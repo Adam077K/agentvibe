@@ -1,11 +1,18 @@
 # Keel · the final plan v2 of the whole company operating system
 
 ```
-version:    final-v2 · 2026-09-05 · one company of named agents, one website, one launcher
+version:    final-v2 · 2026-09-06 (rethink round applied) · one company of named agents, one website, one launcher
+            ~~final-v2 · 2026-09-05~~ (moved 2026-09-06: the rethink round of DECISIONS §17–§19 is folded into every
+            section; the eighty-two rows of SPINE §A are what a section obeys)
 inputs:     final/FINAL-PLAN.md (branch ceo-3-1788468144) · the founder's direction of 2026-09-05
             (docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md, byte-identical on ceo-3 and
             docs/final-plan) · seven research lanes fetched this session, recorded verbatim under final-v2/research/
-            {roster, surfaces, runtimes, skills, cognition, memory, models}.md · final-v2/SPINE.md, the decision
+            {roster, surfaces, runtimes, skills, cognition, memory, models}.md — and, from the rethink round,
+            final-v2/research/world.md (thirty numbered vendor findings, accessed 2026-09-06),
+            final-v2/research/room.md and final-v2/research/cloud.md (the two lanes the founder's interview asked
+            for, returned the same day) · final-v2/rethink/SYNTHESIS.md, the eight thinking lanes and the sourcer
+            lane synthesised — §1 the founder's sixteen decisions, §2 the eighty orchestrator fixes, §5 the
+            twenty-two contradictions, §7 the deletions, §8 the lane ledger · final-v2/SPINE.md, the decision
             spine every section writes from. The founder's choice, 2026-09-05: KEEL ONLY, AGAIN — THE-PLAN.md,
             mind-2, Fable's round-six design and the buy lane were NOT read, for the second round running
 rule:       the founder wins on FINAL rows 6, 8, 10, 15 and 30; the cost of each overrule is stated once, in one
@@ -18,13 +25,25 @@ rule:       the founder wins on FINAL rows 6, 8, 10, 15 and 30; the cost of each
 measured:   this branch = ceo-1-1788609834 at b2cabad = local main, TREE A of final/CENSUS.md, carrying this
             session's own documentation commits on top · ceo-3-1788468144 at 7286420, which holds final/ ·
             docs/final-plan at 7fe8ede, the head of PR #131 · origin/main at 4770d39. Tooling on this Mac,
-            2026-09-05: claude 2.1.261 · codex ABSENT · gemini 0.38.2 present and never authenticated
+            2026-09-05: claude 2.1.261 · codex ABSENT · gemini 0.38.2 present and never authenticated.
+            Added 2026-09-06: the shipped Codex is 0.153.4, released 2026-09-04 (FACT: world.md 19) — nothing is
+            installed here, and the number is recorded because v32's rehearsal floor of ">= 0.124.0" is
+            twenty-nine minor versions stale and no longer discriminates (W19; §10.8) · and the Mac's own
+            hours-off, measured read-only from pmset -g log (R5, DONE — DECISIONS §19): span 2026-08-30 21:44 to
+            2026-09-06 09:39, 156 h retained, asleep 40.7 h (26%) in 487 episodes, zero episodes of an hour or
+            more, longest single sleep 0.3 h. Caveat: only the span the log retains, and DarkWake naps count as
+            wakes, so "asleep" means the machine could not have run a process
 not:        a build plan, a schedule, a first month, a price list. Nothing here was built, installed,
             authenticated, spent, published or pushed
-companions: final-v2/SPINE.md (the sixty-five rows and the roster, binding on every section — v54–v65 are the
-            founder's interview of 2026-09-05) ·
+companions: final-v2/SPINE.md (the ~~sixty-five~~ **eighty-two** rows and the roster, binding on every section —
+            v54–v65 are the founder's interview of 2026-09-05, and v66–v82 are the rethink round of 2026-09-06:
+            sixteen founder decisions and one deletion. It also now carries §L, the eighty orchestrator
+            mechanisms; §M, the thirty-two world facts that moved a row with no decision attached; and §N, the
+            twenty-six research questions) (moved 2026-09-06: SPINE §A) ·
             final-v2/COVERAGE.md (every item of the founder's list placed) · final-v2/DECISIONS.md (this session's
-            own decisions, as they were made) · final-v2/research/ (seven lanes, verbatim) · final-v2/page/final-plan-v2.html (100,099 bytes)
+            own decisions, as they were made — §17–§19 are the rethink round) · final-v2/research/ (seven lanes
+            plus world, room and cloud, verbatim) · final-v2/rethink/ (nine lane files and the synthesis) ·
+            final-v2/page/final-plan-v2.html (100,099 bytes)
 ```
 
 ---
@@ -60,6 +79,28 @@ expiry (§7), and memory written by one curator (§13).
 quoted here because it is what the next reader will search for)** *"the place where the founder — or any other
 person, with any task or goal — opens a project, takes a task, achieves it, and works with agents relentlessly until
 the perfect result."*
+
+---
+
+### 0.1a What this section rests on, and the one adjustment it could not make
+
+**(FOUNDER, rethink 2026-09-06: D11)** Nothing is decided in §0 and two things are admitted here. §0.1 asks for a
+system that is *"self moving, self adjusting, improving"*, and the plan had no adjustment at all for the commonest
+state the founder is in — **away**. **v76** is that adjustment: the system reads one derived value, **the last
+founder event**, at four call sites — it releases the reserve to autonomous work when the last event is older than
+the reserve's own horizon and snaps it back on the first tap, executes a *which*'s stated default at its intent's
+expiry with both built options archived, builds one option instead of two while away, and keys page 5's *since you
+were last here* view on the event rather than on a date. It reintroduces no approve verb and does not reverse v9: a
+silent run still cannot ask. **Mechanism:** one predicate and one field shared by four call sites — **ABSENT**, and
+§A v76 names no path for it. Second, **the whole of §0 rests on contrarian assumption 1** (§I row 16): that a
+deterministic anchor exists for most company work. Rung 1, the trust score, regression-for-free, unattended night
+work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang on it, and the
+evidence for it comes from the harness — the most anchorable venture that could have been chosen. **If it is false
+the architecture inverts:** the night's product becomes built options with their costs, the morning becomes an
+adjudication queue, the taste store becomes the primary asset, mission control's centre of gravity moves off pages 3
+and 5 onto a decision queue, and the roster shrinks. **(R12, OPEN)** settles it: what fraction of the harness
+venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*. It is the cheapest measurement
+named anywhere in the round, and nothing should be built against the inverted architecture before it is taken.
 
 ---
 
@@ -104,7 +145,7 @@ flowchart TD
     DESK --> PICK{"Which of the fourteen<br/>does this kind of work?"}
     PICK --> RUN["A RUN — one agent, one artifact, one worktree,<br/>a brief it may not exceed, a grant that is argv"]
     RUN --> ANCH["THE ANCHOR — something outside the model<br/>says whether the done-test passed"]
-    ANCH --> HAND["HANDOVER — seven fields, always,<br/>including on failure"]
+    ANCH --> HAND["HANDOVER — eighteen lines, always,<br/>including on failure (O7; §6.3's schema owns the count)"]
     HAND --> LOG["The event log"]
     LOG --> MC["MISSION CONTROL — seven pages.<br/>Every element is a fact or a tap;<br/>every tap opens a terminal on the Mac"]
     MC --> F
@@ -159,7 +200,7 @@ the agent doing the work, which is what actually changed)**
 | **Mission control, page 4 — the board** | Tickets, PRs and a timeline. The founder drags a card into *working on it* | The drag launches a session with a team of agents and hands it the task. **Nothing in the world does this** — every board-to-session project found maps one task to one agent (v16), so this part is ours to build |
 | **The Floor** | A terminal, one agent, the same memory and the same envelope. The founder's own browser and own send button are here and nowhere else | The system goes sterile: nothing interrupts, nothing new is dispatched on the founder's window, the venture under their hands is held whole. When they leave, the queue that built up is one paragraph |
 | **A *which*** | Two options, both already built, and the cost of each. One tap | There is no approve verb anywhere in the system. Outside the envelope, the system builds both and asks *which* |
-| **The night** | Nothing. The founder is asleep | Obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back seven fields, and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
+| **The night** | Nothing. The founder is asleep | Obligations first, before any goal. Then, under each driven venture's ceiling, runs are born with a brief, work however they like, are checked by something outside the model, hand back every line the handover schema names (§6.3), and die. Routine work burns the Gemini window and never touches the founder's; embeddings and classification run locally on electricity. A fully autonomous run **cannot ask** — everything it would have asked is pre-decided or staged as a *which* |
 | **Dawn** | The briefing again | The curator has already run: delta-only writes, one writer, an index loaded at start and topic files on demand |
 
 ---
@@ -231,13 +272,14 @@ world agrees with the founder, and §5 spends fourteen names deliberately and sa
 ---
 
 **(NEW: what this section is for, and why it is reproduced rather than summarised)** This is the row set every other
-section writes from. Twenty-three sections cannot disagree if each of them decides nothing that is not here. Rows
+section writes from. Twenty-five sections cannot disagree if each of them decides nothing that is not here. Rows
 **v1–v5** are the founder's overrules of FINAL §1 — they are not arguments, they are decisions, and each is followed
 in §1.2 by one paragraph stating the cost once and the chosen thing. Rows **v6–v41** are places a fact from the
 world moves a FINAL row, or a place FINAL stands *because* a fact was checked against it; rows **v42–v53** are what
 the review round decided — a census of every figure against disk and two sealed challengers, applied before this was assembled; rows
 **v54–v65 are the founder's answers in the interview of 2026-09-05** (DECISIONS.md §15), each a decision and not an
-argument. The losing image is kept
+argument; and rows **v66–v82 are the rethink round of 2026-09-06** (DECISIONS.md §17–§19) — v66–v81 the founder's
+sixteen decisions on `rethink/SYNTHESIS.md` §1, and v82 the one deletion the founder took. The losing image is kept
 by name in every row so it can be argued for later, and collected again in §22.
 
 **(NEW: where the last six rows came from, said once because their provenance is different from the rest)** Rows
@@ -254,9 +296,23 @@ row — and the earlier reading goes to §22 like any other losing image. Two of
 named by the founder as a thing to research rather than a thing to do; **both are now decided**, from
 `research/cloud.md` and `research/room.md`, returned the same day, and v56 opened **§I row 15**, the founder's.
 
+**(FOUNDER, rethink 2026-09-06: D1–D16)** The last seventeen rows have a fourth provenance and it is the newest.
+Rows **v66–v82** are the **rethink round**: the founder asked for *"a rerun on the current system"* (DECISIONS §17),
+nine lanes read v1–v65, the sections, COVERAGE and the research cold, and the synthesis put sixteen decisions to the
+founder in four `AskUserQuestion` rounds. **The founder chose the recommended option on all sixteen** (DECISIONS
+§18), and **no founder row was reversed** — v66–v81 move the *implementation* of an earlier row where they touch one,
+and each says which. **v82** is the one deletion the founder took, verbatim: *"Delete the row from the plan"*
+(DECISIONS §19). The round's other three products are deliberately **not** §1 rows and are not reproduced here,
+because they are mechanism rather than decision: the eighty mechanisms the orchestrator decided (SPINE §L, inventoried
+in §17 and ordered in §19), the thirty-two world facts that moved a row with no decision attached (SPINE §M, applied
+in place below and marked *(moved 2026-09-06: W-n)*), and the twenty-six questions nothing resting on them can be
+decided without (SPINE §N, listed in §20).
+
 ---
 
-### 1.1 The sixty-five rows
+### 1.1 The eighty-two rows
+
+**Eighty-two rows.**
 
 | # | The question | Decided | From | The losing image, kept as |
 |---|---|---|---|---|
@@ -269,10 +325,10 @@ named by the founder as a thing to research rather than a thing to do; **both ar
 | **v7** | The seam between `architect` and `builder` | **The architect's output is a separate artifact with its own done-test, handed over whole.** A builder that needs to change a schema or an interface **files an objection; it does not edit it** | **NEW:** roster.md 6 names the exact failure — two agents acting on assumptions *"not prescribed upfront"*. Making the contract an artifact with a done-test is what prescribes them. **Mechanism:** the builder's grant excludes the architect's output path (argv `--add-dir`); the objection is the cord on itself (FINAL §7.3) | one agent that designs and implements; two agents that share one artifact |
 | **v8** | Who writes the test that judges a build | **Both, and they are different tests.** The builder tests its own work before handing over (self-check). The **tester writes the anchor test blind** — it reads the done-test and the interface, never the implementation | **NEW:** cognition.md 8 (Devin: *"Tell Devin to test its own work before opening a PR"*) is the self-check; a test written by the author of the code is a machine grading its own homework, which FINAL §0 refuses. **Mechanism:** the tester's `--add-dir` excludes the implementation path | one testing agent that reads the diff; the builder's own tests as the only anchor |
 | **v9** | What "fully autonomous" costs | **A fully autonomous run cannot ask.** `dontAsk` mode denies `AskUserQuestion` even when allowed. So everything the run would have asked must be pre-decided in the envelope or **staged as a which** | **NEW:** cognition.md 2 — *"`AskUserQuestion` … are denied even if you've allowed them"*. This makes FINAL's staged-not-sent rule load-bearing rather than stylistic: it is the only channel a silent run has | a fully autonomous run that pauses for a question nobody will answer |
-| **v10** | The widest permission mode | **`bypassPermissions` is refused, by a mechanism** — `permissions.disableBypassPermissionsMode: "disable"` in managed settings, where a running process cannot clear it | **NEW:** cognition.md — deny rules bind in every mode including bypass; allow rules have no effect in it | `--dangerously-skip-permissions` and its successors as a night default |
-| **v11** | The managed settings file, now that `/goal` exists | **The managed file carries `permissions.deny`, `disableBypassPermissionsMode` and `disableAutoMode`, and does NOT set `disableAllHooks` or `allowManagedHooksOnly`** | **NEW:** runtimes.md — *"`/goal` is a wrapper around a session-scoped prompt-based Stop hook"*, and it is unavailable under either of those two settings. **The cost, once:** a run can therefore register its own Stop hook. That is a smaller hole than losing the goal loop the founder asked for, and the probe checks it nightly | a managed file that locks hooks; FINAL §7.5's premise that the managed file is where every narrowing goes |
-| **v12** | Where loops and goals sit | **`/goal` sits on the run: the done-test IS the goal condition**, with a turn clause. **`/loop` is refused in production** and stays a Floor convenience | **NEW:** runtimes.md — `/goal` runs headless in one invocation (`claude -p "/goal …"`), condition limit 4,000 chars, bounded by *"or stop after 20 turns"*. `/loop` is *"session-scoped"*, has a 7-day expiry, and *"Tasks only fire while Claude Code is running and idle"* — the Watch is the loop | `/loop` as the Watch; a cron inside a session as the always-on tier |
-| **v13** | How the Operator dispatches | **Three mechanisms, each for what it is documented to do:** agent teams for the *visible* fleet the founder watches; subagents for depth inside one agent; `claude -p` children through the launcher for unattended night work | **NEW:** surfaces.md (teams are a lead plus named teammates, each a full session, with tmux pane ids on disk) and runtimes.md (subagents: depth 3, 20 concurrent, `Workflow` removed from all of them; `-p` never forms a team). **The constraint, stated once:** teams are experimental and off by default, **no nested teams**, one team per session, `/resume` does not restore them — so the child-flow page shows one level of teammates and the deeper tree is subagents | a single dispatch mechanism; a hierarchy of teams of teams |
+| **v10** | The widest permission mode | **`bypassPermissions` is refused, by a mechanism** — `permissions.disableBypassPermissionsMode: "disable"` in managed settings, where a running process cannot clear it | **NEW:** cognition.md — deny rules bind in every mode including bypass; allow rules have no effect in it. **(moved 2026-09-06: W7)** the managed setting is **no longer the only thing standing there**: `--restricted` *"refuses `bypassPermissions`"* by itself (world.md 7), so the refusal has two carriers, one in argv and one in a file a running process cannot clear | `--dangerously-skip-permissions` and its successors as a night default |
+| **v11** | The managed settings file, now that `/goal` exists | **The managed file carries `permissions.deny`, `disableBypassPermissionsMode` and `disableAutoMode`, and does NOT set `disableAllHooks` or `allowManagedHooksOnly`** | **NEW:** runtimes.md — *"`/goal` is a wrapper around a session-scoped prompt-based Stop hook"*, and it is unavailable under either of those two settings. **The cost, once:** a run can therefore register its own Stop hook. That is a smaller hole than losing the goal loop the founder asked for, and the probe checks it nightly. **(moved 2026-09-06: W7)** on the `-p` carrier the managed file has **less to carry than this row assumed**: `--restricted` *"ignores user, project and local settings files"* (world.md 7), so argv alone decides more there — independent support for §L **O37**, which deletes the project-`settings.json` tier of grants outright | a managed file that locks hooks; FINAL §7.5's premise that the managed file is where every narrowing goes |
+| **v12** | Where loops and goals sit | **`/goal` sits on the run: the done-test IS the goal condition**, with a turn clause. **`/loop` is refused in production** and stays a Floor convenience | **NEW:** runtimes.md — `/goal` runs headless in one invocation (`claude -p "/goal …"`), condition limit 4,000 chars, bounded by *"or stop after 20 turns"*. `/loop` is *"session-scoped"*, has a 7-day expiry, and *"Tasks only fire while Claude Code is running and idle"* — the Watch is the loop. **(moved 2026-09-06: W14, W31, W13, W15 — and this is the sharpest fact of the round.)** ~~Check-ins start at 30 minutes and double to a 4x ceiling~~ is superseded: they back off **30 min → 1 h → every 2 h**, and *"idle sessions … start at most three check-ins on long-running background work per goal; your next message allows three more"* (world.md 14). **Under `-p`, check-ins are the only way the runtime delivers anything, and nobody is there to message it** — so a night goal loop delivers three times and then goes quiet. Beside it, the vendor's own measurement: the **99.9th-percentile turn duration is over 45 minutes** (world.md 30b, W31). **Those two are the measured unattended ceiling that fully autonomous mode (§3.3) is designed above, and the row states it rather than discovering it. The answer this row now carries is §L O21 + O15:** O21 makes the goal condition an **exit code** (`<anchor>` exits 0, and the done-test) so the three deliveries are judged by a program rather than by prose, and **O15**'s wake reconciler is what notices a run that went quiet — writing `orphaned`, never `finished`, then resuming by id or closing with a reason. **W13:** `/schedule` is a **fourth** scheduling surface inside the CLI and its semantics are UNKNOWN (the doc page returned HTTP 404) → **R25**. **W15:** `/loop` gained a self-paced dynamic mode and an autonomous default — the **losing image got stronger, not the decision**; it is still session-scoped and still refused | `/loop` as the Watch; a cron inside a session as the always-on tier |
+| **v13** | How the Operator dispatches | **Three mechanisms, each for what it is documented to do:** agent teams for the *visible* fleet the founder watches; subagents for depth inside one agent; `claude -p` children through the launcher for unattended night work | **NEW:** surfaces.md (teams are a lead plus named teammates, each a full session, with tmux pane ids on disk) and runtimes.md (subagents: depth 3, 20 concurrent, `Workflow` removed from all of them; `-p` never forms a team). **The constraint, stated once:** teams are experimental and off by default, **no nested teams**, one team per session, `/resume` does not restore them — so the child-flow page shows one level of teammates and the deeper tree is subagents. **(moved 2026-09-06: W11, W20)** three dispatch mechanisms are no longer the whole picture: **a channel between sessions that are already running now ships on both providers** — `SendMessage`/`ListAgents` across sessions on one machine, with an inbox socket that closes a connection sending no complete line within 30 seconds (world.md 11), and Codex `@` task mentions (world.md 20). **§3.5 gains a fourth row, and what a message may be is v80** | a single dispatch mechanism; a hierarchy of teams of teams |
 | **v14** | The cost dashboard against *"nothing is only informational"* | **The dashboard is admitted, and every number on it names the tap that acts on it** — a cost row taps to its run, a window row taps to retempo, an anomaly taps to the cord | **FOUNDER** (*"cost and tokens, efficiency, monitoring, and a dashboard"*) + **NEW:** surfaces.md 6 states the collision as two positions, not a resolved question. This resolves it by keeping both | FINAL §13.2's Balcony table with no dashboard row |
 | **v15** | Which canvas and graph substrates are admissible | **Admitted: Langflow (MIT [`api`: GitHub SPDX detection, LICENSE not read], alive 2026-09-05) as the canvas idiom; `3d-force-graph` (MIT [`api`: GitHub SPDX detection, LICENSE not read]) as the renderer. Refused: n8n (Sustainable Use — *"only for your own internal business purposes or for non-commercial"*), Flowise (ARCHIVED, licence NOASSERTION), Gource (GPL-3.0 [`api`: GitHub SPDX detection, LICENSE not read])** | **NEW:** surfaces.md licence table, n8n's LICENSE.md read raw | n8n as the workflow surface; Flowise as the canvas |
 | **v16** | The board→session prior art | **OpenAI Symphony (Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], last push 2026-08-19) replaces vibe-kanban as the reference.** vibe-kanban's own README now reads *"Vibe Kanban is sunsetting"* | **NEW:** surfaces.md 4, 5. **The gap that is ours to build:** *"Nothing found gives a card a team"* — every board-to-session project maps one task to one agent | FINAL §13.8's refusal of vibe-kanban as an unmaintained runtime — right conclusion, weaker reason |
@@ -281,8 +337,8 @@ named by the founder as a thing to research rather than a thing to do; **both ar
 | **v19** | Skill retirement | **By forced expiry.** Every skill carries `valid_until`; at expiry exactly one disposition is recorded — Refresh, Deprecate, or Waive with a new date | **NEW:** skills.md 20 — *"Nobody found retires a skill by non-use"*; the nearest shipped thing is dead-link and drift detection. **Mechanism:** `scripts/ledger.mjs` already forces this disposition and `check-citations.mjs` already blocks on a dead path — both on this branch | *"Ninety days uncalled and it leaves"* — a usage counter nobody in the world has shipped |
 | **v20** | The cheap tier | **No agent's default model is Haiku.** Haiku 4.5 appears only where the vendor sets it (the `/goal` evaluator, the auto-mode classifier). The genuinely cheap work goes to **local models on electricity** | **NEW:** models.md 5 — Haiku 4.5 retirement *"Not sooner than October 15, 2026"*, and it is the only Haiku in the published table. Locals: MiniLM 384-dim and Qwen3-0.6B, both Apache 2.0 | a Haiku executor tier; FINAL §16.7's *"local models: no shape"* read as *no work* |
 | **v21** | Where Fable 5.1 sits | **An escalation, not a default.** One named rule: an intent whose done-test has failed twice under Opus 5 and whose horizon exceeds one window. **Its availability on a subscription seat is UNVERIFIED** — models.md publishes its API price and no plan table names it; fallback is Opus 5 | **NEW:** models.md — Fable 5.1 cache reads at **0.025x** base input against 0.1x everywhere else, which is what makes a large standing context cheap to re-read; the SWE-bench Pro ranking is third-party, confidence L, and is **not** used to route | Fable as the builder's default; wshobson's tier 0 adopted as-is |
-| **v22** | The window | **Two windows, not one: a rolling five-hour AND a weekly, per seat, shared with Claude chat and Cowork.** And two limit shapes that behave differently — a seat limit cannot be escaped with `/model`; a model-family limit can | Moves **FINAL row 19**, which knew only the five-hour fuse. models.md, quoted from the vendor's costs page. **Consequence:** the reserve is per window *and* per week, and a weekly exhaustion is a different event from a five-hour one | one rolling five-hour window as the whole physical fact |
-| **v23** | `--max-budget-usd` | **Not a billing control.** Print mode only, computed locally from token counts at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers. It is a **stall fuse**, and it is kept for that | Moves **FINAL §7.5** and closes half of **FINAL §19.11**. models.md. Still true and still useful: subagent spend counts toward it, and overflow fails a spawn with `Budget limit reached` (v2.1.217+) | a per-run dollar ceiling that binds the account |
+| **v22** | The window | **Two windows, not one: a rolling five-hour AND a weekly, per seat, shared with Claude chat and Cowork.** And two limit shapes that behave differently — a seat limit cannot be escaped with `/model`; a model-family limit can | Moves **FINAL row 19**, which knew only the five-hour fuse. models.md, quoted from the vendor's costs page. **Consequence:** the reserve is per window *and* per week, and a weekly exhaustion is a different event from a five-hour one. **(moved 2026-09-06: W4, W26)** part of the window is machine-readable now — a `rate_limits.spend_limit` status-line field, a Spend limit bar in `/usage`, a per-loop breakdown and a `prompt_cache` object (world.md 4) — so **v74**'s gauge reads vendor fields where they exist and computes only the rest; and Google states a **second reason** for v6 that lands on this row: *"parallel subagents … consume the rate limit faster"* (world.md 26), which makes fan-out a window decision and not only a correctness one | one rolling five-hour window as the whole physical fact |
+| **v23** | `--max-budget-usd` | **Not a billing control.** Print mode only, computed locally from token counts at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers. It is a **stall fuse**, and it is kept for that | Moves **FINAL §7.5** and closes half of **FINAL §19.11**. models.md. Still true and still useful: subagent spend counts toward it, and overflow fails a spawn with `Budget limit reached` (v2.1.217+). **(moved 2026-09-06: W5)** the arithmetic changed — cost estimates *"now include the 1.1× US-only-inference premium for data-residency workspaces"* (world.md 5): still a local estimate, now with a residency multiplier, which is one more reason **v74** denominates a ceiling in window share and keeps USD as a shadow price | a per-run dollar ceiling that binds the account |
 | **v24** | Memory writes | **Delta-only, never a rewrite** — FINAL row 11 stands and is now sourced | **FINAL, now cited:** memory.md 1 — the paper is **ACE, arXiv 2510.04618**: context held 18,282 tokens at 66.7% accuracy, collapsed at the next step to **122 tokens and 57.1%**, below a 63.7% baseline | a nightly full rewrite of the memory files |
 | **v25** | Who writes memory | **The curator, and only the curator** — the thing that acts never edits memory. FINAL stands, **with its counter-example named** | **FINAL**, against memory.md 3: Claude Code's own auto memory *is* written by the acting agent, in-session. That is one shipped counter-example, and it is accepted as a counter-example rather than hidden. **Mechanism:** the curator's grant is the only one whose writable scope includes the memory paths | shared memory writes by every agent; FINAL §10.1's Letta attribution, which memory.md 2 shows the current vendor page no longer supports |
 | **v26** | Transcript mining | **Stands.** No tool was found that mines a transcript archive into taste, negatives or already-built; three tools read the corpus and render it for humans | **FINAL**, confirmed by memory.md 4. **The caveat that binds the build:** *"The entry format is internal to Claude Code and changes between versions"* — so mining is a batch pass over a snapshot, never a live parser in the critical path | a live transcript reader as a system dependency |
@@ -291,9 +347,9 @@ named by the founder as a thing to research rather than a thing to do; **both ar
 | **v29** | The read-back | **Stays.** No shipped system mandates a restatement before work binds; Linear's 10-second `thought` acknowledges rather than confirms | **FINAL**, cognition.md 10 — unsupported *and uncontradicted*. Closed-loop readback is regulation in aviation and medicine | voice or a chat message binding an instruction directly |
 | **v30** | Why `challenger` is an agent and not a step | **Because self-critique without external feedback is measured as harmful** — *"at times, their performance even degrades after self-correction"* (arXiv 2310.01798). Reflexion's 91% is not a counterexample: its feedback is external | **NEW:** cognition.md 5, 6. **Mechanism:** the challenger never reads the artifact's author's reasoning, only the artifact and its done-test; a second model family whenever one is reachable | a plan-critique pass the same run performs on itself |
 | **v31** | The roster size, and its cost | **Fourteen plus the Operator.** The cost, stated once and not re-litigated: **every shipped running roster verified is 5–6 agents; every roster of 150+ is a catalogue you pick from. Ten to fifteen sits in a band nobody publishes evidence for, in either direction** | **FOUNDER**, cost from roster.md 5. It is an unoccupied band, not a refuted one — no source was found for a measured point at which adding specialists stops paying | Magentic-One's five; ChatDev's six; Anthropic's 3–5 concurrent subagents |
-| **v32** | Codex's position on day one | **Checker on a prepared diff, in the foreground, stdout redirected to a file while inheriting the parent shell's TTY.** The **headless rehearsal is what widens it**: `codex exec --json`, no controlling TTY, non-trivial prompt, version ≥ 0.124.0 | **FOUNDER** (day one) + **NEW:** runtimes.md — #19945 open **130 days with no maintainer reply**, and its `script -qfc` cure is *"incompatible with normal background / parallel job execution"*. **The cost, once:** one foreground slot is not parallel, so Codex is not a night lane until the rehearsal passes detached | Codex as a full maker on night one; `script -qfc` wrapped around every child |
+| **v32** | Codex's position on day one | **Checker on a prepared diff, in the foreground, stdout redirected to a file while inheriting the parent shell's TTY.** The **headless rehearsal is what widens it**: `codex exec --json`, no controlling TTY, non-trivial prompt, ~~version ≥ 0.124.0~~ **(moved 2026-09-06: W19)** — **the installed version, recorded**: Codex is at **0.153.4 (2026-09-04)**, so the old floor is 29 minor versions stale and is satisfied by anything installed, which means it no longer discriminates | **FOUNDER** (day one) + **NEW:** runtimes.md — #19945 open **130 days with no maintainer reply**, and its `script -qfc` cure is *"incompatible with normal background / parallel job execution"*. **The cost, once:** one foreground slot is not parallel, so Codex is not a night lane until the rehearsal passes detached. **(moved 2026-09-06: W24)** four weeks of Codex release notes (2026-08-26 → 2026-09-04) mention no `codex cloud exec`, no cloud API, no cancel or poll, no goal mode and **no #19945** — so **this row stands, and so does v56(b)**. Record it as what it is: **absence is not denial**, the June–August window is unread (three fetch failures), and reading it is **R26**, the only cheap route to **R10**. One correction that cuts the other way: 0.152.0 adds credential-refresh progress to `codex exec`, which **adds output to the stream this row depends on being clean** | Codex as a full maker on night one; `script -qfc` wrapped around every child |
 | **v33** | The trifecta split, inside a roster | **Survives intact.** The agent that reads the untrusted world (`scout`) holds no credential and cannot send. The agent that drafts an outward act (`writer`, `growth`) never holds the key. The thing that sends is **the Sender, a program with no model** | **FINAL** row 7, and cognition.md finds *no shipped analog* for staged-not-sent or a recall window anywhere | a research agent with a send verb; one agent that reads mail, decides and replies |
-| **v34** | What makes a grant real | **The exact argv, emitted by one no-model launcher**, plus the managed file of v11, plus a nightly probe that asserts what a run can actually touch | **FINAL** §7.5 and row 13, unchanged. **Mechanism:** `bin/run` is the only thing that composes argv (ABSENT); `bin/probe` asserts it nightly (ABSENT) | `--allowedTools` as a narrowing; a prose rule describing a grant |
+| **v34** | What makes a grant real | **The exact argv, emitted by one no-model launcher**, plus the managed file of v11, plus a nightly probe that asserts what a run can actually touch | **FINAL** §7.5 and row 13, unchanged. **Mechanism:** `bin/run` is the only thing that composes argv (ABSENT); `bin/probe` asserts it nightly (ABSENT). **(moved 2026-09-06: W9)** one narrowing arrives free: `--add-dir`, `/add-dir` and `additionalDirectories` now *"refuse network paths (UNC shares, `/net/<host>` automounts) … before touching them"* (world.md 9), so a grant composed here cannot point at a share | `--allowedTools` as a narrowing; a prose rule describing a grant |
 | **v35** | `Workflow` in an agent's tool line | **Absent from every agent, deliberately.** The gate may not be invocable by the thing it gates | **FINAL / this repo**, now **independently cited**: runtimes.md quotes the vendor — *"The `Workflow` tool is removed from all subagents via the first filter applied to subagent tool sets"* | granting a dispatched engine the ability to run its own gate |
 | **v36** | Who may hold a tainted read | **`scout` only, and the world's door program.** Gmail, Calendar, Drive and Notion reads are tainted READ-ONLY; **no agent that holds `Write`, `Edit` or `Bash` reads them raw.** `steward` writes obligation **proposals** from `scout`'s handover and the Watch alone writes `obligations.yml` (v44); the world's door writes one inbound row per event and holds no model | **FINAL** §9.4–9.5 and v33, applied to a collision found between the tool classes and §5.2's `steward` row — one grant, two rules. Decided by the orchestrator 2026-09-05, DECISIONS.md §8 | a steward that reads mail with a pen in its hand |
 | **v37** | The brief, now that agents have names | **Ten fields: FINAL's nine plus `agent:` — the roster name the launcher composes argv for.** `window+model:` stays as it is; the agent's row supplies its defaults and §9.1 overrides per move | **NEW:** fourteen named agents make *which agent* a fact the brief must carry, and neither reading was in the spine until §6 returned BLOCKED. Chosen because it leaves FINAL's nine untouched. **Mechanism:** `bin/run` refuses a brief whose `agent:` is not a roster file (ABSENT) | `agent+window+model:` as one widened field; a brief that names no agent and lets the launcher guess |
@@ -302,7 +358,7 @@ named by the founder as a thing to research rather than a thing to do; **both ar
 | **v40** | `maxTurns` for the roster files that have no seed | **30 for the nine that produce** — builder, architect, tester, designer, product, writer, growth, steward, curator — **and 25 for the five that only read** — reviewer, guard, scout, analyst, challenger. **The Operator 30.** Tuned per agent by measurement afterwards | **NEW:** the seven existing engine files on this branch use exactly these two values; `maxTurns` binds when an `agentType` is named; the lint ceiling is 120. A default that copies the measured seeds is a starting point, not a design | one cap for every agent; no cap |
 | **v41** | `isolation` for the agents that write | **`worktree` for the four that touch venture source** — builder, architect, tester, designer. **`none` for the five that write only into the house's stores** — product, writer, growth, steward, curator — because their grant is a narrowed `--add-dir`, not a checkout. **`none` for the six that do not write** | **NEW:** FINAL §6.1 — a worktree is for a run that writes code or files of the venture; a store write is narrowed by argv (v34). **The cost, once:** `git worktree add` still cannot complete under the armed sandbox without escalation, measured 2026-08-24 | a worktree for every agent; no isolation for the four that edit source |
 | **v42** | Where the fifteen agent files and their argv live | **Agent files in `.claude/agents/<name>.md` — the path the runtime reads and the `PS-*` lint globs. The per-provider argv files live in `keel/shared/argv/<agent>.<provider>.argv`.** `keel/agents/` does not exist | **NEW:** challenge A P1-1 — two homes, one unread by the runtime. **Mechanism:** the census of §19.2 fails a second path for one artifact | `keel/agents/<name>.md` beside its argv |
-| **v43** | What carries the grant on each dispatch mechanism | **Three carriers, one per mechanism, and a claim is made only where its carrier can hold it:** `claude -p` children — the exact argv (`--restricted --tools … --add-dir …`); subagents — the agent file's `tools:`/`disallowedTools:` plus managed-settings `permissions.deny` rules, and nothing path-scoped that those cannot express; agent teams — the teammate's agent file plus the same managed denies. **Unattended night work runs only on the `-p` carrier.** The tester's blindness (v8) and the builder's exclusion from the architect's paths (v7) are argv facts on the `-p` path and are `permissions.deny` `Edit(<path>)` rules on the other two, **UNVERIFIED** until the probe asserts them | **NEW:** challenge A P1-2 — the plan asserted argv for mechanisms that have none. **Mechanism:** a grant matrix (mechanism × narrowing) in §12, asserted per row by `bin/probe` (ABSENT) | "the grant is the argv" said of a teammate |
+| **v43** | What carries the grant on each dispatch mechanism | **Three carriers, one per mechanism, and a claim is made only where its carrier can hold it:** `claude -p` children — the exact argv (`--restricted --tools … --add-dir …`); subagents — the agent file's `tools:`/`disallowedTools:` plus managed-settings `permissions.deny` rules, and nothing path-scoped that those cannot express; agent teams — the teammate's agent file plus the same managed denies. **Unattended night work runs only on the `-p` carrier.** The tester's blindness (v8) and the builder's exclusion from the architect's paths (v7) are argv facts on the `-p` path and are `permissions.deny` `Edit(<path>)` rules on the other two, **UNVERIFIED** until the probe asserts them | **NEW:** challenge A P1-2 — the plan asserted argv for mechanisms that have none. **Mechanism:** a grant matrix (mechanism × narrowing) in §12, asserted per row by `bin/probe` (ABSENT). **(moved 2026-09-06: W8)** the carrier this row said it could not name **now exists for reads**: `permissions.blockReadsOutsideWorkingDirectories` (world.md 8) is a *read* narrowing expressible in settings, which is exactly what the tester's blindness (v8) and the builder's exclusion from the architect's paths (v7) need on the subagent and team mechanisms. It stays **UNVERIFIED** until `bin/probe` asserts it, and until then §L **O28** routes `tester` and `challenger` on the `-p` carrier only | "the grant is the argv" said of a teammate |
 | **v44** | Who writes `obligations.yml` | **The Watch, alone** (FINAL §2.3, §16.4). `steward` writes **proposals** into `keel/ventures/<v>/obligations-draft/` from `scout`'s handover; the Watch materialises a proposal into a row after the store check | **NEW:** challenge A P1-3 — two writers under "one writer each". **Mechanism:** `bin/check-stores` refuses a store whose declared writer is not the only grant carrying `Write` on that path (ABSENT) | steward writing the store directly |
 | **v45** | The brief's field count | **Eleven: FINAL's nine, `agent:` (v37) and `anchor:`** — the rung-1 check the done-test names, required, and `bin/run` refuses a brief without it | **NEW:** challenge A P1-4 — ten in §6, eleven in §3 and §11. **Mechanism:** one schema file `keel/shared/schemas/brief.yml` (ABSENT) that the prose tables are generated from | ten fields with the anchor implied |
 | **v46** | The Operator's runtime position | **The Operator is the founder's interactive session, started as `claude --agent operator`, so one agent file governs it AND it can form the agent team page 2 draws.** It is inventoried as a file and runs as the main session; whether `--agent` binds the file's `tools:` at top level is **one measurement, UNVERIFIED**, and until it passes the no-`Write` guarantee is held by managed `permissions.deny` | **NEW:** challenge A P1-5 — a dispatched file cannot form a team; a bare main session is not the inventoried object. **Mechanism:** `scripts/probe-workflow-reach.mjs`'s pattern pointed at team formation (ABSENT) | an Operator dispatched as a subagent; an Operator with no file |
@@ -316,19 +372,46 @@ named by the founder as a thing to research rather than a thing to do; **both ar
 | **v54** | The roster's first wave | **Eight agents first — the Operator, builder, reviewer, architect, tester, guard, scout, designer — the ones with a seed file or a code path today. The six business agents (product, analyst, writer, growth, steward, curator) and the challenger come online when a venture needs them.** All fifteen files stay in the inventory; §19 draws two waves | **FOUNDER** (interview 2026-09-05, DECISIONS §15): *"Start with the eight that have seeds or code paths"*. **The cost, once:** wave one has no `challenger`, so a plan about to bind is attacked by `guard`'s adversarial review and the founder's own read until wave two; and wave one has no `product`, so done-tests are written by the founder through the read-back | fifteen files on day one |
 | **v55** | Standing jobs — the company working on a cadence or an event | **A standing intent: an intent that never expires, carrying `every:` (a cadence) or `on:` (an inbound event class), dispatched by the Watch's tick to the agent its kind routes to; outputs stage, never send.** Customer support → steward from inbound rows · leads → growth · research and competitor watch → scout · security → guard · data analysis → analyst. **No new agents** | **FOUNDER**: *"agents like: customer support, marketing agents: leads, research, security, competitors, data analysis and more that can run every set time or event … to build the company like working"*; chose *"Standing intents with a cadence or trigger, run by the Watch"*. **Mechanism:** the intent schema gains two optional fields; `bin/watch` reads them (ABSENT); `bin/check-stores` refuses `every:` without a ceiling per run (ABSENT) | per-agent cron in each agent file; a schedules page; a scheduler beside the Watch |
 | **v56** | Work when the Mac is off | **A cloud lane exists, and FINAL's *"everything runs on the Mac"* gets one stated exception. Its position today, from research/cloud.md:** (a) **Codex cloud is admitted as a PR reviewer** — `@codex review` on a pull request, or automatic review on PR open, is vendor-documented, needs no local Codex, runs in OpenAI's sandbox, and so **sidesteps #19945 entirely**; (b) **Codex cloud as a maker is UNVERIFIED** — no vendor page prints a non-interactive command or an endpoint to create a cloud task; `codex cloud exec --env <id>` appears only in an open feature-request issue (#24777) as the author's claim about the binary; (c) **the documented off-Mac maker paths are Anthropic's** — `claude --cloud "<task>"` (argv, an isolated VM, clones the GitHub remote, `--teleport` pulls the session back) and Routines with an API fire endpoint and a one-hour floor — **and Google's Jules API (alpha)**. Which of these the crew may use for making is **§I row 15, the founder's**, because it is the terms question again (§I row 1, open by the founder's word). **Mechanism, orchestrator's, reopenable:** a hosted run's output lands as a pull request or a staged artifact the Mac reconciles on wake — never into the house directly; `bin/run` gains a `cloud` carrier that only mints a task and records its id (ABSENT); the Watch on wake reads the PRs (ABSENT) | **FOUNDER**: *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* → *"Yes — a cloud lane for when the Mac is off"*, research on **Codex cloud tasks** only. research/cloud.md, five parts. **The cost, once:** the lane the founder named has no documented driver today, and the lanes with a documented driver run on the Claude seat whose terms clause is the open question | the Mac as the only runtime; Routines refused wholesale; Codex cloud as a full night maker on issue-only evidence |
-| **v57** | Fable's position | **`claude-fable-5-1` is the default model of `builder` and `architect`.** v21's escalation rule is the losing image. Reachability on the subscription seat is still one measurement, UNVERIFIED; until it passes, the fallback is `claude-opus-5` | **FOUNDER** (overrules v21): *"Fable as builder's and architect's default"*. **The cost, once:** the two heaviest producers on the top tier burn the window fastest — offset by cache reads at 0.025x on a cache-dominated workload (§9.5) — and `scripts/prompt-standard.test.mjs` must admit `claude-fable-5-1` in the same change that writes the first agent file | Fable as an escalation only; Fable as nobody's default |
+| **v57** | Fable's position | **`claude-fable-5-1` is the default model of `builder` and `architect`.** v21's escalation rule is the losing image. Reachability on the subscription seat is still one measurement, UNVERIFIED; until it passes, the fallback is `claude-opus-5` | **FOUNDER** (overrules v21): *"Fable as builder's and architect's default"*. **The cost, once:** the two heaviest producers on the top tier burn the window fastest — offset by cache reads at 0.025x on a cache-dominated workload (§9.5) — and `scripts/prompt-standard.test.mjs` must admit `claude-fable-5-1` in the same change that writes the first agent file. **(moved 2026-09-06: W1, W2, W6, W17)** **W1** — the model shipped and the two numbers this row rests on are confirmed: *"Claude Fable 5.1 (`claude-fable-5-1`) … 1M context, $10/$50 per Mtok with $0.25/Mtok cache reads"* (world.md 1); **the subscription-seat UNVERIFIED stands**, because no vendor statement about a seat was found. **W2 — an alias trap against this row:** *"`fable` and `best` … keep resolving to Fable 5 for now … pick Fable 5.1 in `/model` to use it"* (world.md 2), so an agent file naming `fable` and one naming `claude-fable-5-1` are **not the same routing** — write the full id. **W6** — `experimental.cacheTtl` (`5m`/`1h`) is per-agent frontmatter, and TTL is what decides whether the 0.025x cache this row is justified on is warm (§B.2, §9.5). **W17** — `PreModelSwitch` can **block** a model switch (world.md 17), which is the gate that could enforce this default or v21's escalation, and no row used it | Fable as an escalation only; Fable as nobody's default |
 | **v58** | The small fast model | **`ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5`, set now**, so `/goal`'s evaluator and the auto-mode classifier stop depending on Haiku 4.5 before its 2026-10-15 retirement | **FOUNDER**: *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now"*. **The cost, once:** every goal check costs Sonnet, not Haiku. **Mechanism:** the env var in the launcher's environment (`bin/run`, ABSENT) and in the managed file's `env` if it carries one | vendor defaults with an expiry row; a local model (unsupported) |
-| **v59** | Agent teams | **On (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and a teammate runs on its own agent file's model** — no Sonnet constraint | **FOUNDER**: *"Turn it on, no model constraint"*. **The cost, once:** the vendor's *"approximately 7x more tokens … in plan mode"* now applies at Opus and Fable prices for five of the fourteen; §9.2's teammate row is struck | Sonnet teammates; teams off, subagent trees only |
+| **v59** | Agent teams | **On (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and a teammate runs on its own agent file's model** — no Sonnet constraint | **FOUNDER**: *"Turn it on, no model constraint"*. **The cost, once:** the vendor's *"approximately 7x more tokens … in plan mode"* now applies at Opus and Fable prices for five of the fourteen; §9.2's teammate row is struck. **(moved 2026-09-06: W10, W12)** **W10 is what makes this row bind:** `CLAUDE_CODE_SUBAGENT_MODEL` now *"set[s] the default subagent model rather than override everything: an agent definition's `model:` and an explicit per-spawn model now take precedence"* (world.md 10) — before it, one env var silently flattened fourteen per-agent model choices. **W12 names the risk the founder took:** agent teams were repaired four times in the window (lost final answers, blanked transcripts, cache-missing announcements, panes surviving shutdown) and **were never promoted out of experimental**; the failure class is **lost teammate output**, which is exactly what §14's page 2 renders — so page 2's census is §L **O70**'s join, not a poll of the vendor's mutable `config.json` | Sonnet teammates; teams off, subagent trees only |
 | **v60** | What a card launches | **The card carries a `solo \| team` toggle, defaulted from the intent's kind** — source code defaults to the solo chain (architect → tester → builder → reviewer); anything cross-department defaults to a team led by the Operator | **FOUNDER**: *"Both: the card carries a 'solo or team' toggle"*. **Mechanism:** one field on the card store; `bin/run` reads it (ABSENT) | a card always launches a team; a card always launches one agent |
 | **v61** | Page 6's place in the build order | **Last of the seven pages.** One research lane on repository-to-graph tooling before the extractor is written | **FOUNDER**: *"Build it, but last in the page order"* | page 6 beside page 2; a 2D graph first |
 | **v62** | The room's renderer | **pixel-agents** (github.com/pixel-agents-hq/pixel-agents — MIT, LICENSE read from the file, pushed 2026-09-05, 9,190 stars) **is the substrate of page 1, admitted through the tool door.** It is display-only, needs no model, and already reads Claude Code — hook events (`SessionStart`, `PreToolUse`, `PermissionRequest`, `Stop`) and the JSONL transcripts under `~/.claude/projects/` — into an `AgentEvent` model; a click on an agent already opens its terminal in the VS Code surface (issue #251). **What is ours:** a writer from the event log into its `AgentEvent` model (schema not read from source — UNVERIFIED), and the browser-side terminal pop, which upstream has only as an open PR (#347). Its Fastify server runs on the Mac beside `mission-control/`. **Refused:** Star-Office-UI — code MIT but the art assets are *"禁止商用"* (commercial use prohibited), six months without a push, OpenClaw-only, no terminal; **"AgentOffice"** — the name resolves to eleven repositories, and the likeliest (harishkotra/agent-office, MIT) **needs an LLM to render**: it is a simulation the model drives and reads no agent runtime, which fails the rule that the room displays real runs. **The founder can settle the name by saying where they saw it.** Generative Agents `demo` and AI Town stay as fallbacks, licences already read | **FOUNDER**: *"use pixel-agents code or Star-Office-UI or AgentOffice"* — the *or* hands the pick to evidence; research/room.md (five parts, licences read from the file for all three). **NEW, and it corrects FINAL §13.8:** *"no Claude Code fleet surface is spatial"* is no longer true — pixel-agents, clawd-on-desk (AGPL-3.0, refused) and pixtuoid (MIT, Rust, terminal) all watch Claude Code, and pixel-agents is a control, not only a display | Generative Agents demo mode as rank 1; Star-Office-UI; an LLM-driven office simulation |
 | **v63** | Disclosure and the legal entity | **Every outward artifact carries a disclosure line unless the venture's charter turns it off; the legal entity and jurisdiction are a charter field answered at intake** | **FOUNDER**: *"Disclose by default; entity per venture decided at intake"*. **Mechanism:** the Sender's checklist reads the disclosure flag (ABSENT); `bin/check-stores` refuses a charter without the entity field (ABSENT) | no default disclosure; both deferred |
 | **v64** | The first venture | **The harness itself.** Intents are the build order; anchors are `npm run check` and the probe | **FOUNDER**: *"The harness itself"*. **The cost, once, and LONG-TERM.md's standing note applies:** the machine tests itself again; no customer-facing work has ever run through it | adopting an existing project; a greenfield charter |
 | **v65** | The second human | **The founder only, for now.** Statutory clocks wake the founder; revisit when a venture has a legal entity | **FOUNDER**: *"Me only, for now"* | a named accountant or lawyer as a wake-me target |
+| **v66** | Who may call the one surface that dispatches, and how the phone reaches it | **Loopback bind; one keychain-held token checked on every write route; the phone through an authenticated tunnel** | **FOUNDER** (rethink 2026-09-06, DECISIONS §18 · D1) · L6 P2 (*surface authentication*, the lane's only ADD) · L3 P10 · L8 F. **Mechanism:** the seed already pins `127.0.0.1`; the token check is one middleware and the token is held in the macOS keychain (ABSENT); the tunnel is named at build time (ABSENT). **The cost, once:** one config line, one middleware, and a tunnel that has to keep working. **Settled by:** `lsof -nP -iTCP -sTCP:LISTEN` showing a non-loopback bind, or a tap accepted from a device that presented no token. Moves **v39**'s implementation; resolves contradiction 16 | loopback only, the phone reading through the published pages and writing requests the Watch picks up; **v39 as written** — bind to the founder's own network, which is an unauthenticated dispatch plane on any network the Mac joins |
+| **v67** | What the cord actually stops | **Both: the launcher records each child's process group and the cord signals it; `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN** | **FOUNDER** (rethink 2026-09-06 · D2) · L3 P4, P5 · L7 P5 · L8 F · (FACT: world.md 22 — Codex shipped `Interrupt` hooks, the natural Codex-side receiver, and no row named it). **Mechanism:** one `pgid` field written by `bin/run` before exec, one signal path, a `stop:` column on §3.5's carrier table (ABSENT); `SIGTERM` is measured to give exit 143 and a resumable turn, so it stops without destroying. **The cost, once:** the Codex-cloud *maker* lane stays shut until cancellation is documented — which is §I row 15's state anyway. **Settled by:** pulling the cord mid-run, measuring time to quiescence, and whether the run resumes. Moves **v13**'s carrier table and **v56**; resolves contradiction 6 | signal only, minting unattended work on every carrier; the cord as designed — it stops the next dispatch, not the child in flight |
+| **v68** | Whether everything leaving a run passes one program | **Yes — `bin/egress`. One no-model program logs every call, filters by domain AND HTTP method, and injects credentials the agent never sees; `--strict-mcp-config` names only the proxy, and `.claude/mcp-policy.json` becomes its configuration rather than an independent control** | **FOUNDER** (rethink 2026-09-06 · D3) · L3 P1 (*tool audit log*, *credential read denial*, *prompt injection defense*, *fetched-content taint*). **Mechanism:** `bin/egress` (ABSENT); `--strict-mcp-config` ships today. It is the only proposal of the round that survives an agent being *fully* persuaded: the trifecta guarantees a leg is missing at dispatch, this keeps it missing at the syscall. **The cost, once:** one program, one hop of latency, and each server declared twice. **Settled by:** a deliberate exfiltration attempt failing at the proxy rather than at the prompt, and the proxy's call count matching the runtime's for one night. **v33** gains a mechanism; new row in §8; **R2** may still turn half of it into configuration | configuration only — measure the sandbox's documented, unused `credentials` and `network` blocks first (kept as **R2**); structural prevention with no detection, where *"every call logged"* stays unenforceable |
+| **v69** | Whether the data path is erasable by construction | **Both, now. No personal datum enters the event log or memory — both hold a hash; one erasable per-subject store holds the body; erasure deletes that row and the hash becomes *a known absence*. The consent register is a store with one writer, read by the Sender before any contact** | **FOUNDER** (rethink 2026-09-06 · D4) · L3 P2 (*data deletion request*, *data classification tags*, *data retention schedule*, *consent management* — the field's single ADD, and the one keyword of ~640 absent from v2's own text). **Mechanism:** one indirection in `bin/log` and the memory writer; two stores whose single writer `bin/check-stores` enforces (ABSENT); one line on the Sender's checklist. **The cost, once:** one indirection per inbound row, one store, one checklist line. **Settled by:** run one erasure end to end, then grep the whole tree for the subject and find nothing but hashes. Resolves contradiction 7 — *the log is never edited* (§15.3), *eviction never deletes* (§13) and *a deletion request is honoured* (§16) could not all hold | the consent register now and the erasable path when a venture has customers; as designed, where a person's data inside the log is structurally unerasable |
+| **v70** | Whether the curator and the challenger wait for wave two | **No — both join wave one, which is ten agents plus the Operator, not eight** | **FOUNDER** (rethink 2026-09-06 · D5) · L4 P2 · L7 (§35 *contrarian-review agent*) · L5 (*taste review panel*) · L6 (§19 — the support chain names three agents, none in wave one). **Moves v54's implementation and reverses nothing:** v54's own test is *"a seed file or a code path today"*, and the curator has four verified code paths on this branch — `evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs`. **Mechanism:** two agent files (ABSENT); the challenger is one read-only file, the cheapest in the roster, and wave one's only gap with a *measured* harm behind it (v30). **The cost, once:** the challenger runs single-family until Codex or Gemini lands, and its findings are labelled rung 4 rather than hidden. **Settled by:** the harness venture producing handovers nobody reads, and a count of memory proposals with no writer | curator only, the knowledge loop first; wave one as decided, promoting when founder-minutes per finished intent crosses a line the founder sets (§21.1 already measures it) |
+| **v71** | What makes an agent routable | **An onboarding pack, for every agent, wave one included: at least one rehearsal case with a known answer, one exemplar of its own good output with provenance, one end-to-end demonstration that its anchor actually fires, and namespaces that resolve. Without them the agent is declared and not routable** | **FOUNDER** (rethink 2026-09-06 · D6) · L2 P1 (*onboarding checklist per agent*, *agent onboarding doc*, *apprenticeship pattern*). **Mechanism:** the pack paths are declared in `keel/shared/roster.yml` (§L O2, ABSENT) and `bin/run` already refuses a brief naming a file that does not exist (v37, v45). **The cost, once:** three artifacts per agent — thirty for a ten-agent wave one. **Why it is not ceremony:** the pack is what distinguishes `writer` from *builder with a different prompt*, and in a band nobody publishes evidence for (v31) evidence is the only thing that can settle the design. **Settled by: R19** — packed against unpacked on the same known-answer cases with §E.2's runner; if the packed agent does not win, the pack is ceremony and this row is refuted by its own test | wave two only, wave one demonstrated by the harness's own work; no pack at all — *"the agent file is the onboarding"*, true about the runtime and false about the company |
+| **v72** | Whether an agent, alone among durable things, is permanent | **No. All fifteen agent files carry `valid_until`, and at expiry exactly one disposition is recorded — Refresh · Merge · Retire — with the anchored evidence attached** | **FOUNDER** (rethink 2026-09-06 · D7) · L2 P3 (*worker retirement*) · L7 (§35 *sunset-candidate review*, which extends the same idiom to a **provider position**: nothing retires Codex's foreground slot if it returns rung 4 on most checks). **Mechanism:** one frontmatter field; the forced disposition is `scripts/ledger.mjs`, already blocking on this branch. **Extends v19's idiom to §B.2 and reopens neither v1's count nor v54's waves.** **The cost, once:** a small number of founder answers a year. **Settled by:** the first expiry producing a Merge or a Retire — or a cycle where every agent Refreshes on real evidence, which is the strongest defence of fourteen available | the six wave-two business agents only, they being the roster entries with the least outside evidence; no expiry, leaving the roster the one object in the system that can only grow |
+| **v73** | Whether an anchor is itself anchored | **Every anchor carries a mutation case — a known-bad input it must fail — or is marked `unrated`; §21's rung-1 share splits into rated and unrated** | **FOUNDER** (rethink 2026-09-06 · D8) · L5 P1 (*false-positive rate*, *false-negative rate*) · L4 (*golden output archive*, whose same-set-must-not-ship half is §L **O11**). **Why:** §11.11 lists fifteen anchors and **none has ever been shown to fail when it should**; an uncalibrated anchor is a rung-4 belief wearing a rung-1 label, which is the error §11.7 built the reconciliation to catch, one level up. This repository has already shipped a change that removed a control while every test stayed green. **Mechanism:** the case is written by whoever writes the anchor, as a **rehearsal-case body under v18**, so it inherits admission and forced expiry free. **The cost, once:** one case per anchor. **Settled by:** an anchor that passes its known-bad input is unrated by definition; the first rung-1 share that falls is the system telling the truth for the first time | only the anchors that gate irreversible work; no rating, where a green check keeps meaning *nothing complained* and the plan's central claim stays an assumption |
+| **v74** | What a ceiling is denominated in | **A window gauge — tokens against an observed high-water mark, since no denominator is published — with wall clock beside it and USD kept as a shadow price. Exploration-class intents route to Gemini, local models or the Codex seat, and the Desk refuses an exploratory dispatch onto the Claude seat past a fraction the founder sets** | **FOUNDER** (rethink 2026-09-06 · D9) · L5 P3 (*budget in money*, *exploration spend*, *rate-limit cost impact*) · L6 (§31 *cross-venture resource pool* — per-venture ceilings do not compose) · L8 B · L2 (*worker cost cap* — the cap is per run and a standing intent has no aggregate). **Why:** on a subscription the dollar is a locally computed shadow of a bill nobody sends (v23), and **v22 falsified *"idle capacity is bounded by being free"*** — the weekly window is per seat and shared with Claude chat and Cowork, so a night of exploration is subtracted from the next day. **Mechanism:** one high-water file, one rule in the Desk, one `class:` on the intent (ABSENT). **The cost, once:** the reserve stops being a percentage of a quantity nobody has counted. **Settled by:** split one weekly window between driven and exploratory work — if exploration is invisible there, the old sentence was right and this is over-built. Beside **v22** and **v23**; resolves contradictions 18 and 21 | the gauge alone, with exploration left where it is; as designed, with dollar ceilings kept as ceilings — an absent ceiling is visible and a wrong one is not |
+| **v75** | How the Desk ranks | **Lexicographically: obligations first (ranked among themselves by consequence and the world's own deadline) · then work that unblocks other work · then the founder's weight band · then cheapest inside the band. `Decay` is split into its two facts, and for a standing intent it is time since last move normalised by its own cadence** | **FOUNDER** (rethink 2026-09-06 · D10) · L1 P4 (*priority queue*, *goal conflict resolver*, *ticket aging*) · L8 A (the obligation tide, standing-intent decay, the staged-output tide) · L2. **Why:** `Weight × Decay ÷ Cost` divides by measured cost, so cheap work permanently outranks expensive work, and **v55's standing intents supply an endless stream of cheap work**; `Decay` was also undefined for an intent that never expires, which is most of a ten-venture queue. **Mechanism:** one comparator and one branch — *less* code than the formula it replaces, explainable on the board, and it cannot invert the founder's weight. **The cost, once:** none beyond the comparator. **Settled by:** replay `logbook/desk/<tick>.json` over a simulated month under both orders and count dispatches of the top-weight intent — the replayer (§L **O20**) is deterministic, free, and reads a file nothing reads today. Moves §4.5 and **v55**'s implementation; resolves contradictions 21 and 22 | the formula kept with `Decay` fixed and a standing-work share cap per window; the formula as designed, where an expensive high-weight intent can starve at any weight the founder sets |
+| **v76** | What the system does while the founder is away | **It reads one derived value — the last founder event — at four call sites: release the reserve to autonomous work when the last event is older than the reserve's own horizon and snap it back on the first tap; execute a *which*'s stated default at its intent's expiry, archiving both built options; build one option instead of two while away; and give page 5 a *since you were last here* view keyed on the event, never on a date** | **FOUNDER** (rethink 2026-09-06 · D11) · L8 P1, F · L1 (*clarifying question trigger*; the which queue is unbounded at fifty sessions) · L5. **Inside the founder's own *"Keep 30% and 3/day; evidence moves them"*** (DECISIONS §15) — it changes what reads those numbers, not the numbers. **It does not reintroduce an approve verb and does not reverse v9:** a silent run still cannot ask. **Mechanism:** one predicate and one field, shared by four call sites (ABSENT). **The cost, once:** none beyond the predicate. **Settled by:** the reserve hit rate §21.1 already measures moving off *expired-unused*, and the count of second options built and never chosen falling. New row under §4.4 | the which expiry and the return view only; as designed, where a month away reads as a fault and costs a third of every window |
+| **v77** | How big the skill library may get | **As big as a measured budget allows: a per-agent startup metadata budget enforced by a checker, plus one generated directory per namespace so an agent loads only what its file declares. The import stops when the budget binds** | **FOUNDER** (rethink 2026-09-06 · D12) · L4 P3 (*skill count*, *skill lookup cost*) · L5 (*skill discovery cost*). **Why:** the published standard loads roughly **100 tokens of metadata at startup for every installed skill**, so each admitted skill taxes every unrelated run — the same shape as the manifest defect this repo already paid for at ~15,000 tokens a lookup — and the upstream advertises 2,111. **Mechanism:** one checker modelled on `scripts/check-memory-budget.mjs` (which exists and blocks), one generator pass (ABSENT); extends **v48** and §E.4. **The cost, once:** the library stops being open-ended, which is what v3's ambition needs to stay affordable. **Settled by: R8** — two trees, one with the full house library installed and one carrying only one agent's namespaces, identical prompt, comparing input tokens; if the tax scales with declared namespaces rather than the installed library, the budget is unnecessary. **v3** gains one clause | namespace directories with no number — most of the saving, none of the argument; count as an output of admission with expiry doing the rest, where a good new skill makes every unrelated task dearer forever |
+| **v78** | What happens when a model family is limited, unreachable or wrong | **A three-deep `fallback:` per agent ending in *stop and stage*; a cross-family reroute recorded as a **rung demotion** unless that family passed the rehearsal for that move class; a `class: calibration` rehearsal set that is never edited; and one provider-outage drill with the primary family denied at the launcher** | **FOUNDER** (rethink 2026-09-06 · D13) · L7 P3 (*model fallback chain*, *model-drift detection*, *vendor-lock-in avoidance*, *multiple-model second opinion*) · (FACT: world.md 19 — Codex is at 0.153.4, so **v32**'s *"version ≥ 0.124.0"* floor is 29 minor versions stale and no longer discriminates; restate it as *the installed version, recorded*). **Why:** v22 says a family limit is a reroute and never says **where a reroute goes**, and because Codex is one foreground slot and Gemini is scout-only, a seat-limit stop stops the whole company; a fallback without the demotion clause silently trades correctness for availability, and an instrument refreshed by the rule that refreshes its subject cannot detect drift. **Mechanism:** one frontmatter field × fifteen files, one `class:` field, one deny switch in `bin/run`, one drilled night (all ABSENT). **The cost, once:** one drilled night, and a reroute that says out loud it bought availability with rung. **Settled by:** the drill's completion count against a normal night, and calibration results moving when a model id changes. Moves **v22** and §11.10 | fallback chains only, vendor independence left as an architecture claim with no anchor; as designed, where the first seat limit is a company-wide stop nobody has rehearsed |
+| **v79** | Which hosted lane may MAKE when the Mac is off, and whether a venture may say no | **Decide the lane after the measurement, and add the charter field `cloud: allow \| deny`, default `deny`, now — whichever lane wins.** **R5 IS DONE (DECISIONS §19), and it prices the lane at zero for the week measured:** *"span 2026-08-30 21:44 → 2026-09-06 09:39 (156 h, all the log retains) · asleep 40.7 h (26%) in 487 episodes · zero episodes of one hour or longer · longest single sleep 0.3 h (about 20 minutes). The Mac was never off long enough for a cloud lane to have bought anything back this week."* **The caveat travels with the number:** the log covers only the span it retains, and DarkWake power-naps are counted as wakes, so *asleep* here means the machine could not have run a process | **FOUNDER** (rethink 2026-09-06 · D14; the lane decision itself stays the founder's, §I row 15) · L6 (*local-first privacy mode*, RQ2) · L7 (*interrupt-hook handling* — cancelling a hosted task is UNKNOWN, which is **v67**'s refusal) · L3 (§18) · (FACT: world.md 24 — four weeks of Codex release notes mention no cloud exec, no cancel and no #19945; **absence is not denial**, and the June–August window is unread). **Mechanism:** one charter field, refused when absent by `bin/check-stores` (ABSENT); a hosted run's output still lands as a pull request or a staged artifact the Mac reconciles on wake, never into the house directly (v56). **The cost, once:** one field. **Settled by:** the hours-off measurement — **taken**, and it says a lane buying back a small tail is not worth §I row 1 | Codex cloud as a PR reviewer only, with no maker lane and no local Codex; Anthropic's documented drivers (`claude --cloud`, Routines) as the maker lane, on the same seat as the Floor and under the same open terms clause |
+| **v80** | What a message between two running agents is | **A handover or an objection, on the handover schema, one append-only file per message. An ask carries a deadline and the asker's stated fallback if unanswered. Page 2's message control posts through the shipped transport, whose ids are recorded as attributes and never as a join key** | **FOUNDER** (rethink 2026-09-06 · D15) · L5 (*worker-to-worker request*, *peer help request*) · L2 (§20 *conflict resolution* — fourteen agents make ninety-one pairs and v7 designs one of them) · (FACT: world.md 11 — Claude Code shipped `SendMessage`/`ListAgents` between sessions on one machine, with a 30-second inbox-socket rule; **FACT: world.md 20** — Codex shipped `@` task mentions, so two providers shipped this in one window and the plan modelled neither). **Why:** free-form agent chat is evidence with no provenance and no ledger row, and the teams mailbox is a mutable document *"overwritten on the next state update"* — a lost-update surface where a vanished message looks exactly like one never sent. **Mechanism:** no new schema; three required fields on the handover (§L **O7**). **The cost, once:** three fields. **Settled by:** a run whose only input was a peer message still reconstructing from files alone, and killing the responder mid-run — the asker must still hand over. New row under §3.5; resolves a COVERAGE `?` | the vendor transport adopted directly for teammates and files for `-p` children — two shapes for one thing, with the lost-update surface kept; no agent-to-agent messaging at all, everything routed through the Operator |
+| **v81** | How the plan notices that the world moved under it | **Every SPINE row resting on a fetched fact carries `source:` and `valid_until`; a `scout` standing intent re-fetches them on the free Gemini window; a changed fact opens a Decide item **naming the row it invalidates**. And every §J entry gains one `wins_if:` line** | **FOUNDER** (rethink 2026-09-06 · D16) · L7 P4 (*periodic architecture rethink*, *alternative-architecture proposal*, *assumption-challenge prompt*) · L4 (*knowledge freshness check* — for a vendor fact the falsifier beats the date, and the `claim-source` resolver already fetches a URL and asserts the quote). **Why:** 13a.7's four rethink conditions are internal, lagging and all blocked on the same absent briefing generator, while the facts most likely to invalidate this plan are external and already written down; **this round is what the alternative looks like** — nothing in the system reads the plan cold, so eight lanes had to be dispatched by hand. **Mechanism:** one field per load-bearing row; one standing intent in **v55**'s already-decided shape; `wins_if:` written by whoever wrote the reason. **The cost, once:** fifty-four lines, written once. **Settled by:** re-fetch this plan's external facts once and count how many moved; and after the next change, whether any `wins_if:` matched — if none ever does, the losing images are decoration and should be argued down rather than stored. Moves 13a.7 and §22's format | the `source:` / `valid_until` half only, leaving the graveyard as decoration; as designed, where the plan cannot notice its own premises expiring |
+| **v82** | §11.3's three-family review panel row | **Deleted.** The row goes out of the plan. **The repo's three live `verified_by: judge` claims and the founder waiver running to 2026-11-17 are untouched** — this deletes a sentence in the plan, not a claim in the ledger. **v78**'s fallback chains and its frozen calibration set are what stands in its place, and the two-family route runs through the no-model launcher, **outside any Claude session** | **FOUNDER** (rethink 2026-09-06, DECISIONS §19, verbatim: *"Delete the row from the plan"*) · L7 delete 2, which the synthesis **refused as a synthesis fix** (X6) and referred to the founder precisely because the live judge claims reason about that panel. **Mechanism:** the deletion is the mechanism; nothing else moves, and §11.3 keeps the one honest sentence about a second family (deletion 26 removes its five other copies). **The cost, once:** §11.3 no longer describes a three-family panel anywhere, so a reader wanting to know why not is sent to v78 and to **R10**. **Settled by:** a deletion carries no falsifier; what would reopen it is a reachable non-Anthropic model, which is **R10**, the hinge of §N | **the row itself** — *"a three-family review panel"*, which read as capability while it needed Gemini authenticated **and** Codex detached-capable **and** panel machinery, none of which exists |
 
 **Carried forward from FINAL §1, unchanged, by number:** rows **1, 2, 3, 4, 5, 7, 9, 14, 16, 17, 18, 20, 21, 22,
 23, 24, 25, 26, 27, 28, 29**. Rows **11, 12, 13, 19** are carried forward *and* moved, by v24/v25, v28, v34 and
 v22 respectively. Rows **6, 8, 10, 15, 30** are overruled by v1, v2, v3, v4 and v5 and appear only in §22.
+
+**(FOUNDER, rethink 2026-09-06: D16)** **Every row above that rests on a fetched fact carries `source:` and
+`valid_until`** — which is most of v6–v53 and every row §M moved. A `scout` standing intent (v55) re-fetches them on
+the free Gemini window, and a fact that has changed opens a Decide item **naming the row it invalidates**, so the
+plan notices its own premises expiring instead of being read cold by someone. This round is what the alternative
+looks like: nothing in the system reads the plan, so nine lanes had to be dispatched by hand. **Mechanism:** one
+field per load-bearing row, one standing intent in v55's already-decided shape, and the `claim-source` resolver,
+which already fetches a URL and asserts the quote is present — `scripts/ledger.mjs` **exists** on branch
+`ceo-1-1788609834` and runs in SHADOW; **the per-row `source:`/`valid_until` fields are ABSENT.** §22 carries v81's
+other half: one `wins_if:` line per losing image, written by whoever wrote the reason.
 
 ---
 
@@ -414,8 +497,9 @@ Nothing else in FINAL §2 moves. The Charter, the Intent, the Obligation and the
 
 ### 2.1 The Charter
 
-**(FINAL)** One per venture, written once, changed rarely, read constantly, short enough for a phone screen. Six
-lines.
+**(FINAL)** One per venture, written once, changed rarely, read constantly, short enough for a phone screen. ~~Six
+lines.~~ **(NEW: contradiction 2)** The count is the schema's, not this paragraph's — three places counted it
+differently and the paragraph below says what that cost.
 
 ```
 venture:   plainly, what this is and who it is for
@@ -424,6 +508,8 @@ envelope:  may-alone / never / wake-me
 ceiling:   what this venture may spend, per window and in money, per month
 weight:    1–5, the founder's priority, read by the Desk
 horizon:   the date this charter is re-read, or it stops
+entity:    the legal entity this venture publishes as, or none — what v63's disclosure line reads
+cloud:     allow | deny — default deny; may a hosted lane MAKE for this venture (v79)
 ```
 
 **(FINAL)** `tempo` is the founder's own distinction made structural: *walk for me* and *walk with me* are one field
@@ -433,14 +519,44 @@ it stops applying. The Charter is the standing-orders half of the naval pair: po
 their own words, read by everything else many times — the right cost shape for a founder who thinks by voice and
 hates being interrupted.
 
-**(FINAL)** **Enforced by:** a charter missing any of the six lines does not load and its venture is `parked` until
-it does — `bin/check-stores` (ABSENT; FINAL names it `keel/bin/check-stores`).
+**(FINAL)** **Enforced by:** a charter missing any line ~~of the six~~ **the schema declares** does not load and its
+venture is `parked` until it does — `bin/check-stores` reading `keel/shared/schemas/charter.yml` (both ABSENT; FINAL
+names the checker `keel/bin/check-stores`).
+
+**(NEW: contradiction 2 — three counts of one object, and the founder's row is the one that loses)** §2.1 enforced
+**six** lines, COVERAGE §14 says **five** fields, and **v63** requires a **seventh** — the legal entity behind the
+disclosure line. So a six-line charter with no entity **both loads and is refused**, and it is the founder's row that
+loses, silently, because the loader never asks for the seventh and nothing downstream notices. **(NEW: O3)** One
+schema is the source and the prose above is **generated from it**: `keel/shared/schemas/charter.yml` (**ABSENT**),
+read by `bin/check-stores` (**ABSENT**). The count moves with the schema, and a count written into a paragraph is
+what produced the contradiction in the first place.
 
 **(NEW: v22 changes what `ceiling` means, and the charter's own words do not change)** *Per window* is now **two
 windows per seat** — a rolling five-hour and a weekly, shared with Claude chat and Cowork — so a ceiling is checked
 against both. The founder writes one line; the Watch reads it against two fuses. **Mechanism:** `bin/watch` (ABSENT)
 reads the ceiling and the reserve per window; §4 carries the distinction between a seat limit and a model-family
 limit, which is the difference between a stop and a reroute.
+
+**(FOUNDER, rethink 2026-09-06: D9)** And ***in money*** **is no longer what a ceiling is denominated in.** **v74**
+makes it a **window gauge** — tokens against an observed high-water mark, since no denominator is published — with
+wall clock beside it and USD kept as a **shadow price**, because on a subscription the dollar is a locally computed
+shadow of a bill nobody sends (v23). The founder still writes one line and the line still reads the same; what
+changes is the unit the Watch checks it in. **Mechanism:** one high-water file and one rule in the Desk (**ABSENT**);
+§16 owns the currency and §4 owns the reserve.
+
+**(FOUNDER, rethink 2026-09-06: D14)** The charter gains **`cloud: allow | deny`, default `deny`** — may a hosted
+lane MAKE for this venture while the Mac is off. It is decided **now, and independently of which lane wins**: §I row
+15 is still the founder's, and a venture that must not leave the Mac has to be able to say so before there is
+anything to say it to. **Mechanism:** one field, refused when absent by `bin/check-stores` (**ABSENT**); a hosted
+run's output still lands as a pull request or a staged artifact the Mac reconciles on wake, never into the house
+directly (v56).
+
+**(NEW: O63 — the horizon needs a third disposition, and wind-down is the one nothing named)** At a charter's
+horizon **exactly one disposition** is recorded — **continue · park · wind down**. The store check refuses `tempo:
+parked` while an obligation is undischarged, and refuses promotion to `driven` while any date the charter relies on
+has passed. Without the third value a venture that should end has only *parked*, which keeps its obligations live and
+owned by nobody. **Mechanism:** `bin/check-stores` (**ABSENT**, §L O63); the pass that finds the passed horizon is
+`bin/horizon` (**ABSENT**, §L O23), which §4 owns.
 
 ---
 
@@ -458,6 +574,7 @@ evidence:   what will be attached to prove the done-test passed
 
 every:      OPTIONAL, v55 — a cadence: this intent is considered again every time it comes round
 on:         OPTIONAL, v55 — an inbound event class: this intent is considered when one arrives
+class:      OPTIONAL, v74 — exploration; an exploratory intent is routed off the Claude seat
 ```
 
 **(FINAL)** The done-test is the whole design compressed into one field. Compare two ways of instructing one piece
@@ -482,6 +599,56 @@ the condition holds, returning Not yet met, Met, or Impossible. The condition li
 the one hard constraint the done-test's wording must respect. **Mechanism:** the launcher composes the `/goal`
 string from the intent's `done-test:` field verbatim, never paraphrased — `bin/run` (ABSENT). §6 carries the run
 side of this.
+
+**(FOUNDER, rethink 2026-09-06: D9)** The intent gains **`class:`**, and the only value the plan needs today is
+**exploration**. An exploratory intent routes to Gemini, a local model or the Codex seat, and **the Desk refuses an
+exploratory dispatch onto the Claude seat past a fraction the founder sets**. The reason is v22: the weekly window is
+per seat and shared with Claude chat and Cowork, so *"idle capacity is bounded by being free"* is false and a night
+of exploration is subtracted from the next day. **Mechanism:** one field on the intent and one rule in the Desk
+(**ABSENT**); the enumeration lives in the intent schema, not in this paragraph.
+
+**(NEW: O22 — the copy that is mandated and checked by nothing)** §6.2 mandates that a brief's `done-test:` is a
+verbatim copy of the intent's, and nothing verifies it. The launcher now **refuses a brief whose `done-test:` is not
+byte-identical to the intent's**, and brief and handover are logged as **adjacent hashed rows**. **Mechanism:**
+`bin/run` (**ABSENT**, §L O22). This repository has lost a measurement in synthesis twice; a byte compare is the
+cheapest place to stop the third, and it is the same defect one layer up.
+
+**(NEW: O23 — an expiry with no forced disposition is a date nobody reads)** `expires:` already stops an intent being
+live. What was missing is what v19 gives a skill: at expiry **exactly one disposition is recorded**, and a **lapse
+record** — one row per thing that expired unactioned, ordered by what it stopped — so the number of things that
+quietly lapsed is readable rather than inferred. **Mechanism:** `bin/horizon` (**ABSENT**, §L O23) walks every
+durable store, intents and charters included; `scripts/ledger.mjs` **exists** on branch `ceo-1-1788609834` and
+already forces one disposition at a claim's expiry, which is the idiom being reused. §4 carries the pass.
+
+---
+
+### 2.2a The work item — the object between an intent and a run
+
+**(NEW: O1 — every surface already assumes this object and no store holds it)** An intent is a goal; a run is one
+disposable unit of work. Between them the plan has been passing *candidate work* around as a phrase, so page 4's
+cards, the Desk's queue and the retry counter each hold their own idea of it. It becomes one store:
+
+```yaml
+i-2026-09-06-0007:                      # the item's own id, in items/w-*.yml
+  intent:        i-2026-09-04-0012      # the INTENT it serves; it does not load without one
+  purpose:       one sentence
+  ceiling:       per run
+  blocked_on:    []                     # other work rows, or an open which
+  attempts:      0
+  last_failure:  null                   # the exact text, never a summary
+  card:          the page 4 card that is a view of this row
+```
+
+**(NEW)** **A board card is a view of a work row, not a second object.** Otherwise page 4 and the Desk hold two
+answers to *what is being worked on* and disagree the first time either is edited. Proposals land in
+`keel/ventures/<v>/items-draft/` and **the Watch materialises them after the store check** — v44's obligation
+pattern reused rather than a second one invented for the same shape. **Mechanism:**
+`keel/ventures/<v>/items/w-*.yml`, with `bin/check-stores` refusing a live intent that has zero work rows —
+**ABSENT** (§L O1, which names the same store `work/`; the directory is `items/` here because `work/` is already
+the venture's source repository in §17.8's tree). **(R16, OPEN)** decides whether this is two objects or three:
+whether any shipped agent system carries a scheduling object between the goal and the run, read from Symphony,
+Linear's agent session model and Copilot's task object. Until it is answered the design is **two** — the intent and
+the work row — and the run stays disposable.
 
 ---
 
@@ -563,6 +730,20 @@ projects without direction*, which is a provenance rule rather than a budget cap
 is text, never voice**: the founder's instructions arrive transcribed with errors, and a misheard word costs one tap
 instead of one night. **The spike file records the reason**, so the Watch does not re-propose the same rejected work
 every night — the most obvious way an always-on system burns tokens forever.
+
+**(NEW: O51 — the fourth door's provenance test is the same as the fifth's, and it was weaker)** Idle work must serve
+a **live intent, a standing intent, or the negatives and knowledge stores**, or it is a leak with a cheap price tag.
+The Watch's idle branch reads the **same** provenance test as its dispatch branch rather than a looser one, because
+*cheap* is not a provenance: a night of unowned work that costs little is still work the founder did not direct, and
+*"never runs my projects without direction"* is a provenance rule, not a budget cap. **Mechanism:** the Desk's gates
+(**ABSENT**, §L O51); §4 carries the gate order and names which gate this is.
+
+**(NEW: O60 — bug intake, the one intake the four doors did not name)** An anchor that fails twice writes a **card
+whose done-test IS the reproducing command**. Where there is no reproduction it is not a ticket at all: it is a
+bounded question for `scout`, which returns a reproduction or the reason there is none. That keeps the one class of
+work that arrives already falsifiable from being paraphrased into an unfalsifiable one on its way in. **Mechanism:**
+`bin/intend` (**ABSENT**, §L O60), entering through the proposal queue like every other non-founder door — it creates
+candidate work under an intent, never an intent.
 
 **(FINAL)** The world's door is a program that writes one row and does nothing else; **no model reads a stranger's
 text with a tool in its hand.** The transcript is kept verbatim, transcription errors preserved, because
@@ -763,13 +944,34 @@ it did.
 
 ---
 
+### 3.1a Who may call the surface that dispatches
+
+**(FOUNDER, rethink 2026-09-06: D1 → v66)** The Operator is reached through mission control, and until this round
+nothing in the plan said **who may call it**. The founder's answer is three things at once and it is recorded in
+DECISIONS §18: *"Loopback bind + a keychain-held token on every write route + an authenticated tunnel for the
+phone."* The server binds loopback only; every route that **writes** — a dispatch, an edit-arguments verb, a tap
+that answers a *which* — checks one token held in the macOS keychain; the phone arrives through an authenticated
+tunnel rather than over the founder's own network.
+
+**(NEW: contradiction 16)** Three sentences could not all stand: v39 let the phone reach *"the local server over
+your own network"*, §14.13 said every page writes *"nothing but the inbox file and the intent log"*, and the seed
+pins `127.0.0.1`. An unauthenticated dispatch plane on any network the Mac joins is what v39 as written describes,
+and it is now the losing image. **Mechanism:** the loopback pin exists in the seed; the token check is one
+middleware and the token is keychain-held (**ABSENT**); the tunnel is named at build time (**ABSENT**). Whether a
+detached night process can read that keychain item without an interactive unlock is **(R3, OPEN)** — the unattended
+half of §3.3 rests on it and nothing has tested it. **Settled by:** `lsof -nP -iTCP -sTCP:LISTEN` showing a
+non-loopback bind, or a tap accepted from a device that presented no token. §14 carries the surface; this section
+carries the consequence, which is that **a dispatch is an authenticated act**.
+
+---
+
 ### 3.2 Graded autonomy — one table, three things at once
 
 **(FOUNDER)** *"how much it asks me depends on the type of task."* **(NEW: this becomes one band table, and every
 band names its envelope terms, its Claude Code permission mode and its Codex axes, so that a band is a real setting
 rather than an adjective.)** This is the row every section about control obeys.
 
-| Band | Task types | Envelope | Claude Code mode | Codex `approval_policy` × `sandbox_mode` | Who runs in it |
+| Band | Task types | Envelope | Claude Code mode | Codex ~~`approval_policy` × `sandbox_mode`~~ `approval_policy` × `sandbox_mode` × **Guardian** *(moved 2026-09-06: W21)* | Who runs in it |
 |---|---|---|---|---|---|
 | **Read and report** | research, review, audit, analysis, challenge | `may-alone` | `plan` | `never` × `read-only` | scout · reviewer · guard · challenger · analyst |
 | **Build in a worktree** | code, design, copy, spec, schema, memory | `may-alone`, inside one venture's worktree | `dontAsk` with `--restricted` and an explicit `--tools` | `never` × `workspace-write` | builder · architect · tester · designer · product · writer · growth · steward · curator — the five with `isolation: none` (product, writer, growth, steward, curator; v41) run in this band on a narrowed `--add-dir`, **not a checkout** |
@@ -790,6 +992,30 @@ guardrail against accident. It is not the envelope.** It can be switched off wit
 reviewing a model, and **nothing in it keys on reversibility** (v28) — both shipped schemes key on path and action
 class. The envelope keys on reversibility, stands alone in the world in doing so, and is enforced by the argv and the
 managed file rather than by a classifier.
+
+**(FACT: world.md 21 — the Codex cell of every band is three axes, not two)** ~~Codex is `approval_policy` ×
+`sandbox_mode`~~ **Guardian** is a third control axis: a background scoring layer whose behaviour changes with the
+approval mode — *"Full Access skips Guardian reviews for confirmation-only actions. User approval mode skips
+background Guardian scoring and prewarming, while sensitive-action checks and requests for user input retain their
+existing handling"* — and its review history *"survives compaction, restarts, and user-created forks … isolating
+subagent history"*. Two consequences for this table. The band's Codex cell **understated what governs a Codex run**,
+so a band read as two settings was never the whole envelope there; and Codex subagents carry **their own review
+history**, which §10 does not describe. **Mechanism:** the axis is the vendor's, not ours — what is ours is that
+`bin/run` (ABSENT) records which approval mode a Codex dispatch used, because that is what decides whether Guardian
+scored the run at all.
+
+**(NEW: contradiction 4)** ~~`analyst` sits in *read and report* here and holds `Bash` in §5.2~~ — one agent, two
+answers, and the shell is the half that goes. §L **O57** strikes `analyst`'s `Bash`; v47 already gave every
+comparison to `bin/reconcile`, so nothing is lost with it and the placement above stands unchanged. §5 carries the
+strike.
+
+**(NEW: O5 — contradiction 17)** *Which agent, which model, which band* is answered in **three places**: the roster
+table (§5.2), this band table, and §9.2's routing. Nothing checks that they agree, and a disagreement between them
+is a mis-route, which is the one defect class the anchor ladder is structurally blind to — an artifact that passes
+its done-test, the blind test and CI while answering the wrong question. **Mechanism:** one machine-readable
+`keel/shared/routing.yml` (**ABSENT**), from which all three views are **generated or checked**; the three tables
+stop being three decisions and become three renderings. Nothing here changes any routing; it changes how many
+places may change one.
 
 ---
 
@@ -823,6 +1049,27 @@ taste; v9 makes it the **only channel a silent run has**, which is a much strong
 **(NEW)** What still reaches the founder while a fully autonomous night runs: the `wake-me` list, the interruption
 budget of three unprompted interruptions a day, and the briefing — which is never an interruption, because the
 founder opens it.
+
+**(FACT: world.md 30b and 14 — the measured ceiling this mode is designed above, stated as the cost of the mode)**
+The vendor's own measurement of its own users: *"the 99.9th percentile turn duration nearly doubled, from under 25
+minutes in late September to over 45 minutes in early January"*, and *"roughly 20% of sessions use full
+auto-approve, which increases to over 40% as users gain experience"*. **Forty-five minutes is the outer measured
+unattended stretch, and this mode is designed for a night.** The mechanism that produces the gap is W14's
+check-in cap: `/goal` check-ins back off 30 min → 1 h → every 2 h, and **an idle session gets at most three
+check-ins per goal** until someone messages it. Under `-p` the check-in is the only thing the runtime delivers and
+**nobody is there to message it**, so a night goal loop delivers three times and then goes quiet — quiet being
+byte-indistinguishable from finished. Two mechanisms answer it and neither is optional: §L **O21** composes
+`/goal`'s condition from v45's `anchor:` field — *"`<anchor>` exits 0, and `<done-test>`"* — turning the most
+frequently executed judgement in the system from a small model reading prose into an exit code
+(`bin/run` composes it, **ABSENT**, **DEPENDS-ON-R17**); and §L **O15**, the wake reconciler, writes `orphaned`
+rather than `finished` when a run goes quiet (`bin/watch`, **ABSENT**). §6 carries the reconciler.
+
+**(NEW: O49 — contradiction 5)** ~~*"The Operator is the escalation"* for a night run~~ — §4.4 says the Operator is
+not always on, in the same plan, so a run that stops at 03:00 escalated to something that was not running. **Night
+escalation is a queue row plus the wake-me test, and never the Operator.** The stopped run writes to the house
+decide queue (§L **O9**, `keel/logbook/decide.jsonl`, **ABSENT**); the `wake-me` list decides whether it also
+rings, against the interruption budget; the Operator reads the row when it next runs, like every other reader.
+**Mechanism:** the queue is a store with one writer, so an escalation survives the absence of every session.
 
 ```mermaid
 flowchart TD
@@ -858,16 +1105,43 @@ where `product` sits behind it.
 **(NEW: v13. One dispatch mechanism for everything is the losing image, and it loses because the three shipped
 mechanisms have different documented properties and picking one would mean using it outside what it does)**
 
-| Mechanism | Used for | The sourced constraint that shapes the design |
-|---|---|---|
-| **Agent teams** | the fleet the founder watches on page 2 — a lead plus named teammates, each a full independent session, messageable by name | **turned on by the founder** (v59: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and experimental in the vendor's own words; **no nested teams**; one team per session; `/resume` does not restore in-process teammates; spawning needs an interactive session, so `-p` never forms a team. Tokens: *"approximately 7x more … when teammates run in plan mode"* — **at each teammate's own model price** (v59) |
-| **Subagents** | depth inside one agent — a builder's own exploration, a scout fan-out | depth 3 by default, 20 concurrent, `Workflow` removed from all of them (v35); a subagent's `permissionMode` frontmatter is ignored; main-conversation auto memory is not loaded into subagents except a fork |
-| **`claude -p` children through the launcher** | unattended night work, and every non-Claude provider | `--session-id` must be a valid UUID, minted by us; `--restricted` needs v2.1.248+; `--max-budget-usd` is a stall fuse, not a billing control (v23); `-p` disables tools needing terminal input, so a session never stalls waiting |
+| Mechanism | Used for | The sourced constraint that shapes the design | `stop:` — what the cord reaches *(added 2026-09-06: v67)* |
+|---|---|---|---|
+| **Agent teams** | the fleet the founder watches on page 2 — a lead plus named teammates, each a full independent session, messageable by name | **turned on by the founder** (v59: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), and experimental in the vendor's own words; **no nested teams**; one team per session; `/resume` does not restore in-process teammates; spawning needs an interactive session, so `-p` never forms a team. Tokens: *"approximately 7x more … when teammates run in plan mode"* — **at each teammate's own model price** (v59) | through their session |
+| **Subagents** | depth inside one agent — a builder's own exploration, a scout fan-out | depth 3 by default, 20 concurrent, `Workflow` removed from all of them (v35); a subagent's `permissionMode` frontmatter is ignored; main-conversation auto memory is not loaded into subagents except a fork | through their session |
+| **`claude -p` children through the launcher** | unattended night work, and every non-Claude provider | `--session-id` must be a valid UUID, minted by us; `--restricted` needs v2.1.248+; `--max-budget-usd` is a stall fuse, not a billing control (v23); `-p` disables tools needing terminal input, so a session never stalls waiting | the **recorded process group**, signalled — `SIGTERM` is measured to give exit 143 and a resumable turn |
+| **A channel between sessions already running** — *(added 2026-09-06: v80, W11, W20)*. **Not a fourth dispatch mechanism: nothing in this row starts a session** | one agent asking another for a handover or filing an objection, and page 2's message control | `SendMessage`/`ListAgents` across sessions on one machine, *"on Bedrock, Vertex, and Foundry, and when telemetry is disabled"*; the **inbox socket closes a connection that sends no complete line within 30 seconds**, so a poster connects once its data is ready (world.md 11). Codex ships the same idea as `@` task mentions (world.md 20) — **two providers shipped this in one window and the plan modelled neither** | none of its own; the two sessions it joins stop by their own rows |
+| **A hosted lane** (v79) | nothing yet | — | **UNKNOWN**, and `bin/run` therefore refuses to mint unattended work on it |
 
 **(NEW: the one consequence of the teams constraint that a surface designer must know before drawing page 2)** There
 are **no nested teams** and one team per session. So the child-flow page shows **one level of teammates**, and
 everything deeper is subagents. A page drawn as a tree of teams of teams would be drawing something the runtime
 cannot produce.
+
+**(FOUNDER, rethink 2026-09-06: D2 → v67 — what the cord actually stops, and why every row above now declares it)**
+The founder took both halves: *"the launcher records each child's process group and the cord signals it; `bin/run`
+refuses unattended work on a carrier whose stop path is UNKNOWN."* ~~The cord as designed stops the next
+dispatch~~ — **it signals work already in flight** (contradiction 6: §12.9 says the cord *"cancels running work"*
+while its mechanism was a file read at the next tick, which stops nothing that is already running).
+**Mechanism:** one `pgid` field written by `bin/run` before exec, one signal path, and the `stop:` column above
+(**ABSENT**). `SIGTERM` is measured to give exit 143 and a resumable turn, so the cord stops a run **without
+destroying it** — which is what makes pulling it cheap enough to pull. The refusal is the load-bearing half: a
+carrier whose `stop:` reads UNKNOWN may not be given unattended work at all, which is why the hosted lane's row is
+shut and stays shut until cancellation is documented (§I row 15's state anyway). **(FACT: world.md 22)** Codex
+shipped `Interrupt` hooks, the natural Codex-side receiver for exactly this signal, and no row in the plan named
+them. **Settled by:** pulling the cord mid-run, measuring time to quiescence, and whether the run resumes.
+
+**(FOUNDER, rethink 2026-09-06: D15 → v80 — what a message between two running agents is)** *"A message is a
+handover or an objection on the handover schema, one append-only file each; asks carry a deadline and a fallback;
+the vendor transport's ids are attributes, never a join key."* There is no third shape. An **ask** carries a
+deadline and the asker's **stated fallback if unanswered**, so a dead responder degrades the asking run rather than
+hanging it. **Why the vendor transport is not adopted as the record:** free-form agent chat is evidence with no
+provenance and no ledger row, and the teams mailbox is a document *"overwritten on the next state update"* — a
+lost-update surface where a vanished message looks exactly like one never sent. **Mechanism:** no new schema —
+three required fields on the handover (§L **O7**, §6.4), one append-only file per message; the transport's ids are
+recorded as **attributes** of that file and never as a join key. **Settled by:** a run whose only input was a peer
+message still reconstructing from files alone, and killing the responder mid-run — the asker must still hand over.
+This closes the COVERAGE `?` on *worker-to-worker request* and *peer help request*.
 
 **(FOUNDER, v59: teams are on, and a teammate runs on its own agent file's model)** *"Turn it on, no model
 constraint."* So `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set, and a teammate is dispatched at **the model its
@@ -891,6 +1165,13 @@ the card and the founder can flip it before dragging. **Mechanism:** one field o
 brief carrying an intent id and a named agent; `bin/run` (ABSENT) composes the argv from the agent's file and the
 band. If the Operator composed argv, then every future agent would be a new place a grant could be written wrongly,
 and there would be fourteen implementations of one narrowing.
+
+**(NEW: O53 — and the same rule holds for the surface, which is where it was about to be broken)** Page 4's
+*edit-arguments* verb writes **a new brief, never argv**. The launcher recomposes from that brief and may
+**narrow**, never widen beyond the band, and it **refuses surface-supplied argv** outright. Without the refusal the
+one narrowing v34 protects would have a second author with a text box, and the founder's own tap would be the way
+past the envelope. **Mechanism:** `bin/run` (**ABSENT**) rejects a dispatch carrying argv fields, and the brief is
+the only input it accepts; §14 draws the verb.
 
 ---
 
@@ -917,7 +1198,7 @@ flowchart TD
 
     B1 --> PICK
     B2 --> PICK
-    PICK{"Which agent? Wave one is eight of them, v54.<br/>See the routing column in section 5"}
+    PICK{"Which agent? Wave one is TEN of them, v54 + v70.<br/>Generated from routing.yml, O5.<br/>See the routing column in section 5"}
     PICK --> BRIEF["THE OPERATOR emits a BRIEF:<br/>intent id, done-test verbatim, out-of-scope,<br/>ceiling, the named agent, the anchor"]
     BRIEF --> LAUNCH["bin/run composes the argv.<br/>Nothing else may. ABSENT"]
     LAUNCH --> HOW{"Which dispatch<br/>mechanism?"}
@@ -929,18 +1210,22 @@ flowchart TD
     PRINT --> RUN
 ```
 
-**(FOUNDER, v54: in wave one the Operator has eight agents to route among, and two of the routes above do not exist
-yet — said once, here, because it changes what the Operator does rather than only what the roster contains)** The
-founder chose to start with the eight that have a seed file or a code path today: the Operator, `builder`,
-`reviewer`, `architect`, `tester`, `guard`, `scout` and `designer`. Two of this section's routes are wave two. **The
-`product` dispatch of §3.6 has nobody in it**, so a genuinely fuzzy request is closed the other way — the founder
-writes the done-test themselves, through the read-back, with the Operator proposing two candidates as it already
-does; nothing binds without their confirm either way, so the provenance rule is unchanged. And **`challenger` is not
-in wave one**, so a plan about to bind is attacked by **`guard`'s adversarial review plus the founder's own read**
-until wave two. That is weaker than v30 asks for and the plan says so rather than pretending otherwise. It keeps the
-half that v30 measured as load-bearing — the critique is **external**, from an agent that reads the artifact and its
-done-test and never the author's reasoning — and it loses the half v30 also asks for, **a second model family**,
-because `guard` runs on the same one. §5 carries the two waves and §19 draws them.
+**(FOUNDER, v54: in wave one the Operator has ~~eight~~ ten agents to route among, and one of the routes above does
+not exist yet — said once, here, because it changes what the Operator does rather than only what the roster
+contains)** The founder chose to start with the ones that have a seed file or a code path today: the Operator,
+`builder`, `reviewer`, `architect`, `tester`, `guard`, `scout` and `designer`. **(FOUNDER, rethink 2026-09-06: D5 →
+v70)** *"Curator and challenger both join wave one"* — so wave one is **ten agents plus the Operator, not eight**,
+and v54's own test is what admits them: the curator has four verified code paths on this branch
+(`evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs`). **The `product` dispatch of
+§3.6 still has nobody in it**, so a genuinely fuzzy request is closed the other way — the founder writes the
+done-test themselves, through the read-back, with the Operator proposing two candidates as it already does; nothing
+binds without their confirm either way, so the provenance rule is unchanged. ~~And **`challenger` is not in wave
+one**, so a plan about to bind is attacked by **`guard`'s adversarial review plus the founder's own read** until
+wave two.~~ **A plan about to bind is attacked by `challenger`, from wave one** (moved 2026-09-06: D5 → v70) — the
+cheapest file in the roster, read-only, and wave one's only gap with a *measured* harm behind it (v30). What is
+still lost is the half v30 also asks for, **a second model family**: the challenger runs single-family until Codex
+or Gemini lands, and **its findings are labelled rung 4 rather than hidden**. §5 carries the two waves and §19
+draws them.
 
 ---
 
@@ -954,6 +1239,10 @@ list, and this repository has already shipped eight of those)**
 | Writes or edits a file | Its `tools:` line carries no `Write` and no `Edit`; the argv, composed by `bin/run` (ABSENT), and asserted by `bin/probe` (ABSENT) |
 | Runs a shell command | No `Bash` in its `tools:` line, for the reason in §3.1 |
 | Composes argv | Only `bin/run` does (v34, ABSENT) |
+| Takes argv from a surface | **O53**: the *edit-arguments* verb writes a new brief, never argv; `bin/run` recomposes, may narrow, never widens beyond the band, and refuses surface-supplied argv (**ABSENT**) |
+| Accepts a dispatch from a caller that presented no token | **v66**: loopback bind, one keychain-held token checked on every write route, the phone through an authenticated tunnel — the pin exists in the seed, the middleware and the tunnel are **ABSENT** |
+| Mints unattended work on a carrier it cannot stop | **v67**: `bin/run` refuses a carrier whose `stop:` reads UNKNOWN; the cord signals the recorded process group (**ABSENT**) |
+| Serves as the night escalation | **O49**: a run that stops at 03:00 writes a row to the house decide queue (**O9**, `keel/logbook/decide.jsonl`, **ABSENT**) and the `wake-me` test decides whether it rings. The Operator reads that queue; it is not the queue |
 | Creates an intent | Only the founder's confirm writes `intents/*.md`; the read-back page is its only writer (ABSENT) |
 | Performs an outward act | The band table gives every agent `never` on that class; the Sender is the only thing that sends, and it holds no model (v33) |
 | Dispatch a team inside a team | The runtime has **no nested teams**. It is not a rule we enforce; it is a thing that does not exist |
@@ -980,6 +1269,14 @@ The Operator returns exactly three kinds of thing, and nothing else reaches the 
 — *what I am not sure about and what would settle it*. It turns a confident wrong answer into a flagged one. **No
 shipped handover schema found has it**, which is exactly why it will be the first field to erode under pressure and
 the one worth naming here.
+
+**(NEW: O80 — and the field needs a number behind it, or it erodes without anyone noticing)** `uncertain:` is
+written by the run **about itself**, and nothing ever checks it, **so a confidently wrong run pays nothing**. Each
+agent therefore carries a **calibration number**: how often an empty `uncertain:` preceded a defect found later.
+**Mechanism:** derived by the `curator` from the handover and the defect that followed it (**ABSENT**) — never
+self-reported, for the same reason the field itself is suspect. It prints beside the agent's trust score, and a
+falling number is the one signal that distinguishes an agent that is confident from an agent that is right. §21
+carries what it measures.
 
 **(NEW: what the Operator may never hand back)** Its own summary in place of the evidence. This repository has
 already recorded the failure twice: a worker measured *"29 of 30 check steps pass; only `check:mc` fails"* and the
@@ -1023,7 +1320,7 @@ flowchart TD
     G1 -->|"no"| G2{"2 · Is the founder on the Floor?"}
     G2 -->|"yes"| STERILE["STERILE — no interruption; no new run on the<br/>founder's window; the venture under the founder's<br/>hands is held whole. Routine-window work and<br/>obligations continue"]
     STERILE --> G4
-    G2 -->|"no"| G3{"3 · Both Claude windows above<br/>their reserve lines — the rolling<br/>one AND the weekly?"}
+    G2 -->|"no"| G3{"3 · Both Claude windows above<br/>their reserve lines — the rolling<br/>one AND the weekly?<br/>v76: the reserve is released while<br/>the founder is away, and snaps back on the first tap"}
     G3 -->|"no"| G4
     G3 -->|"yes"| G5
     G4{"4 · Idle-time work that costs<br/>no Claude capacity?"}
@@ -1065,14 +1362,30 @@ is before gate 5 and nothing about a cadence moves it — so a standing intent c
 someone by a date. **Mechanism:** `bin/watch` reads `every:`/`on:` on each tick (**ABSENT**); `bin/check-stores`
 refuses `every:` without a ceiling per run (**ABSENT**), which is what keeps a thing that fires forever bounded.
 
+**(NEW: O52 — a cadence is not a tick, and the scheduler coalesces)** A standing intent carries **`catch_up: yes |
+no`**. `StartInterval` **coalesces** missed firings into one, which is exactly right for a tick and exactly wrong for
+a cadence: v55's `every:` intents **vanish silently across a sleep** and nothing says they did. With `catch_up: no`
+the miss is recorded and dropped; with `yes` it is run once on wake. Either way it is **visible**. **Mechanism:**
+`bin/watch` reads the field on each tick (**ABSENT**, §L O52).
+
+**(NEW: O23 — the pass that finds what expired, which 13a.6 marks a WISH)** One pass over **every durable store**
+looking for a passed horizon — charters, intents, obligations, memory items, grants, skills — forcing exactly one
+disposition and writing a **lapse record**: one row per thing that expired unactioned, ordered by what it stopped.
+Horizons are the plan's replacement for every calendar audit, and until this exists *finding* the expired thing is
+the half nothing performs. **Mechanism:** `bin/horizon` (**ABSENT**, §L O23), run by the Watch on the routine window;
+`scripts/ledger.mjs` **exists** and already forces the disposition for claims. §2 carries the intent and charter
+side, §13a the horizon rule.
+
 **(NEW: the tick interval is deliberately not written here, and the omission is the point)** FINAL drew it as *every
 240 s* and gave the reason — control latency for the cord, a *which* answered, a run's difficulty. The number is a
 field in `settings.yml` (ABSENT), and the SPINE forbids durations in this plan for a reason this repository has
 measured repeatedly: a number written into prose stops being re-derived and starts being quoted, and then it is
 wrong and nobody notices. **Mechanism:** the field is read from settings; anyone who needs the value reads it there.
 
-**(FINAL)** **Enforced by:** `bin/watch` (ABSENT; FINAL names it `keel/bin/watch`) · the cord file `STOP` (ABSENT) ·
-`settings.yml` holding the tick, the reserve per window, the WIP limits (ABSENT).
+**(FINAL, with the rethink round's four additions)** **Enforced by:** `bin/watch` (ABSENT; FINAL names it
+`keel/bin/watch`) · the cord file `STOP` (ABSENT) · `settings.yml` holding the tick, the reserve per window, the WIP
+limits (ABSENT) · **`bin/horizon`** (ABSENT, §L O23) · **`catch_up:` on the standing intent** (ABSENT, §L O52) ·
+**`bin/replay-desk`** (ABSENT, §L O20) · **the last-founder-event predicate** (ABSENT, v76).
 
 ---
 
@@ -1117,6 +1430,15 @@ because the founder sets it. Too small and they sit down to a burned window; too
 **Mechanism:** one slider, and a line in the briefing reporting how often the reserve was needed and how often it
 expired unused, so it is tuned on evidence.
 
+**(FOUNDER, rethink 2026-09-06: D9)** **A ceiling is denominated in window share, not in dollars.** The gauge is
+**tokens against an observed high-water mark**, because no denominator is published anywhere fetched and the
+paragraph above says so; **wall clock sits beside it** and **USD is kept as a shadow price** (v23 — on a subscription
+the dollar is a locally computed shadow of a bill nobody sends). Exploration-class intents (§2.2's `class:`) route to
+Gemini, a local model or the Codex seat, and the Desk refuses an exploratory dispatch onto the Claude seat past a
+fraction the founder sets. **Mechanism:** one high-water file, one rule in the Desk, one `class:` on the intent (all
+**ABSENT**). **Settled by:** split one weekly window between driven and exploratory work — if exploration is
+invisible there, this is over-built. §16 owns the currency and the shadow price.
+
 ---
 
 ### 4.3 `/loop` is refused; the Watch is the loop
@@ -1140,6 +1462,22 @@ disables scheduled tasks entirely and is available if the Floor's convenience ev
 while a subagent or background shell is running**, and under `-p` the periodic check-in is *"the only way Claude Code
 delivers check-ins."* So a run whose child is stuck delivers nothing and looks alive. That is what §4.5's fuses are
 for.
+
+**(moved 2026-09-06: W14)** And the check-ins this section relies on are **capped**, which nothing here said. They
+back off **30 min → 1 h → every 2 h**, and *"idle sessions … start at most three check-ins on long-running background work per goal; your
+next message allows three more"* (world.md 14). Under `-p` nobody is there to send that next message, **so a night
+goal loop delivers three times and then goes quiet** — which is not the same failure as a stuck child and has to be
+told apart from it. v12 carries the full statement and §6 carries the run side; the thing that notices the silence is
+the wake reconciler (§L **O15**, **ABSENT**), which writes `orphaned` and never `finished`.
+
+**(moved 2026-09-06: W13)** There is a **fourth** scheduling surface inside the CLI that no row named: **`/schedule`**,
+known only from three changelog fix lines — *"Fixed `/schedule` routines whose prompt was saved without a message
+role and then ran with nothing to do"* — against the three this section already weighs (Routines, desktop scheduled
+tasks, `/loop`). **Its semantics are UNKNOWN**: `https://code.claude.com/docs/en/schedule` returned **HTTP 404** on
+2026-09-06, so interval floor, storage location and headless status are unread. **(R25, OPEN)** — read them, and
+decide whether v55's Watch-dispatched standing intents should route through it or ignore it. Nothing here changes
+until it is answered: **the Watch is still the loop**, and a surface whose storage and headless status are unknown
+cannot be given work.
 
 ---
 
@@ -1165,6 +1503,19 @@ launches a session directly, and a founder on the Floor is talking to an agent w
 the founder's door (§2.4), and it is bounded by the same launcher and the same bands. The Watch is what makes the
 system move when the founder is asleep; it is not a gate the founder passes through to work.
 
+**(FOUNDER, rethink 2026-09-06: D11)** **What the system does while the founder is away, and it reads one derived
+value: the last founder event.** Four call sites share it. **One:** the reserve is **released to autonomous work**
+when the last event is older than the reserve's own horizon, and **snaps back on the first tap** — a month away
+otherwise reads as a fault and costs a third of every window. **Two:** a *which* whose intent expires unanswered has
+its **stated default executed**, with **both** built options archived. **Three:** while away the system builds **one**
+option instead of two, because the second exists to be chosen between and nobody is choosing. **Four:** page 5 gets a
+***since you were last here*** view keyed on the event, never on a date. **This sits inside the founder's own
+numbers** — *"Keep 30% and 3/day; evidence moves them"* — and changes what reads them, not what they are. **It
+reintroduces no approve verb and does not reverse v9:** a silent run still cannot ask; a *which* whose default fires
+is a decision the founder already wrote down. **Mechanism:** one predicate and one field shared by four call sites
+(**ABSENT**; §A v76 names no path). **Settled by:** the reserve hit rate §21.1 already measures moving off
+*expired-unused*, and the count of second options built and never chosen falling.
+
 ---
 
 ### 4.5 The Desk, and the fuses
@@ -1174,20 +1525,49 @@ four numbers, deliberately crude because a sophisticated estimate would be false
 
 | Number | How it is got | Range |
 |---|---|---|
-| **Weight** | the venture's `weight` × the Intent's own urgency | 1–5 |
+| **Weight** | the venture's `weight` ~~× the Intent's own urgency~~ — **(NEW: deletion 3)** one person, two dials for one decision, and the second is derivable from the first | 1–5 |
 | **Cost** | median actual cost of the last N runs of this kind, from the ledger. **A measurement, not an estimate** | tokens, per window |
 | **Readiness** | dependencies met, inputs present, whiches answered — **and the done-test's outcome would change a next act** | yes / no |
-| **Decay** | closeness to expiry, and time since it last moved | 0–1 |
+| **Decay** | ~~closeness to expiry, and time since it last moved~~ — **(NEW: deletion 2)** the two are **split**, because they point at opposite dispositions; for a standing intent, *time since last move normalised by its own cadence* | two fields, not one number |
 
-**(FINAL)** Rank = `Weight × Decay ÷ Cost`; dispatch in order; stop at the reserve line; ties break toward the
-cheaper item. **There is no success-probability estimate anywhere:** the system does not predict the value of work,
+**(FOUNDER, rethink 2026-09-06: D10)** ~~Rank = `Weight × Decay ÷ Cost`~~ **(NEW: deletion 1)**. **The Desk ranks
+lexicographically:** **obligations** first — ranked among themselves by consequence and the world's own deadline —
+**then work that unblocks other work**, **then the founder's weight band**, **then cheapest inside the band**.
+Dispatch in order; stop at the reserve line; ties break toward the cheaper item.
+
+**(NEW: contradictions 21 and 22 — why the formula went, said once)** It **divides by measured cost**, so cheap work
+permanently outranks expensive work, and **v55's standing intents supply an endless stream of cheap work**: a
+standing intent is bounded per run and unbounded per window (contradiction 21), so an expensive high-weight intent
+can starve at any weight the founder sets. And `Decay` was **undefined for an intent that never expires**, which is
+most of a ten-venture queue (contradiction 22). Lexicographic order fixes both by refusing to combine three crude
+numbers into a fourth with no dimensional meaning. **Mechanism:** one comparator and one branch — **less** code than
+the formula it replaces, explainable on the board, and it **cannot invert the founder's weight** (**ABSENT**).
+**Settled by:** replay the Desk's own rows over a simulated month under both orders and count dispatches of the
+top-weight intent — the replayer is §L **O20**, deterministic, free, and reading a file nothing reads today.
+
+**(NEW: O55 and O56 — two clocks the comparator must not treat as founder-shaped)** A **`statutory` wake-me class is
+exempt from the interruption budget**, declared on the obligation rather than judged in the moment; and a support
+obligation whose **promised response time falls inside the next window promotes past the interruption budget**.
+Demotion never applies to obligations. The budget is founder-shaped — three interruptions a day, tuned to what the
+founder will tolerate — and **a waiting customer has a clock the budget does not know about**. **Mechanism:** the
+obligation schema carries the class (**ABSENT**, §L O55); the promotion is a branch in this comparator (**ABSENT**,
+§L O56). §2.3 owns the obligation's fields.
+
+**(FINAL)** **There is no success-probability estimate anywhere:** the system does not predict the value of work,
 it measures what work of that kind cost before, takes the founder's weight as given, and lets recency and expiry do
 the rest. Two escape hatches from real practice: one **spinning slot** is always held for whatever the founder asks
 next, so a spoken instruction never queues behind autonomous work; and the Desk **re-ranks on a cadence**, not on
 every event, so a noisy input cannot make it thrash.
 
 **(FINAL)** The Desk records its ranking **and the gate that stopped each candidate**, at every tick, which is what
-makes *why did you not do that* answerable. **Enforced by:** `bin/watch` writes `logbook/desk/<tick>.json` (ABSENT).
+makes *why did you not do that* answerable. **Enforced by:** `bin/watch` writes ~~`logbook/desk/<tick>.json`~~
+(ABSENT).
+
+**(NEW: O20, and deletion 30 in the same move)** The Desk already writes the answer and **nothing reads it**. Those
+fields become **event-log rows** rather than a file per tick — the highest-volume artifact in the design was holding
+an answer whose value decays in hours — and a **no-model replayer** reads them back. It is the only way to tune
+scheduling without living a month, and it is what settles v75 above. **Mechanism:** `bin/replay-desk` (**ABSENT**,
+§L O20); the rows join the event log under its schema (§L O6, **ABSENT**).
 
 **(NEW: v31 adds one input to the cost column that FINAL's did not have)** With fourteen named agents, cost is
 measured **per agent per kind of work**, not per anonymous shape. That is what makes the roster's own claim
@@ -1214,7 +1594,7 @@ worth having under its real name.
 
 | Fuse | Predicate | State |
 |---|---|---|
-| **The stall detector** | no **durable artifact** from a run for N ticks and the run stops spending. The predicate is a durable artifact, **never the run's claim of progress** | `.claude/hooks/budget-guard.js` exists on this branch, `ceo-1-1788609834`, and is **registered nowhere**. Registering it is a founder act on a settings file |
+| **The stall detector** | no **durable artifact** from a run for N ticks and the run stops spending. The predicate is a durable artifact, **never the run's claim of progress** | `.claude/hooks/budget-guard.js` exists on this branch, `ceo-1-1788609834`, and is **registered nowhere** — **register it** (§L **O50**), in `.claude/settings.json`. Registering it is a founder act on a settings file |
 | **The repetition tripwire** | a hash of tool identity and canonicalised arguments against this intent's negatives; an exact repeat is refused unless a named difference is stated | ABSENT |
 | **The aberrance halt** | spend at several times this agent's median for this kind of work, a burst of identical calls, or a claim the nightly reconciliation contradicts — halt the run, ring the bell | ABSENT; the median comes from the ledger |
 
@@ -1222,6 +1602,11 @@ worth having under its real name.
 author: a durable artifact on disk, a hash of what it actually called, a median from the ledger, a reconciliation
 against a record the company does not write. A fuse that read the run's own progress report would be asking the
 thing that stalled whether it has stalled.
+
+**(NEW: O50 — the first row's state is the one worth saying out loud)** **A fuse that is not wired is a memory of a
+fuse.** `budget-guard.js` is the only one of the three that **exists**, and it is the only one that has never fired,
+because nothing invokes it. Registering it is a one-line settings act and it moves the row from *exists* to
+*enforced*; §18 carries its fate.
 
 ---
 
@@ -1259,18 +1644,29 @@ files are still ABSENT** — but the order in which they are written is now deci
 
 | Wave | Agents | Why these |
 |---|---|---|
-| **Wave one — eight** | the **Operator** · `builder` · `reviewer` · `architect` · `tester` · `guard` · `scout` · `designer` | each has a seed file or a code path on this branch today: the seven engine files of `.claude/agents/` are the format and the `maxTurns` seeds (v40), `designer` already holds the one `playwright` grant that exists, and the checkers already run against this repository's own gate |
-| **Wave two — seven** | `product` · `analyst` · `writer` · `growth` · `steward` · `curator` · `challenger` | the six business agents and the challenger. They come online **when a venture needs them** — which, given v64 makes the harness itself the first venture, is not on day one |
+| **Wave one — ~~eight~~ ten** *(moved 2026-09-06: D5 → v70)* | the **Operator** · `builder` · `reviewer` · `architect` · `tester` · `guard` · `scout` · `designer` · **`curator`** · **`challenger`** | each has a seed file or a code path on this branch today: the seven engine files of `.claude/agents/` are the format and the `maxTurns` seeds (v40), `designer` already holds the one `playwright` grant that exists, and the checkers already run against this repository's own gate. **The two added by v70 pass v54's own test:** `curator` has four verified code paths here — `evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs` — and `challenger` is one read-only file, the cheapest in the roster |
+| **Wave two — ~~seven~~ five** *(moved 2026-09-06: D5 → v70)* | `product` · `analyst` · `writer` · `growth` · `steward` | the five remaining business agents. They come online **when a venture needs them** — which, given v64 makes the harness itself the first venture, is not on day one |
 
-**(FOUNDER: the cost, stated once and not re-litigated)** Wave one is missing two agents whose absence changes how
-the system runs, not merely what it contains, and both gaps are covered by something weaker rather than by nothing:
+**(FOUNDER, rethink 2026-09-06: D5 → v70 — the curator and the challenger do not wait for wave two)** *"Curator and
+challenger both join wave one."* v54 is not reversed; its **implementation** moves, and its own test is what admits
+them. What the round found is that wave one otherwise ships two gaps with a measured harm behind them: the
+challenger is v30's external critique, which the plan justifies with a measurement, and the curator is the only
+writer of memory, so without it wave one produces handovers proposing durable facts that nothing may write down.
+**The cost, once:** two agent files (**ABSENT**), and the challenger runs single-family until Codex or Gemini
+lands — **its findings are labelled rung 4 rather than hidden**. **Settled by:** the harness venture producing
+handovers nobody reads, and a count of memory proposals with no writer.
+
+**(FOUNDER: the cost, stated once and not re-litigated)** Wave one is still missing one agent whose absence changes
+how the system runs, not merely what it contains, and the gap is covered by something weaker rather than by nothing:
 
 - **No `product`.** So a request too fuzzy to dispatch is closed by **the founder writing the done-test through the
   read-back**, with the Operator proposing two candidates (§2.5, §3.6). The provenance rule is untouched, because
   `product` never bound an intent anyway; what is lost is the founder's own time on the fuzzy ones.
-- **No `challenger`.** So a plan about to bind is attacked by **`guard`'s adversarial review and the founder's own
-  read** until wave two. That keeps v30's load-bearing half — the critique is external, by an agent that reads the
-  artifact and its done-test and never the author's reasoning — and loses the second model family v30 also asks for.
+- ~~**No `challenger`.** So a plan about to bind is attacked by **`guard`'s adversarial review and the founder's own
+  read** until wave two.~~ **(moved 2026-09-06: D5 → v70)** `challenger` is in wave one, so a plan about to bind is
+  attacked by the agent v30 asks for. What is still unmet is the **second model family**, for the reason §5.7 gives.
+- ~~**No `curator`.**~~ **(moved 2026-09-06: D5 → v70)** It is in wave one, and with it memory has a writer from the
+  first night rather than a queue of proposals.
 
 **(NEW: what the two waves must not be allowed to become, because this is where a wave plan usually rots)** Wave two
 is **not a maybe**. Every one of the fifteen keeps its row in §5.2, its file in the §17 inventory and its anchor,
@@ -1279,6 +1675,40 @@ the order §19 writes the files in. **Mechanism:** the inventory carries the wav
 *not in the roster* cannot be confused for one another; and `bin/run` refuses a brief naming an agent whose file
 does not exist (**ABSENT**), which is what makes wave two's absence a refusal rather than a silent fallback to some
 other agent.
+
+---
+
+### 5.0a What makes an agent routable, and what makes it expire
+
+**(FOUNDER, rethink 2026-09-06: D6 → v71 — an onboarding pack, for every agent, wave one included)** A declared
+agent is not a routable one. Each of the fifteen carries a pack of four things, and **without them the agent is
+declared and not routable**:
+
+| The pack | What it is | Why this one |
+|---|---|---|
+| **A rehearsal case** | at least one, with a **known answer** | it is the only way to tell an agent that works from an agent that is described |
+| **An exemplar** | one piece of its own good output, **with provenance** | this is what distinguishes `writer` from *builder with a different prompt* |
+| **A demonstration** | one end-to-end run showing **its anchor actually fires** | an anchor that has never fired is a rung-4 belief wearing a rung-1 label (v73's argument, one level down) |
+| **Namespaces that resolve** | every namespace its file declares exists and holds at least one unexpired skill | otherwise the agent's skills line is decoration, and §7's `skill.miss` event is what notices |
+
+**Mechanism:** the four pack paths are declared in `keel/shared/roster.yml` (§L **O2**, **ABSENT**), and `bin/run`
+already refuses a brief naming a file that does not exist (v37, v45) — so *not routable* is an existing refusal
+reading a new field, not a new enforcement path. **The cost, once:** three artifacts per agent — **thirty for a
+ten-agent wave one**. **Why it is not ceremony:** in a band nobody publishes evidence for (§5.6), evidence is the
+only thing that can settle the design. **Settled by: (R19, OPEN)** — packed against unpacked on the same
+known-answer cases, using §7's admission runner; **if the packed agent does not win, the pack is ceremony and this
+row is refuted by its own test.** The founder's losing image is named with it: *"the agent file is the
+onboarding"* — true about the runtime and false about the company.
+
+**(FOUNDER, rethink 2026-09-06: D7 → v72 — an agent is not the one permanent thing in the system)** All fifteen
+agent files carry **`valid_until`**, and at expiry exactly one disposition is recorded — **Refresh · Merge ·
+Retire** — with the anchored evidence attached. **Mechanism:** one frontmatter field, carried in `roster.yml`
+(**O2**); the forced disposition is `scripts/ledger.mjs`, which **already blocks on this branch** for claims and
+whose rule is the same one. This extends v19's skill-expiry idiom to the roster and **reopens neither v1's count
+nor v54's waves** — an expiry is a scheduled question, not a cut. **The cost, once:** a small number of founder
+answers a year. **Settled by:** the first expiry producing a Merge or a Retire — or a cycle where every agent
+Refreshes on real evidence, which is the strongest defence of fourteen available. The losing image: no expiry at
+all, leaving the roster the one object in the system that can only grow.
 
 ---
 
@@ -1313,27 +1743,34 @@ the exact seam this design exists to keep apart.
 **(NEW: model ids are from the models lane; `tools` is the argv-level grant, not a description; "Anchor" is what
 proves the work and is **never the agent's own report**)**
 
-| # | Name | The job it exists for | Expertise lens | Model | Tools | MCPs | Skill namespaces | Anchor — what proves it | The Operator routes here when |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | **builder** | Writes the code. One artifact, one worktree, continuous context | engineering | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | Read Write Edit Bash Glob Grep | none by default | engineering · testing | the venture's own CI, plus the done-test, plus the tester's blind test | the intent's outcome is source code |
-| 2 | **reviewer** | Judges code it did not write, against a named dimension | engineering · correctness | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | findings reproduce from the diff alone; a finding with no reproduction is a hypothesis | any builder handover, before merge |
-| 3 | **architect** | The contract before the code: schema, API, data model, migration | engineering · systems | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | Read Glob Grep Write (design paths only) | none | engineering · data | a migration that applies and rolls back in a scratch database | the work changes a schema, an interface or a stored shape |
-| 4 | **tester** | Writes the test that judges a build, **blind to the implementation** | quality | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | the test fails before the change and passes after | any intent whose done-test needs a new anchor (v8) |
-| 5 | **guard** | Security and adversarial review; every tool admission | security | `claude-opus-5` | Read Glob Grep | none | security | a proof of concept that reproduces, or the finding is a hypothesis | auth, credentials, network, outward acts, migrations, or a new tool at the door |
-| 6 | **scout** | Finds things out. Stateless, parallel legal here and only here. **Reads the untrusted world** | research | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — **no Write, no credential, no send** | read-only servers, per run | research | every claim carries URL, quote and access date; `check-citations.mjs` blocks on a dead one | a bounded question of fact is cheaper to answer than to assume |
-| 7 | **designer** | UI, UX, brand, visual identity, prototypes. The perception loop: render, look, iterate | design | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright` (per-run inline) | design · frontend | a rendered screenshot judged against a named anchor; never the agent's description of it | the artifact is seen by a person |
-| 8 | **product** | Turns fuzzy into a falsifiable done-test; specs, tickets, acceptance criteria, roadmap | product | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | the store check refuses an intent whose done-test is not falsifiable by someone who did not do the work | the request cannot yet be dispatched |
-| 9 | **analyst** | Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation | data | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics, error tracking, billing-read | data | the reconciliation reads a record the company does not write; a number that reconciles to our own log is rung 4, not rung 1 | a question is about what actually happened |
-| 10 | **writer** | Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs | growth · craft | `claude-opus-5` for taste work; `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield (rate-capped, spends credits) | growth · craft | staged, never sent; the anchor is the founder's taste store and a rung-2 external reaction | words or assets are the artifact |
-| 11 | **growth** | Leads, scoring, outreach *drafts*, CRM hygiene, funnel work. **Never sends** | growth | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | a reply from a real person, recorded by the world's door; never a count of messages sent | the intent is about reaching people who are not yet customers |
-| 12 | **steward** | Obligations, invoices, expenses, contract *review*, compliance flags, vendors, support triage | operations · finance | `claude-sonnet-5` | Read Glob Grep Write (obligation **proposals** and operations paths — `obligations.yml` itself is the Watch's, v44) | **none** — mail, calendar, drive and Notion are read by the world's door (a program) into inbound rows, and by `scout`; steward writes from scout's handover, never from a raw row (v36) | operations | an obligation is discharged only by a record the company does not write | something is owed to someone by a date |
-| 13 | **curator** | What the company knows: memory, the transcript pass, and skill admission. **The only writer of memory** | knowledge | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — **no Bash** | none | knowledge | a memory item with no source, date, expiry and falsifier is refused at the store check | nightly, and whenever a run's handover proposes a durable fact |
-| 14 | **challenger** | Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism | adversarial reasoning | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | every finding names the mechanism that would have caught it, or it is an opinion | before anything irreversible, and on every plan the Operator is about to bind |
+| # | Name | The job it exists for | Expertise lens | Model | `cacheTtl` *(added 2026-09-06: W6)* | Tools | MCPs | Skill namespaces | Anchor — what proves it | The Operator routes here when |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | **builder** | Writes the code. One artifact, one worktree, continuous context | engineering | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | unset · **O2** | Read Write Edit Bash Glob Grep | none by default | engineering · testing | the venture's own CI, plus the done-test, plus the tester's blind test | the intent's outcome is source code |
+| 2 | **reviewer** | Judges code it did not write, against a named dimension | engineering · correctness | `claude-sonnet-5`; a second family when reachable | unset · **O2** | Read Glob Grep | none | engineering · quality | findings reproduce from the diff alone; a finding with no reproduction is a hypothesis | any builder handover, before merge |
+| 3 | **architect** | The contract before the code: schema, API, data model, migration | engineering · systems | **`claude-fable-5-1`** (v57, the founder); fallback `claude-opus-5` while reachability is UNVERIFIED | unset · **O2** | Read Glob Grep Write (design paths only) | none | engineering · data | a migration that applies and rolls back in a scratch database | the work changes a schema, an interface or a stored shape |
+| 4 | **tester** | Writes the test that judges a build, **blind to the implementation** | quality | `claude-sonnet-5` | unset · **O2** | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | the test fails before the change and passes after | any intent whose done-test needs a new anchor (v8) |
+| 5 | **guard** | Security and adversarial review; every tool admission | security | `claude-opus-5` | unset · **O2** | Read Glob Grep | none | security | a proof of concept that reproduces, or the finding is a hypothesis | auth, credentials, network, outward acts, migrations, or a new tool at the door |
+| 6 | **scout** | Finds things out. Stateless, parallel legal here and only here. **Reads the untrusted world** | research | `claude-sonnet-5`; Gemini once authenticated | unset · **O2** | Read Glob Grep WebSearch WebFetch — **no Write, no credential, no send** | read-only servers, per run | research | every claim carries URL, quote and access date; `check-citations.mjs` blocks on a dead one | a bounded question of fact is cheaper to answer than to assume |
+| 7 | **designer** | UI, UX, brand, visual identity, prototypes. The perception loop: render, look, iterate | design | `claude-opus-5` | unset · **O2** | Read Write Edit Bash Glob Grep | `playwright` (per-run inline) | design · frontend | a rendered screenshot judged against a named anchor; never the agent's description of it | the artifact is seen by a person |
+| 8 | **product** | Turns fuzzy into a falsifiable done-test; specs, tickets, acceptance criteria, roadmap | product | `claude-sonnet-5` | unset · **O2** | Read Glob Grep Write (spec paths) | none | product | the store check refuses an intent whose done-test is not falsifiable by someone who did not do the work | the request cannot yet be dispatched |
+| 9 | **analyst** | Pipelines, KPIs, cohorts, A/B, anomalies, and the nightly reconciliation | data | `claude-sonnet-5` | unset · **O2** | Read Glob Grep ~~Bash~~ *(struck 2026-09-06: **O57**, contradiction 4)* | read-only analytics, error tracking, billing-read | data | the reconciliation reads a record the company does not write; a number that reconciles to our own log is rung 4, not rung 1 | a question is about what actually happened |
+| 10 | **writer** | Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs | growth · craft | ~~`claude-opus-5` for taste work; `claude-sonnet-5` for routine~~ `claude-sonnet-5`, escalating to `claude-opus-5` on a **§9.1 row with a named trigger**, never in this file *(moved 2026-09-06: **O57**)* | unset · **O2** | Read Write Edit Glob Grep | Higgsfield (rate-capped, spends credits) | growth · craft | staged, never sent; the anchor is the founder's taste store and a rung-2 external reaction | words or assets are the artifact |
+| 11 | **growth** | Leads, scoring, outreach *drafts*, CRM hygiene, funnel work. **Never sends** | growth | `claude-sonnet-5` | unset · **O2** | Read Glob Grep Write | CRM read-only | growth | a reply from a real person, recorded by the world's door; never a count of messages sent | the intent is about reaching people who are not yet customers |
+| 12 | **steward** | Obligations, invoices, expenses, contract *review*, compliance flags, vendors, support triage | operations · finance | `claude-sonnet-5` | unset · **O2** | Read Glob Grep Write (obligation **proposals** and operations paths — `obligations.yml` itself is the Watch's, v44) | **none** — mail, calendar, drive and Notion are read by the world's door (a program) into inbound rows, and by `scout`; steward writes from scout's handover, never from a raw row (v36) | operations | an obligation is discharged only by a record the company does not write | something is owed to someone by a date |
+| 13 | **curator** | What the company knows: memory, the transcript pass, and skill admission. **The only writer of memory** | knowledge | `claude-sonnet-5`; the summarising half on Gemini or a local model | unset · **O2** | Read Write Edit Glob Grep — **no Bash** | none | knowledge | a memory item with no source, date, expiry and falsifier is refused at the store check | nightly, and whenever a run's handover proposes a durable fact |
+| 14 | **challenger** | Attacks a finished plan or artifact for holes, contradictions, and rules with no mechanism | adversarial reasoning | `claude-opus-5`; a second family when reachable | unset · **O2** | Read Glob Grep | none | quality · research | every finding names the mechanism that would have caught it, or it is an opinion | before anything irreversible, and on every plan the Operator is about to bind |
 
 **(NEW: where the roster is thinner than it looks, deliberately, and this is the table's most important row)**
-**Ten of the fourteen carry no shell. Five carry no write of any kind. Only four can touch source.** That is the
-trifecta split expressed as a table rather than as a rule, and it is what makes fourteen names cost less than it
-sounds: most of them cannot do most things.
+**~~Ten~~ Eleven of the fourteen carry no shell. Five carry no write of any kind. Only four can touch source.** That
+is the trifecta split expressed as a table rather than as a rule, and it is what makes fourteen names cost less than
+it sounds: most of them cannot do most things.
+
+**(NEW: contradiction 1 — and the fix is not the number)** The plan carried **two counts of one column**: *"eight of
+the fourteen carry no shell"* in one place and *"Ten"* here, while the `Tools` column beside them said four agents
+held `Bash`. **O57** strikes `analyst`'s, so the true count is **eleven** — and the durable point is that a
+hand-written count of a column will drift from the column again the next time a row moves. **Mechanism:** §L **O2**
+— `keel/shared/roster.yml` (**ABSENT**) is the one file, and this table, §17.1 and page 2 are **generated from it or
+checked against it**, so the count is derived and never typed. §5.2a states what that file carries.
 
 **(NEW: v36 — who may hold a tainted read, and it is one line because it is one rule)** Mail, calendar, drive and
 Notion are **tainted read-only**: their content is written by strangers. **Only `scout` and the world's door program
@@ -1352,6 +1789,50 @@ credential and no send.
 plus `Agent(...)`, no `Write`, no `Edit`, no `Bash`, and its file is ABSENT like the rest.
 
 ---
+
+### 5.2a One roster file, and what is generated from it
+
+**(NEW: O2)** `keel/shared/roster.yml` (**ABSENT**) is the single declaration of the fifteen. It carries the
+frontmatter the runtime reads — `name`, `description`, `tools`, `model`, `mcpServers`, `skills`, `maxTurns`,
+`isolation` — and five fields the plan adds:
+
+| Field | From | What it is for |
+|---|---|---|
+| `color:` | **O2** | the agent's colour on page 2 and in a session name. It closes a COVERAGE `?` that had no home |
+| `wave:` | v54, v70 | *not yet written* and *not in the roster* are different states and must not read alike (§5.0) |
+| `valid_until:` | **v72** | the forced disposition — Refresh · Merge · Retire — with anchored evidence |
+| `cacheTtl:` | **W6** | `experimental.cacheTtl`, `5m` or `1h`, per agent |
+| the four pack paths | **v71** | rehearsal case · exemplar · demonstration · namespaces; a missing path is what makes the agent unroutable |
+
+**What is generated from it or checked against it:** §5.2's table above, §17.1's inventory rows, page 2's roster
+view, and the argv the launcher composes. **Why generate rather than write:** contradiction 1 above is one column
+counted twice and answered twice; contradiction 20 is three department tables already drifted on customer service;
+contradiction 17 is *which agent, which model, which band* answered in three places. **All three are the same
+defect** — one fact with several authors — and one file with several renderings is the only fix that does not
+depend on somebody remembering.
+
+**(FACT: world.md 10 — the `Model` column binds now, and until this window it did not)**
+`CLAUDE_CODE_SUBAGENT_MODEL` **no longer overrides an agent's own `model:`**. Before the change, one environment
+variable silently flattened all fourteen per-agent model choices — the table would have been correct, the runs
+would not, and nothing in the plan would have said so. Per-agent routing is a file field now rather than a hope,
+which is what §5.8 fact 3 asserts and could not previously enforce.
+
+**(FACT: world.md 6 — what decides a `cacheTtl` value, since the column ships unset)** `experimental.cacheTtl` is
+**per-agent frontmatter** taking `5m` or `1h`; `promptCacheTtl` and `subagentPromptCacheTtl` are settings, not
+frontmatter, so the per-agent choice lives here and nowhere else. **The test for a value is one question:** is this
+agent's standing prefix read again inside five minutes? A chained maker-and-checker pair inside one run is; a
+`scout` fan-out dispatched once a night is not. Left unset, the vendor's default applies and nothing breaks.
+**Why it belongs in this table at all:** v57 justifies Fable on a **$0.25/Mtok cache read**, which is a discount on
+a **warm** cache, and the TTL is what decides whether it is warm. It pairs with §L **O39**, which hashes the
+standing prefix at dispatch, and **a wrong value is invisible except in the cache-read share** — **(R7, OPEN)**
+measures that share.
+
+**(FACT: world.md 12 — the risk the founder accepted with v59, named where the roster can act on it)** Agent teams
+were repaired **four times** in the window and have **never been promoted out of experimental**, and the failure
+class is **lost teammate output**. The roster's answer is not to avoid teams; it is that a teammate's product is a
+**file** — v80's append-only handover — and never the mailbox, which the vendor overwrites *"on the next state
+update"*. A lost message then becomes a **missing file**, which page 2 can render and a reader can notice, rather
+than a message that looks exactly like one never sent.
 
 ### 5.3 The fourteen, one at a time
 
@@ -1424,7 +1905,11 @@ founder's own input refuses an intent whose done-test is not falsifiable by some
 agent whose output is done-tests is judged by the gate every done-test passes.
 
 **9 · analyst.** Pipelines, KPIs, cohorts, A/B, anomalies, and **the nightly reconciliation**. Lens: data.
-`claude-sonnet-5`. Read, Glob, Grep, Bash — the shell is for deterministic queries, not for writing. MCPs: read-only
+`claude-sonnet-5`. Read, Glob, Grep, ~~Bash — the shell is for deterministic queries, not for writing~~ **and no
+`Bash`** *(struck 2026-09-06: **O57**, contradiction 4)*: it was the only agent in the *read and report* band
+holding a shell — one agent with two answers in one plan — and **v47 already gave every comparison to
+`bin/reconcile`**, a no-model program, so the deterministic queries the shell was for now run outside the agent.
+Nothing is lost with it, and the trifecta count in §5.2 moves from ten to eleven. MCPs: read-only
 analytics, error tracking, billing-read. Skills: data. **Anchor, and it is the sharpest one in the table:** the
 reconciliation reads a record **the company does not write**. A number that reconciles only to our own log is rung 4,
 not rung 1. **This is why the read-only instruments are admitted first** (§8) — not out of caution, but because the
@@ -1432,8 +1917,13 @@ reconciliation cannot exist without them, and the reconciliation is what makes e
 rung 1 instead of rung 4.
 
 **10 · writer.** Content, brand voice, SEO, ad copy, campaign drafts, video and asset briefs. Lens: growth, craft.
-`claude-opus-5` for taste work and `claude-sonnet-5` for routine — the one split default in the roster, because
-taste and throughput are genuinely different moves. Read, Write, Edit, Glob, Grep. MCP: Higgsfield, rate-capped,
+~~`claude-opus-5` for taste work and `claude-sonnet-5` for routine — the one split default in the roster, because
+taste and throughput are genuinely different moves.~~ **(moved 2026-09-06: O57)** The split survives and its home
+changes: `claude-sonnet-5` in the file, escalating to `claude-opus-5` on a **§9.1 routing row with a named
+trigger**. Taste and throughput are still different moves; what was wrong was **where the decision lived** — one
+agent file declaring two models puts a routing decision in the one copy no routing table reviews, which is
+contradiction 17 in miniature. It is generated from `routing.yml` (**O5**) with every other route. Read, Write,
+Edit, Glob, Grep. MCP: Higgsfield, rate-capped,
 **and it spends credits**, which is why the cap is on the tool and not on the prompt. Skills: growth, craft.
 **Anchor:** staged, never sent; the founder's taste store, and a reaction from outside. **It never holds the key**
 (v33) — the thing that drafts an outward act is not the thing that sends it.
@@ -1548,6 +2038,15 @@ rather than deferring)**
 | 29 | finance & legal | steward (invoices, expenses, budget-vs-actual, contract *review*, compliance flags) · analyst (the reconciliation) | **Contract drafting that binds, tax filing, cap-table edits** — one-way doors; they reach the founder as a *which*, with both options prepared |
 | 30 | operations & HR | steward (vendors, process docs, internal tooling requests, and calendar and meeting notes **as inbound rows**, never as a mailbox it opens — v36) | **Hiring pipeline** — there are no employees; revisit when there are |
 
+**(NEW: contradiction 20 — this table is the source, and the other two are renderings of it)** The eight
+departments are written out **three times** in the plan — here, in the SPINE's own §B.4, and in COVERAGE §23–30 —
+and they had **already drifted**: the customer-service row gained the world's door and `scout` here (v36) while the
+other copies still read *"steward triages; writer drafts; the Sender sends"*. Three renderings of eight rows is
+three chances to be wrong and one chance to be right. **Mechanism:** the department mapping is a block in
+`keel/shared/roster.yml` (§L **O2**, **ABSENT**) — each row naming the agents that cover it and the refusal with
+its reason — and **this table plus the other two are generated from it**. Nothing about the mapping changes here;
+the number of places it can be edited does.
+
 **(NEW: the two roster entries with the least outside evidence, named rather than smoothed over)** **Two departments
 have no shipped precedent anywhere in the rosters fetched:** sales and growth as a function, and legal and contracts.
 `growth` and `steward` are therefore the two entries standing on the least outside evidence — **and their anchors are
@@ -1579,6 +2078,21 @@ cost per agent per kind of work from the ledger. So *"fourteen was too many"* is
 specific rows, not a matter of taste: an agent whose anchor rarely holds and whose median cost is high is visible
 without anyone arguing about roster theory.
 
+**(NEW: O26 — and the falsifiability claim above is one of three named consumers, because today nothing reads the
+trust score at all)** A score nothing reads is a number, not a control. The trust score gets **three named
+consumers** and a **model dimension** — it is per agent *per model*, since an agent's pass rate on a move class is
+a fact about the pairing:
+
+| Consumer | What it does with the score |
+|---|---|
+| **The launcher** | below the floor on a move class, **that class is unroutable for that agent until a rehearsal passes** — `bin/run` (**ABSENT**) |
+| **The briefing** | the score and its direction, per agent, so a falling one is seen before it is felt |
+| **§5.6's claim above** | *"fourteen was too many"* becomes a checkable statement about specific rows |
+
+**Mechanism:** the score is derived from the ledger by the curator and read at those three places, and **below a
+sample floor it prints `insufficient` rather than a number** — §L **O25**'s one shared predicate, so admission, the
+error rates and this score cannot disagree about what *enough evidence* means. §21 carries what it measures.
+
 ---
 
 ### 5.7 What the roster never does
@@ -1596,6 +2110,16 @@ upfront."* **Mechanism:** one worktree per artifact, and the launcher composes e
 **The one exception is `scout`**, and it is an exception for a stated reason: its subtasks are independent, which is
 the boundary between the two research results above.
 
+**(NEW: O69 — the axis stated, because v6 is being read as a rule about agents and it is a rule about units)**
+**Parallel is legal where the unit of work is a store row, and refused where the unit is a file.** v6 is right
+about artifacts: two agents editing one file discover their conflicting assumptions at landing, which is
+Cognition's measured failure. It says nothing about ten independent rows. `steward` working through ten ventures'
+obligations is independent in **`scout`'s exact sense** — one row per venture, no shared artifact, no merge — and
+reading v6 as *only scout may ever run in parallel* would forbid it for no reason the evidence supports. **This
+restates v6 and never widens it:** the file case stays refused, and §L **O72**'s file lease is what enforces it,
+since the Desk refuses a run whose declared scope intersects a live run's worktree scope. **Mechanism:** the
+declared scope on the brief; a store row is not a scope collision and a path is.
+
 **It never lets one agent both design and implement one contract (v7).** A builder that needs to change a schema or
 an interface **files an objection; it does not edit it**. **Mechanism:** the builder's grant excludes the
 architect's output path, by `--add-dir`, and the objection is the cord on itself — a run that stops on a defect has
@@ -1611,13 +2135,21 @@ a satisfied requirement** — there is no non-Anthropic model reachable from ins
 asks for a 2-of-3 multi-judge panel and `risk: high` asks for two distinct model families, and neither is met today.
 Codex's admission (v5, v32) is the route to changing that, and until it passes its rehearsal the gap stays named.
 
-**(FOUNDER, v54: in wave one it is narrower still, and the narrowing is stated here rather than discovered)** The
+~~**(FOUNDER, v54: in wave one it is narrower still, and the narrowing is stated here rather than discovered)** The
 `challenger` file is wave two (§5.0), so until a venture brings it online **there is no challenger at all** and
 `guard`'s adversarial review plus the founder's own read stand in its place before anything binds. Two of the three
 things v30 asks for survive that substitution — the critique is external, and it reads the artifact and its
 done-test rather than the author's reasoning — and the third, a second model family, was already unmet for the
 reason in the paragraph above. So wave one does not lose a guarantee it had; it loses a second, differently-anchored
-pair of eyes, and §19's build order is what closes it.
+pair of eyes, and §19's build order is what closes it.~~
+
+**(FOUNDER, rethink 2026-09-06: D5 → v70 — the narrowing above is withdrawn, and one third of it stands)**
+`challenger` is in **wave one** (§5.0), so the external critique v30 asks for exists from the first night rather
+than from the first venture that needs it. **What is still unmet is the second model family, and only that:** the
+challenger runs single-family until Codex or Gemini lands, so **its findings are labelled rung 4** rather than
+presented as an independent check. That labelling is the whole of the honesty here — v78's fallback chains and its
+frozen calibration set are what stand in place of the panel §11.3 no longer describes (**v82**), and **(R10,
+OPEN)** is what would change it.
 
 ---
 
@@ -1628,7 +2160,7 @@ Nothing is left to be discovered by a reader comparing two documents)**
 
 | Fact | What it says | What the roster does with it |
 |---|---|---|
-| 1 | Every shipped roster names its roles; **zero of seven** ship unnamed shapes | **Adopted.** It is the founder's decision and the world agrees with it |
+| 1 | Every shipped roster names its roles; ~~**zero of seven**~~ **zero of eight** ship unnamed shapes *(moved 2026-09-06: W25)* | **Adopted.** It is the founder's decision and the world agrees with it. **The eighth is Gemini CLI**, which ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in `.gemini/agents` (world.md 25) — a third provider naming its roles, and a **third agent-file location**, which is a case v42 did not contemplate. §17.8 carries the path |
 | 2 | Magentic-One splits by **grant** — browser, file-read, code, shell — not by domain | **Adopted as the second axis.** §5.2 splits by job *and* its `tools` column splits by grant. Both cuts are present and they are not the same cut |
 | 3 | Per-agent model is first-class frontmatter | **Adopted.** It is what makes per-agent routing a file field rather than a wish, and it removes the technical half of FINAL's objection to a file per role |
 | 4 | Coding is single-threaded, from Anthropic's own post | **Adopted as v6.** One artifact, one builder, never parallelised |
@@ -1670,7 +2202,7 @@ flowchart TD
     BRIEF["The brief (6.2). Anything not in it<br/>is not in scope, and the run is told so"] --> ARGV["bin/run composes the argv from<br/>the named agent's file and the band.<br/>NOTHING ELSE COMPOSES ARGV. ABSENT"]
     ARGV --> CTX["Fresh context. Loaded: charter, intent,<br/>the memory slice, the skills that trigger.<br/>Nothing else"]
     CTX --> GOAL["/goal set to the done-test verbatim,<br/>plus a turn clause"]
-    GOAL --> ISO["Its own git worktree<br/>if it writes code or files"]
+    GOAL --> ISO["bin/worktree HANDS IT one, in its argv,<br/>if it writes code or files.<br/>A run never creates its own. O14, ABSENT"]
     ISO --> WORK["WORKS — it chooses its own method"]
     WORK --> SELF{"Self-check against<br/>the done-test"}
     SELF -->|"fails"| WORK
@@ -1678,9 +2210,14 @@ flowchart TD
     WORK -->|"hits something outside its scope<br/>that is wrong"| CORD["PULLS THE CORD ON ITSELF:<br/>stops, records the defect, escalates.<br/>THIS IS A SUCCESS"]
     WORK -->|"reaches a question<br/>the envelope does not answer"| STAGE["Builds both options, stages them,<br/>queues a WHICH. It cannot ask"]
     STAGE --> HAND
-    ANCH --> HAND["HANDOVER — seven fields (6.3),<br/>always, including on failure"]
+    ANCH --> HAND["HANDOVER — the schema's fields (6.3),<br/>always, including on failure"]
     CORD --> HAND
     WORK -->|"ceiling reached with no result"| HAND
+    WORK -->|"goes quiet — three check-ins spent, W14"| ORPH["THE WAKE RECONCILER on the next wake:<br/>writes ORPHANED, never FINISHED. O15, ABSENT"]
+    ORPH --> RES{"Resumable by id?"}
+    RES -->|"yes"| WORK
+    RES -->|"no, after N attempts"| BLK["BLOCKED card in 'waiting on you',<br/>carrying the exact failure text. O73"]
+    BLK --> HAND
     HAND --> LOG["Written to the logbook"]
     LOG --> DIE["DIES — the context is discarded"]
     DIE --> NEXT{"Does the handover propose<br/>a next action?"}
@@ -1736,6 +2273,26 @@ are generated from** — the absence of it is why the count was ten here and ele
 a typo, a retired agent, or a name someone invented in a prompt fails at dispatch rather than producing a run with a
 guessed grant.
 
+**(NEW: O22 — *copied verbatim* is a rule with nothing behind it, and this repository has already lost a
+measurement in synthesis twice)** `done-test:` says *copied verbatim from the Intent, never paraphrased*, and
+until now the copying was done by the thing being asked not to paraphrase. **`bin/run` refuses a brief whose
+`done-test:` is not byte-identical to its intent's** (**ABSENT**) — a diff, not a judgement, and a paraphrase that
+means the same thing still fails, which is the point: a run that was measured against a different sentence from the
+one the founder confirmed is a mis-route the anchor cannot see. **In the same move, the brief and the handover are
+logged as adjacent hashed rows**, so the pair that produced an artifact is recoverable without trusting either end
+of it. §2 carries the intent side of the same check.
+
+**(FACT: world.md 14 — the sharpest fact of the round, and it lands on this field)** `/goal` check-ins **back off
+30 min → 1 h → every 2 h, and an idle session gets at most three check-ins per goal** until someone messages it.
+Under `-p` **the check-in is the only thing the runtime delivers, and nobody is there to message it** — so a night
+goal loop delivers three times and goes quiet, and quiet is byte-indistinguishable from finished. Three
+consequences, none of them optional. The `/goal` clause above is **not** a night-long supervisor and must not be
+written as one. §L **O21** composes the condition from v45's `anchor:` field — *"`<anchor>` exits 0, and
+`<done-test>`"* — so the most frequently executed judgement in the system becomes an exit code rather than a small
+model reading prose (**DEPENDS-ON-R17**; **(R17, OPEN)** also asks whether an exit-code condition behaves
+differently from a prose one). And the silence after the third check-in is what §6.4's reconciler exists to
+resolve.
+
 **(NEW: why the field names the agent and not the argv, which is v34 restated where it is most likely to be
 violated)** The brief names *who*. **`bin/run` (ABSENT; FINAL names it `keel/bin/run`) composes the argv** from that
 agent's file plus the band. The Operator never composes argv, a run never composes argv, and the board never
@@ -1756,7 +2313,12 @@ unavailable model.
 
 ### 6.3 The handover
 
-**(FINAL, plus the three fields the rest of the plan already reads back)** **Ten fixed fields, always, even on failure** — FINAL's seven plus `rung`, `findings` and `anchor`, held in **one schema file, `keel/shared/schemas/handover.yml` (ABSENT)**, which every table that shows them is generated from. The I-PASS bundle cut medical errors 23% and preventable
+**(FINAL, plus the three fields the rest of the plan already reads back)** ~~**Ten fixed fields**~~ **Ten fixed
+fields plus five additions (O7), one of them a group of four — eighteen lines, always, even on failure** *(moved
+2026-09-06: O7)* — FINAL's seven plus `rung`, `findings` and `anchor`, held in **one schema file,
+`keel/shared/schemas/handover.yml` (ABSENT)**, which every table that shows them is generated from **and which owns
+the count, so no paragraph has to** (§L **O6**: a `schema_version` on every row, and a reader refuses an unknown
+version rather than guessing). The I-PASS bundle cut medical errors 23% and preventable
 adverse events 30% across nine hospitals; the mechanism is not the format but that named required fields force the
 outgoing party to surface what the incoming party needs, especially the uncertain parts, which free prose omits.
 
@@ -1771,6 +2333,17 @@ next:         the single most valuable next action, as a proposal
 rung:         the evidence rung of the claim this handover makes (§11.2)
 findings:     each defect, with its evidence — no score (§11.3)
 anchor:       the rung-1 check the done-test named (§11.11)
+
+# added 2026-09-06 by O7 — five additions, one of them a group of four
+objection:       a refusal to proceed, with what would unblock it (v7, generalised
+                 from architect-and-builder to all ninety-one pairs)
+brief_sha:       the hash of the brief this run executed, so the pair is joinable
+maker_family:    the family and model that MADE the artifact
+maker_model:
+checker_family:  the family and model that CHECKED it
+checker_model:
+actor:           who performed the move — one legal value today, an agent run
+idempotency_key: on the STAGED ARTIFACT, not only on the resume path
 ```
 
 **(FINAL)** `uncertain` is the field to fight hardest for: it turns a confident wrong answer into a flagged one, and
@@ -1781,6 +2354,19 @@ the anchor and the briefing read it first. **No shipped handover schema found ha
 the intent, the slice — so a summary that lost a number cannot propagate. **This repository has recorded that exact
 defect twice**, most recently when a correct measurement of *29 of 30 steps passing* was synthesised into *29 of 29*
 and propagated into a project file and two handoffs.
+
+**(NEW: O7 — why five fields land now rather than when something needs them, and this is the whole argument for the
+timing)** **All five are free before the first run and a full backfill afterwards.** They cost a schema line each
+today; after a thousand runs they are **unreconstructable**, because nothing else records which family made a thing
+and which family checked it. Two consequences ride on them. **(R11, OPEN)** — *does a second model family reduce
+escaped defects on our move classes, and by how much* — is **blocked on the four maker/checker fields** and cannot
+be answered retroactively, and it is the measurement that decides whether rung 2 outranks rung 4 on any given
+class. And `objection:` generalises v7 from the one pair the plan designed — architect and builder — to **all
+ninety-one pairs the roster makes**, which is what a message between two running agents is allowed to be (v80,
+§3.5): a handover or an objection, and nothing else. `actor:` has **one legal value today**, an agent run, and it
+exists so that the first non-agent actor is a value rather than a schema migration. `idempotency_key:` moves onto
+the **staged artifact** rather than sitting only on the resume path, because §6.4's *"an agent that already sent
+the email and then restarts sends it twice"* is about the artifact, not about the resume.
 
 **(NEW: `learned` is a proposal, and the word is doing work)** A run proposes a durable fact; **only the curator
 writes memory** (v25), delta-only, never a rewrite, and a memory item with no source, date, expiry and falsifier is
@@ -1803,6 +2389,36 @@ is recorded **before** it is attempted, with an idempotency key, and replay chec
 killed, the turn resumable. Every surveyed runtime has a session id and resume-by-id, and Claude Code accepts the id
 the system assigns — which is why the UUID is minted by us and not read back from the vendor.
 
+**(FOUNDER, rethink 2026-09-06: D2 → v67 — what that measured signal is delivered to)** The launcher **records each
+child's process group before exec**, and the cord signals *that*, so the exit 143 above is something the founder
+can cause on purpose rather than a property observed in a test. Every carrier in §3.5 now declares a `stop:`, and
+**`bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN** — which is why no hosted
+lane may hold a night's work today. **Mechanism:** one `pgid` field written by `bin/run` before exec, one signal
+path (**ABSENT**).
+
+**(NEW: O15 — contradiction 13, and it is the largest hole this section had)** ~~*"Resume, not restart"* is asserted
+here and **nothing performs it**~~ *(moved 2026-09-06: O15)*. Every mechanism above describes what a resumable run
+*is*; none of them notices that a run stopped. Under `-p`, with W14's three check-ins spent, a run that died at
+03:00 and a run still working look identical from outside. **The wake reconciler is the carrier:**
+
+| Step | What it does |
+|---|---|
+| Before exec | the launcher writes **`run.started`** — so a run that never reported is distinguishable from a run that never began |
+| On wake | the Watch reconciles our session log against **`claude agents --json --all`**, the tmux session list and the process table |
+| On a gap | it writes **`orphaned`, never `finished`** — the two must never be the same value, because one is an answer and the other is the absence of one |
+| Then | it **resumes by id**, or closes the run with a reason; and it **refuses a night lane the power assertions cannot promise to keep awake** |
+
+**Mechanism:** `bin/run` and `bin/watch` (**ABSENT**). **Why `orphaned` is the load-bearing word:** a reconciler
+that guessed `finished` would turn every crashed night into a completed one, and the handover — the thing every
+downstream reader trusts — would be missing with nobody looking for it.
+
+**(NEW: R9 — one thing about a long run that the strongest memory rule cannot currently see)** **(R9, OPEN)** —
+*does an unattended `-p` run auto-compact, and does it emit anything the log can see?* v24 says memory is written
+by the curator, delta-only, and never by the acting run; **an auto-compaction is the runtime rewriting a run's
+context in place**, which is the same act performed by something the rule cannot address. Measured with one long
+`-p` run under `stream-json --verbose` plus the vendor's documentation. **If it is unobservable, the answer is to
+bound run length** rather than to widen the rule — which is a decision about this section, not about §13.
+
 **(FINAL §6.1 and §14.7, providers lane, measured 2026-09-04: two runtime facts that shape how long a run should be)** `maxTurns` **marks output partial
 and resumable rather than truncating it**, which is the restart-from-checkpoint primitive and does not need to be
 built. And a background child holds its parent open in idle waiting by default — one stuck child doubles its
@@ -1812,6 +2428,19 @@ fanning out under a bounded wait.
 **(FINAL)** **Enforced by:** the brief and handover schemas in `shared/schemas/` and `bin/run`, which births a run
 and **refuses a brief missing any field** (both ABSENT) · `--output-format json` (exists) · `--session-id <uuid>`
 (exists, and *"must be a valid UUID"*) · the runner's `SessionEnd` hook writing the partial handover (ABSENT).
+
+**(NEW: added 2026-09-06 — one row per mechanism this round gives the section)**
+
+| Mechanism | What it enforces | Path |
+|---|---|---|
+| **O22** | the brief's `done-test:` is byte-identical to the intent's; brief and handover are adjacent hashed rows | `bin/run` — **ABSENT** |
+| **O15** | `run.started` before exec; reconcile on wake against `claude agents --json --all`, tmux and the process table; write `orphaned`, never `finished` | `bin/run` · `bin/watch` — **ABSENT** |
+| **v67** | the child's `pgid` recorded before exec; unattended work refused on a carrier whose `stop:` is UNKNOWN | `bin/run` — **ABSENT** |
+| **O14** | a run never creates its own worktree; it is handed one in its argv | `bin/worktree` — **ABSENT** |
+| **O72** | the Desk refuses a run whose declared scope intersects a live run's worktree scope | the Desk — **ABSENT** |
+| **O71** | the launcher refuses to mint past N live sessions; the supervisor refuses to restart into a full table | `bin/run` · `bin/supervise` — **ABSENT**, **DEPENDS-ON-R23** |
+| **O73** | after N failures the run becomes a `blocked` card carrying the exact failure text, written to negatives | the card store · the negatives store — **ABSENT** |
+| **O7** | five additions on the handover, free now and a full backfill later | the handover schema — **ABSENT** |
 
 ---
 
@@ -1834,6 +2463,15 @@ WebFetch, unless you name them individually in `--tools`, not through the `defau
 a tool omits it in fact. It needs v2.1.248+. `--permission-prompts none` means a run never hangs on a prompt nobody
 will answer, and under `-p` the tools needing terminal input are disabled anyway *"so the session never stalls
 waiting for input."*
+
+**(NEW: O14 — where the worktree comes from, because the run cannot make one and the plan assumed it could)** v41
+gives four agents `isolation: worktree`, and **`git worktree add` cannot complete under the armed sandbox** — a
+full checkout has to write the agent-config paths, which the runtime protects independently of this repository's
+settings, and adding them to the write allow-list has been tried and does not lift it. The documented remedy is
+**interactive escalation**, which an unattended run does not have **by construction**. So a run **never creates its
+own worktree**: `bin/worktree` (**ABSENT**), a no-model program in the Watch's context, creates it and the launcher
+**hands the path to the run in its argv**. The run works inside it normally from then on. This is the same shape as
+every other narrowing in the section — the thing that needs the capability is not the thing that holds it.
 
 **(NEW: the stall fuse rides along, under its real name)** `--max-budget-usd` is **not a billing control** (v23) —
 print mode only, computed locally at list price, and for a subscriber *"the session cost figure isn't relevant for
@@ -1868,6 +2506,23 @@ a running process cannot clear it (v10); allow rules have no effect in that mode
 from every agent file and is removed by the runtime from every subagent regardless (v35), so **the gate is not
 invocable by the thing it gates.**
 
+**(NEW: O72 — a run cannot take a file another live run is holding)** v6 removes the case of two agents inside one
+artifact and is **silent on two intents, one file** — two legally-dispatched runs, different intents, overlapping
+paths, and **the conflict is found at landing**, which is exactly Cognition's measured failure arriving by a route
+v6 does not cover. **The file lease:** every brief declares its scope, and the Desk **refuses a run whose declared
+scope intersects a live run's worktree scope** (**ABSENT**). It is a refusal at dispatch, where it costs nothing,
+rather than a merge conflict at landing, where it costs both runs. §5.7's parallelism axis (**O69**) is the same
+rule from the roster's side: parallel is legal where the unit is a store row and refused where it is a file.
+
+**(NEW: O71 — a run cannot be the fifty-first, and a crash loop cannot become the concurrency event)** §14.12
+names three bounds on the fleet and **none of them is a session count**, so a supervisor restarting a failing run
+can mint sessions without limit while every declared bound still reads green. **A session ceiling in settings:**
+the launcher refuses to mint past N live rows and **the supervisor refuses to restart into a full table**
+(`bin/run`, `bin/supervise` — **ABSENT**). N is not guessed: **(R23, OPEN)** asks whether `claude -p` children
+have a concurrency ceiling at all and **whether the N+1th fails loudly, queues, or degrades silently** — vendor
+documentation first, then one measurement. Until it is answered the ceiling is set low and stated as arbitrary,
+which is visible in a way an absent ceiling is not.
+
 **(NEW: two smaller ones, both from decided rows)** A run cannot **edit another agent's contract** — a builder that
 needs a schema change files an objection (v7), enforced by `--add-dir`. And a run cannot **perform an outward act**:
 every agent has `never` on that class, staging is where its authority ends, and the Sender that follows holds no
@@ -1887,6 +2542,15 @@ which carries `valid_until` and forces exactly one disposition at expiry, Refres
 date** (v19). The agent file itself is governed by the lint and by the probe, both of which run against it whether
 or not anyone remembers to look.
 
+**(NEW: O73 — the one death this section had no word for)** A run that **cannot resume** is neither done nor
+running, and the reconciler's `orphaned` is a state of the log rather than a state of the work. **After N failed
+resume attempts the run reaches a terminal state:** it becomes a **`blocked` card in *waiting on you***, carrying
+**the exact failure text** and not a summary of it, and the same text is written to the negatives store **so the
+next brief on that intent carries it** and the system does not rediscover the dead end nightly. **Mechanism:** the
+card store and the negatives store (**ABSENT**); the attempt counter is a field on the work row (§L **O1**). **N is
+not taste: (R18, OPEN)** asks for measured evidence on repeated-attempt yield across sessions, and until it
+answers, N is stated rather than justified.
+
 **(NEW: and the one measurement that survives a run, which is what makes §5.6's claim checkable)** Cost and anchor
 outcome, recorded **per agent per kind of work**, from the runner's own record rather than from anything the run
 says about itself. That is the evidence by which *fourteen was too many* would become a fact rather than an
@@ -1896,7 +2560,7 @@ argument.
 
 ## 7 · Skills
 
-*obeys: v3, v17, v18, v19 (SPINE §E entire); inherits: FINAL §11, §16.2*
+*obeys: v3, v17, v18, v19 (SPINE §E entire), and **v77** (the rethink round of 2026-09-06); inherits: FINAL §11, §16.2*
 
 **(FOUNDER, overruling FINAL §1 row 10.)** *"take all the skills that the biggest systems use, the biggest agent
 systems use, we can learn a lot from them, like, to have more engineering stuff and more creative stuff and to give
@@ -1941,6 +2605,13 @@ only writer of either directory, and the existing manifest check is re-pointed a
 draws from now advertises **2,111+ skills** and is MIT **on the code** — but a separate `LICENSE-CONTENT` file
 exists at that repository and **was not fetched**, and it may carry different terms for skill *content* than MIT
 does for code. **No bulk vendoring until it is read** (v17). One fetch clears it; open decision 4 in section 20.
+
+**(R13, OPEN — and it is narrower than section 20 row 4, which is what makes it decisive.)** The question is not
+*may we redistribute these bodies*. Under v18 an imported body written to the spec's own recommendation **fails
+admission and is rewritten** into one of the four kinds of 7.2 — a **derivative work**, which MIT-on-the-code says
+nothing about. So the answer that matters is whether `LICENSE-CONTENT` permits derivatives, not whether it permits
+copying. **Source class:** the licence file, read raw. Until it is read, 7.2's conversion pass is blocked on the
+same fetch as the bulk import, and both are one act.
 Related and smaller: this branch's `SKILLS_SOURCE.md` (EXISTS, branch `ceo-1-1788609834`) names
 `npx antigravity-awesome-skills`, while the upstream now advertises `npx agentic-awesome-skills` — whether the old
 name still resolves is UNVERIFIED.
@@ -1987,6 +2658,33 @@ because the alternative is a library of procedure, which is the container the do
 
 ---
 
+### 7.2a Eval-only bodies — the case that judges a run may not be readable by it
+
+**(NEW: O11, and it resolves contradiction 11 — two rules already written, which together defeat one of them.)**
+v18 makes **rehearsal case** one of four admissible bodies, and 7.1 generates every admitted skill into the two
+directories an agent loads from. Read together, **the known-answer case that will judge a run ships inside that
+run's own skill directory.** A rehearsal case an agent can read is not a rehearsal case; it is the answer key filed
+with the exam.
+
+**The fix is one field, not a second library.** Every admitted skill carries an **eval-only** flag in its
+frontmatter. The generator writes eval-only bodies into **`keel/golden/` (ABSENT)** and **never** into
+`.claude/skills/` or `.agents/skills/`, and the manifest check of 7.7 is re-pointed to fail a case body found in
+either loaded directory. `bin/skill-eval` (ABSENT) reads `keel/golden/`; a run does not.
+
+| Body | Ships into the loaded directories | Ships into `keel/golden/` |
+|---|---|---|
+| anchor | yes | no |
+| exemplar | yes | no |
+| reference | yes | no |
+| **rehearsal case** | **no** | **yes** |
+
+**The cost, once:** one frontmatter field and one generator rule. **Settled by:** grep a live run's loaded skill
+directories for a known answer and find nothing. This is the same rule §11.4 states about the tester — blindness is
+a property of what the process can open, never of what the prompt asked for — applied to the library rather than to
+the grant.
+
+---
+
 ### 7.3 Admission by eval
 
 **(NEW: the mechanism already ships, so this is an import rather than a design.)** `skill-creator` in
@@ -1998,6 +2696,24 @@ layer** — *"deterministic structural analysis (<2s, free)"*.
 **Refused for now:** `plugin-eval`'s Monte Carlo layer, *"statistical reliability via 50-100 simulated runs"*. **The
 cost, once:** without it a skill's reliability is measured on 2–3 cases, so **the expiry of 7.4 does the work a
 larger sample would have done**. That is why retirement is not optional in this design.
+
+**(NEW: O25 — one sample floor, and it resolves contradiction 12.)** §11.10 prints **`insufficient`** rather than a
+number below a sample floor, *"because a pass rate over four cases is a number that invites a decision it cannot
+support"* — and this section admits a skill on **2–3 cases**. Two rules about the same arithmetic, disagreeing, and
+the one that admits is the looser. **The fix is one shared predicate with two call sites (ABSENT):** the trust
+score, skill admission and §11's error rates all ask the same function whether the sample is enough, and it answers
+once. **The consequence is stated rather than softened:** an admission on 2–3 cases is admission **below the
+floor**, so it is recorded as `insufficient` and is exactly why v19's expiry is what does the work here. The
+alternative — raising skill admission to the trust score's floor — is refused because it would price a skill's
+admission above the work it saves, and the losing image is kept: *two floors, one per section, each defensible
+alone*.
+
+**(NEW: O47 — admission is bound to the bytes it was granted on.)** The admission record carries the **body hash**,
+and **a changed hash voids admission until re-eval**. Without it, admission is a claim about a file that anyone may
+then rewrite, which is the rug pull of §8.1 aimed at the library instead of at a server. **Mechanism:**
+`.claude/skills/CURATION.yml` (**EXISTS** and is checked on branch `ceo-1-1788609834`) gains the hash beside the
+test; `check:curation` fails a hash that does not match the file it names. **The cost, once:** one sha256 per
+admitted body.
 
 **(NEW: the mechanism is imported, the corpus is not — and the licence is the reason.)** `anthropics/skills` has no
 root LICENSE and says its skills are *"provided for demonstration and educational purposes only"*. We take the eval
@@ -2016,10 +2732,12 @@ flowchart TD
     BODY -->|"anchor, exemplar,<br/>rehearsal case, reference"| STATIC["Static layer:<br/>deterministic structural analysis"]
     STATIC --> EVAL["Eval layer: 2 to 3 realistic prompts,<br/>with-skill and baseline run in parallel,<br/>assertions graded"]
     EVAL --> BEAT{"Does with-skill beat baseline?"}
-    BEAT -->|"no"| NEG["Not admitted. The negative is written to<br/>the negatives store, never discarded"]
+    BEAT -->|"no"| NEG["Not admitted. The cut is written to<br/>CURATION.yml with the test that made it —<br/>house scope, never a venture store (O47)"]
     BEAT -->|"yes"| TRIG["Tune the description<br/>for triggering accuracy"]
-    TRIG --> EXP["Admitted: a namespace, and a valid_until"]
-    EXP --> GEN["Generated from the one Markdown source into<br/>.claude/skills/ and .agents/skills/"]
+    TRIG --> EXP["Admitted: a namespace, a valid_until,<br/>and the body hash (O47)"]
+    EXP --> EVO{"Is the body a rehearsal case?"}
+    EVO -->|"yes"| GOLD["keel/golden/ ONLY — eval-only.<br/>Never into a directory a run loads (O11)"]
+    EVO -->|"no"| GEN["Generated from the one Markdown source into<br/>.claude/skills/ and .agents/skills/"]
 ```
 
 ---
@@ -2044,6 +2762,27 @@ a vendor fact and a code exemplar do not rot at the same rate, and a single numb
 
 ---
 
+### 7.4a What the disposition reads, and the event when nothing resolves
+
+**(NEW: O41 — `DEPENDS-ON-R14`.)** 7.4 forces a disposition on a date and says nothing about what informs it. **Log
+skill activation and join it to outcomes**, and a skill that never fired once in its whole life defaults to
+**Deprecate** at expiry, with a founder waiver the only thing that keeps it. **v19 stays whole:** retirement is
+still date-forced and non-use is still not a trigger — 7.4's finding that no project in the world retires by
+non-use is unchanged. What changes is only what the human reads before choosing among three dispositions that are
+already compulsory.
+
+**(R14, OPEN.)** Do any of the three CLIs emit a **skill-activation event** we can read? **Source class:** the three
+vendors' hook and telemetry documentation. **What it decides:** whether O41 is a field lookup or instrumentation we
+build. **Mechanism:** `bin/log` (**ABSENT**) either way; only its input moves.
+
+**(NEW: O48 — the miss is the signal, and today nothing emits it.)** A **`skill.miss` event** is written when a
+brief's declared namespace resolves to **zero unexpired skills**. Uncovered-field detection is named in this plan
+as something the Operator notices, which is not a mechanism — a gap in the library is silent by construction,
+because the run simply proceeds without help and produces something plausible. A miss is the cheapest possible
+trigger for 7.5's creator, and it is one line in `bin/log` (**ABSENT**).
+
+---
+
 ### 7.5 The skill creator
 
 **(FOUNDER.)** *"we need a skill creator of skill, which, you know, we will research a task or a mission and, like,
@@ -2062,8 +2801,15 @@ product → curator**, each under its own grant, and one program scores the resu
 3. **curator** writes the artifact into one of the four admissible bodies of 7.2 and proposes its `valid_until`.
    The curator is the only writer of memory, and a skill is knowledge, so the writer is the same one.
 4. The **admission eval of 7.3** runs with-skill against baseline. **A candidate that does not beat baseline is not
-   admitted, and the negative is written to the negatives store rather than discarded** — the failure is the cheapest
-   thing the run produced.
+   admitted, and the cut is written to ~~the negatives store~~ `CURATION.yml` with the test that made it (moved
+   2026-09-06: O47)** rather than discarded — the failure is the cheapest thing the run produced.
+
+**(NEW: O47 — contradiction 10, and the fix was already on disk.)** §7.5 step 4 used to send a failed candidate to
+the **per-venture** negatives store, while v48 and §13.2 make skills **house scope**: a skill refused for the
+harness would have been invisible to a venture that later proposed the same body. `.claude/skills/CURATION.yml`
+already records every cut with the test that made it, is house scope, and is checked by `npm run check:curation` on
+branch `ceo-1-1788609834`. **The negatives store keeps everything else and loses nothing** — what moves is one
+class of row, to the file built for it.
 
 ```mermaid
 flowchart TD
@@ -2072,7 +2818,7 @@ flowchart TD
     PR --> CU["curator — writes it into one of the four<br/>admissible bodies; proposes valid_until"]
     CU --> AD["The admission eval of 7.3"]
     AD -->|"beats baseline"| IN["Admitted. Namespaced.<br/>Generated into both directories"]
-    AD -->|"does not beat baseline"| OUT["Refused. Negative recorded:<br/>this framing of the field did not help"]
+    AD -->|"does not beat baseline"| OUT["Refused. Recorded in CURATION.yml with<br/>its test — house scope, not a venture store"]
     IN --> EXPY["valid_until falls due"]
     EXPY --> DISP{"Exactly one disposition"}
     DISP --> R1["Refresh — re-run admission"]
@@ -2108,12 +2854,54 @@ there are no orphans:
 | `knowledge` | curator |
 | `research` | scout · challenger |
 
+**(FACT: world.md 16 — the thirteen do not cover everything installed, and the gap arrived from the vendor.)**
+The `Workflow` tool's prompt footprint fell from ~5.7k to ~1k tokens *"with the script-writing reference moved into
+a bundled `workflow-authoring` skill"*. That skill is **installed by the runtime and claimed by no namespace above**
+— so the table is a statement about what *we* admit, not about what an agent actually loads. v35's containment is
+unchanged and now cheaper; what this costs is that the startup metadata of 7.6a must count bundled skills we did
+not admit, or it counts the wrong library.
+
 **(FINAL, and now the standard's own mechanism rather than a local convention.)** **Never preloaded.** Progressive
 disclosure is what enforces it: *"The `name` and `description` fields are loaded at startup for all skills"* at
 **~100 tokens each**, the body loads only on judged relevance, and bundled files load below that. The consequence
 binds the library's size: **every admitted skill taxes every unrelated task at startup**, so the namespace is not
 cosmetic — it is the thing that keeps a growing library from making a shrinking one's job more expensive. That is
 the same defect this repository already fixed once, when reading the whole manifest cost ~15,000 tokens per lookup.
+
+---
+
+### 7.6a How big the library may get — a measured budget, not a number
+
+**(FOUNDER, rethink 2026-09-06: D12 → v77.)** *"As big as a measured budget allows."* The founder's answer to
+*how many skills* is neither a count nor "unlimited": it is **a per-agent startup metadata budget enforced by a
+checker, plus one generated directory per namespace so an agent loads only what its own file declares. The import
+stops when the budget binds.**
+
+**Why a budget and not a count.** 7.6's own arithmetic is the argument: the published standard loads *"the `name`
+and `description` fields … at startup for all skills"* at roughly **100 tokens each**, so **every admitted skill
+taxes every unrelated run**, and the upstream advertises 2,111 candidates. That is the same defect this repository
+already paid for once, when reading the whole manifest cost ~15,000 tokens a lookup and a good new skill made every
+unrelated task dearer. A count would be arbitrary; a budget is the thing that actually binds, and it binds on the
+quantity that hurts.
+
+**Mechanism.** One checker modelled on `scripts/check-memory-budget.mjs` — which **EXISTS and blocks** on branch
+`ceo-1-1788609834`, so this is a second subject for a proven shape rather than a new kind of gate — plus **one
+generator pass** that writes a directory per namespace (**both ABSENT**). It extends v48 and this section's 7.1
+generator: the generator already owns both output directories, so the per-namespace split is a rule inside it, not
+a second writer. **The cost, once:** the library stops being open-ended, which is what v3's ambition needs in order
+to stay affordable.
+
+**(R8, OPEN — and it can refute this row outright.)** Does the skill metadata tax scale with the **installed
+library** or with the agent's **declared namespaces**? **Source class:** two trees, identical prompt, input tokens
+read from `--output-format json` — one with the full house library installed, one carrying only one agent's
+namespaces. **What it decides:** if the tax scales with declared namespaces, **the generated directories are the
+whole fix and the budget is unnecessary**; the checker is then over-built and should not be written.
+
+**(R15, OPEN.)** Is there any published measurement of **selection accuracy as installed-skill count rises**? The
+budget bounds a *cost*; nothing here bounds the risk that a model picks the wrong skill out of two thousand.
+**Source class:** the spec's authors, vendor engineering posts, the harness showcase. **What it decides:** the real
+exposure of importing thousands. **If nobody has measured it, v77's budget is what bounds the exposure** — which
+is a weaker guarantee than it sounds, and is stated here rather than assumed away.
 
 ---
 
@@ -2132,7 +2920,7 @@ dispositions. Nothing sits in a directory read by nothing.
 | **PROCEDURE** | 73 | none, as procedure | One door only: a **Sender checklist**, where the judge is absent and the act cannot be taken back. Otherwise it may **donate its examples** to an exemplar, one at a time, with a caller. All 28 `thinking-*` sit here |
 | **ANCHOR-CANDIDATE** | 22 | **anchor** | It must carry a check with an exit code and beat baseline. First candidates named by the census: `wcag-audit-patterns`, `security-audit`, `web-security-testing`, `e2e-testing-patterns`, `writing-good-tests`, `verification-before-completion` |
 | **EXEMPLAR-CANDIDATE** | 16 | **exemplar** | Provenance per example, then the eval. `react-patterns`, `error-handling-patterns`, `high-end-visual-design`, `seo-content-writer` and the rest |
-| **REHEARSAL-CANDIDATE** | 1 | **rehearsal case** | `react19-test-patterns` carries before/after pairs with known answers — the only one in the corpus |
+| **REHEARSAL-CANDIDATE** | 1 | **rehearsal case** | `react19-test-patterns` carries before/after pairs with known answers — the only one in the corpus. **Its admitted form is eval-only: it lands in `keel/golden/` and leaves `.claude/skills/`** (7.2a, O11) |
 | **INFRA** | 22 | **reference** | **(NEW: this row moves.)** FINAL §16.2 said INFRA is *"never loaded into a run as a skill"*. v18 admits a fourth body — a vendor fact with an expiry — so an INFRA entry now has a legitimate skill form, and 7.4's expiry is what makes it safe |
 
 73 + 22 + 16 + 1 + 22 = 134. **The distribution is the finding, not the total:** the largest class is the one the
@@ -2144,7 +2932,9 @@ by re-admitting what is here.
 does not go to a shelf, so they stay and are re-pointed:
 
 - **`check:manifest`** becomes the **drift check between the one Markdown source and the two generated directories**
-  — the mechanism 7.1 needs, given that Codex does not merge same-named skills.
+  — the mechanism 7.1 needs, given that Codex does not merge same-named skills. **(NEW: O11 adds a second
+  assertion to it)** — it also fails when an eval-only body is found in either loaded directory, which is what makes
+  7.2a a gate rather than a convention.
 - **`check:curation`** already records every cut with the test that made it. Inverted per FINAL §11.3, that is the
   **admission record**: every entry keeps the eval that admitted it and the date it expires.
 
@@ -2164,14 +2954,21 @@ a new blocking check.
 | A skill citing a dead path fails | `scripts/check-citations.mjs` | **EXISTS**, branch `ceo-1-1788609834` |
 | The generated directories match the source | `check:manifest`, re-pointed | **EXISTS** as a suite step; the re-pointing is **ABSENT** |
 | Every admission keeps the test that made it | `.claude/skills/CURATION.yml`, inverted | **EXISTS**, branch `ceo-1-1788609834` |
-| No bulk import before the licence is read | a founder decision, section 20 row 4 | **WISH** until the fetch happens — nothing today blocks a vendoring commit |
+| No bulk import before the licence is read | a founder decision, section 20 row 4; **R13** narrows it to *derivative bodies* | **WISH** until the fetch happens — nothing today blocks a vendoring commit |
 | Skills are never preloaded | the standard's progressive disclosure | **shipped by the runtimes** |
+| **A rehearsal case cannot be read by the run it judges** (O11, 7.2a) | the eval-only frontmatter field; the generator writes it to `keel/golden/` only; `check:manifest` fails a case body in a loaded directory | **ABSENT** — `keel/golden/`; `check:manifest` **EXISTS** and is re-pointed |
+| **Admission is bound to the body it was granted on** (O47) | the body hash in `CURATION.yml`; `check:curation` fails a mismatch | `CURATION.yml` **EXISTS** and is checked, branch `ceo-1-1788609834`; the hash field is **ABSENT** |
+| **A failed candidate is house scope, never a venture store** (O47, contradiction 10) | `.claude/skills/CURATION.yml` | **EXISTS**, branch `ceo-1-1788609834` |
+| **One sample floor answers for admission and for the trust score** (O25, contradiction 12) | one shared predicate, two call sites — §11.10 and 7.3 | **ABSENT** |
+| **Startup metadata stays inside a per-agent budget** (v77) | a checker modelled on `scripts/check-memory-budget.mjs`, plus one generated directory per namespace | checker shape **EXISTS** (memory budget); the skills checker and the generator pass are **ABSENT**; **R8** may retire the checker |
+| **A skill that never fired defaults to Deprecate at expiry** (O41) | activation logged by `bin/log` and joined to outcomes | **ABSENT** · **DEPENDS-ON-R14** — whether any CLI emits the event is unread |
+| **A namespace that resolves to nothing raises an event** (O48) | a `skill.miss` event from `bin/log` | **ABSENT** |
 
 ---
 
 ## 8 · Tools and MCPs
 
-*obeys: v15, v33 (SPINE §F entire); inherits: FINAL §9.3 (the door), §9.4 (the trifecta), §16.3 (the connected hands)*
+*obeys: v15, v33 (SPINE §F entire), and **v68** (the rethink round of 2026-09-06); inherits: FINAL §9.3 (the door), §9.4 (the trifecta), §16.3 (the connected hands)*
 
 **(FOUNDER.)** *"there is no limitations of adding new MCPs or new tools to fill our needs. So there is so many
 filters we might need to include and get more MCPs or more of tools in order to do things better or to improve the
@@ -2206,18 +3003,24 @@ flowchart TD
     WHO -->|"none may"| SENDERQ{"Does it REACH THE WORLD?"}
     SENDERQ -->|"yes"| SENDER["Only the Sender holds it.<br/>The Sender holds no model"]
     SENDERQ -->|"no"| NO
-    WHO -->|"a named agent or agents"| PIN["Pin the version.<br/>Hash the tool descriptions.<br/>A person reads the full description once"]
+    WHO -->|"a named agent or agents"| PIN["Pin the version.<br/>Hash the tool descriptions.<br/>Record a binary's version string and sha256 (O35).<br/>A person reads the full description once"]
     SENDER --> PIN
-    PIN --> SCOPE["Scope the credential:<br/>one venture, least privilege, an expiry —<br/>narrower than the tool"]
+    PIN --> SCOPE["Scope the credential:<br/>one venture, least privilege, an expiry —<br/>narrower than the tool.<br/>Record scopes_observed beside scopes_requested (O35)"]
     SCOPE --> TRI{"Would granting this create the<br/>trifecta on any path? (8.7)"}
     TRI -->|"yes"| SPLIT["SPLIT THE RUN. Structural, not a setting.<br/>The reader is born a scout and stays one"]
     TRI -->|"no"| GUARD
     SPLIT --> GUARD["guard reviews it — every tool admission<br/>is on guard's routing line"]
     GUARD --> REH["Rehearse it: a known call, a known answer,<br/>on its dry branch, headless"]
-    REH --> CEIL{"A counter and a ceiling —<br/>and does the ceiling REJECT?"}
+    REH --> CAP{"Does it spend credits or money?"}
+    CAP -->|"yes"| PCAP{"Is a provider_cap recorded,<br/>held AT the provider? (O32)"}
+    PCAP -->|"null"| NO
+    PCAP -->|"a number"| CEIL
+    CAP -->|"no"| CEIL
+    CEIL{"A counter and a ceiling —<br/>and does the ceiling REJECT?"}
     CEIL -->|"no"| NO
     CEIL -->|"yes"| ADMIT["Admitted, with a horizon:<br/>day, Floor only · night · never"]
-    ADMIT --> WATCH["Every call logged.<br/>Description hash checked each session.<br/>Probed nightly by bin/probe"]
+    ADMIT --> EGR["Every call leaves through bin/egress:<br/>logged, filtered by domain AND method,<br/>credentials injected the agent never sees (v68)"]
+    EGR --> WATCH["Description hash checked each session.<br/>Probed nightly by bin/probe"]
     WATCH -->|"hash changed"| FREEZE["FROZEN — a rug pull until proven otherwise.<br/>The founder is told"]
     WATCH -->|"horizon passes"| RENEW{"Still named by a live intent?"}
     RENEW -->|"no"| REVOKE["Revoked. Credential rotated"]
@@ -2229,18 +3032,64 @@ does it give us we could not build in a day, its LICENSE file, our monthly test,
 alive* — **take the mechanism, not the dependency**, because every framework that wants to own the loop is a second
 control plane beside the runtime, and two implementations of one thing disagree silently.
 
+**(NEW: O35 — the admission record says what we asked for and not what we got, and for a CLI it says nothing at
+all.)** Two fields are added to the admitted-tool file (**ABSENT**). **`scopes_observed`, read back from the
+provider** and recorded beside `scopes_requested`: an OAuth grant is what the provider *issued*, not what we typed
+into a consent screen, and the two differ often enough that the difference is the interesting number.
+**A binary's version string and its sha256, recorded at admission**: version pinning is defined in this section for
+**MCP descriptions** and is **undefined for the binaries that actually run at night** — `gh`, `git`, `node`, `bun`,
+`codex`, `gemini` — which is the larger surface and the one nothing currently hashes. **The cost, once:** two reads
+at admission time. **Settled by:** a re-read that disagrees with the record, which is a rug pull one layer below
+the one 8.1 already watches for.
+
+---
+
+### 8.1a The door in the wall — one program everything leaves through
+
+**(FOUNDER, rethink 2026-09-06: D3 → v68.)** *"Build `bin/egress`; `--strict-mcp-config` names only the proxy; the
+MCP policy file becomes its configuration."* **One no-model program logs every outbound call, filters by domain
+**and HTTP method**, and injects credentials the agent never sees.**
+
+**Why it is a program and not another rule.** 8.1's door decides what may be *admitted*; nothing in this section
+decides what happens at the **syscall**. That gap is where the trifecta argument runs out: 8.7's split guarantees a
+leg is missing **at dispatch**, and v68 is the only proposal of the round that survives an agent being *fully*
+persuaded — it keeps the leg missing at the moment of the call. It is also what turns *"every call logged"* (8.1's
+own `WATCH` node) from a sentence into a count that can be compared against the runtime's.
+
+**What this demotes, and it is a deletion (SYNTHESIS §7 deletion 10).** ~~`.claude/mcp-policy.json` as an
+**independent** control~~ — a policy whose calls no hook can see — **becomes the egress proxy's configuration**
+(moved 2026-09-06: D3). It is not removed from disk and its allow/deny shape is not rewritten; what goes is the
+claim that it enforces anything by itself. `--strict-mcp-config` then names **only the proxy**, so every server is
+declared twice on purpose: once to the proxy, which can see the call, and once in the run's argv, which cannot.
+
+**Mechanism:** `bin/egress` (**ABSENT**); `--strict-mcp-config` **ships today**. **The cost, once:** one program,
+one hop of latency, and each server declared twice. **Settled by:** a deliberate exfiltration attempt failing at
+the proxy rather than at the prompt, and the proxy's call count matching the runtime's for one night.
+
+**(R2, OPEN — it can halve this row.)** Does the sandbox's documented, unused `credentials` block inject a secret at
+egress without the child being able to read it, and does its `network` block support an HTTP-method allowlist and
+TLS inspection? **Source class:** the vendor's sandboxing and settings reference, then one measured cell. **What it
+decides:** whether v68 is one configuration change or a program we write. The founder took the row **before** the
+answer, so what R2 can still change is the *size* of the program, never whether the guarantee exists.
+
 ---
 
 ### 8.2 The four classes
 
-**(SPINE §F, and each row's "who may hold it" is now a roster name rather than a shape.)**
+**(SPINE §F is the decision, and this section stops carrying a second copy of it — contradiction 19, SYNTHESIS §7
+deletion 12.)** The four-class table stood in **four** places: SPINE §F, here, §17.3 and COVERAGE. Four renderings
+of one table is three chances to drift, and the tainted row had already drifted once — which is what v36 had to
+settle. **§F holds the decision; §17.3 holds the inventory copy; this section points at §F and keeps only what §F
+does not carry.**
 
-| Class | Example | Who may hold it | Night? |
-|---|---|---|---|
-| **READ-ONLY** | Playwright headless, a render, a repo read API, analytics, error tracking | any agent whose grant names it | yes |
-| **READ-ONLY, tainted** | Gmail read, Calendar read, Drive read, Notion read, the open web | **`scout`, and the world's door program — nothing else.** No agent holding `Write`, `Edit` or `Bash` reads them raw (v36) | yes |
-| **WRITES, reversible** | Figma, Pencil, a design file on a dry branch | **designer**, after the undo is drilled | yes |
-| **REACHES THE WORLD** | send, publish, pay, deploy, share, delete | **no agent. The Sender**, which holds no model | only after the founder widens the class |
+**Read the classes at SPINE §F: READ-ONLY · READ-ONLY, tainted · WRITES, reversible · REACHES THE WORLD**, each
+with its examples, its holder and its night disposition. Two deltas belong to this section rather than to §F, and
+they are stated once here:
+
+- **v36 narrows the tainted row.** §F reads *"scout only"*; the holder is **`scout` and the world's door program**,
+  and **no agent holding `Write`, `Edit` or `Bash` reads a tainted source raw** (8.7).
+- **The per-agent bindings are 8.7's table**, which is the roster-decided reading of the same four classes and is
+  where a reader should go for *who holds what*.
 
 **(NEW: the class is assigned at the door and consumed at dispatch, which is what makes it structural.)** A grant is
 argv fixed at dispatch and cannot narrow mid-run, so the class cannot be a runtime judgement. **Mechanism:**
@@ -2308,6 +3157,27 @@ arguing.)**
 | **The founder's signed-in Chrome** | REACHES THE WORLD **and** holds private data — the widest hand in the building | nothing. It stays day-only, Floor-only, held by the founder, at any trust score |
 | **A user-testing simulation** | it is the machine grading its own homework; the rung-1 anchor is a real reaction | nothing — this is a truth rule, not a tool rule |
 
+**(NEW: O32 — one rule was giving two answers, and this is contradiction 8.)** The table above refuses **RunPod**
+for *"spends money at a rate under an uncapped key"*, and 8.7 admits **Higgsfield**, which spends credits, *"under a
+daily spend cap"* **that no named program enforces**. Same property, opposite verdicts, and the difference was which
+row a reader landed on first. **The fix is one field at the door: `provider_cap`, required on any credit-spending
+or money-spending tool, and `bin/run` refuses a grant whose recorded cap is `null`** (both **ABSENT**). A cap in
+our prose is not a cap; a cap held **at the provider** survives our own program being wrong. RunPod's refusal is
+unchanged and now says what would reverse it in the same words the rule uses.
+
+**(R21, OPEN — it decides which class Higgsfield sits in.)** Does any **credit-spending server expose a spend or
+balance read**? **Source class:** vendor API documentation, one fetch each. **What it decides:** with a balance
+read, a program can hold an absolute ceiling and Higgsfield stays in **WRITES, reversible**; without one, spending
+is an act with no readable counter and it belongs in **REACHES THE WORLD**, where the Sender holds it and no agent
+does.
+
+**(NEW: O33 — the one item in the departments that is both unprecedented and legally exposed.)** **Bulk collection
+of personal data passes the door with `guard` and a data-classification row *before* it runs**, never after.
+Lead scraping is the only entry in the department tables that is unprecedented in **every** fetched roster **and**
+legally exposed, and it is the shape most likely to be proposed as an ordinary growth tool. **Mechanism:** the
+door's checklist (**ABSENT**) — one required review and one required classification row, which §12's three data
+classes then govern for retention. **The cost, once:** one review on one class of tool.
+
 ---
 
 ### 8.6 One MCP shape serves both runtimes
@@ -2325,7 +3195,29 @@ guarantees are not.** Section 10 is where that is resolved into one launcher.
 `claim-append`. **Two** agent files declare `mcpServers` — `designer` (`playwright`) and `sourcer`
 (`claim-append`, #112). Derive it, do not quote it: `grep -n 'mcpServers' .claude/agents/*.md` against
 `Object.keys(require('./.mcp.json').mcpServers)`. `.claude/mcp-policy.json` EXISTS (per-server allow/deny; the
-shape the door's per-tool file inherits).
+shape the door's per-tool file inherits) — and as of v68 it is **the egress proxy's configuration**, not a control
+in its own right (8.1a).
+
+**(FACT: world.md 23 — W23. An admitted tool's *output* is now a taint path, and the door tests the input.)** A
+Codex extension can *"inspect or replace MCP tool results before reaching the model"* (0.151.0, 2026-08-29). Every
+rule in 8.1 governs what a server is *allowed to do*; none of them governs what an extension does to the server's
+answer on the way back. So a tool that passes admission, keeps its description hash and stays inside its scope can
+still deliver text the model treats as a result and nobody wrote. **This is the rug pull with the direction
+reversed**, and it pairs with O65's taint id: a rewritten result is an inbound row by any honest reading, so it
+carries a taint id or the Sender refuses what descends from it. **Mechanism:** the extension surface is Codex's;
+what we control is `--ignore-user-config` on the Codex carrier and O65's lineage check at the Sender (both
+**ABSENT**).
+
+**(NEW: O36 — nothing governs a config import, and a config import carries everything this section governs.)**
+**`/import` and `claude import` are refused inside the house.** 8.1's door governs *tools* and v53 governs *pages*;
+an import carries **MCP servers, commands, subagents and skills** in one act, past both. It is the one command that
+can widen a grant without touching argv, a settings file or an agent file. **Mechanism:** a `UserPromptSubmit` hook
+that refuses the two verbs (**ABSENT**). **The cost, once:** the founder imports by hand, through the door, one
+item at a time — which is what the door is for.
+
+**(FACT: world.md 16 — the installed library is wider than the admitted one.)** The `Workflow` tool now ships a
+bundled `workflow-authoring` skill that **no namespace in 7.6 claims**. It is named here because it is a capability
+that arrived with a runtime rather than through this door; 7.6a is where its startup cost is counted.
 
 **(NEW: `sourcer`'s grant is the door's own model, and it narrows under v2.)** `claim-append` was granted to
 `sourcer` while `sourcer`'s `tools:` line stayed `[Read, Glob, Grep, WebSearch, WebFetch]` — **no `Write`, no
@@ -2351,7 +3243,7 @@ the door.)**
 | Gmail **send** | REACHES THE WORLD, one-way | OAuth | **the Sender**, founder-signed | never unattended until the founder widens the class |
 | Drive share · Calendar create · Notion write | REACHES THE WORLD (a share is durable) | OAuth | **the Sender**, after a recall window | night only after the class is widened and the undo drilled |
 | Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | WRITES, reversible | OAuth / local files / API key | **designer**, on a dry branch | night after the undo is drilled |
-| Higgsfield (image · video · audio) | reversible artifact, **SPENDS credits** | API key; failed to connect in the census session (`ENOTFOUND`) | **writer**, rate-capped | night, under a daily spend cap. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
+| Higgsfield (image · video · audio) | reversible artifact, **SPENDS credits** | API key; failed to connect in the census session (`ENOTFOUND`) | **writer**, rate-capped | night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
 | RunPod | **SPENDS MONEY at a rate** | API key, **uncapped** | **nobody** | never, until a capped key exists |
 | `claim-append` (local, `scripts/mcp/claim-append-server.mjs`, EXISTS) | WRITES LOCALLY | none | **curator** does this with `Write` and needs no server. The pattern survives as the door's model | night |
 | Mem0 | REACHES THE WORLD | unauthenticated | **nobody** | never (8.5) |
@@ -2373,6 +3265,15 @@ build, a CVE, an invoice, a support message — **a program writes one row into 
 *"No model reads a stranger's text with a tool in its hand."* The door holds no model, so there is nothing in it to
 steer; a prompt injection that reaches it finds a program. A scout with no credentials reads the row, and `steward`
 writes the obligation **from `scout`'s handover, never from a raw row**.
+
+**(NEW: O65 — taint has to survive the handover, and today it stops at the door.)** The door writes one row and the
+taint is a property of that row; **a handover derived from it carries nothing**, so three hops later a staged
+artifact's lineage is a matter of belief. **Two fields fix it.** Every inbound row gets a **taint id**, and any
+handover derived from it carries the id forward; **`bin/send` (ABSENT) refuses a staged artifact whose lineage
+names an uncleared id.** And every inbound row's provenance carries a **per-venture canary string** which the
+Sender also refuses — so a payload that persuades an agent to echo its own provenance **turns an injection attempt
+into a `wake-me`** rather than into a send. **The cost, once:** one id, one string, one refusal at the Sender.
+**Settled by:** plant the canary in a fixture inbound row, run the chain end to end, and the Sender must stop.
 
 **(FINAL §9.4 — why the two-legs argument does not survive.)** Taint is **static at dispatch**, not judged while a
 run is going: *"any run whose brief reads content from outside the company … is born as a scout, without the tools
@@ -2403,8 +3304,14 @@ already wraps an inbound payload in a block labelling it untrusted data, which i
 | The trifecta cannot form on any path | `bin/run` refuses the combined grant; `bin/probe` asserts it nightly | **ABSENT** |
 | A tainted read is held only by `scout` and the world's door (v36) | the door program writes one inbound row and holds no model; `bin/run` refuses any brief pairing an outside read with `Write`, `Edit` or `Bash` | **ABSENT** — the roster row is patched, the launcher that would enforce it is not built |
 | An MCP call is governed by a hook only if the matcher names it | registered as `c-mcp-hook-matcher-must-name-the-tool` | **EXISTS** as a claim, branch `ceo-1-1788609834` |
-| Servers absent unless named in argv | `--strict-mcp-config` | **shipped by the runtime** |
-| Per-server allow/deny | `.claude/mcp-policy.json` (65 lines; the seed shape) | **EXISTS**, branch `ceo-1-1788609834` |
+| Servers absent unless named in argv | `--strict-mcp-config` — **naming only the egress proxy** (v68) | **shipped by the runtime**; the proxy it should name is **ABSENT** |
+| **Everything outbound passes one program** (v68) | `bin/egress` — logs every call, filters by domain **and** HTTP method, injects credentials the agent never sees | **ABSENT**. **R2** decides whether half of it is the sandbox's `credentials`/`network` blocks instead |
+| ~~Per-server allow/deny is an independent control~~ **Per-server allow/deny is the proxy's configuration** (moved 2026-09-06: D3, deletion 10) | `.claude/mcp-policy.json` (65 lines; the seed shape), read by `bin/egress` | file **EXISTS**, branch `ceo-1-1788609834`; the reader is **ABSENT** — until it exists this file enforces nothing |
+| **A credit- or money-spending tool has a recorded `provider_cap`** (O32) | `bin/door` records it; `bin/run` refuses a grant whose cap is `null` | **ABSENT** — nothing today caps Higgsfield or RunPod |
+| **Bulk personal data is classified and reviewed before it runs** (O33) | the door's checklist: `guard` review plus a data-classification row | **ABSENT** |
+| **What the provider actually granted is recorded** (O35) | `scopes_observed` beside `scopes_requested`; a binary's version string and sha256 at admission | **ABSENT** |
+| **A config import cannot widen a grant** (O36) | a `UserPromptSubmit` hook refusing `/import` and `claude import` | **ABSENT** — nothing governs it today |
+| **Taint survives the handover, and an injection attempt wakes the founder** (O65) | a taint id on every inbound row, carried by derived handovers; a per-venture canary the Sender refuses; `bin/send` refuses an uncleared lineage | **ABSENT** |
 | A declared MCP server is backed by real config | `.claude/hooks/schema-lint.js` fails a declaration nothing backs | **EXISTS**, branch `ceo-1-1788609834` |
 | Every tool admission is reviewed adversarially | `guard`'s routing line names it | **WISH** until the roster files exist |
 | A spending tool has a capped credential | the cap must be at the provider, not in our prose | **WISH** — nothing today caps RunPod |
@@ -2413,7 +3320,7 @@ already wraps an inbound payload in a block labelling it untrusted data, which i
 
 ## 9 · Models
 
-*obeys: v20, v22, v23, and v57, v58, v59 which overrule v21 and §G.1's teammate row (SPINE §G entire); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
+*obeys: v20, v22, v23, and v57, v58, v59 which overrule v21 and §G.1's teammate row (SPINE §G entire), and **v78** (the rethink round of 2026-09-06); inherits: FINAL §5, §14.5, §15.3 with its coefficients corrected*
 
 **(FOUNDER.)** *"we need to understand what models each agent gets because we don't need everyone running on Opus or
 Fable or Astra or Terra ChatGPT models. We can also define it."*
@@ -2462,6 +3369,37 @@ cheapest re-read of a large standing context.
 **(NEW: no agent defaults to Haiku, and 9.8 is why.)** The genuinely cheap work does not go to a cheap model at all
 — it goes to a local one, or to no model.
 
+**(FACT: world.md 10 — W10. The field above became binding on 2026-09-01, and before that it was advisory.)**
+*"Changed `CLAUDE_CODE_SUBAGENT_MODEL` to set the default subagent model rather than override everything: an agent
+definition's `model:` and an explicit per-spawn model now take precedence over it"* (2.1.251). Until that change,
+**one environment variable silently flattened all fourteen per-agent choices** — the table above would have been
+true on disk and false at runtime, with nothing in a log to say so. It is recorded here because a reader of the
+table needs to know the field outranks the environment, and because a *downgrade* of the runtime restores the
+flattening.
+
+**(FACT: world.md 2 — W2. Write the full id, never the alias, and this is a routing rule rather than a style
+rule.)** *"Changed `fable` and `best` in Claude apps gateway sessions to keep resolving to Fable 5 for now, since
+gateways not yet configured for Fable 5.1 reject it; pick Fable 5.1 in `/model` to use it"* (2.1.258). **An agent
+file naming `fable` and one naming `claude-fable-5-1` are not the same routing** — the alias lands on the legacy
+model, whose cache read is **1.00 against Fable 5.1's 0.25** (9.9), which is four times the coefficient v57 is
+spending for. So `builder` and `architect` carry the full id, and 9.9's lint set must admit that exact string in
+the same change that writes either file.
+
+**(FACT: world.md 6 — W6. The per-agent frontmatter carries a second cost field, and it decides whether v57's
+argument holds at all.)** `experimental.cacheTtl` is *"`5m`" or `"1h"` … a per-agent prompt cache TTL used when no
+subagent TTL setting is configured"*, with `promptCacheTtl` and `subagentPromptCacheTtl` as settings beside it. The
+roster's model column therefore gains a **`cacheTtl` companion**: v57 justifies Fable on a cache read at 0.025x,
+and the TTL is what decides whether that cache is **warm** when the sibling reads it. A one-hour agent and a
+five-minute agent on the same standing prefix are two different prices for one design (9.6's `W(ttl)`).
+
+**(FACT: world.md 17 — W17. A blocking gate exists for exactly this rule and no row uses it.)**
+`PreModelSwitch` and `PostModelSwitch` hook events shipped in 2.1.251, *"(block, confirm, or annotate a model
+switch)"*. **v57's default and v21's overruled escalation are both statements about which model a run may end up
+on, and neither has a mechanism** — the `model:` field sets a start, not a floor. `PreModelSwitch` is the gate that
+could refuse a downgrade off `claude-fable-5-1` mid-run, or refuse a silent climb onto it. **It is named here and
+not adopted here:** the hook belongs to §12's envelope, which owns hook events, and this section records that the
+gate exists, is blocking, and is currently unused by any row in the plan.
+
 ---
 
 ### 9.2 Model per move
@@ -2488,6 +3426,15 @@ that is now the standing condition of the two agents that do most of the buildin
 climb into. **What the change removes is a trigger nobody could observe cheaply** — *failed twice* and *horizon
 beyond one window* both needed history the ledger does not carry yet — and what it adds is a flat, checkable field
 in two files.
+
+**(NEW: O5 — *which agent, which model, which band* is answered in three places, and this is contradiction 17.)**
+The same routing decision is written in **§B.2's roster table**, in **§C.1's band table** and in **9.2 above**, and
+nothing checks that the three agree. They already differ in emphasis and there is no run in which a disagreement
+would surface — the launcher reads one of them and the other two are prose. **The fix is a generator, not a rule:**
+one file, `keel/shared/routing.yml` (**ABSENT**), holds agent → model → band → carrier, and all three tables are
+generated from it. **The cost, once:** one file and one generator pass; the tables stop being authored and start
+being rendered. **Settled by:** edit the model of one agent in the file and watch three tables move, or the
+generator is not wired.
 
 **(FINAL §5.3, surviving and now sourced.)** *"The only justification for a harder window on a move is that a
 routine one has been measured to fail that move's rehearsal — the reverse of the usual instinct."* And: work judged
@@ -2566,6 +3513,36 @@ reconciliation stay permitted.
 
 ---
 
+### 9.4a When a family is limited, unreachable or wrong — v78
+
+**(FOUNDER, rethink 2026-09-06: D13 → v78.)** 9.4 says a family limit is a **reroute** and never says **where the
+reroute goes**. Because Codex is one foreground slot (§10.2) and Gemini is scout-only, **a seat-limit stop stops the
+whole company**, and a reroute with no rule silently trades correctness for availability. Four things, decided
+together:
+
+| The rule | What it is | Mechanism |
+|---|---|---|
+| **A three-deep `fallback:` per agent, ending in *stop and stage*** | the last rung is not another model — it is the run halting and leaving its work staged for the founder | one frontmatter field × fifteen files — **ABSENT** |
+| **A cross-family reroute is recorded as a rung demotion** | unless that family has passed the rehearsal for that **move class**, its output is rung 4 and says so | the rung field on the handover (§11.2) — **ABSENT** |
+| **A `class: calibration` rehearsal set that is never edited** | an instrument refreshed by the rule that refreshes its subject cannot detect drift | a `class:` field on a rehearsal case (§7.2a, §11.10) — **ABSENT** |
+| **One provider-outage drill, with the primary family denied at the launcher** | a fallback nobody has run is a design, not a fallback | one deny switch in `bin/run` — **ABSENT** |
+
+**The demotion clause is the load-bearing half, and it is what makes this different from a retry list.** A fallback
+chain alone answers *can the work continue*; it does not answer *is the answer still worth what the first answer
+was worth*. Rerouting `builder` from Fable 5.1 to Sonnet 5 mid-build buys availability, and the price is paid in a
+place nothing measures unless the demotion is written down. **A reroute that says out loud what it bought is the
+whole cost of this row.**
+
+**(FACT: world.md 19 — the version floor that gated this is stale.)** v32's Codex rehearsal is specified as
+~~*"version ≥ 0.124.0"*~~ **the installed version, recorded** (moved 2026-09-06: W19) — Codex is at **0.153.4
+(2026-09-04)**, twenty-nine minor versions on, so the floor is satisfied by anything installed and no longer
+discriminates. §10.8 carries the restatement; O35 is what records the version and its hash at admission.
+
+**The cost, once:** one drilled night. **Settled by:** the drill's completion count against a normal night, and
+whether calibration results move when a model id changes. **This moves v22 and §11.10** and reverses neither.
+
+---
+
 ### 9.5 Cache facts that bind
 
 **(FINAL §14.5, confirmed verbatim and found to be broader than it stated.)** **89% of the historical bill on this
@@ -2586,6 +3563,35 @@ the prefix and neither is used yet: `--exclude-dynamic-system-prompt-sections` a
 
 **(NEW: the meter cannot come from `/usage`.)** *"`/usage` reports the cache hit rate for the main conversation
 only"*, so the meter reads each run's own reported token fields, joined by the id minted at dispatch.
+
+**(NEW: O39 — hash the standing prefix at dispatch, and turn on the two flags that stabilise it.)** The paragraph
+above states a rule — the standing prompts are byte-identical and carry no timestamp — with **nothing that checks
+it**. A hit rate answers the question a day late and on a bill: it says the cache missed, not **what changed**.
+**So `bin/run` (ABSENT) hashes the standing prefix — system prompt, tool definitions, skill metadata — records the
+hash on the dispatch row, and treats a change as an event.** A hit rate is a lagging indicator on a bill; a prefix
+hash is a leading indicator on a dispatch, and it names the culprit in the same row. The two shipped flags named
+above, `--exclude-dynamic-system-prompt-sections` and `--system-prompt-snapshot on`, are turned on in the same
+change: they are what make the prefix stable enough for the hash to mean anything. **The cost, once:** one sha256
+per dispatch.
+
+**(R7, OPEN — it is the premise under v57 and under 9.6's formula.)** What is the **cache-read share per dispatch
+shape**, and do those two flags move it? **Source class:** ten real moves per shape, read from **each run's own
+token fields**, never from `/usage`. **What it decides:** whether the 89% figure this section leans on holds for
+*our* shapes, and it is the same assumption on which two competent reviewers priced this machine's predecessor and
+**diverged tenfold** (9.6). Also gains 7.6a's budget a denominator: skill metadata is part of the prefix being
+hashed.
+
+**(FACT: world.md 4 — W4. Four of the numbers this section says are computed are now emitted as structured
+fields.)** The vendor ships a per-session **`prompt_cache` object** for status-line scripts (*"hit ratio, misses,
+tokens re-cached, warm/cold"*), a **`rate_limits.spend_limit`** status-line field with a Spend limit bar in
+`/usage`, a **per-loop `/usage` breakdown** (run count, total tokens, tokens per run, last run), and a
+**`modelPricing` managed setting** that makes `/cost`, the status line and telemetry use contracted rates instead
+of list price. **Read one at a time, they change what the meter does rather than what it means:** a number this
+plan says to compute from the event log can now be *read* where the vendor emits it, and computing it anyway is a
+second implementation of a vendor's own arithmetic. The `prompt_cache` object is per session and does not replace
+R7's per-run token fields, which is the one place this fact does **not** reach. Page 3's use of these fields is
+§14's, and `modelPricing` is what would make O8's `prices.yml` a fallback rather than the source on a contracted
+account.
 
 ---
 
@@ -2614,6 +3620,12 @@ Fails if: shapes vary per run · the standing prompt is regenerated ·
           usage credits mid-batch, which shortens the TTL twelvefold.
 ```
 
+**(NEW: contradiction 15 — this formula is carried twice with the same coefficients, and §9 owns it.)** §16.3
+carried a duplicate of the block above. **Two implementations of one check disagree silently**, and this repository
+has already paid for that class once. **The formula lives here and nowhere else.** §16.3 keeps only its
+tenfold-divergence argument and cites 9.6 for the arithmetic (SYNTHESIS §7 deletion 20). If a coefficient below
+changes, exactly one place changes.
+
 Base input and the published absolutes both appear so either can be checked against the other:
 
 | Model | Base in / out $/MTok | Cache read $/MTok | Cache write 5m / 1h | Context |
@@ -2623,6 +3635,23 @@ Base input and the published absolutes both appear so either can be checked agai
 | Sonnet 5 (`claude-sonnet-5`) | 2 / 10 | 0.20 | 2.50 / 4 | 1M |
 | Haiku 4.5 (`claude-haiku-4-5-20251001`) | 1 / 5 | 0.10 | 1.25 / 2 | 200K |
 | `gpt-5.3-codex` | 1.75 / 14 | 0.175 | — | — |
+
+**(FACT: world.md 1, 3 — the two rows above that a vendor moved, and both hold.)** **W1:** Fable 5.1 shipped as
+`claude-fable-5-1`, *"1M context, $10/$50 per Mtok with $0.25/Mtok cache reads"* — the id, the context and the
+0.025x read in this table are **confirmed from the vendor's own changelog**, and v57's remaining UNVERIFIED is
+narrower than it was: it is the **subscription seat**, not the model. **W3:** Sonnet 5's **$2/$10 is the standard
+list price, not a limited-time promo** — *"Updated the `/model` picker and the bundled `claude-api` skill to show
+Sonnet 5's $2/$10 per Mtok pricing as its standard list price rather than a limited-time promo"*. Any promo caveat
+on a Sonnet row anywhere in this plan is stale; there is none in this table, and this sentence is why.
+
+**(NEW: O8 — a price is a fetched fact, so it carries an expiry and a stale row refuses to route.)** The table above
+is prose, which means it rots exactly like every other fetched fact in this plan and nothing notices. **Every row
+moves into `keel/shared/prices.yml` (ABSENT) with `fetched_at` and `valid_until`, and a stale row REFUSES ROUTING
+rather than mis-pricing.** Refusing is the whole point: a wrong price does not fail, it produces a plausible number
+that a ceiling is then computed from (§16), and nothing downstream can tell. **Gemini's quota is carried as a
+count, not a price** — 60/min and 1,000/day — because it has no per-token figure and a zero would be read as free.
+This is the same rule §9.11 already states for model ids, applied to the number beside the id, and it is what
+v81's `source:` and `valid_until` look like for this section.
 
 **(NEW: this is the quantitative backing for v57, and it is the one number that changes an instinct.)** List price
 runs **10x in and 10x out** from Haiku 4.5 to Fable 5.1 — but **Fable's cache reads are only 2.5x Haiku's**. On the
@@ -2650,6 +3679,14 @@ Opus 5 and Fable 5.x are on it; **Sonnet 4.6 and earlier are not.**
 that much on the current engines.** This system carries several such budgets — the context caps, the handoff ceiling,
 the session-start payload budget. They are not adjusted here by arithmetic, because an adjusted guess is still a
 guess; **they are re-measured, and until they are, every one of them is marked as measured on the old tokenizer.**
+
+**(NEW: O77 — a mark is not a mechanism, so every ceiling names its tokenizer.)** Marking a budget *measured on the
+old tokenizer* tells a reader something and tells the launcher nothing. **Every ceiling carries `tokenizer:`, and
+`bin/run` (ABSENT) refuses to enforce a legacy cap on a current-tokenizer model.** The failure this prevents is the
+one worth naming: a ceiling that fires ~30% early produces a run that stops mid-work with no error, and **a ceiling
+that fires early is indistinguishable from a stuck run** — the same silent-empty-result shape §10.2 refuses in
+Codex, arriving through our own arithmetic. **The cost, once:** one field per ceiling and one comparison at
+dispatch.
 
 ---
 
@@ -2736,7 +3773,15 @@ company's whole capacity.
 | The small fast model is Sonnet 5, not Haiku 4.5 | `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-sonnet-5` in the launcher's environment, and in the managed file's `env` if it carries one (v58) | **ABSENT** — `bin/run` does not exist; the variable itself is shipped and documented |
 | A teammate runs on its own file's model | the teammate is a full session started from an agent file; `bin/run` names the file, never a model (v59) | **ABSENT** — teams are on (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), the launcher is not built |
 | A run's cost is measured, never estimated | each run's own reported cost fields, joined by the dispatch id | **ABSENT** — the event log on this branch is the spine |
-| A stall cannot run forever | `--max-budget-usd`; subagent spend counts toward it; overflow fails a spawn with `Budget limit reached` | **shipped** (v2.1.217+). **It is not a billing control** — print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers (v23) |
+| A stall cannot run forever | `--max-budget-usd`; subagent spend counts toward it; overflow fails a spawn with `Budget limit reached` | **shipped** (v2.1.217+). **It is not a billing control** — print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers (v23). **(FACT: world.md 5 — W5)** the estimate now includes the *"1.1× US-only-inference premium for data-residency workspaces"*: still local, now with a residency multiplier |
+| **Each agent declares a three-deep `fallback:` ending in stop-and-stage** (v78) | one frontmatter field × fifteen files; `bin/run` reads it | **ABSENT** |
+| **A cross-family reroute is recorded as a rung demotion unless rehearsed for that move class** (v78) | the rung field on the handover; the `class: calibration` set that is never edited | **ABSENT** |
+| **The fallback has been run at least once** (v78) | one provider-outage drill with the primary family denied at the launcher | **ABSENT** |
+| **Routing is generated, never authored three times** (O5, contradiction 17) | `keel/shared/routing.yml` generates §B.2, §C.1 and 9.2 | **ABSENT** |
+| **A stale price refuses to route** (O8) | `keel/shared/prices.yml` with `fetched_at` and `valid_until` per row; Gemini carried as a quota count, not a price | **ABSENT** — the table in 9.6 is prose today |
+| **The standing prefix is hashed at dispatch and a change is an event** (O39) | `bin/run`, with `--exclude-dynamic-system-prompt-sections` and `--system-prompt-snapshot on` | `bin/run` **ABSENT**; both flags **shipped and unused**. **R7** measures whether they move the share |
+| **A ceiling is never enforced against the wrong tokenizer** (O77) | `tokenizer:` on every ceiling; `bin/run` refuses a legacy cap on a current-tokenizer model | **ABSENT** |
+| **A model switch can be refused** (W17) | `PreModelSwitch` — a blocking hook event | **shipped by the runtime, used by no row.** Adopting it is §12's, not this section's |
 | A reserve is held per window **and** per week | a founder-set slider, and a weekly line reporting how often it was needed against how often it expired unused | **ABSENT** |
 | The Watch distinguishes a stop from a reroute | the message-shape test of 9.4 | **ABSENT** |
 | Model ids expire rather than rot | an expiry in the facts store; the store check fails a stale one | **ABSENT** |
@@ -2746,8 +3791,8 @@ company's whole capacity.
 
 ## 10 · Codex and Claude Code, from day one
 
-*obeys: v5, v11, v12, v32 (SPINE §H entire), **v56** (the cloud lane, 10.2a); inherits: FINAL §1 row 30 as the losing
-image, §16.7, §14.6*
+*obeys: v5, v11, v12, v32 (SPINE §H entire), **v56** (the cloud lane, 10.2a), and **v67, v78** (the rethink round of
+2026-09-06, carried in 10.8); inherits: FINAL §1 row 30 as the losing image, §16.7, §14.6*
 
 **(FOUNDER, overruling FINAL §1 row 30.)** *"I run from day one of the system to include codex and Claude code in
 the system. So we will need to understand how we are doing it. If you're walking straight from codex, or straight
@@ -2832,11 +3877,17 @@ FINAL was written:
 | Command | `codex exec --json` |
 | TTY | **no controlling TTY** |
 | Prompt | **non-trivial** — a smoke prompt does not exercise the defect |
-| Version | **≥ 0.124.0** |
+| Version | ~~**≥ 0.124.0**~~ **the installed version, recorded** (moved 2026-09-06: W19 — Codex is at 0.153.4, so the old floor is satisfied by anything installed and discriminates nothing; §10.8) |
 | Judged against | known-answer cases |
 
 **Pass** and Codex becomes a night checker and a maker on mid-to-hard work. **Fail** and it stays in the foreground
 slot. **The test is the plan, not the issue closing** — 130 days of silence is not a schedule.
+
+**(NEW: this test is R10, and R10 is the hinge of the whole cross-model design.)** The table above is not one
+open question among several — **v5, v32, v78, v82 and §I row 15 all read differently depending on its answer.**
+Pass and rung 2 becomes parallel and a second family is a lane; fail and the second family is one foreground slot
+forever, at 1/N availability. **R26 is the cheap route to it**: reading the unread Codex June–August window would
+settle whether #19945 was fixed without installing anything. Both are stated in full at 10.8.
 
 **(NEW: the prerequisite is a founder act.)** Codex is **not installed** on this machine. Installing it and running
 the rehearsal is section 20 row 5.
@@ -2986,12 +4037,10 @@ always-on tier. The Watch is the loop.** The vendor's own three scheduling tiers
 
 **(FINAL §16.7, standing.)** Routines stay **refused for the Watch** — cloud-only, cannot reach local files.
 
-**Codex `/goal` is not used.** It exists (**0.128.0, 2026-04-30**) with states *pursuing, paused, achieved, unmet,
-budget_limited*, but **the evidence is third-party — search summaries and tracker items, not a primary page** (the
-two primary URLs 308-redirected and were not followed). Two of its own tracker items are the argument against
-relying on it: **#20536**, asking that the command be documented at all, and **#34215**, *"Goal mode cannot increase
-its token budget and resume after becoming budget_limited"*. And the hinge is unestablished: **whether Codex
-`/goal` runs under `codex exec` is not known.** Revisit when 10.2's test passes.
+**Codex `/goal` is not used, and it is a gap line rather than a description** (SYNTHESIS §7 deletion 28, applied
+2026-09-06). ~~Four sentences on its states, its two tracker items and its unestablished headless behaviour~~ — a
+feature described at length reads as one relied upon, and this one is `C`-confidence off two 308-redirected sources
+and is used by no row. **It survives as gap 1 of 10.6.**
 
 ---
 
@@ -3071,7 +4120,10 @@ each incoming message as an event"* — is *"not available when `DISABLE_TELEMET
 **(NEW: these are the ten gaps the runtimes lane named about itself. They are listed because a plan that hides its
 own unknowns spends them later at a worse price.)**
 
-1. **Codex `/goal` has no primary citation** — the two primary URLs 308-redirected. **Two fetches close it.**
+1. **Codex `/goal` has no primary citation, is `C`-confidence, and is used by no row** — it exists at 0.128.0 with
+   a `budget_limited` state it cannot resume from (#34215), its own tracker asks for it to be documented at all
+   (#20536), whether it runs under `codex exec` is unestablished, and the two primary URLs 308-redirected.
+   **Two fetches close it** (deletion 28: this is the whole of Codex `/goal` in this plan).
 2. **OpenAI's terms are unread** (HTTP 403). The whole OpenAI half of the terms question of section 9.10 is open.
 3. **Whether Codex `/goal` runs under `codex exec` is unestablished** — and it is the hinge for using Codex's goal
    feature from a driver at all.
@@ -3148,12 +4200,98 @@ named fifteen; several are folded here where they are the same hole seen from tw
 | **A hosted run never writes into the house directly** — a pull request or a staged artifact, never the working tree (v56, 10.2a) | reconciliation on wake, against the PR or the staged artifact | **ABSENT** |
 | **Minting a cloud task is not a run** | `bin/run`'s `cloud` carrier — it mints a task and records its id, and does nothing else | **ABSENT** |
 | **A night's cloud work is read, not trusted** | the Watch reads the pull requests on wake | **ABSENT** |
+| **No unattended work is minted on a carrier that cannot be stopped** (v67) | `bin/run` reads the carrier's `stop:` column and refuses `UNKNOWN`; the launcher records each child's process group and the cord signals it | **ABSENT**. Per carrier: Claude `-p` → the process group · **local Codex → the `Interrupt` hook (W22)** · **Codex cloud → UNKNOWN, so the maker lane stays shut** (10.6 gap 14) |
+| **A reroute off a limited or unreachable family is bounded and labelled** (v78) | a three-deep `fallback:` ending in stop-and-stage; a rung demotion unless rehearsed for that move class | **ABSENT** — and Codex's one foreground slot is why a chain naming it must end in stop-and-stage (§9.4a) |
+| **The Codex version in play is a recorded fact, not a floor** (W19, O35) | the admitted-tool file records the binary's version string and sha256 at admission (§8.1) | **ABSENT** — Codex is not installed |
+
+---
+
+### 10.8 What moved under this section on 2026-09-06
+
+**(NEW: SPINE §H.5, carried whole. Nothing above is deleted.)** Seven facts and one absence land here, from
+`research/world.md` accessed 2026-09-06, and one of them is a whole missing row. **None of them was decided by
+anyone** — each moved a statement in this section without a decision attached, which is why they sit together
+rather than being scattered as corrections.
+
+**(FACT: world.md 19 — W19. The rehearsal floor no longer discriminates.)** Codex is at **0.153.4 (2026-09-04)**;
+the window also shows 0.153.3, 0.153.2, 0.153.0, 0.152.0, 0.151.0, 0.150.1 and 0.150.0. 10.2's condition
+~~*"version ≥ 0.124.0"*~~ is **twenty-nine minor versions stale** and is satisfied by anything installed, so it
+tests nothing. **Restate it as *the installed version, recorded*** (moved 2026-09-06: W19), which is a fact the
+admission record can hold and a floor cannot — §8's O35 records a binary's version string and sha256 at admission,
+so the mechanism already exists in this plan and this row is what it is for.
+
+**(FACT: world.md 24 — W24. On the two questions this section most needs answered, the finding is *absence*.)**
+Nothing in the Codex entries readable for **2026-08-26 → 2026-09-04** mentions `codex cloud exec`, a cloud REST
+API, cloud task creation, cancel or poll, goal mode, or **#19945**. **10.2 stands and v56(b) stands.** Read the
+shape of this precisely: it is four weeks of release notes with no mention, against questions that would be
+answered on a documentation page rather than in a changelog. **Absence is not denial** — no vendor page states that
+Codex cloud lacks a creation API. The **June–August window is unread** after three fetch failures, and reading it
+is **R26**. One correction inward: **0.152.0 adds credential-refresh progress to `codex exec`**, which *adds output
+to the stream 10.2 depends on being clean* — the only `codex exec` change in the window, and it moves in the wrong
+direction for a parser.
+
+**(FACT: world.md 21 — W21. Codex has a third control axis, Guardian, and §C.1's cell models two.)** *"Full Access
+skips Guardian reviews for confirmation-only actions. User approval mode skips background Guardian scoring and
+prewarming, while sensitive-action checks and requests for user input retain their existing handling."* So
+Guardian is a **background scoring layer whose behaviour changes with the approval mode** — the band table's
+`approval_policy` × `sandbox_mode` pair understates what governs a Codex run, and the correction lands in §C.1
+rather than here. Also: *"Guardian review history survives compaction, restarts, and user-created forks while
+respecting rollback boundaries and **isolating subagent history**"* — Codex subagents keep their own review
+history, which 10.5's subagent row does not describe.
+
+**(FACT: world.md 22 — W22. The cord has a Codex-side receiver and no row named it.)** Codex 0.150.0 shipped
+`Interrupt` hooks: *"run commands or MCP handlers when an active top-level turn is interrupted"*. **v67 is what
+this answers to** — the launcher records each child's process group and the cord signals it, and `bin/run` refuses
+to mint unattended work on a carrier whose `stop:` reads **UNKNOWN**. `Interrupt` is what a Codex carrier's `stop:`
+column would name, and it is the reason the *local* Codex carrier can plausibly carry a value at all. **The cloud
+carrier still cannot:** cancelling a hosted task is UNKNOWN (10.6 gap 14), which under v67 means the Codex-cloud
+maker lane stays shut — not as a new refusal, but as §I row 15's state stated in the cord's own terms.
+
+**(FACT: world.md 20 — W20. Codex ships `@` mentions between tasks.)** Agents can *"read, create, or message tasks
+from terminal"* (0.150.0). **Two providers shipped agent-to-agent messaging inside one window** — this and Claude
+Code's cross-session `SendMessage`/`ListAgents` — and the plan modelled neither. The shape is decided in **v80**
+(§3): a message is a **handover or an objection**, on the handover schema, and the vendor transport's ids are
+recorded as attributes and never as a join key. What that decision buys here is that Codex's `@` mention and
+Anthropic's socket are **one shape in the ledger**, not two.
+
+**(FACT: world.md 23 — W23. An admitted tool's output can be rewritten before the model sees it.)** A Codex
+extension can *"inspect or replace MCP tool results before reaching the model"* (0.151.0). §8's door tests a tool's
+*input* surface; this is the return path, and it pairs with **O65**'s taint id and per-venture canary. Named here
+because it is a property of **this runtime**, not of the tool: the same server is safer under the Claude carrier
+than under the Codex one, which is a routing fact.
+
+**(FACT: world.md 25, 27 — W25 and W27. §10 has no Gemini row of any kind, and that is now a hole with a name.)**
+Gemini CLI ships **named subagents** with *"their own set of tools, MCP servers, system instructions, and context
+window"*, delegated by `@agent`, defined in `~/.gemini/agents` (personal) or `.gemini/agents` (project) — **a third
+agent-file location beside `.claude/agents/` and Codex TOML**, which v42 decided one home without contemplating.
+And its releases since 0.30 are dominated by security hardening, including *"enforce fail-closed workspace trust
+and filter mcpServers in restricted mode"* — **the nearest analogue to `--restricted` in any third runtime**, and
+the thing a Gemini row in 10.5 would be written against. Gemini is carried in this plan as a price and as
+*"scout, once authenticated"*; that is thinner than the evidence now supports, and the gap is recorded rather than
+filled here.
+
+**(NEW: v78 lands on this section as the thing that makes a one-slot family survivable.)** 9.4a decides a
+three-deep `fallback:` per agent ending in *stop and stage*, a **rung demotion** on any cross-family reroute not
+rehearsed for that move class, a frozen `class: calibration` set, and one provider-outage drill. Read against 10.2:
+Codex is **one foreground slot**, so it is not a fallback destination for parallel work, and a chain naming it must
+end in stop-and-stage rather than pretending a second lane exists.
+
+**(R10 — the hinge, and it is this section's hinge more than anyone's.)** Does `codex exec --json` return output
+with **no controlling TTY**, on a current version, with a non-trivial prompt? **Source class:** five known-answer
+cases on an installed binary. **What it decides:** pass and rung 2 becomes **parallel** and a second family is a
+lane; fail and the second family is **one foreground slot forever, at 1/N availability**. **v5, v32, v78, v82 and
+§I row 15 all read differently depending on it** — which is why it is named as the hinge rather than as one more
+open question. Its prerequisite is a founder act: Codex is not installed.
+
+**(R26 — the only cheap route to R10.)** Was **#19945** fixed between Codex 0.125 and 0.153? **Source class:** the
+unread June–August changelog window, against which three fetches already failed. It would settle R10 **without a
+local install**, which is the entire reason it is worth naming separately from R10.
 
 ---
 
 ## 11 · Truth — how anything is known to be good
 
-*obeys: v8, v30, and §B.2's anchor column · inherits: FINAL §8, and §7.6's rehearsal set*
+*obeys: v8, v30, and §B.2's anchor column, and **v73** and **v82** (the rethink round of 2026-09-06) · inherits: FINAL §8, and §7.6's rehearsal set*
 
 ---
 
@@ -3236,6 +4374,48 @@ rung is a field on the handover and the briefing renders rung 4 differently from
 claims the mechanism exists today: `scripts/check-citations.mjs` on branch `ceo-1-1788609834` blocks on a dead path,
 wired as `check:citations-exist` in the check suite.
 
+**(NEW: O29 — the `claim-source` resolver goes from SHADOW to blocking, on `scout` handovers only.)** The resolver
+fetches a claim's URL and asserts the quoted line is present in the fetched text; on this branch it runs in
+**SHADOW**, computing `claim.would_block` and failing nothing. Promoting it everywhere at once would put fetch
+latency and network flake in front of every agent. **Promoting it on `scout` handovers alone puts the friction
+exactly where the anchor already is** — `scout`'s whole anchor is *"every claim carries URL, quote and access
+date"*, so a scout whose citation does not resolve has failed its own test, not somebody else's rule.
+**Mechanism:** `scripts/ledger.mjs` — **EXISTS**, in SHADOW, branch `ceo-1-1788609834`; the per-agent promotion is
+**ABSENT**. Rule 10 governs it unchanged: offline or timed out is `unresolved`, never `pass`.
+
+**(R12, OPEN — and it is the cheapest measurement named anywhere in the rethink round.)** What fraction of a
+venture's real done-tests reach **rung 1 without inventing an anchor**? **Source class:** the harness venture's
+first thirty intents. **What it decides: contrarian assumption 1** — that most company work has a deterministic
+anchor waiting to be found — and with it the shape of this whole section. The paragraph above says *"for most
+company work there is a deterministic anchor"*, and **that sentence has never been measured.** If the true fraction
+is small, the ladder still stands and the design around it does not: rung 4 becomes the common case rather than the
+labelled exception, and §21's rung-1 share is measuring an aspiration.
+
+---
+
+### 11.2a Is the anchor itself anchored — v73
+
+**(FOUNDER, rethink 2026-09-06: D8 → v73.)** **Every anchor carries a mutation case — a known-bad input it must
+fail — or it is marked `unrated`. §21's rung-1 share splits into rated and unrated.**
+
+**Why, and it is this section's own argument turned on itself.** 11.11 lists fifteen anchors and **not one has ever
+been shown to fail when it should.** An anchor that has never failed is not evidence that the work is good; it is a
+check whose sensitivity is unmeasured, which is **a rung-4 belief wearing a rung-1 label** — precisely the error
+11.7 built the reconciliation to catch, one level up. This repository has already shipped a change that **removed a
+control while every test stayed green** (the eighth CI-chain bypass), which is what that failure looks like when
+nobody is watching for it.
+
+**Mechanism, and it costs nothing new.** The mutation case is written by whoever writes the anchor, as a
+**rehearsal-case body under v18** — so it inherits §7's admission, §7.2a's eval-only placement in `keel/golden/`,
+and v19's forced expiry **free**. There is no new store, no new format and no new gate: an anchor with a case is
+rated, an anchor without one is `unrated`, and the store check reads the field. **The cost, once:** one case per
+anchor.
+
+**What this changes about §21, stated plainly.** The rung-1 share stops being one number and becomes two, and
+**the rated share will start low** — today it is zero of fifteen. That is the instrument reporting correctly for
+the first time rather than a regression. **Settled by:** an anchor that **passes** its known-bad input is `unrated`
+by definition, whatever its author intended; the first rung-1 share that falls is the system telling the truth.
+
 ---
 
 ### 11.3 The other family, and what it actually is on day one
@@ -3252,7 +4432,34 @@ reachable in exactly one shape and two founder acts widen it:
 |---|---|---|
 | **Codex `gpt-5.3-codex` as a checker on a prepared diff** | admitted day one by v5; foreground slot only, stdout redirected to a file while inheriting the parent shell's TTY (v32) | **one foreground slot is not parallel**, so Codex is not a night lane until the H.2 rehearsal passes detached |
 | **Gemini on routine checking** | installed, unauthenticated — §I row 6, one terminal act by the founder | until it happens, routine checking has no second family and falls to rung 4 with the label |
-| **A three-family panel** | reserved for a one-way door with no rung-1 anchor (FINAL §8.3) | there is no non-Anthropic model reachable from inside Claude Code, so a `judge` claim with an empty panel resolves `unresolved` forever, and saying so is the design |
+
+**(FOUNDER, rethink 2026-09-06, DECISIONS §19 → v82: the third row of that table is deleted.)** The table above
+carried a third route, **~~a three-family panel~~**, *"reserved for a one-way door with no rung-1 anchor"*. The
+founder's word, verbatim: ***"Delete the row from the plan."*** It is gone, and the deletion is recorded here
+rather than performed silently, because the row is what a reader would otherwise go looking for.
+
+**Why it went, and what is untouched.** It **read as a capability** while it needed Gemini authenticated **and**
+Codex detached-capable **and** panel machinery, none of which exists — the same failure shape §11.1 refuses, at the
+level of the plan rather than the run. **The repository's three live `verified_by: judge` claims and the founder
+waiver running to 2026-11-17 are untouched:** this deletes a sentence in a plan, not a claim in a ledger, and those
+three claims still resolve `unresolved` and still say so. **What stands in its place is v78** — a three-deep
+`fallback:` per agent, a rung demotion on any unrehearsed cross-family reroute, and a frozen calibration set (§9.4a)
+— and **the two-family route runs through the no-model launcher, outside any Claude session**, which is the one
+shape that does not need a panel to exist. **A deletion carries no falsifier; what would reopen it is a reachable
+non-Anthropic model, which is R10** (§10.8), the hinge.
+
+**(NEW: deletion 26 — the one honest sentence about a second family lives here, and the other five copies go.)**
+**A second model family is used whenever one is reachable for the move — and today, one is reachable in exactly the
+one shape this table names.** That sentence was written in six places across this plan and enforced in none, which
+is how a rule becomes decoration. It is stated **once, here**, beside its own state, and every other section points
+at this paragraph rather than restating it.
+
+**(R11, OPEN — nobody has measured what the second family buys *us*.)** Does a second model family reduce **escaped
+defects on our own move classes**, and by how much? **Source class:** twenty-five paired checks drawn from our own
+event log. **What it decides:** whether rung 2 outranks rung 4 on any given class — the ladder asserts it and this
+would measure it — and contrarian assumption 2. **It is blocked on O7's four provenance fields on the handover,
+which are cheap to add now and unreconstructable later:** without maker family, checker family and the model id of
+each, the paired comparison cannot be assembled from history at all.
 
 **(FINAL, redrawn for the roster)** What the checker does, and what happens when it disagrees:
 
@@ -3303,6 +4510,23 @@ has nothing to average (ABSENT). Rule 10 of this repo already holds the general 
 implementation path**, so the blindness is a property of what the process can open, not of what the prompt asked for
 (§B.2 row 4; composed by `bin/run`, ABSENT; asserted by `bin/probe`, ABSENT).
 
+**(NEW: O28 — the blindness is argv on one carrier and UNVERIFIED on the other two, so the carrier is the rule.)**
+`--add-dir` is a **launcher** flag. A tester running as a **subagent** or as a **teammate** was never started by
+`bin/run` with its own argv, and nothing in this plan establishes that the exclusion survives either path. **So
+`tester` and `challenger` route on the `-p` carrier only, until `bin/probe` asserts read-denial on subagents and
+teams.** This is a routing constraint on two of fifteen agents, not a new mechanism, and it is the cheapest way to
+stop an unverified guarantee from being load-bearing. **(FACT: world.md 8 — W8 names the field that could lift
+it):** `permissions.blockReadsOutsideWorkingDirectories` is a **read** narrowing expressible in settings rather
+than argv, which is exactly the carrier this rule could not name. It is not adopted here — it is what the probe
+would be pointed at.
+
+**(FACT: world.md 30c — W32. The vendor independently reports the failure v8 splits the tests to catch.)**
+From Anthropic's own engineering writing on long-running agents: *"Claude tended to mark a feature as complete
+without proper testing"*, and providing testing tools *"dramatically improved performance"*. That is the builder's
+self-check being mistaken for an anchor, named by the party with the most data and the least incentive to say it.
+v8 is unchanged and now independently cited; the post is qualitative and carries no measured numbers, so it
+supports the split rather than sizing it.
+
 **The anchor on the tester's own work** — because the tester is an agent and this section trusts no agent's report:
 **the test fails before the change and passes after.** A test that passes before the change is not testing the change,
 and that is checkable by running it twice with no model in the loop.
@@ -3317,8 +4541,11 @@ inputs**. So `challenger` is a roster entry with a grant, not a step in anybody'
 
 **(NEW: v30's mechanism, stated as two exclusions.)** The challenger never reads the artifact's author's reasoning —
 only the artifact and its done-test — and it carries `Read Glob Grep` and no `Write`, `Edit` or `Bash` (§B.2 row 14).
-Both are argv facts. **A second model family whenever one is reachable**, and §11.3's honest reading applies: when
-none is, the challenger's finding is rung 4, and it is labelled rung 4.
+Both are argv facts, and both are argv **on the `-p` carrier**, which is why O28 routes the challenger there until
+the probe says otherwise (11.4). ~~**A second model family whenever one is reachable**~~ — **deleted here and
+stated once in 11.3** (deletion 26, 2026-09-06): five of the six copies of that sentence go, because a rule written
+six times and enforced zero times reads as a guarantee. §11.3's reading governs: when no second family is
+reachable, the challenger's finding is rung 4, and it is labelled rung 4.
 
 **(FINAL)** Its own anchor is the one that keeps it from becoming an opinion generator: **every finding names the
 mechanism that would have caught it, or it is an opinion.** That is checkable by a reader who did not do the work,
@@ -3345,6 +4572,16 @@ predicting what the founder *wants* rather than what they *approve*.
 carries `type: user` and `type: feedback` notes written by the acting agent in-session — typed extraction of exactly
 this material. It is a precedent for the *content* and a counter-example to the writer rule (v25, §13). A **brand
 voice profile** and a **golden output archive** are marked *none found* in the same table: no shipped CLI has either.
+
+**(NEW: O62 — a taste check earns the right to judge before it judges anything.)** **Any taste or brand check must
+first pass a held-out discrimination test: rank labelled approved artifacts above rejected ones, on a held-out
+slice it never saw.** Its measured rate prints **beside every verdict it issues**, so a reader always knows what
+the instrument is worth. **Below chance, the check is deleted rather than tuned** — a check that cannot separate
+what the founder accepted from what they rejected is not a weak instrument, it is not an instrument, and tuning it
+against the same corpus is how a rung-4 opinion acquires a rung-2 label. **Mechanism:** the §7.3 eval runner, which
+**exists upstream** as `skill-creator`'s paired with-skill/baseline loop; the held-out split and the printed rate
+are **ABSENT**. This is the same discipline §11.1 applies to a model reviewing itself, applied to the store that
+speaks for the founder's taste.
 
 **Mechanism:** the taste store is written only by the curator (v25); the held-out fraction and its score are a field
 on the store, checked by `bin/check-stores` (ABSENT).
@@ -3389,6 +4626,33 @@ one at a time through §12's door.
 anchor, **the set of live done-tests across all ventures *is* the regression suite**, re-run on the routine window at
 close to zero marginal cost. Nothing extra is maintained. That is a consequence of the done-test design and the
 strongest argument for it.
+
+**(NEW: O24 — the free regression suite is also a fleet of hands, and nothing currently says so.)** *"The set of
+live done-tests across all ventures is the regression suite, re-run on the routine window"* — re-read that sentence
+with §8's four classes in mind. A done-test whose anchor **sends**, **charges**, **deploys** or **files** is a
+REACHES-THE-WORLD act, and re-running it nightly **turns the regression suite into a Sender** — a v33 breach
+arriving through the one mechanism this plan calls free. **So every anchor declares `effect: none | metered |
+reaches-the-world`, and the unattended re-run executes only `none`.** A `metered` anchor costs money per run and
+belongs to §16's ceiling; a `reaches-the-world` anchor runs only through the Sender, with the founder's act in
+front of it. **Mechanism:** the anchor declaration (**ABSENT**), read by whatever schedules the re-run. **The cost,
+once:** one field per anchor, written by the same hand as v73's mutation case.
+
+**(NEW: O30 — the verdict is signed, and the guarantee is stated honestly.)** `scripts/verdict.mjs` **EXISTS** on
+this branch and binds a verdict to `sha256(diff)`, so an **inherited** verdict cannot pass for a fresh one. It does
+not stop a **forged** one: anyone with repo-write can author a `.qa/verdicts/*.json`, which the workflow says about
+itself. **So the verdict is signed with a key under a path every agent's grant excludes and `denyRead` covers**
+(the key path **ABSENT**). **What that buys, precisely: it raises forging from a file write to defeating a checked
+deny rule.** It is a guardrail, not containment — the same honest reading §12 gives the sandbox — and saying so is
+the point, because a signature described as containment is worse than no signature.
+
+**(NEW: O19 — three named mechanisms rest on one predicate nobody has defined.)** *"The same failure twice"* is
+what stops the fast loop, what increments the sighting counter, and what memory dedup calls a duplicate — **three
+consumers, one comparison, and no definition anywhere.** Byte equality is wrong (a timestamp or a path defeats it)
+and a model deciding is a rung-4 judgement inside a rung-1 gate. **So: the anchor's exit signature where there is
+one, and cosine over local embeddings of normalised failure text where there is not, calibrated on labelled
+pairs.** One shared hash, one implementation, three call sites — **ABSENT**, and it rests on **O13**'s local
+embedding program (§15), which is why it is named here and built there. Two implementations of this predicate would
+disagree silently, which is the class this repository has already paid for.
 
 **(FINAL)** The check suite on branch `ceo-1-1788609834` (`scripts/run-checks.mjs`, 48 steps) is the founding
 population of rung-1 anchors for the harness venture, and its rule survives whole and is worth restating because it is
@@ -3457,7 +4721,12 @@ flowchart TD
 1. **A trust score is a measurement, not a rating.** It is the observed pass rate of anchored checks for that agent on
    that move class, and **no run scores itself** — §11.1 applied to the question of who may work alone. Below a sample
    floor it prints **`insufficient`** rather than a number, because a pass rate over four cases is a number that
-   invites a decision it cannot support.
+   invites a decision it cannot support. **(NEW: O25 — that floor is now one shared predicate, not a sentence here
+   and a different one in §7.)** §7.3 admits a skill on **2–3 cases** while this rule refuses to print a number over
+   four, which is contradiction 12: **two rules about the same arithmetic, and the looser one is the one that
+   grants.** One predicate with two call sites (**ABSENT**) answers for the trust score, for skill admission and for
+   the error rates of v73, and it answers the same way in all three. The consequence is stated rather than softened
+   in §7.3: an admission on 2–3 cases is an admission **below the floor**, recorded as `insufficient`.
 2. **"Not yet trusted" has a productive destination.** A move that fails rehearsal goes to the Floor, where the
    founder does it *with* the agent — **and that session becomes the rehearsal case for next time.** This is the
    mechanism by which walking *with* the founder teaches the system to walk *for* them, and it is why the Floor is not
@@ -3481,10 +4750,13 @@ A rehearsal case is a `SKILL.md` body under §E's content rule, which means the 
 expiry (v19) apply to it as to everything else the library holds.
 
 **(NEW: H.2 is a rehearsal case in this exact sense, and it is the one that matters most on day one.)** Codex's
-admission test — `codex exec --json`, **no controlling TTY**, a non-trivial prompt, version ≥ 0.124.0, against
-known-answer cases — is what widens Codex from a foreground checker to a night lane. Pass and rung 2 becomes
-parallel; fail and it stays in the foreground slot. **#19945 has been open 130 days with no maintainer reply**, so
-the test is the plan, and the issue closing is not.
+admission test — `codex exec --json`, **no controlling TTY**, a non-trivial prompt, ~~version ≥ 0.124.0~~ **the
+installed version, recorded** (moved 2026-09-06: W19 — Codex is at 0.153.4, twenty-nine minor versions past the old
+floor, which now admits anything), against known-answer cases — is what widens Codex from a foreground checker to a
+night lane. Pass and rung 2 becomes parallel; fail and it stays in the foreground slot. **#19945 has been open 130
+days with no maintainer reply**, so the test is the plan, and the issue closing is not. **It is R10, the hinge of
+the cross-model design** (§10.8), and **v82's deleted panel row is one of the things that reads differently
+depending on its answer.**
 
 ---
 
@@ -3516,16 +4788,48 @@ section's reading of them, and the two rows that cannot reach rung 1 today are n
 as a roster fact: **the agents that check are the ones whose own output cannot be checked deterministically**, and
 that is why the second family is bought and why §11.3 refuses to round it up.
 
+**(NEW: v73 — all fifteen rows are `unrated` today, and that is the table's second finding.)** Not one anchor above
+carries a **mutation case**, so not one has been shown to fail when it should (11.2a). The column is not added here
+because it would be fifteen identical cells; the statement is the same and cheaper: **rated: 0 of 15.** As cases
+land, §21's rung-1 share reports rated and unrated separately, and the rated share starts at zero by construction.
+
+**(FACT: world.md 30a — W30. The only outside comparator this design has.)** TheAgentCompany, whose paper was
+accessed 2026-09-06 and has no 2026 revision: *"The most competitive agent can complete **30%** of tasks
+autonomously"*, over six job functions — *"Software Engineer, Product Manager, Data Scientist, Human Resource,
+Financial Staff, Administrator"*, which is close to this roster's own span. **It is a floor for §21 and not a
+target**, and it is the only external number a fourteen-agent design has to check itself against. Read it as a
+bound on expectations, not as a benchmark to beat: their tasks are not ours, and the comparison is honest only at
+the order of magnitude.
+
 **Mechanism for the whole table:** the anchor is a required field on every brief and every handover; `bin/run` refuses
 a brief whose done-test names no anchor, and `bin/probe` asserts each agent's grant nightly (both ABSENT). Until they
 exist, this table is a **WISH** — and naming it as one here is cheaper than discovering it during the first night.
 
 ---
 
+### 11.11a What enforces this section
+
+| Rule | Mechanism | State |
+|---|---|---|
+| A done-test names an anchor, or it is refused | `bin/check-stores`; the rung is a field on the handover | **ABSENT** |
+| A research claim's citation resolves | `scripts/check-citations.mjs`, wired as `check:citations-exist` | **EXISTS**, branch `ceo-1-1788609834` |
+| **A `scout` handover's citations are fetched and quoted, blocking** (O29) | `scripts/ledger.mjs`'s `claim-source` resolver, promoted from SHADOW on `scout` only | resolver **EXISTS** in SHADOW; the per-agent promotion is **ABSENT** |
+| **Every anchor carries a mutation case or is marked `unrated`** (v73) | the case is a rehearsal-case body under v18, so §7's admission and v19's expiry carry it | **ABSENT** — rated: 0 of 15 |
+| **Every anchor declares `effect:`, and the unattended re-run executes only `none`** (O24) | the anchor declaration, read by whatever schedules the re-run | **ABSENT** — today the regression suite could send |
+| **A verdict cannot be inherited, and forging one means defeating a deny rule** (O30) | `scripts/verdict.mjs` binds `sha256(diff)`; the signing key sits under a path `denyRead` covers and no grant names | `verdict.mjs` **EXISTS**; the key path **ABSENT**. A guardrail, not containment |
+| **"The same failure twice" means one thing** (O19) | one shared predicate: exit signature, else cosine over local embeddings of normalised failure text, calibrated on labelled pairs | **ABSENT**; rests on O13's local embedding program |
+| **A taste check proves it can discriminate before it may judge** (O62) | the §7.3 eval runner over a held-out labelled slice; the rate prints beside every verdict; below chance it is deleted | runner **EXISTS** upstream; the held-out split and printed rate are **ABSENT** |
+| **One sample floor answers for the trust score, skill admission and the error rates** (O25) | one predicate, two call sites | **ABSENT** |
+| **`tester` and `challenger` route on the `-p` carrier until blindness is probed** (O28) | the launcher's carrier choice; `bin/probe` asserts read-denial | **ABSENT**. **W8** names the settings field that could lift it |
+| A checker never averages scores | the checker's handover schema carries `findings` and no score field | **ABSENT** |
+| A flipped verdict under a swap is `unresolved` | `bin/run` presents an ordered pair twice, swapped; Rule 10 already pins `unresolved` distinct from `pass` | ordering **ABSENT**; Rule 10 **EXISTS**, branch `ceo-1-1788609834` |
+
+---
+
 ## 12 · Control — what may be done alone, and what never
 
-*obeys: §C.1's bands, v9, v10, v28, v33 · inherits: FINAL §9. The tool door itself lives in §8 (Tools and MCPs) and
-is not restated here.*
+*obeys: §C.1's bands, v9, v10, v28, v33, and **v67, v68, v69** from the rethink round of 2026-09-06 · inherits:
+FINAL §9. The tool door itself lives in §8 (Tools and MCPs) and is not restated here.*
 
 ---
 
@@ -3626,6 +4930,22 @@ alone' is a prompt or a deny rule, not a staged artifact."*
 
 **Mechanism:** the door test runs before a brief carries a `REACHES THE WORLD` grant (ABSENT) · the drill dates in
 `shared/tools/<name>.yml` (ABSENT) · `bin/send`, which holds no model (ABSENT).
+
+---
+
+### 12.2a The Sender's checklist gains a provenance line
+
+**(NEW: O64.)** Inbound licences are read exceptionally well in this plan — v17 blocks a 2,111-skill import on one
+unread file — and **outbound is unchecked**: nothing records the licence of a third-party asset embedded in an
+artifact the Sender publishes. So the checklist the Sender reads before an outward act carries one more line beside
+v63's disclosure — **source, licence, date read**, per asset. A staged artifact whose provenance line is empty is
+refused, the way a brief naming a file that does not exist is already refused.
+
+**Why it belongs on the checklist and not in a review.** The Sender holds no model, so the line is a field that is
+present or absent rather than a judgement someone makes at the last inch. That is the same reason the disclosure line
+sits there.
+
+**Mechanism:** the Sender's checklist (**ABSENT**, §L O64) · `bin/send`, which holds no model (**ABSENT**).
 
 ---
 
@@ -3764,6 +5084,39 @@ is disarmed.
 
 ---
 
+### 12.6a Two tiers of grant, not three — and one narrowing that is a settings field
+
+**(NEW: O37.)** A tool grant lives in **exactly two places**: the argv `bin/run` composes, and the managed file a
+running process cannot clear. **The project `settings.json` tier is deleted.** A third tier that neither the launcher
+owns nor the founder writes is a grant nobody reviews and a place two answers can disagree; §18 carries the deletion
+as a fate.
+
+**(FACT: world.md 7 — W7, and it is independent support rather than the reason.)** `--restricted` *"refuses
+`bypassPermissions`, and ignores user, project and local settings files"*. So on the `-p` carrier — the carrier every
+unattended run uses — **the project tier is already ignored by the runtime**, and deleting it removes a tier that
+binds nothing where it matters and misleads everywhere else. The same clause gives **v10 a second mechanism**: the
+flag refuses the widest mode by itself, so §12.4's managed setting is no longer the only thing standing there.
+
+**(FACT: world.md 8 — W8, and it is the carrier v43 could not name.)**
+`permissions.blockReadsOutsideWorkingDirectories` is a **read** narrowing expressible in settings rather than in
+argv. v43 records the tester's blindness (v8) and the builder's exclusion from the architect's paths (v7) as
+**UNVERIFIED** on the subagent and team carriers because no carrier could hold them; this is one, for reads. It is
+what **O28** is waiting on — until `bin/probe` asserts read-denial there, `tester` and `challenger` route on the
+`-p` carrier only, where blindness is argv (§11).
+
+**(NEW: O38 — ADOPTED-AS-SPEC. The decision is taken; the act is deferred to build time by the founder, DECISIONS
+§15.)** A hook denies through the **`decision` object on the non-blocking events** and keeps `exit 2` only for the
+documented blocking ones. `PermissionRequest` is non-blocking — *"Exit code 2 isn't honored for this event … Deny
+through the `decision` object instead"* (§15.8) — so **a hook written the obvious way silently fails to deny**, which
+is the worst direction for a control to fail in. The specification does not wait on the rewrite; the rewrite is an
+edit to the judging machinery and stays the founder's.
+
+**Mechanism:** the project-tier deletion (**a deletion**, §L O37; §18 carries it) ·
+`permissions.blockReadsOutsideWorkingDirectories` in the checked-in settings file (**the field ships; unset here**) ·
+the hook rewrite (**ABSENT**, §L O38, **ADOPTED-AS-SPEC**).
+
+---
+
 ### 12.7 The trifecta split — the one structural safety rule, now expressed as a roster
 
 **(FINAL, v33.)** An execution path holding all three of **private data**, **untrusted content** and **the ability to
@@ -3837,6 +5190,99 @@ person, recorded by the world's door* — so the door is not only the safety bou
 
 ---
 
+### 12.8a Everything leaving a run passes one program
+
+**(FOUNDER, rethink 2026-09-06: D3.)** *Build `bin/egress`.* One **no-model program** logs every call, filters by
+**domain and HTTP method**, and **injects credentials the agent never sees**. `--strict-mcp-config` names only the
+proxy, and **`.claude/mcp-policy.json` stops being an independent control and becomes this program's configuration**
+(deletion 10) — a policy whose calls no hook can see was never a control, and calling it one meant the plan believed
+it had two boundaries where it had one.
+
+**Why this and not a prompt.** It is the only proposal of the round that survives an agent being *fully* persuaded.
+§12.7's trifecta split guarantees a leg is missing **at dispatch**; the door outward keeps it missing **at the
+syscall**. **v33 gains a mechanism** it had only as a shape rule.
+
+**The cost, once:** one program, one hop of latency, and every server declared twice. **Settled by:** a deliberate
+exfiltration attempt failing at the proxy rather than at the prompt, and the proxy's call count matching the
+runtime's for one night.
+
+**(R2, OPEN — and it decides how much of this is code.)** The sandbox schema has a documented `credentials` block
+(`mask`, per-host `injectHosts`) and a `network` block with `allowedDomains`, `strictAllowlist` and `tlsTerminate`,
+and **this repository uses neither** (§12.10). If injection and an HTTP-method allowlist behave as documented, **half
+of `bin/egress` is configuration rather than a program**. The half that is not — the call log — is ours either way,
+which is why the row is decided now and the research only narrows it.
+
+**Mechanism:** `bin/egress` (**ABSENT**, §L) · `--strict-mcp-config` (**ships**) · `.claude/mcp-policy.json` demoted
+to its configuration (§8 carries the tool door itself).
+
+---
+
+### 12.8b The erasable path, the consent register, and the class on every row
+
+**(FOUNDER, rethink 2026-09-06: D4 — *both, now*. It resolves contradiction 7, which no single section could have
+fixed alone.)** Three sentences in this plan could not all hold: **a deletion request is honoured** (§16.7), **the log
+is never edited** (§15.3), and **eviction archives and never deletes** (§13.3). The reconciliation is an indirection
+rather than an exception to any of them:
+
+- **No personal datum enters the event log or memory. Both hold a hash.**
+- **One erasable per-subject store holds the body — `keel/subjects/<hash>.yml`, keyed by the same hash the log
+  carries.**
+- **Erasure deletes that row, and the hash becomes *a known absence*** — the same shape §15.3 already uses for a blob
+  that is gone, which is a different thing from a silent one.
+
+So the log stays append-only and never edited, memory still never deletes, and a person's data still leaves the system
+completely, because the only place it ever was is the one store built to be emptied. §13.2a and §15.3 carry the same
+reconciliation from their own ends.
+
+**The consent register — `keel/consent.yml`.** *May we contact this person at all* was **the single keyword of roughly
+640 absent from v2's own text** (§23). It is a store with **one writer**, read by the Sender **before any contact**.
+No consent row, no contact — checked by the program that sends, never by the run that drafts. It sits at house level
+and not per venture, for the same reason the decide queue does (**O9**): a person who asked not to be contacted did
+not ask it of one venture.
+
+**(NEW: O34 — three data classes, assigned by the writing program.)** Every store row carries **ours · a third
+party's · a named person's**, and the `never` list keys on **the class** rather than on a path list, which goes stale
+the first time a store is renamed. **Retention is declared per store**, and **a store declaring *forever* may not hold
+a body** — which is what makes the three bullets above checkable rather than aspirational.
+
+**(NEW: O66 — PII detection becomes a gate on two paths, and it is measured before it blocks.)** The Sender's
+checklist and the mining pass (§13.7) both run it; a positive **blocks**, and an override is a *which*. **Its
+false-positive rate is measured for a week before it blocks anything**, because a gate that cries wolf is a gate
+people route around — and this repository has already taken that lesson once, blocking on the deterministic half of
+its citation checker and leaving the heuristic half a warning.
+
+**The cost, once:** one indirection per inbound row, one store, one checklist line. **Settled by:** run one erasure
+end to end, then grep the whole tree for the subject and find nothing but hashes.
+
+**Mechanism:** the hash indirection in `bin/log` and the memory writer (**ABSENT**) · `keel/subjects/<hash>.yml` and
+`keel/consent.yml`, one writer each, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on
+every store (**ABSENT**) · `bin/redact` as the PII gate (**ABSENT**, §L O17 and O66) · one line on the Sender's
+checklist (**ABSENT**).
+
+---
+
+### 12.8c Two things that happened without a record, and now leave one
+
+**(NEW: O31 — the log is hash-chained, and every escalation is a row in it.)** Each log row carries **the sha256 of
+the row before it**, so a row removed or rewritten is detectable rather than invisible. Today the log is append-only
+**by convention** and editable without trace, which is a weaker guarantee than the one §15.3 rests the entire recovery
+plan on — *if memory is wrong the log is still right* is a claim about a file nothing protects.
+
+**And both escape hatches write a row.** A sandbox escalation — `dangerouslyDisableSandbox`, or any other — **emits an
+event that appears in the briefing**. §12.10 says plainly that the sandbox is a guardrail rather than containment
+*because* a documented escape hatch exists; an escape hatch that is used and recorded nowhere is the half of that
+sentence no one can check afterwards.
+
+**(NEW: O67 — rotation is an obligation, and it needs no new mechanism.)** §15.4's credential plan says rotation
+happens *at the horizon*, which is a promise with no clock. It becomes **one row per credential in the obligations
+store** (v44), surfaced by the briefing, carrying the same forced disposition every other dated thing here carries.
+Nothing is built for this: the store, the horizon and the briefing already exist in the design.
+
+**Mechanism:** the chain and the escalation row in `bin/log` (**ABSENT**, §L O31) · rotation rows in
+`obligations.yml` (**the store is decided by v44; the rows ABSENT**, §L O67).
+
+---
+
 ### 12.9 Ceilings, and the cord
 
 **(FINAL)** Two mechanisms, both deliberately blunt.
@@ -3845,22 +5291,53 @@ person, recorded by the world's door* — so the door is not only the safety bou
 after. There is no *warn at 80%* an agent can reason past. Ceilings exist per run, per intent, and per venture per
 month, and **the tightest binds**.
 
-**The cord.** One control that stops everything: cancels running work, revokes outward grants, finishes nothing new,
-leaves every artifact in place. One tap from mission control — §14 makes it *a control present on every page* — one
-word on the Floor, one command in a terminal, and tested on purpose. It does not delete and does not roll back; undo
-is a separate, deliberate act, because the state after a panic stop is exactly when you least want an automatic
-mutation. The cord is **a file, read first on every tick**; the same tap recalls everything in the Sender's window;
-there is one kill and not two, because a kill that lives in a second place is a kill that disagrees.
+**The cord.** One control that stops everything: ~~cancels running work~~ **signals every child's process group and
+stops the next dispatch** (moved 2026-09-06: v67), revokes outward grants, finishes nothing new, leaves every artifact
+in place. One tap from mission control — §14 makes it *a control present on every page* — one word on the Floor, one
+command in a terminal, and tested on purpose. It does not delete and does not roll back; undo is a separate,
+deliberate act, because the state after a panic stop is exactly when you least want an automatic mutation. The same
+tap recalls everything in the Sender's window; there is one kill and not two, because a kill that lives in a second
+place is a kill that disagrees.
 
-**(NEW: v23 corrects what one of these mechanisms actually is, and the correction matters in the direction of less
-safety, not more.)** `--max-budget-usd` is **not a billing control**. It is print mode only, *"Claude Code computes
-the dollar figure locally from token counts at list price"*, and for subscribers *"the session cost figure isn't
-relevant for billing purposes"* (models.md, accessed 2026-09-05). What it genuinely is: a **stall fuse**. Subagent
-spend counts toward it, and overflow fails a spawn with `Budget limit reached` (v2.1.217+). It is kept for that, and a
-ceiling that binds the account is §16's business, not this section's.
+**(FOUNDER, rethink 2026-09-06: D2 — and it resolves contradiction 6, which was that the cord's description and the
+cord's mechanism were two different controls sharing one word.)** The founder chose **both**. `bin/run` records each
+child's **process group id** before exec, and the cord **signals the group**. A file read at the next tick could never
+stop work already running — it stops the *next dispatch*, which is a real guarantee and a different one. Both halves
+stay, named apart, so nobody reads the weaker one as the stronger.
 
-**Mechanism:** the cord file (**ABSENT**, read first on every tick) · the three ceilings in `bin/run` and `bin/send`
-(**ABSENT**) · `--max-budget-usd` per run (exists, and is a stall fuse).
+**And a carrier whose stop path is unknown may not be given unattended work.** §C.4's carrier table gains a **`stop:`**
+column, and `bin/run` **refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN**. Today that shuts
+the Codex-cloud *maker* lane, where cancellation is undocumented (§15.1a) — which is §I row 15's state anyway, so the
+refusal costs the plan nothing it had.
+
+**(FACT: world.md 22.)** Codex shipped `Interrupt` hooks — *"New `Interrupt` hooks run commands or MCP handlers when
+an active top-level turn is interrupted"* — which is **the cord's natural Codex-side receiver**, and no row named it
+before this round. §10.8 carries the fact.
+
+**Why signalling does not destroy what it stops.** `SIGTERM` is measured to give **exit 143 and a resumable turn**
+(§15.8), so the cord stops a run without losing it. That is what makes *leaves every artifact in place* true of
+running work and not only of finished work. **Settled by:** pulling the cord mid-run, measuring time to quiescence,
+and whether the run resumes.
+
+```mermaid
+flowchart TD
+    PULL["The cord is pulled —<br/>any page, the Floor, or a terminal"] --> TWO{"Two halves, one word<br/>until v67 split them"}
+    TWO -->|"work already running"| SIG["bin/run recorded each child's pgid before exec.<br/>The cord signals the GROUP.<br/>SIGTERM: exit 143, a resumable turn (§15.8)"]
+    TWO -->|"work not yet started"| FILE["The cord file, read first on every tick.<br/>The Watch starts nothing new."]
+    SIG --> HOLD["Outward grants revoked.<br/>The same tap recalls the Sender's window."]
+    FILE --> HOLD
+    HOLD --> KEEP["Every artifact stays in place.<br/>No delete, no rollback —<br/>undo is a separate, deliberate act."]
+    PULL -.->|"the refusal that makes the cord true"| MINT["bin/run REFUSES to mint unattended work<br/>on a carrier whose stop: reads UNKNOWN"]
+```
+
+**(Deletion 13, 2026-09-06 — `--max-budget-usd` leaves this section.)** ~~It was explained here as a stall fuse, and
+in three other places besides.~~ **§16.5 owns it**, and a fuse explained four times invites a fifth misreading. The one
+clause that bears on control stays: **it does not bind the account**, so it is not one of the three ceilings above.
+§12.10's argv line still names the flag, because that is where the launcher composes it.
+
+**Mechanism:** the cord file (**ABSENT**, read first on every tick) · the `pgid` field written by `bin/run` before
+exec and the signal path that reads it (**ABSENT**, §L) · the `stop:` column on §C.4's carrier table (**ABSENT**) ·
+the three ceilings in `bin/run` and `bin/send` (**ABSENT**).
 
 ---
 
@@ -3905,16 +5382,40 @@ control is the argv, the deny rules, and the fact that the thing which sends hol
 isolation file (**ABSENT**) · `bin/probe` nightly (**ABSENT**) · `npm run test:sandbox` (exists on branch
 `ceo-1-1788609834`).
 
-**The honest summary of this section's state:** the *rules* are decided and every one of them names a mechanism. **Six
-of those mechanisms do not exist yet**, and until they do, the parts of this section that depend on them are WISHes
-wearing rule clothing. The two that exist today — the armed sandbox test and the deny rules in settings — are the two
-that were built for a smaller purpose than this section asks of them.
+**The honest summary of this section's state:** the *rules* are decided and every one of them names a mechanism.
+~~**Six of those mechanisms do not exist yet**~~ **Almost every one of them is ABSENT — read the table below rather
+than a number here, because the rethink round added twelve more rows to it** (moved 2026-09-06: the count was written
+before v67, v68, v69 and seven O ids landed in this section). Until they exist, the parts of this section that depend
+on them are WISHes wearing rule clothing. The two mechanisms that exist today — the armed sandbox test and the deny
+rules in settings — are the two that were built for a smaller purpose than this section asks of them.
+
+---
+
+### 12.10a Enforced by — the mechanisms this section names
+
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added, with the path SPINE §L gives it. A row with no
+path is not a rule.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| The egress door — one log, domain **and method** filtering, credential injection | `bin/egress`; `.claude/mcp-policy.json` as its configuration | **v68** (D3) | **ABSENT**; `--strict-mcp-config` ships |
+| The hash indirection — no personal datum in the log or memory | `bin/log` · the memory writer | **v69** (D4) | **ABSENT** |
+| The erasable per-subject store and the consent register, one writer each | `keel/subjects/<hash>.yml` · `keel/consent.yml`; enforced by `bin/check-stores` | **v69** (D4) | **ABSENT** |
+| Three data classes on every row; retention declared per store | the writing programs · `bin/check-stores` | **O34** | **ABSENT** |
+| PII as a gate on the Sender's checklist and the mining pass | `bin/redact` | **O66** (with **O17**) | **ABSENT**; measured a week before it blocks |
+| The log's hash chain, and an event row per sandbox escalation | `bin/log` | **O31** | **ABSENT** |
+| Rotation as a row per credential | `obligations.yml` | **O67** | store decided (v44); rows **ABSENT** |
+| The provenance line — source, licence, date read | the Sender's checklist | **O64** | **ABSENT** |
+| The cord's signal path, and the carrier's `stop:` column | `bin/run` (pgid before exec) · §C.4's table | **v67** (D2) | **ABSENT** |
+| Grants in two tiers, not three | a deletion; §18 carries the fate | **O37** · **W7** | a deletion |
+| Reads narrowed by a settings field, not by argv | `permissions.blockReadsOutsideWorkingDirectories` | **W8** | the field ships; **unset here** |
+| Deny through the `decision` object on non-blocking hook events | the hooks | **O38** | **ADOPTED-AS-SPEC** |
 
 ---
 
 ## 13 · Memory and knowledge — what is remembered, who writes it, and what rots
 
-*obeys: v24, v25, v26, v27, and §E · inherits: FINAL §10 and §11*
+*obeys: v24, v25, v26, v27, **v69** (rethink round, 2026-09-06), and §E · inherits: FINAL §10 and §11*
 
 ---
 
@@ -3973,9 +5474,18 @@ flowchart TB
 ```
 
 **(FINAL)** Scope, strictly: `TASTE` and `CRAFT` are the founder's and cross every venture. `FACTS`, `NEGATIVES`,
-`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **Credentials are not memory**, and are never in a file — **mechanism:** a `gitleaks`-class secret scan over every store write, run as a **rung-one anchor on the house repository on every push** (**ABSENT**), which §13.8 already counts among the free deterministic checks and
-are never in any of these files. **Every item carries four things** — where it came from, when it was written, when
-it expires, and what would falsify it — and an item with no expiry is not accepted.
+`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **Credentials are not memory**, and
+are never in a file — **mechanism (moved 2026-09-06: O17):** ~~a `gitleaks`-class secret scan~~ **`bin/redact`,
+the one redaction program**, run over every store write as a **rung-one anchor on the house repository on every push**
+(**ABSENT**), which §13.8 already counts among the free deterministic checks and are never in any of these files.
+**Every item carries four things** — where it came from, when it was written, when it expires, and what would falsify
+it — and an item with no expiry is not accepted.
+
+**(NEW: O17, and it is why the sentence above changed rather than gained a clause — contradiction 14.)** Redaction was
+implemented **twice** in this plan: here as a `gitleaks`-class scan over store writes, and in §13.7 as the mining
+pass's first step. **Two implementations of one check disagree**, and this repository has already found that class
+twice — once in risk classification, once in the CI chain guard. One program, two call sites. It is the same program
+**O66** turns into a PII gate (§12.8b), which is a third call site and not a third implementation.
 
 **(FINAL)** Retraction works because the log is the only truth and every store is a derived view. *Ignore that
 interview, he was pitching me*, and everything downstream is recomputed with a list of what moved. A corrupted store
@@ -3987,6 +5497,32 @@ a memory came from.** Claude Code's `modified` field records **write time only, 
 decay are **absent from all three CLIs** — Codex has no memory feature at all (*"Codex rebuilds the instruction chain
 on every run … so there is no cache to clear manually"*), and Gemini CLI appends facts to **one global heading** under
 `## Gemini Added Memories`, with no expiry, no dedupe and no per-project scope — **search-synthesised, `M`: memory.md reached this after two 404s, not from vendor documentation.**
+
+---
+
+### 13.2a Memory holds a hash, never a body
+
+**(FOUNDER, rethink 2026-09-06: D4 — this is memory's half of contradiction 7, and §12.8b and §15.3 carry the other
+two.)** Three sentences could not all hold: **a deletion request is honoured** (§16.7), **the log is never edited**
+(§15.3), and **eviction archives and never deletes** (§13.3, and it is the rule this section is proudest of). The
+founder's answer keeps all three by moving what they are about:
+
+**No personal datum enters memory. A memory item holds a hash.** The body lives in **one erasable per-subject store**
+outside memory and outside the log. Erasure deletes that row, and the hash it leaves behind becomes **a known
+absence** — which is what §13.3's REMOVE branch was already unable to express, because *expired* and *falsified* are
+its only two reasons to remove an item and *this person asked* is neither.
+
+**So §13.3 does not gain an exception, and that is the point.** REMOVE is still refused for tidiness; eviction still
+archives; the archive still leaves a stub under every heading so a citation resolves. What changes is that the thing a
+person can ask to have deleted was never in any of those files.
+
+**(NEW: O34 lands here too — the class is what the never-list keys on.)** Every item carries **ours · a third party's
+· a named person's**, written by the writing program rather than judged at read time, and **a store declaring
+`retention: forever` may not hold a body**. Memory declares forever. That is exactly why it may only hold a hash.
+
+**Mechanism:** the hash indirection in the memory writer and `bin/log` (**ABSENT**, §L) · the per-subject store with
+one writer, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on the item schema
+(**ABSENT**).
 
 ---
 
@@ -4014,13 +5550,13 @@ flowchart TD
     HAND["Handovers since the last pass"] --> CUR["curator · the only writer<br/>(routine window)"]
     CUR --> P["Proposes deltas, ONE ITEM AT A TIME.<br/>Never a regeneration of the file."]
     P --> CHECK{"For each proposed delta"}
-    CHECK -->|"ADD"| A1{"Does an item already<br/>say something close?"}
+    CHECK -->|"ADD"| A1{"Does an item already say something close?<br/>THRESHOLD CALIBRATED on labelled mined pairs,<br/>never guessed (O44)"}
     A1 -->|"yes"| A2["UPDATE that item instead.<br/>Never two items on one fact."]
     A1 -->|"no"| A3{"Anchored? (§11 — evidence,<br/>not an opinion)"}
     A3 -->|"no"| DROP["Dropped. It stays in the log,<br/>which is never lost."]
     A3 -->|"yes"| WRITE["Written, with source + expiry + falsifier"]
     CHECK -->|"UPDATE"| U1{"Does it contradict<br/>an existing item?"}
-    U1 -->|"yes"| CONF["CONFLICT: keep BOTH, mark both.<br/>Ask the founder only if a live intent<br/>depends on which is true."]
+    U1 -->|"yes"| CONF["CONFLICT: keep BOTH, mark both —<br/>and the PAIR becomes an item with its own<br/>OWNER and EXPIRY (O44). At expiry it reaches<br/>the founder as a which, not before."]
     U1 -->|"no"| WRITE
     CHECK -->|"REMOVE"| R1{"Expired, or falsified<br/>by evidence?"}
     R1 -->|"either"| ARCH["Archived, not deleted"]
@@ -4031,6 +5567,19 @@ flowchart TD
 
 **(FINAL)** A conflict is **kept, not resolved**: two items that disagree is information, usually that something
 changed. Silently picking one is how a store becomes confidently wrong.
+
+**(NEW: O44 — and it repairs two soft spots in that rule at once.)** *Something close* is a similarity threshold, and
+this plan does not otherwise permit a number nobody measured. The dedup threshold is **calibrated on labelled mined
+pairs** — the mining pass of §13.7 produces the labelled set for free — and the same predicate is **O19**'s
+same-failure test, which three other mechanisms already sit on. And a conflict that is *kept* with nothing attached is
+a conflict nobody ever returns to: **the pair becomes an item with its own owner and its own expiry**, and at expiry
+it reaches the founder as a *which* with both readings stated. Keeping both stops being a way of deferring forever.
+
+**(R9, OPEN — and it is aimed at this section's strongest rule.)** Does an unattended `-p` run **auto-compact**, and
+does it emit anything the log can see? v24 forbids a rewrite because one rewrite step took ACE from better-than-
+baseline to worse-than-baseline. If the runtime compacts a long night run on its own, **v24 is being broken in the one
+place it cannot watch**, and the answer is not a new rule but a bound on run length. One long `-p` run with
+`stream-json --verbose` settles it.
 
 **Mechanism, and two thirds of it already exist on branch `ceo-1-1788609834`.** `scripts/evict-memory.mjs` implements
 the EVICT branch exactly — an irreversible entry is never archived while its subject exists, anything cited by a live
@@ -4081,8 +5630,16 @@ credits are drawn. A 1-hour cache write costs **2x** base input; a cache read co
 5.1 and Mythos 5.1, where it is **0.025x**. So a large standing slice is the one thing that is cheap to re-read and
 expensive to churn, and *the standing prompt carries no timestamp* for that reason alone.
 
+**(NEW: O45 — *the Desk is itself measured* named no measurement, so the ranker could not be wrong.)** The number is
+**slice precision**: of the items the slice carried, how many the finished artifact and its handover actually used.
+It is **derived by the curator from the artifact and the handover, never self-reported by the run** — the same reason
+v25 keeps the acting agent away from memory, applied to the instrument that feeds it. It increments ACE's helpfulness
+counters on the items themselves, so a store item that is carried a hundred times and used never becomes visible
+rather than merely present. §21 carries it as a line.
+
 **Mechanism:** the slice assembler in `bin/run` writes those three before it ranks anything, and `bin/check-stores`
-refuses a brief whose slice lacks them (both **ABSENT**).
+refuses a brief whose slice lacks them (both **ABSENT**) · slice precision derived in the curator's pass
+(**ABSENT**, §L O45).
 
 ---
 
@@ -4104,6 +5661,12 @@ would have been done differently. **Never *what did you learn***: in sixteen fro
 121 free reflections named the correct cause**, and the agent wrote confident wrong diagnoses into memory and
 reinforced them. The curator asks the five questions of every `stopped-on-defect`, `blocked` and `over-ceiling`
 handover; the answer is a NEGATIVE candidate.
+
+**(NEW: O43 — the scope split, and today's default is the expensive one.)** `NEGATIVES` is a per-venture store, so
+**a tooling dead end is relearned once per venture**. The split is mechanical rather than a judgement: **a negative
+whose reproducing command names no venture path is a fact about the world, and is house scope.** *This CLI flag does
+not do what its help text says* belongs beside `CRAFT`; *this venture's checkout script fails on a clean clone* does
+not. The scope field is written by the same program that writes the command, so nothing has to decide it later.
 
 **(NEW: memory.md's coverage table places this store in the world.)** A negative-knowledge log appears in **research**
 (ACE stores a failure mode as a unit with a helpfulness counter) and in one prior catalogue entry with a pre-action
@@ -4132,10 +5695,10 @@ costs one failed batch, not a broken system.
 
 ```mermaid
 flowchart TD
-    TR["3,060 transcripts already on the Mac<br/>SNAPSHOT — copied, never read live"] --> LOCAL["Local pass · no window at all<br/>MiniLM embeddings (384 dims, Apache 2.0)<br/>+ a local index"]
-    LOCAL --> RED["REDACT FIRST: credentials,<br/>third-party PII, anything a client owns"]
+    TR["3,060 transcripts already on the Mac<br/>SNAPSHOT — copied, never read live<br/>WATERMARK: only what is newer than the last pass (O42)"] --> LOCAL["Local pass · no window at all<br/>bin/embed — MiniLM (384 dims, Apache 2.0)<br/>+ a local index (O13)"]
+    LOCAL --> RED["bin/redact FIRST — the ONE redaction program (O17):<br/>credentials, third-party PII, anything a client owns.<br/>A PII positive BLOCKS here (O66)"]
     RED --> SEG["Segment into episodes<br/>by project and by date"]
-    SEG --> MINE{"Local classifier sorts each episode<br/>(Qwen3-0.6B, Apache 2.0)"}
+    SEG --> MINE{"bin/classify sorts each episode<br/>(Qwen3-0.6B, Apache 2.0) (O13)"}
     MINE -->|"'no, not like that' / 'yes, that's it'"| TASTE["TASTE candidates"]
     MINE -->|"'we already built X'"| BUILT["ALREADY-BUILT candidates"]
     MINE -->|"'that didn't work because'"| NEG["NEGATIVE candidates"]
@@ -4143,7 +5706,7 @@ flowchart TD
     MINE -->|"a case with a known right answer"| REH["REHEARSAL cases (§11.10)"]
     TASTE & BUILT & NEG & FACT --> SUM["The summarising half:<br/>Gemini once authenticated, or a local model.<br/>REDACTED EXTRACTS ONLY."]
     SUM --> CUR["curator — the delta rules of §13.3"]
-    REH --> BENCH["The rehearsal set that decides<br/>which loadouts may run unattended"]
+    REH --> BENCH["keel/golden/ — EVAL-ONLY (O11).<br/>The rehearsal set that decides which loadouts<br/>may run unattended, and which no run may load"]
 ```
 
 **(FINAL)** Embeddings, indexing and the first-pass classifier never leave the machine; only redacted extracts are
@@ -4154,6 +5717,19 @@ than doing more**. **A transcript enters the log as an episode and never as retr
 a **256-word-piece truncation** that decides the chunk size. Qwen3-0.6B is Apache 2.0 with a **32,768** context. Both
 run on electricity and burn no window. The summarising half is `curator`'s row in §B.2: *"the summarising half on
 Gemini or a local model"* — and Gemini is installed, unauthenticated, one founder act away (§I row 6).
+
+**(NEW: O42 — a watermark, so there is one mining program and not two.)** The pass carries a **watermark**: it reads
+what is newer than the last pass and nothing else. The backlog pass over 3,060 files and the steady pass over last
+night's transcripts stop being two programs with two failure modes, and **`bin/mine --since` is the whole of the
+difference between them.** With it, *"unread transcript count"* — a progress bar for a backlog that clears once and
+then reads zero forever — becomes **watermark lag**, which still means something in year two (deletion 17).
+
+**(NEW: O13, and it is why the two local boxes above are named as programs.)** The local tier has **no reachable
+carrier**: the armed sandbox denies a loopback `bind()`, so a local model server inside a run cannot be reached, and
+this tier's consumer `curator` carries **no `Bash` and no MCP** (§13.1). So the local half is **`bin/embed` and
+`bin/classify`, no-model programs in the Watch's launchd context, handing the curator a file** — v47's shape.
+**(R4, OPEN)** decides whether that is the only possible shape: inbound `bind()` is measured denied, and **outbound
+connect to loopback is unmeasured**. §15.7 carries the tier.
 
 ---
 
@@ -4181,6 +5757,17 @@ than content:
 | the anchors: how this field checks itself | **names anchor skills** (a check with an exit code) — existing, or to be built |
 | the common failure modes | **reference**, and each one that recurs becomes a NEGATIVE (§13.6) |
 | the vocabulary a practitioner uses | **reference**, with an expiry like any other vendor fact |
+
+**(NEW: O11 — the seam has a hole in it, and it is the kind that leaves every check green. Contradiction 11.)** v18
+admits **rehearsal case** as one of four SKILL.md bodies, and **§7.1 generates every admitted skill into the two
+directories an agent loads from**. Read together, those two rules ship **the case that will judge a run into the
+context of that run**. The fix is one frontmatter field and one generator rule: a body marked eval-only is generated
+into **`keel/golden/`**, which no agent's namespace resolves to, and the manifest check is re-pointed at it. Nothing
+about admission or expiry changes — an eval-only body is a skill in every other respect.
+
+**Why this belongs in this section and not only in §7.** The mining pass above writes `REHEARSAL` candidates from the
+transcript archive, so the store that judges runs is fed by the same pass that feeds the stores runs read from. One
+generator rule keeps them apart; without it, the archive quietly becomes an answer key.
 
 **(FINAL)** A field kit contains no steps, and this is enforced by what its sections *are*: all four headings are
 descriptive and none can hold *first do this, then do that*. **(NEW: v18 makes the same refusal at the library level,
@@ -4288,6 +5875,20 @@ rather than to select one.
 requiring source, date, expiry and falsifier (**ABSENT**) · `scripts/evict-memory.mjs` and `scripts/ledger.mjs`
 (**exist**, branch `ceo-1-1788609834`, renamed) · the local index (**ABSENT**; deletable, rebuilt in one pass).
 
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
+it.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| Memory holds a hash; the body lives in one erasable per-subject store | the memory writer · `bin/check-stores` | **v69** (D4) | **ABSENT** |
+| One redaction program, three call sites — store writes, the mining pass, the PII gate | `bin/redact` | **O17** (with **O66**) | **ABSENT** |
+| A watermark, so the backlog pass and the steady pass are one program | `bin/mine --since` | **O42** | **ABSENT** |
+| The dedup threshold calibrated on labelled pairs; a conflict pair with an owner and an expiry | the curator's pass | **O44** | **ABSENT** |
+| Slice precision, derived by the curator and never self-reported | the curator's pass | **O45** | **ABSENT** |
+| House scope for a negative whose reproducing command names no venture path | the negatives store's scope field | **O43** | **ABSENT** |
+| Eval-only bodies, generated where no agent's namespace resolves | `keel/golden/`; `check:manifest` re-pointed | **O11** | **ABSENT**; `check:manifest` exists |
+| The local tier as programs, because it has no reachable carrier | `bin/embed` · `bin/classify` | **O13** | **ABSENT**; **DEPENDS-ON-R4** |
+
 ---
 
 ## 13a · How the system improves itself
@@ -4312,7 +5913,7 @@ flowchart TB
     subgraph FAST["Within a run — the retry ladder"]
         F1["Done-test fails"] --> F2["The exact failure text goes back to<br/>the agent that produced it. Never a summary."]
         F2 --> F3["One retry, with the failure in context"]
-        F3 -->|"the same failure twice"| F4["Stop. outcome: stopped-on-defect (§6).<br/>Recorded; the Operator is the escalation."]
+        F3 -->|"the same failure twice"| F4["Stop. outcome: stopped-on-defect (§6).<br/>Recorded; escalation is a DECIDE-QUEUE ROW<br/>plus the wake-me test — never the Operator (O49)"]
     end
     subgraph NIGHT["Nightly — the curator, §B.2 row 13"]
         N1["Read every handover"] --> N2["Deltas into memory, never a rewrite (v24)"]
@@ -4338,6 +5939,15 @@ rather than three.)** A stop feeds the nightly read; a promoted pattern becomes 
 written back as a negative by the only agent that may write memory. **Nothing improves anything in the loop it was
 found in** — v30 as topology, not advice.
 
+**(NEW: contradiction 5 — the escalation had nowhere to land, and the fix is a queue)** This section said ~~*"the
+Operator is the escalation"*~~ and **§4.4 says the Operator is not always on**, in the same plan. A run that stops at
+03:00 therefore escalated to something that was not running. **(NEW: O49)** Night escalation is **a row in the decide
+queue plus the wake-me test** — never the Operator. The queue is read by a founder who is awake and by page 5; the
+wake-me test decides whether anything rings tonight. **Mechanism:** the decide queue `keel/logbook/decide.jsonl`
+(**ABSENT**, §L O9), which refuses a row with no intent id; the bell is §L **O18** (**ABSENT**) and §14 owns it. The
+Operator is still where an escalation goes **when the founder is present** — what changes is that being present is
+no longer assumed.
+
 ---
 
 ### 13a.2 The fast loop — the retry ladder is deliberately short
@@ -4348,8 +5958,17 @@ second chance for the model to be wrong about what happened.
 
 **(NEW: v2 has a place to put the outcome that FINAL did not.)** The stop is not silence — it is the
 `stopped-on-defect` value of the run's `outcome` field (§6), one of the three handover kinds the curator reads
-(§13.6). **Mechanism:** the done-test's exit code decides the retry. **WISH:** nothing yet compares two failure
-texts to decide they are *the same* failure; 13a.10's classifier row is that gap from the other side.
+(§13.6). **Mechanism:** the done-test's exit code decides the retry. ~~**WISH:**~~ nothing yet compares two failure
+texts to decide they are *the same* failure; 13a.10's classifier row is that gap from the other side, and it has a
+name now — the same-failure predicate, §L **O19** (**ABSENT**), one shared hash carrying the anchor's exit signature
+where there is one and cosine over local embeddings of normalised failure text where there is not. **Three named
+mechanisms rest on it:** this stop, the curator's sighting counter (13a.3) and memory dedup.
+
+**(R18, OPEN)** The ladder's stopping number is **taste until it is measured**. *Is there measured evidence for a
+re-attempt ceiling across sessions* — as against the within-run retry above — read from vendor documentation and any
+measured paper on repeated-attempt yield? It sets the N in the work item's `attempts` counter (§2.2a) before a run
+becomes a terminal **`blocked`** card carrying the exact failure text (§L **O73**, **ABSENT**). The within-run ladder
+is unchanged either way: a second identical failure still stops the run.
 
 ---
 
@@ -4373,6 +5992,13 @@ deliberately: two implementations of one check disagree.
 **(FINAL, §13.6.)** The lesson comes from **structured trajectory analysis over the failed trace** — five fixed
 questions, never *what did you learn*, because **zero of 121 free reflections named the correct cause**. §13.6 owns
 that mechanism and is cited, not restated.
+
+**(NEW: O80 — the one number the curator can derive that nothing else can)** A **calibration number per agent**: how
+often an empty `uncertain:` on a handover **preceded a defect found later**. `uncertain:` is written by the run
+**about itself**, and nothing ever checks it, so **a confidently wrong run pays nothing** — while a run that says it
+is unsure pays in attention. Derived by the curator from the handover and what happened afterwards, **never
+self-reported**. **Mechanism:** the curator's pass (**ABSENT**, §L O80); §21 reads the number and §3 is where it
+changes a routing.
 
 ---
 
@@ -4399,9 +6025,16 @@ described and nothing runs it.
 ### 13a.5 Corrections learn — the defect is in the brief, not in the run
 
 **(FINAL)** A founder redirect is logged as **a defect in the brief**, not in the run: *a run that had to be
-redirected was told the wrong thing.* **(NEW: v37 sharpens it — the brief has ten named fields and `agent:` is
-one)**, so a redirect is attributable to a field: the wrong agent, an unfalsifiable done-test and a missing envelope
-clause are three defects with three fixes. **(FINAL)** A **rejection at a which** is a labelled example in the taste
+redirected was told the wrong thing.* **(NEW: v37 sharpens it — the brief has ~~ten~~ **eleven** named fields, and
+`agent:` and `anchor:` are two of them)**, so a redirect is attributable to a field: the wrong agent, an
+unfalsifiable done-test and a missing envelope clause are three defects with three fixes.
+
+**(NEW: contradiction 3 — the attribution table was built on the wrong count)** This section said **ten** and **v45
+decided eleven**, so *"which field was wrong"* could be answered against a list that did not contain `anchor:` —
+the rung-1 check the done-test names, and one of the likelier fields for a redirect to blame. **(NEW: O4)** The
+count belongs in a schema for the same reason the charter's does: `keel/shared/schemas/brief.yml` (**ABSENT**, §L
+O4) is the source, and this section and §6 are checked against it rather than each restating a number. Two places
+counting the fields of one object is how this happened. **(FINAL)** A **rejection at a which** is a labelled example in the taste
 profile by the next curator pass; nothing is asked of the founder, the rejection *is* the label.
 
 **(NEW: the metric is §21's, cited and not redefined.)** §21's **interventions per finished artifact** is the number
@@ -4422,7 +6055,21 @@ happens; a remembered one does not.
 **(NEW: v2 can name the mechanism FINAL could only assert, and part of it already runs.)** `scripts/ledger.mjs`
 forces one disposition at expiry and refuses an open-ended waiver (branch `ceo-1-1788609834`). **ABSENT:** the pass
 that walks every durable store looking for a passed horizon, and §13.2's item schema. **So: forced disposition is
-ENFORCED; finding the thing that expired is a WISH.**
+ENFORCED; finding the thing that expired was ~~a WISH~~ and is now ABSENT with a name.**
+
+**(NEW: O23 — the pass has a name, which is the whole difference between ABSENT and WISH)** `bin/horizon`
+(**ABSENT**, §L O23) makes **one pass over every durable store**, forces exactly one disposition, and writes a
+**lapse record**: one row per thing that expired unactioned, **ordered by what it stopped**. That last field is what
+turns a list of expiries into something a founder can act on in one sitting. §4 runs it on the routine window; §2
+carries the intent and charter dispositions, including v79's `cloud:` and O63's wind-down.
+
+**(NEW: O41 — what a skill's disposition reads, and v19 stays whole)** Today a skill's expiry disposition reads
+nothing but the date. **Skill activation is logged and joined to outcomes**, so a skill that **never fired** defaults
+to **Deprecate** at expiry and a founder waiver is what keeps it. **v19 is unchanged**: retirement is still
+date-forced, and only what the disposition *reads* changes. **Mechanism:** `bin/log` (**ABSENT**, §L O41),
+**DEPENDS-ON-R14**. **(R14, OPEN)** — do any of the three CLIs emit a **skill-activation event** we can read, from
+their hook and telemetry documentation? If they do, this is a field lookup; if they do not, it is instrumentation we
+write, and §7 carries the cost either way.
 
 ---
 
@@ -4433,15 +6080,30 @@ most expensive refusal** — what was going to happen, what stopped it, what it 
 carry that line, not redefined here. **A refusal that tops it four weeks running is a design defect wearing a
 safety costume, and is narrowed by name** — never loosened generally.
 
-**(FINAL)** **The rethink trigger is a number, not a mood.** It fires when the founder's own ideas stop reaching
-production, or interventions per finished artifact rise for a month, or the same refusal tops the line four weeks
-running, or **two of §21's six numbers move the wrong way at once**. Its method is the measured one: a brief of the
-founder's words only, no floor, sealed minds writing a spine before reading, one merge that decides and keeps the
+**(FINAL, and the four conditions are struck by v81 — left visible, because which four they were is the argument)**
+~~**The rethink trigger is a number, not a mood.** It fires when the founder's own ideas stop reaching production, or
+interventions per finished artifact rise for a month, or the same refusal tops the line four weeks running, or **two
+of §21's six numbers move the wrong way at once**.~~ Its method is the measured one and that half stands: a brief of
+the founder's words only, no floor, sealed minds writing a spine before reading, one merge that decides and keeps the
 losing images — what produced this document and §22.
 
-**(NEW: all four conditions are readable from §21's numbers and the briefing, which is what makes it a trigger
-rather than a mood.)** **Mechanism:** the briefing generator reading the logbook (**ABSENT**). No agent declares a
-rethink; the numbers do, and the founder decides what it is about.
+**(FOUNDER, rethink 2026-09-06: D16)** **The trigger is external now.** All four struck conditions are **internal and
+lagging** — each fires only after the plan has already been wrong for a month — and all four read the **same absent
+briefing generator**, so the trigger could never fire at all. Meanwhile the facts most likely to invalidate this plan
+are **vendors' and already written down**. So: **every SPINE row resting on a fetched fact carries `source:` and
+`valid_until`**; a `scout` standing intent (v55) re-fetches them on the free Gemini window; and **a fact that changed
+opens a Decide item naming the row it invalidates**. **This round is what the alternative looks like** — nothing in
+the system reads the plan cold, so nine lanes had to be dispatched by hand, and the round found thirty-two facts that
+had moved under rows nobody had touched. **Mechanism:** one field per load-bearing row and one standing intent in
+v55's already-decided shape (both **ABSENT**); the `claim-source` resolver already fetches a URL and asserts the
+quote is present — `scripts/ledger.mjs`, **exists** on branch `ceo-1-1788609834`, in SHADOW. **Settled by:** re-fetch
+this plan's external facts once and count how many moved. §1 carries the field; §22 carries v81's other half, one
+`wins_if:` line per losing image.
+
+**(NEW: what did not change)** No agent declares a rethink; **the founder decides what it is about**, and a Decide
+item is a queue row, not a dispatch. And the four conditions are **struck in place above rather than deleted**: they
+are the right trigger for a system whose failures are internal, and the claim being made here is only that this
+system's are not.
 
 ---
 
@@ -4455,7 +6117,7 @@ proposal enters from one of four places, each already part of the system:
 |---|---|---|
 | A finding on a plan or artifact | `challenger` (§B.2 row 14) | the mechanism that would have caught it, **or it is an opinion** and does not enter |
 | A pattern at its third sighting | `curator` (§B.2 row 13) | the command that reproduces the failure (§13.6) |
-| A founder redirect, as a brief defect | the logbook, via 13a.5 | which of v37's ten fields was wrong |
+| A founder redirect, as a brief defect | the logbook, via 13a.5 | which of v45's ~~ten~~ **eleven** fields was wrong |
 | A skill candidate | `bin/skill` (**ABSENT**, §E.3) | its eval cases and proposed `valid_until` |
 
 **(NEW: the exit is the same for all four.)** A proposal leaves in one of two directions — **adopted** after beating
@@ -4464,8 +6126,12 @@ third state, and nothing ages out silently, because an item with no expiry is no
 **Ownership** is per loop and named: the run's own agent escalating to the Operator; the `curator`; and for the slow
 loop whoever found it, decided by the rehearsal set, **adopted by the founder where it is irreversible**.
 
-**Mechanism:** one append-only file beside the log — `keel/logbook/backlog.jsonl` (**ABSENT**; §17 inventories it,
-§19 orders it) — plus the negatives store, one of §13.2's six, written only by the curator.
+**Mechanism:** ~~one append-only file beside the log — `keel/logbook/backlog.jsonl` (**ABSENT**; §17 inventories it,
+§19 orders it)~~ **(NEW: O46, deletion 15)** — **a filter over the intent store where `kind: improvement`**, plus the
+negatives store, one of §13.2's six, written only by the curator. **COVERAGE says twice that an improvement is an
+intent**, so a second store for improvements is a second answer to *what is the company trying to do*, and two
+answers to one question disagree the first time either is written. The file is **deleted rather than built**; §18
+carries the deletion and §2's work rows (§L O1) are where a proposal that has been accepted actually lands.
 
 ---
 
@@ -4484,10 +6150,14 @@ loop whoever found it, decided by the rehearsal set, **adopted by the founder wh
   multiplies cost with **no anchor to pick between the outputs**. The adversarial pressure the founder asked for
   comes from a second agent, a second model family where one is reachable, and a test.
 
-**(NEW: the caveat §21 states and this section inherits.)** *"A second family when reachable"* is today **not
-reachable** — `codex` is not installed, `gemini` is unauthenticated (§I rows 5, 6) — so the challenger runs
-single-family, accepted risk to **2026-11-17**. This section's rule is met by a *different agent*, not yet by a
-*different family*.
+**(NEW: deletion 26 — this section carried one of six copies of one sentence, and five of the six go.)** The rule
+~~*"a second family whenever one is reachable"*~~ was written six times across v2 and enforced zero times; **§11.3
+keeps the one copy whose state is honest, and this section cites it rather than restating it.** What still holds
+here, and is this section's own: the challenger runs **single-family** — `codex` is not installed, `gemini` is
+unauthenticated (§I rows 5, 6) — an **accepted risk to 2026-11-17**, and the adversarial pressure the founder asked
+for is met by a *different agent*, not yet by a *different family*. **v82** deletes §11.3's three-family review panel
+row on the founder's word and does not change that state; **v78**'s fallback chains and its frozen calibration set
+are what stand in its place, and the two-family route runs through the no-model launcher, outside any Claude session.
 
 ---
 
@@ -4498,12 +6168,12 @@ design, so it is not adopted on a guess.)**
 
 | Founder item (§12) | Where it lives |
 |---|---|
-| Correction learning | **13a.5** — a redirect is a defect in the brief attributable to one of v37's ten fields |
+| Correction learning | **13a.5** — a redirect is a defect in the brief attributable to one of v45's ~~ten~~ **eleven** fields |
 | Regex classifier | **§4's repetition tripwire**, matching on *a hash of tool identity and canonicalised arguments*, not a regex over free text. A regex over failure prose is **UNVERIFIED**; 13a.2 is the same gap |
 | Post-mortem log | **§13.2's NEGATIVES store**, a memory store rather than a second file |
 | Post-mortem mechanism | **§13.6's five fixed questions**of every `stopped-on-defect`, `blocked` and `over-ceiling` handover. Never *what did you learn* |
 | Pattern promotion threshold | **13a.3** — three sightings then founder-reviewed promotion to a deterministic check |
-| Sighting count trigger | **13a.3**, the curator's counter. ABSENT with `bin/curate` |
+| Sighting count trigger | **13a.3**, the curator's counter. ABSENT with `bin/curate`, and it rests on the same-failure predicate (§L **O19**, ABSENT) |
 | Blocked improvement metric | **13a.8** — proposals that entered the backlog and could not run for want of a rehearsal case (**ABSENT** with the queue) |
 | Prompt A/B testing | **13a.4, §11.10** — both versions against known answers, or the change is not made |
 | Pareto prompt archive | **Narrowed:** the archive is **git history of the agent files**, reversible in one command. A Pareto *frontier* needs a score nothing here produces — **UNVERIFIED** |
@@ -4514,16 +6184,16 @@ design, so it is not adopted on a guess.)**
 | Field-note expiry | **§13.2, v19** — no expiry, not accepted; `scripts/ledger.mjs` forces one of three dispositions |
 | Continuous fine-tuning | **Refused** — 13a.9, kept as a losing image |
 | Feedback loop closure | **13a.1's arrows.** Closed only when a lesson becomes something that fails without it: a negative in every brief, or a rung-1 anchor (§11.2) |
-| Improvement backlog | **13a.8** — the proposal queue plus the negatives store, one list read from two ends |
+| Improvement backlog | **13a.8** — the proposal queue plus the negatives store, one list read from two ends. **(NEW: O46)** the queue is a **filter over the intent store** where `kind: improvement`; the separate file is deleted |
 | Improvement ownership | **13a.8**, per loop: the run's agent to the Operator · the `curator` · the founder for anything irreversible |
 
 | Founder item (§35) | Where it lives |
 |---|---|
-| Assumption-challenge prompt | **v30 — an agent, not a prompt.** `challenger` (§B.2 row 14), which never reads the artifact author's reasoning |
-| Periodic architecture rethink | **Refused as periodic, kept as triggered** — 13a.7's four numeric conditions; a calendar audit is what horizons replace (13a.6) |
+| Assumption-challenge prompt | **v30 — an agent, not a prompt.** `challenger` (§B.2 row 14), which never reads the artifact author's reasoning. **(NEW: v81)** the plan's own assumptions are challenged by `source:`/`valid_until` on every fact-based row, and by one `wins_if:` line per losing image |
+| Periodic architecture rethink | **Refused as periodic, kept as triggered — and the trigger is external now (v81)**: a re-fetched fact that moved opens a Decide item naming the row it invalidates. ~~13a.7's four numeric conditions~~ were internal, lagging and all blocked on one absent generator. A calendar audit is still what horizons replace (13a.6) |
 | "Why does this exist" audit | **13a.6** — a passed horizon justifies renewal in one sentence or it stops; no agent argues for its own existence |
 | Sunset-candidate review | **v19's three dispositions** — Refresh, Deprecate, Waive with a new date — over skills, promoted checks and every store item |
-| Alternative-architecture proposal | **§22's losing-images ledger**, each kept by name so it can be argued for later, plus **13a.8's queue** |
+| Alternative-architecture proposal | **§22's losing-images ledger**, each kept by name so it can be argued for later, plus **13a.8's queue**. **(NEW: v81)** each entry now carries `wins_if:` — the condition under which that losing image would be the better choice — so an argument for one is a check rather than a mood |
 | Contrarian-review agent | **`challenger`, §B.2 row 14** — `claude-opus-5`, Read Glob Grep, no write, routed before anything irreversible |
 | Fresh-eyes onboarding review | **v30's mechanism is the durable version:** the challenger sees the artifact and its done-test, **not** the author's reasoning. Fresh eyes as structure, not a first week |
 | Session-scoped rethink checklist | **Refused twice over.** v18 admits a step list in one place only, the Sender's checklist; and a rethink checklist inside a session is a plan-critique the run performs on itself, which v30 measures as harmful |
@@ -4533,14 +6203,28 @@ design, so it is not adopted on a guess.)**
 **Enforced by:** `scripts/ledger.mjs` — forced disposition at expiry, no open-ended waiver (**exists**, branch
 `ceo-1-1788609834`) · `scripts/check-citations.mjs` (**exists**, same branch) · git history of `.claude/agents/*.md`,
 the reversibility of every adopted prompt change (**exists**, same branch) · `bin/curate` (**ABSENT**, §13) · the
-rehearsal runner (**ABSENT**, §11.10) · `bin/skill` (**ABSENT**, §E.3) · `keel/logbook/backlog.jsonl` (**ABSENT**) ·
-the counter of redirects per intent (**ABSENT**) · the pass that finds a passed horizon (**ABSENT**).
+rehearsal runner (**ABSENT**, §11.10) · `bin/skill` (**ABSENT**, §E.3) · ~~`keel/logbook/backlog.jsonl`~~ **deleted,
+O46** · the counter of redirects per intent (**ABSENT**).
+
+**Added by the rethink round of 2026-09-06**, one row per new mechanism in this section:
+
+| Mechanism | Path | State | What it does here |
+|---|---|---|---|
+| **O23** · the horizon pass | `bin/horizon` | **ABSENT** | one pass over every durable store; forces a disposition and writes the lapse record — 13a.6's WISH becomes a named absence |
+| **O49** · night escalation | `keel/logbook/decide.jsonl` (§L O9) | **ABSENT** | a queue row plus the wake-me test, never the Operator — contradiction 5 |
+| **O4** · the brief schema | `keel/shared/schemas/brief.yml` | **ABSENT** | eleven fields, counted once — contradiction 3 |
+| **O41** · skill activation | `bin/log` | **ABSENT**, DEPENDS-ON-**R14** | a skill that never fired defaults to Deprecate at expiry; v19 unchanged |
+| **O80** · calibration per agent | the curator's pass | **ABSENT** | how often an empty `uncertain:` preceded a defect found later |
+| **O19** · the same-failure predicate | one shared hash | **ABSENT** | what 13a.2's stop, the sighting counter and memory dedup all rest on |
+| **O46** · the backlog | a filter over the intent store, `kind: improvement` | a deletion | the separate file goes; §18 carries it |
+| **v81** · the rethink trigger | `source:`/`valid_until` per fact-based row; a `scout` standing intent | **ABSENT**; `claim-source` **exists** in SHADOW | replaces 13a.7's four internal conditions with an external one |
 
 ---
 
 ## 14 · Mission control — seven pages, one state, and every tap opens a terminal on the Mac
 
-*obeys: §D entire, v4, v14, v15, v16, **v62** (the room's renderer, §14.4) · inherits: FINAL §13 — the Floor and the Balcony are absorbed, not deleted*
+*obeys: §D entire, v4, v14, v15, v16, **v62** (the room's renderer, §14.4) and **v66** (the surface's identity,
+rethink round 2026-09-06) · inherits: FINAL §13 — the Floor and the Balcony are absorbed, not deleted*
 
 ---
 
@@ -4595,7 +6279,28 @@ seed rather than starting a website from nothing.
 | Surface | What it is for | What it cannot do |
 |---|---|---|
 | **The published artifact pages** — the absorbed Balcony views, the briefing, the read-back (v38) | reading and **deciding**, from anywhere, with a shared database, viewer identity and comment threads that wake the publishing session | **cannot pop a terminal**, because it is not on the Mac |
-| **The local server**, over the founder's own network | everything else, including every tap that opens a terminal | not reachable when the Mac is off, which is the same condition the whole night already has (§15.1) |
+| **The local server**, ~~over the founder's own network~~ **bound to loopback and reached from the phone through an authenticated tunnel** (moved 2026-09-06: v66) | everything else, including every tap that opens a terminal | not reachable when the Mac is off, which is the same condition the whole night already has (§15.1) |
+
+**(FOUNDER, rethink 2026-09-06: D1 — and it resolves contradiction 16, which was three sentences about one server
+disagreeing.)** v39 said the phone reaches *"the local server over your own network"*; §14.13 said every page writes
+*"nothing but the inbox file and the intent log"*; and the seed already pins `127.0.0.1`. Read together they describe
+**an unauthenticated dispatch plane on any network the Mac joins** — because a page that can write the intent log and
+pop a terminal is a dispatch plane, whatever the table calls it. The founder's answer is three things and each has a
+cost of roughly one line:
+
+- **Loopback bind.** Already true of the seed; it stops being an accident and becomes the decision.
+- **One token, held in the macOS keychain, checked on every write route.** One middleware. Reads may be open on
+  loopback; **every write route checks**, because the write routes are the dispatch.
+- **The phone through an authenticated tunnel**, named at build time. Not the local network.
+
+**This moves v39's implementation and reverses nothing about it.** **Settled by:**
+`lsof -nP -iTCP -sTCP:LISTEN` showing a non-loopback bind, or a tap accepted from a device that presented no token —
+either one falsifies the row. **(R3, OPEN)** prices the keychain half: whether a **non-interactive background process
+can read a keychain item without an interactive unlock, and under what ACL**, is unmeasured, and §15.4's whole
+unattended credential plan rests on the same answer.
+
+**Mechanism:** the loopback pin (**the seed already has it**) · the token middleware and the keychain item
+(**ABSENT**, §L) · the tunnel, named at build time (**ABSENT**).
 
 **The cost, stated once and not re-litigated (v39):** **two renderers over one state** — which FINAL §13.1 explicitly
 refused when it said there is no third source of truth. It is accepted here because **a tap that opens a terminal
@@ -4670,10 +6375,35 @@ to.
 
 ---
 
+### 14.3a The page manifest — how *every element is a fact or a tap* stops being a promise
+
+**(NEW: O12.)** §14.1 keeps FINAL §13.2's rule — **every element is either a fact or a tap, and nothing is only
+informational** — and until now nothing could check it, so §14.4's own prohibitions are marked WISH in their first
+line. The manifest is the check. **A page is a file**, `keel/surfaces/pages/<n>.yml`, and **every element on it
+resolves to either a store path (`fact:`) or a `bin/` verb (`tap:`)**. The renderer builds **only** from the manifest,
+so an element with neither cannot be drawn — not *should not*, cannot.
+
+**What it buys immediately, beyond the rule.** Three of this section's hardest sentences become greppable: *no page
+holds state another page cannot see* is a join over `fact:` paths; *a tap on a website cannot widen a grant* is the
+assertion that every `tap:` names a `bin/` verb and never argv (v34, **O53**); and *page 1 is never where a decision
+is made* is a count.
+
+**(NEW: contradiction 9, and the count is the fix.)** §14.4 says page 1 is **never where a decision is made** and the
+page was also carrying the **venture toggle and the portfolio** — a control that switches which venture the founder is
+looking at is a decision surface, whatever the room around it looks like. **Page 1 declares zero elements of kind
+`tap: decide`**, and the toggle and the portfolio move to **page 3's strip** (§14.4, §14.6, and deletion 24). Page 1
+keeps the room; it loses its second job.
+
+**Mechanism:** `keel/surfaces/pages/<n>.yml` per page and the renderer that builds only from it (**ABSENT**, §L O12) ·
+the manifest lint asserting page 1's `tap: decide` count is zero (**ABSENT**).
+
+---
+
 ### 14.4 Page 1 · The office
 
-**(NEW: the prohibitions in this subsection are WISH under v50 — no renderer check enforces any of them
-today, and none names a mechanism.)**
+**(NEW: the prohibitions in this subsection ~~are WISH under v50 — no renderer check enforces any of them today, and
+none names a mechanism~~ now name one: the page manifest of §14.3a, which is ABSENT rather than absent-in-principle
+— moved 2026-09-06: O12.)**
 
 **What it shows.** The room: every live run a light, one venture per area, and the night replayed at speed in the
 morning. **(FOUNDER)** *"include it with the office, and also the place where it updates and shows what we are
@@ -4753,6 +6483,17 @@ is a legitimate requirement and a disqualifying control surface*, and the reason
 surface will always win the argument against a useful one.** The one change v4 makes: an avatar may open a terminal.
 It may not *be* the decision.
 
+**(NEW: O12 — page 1 loses its second job, and the guard rail above is the reason. Contradiction 9.)** The **venture
+toggle and the portfolio move to page 3's strip** (§14.6, deletion 24). Switching which venture the founder is looking
+at is a decision made on the page that is *never where a decision is made*, and the room is one venture per area
+already — the toggle was the portfolio's control wearing the room's clothes. **Page 1's manifest declares zero
+elements of kind `tap: decide`**, and that is a count a lint can take rather than a promise a reviewer must hold.
+
+**(R24, OPEN — and it is the one measurement page 1 rests on.)** Does **pixel-agents** actually render **ten venture
+areas and fifty live agents**, and what is its **`AgentEvent` schema and ingest rate**? The schema is UNVERIFIED above
+because the lane read the README rather than the type in source, and the writer's target shape is the one thing that
+is genuinely ours here. One file read closes the schema; one local run at our own emission rate closes the rest.
+
 ---
 
 ### 14.5 Page 2 · Agents and child flows — the page whose substrate already ships
@@ -4803,6 +6544,22 @@ page says which is which because they behave differently when the session ends.
 array for scripting, and `--json --all` includes completed ones. Its caveat is the page's problem, not a blocker:
 *"Opening agent view requires an interactive terminal."*
 
+**(NEW: O70 — where the census comes from, because the obvious source is a file that rewrites itself.)** The page's
+census is **`claude agents --json --all` joined to our own `sessions.jsonl`**. The vendor's `config.json` enriches it
+with **tmux pane ids only** — nothing else — because the vendor says of that file *"your changes are overwritten on
+the next state update"*, and **a page polling fifty rewriting files shows a different fleet on every render**. Two
+sources, one of them ours and stable, one of them the vendor's and narrow.
+
+**Why our log is the join key and not the vendor's ids.** A row in `sessions.jsonl` is written by `bin/run` at
+dispatch and carries the intent id; a vendor id is an attribute of a session that may vanish. That is the same rule
+**v80** applies to the messaging transport — vendor ids are recorded as attributes and **never as a join key**.
+
+**(FACT: world.md 12 — W12, and it is what this page is actually for.)** Agent teams were **repaired four times in the
+window and never promoted out of experimental**, and the recurring failure class is **lost teammate output** — a
+teammate's final answer not reaching the lead, a transcript going blank during long retry waits. v59 turns teams on;
+the risk of that decision is exactly the thing page 2 renders. A page that draws only *who is working* would show a
+healthy fleet on the night this fails, because the fleet **is** healthy and the output is what is missing.
+
 **State.** The substrate **ships**. The page is **ABSENT**.
 
 ---
@@ -4823,6 +6580,25 @@ a dashboard. **Both are kept, by one rule: every number on the page names the ta
 | cache hit rate, and the reserve | → the batching decision it implies (§16) |
 | an anomaly | → **the cord** |
 | the quality-of-belief split — how much of what is believed is rung 1 and how much rung 4 (§11) | → the done-tests behind the rung-4 share |
+| **the portfolio strip** — every venture, its spend and its tempo *(new 2026-09-06: O12; it was page 1's second job)* | → retempo, or that venture's intents |
+
+**(FACT: world.md 4 — W4, and it changes what this page computes rather than what it shows.)** Four of the numbers
+above are now **structured vendor fields the page can read instead of derive**: a per-session `prompt_cache` object
+for status-line scripts (hit ratio, misses, tokens re-cached, warm/cold); `rate_limits.spend_limit`; the `/usage`
+Loops breakdown with per-loop run count, total tokens, tokens per run and last run; and the `modelPricing` managed
+setting, which makes contracted rates rather than list price the basis for `/cost` and telemetry. **Read the field
+where a field exists.** A number this page computes from the log and the price table can disagree with the number the
+runtime shows in `/cost`, and when they disagree the founder has no way to tell which is wrong.
+
+**What stays computed, and it is not a small remainder.** Per-agent, per-intent and per-venture rollups have no vendor
+field — the vendor knows about sessions, not about our roster — so the join by dispatch id (§16.1) still does that
+work. The rule is narrow: **vendor field where one exists, our join where one does not, and the page says which it
+is drawing.**
+
+**(R22, OPEN — and this page is where it bites.)** **What does page 3 cost to render at a year of rows, and where is
+the knee?** The answer decides whether **O40**'s log rotation and rebuildable rollups are a day-one shape or a later
+migration — and a later migration touches the one store this plan says is never edited (§15.3). Measured against a
+synthesised log at this Mac's own emission rate, against the real server. §16.1a carries the rotation.
 
 **Substrate.** The event log, with `gen_ai.*` attribute names and an id on every row, joined to §16's price table.
 `~/.agentvibe/events.jsonl` exists on this Mac — 1.1 MB, 3,843 rows — and `mission-control/` (60 files, a Bun and Hono
@@ -4856,6 +6632,16 @@ session and then, like, give it the task, and then it starts walking."*
 decision is a card in the same board as the work it blocks, rather than a separate view the founder must remember to
 open. And **the read-back is this page's *new card* form**: an intent is born here, so the restatement that binds it
 is born here too (§C.3). Nothing binds by voice; the founder confirms by tap or typed word, on this form.
+
+**(NEW: O9 — the column is a view over one queue, and there was nearly one queue per venture. Deletion 31.)** The
+decide items live in **one house-level queue**, `keel/logbook/decide.jsonl`, replacing **ten per-venture `open.md`
+stores**. Ten queues and one founder is nine writer-contention points and nine places a decision can be missed; the
+founder does not decide per venture, they decide in one sitting. **A row with no intent id is refused**, which is what
+keeps the "waiting on you" column a view of blocked work rather than a second inbox.
+
+**And this is also where a night escalates to (O49, §4).** 13a.1 said *"the Operator is the escalation"* while §4.4
+says the Operator is not always on, so a run that stops at 03:00 escalated to something that was not running. **It
+escalates to a row in this queue plus the wake-me test** — the queue is awake because it is a file.
 
 **(NEW: v36 decides where a card may come from, and it is the same rule as the trifecta.)** A card that originates
 outside the company — a support message, an invoice, a failed build, a reply — is created from **an inbound row
@@ -4943,10 +6729,18 @@ falsifier. *How does the whole thing work* → this document and its diagrams. *
 intent id and an intent cannot exist without a founder sentence behind it, everything the system ever did traces back
 to something the founder actually said** — not a logging feature, a consequence of one rule.
 
+**(NEW: O54 — the one element on any page that a model writes, and it cites or it refuses.)** *Ask the company
+anything* is answered by a model, and every other element in this section is a fact or a tap. So it carries the
+narrowest possible contract: **an answer renders only with the log-row ids or memory-item ids it rests on, and zero
+citations renders as *I cannot answer that from the log*.** Not a hedge, not a summary with a caveat — a refusal.
+The three deeper reads above already resolve to ids (the handover, the brief, the ranking at that tick), so the
+citation is a field the renderer has rather than a discipline the model must keep. This is `check-citations.mjs`'s
+own idiom, turned on a surface.
+
 **(NEW: v38 — the briefing is the top strip of this page, and `Decide` is not.)** *Last night* lives here, above the
 engines, because the briefing answers *what happened* and this is the page that answers *how it works*. `Decide` went
-to page 4 instead, as a "waiting on you" column, so that a decision sits beside the work it blocks. **Both remain
-published phone pages**, which is how they are read away from the Mac (v39).
+to page 4 instead, as a "waiting on you" column over the one house queue (**O9**, §14.7), so that a decision sits
+beside the work it blocks. **Both remain published phone pages**, which is how they are read away from the Mac (v39).
 
 **(FINAL §13.4, unchanged.)** The briefing's shape is the newsroom budget meeting: what moved, what finished, what is
 stuck, **what I could not check**, what is waiting on you, what it cost, whether the books agree with the bank, what
@@ -5056,7 +6850,9 @@ tmux has-session -t <name>                            # does it still exist
 
 ```mermaid
 flowchart TD
-    TAP["A tap on ANY page:<br/>an avatar · a row · a card · a node · a canvas item"] --> WHO{"Does this agent<br/>already have a session?"}
+    TAP["A tap on ANY page:<br/>an avatar · a row · a card · a node · a canvas item"] --> AUTH{"v66: is this a WRITE route?<br/>Every write route checks the<br/>keychain-held token"}
+    AUTH -->|"no token"| REFUSE["REFUSED, and logged.<br/>A tap is a dispatch, whatever<br/>the page calls it."]
+    AUTH -->|"token checks out"| WHO{"Does this agent<br/>already have a session?"}
     WHO -->|"yes, a teammate"| PANE["Read its tmux pane id from<br/>~/.claude/teams/&lt;team&gt;/config.json<br/>(READ ONLY — it is overwritten on every state update)"]
     WHO -->|"yes, a background session"| ATT["claude --attach &lt;id&gt;"]
     WHO -->|"no"| NEW["bin/run composes the argv,<br/>mints a UUID for --session-id,<br/>and starts a detached tmux session"]
@@ -5088,6 +6884,11 @@ later attaches to; `--name` sets a name *"shown in `/resume` and the terminal ti
 hand-off**: *"Not found: any primary source … I fetched none, so the obvious macOS route is unverified, not absent."*
 The design does not rest on it. **Also UNRESOLVED:** `-w` / `--worktree` and `--tmux`, which a prior measurement
 recorded and this session's fetch of the CLI reference did not document. One `claude --help` closes it.
+
+**(NEW: v66 — the tap is the dispatch, so the tap is what is authenticated.)** Every route in the diagram above that
+**writes** — mint a session, attach, write an inbox file, drag a card — **checks the keychain-held token**. Reads may
+be open on loopback. The distinction is not cosmetic: this page-set's whole argument is that a tap opens a terminal on
+this Mac, which means the surface that pops terminals is a dispatch plane and has to be treated as one (§14.1).
 
 ---
 
@@ -5136,22 +6937,49 @@ already has one.
 `--bg`. The redirect row's *"dies with the session"* is now only half true — the mailbox is on disk, though *"its
 durability is not stated on the page."* The *page that answers back* row is unaffected by anything fetched.
 
-**The cord is on every page, and it is the same cord** (§12.9): one file, read first on every tick, cancelling running
-work, revoking outward grants, finishing nothing new, leaving every artifact in place. **There is one kill and not
-two, because a kill that lives in a second place is a kill that disagrees** — which is exactly the risk a seven-page
-website introduces, and the reason it is a control rather than a page.
+**(NEW: O18 — the *Be told* row named a bell and no transport, in a plan where every rule names a mechanism.)** The
+interruption budget is designed in detail — three a day, `wake-me` classes, a statutory class exempt from it (**O55**)
+and a waiting customer's clock that promotes past it (**O56**) — and **nothing was named that could actually make a
+sound**. One no-model program, `bin/bell`, is **the only thing that may ring**, and it reads three inputs: the
+`wake-me` classes, the budget, and the per-channel acted-on rate. **A channel the founder never acts on stops being a
+channel**, which is the only defence against the budget being spent on the cheapest thing to send.
 
-**Enforced by:** every page reading the one state and writing nothing but the inbox file and the intent log
+**Why it is a program and not a page control.** Everything else in this section is reached by the founder opening it;
+a bell is the one thing that reaches *out*. That makes it an outward act in §12's sense, and outward acts here are
+performed by programs that hold no model.
+
+**The cord is on every page, and it is the same cord** (§12.9): ~~one file, read first on every tick, cancelling
+running work~~ **two halves under one word — the file the Watch reads first on every tick, which stops the next
+dispatch, and the signal to each child's recorded process group, which stops work already running** (moved 2026-09-06:
+v67) — revoking outward grants, finishing nothing new, leaving every artifact in place. **There is one kill and not
+two, because a kill that lives in a second place is a kill that disagrees** — which is exactly the risk a seven-page
+website introduces, and the reason it is a control rather than a page. §12.9 owns both halves; this page taps them.
+
+**Enforced by:** every page reading the one state and writing nothing but the inbox file and the intent log —
+**and every write route checking the token, because those two writes are a dispatch** (moved 2026-09-06: v66)
 (**ABSENT**) · `~/.agentvibe/events.jsonl` and `mission-control/`'s SSE feed (**exist** on branch
 `ceo-1-1788609834`; the spine, renamed) · the room's JSON writer (**ABSENT**) · `bin/run` as the only composer of
 argv, so that a tap on a website cannot widen a grant (**ABSENT**).
+
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
+it.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| Loopback bind · one keychain-held token on every write route · an authenticated tunnel | the seed's `127.0.0.1` pin · one middleware · the tunnel | **v66** (D1) | pin **exists**; token and tunnel **ABSENT** |
+| The page manifest — every element a `fact:` path or a `tap:` verb; page 1's `tap: decide` count is zero | `keel/surfaces/pages/<n>.yml` | **O12** | **ABSENT** |
+| One house decide queue, replacing ten per-venture stores; a row with no intent id is refused | `keel/logbook/decide.jsonl` | **O9** | **ABSENT** |
+| Page 2's census: the vendor's fleet list joined to our own session log, pane ids only from `config.json` | the page's reader | **O70** | **ABSENT** |
+| The Q&A answer renders with its ids or renders a refusal | the page's renderer | **O54** | **ABSENT** |
+| One bell, reading the classes, the budget and the per-channel acted-on rate | `bin/bell` | **O18** | **ABSENT** |
+| Page 3 reads the vendor's `prompt_cache`, `rate_limits.spend_limit`, Loops breakdown and `modelPricing` | the page's reader | **W4** | fields **ship**; the reader **ABSENT** |
 
 ---
 
 ## 15 · Runtime and the Mac — the facts that bind, and each provider
 
-*obeys: §D.1, §D.2, v13's constraints, and **v56** — which gives this section its one stated exception (§15.1a) ·
-inherits: FINAL §14 and §16.7*
+*obeys: §D.1, §D.2, v13's constraints, **v56** — which gives this section its one stated exception (§15.1a) — and
+**v79**, which prices that exception with a measurement (rethink round, 2026-09-06) · inherits: FINAL §14 and §16.7*
 
 ---
 
@@ -5165,7 +6993,9 @@ in the same interview and which exists only for the hours this sentence is false
 Mac**, by `mission-control/` — the Bun and Hono server and React client on branch `ceo-1-1788609834` — because a tap
 that pops a terminal needs `tmux` on the same machine, and a published page cannot reach it. So the website inherits
 every fact in this section: it is up while the Mac is up, it dies at logout with everything else, and it is reachable
-from the phone over the founder's own network. **What the phone keeps when the Mac is asleep** is the published
+from the phone ~~over the founder's own network~~ **through an authenticated tunnel, the server itself bound to
+loopback and every write route checking a keychain-held token** (moved 2026-09-06: v66; §14.1 carries the row).
+**What the phone keeps when the Mac is asleep** is the published
 artifact pages — the briefing, the read-back, and the Decide items — which are for reading and deciding and can pop
 nothing. §14.1 carries the cost of that split, stated once: two renderers over one state.
 
@@ -5202,6 +7032,35 @@ directly. `bin/run` gains a `cloud` carrier that **mints a task and records its 
 Watch reads the pull requests on wake. **All three are ABSENT.** The reason the shape is this and not a remote write
 is the same reason §15.3 gives for plain files: a machine that was asleep cannot have judged anything, so the judgement
 happens here, once it is awake.
+
+**(NEW: v67 shuts the maker half of this lane today, and the refusal is mechanical.)** The carrier table gains a
+`stop:` column and **`bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN** (§12.9).
+Cancel is UNKNOWN for Codex cloud — the row above says so — so the maker lane is refused by the launcher rather than
+by a policy someone has to remember. The **reviewer** lane is unaffected: it starts nothing unattended.
+
+**(FOUNDER, rethink 2026-09-06: D14 — decide the lane after the measurement, and add the charter field now.)** Two
+things, and only the second is a decision about the lane. First, **the charter gains `cloud: allow | deny`, default
+`deny`** — whichever lane eventually wins, a venture may say no, and the field costs one line to add now and a
+migration to add later. `bin/check-stores` refuses a charter without it. Second, the lane itself stays **§I row 15,
+the founder's**, and the measurement it asked for has been taken.
+
+**R5 is DONE, and it prices the lane at zero for the week measured.** From `pmset -g log` on this Mac, read-only,
+2026-09-06 (DECISIONS §19, verbatim):
+
+> *"span 2026-08-30 21:44 → 2026-09-06 09:39 (156 h, all the log retains) · asleep 40.7 h (26%) in 487 episodes ·
+> zero episodes of one hour or longer · longest single sleep 0.3 h (about 20 minutes). The Mac was never off long
+> enough for a cloud lane to have bought anything back this week."*
+
+**The caveat travels with the number and is not a footnote to it.** The log covers **only the span it retains**, and
+**DarkWake power-naps are counted as wakes** — so *asleep* here means *the machine could not have run a process*, and
+a longer history might read differently. What the measurement does settle is the shape of the argument: **487 short
+sleeps and no gap over an hour** is a tail a cloud lane cannot buy back, and §I row 1's terms question is a real cost
+to pay for it. It does not close row 15; it prices it.
+
+**(FACT: world.md 24 — and it cuts the other way from how it reads.)** Four weeks of Codex release notes mention **no
+cloud exec, no cancel and no #19945**. That is **absence, not denial**: the June–August window is unread (**R26**),
+and no vendor page states that a cloud creation API does not exist. The maker row above stays UNVERIFIED for that
+reason rather than becoming a negative.
 
 **Two rows stay open, and neither is an agent's to close.**
 
@@ -5255,7 +7114,72 @@ clone — so they cannot reach anything this system stores. **Desktop scheduled 
 1-minute minimum, local files. **`/loop`**: machine on **and** session open. Only the middle tier and a LaunchAgent
 touch local files without an open session, and only the LaunchAgent is ours to supervise.
 
-**Mechanism:** `~/Library/LaunchAgents/…watch.plist` and `bin/supervise` (both **ABSENT**).
+**(NEW: O79 — blue-green at a tick boundary, and it is free because of the last fact above.)** Every tick is already
+crash-only, so a new `bin/watch` or `bin/send` is swapped **between ticks** rather than during one: the running tick
+finishes, the next one starts on the new code, and a bad swap costs one tick rather than a partial outward act. This
+is the whole of the deployment story for the two programs that may act on the world, and it needs no mechanism beyond
+the boundary that already exists.
+
+**Mechanism:** `~/Library/LaunchAgents/…watch.plist` and `bin/supervise` (both **ABSENT**) · the tick-boundary swap
+in `bin/watch` and `bin/send` (**ABSENT**, §L O79).
+
+---
+
+### 15.2a The host directory, and a probe that asserts by attempting
+
+**(NEW: O10.)** Every fact this section states about the machine — the plist, the managed-settings template, the env
+file (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`), the sandbox block, the `denyRead`
+list, the expected macOS grants — is **configuration that lives somewhere or a sentence that rots**. It lives in
+**`keel/host/`**, one directory, in git, and it is what a new machine is rebuilt from.
+
+**And `bin/probe` asserts the live machine matches it by attempting the operation, never by reading a database.** The
+distinction is the whole value of the program. Reading a settings file tells you what someone intended; attempting a
+cross-venture read, a write outside the worktree, or a fetch of a denied path tells you what the machine will actually
+do tonight. This repository has already been wrong about a grant it had configured correctly — the sandbox deny-set is
+per session root, which hid half a finding three times in one day.
+
+**(NEW: O14 — a run never creates its own worktree.)** v41 gives four agents `isolation: worktree`; **`git worktree
+add` cannot complete under the armed sandbox** (§15.8), and interactive escalation is unavailable to an unattended run
+**by construction** — there is nobody to approve it. So **`bin/worktree` makes it and `bin/run` hands it over in the
+argv**. A build plan that assumes a worker makes its own stalls on its first step, and the failure is not loud: the
+partial checkout looks like the worker's own broken work.
+
+**(R1, OPEN — and it decides whether `isolation: worktree` is enforced or merely declared.)** Is the Bash sandbox's
+`filesystem.allowWrite` settable **per `claude -p` invocation**, or project-scoped only? Per-invocation, the shell
+narrows to the run's own worktree and the isolation is a fact; project-scoped, it stays a convention the agents keep.
+Vendor reference first, then one measured cell.
+
+**Mechanism:** `keel/host/` (**ABSENT**) · `bin/probe`, asserting by attempting (**ABSENT**) · `bin/worktree`
+(**ABSENT**).
+
+---
+
+### 15.2b The wake reconciler — what *"resume, not restart"* never had
+
+**(NEW: O15, and contradiction 13 is that the sentence was asserted with no carrier.)** §6 says a run resumes rather
+than restarts, and **nothing performs it**. On wake, the state of last night is four sources that disagree: our own
+session log, `claude agents --json --all`, the tmux session list, and the process table. The reconciler is the program
+that reads all four and writes one answer.
+
+**Three rules, and the middle one is the one that matters.**
+
+- **`bin/run` writes `run.started` before exec**, so a run that dies between mint and start is visible rather than
+  absent.
+- **The reconciler writes `orphaned`, never `finished`.** A run whose process is gone and whose done-test never ran
+  did not finish, and calling it finished is how a night of nothing reads like a night of work. From `orphaned` it
+  either **resumes by id** or **closes with a reason**.
+- **It refuses a night lane the power assertions cannot promise to keep awake.** `caffeinate -i` is time-bounded and
+  nothing but `pmset -a disablesleep 1` prevents lid sleep (§15.2); minting eight hours of work against an assertion
+  that expires in two is a plan to produce orphans.
+
+**(NEW: W14 is why this is not optional, and it is the sharpest fact of the round for this section.)** Under `-p`,
+`/goal` check-ins are the only way the runtime delivers anything, they back off **30 min → 1 h → every 2 h**, and an
+idle session gets **at most three check-ins per goal** until someone messages it. **Nobody is there to message it.**
+So a night goal loop delivers three times and goes quiet — and *quiet* is exactly what a finished run and an orphaned
+run look like from outside. Without the reconciler, the two are the same row.
+
+**Mechanism:** `run.started` written by `bin/run` before exec (**ABSENT**) · the reconciliation pass in `bin/watch`
+over the four sources (**ABSENT**, §L O15).
 
 ---
 
@@ -5303,7 +7227,21 @@ different thing from a silent one.
 **(FINAL)** The log is the truth and is never edited; memory is a curated view over it; **if memory is wrong the log
 is still right** (§13).
 
-**Mechanism:** `bin/log` with `F_FULLFSYNC` (**ABSENT**) · the push in every run's close (**ABSENT**) · the nightly
+**(FOUNDER, rethink 2026-09-06: D4 — the sentence above stands, and it took an indirection to make it stand.
+Contradiction 7.)** *The log is never edited* could not hold beside *a deletion request is honoured* (§16.7) and
+*eviction never deletes* (§13.3) — three rules, one of which had to give. **None of them gave.** No personal datum
+enters the log: **the log holds a hash**, one erasable per-subject store holds the body, and erasure deletes that row
+so the hash becomes **a known absence** — the same shape this section already uses two paragraphs above for a blob
+that is gone, *which is a different thing from a silent one*. §12.8b carries the store and the consent register;
+§13.2a carries memory's half.
+
+**(NEW: O31 — and it is what makes *never edited* checkable rather than promised.)** Each row carries **the sha256 of
+the row before it**. Today the guarantee is a convention: the file is editable without trace, and the recovery plan
+above rests entirely on it being right. A chain does not prevent an edit; it makes one detectable, which is the most
+a file on the founder's own machine can offer and more than a convention offers.
+
+**Mechanism:** `bin/log` with `F_FULLFSYNC` **and the previous row's hash on every row** (**ABSENT**, §L O31) · the
+hash indirection for personal data (**ABSENT**, §L, v69) · the push in every run's close (**ABSENT**) · the nightly
 snapshot job (**ABSENT**).
 
 ---
@@ -5332,7 +7270,45 @@ file that gets committed eventually.
 `npm run test:sandbox` on branch `ceo-1-1788609834` fails if the sandbox is disarmed. §12.10's caveat applies
 unchanged: **that is a guardrail against accident, not containment.**
 
-**Mechanism:** the drill as an obligation with `recurs: monthly` in the harness venture's obligations (**ABSENT**).
+**(R3, OPEN — and the unattended half of this plan rests on it with nothing tested.)** Can a **non-interactive
+background process read a macOS keychain item without an interactive unlock, and under what ACL**? Everything above
+assumes it can: the LaunchAgent runs as the founder's user *because that is what reaches the keychain*. If it cannot
+at 3 a.m., the credential plan works exactly when someone is watching, which is when it is least needed. **It also
+prices v66's keychain-held token** (§14.1) — the same question, asked of the surface. Apple platform documentation,
+then one detached measurement.
+
+**(NEW: O67 — rotation stops being a promise with no clock.)** *"At the horizon"* becomes **one row per credential in
+the obligations store** (v44), surfaced by the briefing, with the same forced disposition every dated thing here
+carries. §12.8c holds the decision; this is the section whose plan it repairs.
+
+**Mechanism:** the drill as an obligation with `recurs: monthly` in the harness venture's obligations (**ABSENT**) ·
+rotation rows in `obligations.yml` (**ABSENT**, §L O67).
+
+---
+
+### 15.4a The lease, and a house to break
+
+**(NEW: O16 — the only failure in the whole round that ends in a duplicated outward act.)** The drill above restores
+the fleet **from the remote alone** and runs the anchors there. That clone has the Watch's plist, the Sender's code
+and the obligations store. **Nothing stops it ticking, and nothing stops it sending.** Twice a year, a drill that
+succeeds is a second company acting on the world on the founder's behalf, and the duplicate is an email or a payment
+rather than a file.
+
+**The lease is one file.** `logbook/watch.lease` holds **a host id and a heartbeat**. The **Watch refuses to tick
+without it** and the **Sender refuses to act without it**, so the restored clone — a different host id, a stale
+heartbeat — can do neither. It is also the honest replacement for COVERAGE §11's refusal reason: *"one founder, one
+Mac"* is **falsified by this section's own restore drill** (deletion 32), and the lease is what actually holds where
+that sentence did not.
+
+**(NEW: O78 — a scratch house, because four programs that touch the world have no test seam.)** The Sender, the
+Watch, the world's door and the launcher are exactly the four things a defect in cannot be recalled, and there is
+nowhere to exercise them. **`keel/fixtures/` is a scratch house and `bin/drill` runs against it** — fixture charters,
+fixture obligations, a fixture inbound row, and a Sender whose outward act lands in the fixture rather than in the
+world. It is what makes the monthly restore drill a rehearsal rather than a first performance, and it is what O16's
+lease is tested against.
+
+**Mechanism:** `logbook/watch.lease`, refused-without by `bin/watch` and `bin/send` (**ABSENT**, §L O16) ·
+`keel/fixtures/` and `bin/drill` (**ABSENT**, §L O78).
 
 ---
 
@@ -5427,6 +7403,19 @@ retirement is committed *"Not sooner than October 15, 2026"*, the nearest retire
 names. `ANTHROPIC_DEFAULT_HAIKU_MODEL` changes the evaluator, **and it changes it everywhere the small fast model is
 used**, not only for `/goal`.
 
+**(NEW: O13 — the tier has a shape and had no carrier, which is a different gap and a worse one.)** A model with a
+licence and a size still needs something able to call it, and **the local tier has no reachable carrier**: the armed
+sandbox **denies a loopback `bind()`**, so a model server started inside a run cannot be reached, and this tier's only
+consumer, `curator`, carries **no `Bash` and no MCP** (§13.1) — it could not call one if it were there. So the tier is
+**`bin/embed` and `bin/classify`, no-model programs in the Watch's launchd context, handing the curator a file.**
+That is v47's shape, reused rather than invented, and it is why §13.7's mining diagram names two programs instead of a
+service.
+
+**(R4, OPEN, and it is the whole of the design question.)** Can a sandboxed run reach a local model, and **in which
+shape — server inside, server outside, or in-process**? Inbound `bind()` is **measured denied**; **outbound connect to
+loopback is unmeasured**, and if it works, a server outside the sandbox is reachable and the tier could be a service
+after all. The programs above are what the tier is until that is measured.
+
 **(UNVERIFIED, and named.)** On-disk byte sizes are not stated on either model page. FINAL's *"under 100 MB"* for the
 embedder is consistent with the parameter count and is **not quoted from the page**.
 
@@ -5471,18 +7460,42 @@ this Mac, this account and these runtimes — they are not design, and nothing a
 taken under it.)** `git worktree add` cannot complete under the armed sandbox — exit 128 across the agent-config paths
 — and adding those paths to the write allow-list does not lift it. That one command needs the sandbox disabled. It is
 a known, measured limit rather than a defect in anyone's work, and it is the reason a build plan that assumes a worker
-can make its own worktree will stall on its first step.
+can make its own worktree will stall on its first step. **That is what `bin/worktree` is for (O14, §15.2a):** the
+program runs where the escalation is available, and the run is handed the result.
+
+**(R6, OPEN — and it decides whether the world's door is a reader or a listener.)** **Which inbound sources document a
+polling read with a cursor, and which need a listening socket?** The table above already carries the constraint that
+answers half of it: **nothing lifts an inbound `bind`** under the armed sandbox. So a source that requires being
+reachable from the internet cannot be served by a program on this Mac as configured, and the door either polls with a
+cursor or the source does not enter through it. One page per source, vendor documentation.
 
 **Enforced by:** a facts store with one row per fact, its date and the command or URL that re-measures it, checked for
 expiry like any other item (**ABSENT**; the substrate is `scripts/ledger.mjs`, which exists on branch
 `ceo-1-1788609834` and already forces a disposition when a date comes due).
 
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
+it.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| The host directory, and a probe that asserts **by attempting the operation** | `keel/host/` · `bin/probe` | **O10** | **ABSENT** |
+| The local tier as programs, because it has no reachable carrier | `bin/embed` · `bin/classify` | **O13** | **ABSENT**; **DEPENDS-ON-R4** |
+| A run never creates its own worktree; it is handed one in its argv | `bin/worktree` | **O14** | **ABSENT** |
+| The wake reconciler — `orphaned`, never `finished` | `bin/run` (`run.started` before exec) · `bin/watch` | **O15** | **ABSENT** |
+| The Watch/Sender lease — host id and heartbeat, refused-without | `logbook/watch.lease` | **O16** | **ABSENT** |
+| A scratch house and a drill for the four programs that touch the world | `keel/fixtures/` · `bin/drill` | **O78** | **ABSENT** |
+| Blue-green at a tick boundary | `bin/watch` · `bin/send` | **O79** | **ABSENT**; the boundary exists |
+| The log's hash chain, and the hash indirection for personal data | `bin/log` | **O31** · **v69** | **ABSENT** |
+| `cloud: allow \| deny` on every charter, default `deny`, refused when absent | the charter schema · `bin/check-stores` | **v79** (D14) | **ABSENT** |
+| Rotation as a row per credential | `obligations.yml` | **O67** | store decided (v44); rows **ABSENT** |
+
 ---
 
 ## 16 · Economics — where the money and the window actually go
 
-*obeys: §G.2, §G.3, v22, v23, and v57 and v59 which change what the arithmetic assumes · inherits: FINAL §15, with
-its cost formula corrected*
+*obeys: §G.2, §G.3, v22, v23, v57 and v59 which change what the arithmetic assumes, and **v74**, which changes what a
+ceiling is denominated in (rethink round, 2026-09-06) · inherits: FINAL §15 — **and the corrected cost formula now
+lives in §9.6, cited here and not restated** (deletion 20, contradiction 15)*
 
 ---
 
@@ -5515,8 +7528,41 @@ record, joined by the id minted at dispatch — **not** output tokens, which are
 heuristic, which cannot attribute. One review session on this machine produced **1.4 million output tokens in five
 hours with no loop running**, and a meter without a per-run axis cannot see that.
 
+**(FACT: world.md 4 — W4. Four of these numbers stopped needing to be computed.)** The vendor now emits a per-session
+**`prompt_cache`** object for status-line scripts (hit ratio, misses, tokens re-cached, warm/cold), a
+**`rate_limits.spend_limit`** field, a **`/usage` Loops breakdown** with per-loop run count, total tokens, tokens per
+run and last run, and a **`modelPricing`** managed setting that makes contracted rates rather than list price the
+basis for `/cost` and telemetry. **Read the field where a field exists** — a number this section derives can disagree
+with the number the runtime prints, and when they disagree nothing here can say which is wrong. The rollups above have
+no vendor field, because the vendor knows about sessions and not about our roster; those stay ours, joined by the
+dispatch id. §14.6 renders both and says which it is drawing.
+
 **Mechanism:** a ledger line per run, written from each run's `--output-format json` cost fields (**ABSENT**);
 `bin/warroom`'s per-worker cost pricing exists on branch `ceo-1-1788609834` and is absorbed into it.
+
+---
+
+### 16.1a The log rotates, and no surface reads the raw file
+
+**(NEW: O40, DEPENDS-ON-R22.)** Every number in this section is derived from one append-only file that only grows, and
+**three surfaces read it directly** (§14.6, the briefing, the weekly lines). At a year of rows that is a page waiting
+to get slow and a store waiting to get corrupted in one piece. The shape:
+
+- **The log rotates into a file per period**, `logbook/events/YYYY-MM.jsonl`.
+- **A rollup per period is derived and rebuildable**, and **no surface reads the raw file**.
+- **The index partitions by the same period**, so a corrupt period costs a period rather than the history.
+
+**Nothing is deleted.** The rollup stands to the log exactly as memory already does (§13.2): a derived view over a
+record that remains the truth, rebuildable by re-running the deriving pass. That is why this can be done to the one
+store the plan says is never edited **without touching that rule** — rotation appends and derives; it does not edit.
+
+**(R22, OPEN, and it decides day-one versus later.)** **What does page 3 cost to render at a year of rows, and where
+is the knee?** Measured against a synthesised log at this Mac's own emission rate, against the real server. If the
+knee is far out, this is a later migration; if it is near, doing it after a year of rows means migrating the one store
+that must not be lost. §14.6 carries the page's half.
+
+**Mechanism:** `logbook/events/YYYY-MM.jsonl` and the derived rollup (**ABSENT**, §L O40) · the partitioned index
+(**ABSENT**).
 
 ---
 
@@ -5558,38 +7604,67 @@ minute and 1,000 a day** on a personal Google account; the paid per-tier CLI quo
 
 ---
 
-### 16.3 The cost formula, corrected
+### 16.2a What a ceiling is denominated in — and the dollar is not it
+
+**(FOUNDER, rethink 2026-09-06: D9. This changes the currency of every ceiling in the plan, and §12.9's three
+ceilings are what it changes.)** A ceiling is stated in **window share: tokens against an observed high-water mark**,
+because **no denominator is published** and one measured from this seat is the only one that exists. **Wall clock sits
+beside it**, and **USD is kept as a shadow price** — computed, shown, never binding.
+
+**Why the dollar had to go, and it is not a preference.** On a subscription the dollar is *"computed locally from
+token counts at list price"* against a bill nobody sends (v23, §16.5). A ceiling denominated in it binds nothing, and
+**an absent ceiling is visible while a wrong one is not** — a founder who sees `$40 of $100` believes something is
+holding.
+
+**(Deletion 21, 2026-09-06.)** ~~Dollar ceilings, as ceilings.~~ They are a shadow price now. ~~And every token budget
+inherited from a Sonnet-4.6-era measurement~~ — see §16.3 on the tokenizer, and **O77** below, which is what stops a
+stale budget firing silently.
+
+**(NEW: contradiction 18 — this is where *"bounded by being free"* dies.)** §16.7 said exploration is *"bounded by
+being free"*; **v22 measured that the weekly window is per seat and shared with Claude chat and Cowork.** A night of
+exploration is therefore **subtracted from the next day**, and the sentence was not a small optimism — it was the
+reason no mechanism was ever built for exploration spend. So:
+
+- **An intent carries a `class:`**, and exploration is one of its values.
+- **Exploration-class work routes to Gemini, local models, or the Codex seat** — windows that are not the one the
+  founder works in.
+- **The Desk refuses an exploratory dispatch onto the Claude seat past a fraction the founder sets.** The fraction is
+  the founder's number, not a rule's, exactly like §12.2's undo window.
+
+**Settled by:** split one weekly window between driven and exploratory work. **If exploration is invisible there, the
+old sentence was right and this is over-built** — which is the falsifier the original sentence never carried.
+
+**Mechanism:** one high-water file (**ABSENT**) · one rule in the Desk's comparator (**ABSENT**, §4) · one `class:`
+field on the intent (**ABSENT**, §2).
+
+---
+
+### 16.3 The cost formula ~~, corrected~~ — why it diverges tenfold; §9.6 owns the arithmetic
 
 **(FINAL, and the reason it is kept at all.)** Two competent reviewers priced this machine's predecessor within days
 of each other and **diverged tenfold** — $74 a month against $1,300–1,700 — on **one assumption, the cache hit rate**,
 which sets whether context costs a read multiple or a write multiple on the 89% of the bill that is context. The plan
 does not pick a number. It says **what determines it**.
 
-**(NEW: §G.3 corrects two coefficients, and FINAL was wrong in both directions.)** FINAL multiplied the standing
-prompt by **1.25** on the first run of a batch *while assuming the one-hour TTL*. **1.25x is the five-minute write.
-A one-hour write is 2x.** And FINAL's sibling-read coefficient of **0.10** is right for Opus 5, Sonnet 5 and Haiku 4.5
-and **wrong by 4x for Fable 5.1 and Mythos 5.1, where reads are 0.025x** — $0.25 per MTok.
+**(Deletion 20 and contradiction 15, 2026-09-06: the formula itself leaves this section.)** ~~The four-line cost
+expression, its `W` and `R` coefficient table and its fails-if list stood here in full, byte-for-byte the same
+arithmetic as §9.6's.~~ **§9.6 owns the formula; this section cites it and does not restate it.** Two copies of one
+formula is two implementations of one check, and this repository has already found what that costs — twice, once in
+risk classification and once in the CI chain guard. What §9.6 carries, in one line: **the dominant term, by a
+distance, is whether the siblings hit the cache**, with a one-hour cache **write** at **2x** base input (not FINAL's
+1.25x, which is the five-minute write) and a sibling **read** at **0.1x** everywhere except **Fable 5.1 and Mythos
+5.1 at 0.025x**.
 
-```
-cost per night ≈ (standing prompt tokens) × W          on the FIRST run of a batch
-               + (standing prompt tokens) × (siblings − 1) × R   on every sibling that HITS
-               + (divergence tokens per run) × siblings × 1.0
-               + output
+**What this section keeps, because no other section computes it:** the **divergence argument** above. Two competent
+reviewers, one assumption, a tenfold spread. That is an argument about how to *use* the formula, not a second copy of
+it, and it is the reason §16.8's line 5 watches the cache-hit rate rather than targeting it.
 
-where  W = 2.00   buying the 1-HOUR TTL   ← what a subscription gives, and what a batch relies on
-       W = 1.25   buying the 5-MINUTE TTL
-       R = 0.100  Opus 5 · Sonnet 5 · Haiku 4.5
-       R = 0.025  Fable 5.1 · Mythos 5.1
-
-Dominant term, by a distance: whether the siblings hit the cache.
-Fails if: shapes vary per run · the standing prompt is regenerated · the TTL is shorter than the batch
-          · the TTL silently drops to five minutes because the account began drawing on credits.
-```
-
-**(NEW: one more correction that has nothing to do with price and everything to do with the inputs.)** Opus 5 and
-Fable 5.x use a newer tokenizer producing *"approximately 30% more tokens for the same text"* than Sonnet 4.6 and
-earlier. **Any token budget inherited from a Sonnet-4.6-era measurement understates by about that much**, so a
-byte-count carried over from an older plan is not a token count for these engines.
+**(NEW: O77 — the tokenizer discontinuity stops being a caveat and becomes a field.)** Opus 5 and Fable 5.x use a
+newer tokenizer producing *"approximately 30% more tokens for the same text"* than Sonnet 4.6 and earlier, so **any
+budget inherited from a Sonnet-4.6-era measurement understates by about that much**. The fix is not vigilance:
+**every ceiling carries `tokenizer:`, and the launcher refuses to enforce a legacy cap on a current-tokenizer
+model.** The reason it must refuse rather than warn is that **a ceiling that fires early is indistinguishable from a
+stuck run** — the founder sees a night that stopped, and nothing in the log says which of the two it was.
 
 **(FINAL, unchanged and still the first thing to do.)** Before any estimate is believed: **ten real moves against the
 runner's own reported cost**, on the subscription, in window units per run. Every prior round's dollar figure is kept
@@ -5659,6 +7734,23 @@ attached to that day, not to this one.
 
 ---
 
+### 16.4a The largest source of unplanned context is now a settings ceiling
+
+**(FACT: world.md 18 — W18, and it is the one context number in this plan that a vendor will enforce for us.)**
+`bashOutputMaxChars` and `taskOutputMaxChars` raise how much command and background-task output a run receives inline
+before it is saved to a file, **up to 128K characters**. Against that, this plan's own handoff limit is **≤ 500 tokens
+by convention** — a convention nobody enforces, sitting beside a vendor ceiling that is enforced and two orders of
+magnitude wider.
+
+**Why it belongs in this section rather than in the context budget.** §16.3's dominant term is the *stable* prefix; a
+tool result pasted inline is **divergence tokens**, the term that is multiplied by every sibling and never cached. A
+command that prints 128K characters into a run is the cheapest way to lose a night's cache economics, and it happens
+without anyone choosing it. **The settings value is a number the founder sets and the ledger can attribute** — set it
+low, and the output lands in a file the run can read on demand, which is the same just-in-time shape §13.8 quotes the
+vendor stating for data generally.
+
+---
+
 ### 16.5 `--max-budget-usd` is a stall fuse, not a spend control
 
 **(NEW: v23, and the correction runs in the direction of less protection, which is why it is stated plainly.)** The
@@ -5669,9 +7761,20 @@ for subscribers *"the session cost figure isn't relevant for billing purposes."*
 and once spend reaches it, *"spawning another subagent fails with `Budget limit reached`"* (v2.1.217+). That is a fuse
 against a run that has stopped making progress and started making calls — the failure mode a night actually has.
 
+**(FACT: world.md 5 — W5, and it makes the local estimate less local.)** *"Cost estimates (`/cost`, status line,
+`--max-budget-usd`) now include the 1.1× US-only-inference premium for data-residency workspaces."* Still a local
+estimate at list price; now a local estimate with a **residency multiplier** in it. It changes nothing about what the
+flag binds — which is nothing — and it does change the number a reader might otherwise reconcile against a bill.
+
+**(Deletion 13, 2026-09-06: this subsection is now the only place that explains the flag.)** It was explained here and
+in three other places besides — §12.9 most fully, which now carries one clause and a pointer. **A fuse explained four
+times invites a fifth misreading**, and the misreading is always the same one: that it is a spend control.
+
 **What binds the account instead:** usage credits with a monthly spend limit, and on Team or Enterprise, admin spend
 limits. Neither is a per-run control, and the ceilings that matter to this design are §12.9's — **pre-action, per run,
-per intent, per venture per month, tightest binds** — which are ours to implement and are **ABSENT**.
+per intent, per venture per month, tightest binds** — which are ours to implement and are **ABSENT**. **Since v74
+they are denominated in window share rather than in dollars** (§16.2a); the dollar figure this flag prints is the
+shadow price beside them.
 
 ---
 
@@ -5686,6 +7789,16 @@ which, with the alternative already framed.
 push, the anchors, the log write and the reconciliation stay permitted. **A model with no entry in the price table is
 refused, not scored at zero.**
 
+**(NEW: O8 — the price table gets a clock, and a stale row refuses routing.)** *A model with no entry is refused
+rather than scored at zero* is the right rule with a hole in it: **a row that is present and wrong is worse than a row
+that is missing**, because the refusal never fires. So `keel/shared/prices.yml` carries **`fetched_at` and
+`valid_until` per row**, and **a stale row refuses routing** exactly as a missing one does. This is v19's forced-expiry
+idiom applied to the one table that turns tokens into a number the founder reads.
+
+**And Gemini's quota is carried as a count, not a price.** **60 requests a minute and 1,000 a day** is not a rate in
+dollars, and storing it as one would invent a figure the vendor does not publish. A count is what the router needs
+anyway.
+
 **(NEW: v22 makes the rope read two gauges.)** A five-hour exhaustion stops starting until the window rolls. A
 **weekly** exhaustion stops starting for the rest of the week, and it is the one that should reach the briefing as an
 event rather than as a line.
@@ -5698,11 +7811,11 @@ event rather than as a line.
 
 | The founder asked for | Here it is |
 |---|---|
-| budget in money · daily spend cap · spend-rate limit | the charter's money ceiling per month and a rate per tool; **the Sender rejects at the ceiling independently of the number in the instruction**; a tool with a null rate cannot carry `SPENDS MONEY` |
-| budget in hours | the reserve per window — **now per five-hour window *and* per week** (v22) |
+| budget in money · daily spend cap · spend-rate limit | **the charter's ceiling is window share; money is the shadow price beside it** (v74, §16.2a). The money ceiling per month and the rate per tool survive **where real money moves** — **the Sender rejects at the ceiling independently of the number in the instruction**, and a tool with a null rate cannot carry `SPENDS MONEY` (**O32**'s `provider_cap`, §8) |
+| budget in hours | the reserve per window — **now per five-hour window *and* per week** (v22), with **wall clock beside the window gauge** (v74) |
 | per-mission cost · per-worker cost · cost attribution | per intent and per run, joined by the id on every row; **per agent is now a real unit** (§16.1) |
 | mission budget cap · investment stop criteria | the intent's ceiling and expiry; the stop rule (§16.6) |
-| exploration vs exploitation spend | idle capacity buys knowledge, bounded by being free; *both options built* is the only sampled diversity |
+| exploration vs exploitation spend | idle capacity buys knowledge, ~~bounded by being free~~ **metered: an exploration `class:` on the intent, routed to Gemini, local models or the Codex seat, and refused onto the Claude seat past a founder-set fraction** (moved 2026-09-06: v74, contradiction 18 — the weekly window is per seat and shared with chat and Cowork, so a night of exploration is subtracted from the next day); *both options built* is the only sampled diversity |
 | cheap-tier bulk usage | **local models on electricity** (v20) · the Gemini window once authenticated · batch on the day a key exists |
 | cache-hit cost rate | measured per run from the runner's record; **the dominant term**, one line weekly |
 | company P&L · revenue tracking · payment analytics · burn · runway | a venture's own work; revenue **read from the processor as a claim, never typed**; a runway computed from a number the bank does not confirm is stamped *internal* and cannot promote anything (§11.7) |
@@ -5711,7 +7824,7 @@ event rather than as a line.
 
 ---
 
-### 16.8 The six weekly lines
+### 16.8 The weekly lines — ~~six~~ seven since 2026-09-06 (O75)
 
 **(FINAL §15.5 and §12, collected. Each must be reported whether or not it flatters, and each names what it would take
 to game it.)**
@@ -5722,13 +7835,25 @@ to game it.)**
 | 2 | **founder-minutes per finished intent** | must fall | the founder's own time, measured, not estimated |
 | 3 | **cost per surviving artifact** | reported, and **undefined when it is undefined** | a month of cheap runs that produced nothing has no such number, and **reporting a small one is the arithmetic by which producing nothing looks efficient** |
 | 4 | **interventions per surviving artifact** — redirects, rejections and rework | must fall | **the denominator is survivorship**, so producing more does not help |
-| 5 | **the cache-hit cost rate** | watched, not targeted | it is the dominant term of §16.3, and it is read from the runner's own record |
-| 6 | **the rung-1 share of finished work** (§11) | must not fall | it is *quality of belief*; if it falls the system is producing more and knowing less |
+| 5 | **the cache-hit cost rate** | watched, not targeted | it is the dominant term §9.6 owns, and it is read from the runner's own record |
+| 6 | **the rung-1 share of finished work** (§11) | must not fall | it is *quality of belief*; if it falls the system is producing more and knowing less. **Since v73 it splits into rated and unrated** (§21), and the unrated half is the honest one |
+| 7 | **cost per rung movement, per venture** *(new 2026-09-06: O75)* | watched | **the only ROI this system can compute honestly**: the numerator is measured from the runner's own record and the denominator — a belief moving from rung 4 to rung 1 — is set by the world, not by us. Cost per finished intent can be gamed by finishing small things; this cannot, because a rung does not move without an anchor |
+
+**(NEW: O74 — one control chart instead of three thresholds someone invents at 3 a.m.)** Three of the lines above beg
+for a *warn at* number: cache-read share, tokens per run, and the trust pass rate. **There is no defensible constant
+for any of them**, and a threshold picked to make a chart look decisive is exactly the kind of number this section
+refuses everywhere else. So each is plotted **against its own history** and the alarm is *this shape has moved off its
+own baseline*, which needs no constant and survives a model change, a roster change and a tokenizer change.
 
 **(FINAL)** Two more lines belong in the briefing beside them and are not numbers: **the reconciliation line** — the
 books agree with the bank, or the incident — and **the week's most expensive refusal**: what was going to happen, what
 stopped it, what it would have been worth. **A refusal that tops that line four weeks running is a design defect
 wearing a safety costume, and is narrowed by name.**
+
+**(NEW: O76 — and the third thing beside them is a number after all.)** **The restore drill's number goes on the
+briefing** (§15.4). *The restore is drilled or none of this is true* is the strongest sentence in §15, and it was the
+only claim in the plan whose evidence never reached the founder's weekly reading. A drill that produces a number
+nobody sees is a drill that stops being run.
 
 **(NEW: a scope note, because two sections must not define one number.)** **§21.1 carries FINAL §20's six numbers and
 governs every line that appears in both.** Four of the six above are in that set — cost per finished intent, the
@@ -5738,9 +7863,10 @@ interventions per **finished** artifact, and line 4 above counts them per **surv
 stricter denominator FINAL §12 argued for. **§21 owns that reconciliation and this section defers to it: FINAL
 §15.5's two weekly numbers are cost per finished intent and founder-minutes per finished intent, while
 interventions per surviving artifact is FINAL §12/§20's number, so §21 governs and "surviving" is the word used
-here.** **The two lines this section genuinely adds
-are 3 and 5** — cost per surviving artifact, and the cache-hit cost rate — because both are arithmetic about money
-that no other section computes.
+here.** **The lines this section genuinely adds
+are ~~3 and 5~~ 3, 5 and 7** (moved 2026-09-06: O75) — cost per surviving artifact, the cache-hit cost rate, and cost
+per rung movement — because all three are arithmetic about money that no other section computes. Line 7 is shared with
+§21, which owns the rung ladder; **§21 governs what a rung movement *is* and this section prices it.**
 
 ---
 
@@ -5760,8 +7886,24 @@ which is why §G.1 routes on **cache behaviour, window, and family independence*
 and never on a benchmark score.
 
 **Enforced by:** the ledger line per run (**ABSENT**) · the price table, with a model that has no entry **refused
-rather than scored at zero** (**ABSENT**) · the three ceilings of §12.9 (**ABSENT**) · the six weekly lines in the
-briefing (**ABSENT**) · `--max-budget-usd` per run as a stall fuse (**exists**).
+rather than scored at zero**, **and a stale row refused the same way** (**ABSENT**, O8) · the three ceilings of §12.9,
+**denominated in window share** (**ABSENT**, v74) · the ~~six~~ **seven** weekly lines in the briefing (**ABSENT**) ·
+`--max-budget-usd` per run as a stall fuse (**exists**).
+
+**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
+it.)**
+
+| Mechanism | Path | From | State |
+|---|---|---|---|
+| Ceilings in window share against an observed high-water mark; exploration routed off the Claude seat | one high-water file · one Desk rule · `class:` on the intent | **v74** (D9) | **ABSENT** |
+| A price file with `fetched_at` / `valid_until`; a stale row refuses routing | `keel/shared/prices.yml` | **O8** | **ABSENT** |
+| `tokenizer:` on every ceiling; the launcher refuses a legacy cap on a current-tokenizer model | `bin/run` | **O77** | **ABSENT** |
+| The log rotates; a rebuildable rollup; no surface reads the raw file | `logbook/events/YYYY-MM.jsonl` | **O40** | **ABSENT**; **DEPENDS-ON-R22** |
+| One control chart per shape, over its own history, instead of three invented thresholds | the briefing | **O74** | **ABSENT** |
+| Cost per rung movement, per venture | the briefing | **O75** | **ABSENT** |
+| The restore drill's number on the briefing | the briefing | **O76** | **ABSENT** |
+| Four vendor cost fields read rather than computed | the ledger's reader · §14.6 | **W4** | fields **ship**; the reader **ABSENT** |
+| Inline output caps set low, so tool output lands in a file | `bashOutputMaxChars` · `taskOutputMaxChars` | **W18** | the settings **ship**; **unset here** |
 
 ---
 
@@ -5792,31 +7934,57 @@ that already passes the lint; nine have no seed and are written from the standar
 
 **(FOUNDER, v54: the `Wave` column says which are written first, and it is an order, not a shortlist)** The founder
 chose to *"Start with the eight that have seeds or code paths"*: the Operator, `builder`, `reviewer`, `architect`,
-`tester`, `guard`, `scout` and `designer` are **wave 1**; the six business agents and `challenger` are **wave 2**,
-online when a venture needs them. **All fifteen rows stay in this inventory and all fifteen files are still ABSENT**
-— the column records when each is written, never whether the roster contains it, and §5.0 states the cost of the two
-that wave one does without. Read the `Wave` and `Seed` columns together, because they do not agree and the
-disagreement is informative: **five of the eight in wave one carry a seed file** (Operator, builder, reviewer, scout,
-designer) and **three do not** — `architect`, `tester` and `guard` are in wave one on a code path rather than a seed,
-which is the founder's other criterion.
+`tester`, `guard`, `scout` and `designer` are **wave 1**; ~~the six business agents and `challenger` are **wave
+2**~~ **(moved 2026-09-06: D5 → v70)** `curator` and `challenger` join wave 1, so **wave one is ten and wave two is
+five** — `product`, `analyst`, `writer`, `growth`, `steward` — online when a venture needs them. **All fifteen rows
+stay in this inventory and all fifteen files are still ABSENT** — the column records when each is written, never
+whether the roster contains it, and §5.0 states the cost of the one that wave one does without. Read the `Wave` and
+`Seed` columns together, because they do not agree and the disagreement is informative: **five of the ten in wave
+one carry a seed file** (Operator, builder, reviewer, scout, designer) and **five do not** — `architect`, `tester`,
+`guard`, `curator` and `challenger` are in wave one on a code path rather than a seed, which is the founder's other
+criterion, and the curator's four are named in §5.0.
 
-| # | Name | Wave | File | Seed on `ceo-1-1788609834` | Model | Tools (the argv grant) | MCPs | Skill namespaces | maxTurns | Isolation | Anchor — what proves it |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 0 | **Operator** | **1** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect. **It runs as the founder's main interactive session, `claude --agent operator` (v46)** |
-| 1 | **builder** | **1** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (v40) | worktree (v41) | the venture's own CI, plus the done-test, plus the tester's blind test |
-| 2 | **reviewer** | **1** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 25 (v40) | none (v41) | findings reproduce from the diff alone |
-| 3 | **architect** | **1** | `.claude/agents/architect.md` — ABSENT | none | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Glob Grep Write (design paths only) | none | engineering · data | 30 (v40) | worktree (v41) | a migration that applies and rolls back in a scratch database |
-| 4 | **tester** | **1** | `.claude/agents/tester.md` — ABSENT | none | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | 30 (v40) | worktree (v41) | the test fails before the change and passes after |
-| 5 | **guard** | **1** | `.claude/agents/guard.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep | none | security | 25 (v40) | none (v41) | a proof of concept that reproduces |
-| 6 | **scout** | **1** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (v40) | none (v41) | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
-| 7 | **designer** | **1** | `.claude/agents/designer.md` — ABSENT as v2's file | `designer.md` (151 lines, `mcpServers: [playwright]`) | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright`, per-run inline | design · frontend | 30 (v40) | worktree (v41) | a rendered screenshot judged against a named anchor |
-| 8 | **product** | 2 | `.claude/agents/product.md` — ABSENT | `framer.md` (121 lines) | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | 30 (v40) | none (v41) | the store check refuses a done-test not falsifiable by someone who did not do the work |
-| 9 | **analyst** | 2 | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Bash | read-only analytics · error tracking · billing-read | data | 25 (v40) | none (v41) | the reconciliation reads a record the company does not write |
-| 10 | **writer** | 2 | `.claude/agents/writer.md` — ABSENT | none | split: `claude-opus-5` for taste work, `claude-sonnet-5` for routine | Read Write Edit Glob Grep | Higgsfield, rate-capped | growth · craft | 30 (v40) | none (v41) | staged, never sent; the founder's taste store and a rung-2 external reaction |
-| 11 | **growth** | 2 | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | 30 (v40) | none (v41) | a reply from a real person, recorded by the world's door |
-| 12 | **steward** | 2 | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | 30 (v40) | none (v41) | an obligation is discharged only by a record the company does not write |
-| 13 | **curator** | 2 | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | 30 (v40) | none (v41) | a memory item with no source, date, expiry and falsifier is refused at the store check |
-| 14 | **challenger** | 2 | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | 25 (v40) | none (v41) | every finding names the mechanism that would have caught it |
+**(FOUNDER, rethink 2026-09-06: D6 → v71 — three pack artifacts per agent, and they are inventory, not ceremony)**
+An agent with no pack is **declared and not routable**, so the pack is part of what *"the file exists"* has to
+mean. Three artifacts per agent plus the namespace check, **forty-five artifacts for fifteen agents, thirty of them
+for wave one**, all **ABSENT**:
+
+| Pack artifact | Path | The one writer | Fails when |
+|---|---|---|---|
+| Rehearsal case, known answer | `keel/shared/packs/<agent>/rehearsal.md` | the curator, as a v18 rehearsal body | the file is missing, or its expected answer is not machine-checkable |
+| Exemplar of its own good output | `keel/shared/packs/<agent>/exemplar.md` | the curator, from a real handover, **with provenance** | it carries no provenance, or was written rather than harvested |
+| End-to-end demonstration that the anchor fires | `keel/shared/packs/<agent>/demonstration.md` | whoever writes the anchor | the anchor has never been observed to fire |
+| Namespaces resolve | the `Skill namespaces` column above | — | a declared namespace holds zero unexpired skills — §7's `skill.miss` event |
+
+**Mechanism:** the four paths are declared per agent in `keel/shared/roster.yml` (§L **O2**, **ABSENT**), and
+`bin/run` already refuses a brief naming a file that does not exist (v37, v45). **(R19, OPEN)** is the test that
+would refute the pack.
+
+**(FOUNDER, rethink 2026-09-06: D7 → v72, and W6 — the two columns this table gains)** `valid_until` is on **all
+fifteen** rows: at expiry exactly one disposition is recorded — **Refresh · Merge · Retire** — with the anchored
+evidence attached, enforced by the same forced-disposition rule `scripts/ledger.mjs` already blocks on. `cacheTtl`
+is `experimental.cacheTtl` (**FACT: world.md 6**), per-agent frontmatter taking `5m` or `1h`; it ships **unset**,
+because the value is a per-agent build-time choice answering one question — is this agent's standing prefix read
+again inside five minutes? — and §5.2a states the test. Neither column is written by hand: **O2** generates both
+from `keel/shared/roster.yml`, which is where the wave, the colour, the pack paths and the expiry all live.
+
+| # | Name | Wave | File | Seed on `ceo-1-1788609834` | Model | Tools (the argv grant) | MCPs | Skill namespaces | maxTurns | `cacheTtl` *(W6)* | `valid_until` *(v72)* | Isolation | Anchor — what proves it |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | **Operator** | **1** | `.claude/agents/operator.md` — ABSENT | `orchestrator.md` (154 lines) | `claude-opus-5` | Read Glob Grep Agent | none | — | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | it dispatched, and it did not build: a diff authored by the Operator is a defect. **It runs as the founder's main interactive session, `claude --agent operator` (v46)** |
+| 1 | **builder** | **1** | `.claude/agents/builder.md` — ABSENT as v2's file | `builder.md` (134 lines) | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Write Edit Bash Glob Grep | none by default | engineering · testing | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | the venture's own CI, plus the done-test, plus the tester's blind test |
+| 2 | **reviewer** | **1** | `.claude/agents/reviewer.md` — ABSENT as v2's file | `reviewer-readonly.md` (169 lines) — **not** `reviewer.md`, which carries Bash | `claude-sonnet-5`; a second family when reachable | Read Glob Grep | none | engineering · quality | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | findings reproduce from the diff alone |
+| 3 | **architect** | **1** | `.claude/agents/architect.md` — ABSENT | none | **`claude-fable-5-1`** (v57); fallback `claude-opus-5`, reachability UNVERIFIED | Read Glob Grep Write (design paths only) | none | engineering · data | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | a migration that applies and rolls back in a scratch database |
+| 4 | **tester** | **1** | `.claude/agents/tester.md` — ABSENT | none | `claude-sonnet-5` | Read Write Edit Bash Glob Grep, `--add-dir` excluding the implementation | none | testing · quality | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | the test fails before the change and passes after |
+| 5 | **guard** | **1** | `.claude/agents/guard.md` — ABSENT | none | `claude-opus-5` | Read Glob Grep | none | security | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a proof of concept that reproduces |
+| 6 | **scout** | **1** | `.claude/agents/scout.md` — ABSENT | `sourcer.md` (147 lines, `mcpServers: [claim-append]`) | `claude-sonnet-5`; Gemini once authenticated | Read Glob Grep WebSearch WebFetch — no Write, no credential, no send | read-only servers, admitted per run | research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every claim carries URL, quote and access date; `scripts/check-citations.mjs` (846 lines) blocks on a dead one |
+| 7 | **designer** | **1** | `.claude/agents/designer.md` — ABSENT as v2's file | `designer.md` (151 lines, `mcpServers: [playwright]`) | `claude-opus-5` | Read Write Edit Bash Glob Grep | `playwright`, per-run inline | design · frontend | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | worktree (v41) | a rendered screenshot judged against a named anchor |
+| 8 | **product** | 2 | `.claude/agents/product.md` — ABSENT | `framer.md` (121 lines) | `claude-sonnet-5` | Read Glob Grep Write (spec paths) | none | product | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | the store check refuses a done-test not falsifiable by someone who did not do the work |
+| 9 | **analyst** | 2 | `.claude/agents/analyst.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep ~~Bash~~ *(struck: **O57**)* | read-only analytics · error tracking · billing-read | data | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | the reconciliation reads a record the company does not write |
+| 10 | **writer** | 2 | `.claude/agents/writer.md` — ABSENT | none | ~~split in the file~~ `claude-sonnet-5`, escalating to `claude-opus-5` on a §9.1 row *(moved: **O57**)* | Read Write Edit Glob Grep | Higgsfield, rate-capped | growth · craft | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | staged, never sent; the founder's taste store and a rung-2 external reaction |
+| 11 | **growth** | 2 | `.claude/agents/growth.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write | CRM read-only | growth | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a reply from a real person, recorded by the world's door |
+| 12 | **steward** | 2 | `.claude/agents/steward.md` — ABSENT | none | `claude-sonnet-5` | Read Glob Grep Write (obligations and operations paths) | **none** (v36) — it writes from scout's handover and the world's door's rows, never from a raw mailbox | operations | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | an obligation is discharged only by a record the company does not write |
+| 13 | **curator** | **1** *(v70)* | `.claude/agents/curator.md` — ABSENT | none | `claude-sonnet-5`; the summarising half on Gemini or a local model | Read Write Edit Glob Grep — no Bash | none | knowledge | 30 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | a memory item with no source, date, expiry and falsifier is refused at the store check |
+| 14 | **challenger** | **1** *(v70)* | `.claude/agents/challenger.md` — ABSENT | none | `claude-opus-5`; a second family when reachable | Read Glob Grep | none | quality · research | 25 (v40) | unset · **O2** | **ABSENT** — one disposition at expiry | none (v41) | every finding names the mechanism that would have caught it |
 
 **(NEW: what leaves, and it is thirteen files of eighteen)** `reviewer.md` (149 lines, `tools: [Read, Glob, Grep,
 Bash]`) is **gone**: a checker has no shell, so the v2 `reviewer` is seeded from `reviewer-readonly.md` instead. The
@@ -5826,7 +7994,9 @@ declares `model:`, `tools:`, `mcpServers:`, `maxTurns:` or `isolation:`, so noth
 
 **(NEW: the model set is not the founder's whim, it is §G.1's instruction made countable — and v57 moves two of the
 rows)** Of the fourteen, **two run `claude-fable-5-1`** (builder, architect, by the founder's decision v57), **three
-run `claude-opus-5`** (guard, designer, challenger), **eight run `claude-sonnet-5`**, and **one is split** (writer).
+run `claude-opus-5`** (guard, designer, challenger), **~~eight~~ nine run `claude-sonnet-5`**, and ~~**one is
+split** (writer)~~ **none is split in its file** — `writer`'s escalation moved to a §9.1 routing row *(moved
+2026-09-06: **O57**)*.
 The Operator is a fourth `claude-opus-5` seat and is counted separately because it dispatches rather than produces.
 Both Fable rows carry `claude-opus-5` as the fallback while reachability on the seat is UNVERIFIED, so the count of
 *files that would load today* is unchanged; what changed is the value each declares.
@@ -5914,6 +8084,15 @@ installed skill, instructions under 5,000 tokens, body under 500 lines.
 **none is admitted**; each row is its disposition when it reaches the door. Anything may be proposed — §F's door is
 material, not a ceiling.
 
+**(NEW: contradiction 19 — this table is one of four copies, and it is the one that stays)** The four-class hands
+table was written out **four times**: as the decision (SPINE §F), in §8.2, here, and in COVERAGE. Four copies of one
+classification is four places for a tool to be classed differently and one incident to find out. **Two survive with
+different jobs: §F is the decision, and §17.3 is the inventory** — this one, because an inventory is where a
+*holder* and a *credential* belong. §8 keeps a pointer instead of a copy. Nothing about any row's class changes.
+**And one column here is descriptive, not enforcing** *(deletion 14)*: `Day · night · never` records the design
+intent, while **the enforced horizon is the one in the admitted-tool file**, `keel/shared/tools/<name>.yml`, which
+the door reads. Where they ever disagree, the file is right.
+
 | Hand | Class (§F) | Credential | Who may hold it | Day · night · never | Disposition at the door |
 |---|---|---|---|---|---|
 | the founder's signed-in Chrome (`claude-in-chrome`) | REACHES THE WORLD + private data | the founder's own sessions | **nobody but the founder, on the Floor** | day, Floor only, forever | the widest hand in the building; never a night grant, never shared |
@@ -5990,7 +8169,7 @@ fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 
 | Teams config | `~/.claude/teams/<team>/config.json` · `inboxes/<agent>.json` · `~/.claude/tasks/<team>/` | the vendor's; session ids **and tmux pane ids**; team name is `session-` + the first eight characters of the session id | **Claude Code itself — READ-ONLY to us** | page 2 | anything of ours writes it. The file is *"overwritten on the next state update"*, so a write is lost and looks like a bug in the page |
 | Cards | `keel/ventures/<v>/cards/<id>.yml` | card id · intent id · stage · venture · **`solo \| team`, defaulted from the intent's kind (v60)** · the team or chain it launched · the PR · the execution cap | **the founder's door — `bin/intend` (ABSENT) creates the card with its intent id (v52)**; `keel/bin/run` writes only the session id and the stage, and the founder's drag is an input to it, never a second writer (v34) | page 4; the Watch | a card in "working on it" with no session id; a stage change with no logbook row |
 | Sessions registry | `keel/logbook/sessions.jsonl` | session id (a UUID we mint) · provider · agent · venture · tmux session name · pane id · state · started · ended | `keel/bin/run` | pages 2, 3, 7; `claude --attach`; `tmux attach-session` | a session id that is not a valid UUID (`--session-id` refuses it); a row with no provider |
-| Price table | `keel/shared/prices.yml` | model id · input · output · cache write at **1.25x for 5 minutes and 2x for 1 hour** · cache read at 0.1x, **0.025x for Fable 5.1 and Mythos 5.1** · batch at 50% both directions · source URL · date · expiry | the founder, from the vendor page; the probe stamps the date | page 3; the meter | a model id used anywhere with no price row — **refused, not scored at zero**; a row past its expiry |
+| Price table | `keel/shared/prices.yml` | model id · input · output · cache write at **1.25x for 5 minutes and 2x for 1 hour** · cache read at 0.1x, **0.025x for Fable 5.1 and Mythos 5.1** · batch at 50% both directions · source URL · ~~date · expiry~~ **`fetched_at` and `valid_until` per row** *(added 2026-09-06: **O8**)*; **a quota that is a count and not a price is carried as a count** — Gemini's 60/min and 1,000/day | the founder, from the vendor page; the probe stamps `fetched_at` | page 3; the meter; **`bin/run`** | a model id used anywhere with no price row — **refused, not scored at zero**; and **a row past `valid_until` refuses routing to that model** rather than mis-pricing it, because a stale price is a wrong number that looks like a right one |
 | Skills registry | `keel/shared/skills/registry.yml` | name · namespace · body class (anchor · exemplar · rehearsal · reference) · with-skill and baseline scores · n · `valid_until` · both directory paths | `keel/bin/skill` | agents at load; the store check | a skill in either directory with no registry row; an expiry passed with no disposition |
 | Model-expiry facts | rows in `keel/shared/facts.yml` | model id · retirement date · source URL · date read | the probe | the store check; §20's dated review | a model id in any agent file with no fact row, or a retirement date in the past. **This is G.4's mechanism**: Haiku 4.5 is committed *"not sooner than October 15, 2026"* |
 
@@ -5998,6 +8177,30 @@ fails it. Compressed here to what v2 changes; the schemas stand as FINAL §16.4 
 mechanisms that already exist on this branch: `scripts/ledger.mjs` (expiry, resolvers, `unresolved ≠ pass`),
 `scripts/evict-memory.mjs` (1,125 lines, archive rules), `scripts/check-memory-budget.mjs` (size caps) and
 `scripts/verdict.mjs` (sha256 binding of evidence to the exact artifact).
+
+#### 17.4.2 The stores and schemas the rethink round adds
+
+**(NEW: §L, 2026-09-06 — every one is ABSENT, and each is here because a rule the plan already states had no store
+behind it)** The one-writer rule is what generates most of this table: a fact with two authors is the defect that
+recurs in this plan more than any other, and each row below is one fact given one author.
+
+| Store or schema | Path | The one writer | Readers | Fails when |
+|---|---|---|---|---|
+| **Work items** (**O1**) | `keel/ventures/<v>/items/w-*.yml` — `intent` · `purpose` · `ceiling` · `blocked_on` · `attempts` · `last_failure` · `card`. **(NEW: orchestrator, 2026-09-06)** O1 declared `work/`, which this inventory already gives to the venture's source repository, so the store is named `items/` and `work/` is left where it was | the Watch, materialising from `items-draft/` after the store check — v44's obligation pattern reused | the Desk · page 4 · `bin/run` | a live intent has **zero** work rows; **a board card is a view of a work row and never a second object**. **(R16, OPEN)** decides two objects or three |
+| **The roster** (**O2**) | `keel/shared/roster.yml` — frontmatter plus `color` · `wave` · `valid_until` · `cacheTtl` · the four v71 pack paths · anchor | the founder, through review | §5.2 · §17.1 · page 2 · the argv files · `bin/run` | any of those views is **written by hand instead of generated**; a count in prose disagrees with the file |
+| **Charter schema** (**O3**) | `keel/shared/schemas/charter.yml` | the schema is the source; **the prose is generated from it** | `bin/check-stores` · §2 | a six-line charter with no entity **both loads and is refused** — §2.1 enforces six lines, COVERAGE §14 says five fields, v63 requires a seventh, and **the founder's row is the one that loses** (contradiction 2) |
+| **Brief schema** (**O4**) | `keel/shared/schemas/brief.yml` | as above | `bin/run` · §6.2 · §13a | a table is built on the wrong field count — 13a.5 says ten, **v45 decided eleven** (contradiction 3) |
+| **Routing table** (**O5**) | `keel/shared/routing.yml` | the founder, through review | §3.2's bands · §5.2 · §9.2 — **all generated or checked from it** | *which agent, which model, which band* is answered in three places with nothing checking that they agree (contradiction 17) |
+| **Event schema** (**O6**) | `keel/shared/schemas/event.yml` · `bin/log` | the schema; `bin/log` refuses a row that fails it | every reader of the logbook | a row carries no `schema_version`, or **a reader guesses at an unknown version instead of refusing** — v26's posture toward the vendor's format, turned on our own |
+| **The decide queue** (**O9**) | `keel/logbook/decide.jsonl` — one house-level queue replacing ten per-venture `open.md` stores | `bin/log`, one writer | pages 4 and 5 · the Operator · the night escalation (**O49**) | a row carries no intent id. Ten queues meant **nine writer-contention points for one founder** |
+| **The host directory** (**O10**) | `keel/host/` — plist · managed-settings template · env file (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`) · the sandbox block · the `denyRead` list · expected macOS grants | the founder | `bin/probe` | the live machine differs from the declaration — and **the probe asserts it by attempting the operation**, never by reading a database |
+| **Eval-only bodies** (**O11**) | `keel/golden/` | the skill creator, at admission | the rehearsal runner only | a rehearsal case ships into the two directories an agent loads from, **so the case that judges a run can be read by that run** (contradiction 11) |
+| **Page manifests** (**O12**) | `keel/surfaces/pages/<n>.yml` — every element is a `fact:` (a store path) or a `tap:` (a `bin/` verb) | the founder, through review | the renderer, which **builds only from it** | an element resolves to neither. Page 1 loses the venture toggle and the portfolio moves to page 3's strip (contradiction 9) |
+| **The consent register** (**v69**) | `keel/consent.yml` — one row per subject per relationship | one writer, enforced by `bin/check-stores` | **the Sender, before any contact** | the Sender acts on a subject with no consent row. *"Consent"* was **the one keyword of ~640 absent from v2's own text** |
+| **The per-subject store** (**v69**) | `keel/subjects/<hash>.yml` — the erasable body; **the log and memory hold only the hash** | one writer | the Sender · the world's door | an erasure leaves anything but a **known absence**: delete the row, and the hash resolves to nothing. §12 and §13 carry the rule |
+| **The Watch/Sender lease** (**O16**) | `keel/logbook/watch.lease` — a host id and a heartbeat | whichever host holds it | `bin/watch` · `bin/send`, both of which **refuse to act without it** | two hosts tick at once. **The only failure in the round that ends in a duplicated outward act**, and the reason the restore drill's clone can never send |
+| **The window high-water mark** (**v74**) | `keel/logbook/window-highwater.yml` | the meter | the Desk · the briefing · page 3 | a ceiling is denominated in dollars nobody is billed. **No denominator is published**, so the gauge is tokens against an observed high-water mark |
+| **The scratch house** (**O78**) | `keel/fixtures/` · `bin/drill` | the drill | the Sender · the Watch · the door · the launcher, under test | **a Sender defect is an outward act that cannot be recalled**, and these four have no test seam today |
 
 ---
 
@@ -6016,6 +8219,15 @@ mechanisms that already exist on this branch: `scripts/ledger.mjs` (expiry, reso
 | `keel/bin/skill` | the skill creator of §E.3 and 17.2 | it orchestrates four agents; a fifteenth agent orchestrating agents is the Operator, and there is one |
 | `keel/bin/probe` | asserts nightly what a run can actually touch | a prompt injection that reaches it finds a program |
 | `keel/bin/send` · `inbound` · `watch` · `reconcile` · `log` · `check-stores` · `door` · `drill` · `rehearse` · `curate` · `supervise` | FINAL §16.1's no-model programs, unchanged | **§B.1 rule 4**: the twelve stay programs |
+| **`keel/bin/egress`** *(v68)* | **one door out.** Logs every call, filters by domain **and HTTP method**, and **injects credentials the agent never sees**; `--strict-mcp-config` names only this proxy, and `.claude/mcp-policy.json` becomes its configuration rather than an independent control | it is the **only proposal of the round that survives an agent being fully persuaded**: the trifecta guarantees a leg is missing at dispatch, this keeps it missing at the syscall. A model cannot be the thing that decides what leaves. **(R2, OPEN)** may turn half of it into configuration |
+| **`keel/bin/worktree`** *(O14)* | creates the worktree and **hands its path to the run in argv** | `git worktree add` **cannot complete under the armed sandbox**, and interactive escalation is unavailable to an unattended run by construction. A run never creates its own |
+| **`keel/bin/embed`** · **`keel/bin/classify`** *(O13)* | embeddings, classification, dedup and PII detection on the local tier | the local tier has **no reachable carrier**: the sandbox denies a loopback `bind()`, and the consumer `curator` carries no `Bash` and no MCP. So it is a no-model program in the Watch's launchd context handing the curator a file — v47's shape. **DEPENDS-ON-R4** |
+| **`keel/bin/redact`** *(O17)* | **one** redaction implementation, used by the mining pass and by the `gitleaks`-class scan | redaction is implemented **twice** today, and two implementations of one check disagree. It is also **O66**'s PII gate on two paths |
+| **`keel/bin/bell`** *(O18)* | the **only thing that may ring**: reads the wake-me classes, the interruption budget and the per-channel acted-on rate | the interruption budget is designed and **its transport is named nowhere**. Two things that can ring is two budgets |
+| **`keel/bin/horizon`** *(O23)* | one pass over every durable store: **forced disposition at expiry** for intents and charters, plus a **lapse record** — one row per thing that expired unactioned, ordered by what it stopped | 13a.6 marks this a WISH. An expiry with no pass over it is a date nobody reads |
+| **`keel/bin/mine --since`** *(O42)* | the transcript pass with a **watermark**, so the backlog pass and the steady pass are one program | *"unread transcript count"* is a progress bar for a backlog that clears once; **watermark lag** stays meaningful in year two |
+| **`keel/bin/replay-desk`** *(O20)* | replays the Desk's own ranking rows and the gate that stopped each candidate | the Desk **already writes its ranking and nothing reads it**. A no-model replayer is the only way to tune scheduling without living a month, and it is what settles **v75** |
+| **`keel/bin/drill`** + **`keel/fixtures/`** *(O78)* | a scratch house the Sender, Watch, door and launcher can be run against | those four have **no test seam**, and a Sender defect is an outward act that cannot be recalled. Blue-green at a tick boundary (**O79**) is free beside it, because every tick is already crash-only |
 
 **(FOUNDER, v4)** **Mission-control taps, by page** — page 1 tap an avatar → that agent's terminal · page 2 tap →
 `tmux attach-session -t <name>` or `claude --attach <id>`, message → write the agent's inbox file · page 3 a cost row
@@ -6096,7 +8308,7 @@ renderers read the same logbook.
 |---|---|---|---|---|
 | **Claude Code** (subscription) | every agent of 17.1; **the Floor, always**; the Operator | **two windows: a rolling five-hour AND a weekly, per seat, shared with Claude chat and Cowork** (v22); one-hour cache | `<agent>.claude-code.argv` — ABSENT | installed, **2.1.261** |
 | **Codex CLI** (subscription) | **day one (v5), in one position:** checker on a prepared diff, foreground, stdout to a file while inheriting the parent shell's TTY | its own window; **the only vendor publishing numeric per-window quotas** | `<agent>.codex.argv` — ABSENT | **not installed** (`command -v codex` → absent). #19945 open **130 days with no maintainer reply** |
-| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`) |
+| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`). **(FACT: world.md 25)** it ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in **`.gemini/agents`** — an **eighth** named roster in the world (§5.8 fact 1) and a **third agent-file location**, which is a case v42 did not contemplate. §17.8 carries the path |
 | **Local models** | **real work, not no work** (v20): embeddings, classification, dedup, PII detection | none — electricity | — | ABSENT. MiniLM (384 dims, Apache 2.0, 256-word-piece truncation) · Qwen3-0.6B (32,768 context, Apache 2.0); on-disk size not published |
 | **The artifact runtime** | the published phone pages: Balcony views, the briefing, the read-back. **It cannot pop a terminal**, which is why it is not the website's host (v39) | free | — | exists; measured: database, user identity, comments that wake the session |
 | **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach anything this system stores on the Mac. **Read *no local files* narrowly** — a routine clones every selected repo per run and pushes `claude/`-prefixed branches, so it has a repository and not this laptop (cloud.md) | **1-hour minimum, confirmed verbatim**: *"The minimum interval is one hour; expressions that run more frequently are rejected."* The **daily cap exists and is published as no number** — superseding this cell's earlier *unverified*, which doubted the cap rather than its size | — | exists; **API fire endpoint documented** (§10.2a) |
@@ -6127,9 +8339,16 @@ only things that exist today are the `mission-control/` seed and the `.claude/` 
 
 ```
 keel/                                   one private repository · the house
-  settings.yml                          windows{reserve, models} · tick · driven_limit (2) · wip · interruptions/day
-  STOP                                  the cord: a file, read first every tick; a control on every mission-control page
+  settings.yml                          windows{reserve, models} · tick · driven_limit (2) · wip · interruptions/day ·
+                                        sessions_ceiling (O71, R23)
+  STOP                                  the cord: a file, read first every tick; a control on every mission-control page.
+                                        The cord SIGNALS the recorded process group now (v67), it does not only stop the
+                                        next dispatch
   people.yml                            named humans: consent per relationship; first contact narrower than reply
+  consent.yml                           v69 · THE CONSENT REGISTER: one row per subject per relationship, one writer,
+                                        read by the Sender BEFORE any contact
+  subjects/<hash>.yml                   v69 · the erasable body. The log and memory hold only the hash, so an erasure
+                                        turns it into a known absence
   .claude/agents/                       THE FIFTEEN — one file per agent (v42: the path the runtime reads
                                         and the path the PS-* lint globs; `keel/agents/` does not exist)
     operator.md builder.md reviewer.md architect.md tester.md guard.md scout.md designer.md
@@ -6138,13 +8357,41 @@ keel/                                   one private repository · the house
                                         strings on the `claude -p` carrier, and only there (v43)
   bin/
     run · skill · probe · watch · send · inbound · reconcile · log · check-stores · door · drill · rehearse ·
-    curate · supervise
+    curate · supervise · intend
+    egress                              v68 · the one door out: every call logged, filtered by domain AND method,
+                                        credentials injected where the agent never sees them
+    worktree                            O14 · creates the tree and hands its path to the run in argv
+    embed · classify                    O13 · the local tier as programs, not a service (DEPENDS-ON-R4)
+    redact                              O17 · ONE redaction, used by the mining pass and the secret scan
+    bell                                O18 · the only thing that may ring
+    horizon                             O23 · forced disposition at expiry, plus one lapse record per thing that
+                                        expired unactioned
+    mine --since                        O42 · the watermark: the backlog pass and the steady pass are one program
+    replay-desk                         O20 · replays the Desk's own rows; it is what settles v75
+  fixtures/                             O78 · the scratch house: the Sender, Watch, door and launcher have no other
+                                        test seam, and a Sender defect cannot be recalled
+  host/                                 O10 · plist · managed-settings template · env file · sandbox block ·
+                                        denyRead list · expected macOS grants — asserted by bin/probe BY ATTEMPTING
+                                        THE OPERATION
+  golden/                               O11 · eval-only bodies: the case that judges a run may not be readable by it
+  surfaces/pages/<n>.yml                O12 · the page manifest: every element is a fact: (a store path) or a
+                                        tap: (a bin/ verb); the renderer builds only from this
   shared/
+    roster.yml                          O2 · THE ONE ROSTER FILE: frontmatter plus color · wave · valid_until (v72) ·
+                                        cacheTtl (W6) · the four v71 pack paths · anchor. 17.1, 5.2 and page 2 are
+                                        generated from it or checked against it
+    routing.yml                         O5 · which agent, which model, which band — answered ONCE, and the three
+                                        views generated from it
+    schemas/                            O3 charter.yml · O4 brief.yml · O6 event.yml · handover.yml (O7's five
+                                        additions). The schema is the source and the prose is generated
+    packs/<agent>/                      v71 · rehearsal.md · exemplar.md · demonstration.md — no pack, not routable
     skills/                             THE LIBRARY, one source of truth, thirteen namespaces
       <name>/SKILL.md                   one of four bodies: anchor · exemplar · rehearsal case · reference
       registry.yml                      name · namespace · body class · eval scores · n · valid_until
     prices.yml                          model id · in · out · cache write (1.25x 5-min, 2x 1-hour) · cache read
-                                        (0.1x; 0.025x Fable) · batch 50% · source · date · expiry
+                                        (0.1x; 0.025x Fable) · batch 50% · source · O8: fetched_at · valid_until
+                                        per row, a stale row REFUSING routing; a quota carried as a count
+                                        (Gemini 60/min, 1,000/day), never as a price
     facts.yml                           measured facts, each with its re-measurement command and its expiry,
                                         including one model-expiry row per model id in use
     tools/<name>.yml · checklist.md     every admitted hand: class · credential scope · rate · drill date · hash
@@ -6154,6 +8401,12 @@ keel/                                   one private repository · the house
     rehearsals/<move-class>/            known-answer cases; scores.jsonl per agent
   ventures/<name>/
     charter.md · intents/<id>.md · obligations.yml
+                                        the charter gains cloud: allow | deny, default deny (v79); the intent gains
+                                        class: for exploration (v74)
+    items/w-*.yml · items-draft/        O1 · intent · purpose · ceiling · blocked_on · attempts · last_failure ·
+                                        card. A CARD IS A VIEW OF A WORK ROW, not a second object (R16).
+                                        NEW (orchestrator, 2026-09-06): O1 declared work/, which this tree already
+                                        gives to the venture's source repository below, so the store is named items/
     cards/<id>.yml                      the board's cards: intent id · stage · the team it launched · the PR
     memory/{facts,negatives,already-built,open}.md
     ship-log.md
@@ -6162,13 +8415,29 @@ keel/                                   one private repository · the house
                                         and Gemini CLI, not .codex/skills
   .claude/skills/                       AT THE HOUSE ROOT (v48), GENERATED from shared/skills — read by Claude
                                         Code. A venture carries no skills directory; skills are not per venture
+  .gemini/agents/                       W25 · A THIRD AGENT-FILE LOCATION, per provider: Gemini CLI ships named
+                                        subagents with their own tools, MCP servers and context windows, delegated
+                                        by @agent. v42 decided ONE path and did not contemplate this case; the file
+                                        is GENERATED from shared/roster.yml (O2) for the agents Gemini may stand
   mission-control/                      the website: seven pages, each a control, every tap opening a terminal here
     server/ client/ scripts/            seeded from mission-control/ on ceo-1-1788609834 (60 files) — §18
   logbook/
-    events.jsonl · ledger.jsonl         typed, append-only, gen_ai.* names, an id on every row, F_FULLFSYNC
-    sessions.jsonl                      session id (UUID) · provider · agent · venture · tmux name · pane id · state
-    runs/<id>/                          brief · trace · handover · evidence
-    desk/<tick>.json · inbound/
+    events.jsonl · ledger.jsonl         typed, append-only, gen_ai.* names, an id on every row, F_FULLFSYNC.
+                                        O6: a schema_version on every row and a reader that REFUSES an unknown one.
+                                        O31: hash-chained — each row carries the sha256 of the previous
+    events/YYYY-MM.jsonl                O40 · rotated, with a rebuildable rollup; no surface reads the raw file
+                                        (DEPENDS-ON-R22)
+    decide.jsonl                        O9 · ONE house-level decide queue, replacing ten per-venture open.md stores.
+                                        It is also where a night run escalates, never to the Operator (O49)
+    watch.lease                         O16 · host id and heartbeat. The Watch refuses to tick without it and the
+                                        Sender refuses to act without it, so the restore drill's clone cannot send
+    window-highwater.yml                v74 · tokens against an observed high-water mark, because no denominator is
+                                        published. Wall clock beside it; USD as a shadow price
+    sessions.jsonl                      session id (UUID) · provider · agent · venture · tmux name · pane id · state.
+                                        O15 writes run.started before exec and ORPHANED, never finished, on a gap
+    runs/<id>/                          brief · trace · handover · evidence. O22: the brief's done-test is
+                                        byte-identical to the intent's, and brief and handover are adjacent hashed rows
+    desk/<tick>.json · inbound/         O20 · the Desk's rows become event-log rows and gain a replayer
   .index/                               SQLite, WAL; vectors; deletable; rebuilt in one pass
   .secrets/                             NOT in git. Keychain references only.
 ```
@@ -6183,7 +8452,8 @@ Off the machine by hash: renders, screenshots, video, audio.
 ## 18 · What exists today, and its fate
 
 *obeys: v1 (the eighteen agent files become fifteen, not three), v3, v4, v6, v13, v25, v26, v35, **v62** (18.5's
-room substrate and the finding it overturns) · inherits: FINAL §17*
+room substrate and the finding it overturns) · **and, from the rethink round of 2026-09-06, SPINE §L O46, O37,
+O50 and O47, SYNTHESIS §7 deletion 19, and §J 72 as the full list of what leaves** · inherits: FINAL §17*
 
 **(NEW: three of FINAL §17's rows are re-decided, and one of them inverts)** FINAL wrote this table against three
 shapes, a holding directory and one Balcony. v1 replaces the shapes with fifteen named files, v3 replaces the holding
@@ -6240,7 +8510,7 @@ v2 retires eleven and re-seeds six.
 
 | Exists today | Measured | Fate | In v2 it is |
 |---|---|---|---|
-| 134 curated skills, `CURATION.yml`, 7 routers + INDEX, `MANIFEST.json` | 135 entries under `.claude/skills/`; 462 and 870 lines | **RENAMED** | **the library** (17.2). Not held: each of the 134 re-enters through the eval or expires at its `valid_until`. **`check:curation` retires with the old shape; `check:manifest` is RE-POINTED, not retired (§7.7)** — it becomes the drift check between the one Markdown source and the two generated directories; their rule survives as *a skill names its body class and its expiry or it does not load* |
+| 134 curated skills, `CURATION.yml`, 7 routers + INDEX, `MANIFEST.json` | 135 entries under `.claude/skills/`; 462 and 870 lines | **RENAMED** | **the library** (17.2). Not held: each of the 134 re-enters through the eval or expires at its `valid_until`. **~~`check:curation` retires with the old shape~~; `check:manifest` is RE-POINTED, not retired (§7.7)** — it becomes the drift check between the one Markdown source and the two generated directories; their rule survives as *a skill names its body class and its expiry or it does not load*. **(NEW: O47, moved 2026-09-06)** `CURATION.yml` and its check **SURVIVE**: a failed skill candidate is written *there*, house scope, beside every cut this repository has already recorded with the test that made it — not into a per-venture negatives store, where a house-scope fact would be relearned once per venture. The admission record gains the **body hash**, and a changed hash voids admission until re-eval (§7) |
 | `.claude/skills/routers/INDEX.md` and the seven namespace routers | 8 entries | **SURVIVES** | the two-tier discovery shape, which is now also the vendor's default for memory (v27). It is the reason a lookup costs ~1,070 tokens instead of ~15,000 |
 | Six playbooks — `.claude/playbooks/` | 6 files, 284 lines | **ABSORBED into the Operator** | a playbook declared the stages a category of work passes and the claims required to exit each, and never the method. **Under v1 the Operator holds exactly that**: which agent a stage routes to (17.1's last column in §B.2), and what anchor exits it. The rule that made playbooks work — *a stage may not state method* — becomes the Operator's own constraint, enforced today by `schema-lint.js` refusing `steps:`, `how:`, `method:`, `implementation:` |
 | `.claude/lenses.yml` | 201 lines | **ABSORBED** | domain procedure becomes **the agent's own file**. v2's whole premise is that expertise is a named agent rather than a lens applied to a shape, so the lens file's content moves into fifteen bodies and the file goes |
@@ -6256,7 +8526,7 @@ v2 retires eleven and re-seeds six.
 | `.claude/hooks/pre-tool-use.sh`, the armed sandbox, the worktree protocol | 676 lines; `sandbox.enabled: true`, `failIfUnavailable: true`; no `network` key | **SURVIVES** | run physics. `git worktree add` stays the one escalated command. **The `network` and `credentials` blocks are added**; the string matcher becoming structured-input matching is a founder decision (§20) |
 | `.claude/hooks/session-start.js` | 259 lines; emits 2,941 bytes under a 4,096 ceiling | **RENAMED** | the Floor's loader: charter, envelope, slice. **The 9.2x cut is the reason it works** — at 27KB the runtime truncated it and the payload never reached agent context |
 | `.claude/hooks/schema-lint.js` | 1,947 lines | **ABSORBED** | see 18.1. **`PS-WORKFLOW-CONTAINMENT` survives verbatim** (v35): `Workflow` absent from every agent file, deliberately, because the gate may not be invocable by the thing it gates. `grep -c '^tools:.*Workflow' .claude/agents/*.md` → 0, and the zero is the guarantee |
-| `.claude/hooks/budget-guard.js` | 204 lines; **zero references in `settings.json`** | **RENAMED** | the stall detector in the Watch. Registering it is a founder act and is a §20 row |
+| `.claude/hooks/budget-guard.js` | 204 lines; **zero references in `settings.json`** | **RENAMED** | the stall detector in the Watch. ~~Registering it is a founder act and is a §20 row~~ **(NEW: O50)** its fate is **register**: a fuse that is not wired is a memory of a fuse, and this one has been unwired on every branch it has existed on. **Mechanism:** one entry in `.claude/settings.json` — the hook exists, so nothing is written but the registration. What the founder deferred (FINAL §19 row 6, DECISIONS §15) is the **act at build time**, not the fate; the same split O38 makes for the hook rewrite (§12) |
 | `.claude/hooks/gsa-check-update.js`, `gsa-context-monitor.js`, `gsa-statusline.js`, `stop.sh` | part of 8 files / 3,579 lines; `stop.sh` exists with **no `Stop` event registered** | **RETIRED** | gone. **And `stop.sh` is the caution v2 inherits**: v11 keeps `disableAllHooks` and `allowManagedHooksOnly` out of the managed file so `/goal` survives, which means **a run can register its own Stop hook**. The cost is stated once and the probe checks it nightly |
 | `CLAUDE.md` | 886 lines | **RENAMED** | the Floor's standing context, stripped of archaeology. The archaeology moves to the logbook. **Byte-identical and carrying no timestamp**, because the subscription cache TTL is one hour |
 | `.claude/memory/DECISIONS.md`, `evict-memory.mjs`, the archive volumes | 424 lines / ~39,543 bytes; 1,125 lines; two volumes | **RENAMED** | the curator's rules: nothing deleted to meet a cap, irreversible entries pinned, a stub under every heading, capped rotating volumes. **v25 gives the "one writer" an agent with a name** |
@@ -6310,7 +8580,7 @@ where that is argued. FINAL §13.8 is kept by name as a losing image (§J.51).
 | `bin/fleet-install.mjs` | 1,053 lines | **RENAMED** | `keel adopt`: stamps a repository with the templates and **verifies** the port rather than assuming it |
 | `bin/install.js`, `install-war-room.sh`, `init-from-template.sh` | 308, 149, 147 lines | **RETIRED** | three installers for one act. `keel adopt` is the one |
 | `war-room/` | 4 entries, 62 files; does **not** contain `fleet-install.mjs` | **ABSORBED** | the tmux layer is the five documented commands of 17.5, not a vendored dashboard |
-| `.mcp.json`, `.claude/mcp-policy.json` | 12 and 65 lines | **RENAMED** | designer's one server and scout's read-only servers; the per-server allow/deny shape is the tool file's seed |
+| `.mcp.json`, `.claude/mcp-policy.json` | 12 and 65 lines | **RENAMED** | designer's one server and scout's read-only servers; the per-server allow/deny shape is the tool file's seed. **(FOUNDER, rethink 2026-09-06: D3 · v68)** and `mcp-policy.json`'s fate narrows in the same move: it becomes **`bin/egress`'s configuration file**, not an independent control. It was a policy whose calls no hook could see; `--strict-mcp-config` names only the proxy, and the rules in this file are what the proxy reads. §8 carries the door and the program |
 | `docs/02-competitive/` — the catalogue and five reference studies | TREE B only for `expansion/` and `reference-systems/` — `open-source.md` 1,083 · `hands.md` 901 · `concepts.md` 2,157 lines, 5 studies. `LANDSCAPE.md`, `MOAT.md`, `POSITIONING.md` and `competitors/` (237 lines) are on both trees | **SURVIVES** | the door's catalogue. **Every entry re-verified against its LICENSE before admission** — v15 is what that rule caught: n8n's own LICENSE.md, read raw, says internal or non-commercial only |
 | The design record — v2, WAKE, WATCH, the minds, v3, Keel, round-5, round-6, `final/` | 86 design docs on TREE B; Keel 2,682 lines | **SURVIVES** | as record: the priors of this plan. Every decision against them is a row of §1-v2, with the losing image kept by name |
 | `final/CENSUS.md` | the measurements this section rests on | **SURVIVES** | the census of TREE A and TREE B. §17 and §18 are re-measured against it rather than re-derived |
@@ -6321,9 +8591,61 @@ schedule. And it does not say that a RETIRED artifact was wrong: `coding.js` and
 
 ---
 
+### 18.7 What the rethink round takes out before it is built
+
+**(NEW: the rethink round of 2026-09-06 — SYNTHESIS §7, and SPINE §J 72 is the same list kept by name)** The four
+fates above are fates of things that **exist**. This table is the other half of a fate table and it did not exist
+before this round: eighteen things v2 had **designed and not built**, withdrawn now, plus two that exist on this
+branch today. The mark for a designed thing withdrawn before anything is written is **WITHDRAWN** — it is not
+RETIRED, because nothing was ever built to retire, and the distinction matters when a builder later looks for it.
+
+**(NEW: the rule that makes a withdrawal safe)** **Every row names what holds its job instead.** A deletion with no
+successor is a capability loss wearing the word *simplify*; a deletion whose job something else already does is free.
+That predicate is also this list's own falsifier, and SPINE §J 72 states it: *a builder who reaches for one of these
+and can name no replacement is the observation that brings it back*.
+
+| What goes | Exists? | Why it goes | What holds its job |
+|---|---|---|---|
+| **`keel/logbook/backlog.jsonl`** — the improvement backlog as its own store | designed, ABSENT | **O46.** COVERAGE says twice that an improvement **is an intent**; a second store for the same object is a second place it can be true | a filter over the intent store where `kind: improvement`. §13a keeps the loop; it loses the file |
+| **The project-`settings.json` tier of tool grants** | **YES** — `.claude/settings.json` on this branch carries 39 allow/deny rules | **O37**, with **W7** as independent support: `--restricted` *"ignores user, project and local settings files"*, so on the `-p` carrier this tier is already ignored outright. A third tier neither the argv nor the managed file owns is a grant nobody reviews | grants live in exactly **two** places: the argv `bin/run` composes, and the managed file a running process cannot clear (§12) |
+| **The dependency on `skills-ref validate`** | designed, ABSENT | **Deletion 19.** Its licence is **UNKNOWN and was never fetched** — the same defect v17 caught in the skills upstream, one level down in the toolchain | **its four checks are kept** and re-implemented from the spec text. This is a dropped *dependency*, not a dropped check, and §7 carries the checks |
+| **`logbook/desk/<tick>.json` as a file per tick** | designed, ABSENT | **O20.** The highest-volume artifact in the design, holding an answer whose value decays in hours, read by nothing | the Desk's ranking becomes **event-log rows**, and `bin/replay-desk` reads them. §4 |
+| **The per-venture `open.md` store** | designed, ABSENT | **O9.** Ten queues, one founder, nine writer-contention points | one house-level `keel/logbook/decide.jsonl`, rendered by pages 4 and 5. §14 |
+| **`analyst`'s `Bash`** · **`writer`'s split model default** | designed, ABSENT | **O57** (contradiction 4). The only read-class agent holding a shell, contradicting §C.1's own placement of it; and a routing decision living in the one copy no table reviews | `bin/reconcile` does the arithmetic (v47); `writer`'s split becomes a **§G.1 row with a named trigger**. §5, §9 |
+| **The rank formula's two companions** — *the intent's own urgency as a second scale*, and the sentence *"the Desk decomposes"* | designed, ABSENT | **Deletions 3 and 4**, riding with the founder's **v75**. One person and two dials for one decision, the second derivable; and a sentence assigning a model's job to a no-model program | the founder's weight band is the one dial (§4.5); decomposition is the work-item store's, **O1** |
+| **The menu-bar glyph** | designed, ABSENT | **Deletion 23.** No substrate was ever named, it is a new dependency if built, and **a status living in two places is one that disagrees** | page 5's top strip and `bin/bell` (**O18**), which is the only thing that may ring. §14 |
+| **Page 1's second job** — the portfolio and the venture toggle | designed, ABSENT | **Deletion 24** (contradiction 9). §14.4's own guard rails say page 1 is *never where a decision is made*, and the toggle is a decision | the portfolio moves to **page 3's strip**; the page manifest (**O12**) is what makes the rule checkable rather than stated |
+| **The four-class hands table, three of its four copies** · its **`Night?`** column | designed, ABSENT | **Deletions 12 and 14** (contradiction 19). Four renderings of one table drift; the admitted-tool file already carries a horizon and the door's is the enforced one | **§F is the decision** and **§17.3 is the inventory copy**. §8 points at §F rather than restating it |
+| **Two of the three department tables** | designed, ABSENT | **Deletion 8** (contradiction 20) — three renderings of eight rows, already drifted on customer service | generated from `roster.yml` (**O2**). §5 |
+| **The duplicate cost formula (§16.3's copy)** | designed, ABSENT | **Deletion 20** (contradiction 15). Two implementations of one check disagree, which this repository has already paid for | **§9.6 owns the formula**; §16.3 keeps only its tenfold-divergence argument and cites it |
+| **`--max-budget-usd` from the control section, and its three other restatements** | designed, ABSENT | **Deletion 13.** A stall fuse explained four times invites a fifth misreading | **§16.5 owns it**, as one thing with one job |
+| **Dollar ceilings *as ceilings*** | designed, ABSENT | **Deletion 21**, and the founder's **v74**: on a subscription the dollar is a locally computed shadow of a bill nobody sends, and **an absent ceiling is visible while a wrong one is not** | a **window gauge** — tokens against an observed high-water mark — with wall clock beside it and USD kept as a shadow price. §16 |
+| **The message priority tag** | designed, ABSENT | **Deletion 22.** A second ranking that will disagree with the Desk's, deleted **before** it is built rather than after | the Desk's lexicographic order (**v75**). §4 |
+| **The name *venture health score*** | designed, ABSENT | **Deletion 33.** It survives on two pages and invites the composite the plan refuses | the three raw numbers, ordered by the worst one. §14, §21 |
+| ***"Unread transcript count"*** as a surfaced number | designed, ABSENT | **Deletion 17.** A progress bar for a backlog that clears once | **watermark lag** (**O42**), which stays meaningful in year two. §13 |
+| **The *Pareto prompt archive*** as a distinct artifact | designed, ABSENT | **Deletion 18.** Git history is already the archive | two numbers on `scores.jsonl` are the frontier. §13 |
+| **The renamed *model specialization map***, and *"on a cadence"* in the model-drift row | designed, ABSENT | **Deletion 29.** A renamed thing gets rebuilt; a cadence is a schedule the SPINE forbids | one routing table (**O5**); the drift trigger is an **event**, not a clock. §9 |
+| **Codex `/goal`'s four sentences** | designed, ABSENT | **Deletion 28.** `C`/medium confidence, two 308-redirected sources, used by no row — **and a feature described at length reads as one relied upon** | one line in §10.6's gap list |
+| **The blanket OUTSIDE on §17 for the house** | designed, ABSENT | **Deletion 25.** v64 makes the harness the venture, and it deploys by editing the programs that dispatch and send | §17 carries the house's own deployment as inventory, not as an exclusion |
+| **The *reason* under COVERAGE §11's refusal** — *"one founder, one Mac"* | designed, ABSENT | **Deletion 32.** The refusal stands; its reason is falsified by §15.4's **own restore drill**, which produces a second machine | cite the **lease** (**O16**) instead: the Watch refuses to tick and the Sender refuses to act without it, so the drill's clone can do neither |
+
+**(NEW: what this table is not)** It is not a claim that any of these was wrong to design. Three of them —
+`backlog.jsonl`, `open.md` and the per-tick Desk file — are ordinary shapes that lost to a **cheaper shape with the
+same job**, and one, the project-settings tier, lost to a **vendor fact published after it was written**. And two
+rows point the other way: `CURATION.yml` and its check (§18.3) and `budget-guard.js` (§18.4) both **exist and gain**
+work in this round rather than losing it, which is the same round's evidence that the list is not a tidy-up.
+
+**(NEW: one deletion of the round is the founder's and is not on this list)** §11.3's three-family review panel row
+is deleted by **v82**, in the founder's words — *"Delete the row from the plan"*. It is a row of the plan rather than
+an artifact with a fate, so §11 states it in place and §20.7 records the decision. **The repository's three live
+`verified_by: judge` claims and the founder waiver running to 2026-11-17 are untouched by it.**
+
+---
+
 ## 19 · Build order, by dependency
 
-*obeys: every ABSENT path named in SPINE §B–§H · inherits: FINAL §18*
+*obeys: every ABSENT path named in SPINE §B–§H, **and, since 2026-09-06, every ABSENT path named in SPINE §L** ·
+inherits: FINAL §18*
 
 **(FINAL)** No durations, no schedule, no first month. Each arrow reads **needs**. The three-first rule stands — the
 logbook, transcript mining, one real venture driven — and the seam nodes sit where the measured facts put them:
@@ -6353,7 +8675,7 @@ flowchart TD
     CODEX(["FOUNDER ACT · install codex<br/>command -v codex is absent today<br/>DECIDED 2026-09-05: installed when building starts"])
     TEAMS(["FOUNDER ACT · CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1<br/>experimental, no nested teams<br/>DECIDED 2026-09-05, v59: ON, and no model constraint —<br/>a teammate runs on its own file model"])
     LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)<br/>DECIDED 2026-09-05: fetched at build time; row stays open"])
-    HOSTED(["FOUNDER DECISION · which hosted lane may make<br/>when the Mac is off (§I row 15) — Codex cloud has no<br/>documented driver; claude --cloud and Routines do"])
+    HOSTED(["FOUNDER DECISION · which hosted lane may make<br/>when the Mac is off (§I row 15) — Codex cloud has no<br/>documented driver; claude --cloud and Routines do<br/>MEASURED 2026-09-06, R5 DONE: 156 h of log, asleep 40.7 h<br/>in 487 episodes, ZERO gaps of an hour — the tail this<br/>lane would buy back is zero over the week measured.<br/>The charter field cloud: allow or deny, default deny,<br/>is decided either way (v79)"])
 
     AGENTS1["WAVE ONE · eight agent files (v54)<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change,<br/>because builder and architect declare claude-fable-5-1 (v57)"]
     AGENTS2["WAVE TWO · seven agent files (v54)<br/>product · analyst · writer · growth · steward ·<br/>curator · challenger<br/>written when a venture needs them; each brings<br/>its own argv file with it"]
@@ -6379,7 +8701,7 @@ flowchart TD
     RECON["keel/bin/reconcile<br/>reads a record the company does not write"]
 
     READBACK["The read-back page<br/>nothing binds by voice"]
-    CLOUD["The cloud lane<br/>a hosted run's output lands as a PR or staged artifact ·<br/>bin/run's cloud carrier mints and records only ·<br/>the Watch reads PRs on wake · ABSENT"]
+    CLOUD["The cloud lane<br/>a hosted run's output lands as a PR or staged artifact ·<br/>bin/run's cloud carrier mints and records only ·<br/>the Watch reads PRs on wake · ABSENT<br/>SHUT BY v67: stop: reads UNKNOWN on this carrier, and<br/>bin/run refuses to mint unattended work on a carrier<br/>it cannot stop. Cancellation is what reopens it"]
     WATCH["3 · keel/bin/watch, the Desk and the cord<br/>obligations first · a LaunchAgent that exits"]
 
     MC["mission-control/ server + client, kept<br/>the website's runtime"]
@@ -6397,12 +8719,36 @@ flowchart TD
     VENTURE["3 · One real venture, driven<br/>a real done-test and a rung-1 anchor"]
     OVERNIGHT["The first measured overnight<br/>one week overnight against one week bounded"]
 
+    ROSTER["keel/shared/roster.yml · O2<br/>ONE roster file: frontmatter, argv paths, color, wave,<br/>valid_until with a forced disposition (v72), maxTurns,<br/>isolation, anchor, the v71 pack paths ·<br/>§17.1 and page 2 are generated or checked against it"]
+    PACKS["The onboarding packs · v71<br/>per agent, wave one included: one rehearsal case with a<br/>known answer, one exemplar of its own output with<br/>provenance, one end-to-end demonstration that its anchor<br/>fires, namespaces that resolve ·<br/>WITHOUT THEM AN AGENT IS DECLARED AND NOT ROUTABLE"]
+    ROUTING["keel/shared/routing.yml · O5<br/>which agent, which model, which band — answered ONCE and<br/>generated into §B.2, §C.1 and §9.2, which today answer it<br/>in three places with nothing checking that they agree"]
+    SCHEMAS["keel/shared/schemas/ · O3 O4 O6 O7<br/>charter.yml · brief.yml, eleven fields per v45 ·<br/>event.yml, a schema_version on every row and a reader<br/>that refuses an unknown version · the handover's five<br/>fields: objection, brief_sha, maker and checker<br/>family plus model, actor, idempotency key"]
+    WORK["keel/ventures/&lt;v&gt;/items/ · O1<br/>w-*.yml with intent, purpose, ceiling, blocked_on,<br/>attempts, last_failure, card · proposals land in<br/>items-draft/ · A BOARD CARD IS A VIEW OF A WORK ROW"]
+    DECIDE["keel/logbook/decide.jsonl · O9<br/>one house queue replacing ten per-venture open.md ·<br/>a row with no intent id is refused ·<br/>the night escalation target, never the Operator (O49)"]
+    GOLDEN["keel/golden/ · O11<br/>eval-only bodies, so the case that will judge a run<br/>cannot be read by that run · one frontmatter field,<br/>one generator rule, check:manifest re-pointed"]
+    PAGEMAN["keel/surfaces/pages/&lt;n&gt;.yml · O12<br/>every element resolves to a store path or a bin/ verb<br/>and the renderer builds only from it ·<br/>page 1 loses the venture toggle to page 3's strip"]
+    HOST["keel/host/ · O10<br/>plist · managed-settings template · env file ·<br/>sandbox block · denyRead list · expected macOS grants —<br/>the one place the machine is declared"]
+    CONSENT["keel/consent.yml + keel/subjects/&lt;hash&gt;.yml · v69<br/>the register has ONE writer and is read by the Sender<br/>BEFORE any contact · log and memory hold a hash, never a<br/>body, so erasure deletes one subject row and the hash<br/>becomes a known absence"]
+    HIGHWATER["The window high-water file · v74<br/>tokens observed, because no denominator is published ·<br/>wall clock beside it, USD kept as a shadow price"]
+
+    EGRESS["keel/bin/egress · v68<br/>ONE no-model door: every call logged, filtered by domain<br/>AND method, credentials injected that the agent never<br/>sees · --strict-mcp-config names only the proxy and<br/>mcp-policy.json becomes its configuration"]
+    WORKTREE["keel/bin/worktree · O14<br/>a run NEVER creates its own — git worktree add cannot<br/>complete under the armed sandbox and escalation is<br/>unavailable to an unattended run · it is handed one"]
+    LEASE["logbook/watch.lease · O16<br/>host id and heartbeat · the Watch will not tick and the<br/>Sender will not act without it, so the restore drill's<br/>clone can never send twice"]
+    REDACT["keel/bin/redact · O17 O66<br/>ONE redaction where there were two · the PII gate on the<br/>Sender's checklist and the mining pass, its<br/>false-positive rate measured for a week before it blocks"]
+    BELL["keel/bin/bell · O18<br/>the only thing that may ring · reads the wake-me classes,<br/>the interruption budget and the acted-on rate"]
+    REPLAY["keel/bin/replay-desk · O20<br/>deterministic, free, reads rows nothing reads today ·<br/>it is what settles v75 without living a month"]
+    HORIZON["keel/bin/horizon · O23<br/>one pass over every durable store: forced disposition at<br/>expiry, plus a LAPSE RECORD, one row per thing that<br/>expired unactioned, ordered by what it stopped"]
+    INTEND["keel/bin/intend · O60<br/>bug intake: an anchor that fails twice writes a card<br/>whose done-test IS the reproducing command; with no<br/>reproduction it is a bounded question for scout"]
+    LOCAL["keel/bin/embed · keel/bin/classify · O13<br/>the local tier has no reachable carrier — the sandbox<br/>denies a loopback bind and curator holds no Bash ·<br/>no-model programs handing the curator a file<br/>DEPENDS ON R4"]
+    FIXTURES["keel/fixtures/ · O78 O79<br/>a scratch house: the Sender, Watch, door and launcher<br/>have no test seam, and a Sender defect is an outward act<br/>that cannot be recalled · blue-green at a tick boundary"]
+
     LOG --> RUN
     LOG --> MINE
     LOG --> STORES
     LOG --> METER
     LOG --> MC
-    MANAGED --> PROBE
+    MANAGED --> HOST
+    HOST --> PROBE
     PROBE --> RUN
     AGENTS1 --> ARGV
     ARGV --> RUN
@@ -6461,6 +8807,49 @@ flowchart TD
     SKILL --> VENTURE
     VENTURE -.->|"when a venture needs them"| AGENTS2
     VENTURE --> OVERNIGHT
+
+    AGENTS1 --> ROSTER
+    ROSTER --> PACKS
+    PACKS --> ROUTING
+    ROUTING --> RUN
+    ROSTER --> P2
+    SCHEMAS --> LOG
+    SCHEMAS --> RUN
+    SCHEMAS --> STORES
+    STORES --> WORK
+    WORK --> P4
+    WORK --> WATCH
+    INTEND --> WORK
+    STORES --> INTEND
+    LOG --> DECIDE
+    STORES --> DECIDE
+    DECIDE --> P4
+    DECIDE --> P5
+    HORIZON --> DECIDE
+    STORES --> HORIZON
+    REHEARSE --> GOLDEN
+    GOLDEN --> SKILL
+    PAGEMAN --> MC
+    INBOUND --> CONSENT
+    STORES --> CONSENT
+    CONSENT --> SENDER
+    METER --> HIGHWATER
+    HIGHWATER --> WATCH
+    DOOR --> EGRESS
+    EGRESS --> INBOUND
+    EGRESS --> SENDER
+    EGRESS --> RECON
+    WORKTREE --> RUN
+    LEASE --> WATCH
+    LEASE --> SENDER
+    REDACT --> MINE
+    REDACT --> SENDER
+    WATCH --> BELL
+    WATCH --> REPLAY
+    LOCAL --> CURATE
+    FIXTURES --> SENDER
+    FIXTURES --> WATCH
+    FIXTURES --> DRILL
 ```
 
 ---
@@ -6468,7 +8857,8 @@ flowchart TD
 ### 19.2 Every ABSENT path of SPINE §B–§H, and the one node it appears in
 
 **(NEW: the graph claims completeness, so the claim is made checkable)** One row per ABSENT path. If a path appears in
-two nodes the graph is wrong, and this table is how that is found.
+two nodes the graph is wrong, and this table is how that is found. **The rethink round's own paths — SPINE §L — are
+in 19.2a below**, in three groups, because they arrived as a set and behave as three kinds.
 
 | ABSENT path or artifact | SPINE | Node |
 |---|---|---|
@@ -6504,6 +8894,97 @@ two nodes the graph is wrong, and this table is how that is found.
 | Page 7, canvas and playground | §D, v15 | `P7` |
 | `keel/shared/prices.yml` and the model-expiry facts | §G.1, §G.3, §G.4 | `PRICES` |
 | The Codex headless rehearsal | §H.2, v32 | `CODEXTEST` |
+
+### 19.2a Every ABSENT path of SPINE §L, grouped — the rethink round's own additions
+
+**(NEW: the rethink round of 2026-09-06 named eighty mechanisms, and a mechanism with a path is a build node or it is
+a wish)** The same completeness claim as 19.2, made against SPINE §L: **one row per ABSENT path, and a path in two
+nodes means the graph is wrong.** They group into three kinds, and the kinds behave differently in a build order —
+**a store is written once and read forever, a program is a thing somebody writes, and a mechanism is a rule that
+lands inside a program that already has a node.** Only the first two are new nodes; the third joins one, which is
+why the graph grew by twenty-one nodes and not by eighty.
+
+**Stores and schemas — O1–O12, plus the two the founder's rows add**
+
+| ABSENT path | SPINE | Node |
+|---|---|---|
+| `keel/ventures/<v>/items/` — `w-*.yml`, and `items-draft/` | §L O1 (**R16** decides two objects or three) | `WORK` |
+| `keel/shared/roster.yml` | §L O2 · v72's `valid_until` · v71's pack paths | `ROSTER` |
+| `keel/shared/schemas/charter.yml` | §L O3 (contradiction 2) · v79's `cloud:` field | `SCHEMAS` |
+| `keel/shared/schemas/brief.yml` — eleven fields | §L O4 (contradiction 3) | `SCHEMAS` |
+| `keel/shared/routing.yml` | §L O5 (contradiction 17) | `ROUTING` |
+| `keel/shared/schemas/event.yml` — `schema_version` on every row | §L O6 | `SCHEMAS`; the logger change joins `LOG` |
+| The handover schema's five fields | §L O7 (**R11** is blocked on it) | `SCHEMAS`; the writer joins `RUN` |
+| `keel/shared/prices.yml` with `fetched_at` and `valid_until` | §L O8 | `PRICES` — the node exists; the two fields and the stale-row refusal are what is new |
+| `keel/logbook/decide.jsonl` | §L O9 · O49 · v76's which-expiry | `DECIDE` |
+| `keel/host/` | §L O10 | `HOST` |
+| `keel/golden/` | §L O11 (contradiction 11) | `GOLDEN` |
+| `keel/surfaces/pages/<n>.yml` | §L O12 (contradiction 9) | `PAGEMAN` |
+| `keel/consent.yml` — the register — and `keel/subjects/<hash>.yml`, the erasable per-subject store | **v69** | `CONSENT` |
+| The window high-water file | **v74** | `HIGHWATER` |
+
+**Programs — O13–O20, O23, O60, O78, O79, plus the founder's one**
+
+| ABSENT path | SPINE | Node |
+|---|---|---|
+| `keel/bin/egress` | **v68** (D3) | `EGRESS` |
+| `keel/bin/embed` and `keel/bin/classify` | §L O13 — **DEPENDS-ON-R4** | `LOCAL` |
+| `keel/bin/worktree` | §L O14 | `WORKTREE` |
+| The wake reconciler — `run.started` before exec, then reconcile against `claude agents --json --all`, the tmux session list and the process table | §L O15 (contradiction 13) | joins `RUN` and `WATCH`; it is the carrier *"resume, not restart"* never had |
+| `logbook/watch.lease` | §L O16 | `LEASE` |
+| `keel/bin/redact` | §L O17 (contradiction 14) · O66 | `REDACT` |
+| `keel/bin/bell` | §L O18 | `BELL` |
+| The same-failure predicate — one shared hash | §L O19 (rests on **O13**) | joins `LOCAL`; its three consumers are `WATCH`, `CURATE` and the fast loop |
+| `keel/bin/replay-desk` | §L O20 (**v75** is settled by it) | `REPLAY` |
+| `keel/bin/horizon` | §L O23 | `HORIZON` |
+| `keel/bin/intend` | §L O60 | `INTEND` |
+| `keel/fixtures/` | §L O78 | `FIXTURES`; `bin/drill` gains the scratch house and keeps node `DRILL` |
+| Blue-green at a tick boundary | §L O79 | joins `WATCH` and `SENDER` — free, because every tick is already crash-only |
+
+**Mechanisms — the rules that land inside a program that already has a node**
+
+| Mechanism | SPINE | Node it joins |
+|---|---|---|
+| `/goal`'s condition composed from `anchor:` — **DEPENDS-ON-R17** · the byte-identical done-test · the edit-arguments verb writing a brief and never argv · the prefix hash and the two shipped flags — **R7** · `tokenizer:` on every ceiling · the trust score's launcher consumer · the cross-venture refusal · the carrier choice for `tester` and `challenger` · brand-voice unroutable while the taste store is empty · the session ceiling — **DEPENDS-ON-R23** | §L O21, O22, O53, O39, O77, O26, O27, O28, O61, O71 | `RUN` |
+| The hash chain, the sandbox-escalation row, `skill.miss`, skill activation (**DEPENDS-ON-R14**) | §L O31, O48, O41 | `LOG` |
+| `catch_up:` because `StartInterval` coalesces · idle work must serve a live intent · the file lease · the statutory class and the customer's clock | §L O52, O51, O72, O55, O56 | `WATCH` |
+| The watermark, the venture argument, the dedup calibration, slice precision, the calibration number per agent, the negatives scope split | §L O42, O68, O44, O45, O80, O43 | `CURATE` and `MINE` |
+| `effect:` on every anchor · one sample floor · the held-out discrimination test · the signed verdict's key path · `claim-source` blocking on `scout` | §L O24, O25, O62, O30, O29 | `REHEARSE`, with `O29` and `O30` on machinery that exists today |
+| `provider_cap` · bulk personal data with `guard` · `scopes_observed` and a binary's version and hash · refusing `/import` · the taint id and the per-venture canary | §L O32 (**R21**), O33, O35, O36, O65 | `DOOR`, with the canary's refusal in `SENDER` |
+| Three data classes and per-store retention · wind-down · rotation as an obligation · the provenance line on the Sender's checklist | §L O34, O63, O67, O64 | `STORES` and `SENDER` |
+| One control chart · cost per rung movement · the restore drill's number · log rotation (**DEPENDS-ON-R22**) | §L O74, O75, O76, O40 | `METER` and the briefing |
+| A terminal `blocked` state after N failures — **R18** sets N | §L O73 | `RUN`, written to the card store and the negatives store |
+| The deterministic accessibility check · the verbatim legal clause | §L O58, O59 | `P5` and `RECON`; both sit on grants and checks that exist |
+| The page manifest's readers: the census join, the citing-or-refusing Q&A | §L O70, O54 | `P2` and the page renderers, downstream of `PAGEMAN` |
+| Deletions and rules with no program: the project-settings grant tier, the backlog file, the parallelism axis, `analyst`'s shell, `CURATION.yml` as the failed-candidate home, the hook rewrite as spec | §L O37, O46, O69, O57, O47, O38 | no node — §18.7 carries them as fates |
+
+**(NEW: three of these paths are named more narrowly than SPINE §L names them, and the difference is recorded
+rather than applied in silence)** §L writes the work-item store as `keel/ventures/<v>/work/` holding `w-*.yml`. **It
+is `items/` holding `w-*.yml` here, with drafts in `items-draft/`** — because **`work/` is already the venture's own
+source repository**, and a store path that collides with the tree a builder checks out is a defect found by a `git
+status` at three in the morning rather than by a review. **v69**'s two stores are named the same way:
+`keel/consent.yml` for the register and `keel/subjects/<hash>.yml` for the erasable per-subject bodies, where §L
+says only *two stores*. **None of the three is a change of behaviour** — §L's fields, its one-writer rule and
+`bin/check-stores`' refusals are untouched, and only directory and file names move. They are written down because a
+path that differs between the spine and the build order is precisely the drift the spine exists to stop, and the
+cheapest moment to see it is now.
+
+**(NEW: two rows are free before the first run and expensive after, and the graph cannot show that)** **O7**'s five
+handover fields and **O6**'s `schema_version` cost nothing while no run has written a row, and cost a **full backfill**
+the moment one has. They are marked *free now, backfill later* in §L for that reason, and **R11** — does a second
+model family reduce escaped defects on our own move classes — is **blocked on O7's four provenance fields**, which
+are cheap now and unreconstructable later. A build order that defers them is not deferring work; it is choosing to
+pay more for it and to lose one measurement outright.
+
+**(NEW: R10 gates everything cross-model, and it is one node the graph already has)** `CODEXTEST` **is R10** — does
+`codex exec --json` return output with no controlling TTY, on a current version, with a non-trivial prompt. Pass and
+rung 2 becomes parallel and a second family is a lane; fail and the second family is one foreground slot forever, at
+1/N availability. **v5, v32, v78, v82 and §I row 15 all read differently depending on it.** Note **W19** against the
+node's own label: the rehearsal floor written there as `>= 0.124.0` is twenty-nine minor versions stale against the
+shipped 0.153.4 and no longer discriminates — the floor is **the installed version, recorded**. **R26**, reading the
+unread Codex June–August changelog window, is the only cheap route to the same answer and needs no install at all.
+
+---
 
 **(NEW: two nodes are not ABSENT paths and are drawn anyway)** `MC` is `mission-control/` on
 `ceo-1-1788609834` — 60 files that already exist and are kept (§18.5). `MINE` reads
@@ -6561,6 +9042,40 @@ is why the world's door is a node in its own right rather than a detail inside t
 `WATCH` or to a gate. **The gate may not be invocable by the thing it gates** (v35), and the same argument keeps
 `Write` off reviewer. A build order that wired an engine to its own gate would be drawing the failure in.
 
+**(NEW: what the rethink round of 2026-09-06 did to this graph, and the shape of the change is the finding)** It
+added **twenty-one nodes — eleven stores and schemas, ten programs — and not one new root.** Every one of them hangs
+off `LOG`, `RUN`, `STORES`, `DOOR` or `WATCH`, which is what a round of *mechanism* fixes looks like when it is
+drawn: eighty decisions (§L), and the trunk did not move. Had the round found a second architecture, this graph
+would have a second source. It has none. **Four of the twenty-one change an ordering rather than adding work.**
+`PACKS` is the sharpest — **v71 makes an agent unroutable without its onboarding pack**, so `AGENTS1 → ROSTER →
+PACKS → ROUTING → RUN` is the order, and the pack is not paperwork filed after the fact: it is what distinguishes
+`writer` from *builder with a different prompt*, in a band nobody publishes evidence for. **The enforcement is not
+the arrow.** `bin/run` already refuses a brief naming a file that does not exist (v37, v45) and the pack paths are
+declared in `roster.yml`, so an unpacked agent fails at dispatch rather than at review — which is why the graph may
+also be read the wrong way round and must not be: `AGENTS1 → ARGV → RUN` still exists, and it is the refusal, not the
+drawing, that keeps an unpacked agent off it. `WORKTREE` is the second: **a run never creates its own**, because
+`git worktree add` cannot complete under the armed sandbox and interactive escalation is unavailable to an
+unattended run by construction, so the tree is composed into its argv like every other grant. `HOST` is the third —
+`MANAGED → HOST → PROBE` replaces `MANAGED → PROBE`, because the founder's act now writes into a directory that
+declares the whole machine and the probe asserts it **by attempting the operation**. `LEASE` is the fourth, and it
+is the only node in the round that exists to prevent a **duplicated outward act**: without it the restore drill's
+own clone can tick and can send.
+
+**(NEW: one node was measured and one was shut, and they are the two that concern the world outside this Mac)**
+`HOSTED` is answered by measurement for the first time — **R5 is DONE**: 156 hours of log, 40.7 asleep in 487
+episodes, **zero episodes of an hour or more**, longest single sleep about twenty minutes. The tail a hosted maker
+lane would buy back is **zero over the week measured**, so the node stays a founder decision (§I row 15) but it is
+now a decision with a number under it. `CLOUD` is shut from the other end by **v67**: `bin/run` refuses to mint
+unattended work on a carrier whose `stop:` reads UNKNOWN, and cancelling a hosted Codex task is exactly that. **The
+two facts point the same way from opposite directions** — the lane buys back nothing measurable, and it cannot be
+stopped — which is the strongest state an open decision can be in without being closed.
+
+**(NEW: the round's one node that is not work but an answer)** `CODEXTEST` **is R10**, and R10 is the hinge of the
+cross-model design rather than one of its rows: pass, and rung 2 becomes parallel and a second family is a lane;
+fail, and the second family is one foreground slot forever. Nothing downstream of it changes size — the *shape* of
+§9, §10, §11 and §I row 15 changes. It is drawn as one small node because a graph cannot show that, and this
+paragraph is where it is said instead.
+
 ---
 
 ## 20 · Open decisions, with both sides
@@ -6572,9 +9087,12 @@ with one side is a recommendation wearing a question mark, and this section refu
 
 ---
 
-### 20.1 The fifteen, from SPINE §I
+### 20.1 The ~~fifteen~~ **seventeen**, from SPINE §I
 
-**(FOUNDER and NEW, per row)**
+**(FOUNDER and NEW, per row)** (moved 2026-09-06: SPINE §I rows 16 and 17) The rethink round added two rows and
+closed none. **Neither is a new question** — row 16 is an assumption the plan has been making since FINAL §11.2 and
+treating as settled, and row 17 is the half of row 1 nobody had written down. **An assumption that gets written as a
+row acquires two sides and an owner**, which is the whole difference between this section and a premise.
 
 | # | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
 |---|---|---|---|---|---|
@@ -6592,7 +9110,9 @@ with one side is a recommendation wearing a question mark, and this section refu
 | 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display, one JSON file | a living project, if the founder wants it maintained | the founder | **DECIDED v62** — pixel-agents (MIT, alive, reads Claude Code); Star-Office-UI and "AgentOffice" refused with reasons; the founder may still name where they saw "AgentOffice" |
 | 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist — the 48-step suite | the founder | **DECIDED v64** — *"The harness itself"* |
 | 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence in hand | every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from | **decided; reopened only by name** | **DECIDED v54** — two waves; the eight with seeds or code paths first |
-| 15 | **Which hosted lane may MAKE when the Mac is off** — Codex cloud (`codex cloud exec`, issue-only, UNVERIFIED) · Claude Code `--cloud` and Routines (documented argv and API; shares the Claude seat) · Jules (alpha API, third family) | Anthropic's is the only fully documented driver today and costs no extra compute | it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet. **What would close it:** a vendor page or `codex cloud exec --help` on an installed binary (the measurement row 5 already names), OpenAI's terms actually read (four HTTP 403 refusals so far — `research/cloud.md` part 4), the undocumented maximum cloud-task duration, and a cancel command — none of the four is published today | the founder, with row 1 | **OPEN — raised by v56** |
+| 15 | **Which hosted lane may MAKE when the Mac is off** — Codex cloud (`codex cloud exec`, issue-only, UNVERIFIED) · Claude Code `--cloud` and Routines (documented argv and API; shares the Claude seat) · Jules (alpha API, third family) | Anthropic's is the only fully documented driver today and costs no extra compute | it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet. **What would close it:** a vendor page or `codex cloud exec --help` on an installed binary (the measurement row 5 already names), OpenAI's terms actually read (four HTTP 403 refusals so far — `research/cloud.md` part 4), the undocumented maximum cloud-task duration, and a cancel command — none of the four is published today | the founder, with row 1 | **MEASURED (R5), and the decision is pending the founder** — see **v79**. *(moved 2026-09-06: the row read "OPEN — raised by v56", which was true and carried no number.)* The measurement D14 asked for is **taken** (DECISIONS §19), read-only from `pmset -g log` on this Mac: **span 2026-08-30 21:44 → 2026-09-06 09:39 · 156 h, all the log retains · asleep 40.7 h (26%) in 487 episodes · ZERO episodes of one hour or longer · longest single sleep 0.3 h, about twenty minutes.** The tail a hosted maker lane would buy back is **zero over the week measured**. **The caveat travels with the number:** the log covers only the span it retains, and DarkWake power-naps count as wakes, so *asleep* here means the machine could not have run a process. **What is decided either way, and is decided now:** the charter field `cloud: allow \| deny`, default `deny` (**v79**). **What shuts the lane from the other end:** **v67** — `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN, and cancelling a hosted Codex task is exactly that |
+| 16 | **Contrarian assumption 1 — that a deterministic anchor exists for most company work** (FINAL §11.2). Rung 1, the trust score, regression-for-free, unattended night work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang here | the harness venture's anchors are real and deterministic today — `npm run check` and the probe — and every part of the architecture resting on them works | **the evidence comes from the most anchorable venture that could have been chosen.** What a real venture is made of — positioning, a price, copy that converts, a design someone likes, whether to pivot — is what §11.2's own table answers with *taste* or *the founder*. **If false the architecture inverts:** the night's product becomes built options with their costs, the morning becomes an adjudication queue, the taste store becomes the primary asset, mission control's centre of gravity moves off pages 3 and 5 onto a decision queue, and **the roster shrinks** | **the measurement first, then the founder** | **OPEN — raised by the rethink round** (SYNTHESIS §6, lane L7). **Settled by R12:** what fraction of the harness venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*. It is the cheapest measurement named anywhere in the round, and **nothing should be built against the inverted architecture before it** |
+| 17 | **If row 1 answers *no*, does the architecture move to a metered API key** | a key buys the carve-out the terms name explicitly, and with it batch at 50% both directions, stacking with caching; v22's two windows stop mattering and **the reserve is redesigned** | it is a different economics and a different plan — money per token instead of a seat — and the founder has not been asked for it. It is downstream of row 1 and cannot be answered before it | the founder, after row 1 | **OPEN — raised by the rethink round** (SYNTHESIS §6, the fourth assumption). Listed rather than argued, and **deliberately carrying no expiry: attaching one would decide row 1**, which the founder kept open by their own word — that is why the synthesis refused **X2**. Its useful half is already discharged for free by **v64**, which confines automated seat access to the harness venture |
 
 ---
 
@@ -6604,7 +9124,7 @@ carries a disposition, and two of the five are still deferred on purpose.**
 
 | FINAL §19 | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
 |---|---|---|---|---|---|
-| 6 | **The hook rewrite to structured tool input, and registering `budget-guard.js`** | both are correct in shape and measured; the string matcher has both bypassed and over-blocked, and the guard has **zero references in `settings.json`** today | both are edits to the judging machinery, one-way from day one | the founder | **DEFERRED to build time** — *"Neither yet — decide at build time"* |
+| 6 | **The hook rewrite to structured tool input, and registering `budget-guard.js`** | both are correct in shape and measured; the string matcher has both bypassed and over-blocked, and the guard has **zero references in `settings.json`** today | both are edits to the judging machinery, one-way from day one | the founder | **DEFERRED to build time** — *"Neither yet — decide at build time"*. **(NEW, rethink 2026-09-06: O38 and O50 take the shape and leave the act.)** Both halves now have a decided *specification* and neither has been performed: **O38** is marked **ADOPTED-AS-SPEC** in SPINE §L — deny through the `decision` object on non-blocking hook events, keep `exit 2` for the documented blocking ones — and **O50**'s answer on `budget-guard.js` is **register it**, one entry in `.claude/settings.json` against a hook that already exists (§18.4). **The founder's deferral is preserved exactly**: what was deferred is the edit to the judging machinery, which is one-way from day one, and a decided shape is not that edit |
 | 7 | **`pmset -a disablesleep 1`** | it runs with the lid shut, which is what a night lane is | it defeats thermal and battery policy, and is not a change to make on the founder's behalf | the founder | **DEFERRED to build time** — the same answer as row 6, *"Neither yet"* |
 | 8 | **Disclosure of machine-made work; the legal entity and jurisdiction per venture** | a dated founder decision with a reopen trigger | one-way doors, on the default `never` list | the founder | **DECIDED v63** — *"Disclose by default; entity per venture decided at intake"* |
 | 12 | **The overnight premise** — nobody has measured whether a crew that runs overnight beats one that stops | the first overnight starts a standing comparison: one week overnight against one week bounded on the same venture | every founder in the corpus reviews in the morning; if overnight does not beat bounded, the system runs bounded and says so | the measurement | **DECIDED: run the comparison** — *"Run the comparison; let the measurement decide"*. The premise stays a measurement, not a belief |
@@ -6697,7 +9217,54 @@ which hosted lane may make — that question is not answered by the research tha
 word — *"still keep it open"* — **row 4, `LICENSE-CONTENT`**, which is one fetch at build time — and **row 15, which
 hosted lane may make when the Mac is off**, raised by v56 and not settled by it. Rows 5 and 8 are **acts at build
 time** rather than choices. Everything else in 20.1 is decided, and 20.2's five rows are decided or deliberately
-deferred to the moment building starts.
+deferred to the moment building starts. *(moved 2026-09-06: this list of three was complete on 2026-09-05 and is
+not complete now — **the rethink round added rows 16 and 17**, and row 15's measurement closed while its decision
+did not. The list of five that stands is at the end of this section; this paragraph is kept as it was written,
+because what the interview left open is a different fact from what is open today.)*
+
+---
+
+### 20.7 Decided in the rethink round · 2026-09-06
+
+**(FOUNDER, DECISIONS §18)** Sixteen decisions, asked in four `AskUserQuestion` rounds from `rethink/SYNTHESIS.md`
+§1, each recorded by label and each now a row of §1-v2. **The founder chose the recommended option on all sixteen.**
+One line here with the option chosen; the row carries the reason, the mechanism, the cost stated once and the losing
+image, and **none of them is re-argued in this section or anywhere else.**
+
+| D | Row | What the founder decided |
+|---|---|---|
+| D1 | **v66** | Mission control binds **loopback**, one keychain-held token is checked on every write route, and the phone reaches it through an **authenticated tunnel** |
+| D2 | **v67** | **Both:** the launcher records each child's process group and the cord signals it; `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN |
+| D3 | **v68** | Build **`bin/egress`** — one no-model program logs every call, filters by domain and method, and injects credentials the agent never sees; `--strict-mcp-config` names only the proxy and the MCP policy file becomes its configuration |
+| D4 | **v69** | **Both now:** a hash in the log and in memory, one erasable per-subject store holding the body, and a **consent register** with one writer, read by the Sender before any contact |
+| D5 | **v70** | The **curator and the challenger both join wave one** — ten agents plus the Operator, not eight |
+| D6 | **v71** | An **onboarding pack for every agent, wave one included**. Without it the agent is declared and not routable |
+| D7 | **v72** | **All fifteen agent files carry `valid_until`**, with exactly one recorded disposition at expiry — Refresh · Merge · Retire |
+| D8 | **v73** | **Every anchor carries a mutation case** — a known-bad input it must fail — or is marked `unrated`; §21's rung-1 share splits rated and unrated |
+| D9 | **v74** | Ceilings are denominated in **window share** — tokens against an observed high-water mark — with wall clock beside it and USD kept as a shadow price; exploration routes off the Claude seat past a fraction the founder sets |
+| D10 | **v75** | The Desk ranks **lexicographically**: obligations · work that unblocks work · the founder's weight band · cheapest inside the band. `Decay` is split into its two facts and defined for a standing intent |
+| D11 | **v76** | **The last founder event** as one derived value at four call sites: release the reserve while away, execute a *which*'s stated default at expiry, build one option instead of two, and key the *since you were last here* view on the event rather than on a date |
+| D12 | **v77** | A **per-agent startup metadata budget**, enforced by a checker, plus one generated directory per namespace. The import stops when the budget binds |
+| D13 | **v78** | A **three-deep `fallback:`** per agent ending in *stop and stage*; a cross-family reroute recorded as a **rung demotion** unless rehearsed; a frozen `class: calibration` set; and one provider-outage drill |
+| D14 | **v79** | **Measure the hours off first** — done, R5 — and add the charter field **`cloud: allow \| deny`, default `deny`**, now, whichever lane wins |
+| D15 | **v80** | A message between two running agents is **a handover or an objection**, on the handover schema, one append-only file each; an ask carries a deadline and a stated fallback; the vendor transport's ids are attributes and never a join key |
+| D16 | **v81** | **`source:` and `valid_until` on every SPINE row resting on a fetched fact**, a `scout` standing intent that re-fetches them, a changed fact opening a Decide item **naming the row it invalidates** — and one **`wins_if:`** line per losing image |
+
+**(FOUNDER, DECISIONS §19 — one deletion, and it is the only thing this round removed from the plan by founder
+decision)** **v82**: §11.3's three-family review panel row is **deleted**, in the founder's words — *"Delete the row
+from the plan."* **The repository's three live `verified_by: judge` claims and the founder waiver running to
+2026-11-17 are untouched**; this deletes a sentence in the plan, not a claim in the ledger. What stands in its
+place is **v78**'s fallback chains and frozen calibration set, with the two-family route running through the
+no-model launcher, **outside any Claude session**. It carries no falsifier, because a deletion cannot have one; what
+would reopen it is a reachable non-Anthropic model, which is **R10**.
+
+**(NEW: what "the recommended option on all sixteen" does and does not tell you)** It is a fact about the round and
+not a verdict on it. Sixteen for sixteen is the shape of a synthesis whose options were **well separated** — or of
+one whose alternatives were **not written strongly enough to win**, and the two look identical from the tally alone.
+**What makes it checkable is that every rejected option was kept by name**: §J 55–71 record the losing image of each
+of these rows, and **v81 gives each one a `wins_if:` line** — the observation under which the rejected option becomes
+the better answer. A decision whose alternative is stored with the condition that would revive it is a decision that
+can be wrong out loud. That is the register §22 now carries for all seventy-two.
 
 ---
 
@@ -6710,9 +9277,35 @@ seat, the fallback is `claude-opus-5` and the pinned set still has to be correct
 
 ---
 
+**(NEW, 2026-09-06: what is still open when this section closes, and it is five things)** After the interview of
+2026-09-05 and the rethink round of 2026-09-06, **five rows of 20.1 are open and everything else is decided, an act
+at build time, or a measurement.** Naming them beats counting them:
+
+- **Row 1 — the terms.** Open **by the founder's own word**: *"still keep it open"*. OpenAI's terms returned HTTP 403
+  and are unread; Google's are unfetched. It carries **no expiry on purpose**, and row 17 is why: attaching one would
+  decide it.
+- **Row 4 — `LICENSE-CONTENT`.** One fetch at build time. It gates the bulk import and nothing else in the graph.
+- **Row 15 — which hosted lane may make.** The *measurement* is closed (R5, above) and the *decision* is not. **Do
+  not read one as the other**: what the number says is that the tail is zero over the week measured, which is an
+  argument and not a choice. The charter field `cloud: allow \| deny` is decided either way (v79).
+- **Row 16 — contrarian assumption 1.** Raised by the rethink round and settled by **R12**, the cheapest measurement
+  named anywhere in it. **This is the row with the largest blast radius on this page**, because the architecture
+  inverts if it is false, and it has been treated as settled everywhere in v2 without ever being asked.
+- **Row 17 — the metered key.** Downstream of row 1 and unanswerable before it.
+
+**(NEW: two of the five were raised by the round that was meant to close things, and that is the correct outcome)**
+Rows 16 and 17 are **assumptions this plan was already making**, promoted into rows with two sides and an owner. A
+round that only closes decisions cannot find those; **v81 is the mechanism that makes finding them routine rather
+than dependent on eight lanes being dispatched by hand.** The count going up is not the round failing. The count
+staying at fifteen while both assumptions kept being made silently is what failure would have looked like.
+
+---
+
 ## 21 · How we would know it worked
 
-*obeys: SPINE §B.2's anchor column; v6, v31 — the roster's own claim is falsifiable; §D, v14 · inherits: FINAL §20*
+*obeys: SPINE §B.2's anchor column; v6, v31 — the roster's own claim is falsifiable; §D, v14 · **and, from the
+rethink round of 2026-09-06, v73 (the rung-1 share splits), W30 (the only outside floor), O75, O26, O45, O80, and
+R11 and R12** · inherits: FINAL §20*
 
 **(FINAL)** Not a dashboard. Six numbers on the briefing, one line each, tracked over weeks. **(NEW: and v14 changes
 where they can be looked at, not what they are)** — the founder asked for a cost, tokens and efficiency page, it is
@@ -6728,7 +9321,7 @@ number that has a tap is not.
 | Number | What it means | Direction |
 |---|---|---|
 | **Interventions per finished artifact** | how often the founder had to correct or redo | ↓ — the one that matters most; the only number that directly measures walking *for* versus being carried |
-| **Rung-1 fraction** | of finished work, how much was checked by something deterministic | ↑ |
+| **Rung-1 fraction**, and **(FOUNDER, rethink 2026-09-06: v73)** it splits in two — **rated** and **unrated** | of finished work, how much was checked by something deterministic — and of that, how much was checked by an anchor that has itself been shown to fail when it should. An anchor with no mutation case is `unrated` by definition | ↑ on **rated**. **The unrated share may fall first and that is the number working, not breaking** |
 | **Acted-on rate of interruptions** | of the times it woke you, how often you did something | ↑, and above the threshold |
 | **Cost per finished intent** | measured, per venture, per window | ↓ on repeated kinds of work |
 | **Reserve hit rate** | how often the reserve was needed versus expired unused | neither extreme |
@@ -6739,10 +9332,56 @@ most expensive refusal**, never the same four weeks running · **the harness's s
 ceiling · **founder-originated work that shipped**, above a floor, which is the capture check, and if it falls it is
 the first line of the briefing · **founder-minutes per finished intent**, falling.
 
+**(FOUNDER, rethink 2026-09-06: v73 — the first number on this page that can fall for a good reason)** §11.11 lists
+fifteen anchors and **not one has ever been shown to fail when it should**. An uncalibrated anchor is a rung-4 belief
+wearing a rung-1 label — which is exactly the error §11.7 built its reconciliation to catch, one level up — and this
+repository has already shipped a change that removed a control while every test stayed green. So **every anchor
+carries a mutation case, a known-bad input it must fail, or it is marked `unrated`**, and the rung-1 share splits
+along that line. **Mechanism:** the case is written by whoever writes the anchor, as a rehearsal-case body under v18,
+so it inherits admission and forced expiry free (ABSENT — the anchor declaration; §11). **The cost, once:** one case
+per anchor. **What it does to this page:** the first reporting period after the split will show the rung-1 fraction
+**drop**, because part of what was counted was never calibrated. **That fall is the instrument being installed, not
+the system getting worse**, and a reader who does not know that will read it exactly backwards. It is also why the
+two shares are reported separately and never summed into one number.
+
 **(NEW: v22 splits one of these in two, and it is not cosmetic)** *Cost per finished intent* and *reserve hit rate*
 are now **per window and per week**, because there are two windows per seat, shared with Claude chat and Cowork. **A
 weekly exhaustion is a different event from a five-hour one** — one is a stop, the other is a pause — and a single
 reserve number would average them into something that describes neither.
+
+---
+
+### 21.1a The outside floor, and four numbers the rethink round adds
+
+**(FACT: world.md 30a — this section's only outside comparator, and it closes a gap the roster research left open)**
+TheAgentCompany, over six job functions: ***"The most competitive agent can complete 30% of tasks autonomously."***
+Every other number on this page is measured against **our own history**, which can only say whether the system is
+improving, never whether it is any good. **Thirty per cent is the one figure from outside**, and a fourteen-agent
+design has no other.
+
+**(NEW: read the 30% narrowly or it will mislead in both directions)** It is a benchmark of simulated job-function
+tasks, not of this company's ventures, so it is **not a target and not a pass mark**. What it is good for is the
+shape of the claim: a design promising that a founder is not the bottleneck is promising something **above** the
+published state of the art, and *above* has a number now. **The honest use is as a floor on the autonomous share** —
+finished intents that reached a done-test with no founder tap, over all finished intents — and the honest reading of
+falling below it is that the roster is doing something the published art already does better. **It is not comparable
+enough to route on**, and nothing routes on it.
+
+**(NEW: four numbers the rethink round adds, and three of them exist for one reason)** Three of the four exist
+because **a self-report was grading itself** — the defect this whole section is built to refuse, appearing three
+times in machinery the plan already had.
+
+| Number | What it means | Why it did not exist | Mechanism |
+|---|---|---|---|
+| **Cost per rung movement, per venture** (**O75**) | what it cost to move a piece of work from rung 4 to rung 2, or rung 2 to rung 1 — beside cost per finished intent | **the only ROI computable honestly here**: the numerator is measured by the meter and the denominator is set by the world, so neither side is an opinion. Cost per finished intent alone rewards finishing cheap work | the briefing — ABSENT (§16) |
+| **The trust score's three consumers** (**O26**) | the launcher (below the floor on a move class, that class is **unroutable** until a rehearsal passes) · the briefing · §5.6's own falsifiability claim | **today nothing reads it.** A score with no consumer is a number that cannot be wrong, and it was carrying an argument about the roster while doing nothing | `bin/run` and the briefing — ABSENT (§5) |
+| **Slice precision** (**O45**) | of what the Floor loaded into a run, how much the run actually used — **derived by the curator from the artifact and the handover, and never self-reported** | §13.5 says *"the Desk is itself measured"* and names no measurement, so **the ranker could not be wrong**. A run reporting its own context usefulness is the same shape as a builder grading its own tests | the curator's pass — ABSENT (§13) |
+| **A calibration number per agent** (**O80**) | how often an empty `uncertain:` was followed by a defect found later | `uncertain:` is written **by the run about itself** and nothing ever checks it, so **a confidently wrong run pays nothing**. This is the number that makes the field cost something | derived by the curator — ABSENT (§3) |
+
+**(NEW: what the four have in common with the six above them)** None is a dashboard number and none is informational.
+Each one either **changes a routing decision** (O26 makes a move class unroutable; O80 makes an agent's confidence
+worth reading) or **prices a decision the founder already makes** (O75, O45). A number added to this page without one
+of those two properties would be the thing §21 opens by refusing.
 
 ---
 
@@ -6808,6 +9447,32 @@ records on this branch (80 on `origin/main`), every one `verdict: PASS`, and **n
 requirement**. *The checks ran and are green* is not *the tier was satisfied*. Accepted risk, exit condition
 **2026-11-17**.
 
+**(R-12, OPEN — and it is the cheapest measurement named anywhere in the rethink round)** The first assumption in
+that list — *most valuable company work has a deterministic anchor cheaper than the work* — is **contrarian
+assumption 1** (§20.1 row 16), and the round found that **every part of this plan treats it as settled while the
+only evidence for it comes from the most anchorable venture that could have been chosen**: the harness, whose
+anchors are `npm run check` and the probe. **The question, bounded:** what fraction of the harness venture's **first
+thirty** real done-tests reach rung 1 *without inventing an anchor*? **Why it belongs on this page and not in a
+research list:** it is the falsifier for the number at the top of this section. If the fraction is low, the rung-1
+share is not a number that can be improved — it is a number that describes one kind of work — and the architecture
+inverts: the night's product becomes built options with their costs, the morning becomes an adjudication queue, the
+taste store becomes the primary asset and **the roster shrinks**. **Nothing should be built against the inverted
+architecture before it is measured, and nothing should be built as if it cannot happen.**
+
+**(R-11, OPEN — and it is blocked on four fields that are free today)** The last assumption — *a different family is
+a good enough checker* — is not merely untestable for want of a reachable model. **It is untestable for want of
+four fields**: `maker_family`, `maker_model`, `checker_family` and `checker_model` on the handover (**O7**). Twenty-five
+paired checks from our own event log would answer *does a second family reduce escaped defects on our own move
+classes, and by how much* — and the log cannot answer it, because it does not record who checked what on which
+family. **These fields cost nothing before the first run has written a row and cannot be reconstructed after**, which
+makes this the one measurement on this page that gets more expensive the longer it is deferred, and the only one
+that can be lost outright. **What it decides:** whether rung 2 outranks rung 4 on any given class — and with it,
+contrarian assumption 2, which §11 and §9 both rest on.
+
+**(NEW: the two research questions above are stated here rather than answered here)** Both are `OPEN` in SPINE §N.
+This section names them because **an assumption with a falsifier written down is a claim, and one without is a
+premise** — and §21's whole job is the difference.
+
 **(NEW: the one number that would settle the biggest open question, and nothing else will)** FINAL §19.12's overnight
 premise is still unmeasured — **one week overnight against one week bounded, on the same venture, judged by rung
 movement per window spent and the reconciliation line.** Every other number on this page can improve while that one
@@ -6823,12 +9488,26 @@ stays unknown, and it is the number that decides whether this system runs at nig
 its own last column. **Nothing from that column is repeated here word for word**, because two copies of one sentence
 in one document disagree the first time somebody edits one of them. What this section adds is the thing a column
 cannot hold: the **collection**, in one place, so that arguing for any of these later costs one lookup instead of
-twenty-four.
+~~twenty-four~~ **seventy-two** (moved 2026-09-06: SPINE §J is seventy-two entries).
 
 **(NEW: why a losing image is kept at all)** A decision recorded without its alternative reads as the only thing
 anybody thought of. Each entry below was a real design that a real reader preferred, and five of them were this
 system's own position until the founder overruled it on 2026-09-05. **Reopening one is a founder act, by name and by
 number.**
+
+**(FOUNDER, rethink 2026-09-06: D16 · v81 — the format changed, and this section is where the change was paid for)**
+Every entry now carries a **`wins_if:`** line: *the observation that would make the losing image the better answer.*
+**The distinction it draws is the whole point** — an entry with no `wins_if:` is a graveyard plot, and an entry with
+one is a live alternative waiting for a fact. Entries 55–72 arrived with theirs already written (§22.2a); **the
+fifty-four above were written here, in this section, by the people who wrote the reasons**, and SPINE §J left them
+deliberately blank so that they would be. Each is derived from that entry's own *Beaten by* column — which means a
+`wins_if:` is not a new argument, it is the existing reason **read backwards**, and where the reason was a
+measurement the `wins_if:` names the measurement moving.
+
+**(NEW: the register has its own falsifier, and v81 states it)** If a year passes in which **no** entry's `wins_if:`
+ever matches while external facts demonstrably do move, then these are decoration and every one of them should be
+argued down and deleted rather than stored. That is entry 70's own line, and it is the reason this section can be
+wrong rather than merely long.
 
 ---
 
@@ -6837,13 +9516,13 @@ number.**
 **(FOUNDER, 2026-09-05)** These are not research findings. The founder read the plan and decided against it, the cost
 was stated once, and the chosen thing is then built properly. They are never re-litigated.
 
-| # | The losing image | Beaten by | The founder's words |
-|---|---|---|---|
-| 1 | **Three shapes — maker · scout · checker — with loadouts assembled per run, and no file per role** | v1, over FINAL row 6 | *"I want us to recreate the whole startup company … between ten and fifteen agents"* |
-| 2 | **Labels, not names; no registry of personalities; a run labelled only by what it makes and which window it burns** | v2, over FINAL row 8 | the same instruction, and **every shipped roster fetched agrees with it**: MetaGPT, ChatDev, Magentic-One, CrewAI, the OpenAI SDK, wshobson and VoltAgent all ship named persistent roles; zero of seven ship unnamed-shape-plus-loadout |
-| 3 | **`keel/holding/skills/` — the 134 moved whole into a directory read by nothing** | v3, over FINAL row 10 | *"take all the skills that the biggest systems use … we need a skill creator of skill"* |
-| 4 | **Five Balcony views over one state, and a room that is a display and never a control** | v4, over FINAL row 15 | *"the mission control surface. I want to add it, bring it back"*, and *"when I click on it, the terminal which runs the agent on my Mac is popping up"* |
-| 5 | **Codex admitted only after a headless rehearsal passes; Gemini proving the second-family route first** | v5, over FINAL row 30 | *"I run from day one of the system to include codex and Claude code"* |
+| # | The losing image | Beaten by | The founder's words | **`wins_if:`** — the observation that would make it the better answer (NEW: v81) |
+|---|---|---|---|---|
+| 1 | **Three shapes — maker · scout · checker — with loadouts assembled per run, and no file per role** | v1, over FINAL row 6 | *"I want us to recreate the whole startup company … between ten and fifteen agents"* | `wins_if:` a working month whose routing counts show work reaching only five or six of the fifteen files — the roster is then a catalogue you pick from, which is exactly what three shapes with loadouts describe honestly. **v31's own falsifier, §21.2** |
+| 2 | **Labels, not names; no registry of personalities; a run labelled only by what it makes and which window it burns** | v2, over FINAL row 8 | the same instruction, and **every shipped roster fetched agrees with it**: MetaGPT, ChatDev, Magentic-One, CrewAI, the OpenAI SDK, wshobson and VoltAgent all ship named persistent roles; zero of seven ship unnamed-shape-plus-loadout | `wins_if:` two files with the same grant and the same anchor produce work no checker can tell apart — the name was carrying nothing the argv and the anchor did not already carry |
+| 3 | **`keel/holding/skills/` — the 134 moved whole into a directory read by nothing** | v3, over FINAL row 10 | *"take all the skills that the biggest systems use … we need a skill creator of skill"* | `wins_if:` one full admission cycle in which the eval retires more of the 134 than it admits **and** **R8** shows the metadata tax scales with the installed library — holding them unread would then have cost nothing and admitting them taxes every unrelated run |
+| 4 | **Five Balcony views over one state, and a room that is a display and never a control** | v4, over FINAL row 15 | *"the mission control surface. I want to add it, bring it back"*, and *"when I click on it, the terminal which runs the agent on my Mac is popping up"* | `wins_if:` a quarter in which every visit to pages 1 and 2 ends in reading and no tap is ever used to act — the surface was a display all along, and two renderers over one state were paid for nothing |
+| 5 | **Codex admitted only after a headless rehearsal passes; Gemini proving the second-family route first** | v5, over FINAL row 30 | *"I run from day one of the system to include codex and Claude code"* | `wins_if:` **R10** fails on a current Codex with a non-trivial prompt — day one then bought a foreground slot that the rehearsal would have identified for free, before it was in the loadout |
 
 ---
 
@@ -6855,57 +9534,111 @@ source. **Numbers 6–30 are §J's own, unchanged.** **Numbers 31–42 are the r
 and **25–30 fell to a rule that was already on the page** — the trifecta split, FINAL §6.1, the values the existing
 engine files already carry. The second kind costs nothing to decide and is the cheaper half of any design.
 
-| # | The losing image | Beaten by | The fact that moved it |
-|---|---|---|---|
-| 6 | **One artifact designed and built by one agent** | v7 | two agents acting on assumptions *"not prescribed upfront"* is the named failure; making the contract an artifact with a done-test is what prescribes them |
-| 7 | **The builder's own tests as the only anchor** | v8 | a test written by the author of the code is a machine grading its own homework. Devin's own guidance — *"Tell Devin to test its own work before opening a PR"* — is the **self-check**, and it is a different test from the anchor |
-| 8 | **A fully autonomous run that pauses to ask** | v9 | *"`AskUserQuestion` … are denied even if you've allowed them"* under `dontAsk`. The mode **cannot ask**, so staged-not-sent is load-bearing rather than stylistic |
-| 9 | **A managed settings file that locks hooks** | v11 | `/goal` is a session-scoped prompt-based Stop hook and is unavailable under `disableAllHooks` or `allowManagedHooksOnly`. Locking hooks would kill the goal loop the founder asked for |
-| 10 | **`/loop` as the always-on tier** | v12 | it is session-scoped, expires in 7 days, and fires *"only while Claude Code is running and idle"*. The Watch is the loop |
-| 11 | **One dispatch mechanism for everything** | v13 | three ship and each documents a different job: agent teams (a lead plus named teammates, each a full session, with tmux pane ids on disk), subagents (depth 3, 20 concurrent), and `claude -p` children, which **never form a team** |
-| 12 | **"Nothing is only informational" read as refusing a dashboard** | v14 | the collision was two stated positions, not a resolved question. Both are kept: the dashboard is admitted and every number names the tap that acts on it |
-| 13 | **n8n and Flowise as canvas substrates** | v15 | n8n's LICENSE.md, read raw: *"only for your own internal business purposes or for non-commercial"*. Flowise is **archived** with licence NOASSERTION |
-| 14 | **vibe-kanban as the board reference** | v16 | its own README now reads *"Vibe Kanban is sunsetting"*. OpenAI Symphony (Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], last push 2026-08-19) replaces it. **FINAL reached the right conclusion on a weaker reason** |
-| 15 | **Importing 2,111+ skills on the strength of an MIT badge** | v17 | the MIT file covers the code; a **separate `LICENSE-CONTENT` exists and was not fetched**, and it may carry different terms for skill content |
-| 16 | **The SKILL.md spec's recommended step-by-step body** | v18 | the published spec recommends *"Step-by-step instructions"* and this system refuses procedure, so the two describe *"different artifacts wearing the same filename"*. The container is the standard; the content rule is ours |
-| 17 | **"Ninety days uncalled and it leaves"** | v19 | *"Nobody found retires a skill by non-use."* The nearest shipped thing is dead-link and drift detection. Retirement is by forced expiry instead, on a mechanism this repo already runs |
-| 18 | **A Haiku executor tier** | v20 | Haiku 4.5's retirement is committed *"Not sooner than October 15, 2026"* — six weeks out and the nearest retirement date of any model named here. The genuinely cheap work goes to local models on electricity |
-| 19 | **Fable as anyone's default; wshobson's tier 0 adopted as-is** | v21 | it is an escalation with one named trigger. Its **availability on a subscription seat is UNVERIFIED**, and the SWE-bench Pro ranking behind the tier-0 idea is third-party, confidence L, and is not used to route |
-| 20 | **One rolling five-hour window as the whole physical fact** | v22 | there is a **weekly** window too, per seat, shared with Claude chat and Cowork — and a seat limit cannot be escaped with `/model` while a model-family limit can |
-| 21 | **`--max-budget-usd` as a spend control** | v23 | print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers. Kept as a **stall fuse**, which it is good at |
-| 22 | **FINAL §10.1's Letta attribution** | v25 | the current vendor page for that feature no longer supports the sentence. The **principle** stands — the thing that acts never edits memory — with its one shipped counter-example named rather than hidden: Claude Code's own auto memory is written by the acting agent, in-session |
-| 23 | **A plan-critique pass the same run performs on itself** | v30 | *"at times, their performance even degrades after self-correction"* (arXiv 2310.01798). Reflexion's 91% is not a counterexample: its feedback is external. That is why `challenger` is an agent |
-| 24 | **`script -qfc` wrapped around every Codex child** | v32 | the cure is *"incompatible with normal background / parallel job execution"*, which is what a crew is. Codex runs in the foreground slot instead, and the headless rehearsal is what widens it |
-| 25 | **A steward that reads mail with a pen in its hand** | v36 | **a standing rule reaching a collision, not a new fact.** §F held the tainted read at scout only while §B.2 row 12 granted steward the same reads, and steward carries `Write`. The trifecta split decided it: a tainted read is held by `scout` and by the **world's door**, a program with no model, and by nothing else. Steward writes obligations from the handover and the door's rows |
-| 26 | **A brief that names no agent and lets the launcher guess; `agent+window+model:` as one widened field** | v37 | fourteen named agents make *which agent* a fact the brief must carry. **Ten fields: FINAL's nine plus `agent:`**, the roster name the launcher composes argv for — chosen because it leaves FINAL's nine untouched. **Mechanism:** `bin/run` refuses a brief whose `agent:` is not a roster file (ABSENT). The field itself is carried in §6, not here |
-| 27 | **A read-back page as an eighth page; a briefing nobody can reach from mission control** | v38 | both were **already** published pages, and the founder's pages absorb rather than delete them (v4). The read-back is the intent-creation form on page 4's *new card* and page 7's *add session*; the briefing is page 5's top strip. Both stay phone pages, and neither becomes an eighth page |
-| 28 | **The website hosted as a published artifact; a cloud host reaching into the Mac** | v39 | a terminal pop needs `tmux` on the same machine, and a hosted page cannot reach it. `mission-control/` serves the seven pages on the Mac; the phone keeps the published pages for reading and deciding, and they cannot pop a terminal. **The cost, once:** two renderers over one state, which FINAL §13.1 refused |
-| 29 | **One `maxTurns` for every agent; no cap** | v40 | the seven existing engine files already use exactly two values — **30 producing, 25 read-only** — `maxTurns` binds when an `agentType` is named, and the lint ceiling is 120. A default that copies the measured seeds is a starting point, not a design, and measurement tunes it per agent afterwards |
-| 30 | **A worktree for every agent; no isolation for the four that edit source** | v41 | a worktree is for a run that writes the venture's own files; a store write is narrowed by argv instead (v34). **The cost, once:** creating a worktree still needs the sandbox escalated for that one command, and only four agents ever meet it |
-| 31 | **`keel/agents/<name>.md`, the fifteen files beside their argv** | v42 | Claude Code reads `.claude/agents/` and the `PS-*` lint globs it, so fifteen files under a second path would be loaded by nothing (challenge A P1-1) |
-| 32 | **"the grant is the argv", said of a teammate** | v43 | a teammate and a subagent are spawned in-process and have no argv at all; four narrowings were claimed on mechanisms that cannot carry them (P1-2) |
-| 33 | **`steward` writing the obligations store directly** | v44 | the store table gives the file one writer, the Watch. Two writers under a heading that reads *one writer each* is the defect the store check exists to refuse (P1-3) |
-| 34 | **ten brief fields, with the anchor implied** | v45 | §11.11 keys a refusal on the eleventh field, so a launcher built to a ten-field brief refuses nothing and one built to eleven refuses every brief §6.2 describes (P1-4) |
-| 35 | **an Operator dispatched as a subagent; or an Operator with no file** | v46 | a dispatched agent file cannot form the agent team page 2 draws, and a bare main session is not the object §17.1 inventories with a model and a tools line (P1-5) |
-| 36 | **an `analyst` that does the arithmetic** | v47 | the reconciliation is the anchor that makes every other number rung 1; a model in that loop makes the company's own numbers rung 4 (P2-12) |
-| 37 | **skill directories under `ventures/<name>/`** | v48 | the file tree put the generated directories inside a venture while §7.1 put them at the repository root, which leaves the house's own fifteen agents with no skills directory (P2-13) |
-| 38 | **a skill creator that is a program dispatching four agents** | v49 | §0.3 admits one dispatcher. A second one is a second place a grant is composed, which is the failure v34 exists to prevent (P2-14) |
-| 39 | **ABSENT and WISH as interchangeable marks** | v50 | the two marks decide how much of the plan reads as enforced, and six sections used them for one state — designed-but-unbuilt against no-mechanism-proposed (P2-19) |
-| 40 | **one admitted step list, with the curator's five questions smuggled in** | v51 | 0 of 121 free reflections named the cause: evidence for admitting a second list by name, not for declining to call it one (P2-20) |
-| 41 | **a card with no writer** | v52 | a card exists before anyone drags it, and `keel/bin/run` writes only what happens after the drag (P2-21) |
-| 42 | **seven pages as a ceiling** | v53 | the founder asked for *"a lot more cool and important things"*, and the plan built a door for tools and none for surfaces. An eighth page enters through the §9.3 door or not at all (opinion O-1) |
-| 43 | **fifteen agent files on day one** | v54 | the founder, asked how many to write first: *"Start with the eight that have seeds or code paths"*. The other seven stay in the roster and in the inventory; what moved is the order, not the membership |
-| 44 | **a per-agent cron field; a schedules page; a second scheduler beside the Watch** | v55 | the founder chose *"Standing intents with a cadence or trigger, run by the Watch"*. A cron inside an agent file puts the decision to run work inside the thing that does the work, where nothing ranks it against an obligation or the reserve |
-| 45 | **the Mac as the only runtime; Routines refused wholesale; Codex cloud as a full night maker on issue-only evidence** | v56 | the founder: *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* → a cloud lane, researched from `research/cloud.md`: Codex cloud is admitted as a PR reviewer today; as a night **maker** it is UNVERIFIED, with no vendor page printing a non-interactive command or an endpoint. FINAL's *"everything runs on the Mac"* gets one stated exception, not a general one |
-| 46 | **Fable as an escalation only** — v21, which was itself a losing image's winner | v57 | the founder: *"Fable as builder's and architect's default."* What v21 got right is kept as the reason: cache reads at 0.025x are what make a large standing context cheap to re-read. What it got wrong was making that a trigger nobody could observe cheaply |
-| 47 | **Haiku left as the vendor's small fast model until it retires** | v58 | the founder: *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now."* Haiku 4.5 retires *"not sooner than October 15, 2026"* and is the only Haiku in the published table, so waiting buys a migration on a date somebody else picked |
-| 48 | **Sonnet teammates** — the vendor's own advice, followed | v59 | the founder: *"Turn it on, no model constraint."* A teammate is a full session running one of the fifteen files, so it runs at that file's model; the 7x plan-mode token multiplier now lands at each teammate's own price, stated once in §9.2 |
-| 49 | **a card that always launches a team; a card that always launches one agent** | v60 | the founder: *"Both: the card carries a 'solo or team' toggle."* Neither fixed answer survives, because the founder's drag is what decides the shape and the default comes from the intent's kind |
-| 50 | **page 6 beside page 2; a 2D graph first** | v61 | the founder: *"Build it, but last in the page order."* It is the only page whose substrate has no verified prior art, so it waits for the six that do and for one research lane |
-| 51 | **Generative Agents `demo` mode as rank 1; Star-Office-UI; an LLM-driven office simulation** | v62 | the founder named three candidates nobody had read — *"use pixel-agents code or Star-Office-UI or AgentOffice"*. Researched from `research/room.md`: pixel-agents (MIT, alive, reads Claude Code) is admitted through the tool door; Star-Office-UI's art assets are *"禁止商用"* and it has no terminal; "AgentOffice" resolves to eleven repositories and its likeliest match needs an LLM to render, reading no agent runtime. The two Apache/MIT fallbacks keep their licences already read |
-| 52 | **no default disclosure; the entity deferred whole** | v63 | the founder: *"Disclose by default; entity per venture decided at intake."* A disclosure default that is off is a decision nobody revisits, and an entity question deferred whole is one that arrives with the first contract |
-| 53 | **adopting an existing project as the first venture** | v64 | the founder: *"The harness itself."* Its anchors already exist — `npm run check` and the probe — which is the property no adopted project has on day one. The standing cost is that the machine tests itself again |
-| 54 | **a named accountant or lawyer as a wake-me target** | v65 | the founder: *"Me only, for now."* Statutory clocks wake the founder; the row reopens when a venture has a legal entity, which v63 makes a charter field |
+| # | The losing image | Beaten by | The fact that moved it | **`wins_if:`** — the observation that would make it the better answer (NEW: v81) |
+|---|---|---|---|---|
+| 6 | **One artifact designed and built by one agent** | v7 | two agents acting on assumptions *"not prescribed upfront"* is the named failure; making the contract an artifact with a done-test is what prescribes them | `wins_if:` objections against contracts fall to zero over a quarter while builders still work around the contract — the seam then costs a handover and prevents nothing |
+| 7 | **The builder's own tests as the only anchor** | v8 | a test written by the author of the code is a machine grading its own homework. Devin's own guidance — *"Tell Devin to test its own work before opening a PR"* — is the **self-check**, and it is a different test from the anchor | `wins_if:` the blind tester's anchor is no better than the builder's own self-check on matched artifacts — **v8's own falsifier, §21.2**; the second agent is then not paying |
+| 8 | **A fully autonomous run that pauses to ask** | v9 | *"`AskUserQuestion` … are denied even if you've allowed them"* under `dontAsk`. The mode **cannot ask**, so staged-not-sent is load-bearing rather than stylistic | `wins_if:` the runtime ever lets a denied `AskUserQuestion` resolve from a **file** rather than a person — the mode's refusal is then a routing choice and not a physical fact, and staging stops being load-bearing |
+| 9 | **A managed settings file that locks hooks** | v11 | `/goal` is a session-scoped prompt-based Stop hook and is unavailable under `disableAllHooks` or `allowManagedHooksOnly`. Locking hooks would kill the goal loop the founder asked for | `wins_if:` `/goal` is retired, or is reimplemented as anything other than a session-scoped Stop hook — the trade v11 pays for vanishes and locking hooks costs nothing |
+| 10 | **`/loop` as the always-on tier** | v12 | it is session-scoped, expires in 7 days, and fires *"only while Claude Code is running and idle"*. The Watch is the loop | `wins_if:` `/loop`'s self-paced dynamic mode (world.md 15) gains a headless carrier and survives the session that started it — the Watch would then be duplicating a shipped loop |
+| 11 | **One dispatch mechanism for everything** | v13 | three ship and each documents a different job: agent teams (a lead plus named teammates, each a full session, with tmux pane ids on disk), subagents (depth 3, 20 concurrent), and `claude -p` children, which **never form a team** | `wins_if:` two of the three mechanisms are chosen by no brief over a quarter — the fleet runs on one, and the other two are configuration nobody exercises |
+| 12 | **"Nothing is only informational" read as refusing a dashboard** | v14 | the collision was two stated positions, not a resolved question. Both are kept: the dashboard is admitted and every number names the tap that acts on it | `wins_if:` a quarter in which page 3's numbers are read daily and its taps are never used — *informational* was the honest description and the tap rule was ceremony |
+| 13 | **n8n and Flowise as canvas substrates** | v15 | n8n's LICENSE.md, read raw: *"only for your own internal business purposes or for non-commercial"*. Flowise is **archived** with licence NOASSERTION | `wins_if:` n8n relicenses, or the vendor confirms an internal-use reading of its own LICENSE.md in writing — the refusal was licence-shaped and the licence moved |
+| 14 | **vibe-kanban as the board reference** | v16 | its own README now reads *"Vibe Kanban is sunsetting"*. OpenAI Symphony (Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], last push 2026-08-19) replaces it. **FINAL reached the right conclusion on a weaker reason** | `wins_if:` Symphony is archived or sunset while a vibe-kanban fork stays alive — *sunsetting* was the wrong signal to read |
+| 15 | **Importing 2,111+ skills on the strength of an MIT badge** | v17 | the MIT file covers the code; a **separate `LICENSE-CONTENT` exists and was not fetched**, and it may carry different terms for skill content | `wins_if:` **R13** shows `LICENSE-CONTENT`, read raw, permits **derivative** bodies **and** v77's budget holds — the caution then cost exactly one fetch |
+| 16 | **The SKILL.md spec's recommended step-by-step body** | v18 | the published spec recommends *"Step-by-step instructions"* and this system refuses procedure, so the two describe *"different artifacts wearing the same filename"*. The container is the standard; the content rule is ours | `wins_if:` procedure bodies beat the four admissible body classes on the same known-answer cases through §E.2's runner — the spec's recommendation was right and ours is taste |
+| 17 | **"Ninety days uncalled and it leaves"** | v19 | *"Nobody found retires a skill by non-use."* The nearest shipped thing is dead-link and drift detection. Retirement is by forced expiry instead, on a mechanism this repo already runs | `wins_if:` **O41**'s activation log shows a clean split — skills either fire often or never — so non-use discriminates as well as a date does and needs no founder disposition |
+| 18 | **A Haiku executor tier** | v20 | Haiku 4.5's retirement is committed *"Not sooner than October 15, 2026"* — six weeks out and the nearest retirement date of any model named here. The genuinely cheap work goes to local models on electricity | `wins_if:` the vendor ships a Haiku after 4.5 with a published horizon longer than the work it would do — the tier's only defect was a retirement date |
+| 19 | **Fable as anyone's default; wshobson's tier 0 adopted as-is** | v21 | it is an escalation with one named trigger. Its **availability on a subscription seat is UNVERIFIED**, and the SWE-bench Pro ranking behind the tier-0 idea is third-party, confidence L, and is not used to route | `wins_if:` Fable 5.1 proves unreachable on the subscription seat, **or** **R7** shows the cache-read share does not survive contact with real dispatch shapes — escalation-only was then the right rule |
+| 20 | **One rolling five-hour window as the whole physical fact** | v22 | there is a **weekly** window too, per seat, shared with Claude chat and Cowork — and a seat limit cannot be escaped with `/model` while a model-family limit can | `wins_if:` a quarter of real use in which the weekly window is never the binding constraint — the second window is real and irrelevant, and one fuse was the whole physical fact worth modelling |
+| 21 | **`--max-budget-usd` as a spend control** | v23 | print mode only, computed locally at list price, and *"the session cost figure isn't relevant for billing purposes"* for subscribers. Kept as a **stall fuse**, which it is good at | `wins_if:` the vendor makes the printed figure billing-relevant for subscribers — the sentence that demoted it to a stall fuse is retracted by its own author |
+| 22 | **FINAL §10.1's Letta attribution** | v25 | the current vendor page for that feature no longer supports the sentence. The **principle** stands — the thing that acts never edits memory — with its one shipped counter-example named rather than hidden: Claude Code's own auto memory is written by the acting agent, in-session | `wins_if:` the vendor restores the claim on a live page — the attribution was right and the page moved under it |
+| 23 | **A plan-critique pass the same run performs on itself** | v30 | *"at times, their performance even degrades after self-correction"* (arXiv 2310.01798). Reflexion's 91% is not a counterexample: its feedback is external. That is why `challenger` is an agent | `wins_if:` the challenger's findings are no better than a matched same-run self-critique on the same artifacts — **v30's own falsifier, §21.2** |
+| 24 | **`script -qfc` wrapped around every Codex child** | v32 | the cure is *"incompatible with normal background / parallel job execution"*, which is what a crew is. Codex runs in the foreground slot instead, and the headless rehearsal is what widens it | `wins_if:` **R10** fails **and** one foreground Codex slot turns out to be all this company ever uses — the wrapper is then free, because there is no parallel job for it to be incompatible with |
+| 25 | **A steward that reads mail with a pen in its hand** | v36 | **a standing rule reaching a collision, not a new fact.** §F held the tainted read at scout only while §B.2 row 12 granted steward the same reads, and steward carries `Write`. The trifecta split decided it: a tainted read is held by `scout` and by the **world's door**, a program with no model, and by nothing else. Steward writes obligations from the handover and the door's rows | `wins_if:` steward's obligations are routinely wrong in ways the handover loses but the raw mail would have carried — reading raw was worth the trifecta risk, and the correction count is where it shows |
+| 26 | **A brief that names no agent and lets the launcher guess; `agent+window+model:` as one widened field** | v37 | fourteen named agents make *which agent* a fact the brief must carry. **Ten fields: FINAL's nine plus `agent:`**, the roster name the launcher composes argv for — chosen because it leaves FINAL's nine untouched. **Mechanism:** `bin/run` refuses a brief whose `agent:` is not a roster file (ABSENT). The field itself is carried in §6, not here | `wins_if:` **O5**'s routing table becomes good enough that the launcher's own choice beats the Operator's on the routing rehearsal cases — `agent:` is then a hand-written override of a better answer |
+| 27 | **A read-back page as an eighth page; a briefing nobody can reach from mission control** | v38 | both were **already** published pages, and the founder's pages absorb rather than delete them (v4). The read-back is the intent-creation form on page 4's *new card* and page 7's *add session*; the briefing is page 5's top strip. Both stay phone pages, and neither becomes an eighth page | `wins_if:` page 4's *new card* and page 7's *add session* diverge enough that one read-back has to be maintained twice — an eighth page would have been cheaper than two copies |
+| 28 | **The website hosted as a published artifact; a cloud host reaching into the Mac** | v39 | a terminal pop needs `tmux` on the same machine, and a hosted page cannot reach it. `mission-control/` serves the seven pages on the Mac; the phone keeps the published pages for reading and deciding, and they cannot pop a terminal. **The cost, once:** two renderers over one state, which FINAL §13.1 refused | `wins_if:` a hosted page gains a documented way to reach `tmux` on the Mac — the terminal pop stops requiring the same machine and one renderer replaces two |
+| 29 | **One `maxTurns` for every agent; no cap** | v40 | the seven existing engine files already use exactly two values — **30 producing, 25 read-only** — `maxTurns` binds when an `agentType` is named, and the lint ceiling is 120. A default that copies the measured seeds is a starting point, not a design, and measurement tunes it per agent afterwards | `wins_if:` a year of measurement moves no agent's `maxTurns` off the two seeded values — per-agent tuning bought nothing over one number and a ceiling |
+| 30 | **A worktree for every agent; no isolation for the four that edit source** | v41 | a worktree is for a run that writes the venture's own files; a store write is narrowed by argv instead (v34). **The cost, once:** creating a worktree still needs the sandbox escalated for that one command, and only four agents ever meet it | `wins_if:` **R1** shows `filesystem.allowWrite` is settable per `claude -p` invocation — isolation becomes **enforced** rather than declared, and a worktree everywhere is then cheap and uniform |
+| 31 | **`keel/agents/<name>.md`, the fifteen files beside their argv** | v42 | Claude Code reads `.claude/agents/` and the `PS-*` lint globs it, so fifteen files under a second path would be loaded by nothing (challenge A P1-1) | `wins_if:` a vendor change lets the agent directory be named in configuration instead of fixed at `.claude/agents/` — the second path stops being a directory loaded by nothing |
+| 32 | **"the grant is the argv", said of a teammate** | v43 | a teammate and a subagent are spawned in-process and have no argv at all; four narrowings were claimed on mechanisms that cannot carry them (P1-2) | `wins_if:` **W8**'s `permissions.blockReadsOutsideWorkingDirectories`, or a successor, narrows a teammate as tightly as argv narrows a `-p` child — the sentence becomes true of all three mechanisms at once |
+| 33 | **`steward` writing the obligations store directly** | v44 | the store table gives the file one writer, the Watch. Two writers under a heading that reads *one writer each* is the defect the store check exists to refuse (P1-3) | `wins_if:` an inbound obligation waits long enough for the Watch to materialise it that a statutory clock is missed — one writer then cost a deadline, which is the one price this rule cannot pay |
+| 34 | **ten brief fields, with the anchor implied** | v45 | §11.11 keys a refusal on the eleventh field, so a launcher built to a ten-field brief refuses nothing and one built to eleven refuses every brief §6.2 describes (P1-4) | `wins_if:` **O21** composes `/goal`'s condition from the done-test well enough that the anchor is derivable — the eleventh field is then computed rather than carried |
+| 35 | **an Operator dispatched as a subagent; or an Operator with no file** | v46 | a dispatched agent file cannot form the agent team page 2 draws, and a bare main session is not the object §17.1 inventories with a model and a tools line (P1-5) | `wins_if:` agent teams are promoted out of experimental **with nested teams supported** — a dispatched Operator can then form the team page 2 draws, and the file need not be the main session |
+| 36 | **an `analyst` that does the arithmetic** | v47 | the reconciliation is the anchor that makes every other number rung 1; a model in that loop makes the company's own numbers rung 4 (P2-12) | `wins_if:` `bin/reconcile` proves unable to express comparisons the founder actually asks for, often — a model in that loop is then the only way to answer them, and the rung cost is paid deliberately |
+| 37 | **skill directories under `ventures/<name>/`** | v48 | the file tree put the generated directories inside a venture while §7.1 put them at the repository root, which leaves the house's own fifteen agents with no skills directory (P2-13) | `wins_if:` two ventures need genuinely different bodies for the same namespace — house-scope generation has to fork anyway, and per-venture directories were the honest shape |
+| 38 | **a skill creator that is a program dispatching four agents** | v49 | §0.3 admits one dispatcher. A second one is a second place a grant is composed, which is the failure v34 exists to prevent (P2-14) | `wins_if:` the single dispatcher becomes a measured bottleneck on the Desk — a second composer is then worth the grant risk it carries |
+| 39 | **ABSENT and WISH as interchangeable marks** | v50 | the two marks decide how much of the plan reads as enforced, and six sections used them for one state — designed-but-unbuilt against no-mechanism-proposed (P2-19) | `wins_if:` a year in which no path marked ABSENT ever becomes a build node and no WISH ever acquires a mechanism — the two marks then described nothing that behaved differently |
+| 40 | **one admitted step list, with the curator's five questions smuggled in** | v51 | 0 of 121 free reflections named the cause: evidence for admitting a second list by name, not for declining to call it one (P2-20) | `wins_if:` a quarter in which no run ever loads both lists — one list was enough, and naming two was ceremony with a second expiry attached |
+| 41 | **a card with no writer** | v52 | a card exists before anyone drags it, and `keel/bin/run` writes only what happens after the drag (P2-21) | `wins_if:` every card in a quarter originates from a drag and none from intake or from **O60**'s bug intake — the card store then has one writer after all, and it is `bin/run` |
+| 42 | **seven pages as a ceiling** | v53 | the founder asked for *"a lot more cool and important things"*, and the plan built a door for tools and none for surfaces. An eighth page enters through the §9.3 door or not at all (opinion O-1) | `wins_if:` the surface door admits an eighth page and it goes unused — a ceiling was a better default than a door, and the door cost a review |
+| 43 | **fifteen agent files on day one** | v54 | the founder, asked how many to write first: *"Start with the eight that have seeds or code paths"*. The other seven stay in the roster and in the inventory; what moved is the order, not the membership | `wins_if:` the harness venture needs a wave-two agent inside its first thirty intents — the split delayed work rather than deferring it, which is the one thing two waves must not do |
+| 44 | **a per-agent cron field; a schedules page; a second scheduler beside the Watch** | v55 | the founder chose *"Standing intents with a cadence or trigger, run by the Watch"*. A cron inside an agent file puts the decision to run work inside the thing that does the work, where nothing ranks it against an obligation or the reserve | `wins_if:` standing intents are so rarely ranked against anything else that the Desk's order never changes their dispatch — cron would have produced the same behaviour for less |
+| 45 | **the Mac as the only runtime; Routines refused wholesale; Codex cloud as a full night maker on issue-only evidence** | v56 | the founder: *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* → a cloud lane, researched from `research/cloud.md`: Codex cloud is admitted as a PR reviewer today; as a night **maker** it is UNVERIFIED, with no vendor page printing a non-interactive command or an endpoint. FINAL's *"everything runs on the Mac"* gets one stated exception, not a general one | `wins_if:` a longer `pmset -g log` span finds a real tail — whole days off rather than twenty-minute naps — **or** Codex documents a cloud driver with a cancel path, which also clears v67's refusal. **R5 already measured zero over 156 h**, so this entry starts with a number against it |
+| 46 | **Fable as an escalation only** — v21, which was itself a losing image's winner | v57 | the founder: *"Fable as builder's and architect's default."* What v21 got right is kept as the reason: cache reads at 0.025x are what make a large standing context cheap to re-read. What it got wrong was making that a trigger nobody could observe cheaply | `wins_if:` Fable 5.1 is unreachable on the seat, **or** **R7** shows the 0.025x cache read does not survive real dispatch shapes — v21's escalation-only rule was then right and its only fault was an unobservable trigger |
+| 47 | **Haiku left as the vendor's small fast model until it retires** | v58 | the founder: *"Set ANTHROPIC_DEFAULT_HAIKU_MODEL to Sonnet 5 now."* Haiku 4.5 retires *"not sooner than October 15, 2026"* and is the only Haiku in the published table, so waiting buys a migration on a date somebody else picked | `wins_if:` Haiku 4.5's retirement slips a year **and** Sonnet 5 costs measurably more on the classification and `/goal` evaluation it replaced it on |
+| 48 | **Sonnet teammates** — the vendor's own advice, followed | v59 | the founder: *"Turn it on, no model constraint."* A teammate is a full session running one of the fifteen files, so it runs at that file's model; the 7x plan-mode token multiplier now lands at each teammate's own price, stated once in §9.2 | `wins_if:` the 7x plan-mode multiplier at each teammate's own model exhausts a weekly window a Sonnet-only team would not have — the vendor's advice was about the bill, and the bill is the seat |
+| 49 | **a card that always launches a team; a card that always launches one agent** | v60 | the founder: *"Both: the card carries a 'solo or team' toggle."* Neither fixed answer survives, because the founder's drag is what decides the shape and the default comes from the intent's kind | `wins_if:` the toggle is set to the same value on essentially every card for a quarter — the default *was* the decision, and the toggle was a question nobody wanted asked |
+| 50 | **page 6 beside page 2; a 2D graph first** | v61 | the founder: *"Build it, but last in the page order."* It is the only page whose substrate has no verified prior art, so it waits for the six that do and for one research lane | `wins_if:` `GRAPHLANE` finds a maintained repository-to-graph extractor with real prior art — the page's only reason for being last disappears with it |
+| 51 | **Generative Agents `demo` mode as rank 1; Star-Office-UI; an LLM-driven office simulation** | v62 | the founder named three candidates nobody had read — *"use pixel-agents code or Star-Office-UI or AgentOffice"*. Researched from `research/room.md`: pixel-agents (MIT, alive, reads Claude Code) is admitted through the tool door; Star-Office-UI's art assets are *"禁止商用"* and it has no terminal; "AgentOffice" resolves to eleven repositories and its likeliest match needs an LLM to render, reading no agent runtime. The two Apache/MIT fallbacks keep their licences already read | `wins_if:` pixel-agents is archived, **or** **R24** shows its `AgentEvent` model cannot be written from our event log — the cold Apache-2.0 display is then the one that still renders |
+| 52 | **no default disclosure; the entity deferred whole** | v63 | the founder: *"Disclose by default; entity per venture decided at intake."* A disclosure default that is off is a decision nobody revisits, and an entity question deferred whole is one that arrives with the first contract | `wins_if:` a jurisdiction a venture operates in makes disclosure a liability rather than a protection — the default inverts by law rather than by taste |
+| 53 | **adopting an existing project as the first venture** | v64 | the founder: *"The harness itself."* Its anchors already exist — `npm run check` and the probe — which is the property no adopted project has on day one. The standing cost is that the machine tests itself again | `wins_if:` **R12** returns a low fraction — the harness's anchors were unrepresentative of company work, and an adopted project would have tested the architecture where it actually has to hold |
+| 54 | **a named accountant or lawyer as a wake-me target** | v65 | the founder: *"Me only, for now."* Statutory clocks wake the founder; the row reopens when a venture has a legal entity, which v63 makes a charter field | `wins_if:` a statutory obligation is missed while the founder is away past the reserve's own horizon (**v76**) — the second human is precisely what away mode cannot supply |
+
+---
+
+### 22.2a The eighteen the rethink round moved · 55–72
+
+**(FOUNDER and NEW, 2026-09-06 — reproduced verbatim from SPINE §J, which is where they were written)** Sixteen of
+these are the option the founder did **not** choose on D1–D16, one is the row the founder deleted (v82), and the
+last is the orchestrator's own deletions of the round kept in a single entry. **They arrive with their `wins_if:`
+line already written**, by the people who wrote the reason — which is what v81 changed about the format, and why
+entries 1–54 above needed the column added to them here.
+
+**(NEW: read the *second* clause of each of the first sixteen)** Most carry **two** losing images, not one: the
+option the synthesis ranked second, **and the thing v2 said before the round**. Entry 56 is the clearest — *a cord
+that signals but mints unattended work on every carrier* was the runner-up, and *the cord as designed, stopping the
+next dispatch and nothing in flight* is what this plan actually contained. **The second clause is the more useful
+half**, because it is the one a reader of an older draft may still believe.
+
+55. **Loopback only, the phone reading published pages and writing requests the Watch picks up; and v39 as written — an unauthenticated dispatch plane on any network the Mac joins** (→ v66).
+    `wins_if:` a year of use where the token and the tunnel are what break a tap the founder wanted, while `lsof -nP -iTCP -sTCP:LISTEN` never once shows a non-loopback bind.
+56. **A cord that signals but mints unattended work on every carrier; and the cord as designed, stopping the next dispatch and nothing in flight** (→ v67).
+    `wins_if:` a measured cord pull reaches quiescence inside one tick period on every carrier without a signal — then the tick *is* the stop and the `pgid` field buys nothing.
+57. **Configuration instead of a program — the sandbox's own `credentials` and `network` blocks; and structural prevention with no detection** (→ v68).
+    `wins_if:` **R2** shows the `credentials` block injects a secret the child cannot read *and* `network` supports an HTTP-method allowlist. Then B was right and `bin/egress` is ours not to write.
+58. **The consent register now, the erasable path only when a venture has customers; and the data path as designed** (→ v69).
+    `wins_if:` a year passes in which no venture holds a named person's data, so the indirection is paid on every row and redeemed on none.
+59. **Curator only; and wave one as decided, with promotion when founder-minutes per finished intent crosses a line** (→ v70).
+    `wins_if:` a quarter of wave-one work produces no memory proposal worth writing and no plan the challenger would have changed — the two files are then idle capacity, not cover.
+60. **The onboarding pack in wave two only; and no pack — *"the agent file is the onboarding"*** (→ v71).
+    `wins_if:` **R19** shows a packed agent does not beat an unpacked one on the same known-answer cases. The proposal is then refuted by its own test, which is how it was written.
+61. **`valid_until` on the six wave-two business agents only; and no agent expiry at all** (→ v72).
+    `wins_if:` the first full cycle returns Refresh on all fifteen with no anchored evidence attached to any of them — the field is then a date nobody reads.
+62. **Mutation cases only on the anchors that gate irreversible work; and no rating, where a green check keeps meaning *nothing complained*** (→ v73).
+    `wins_if:` a year of real work in which no anchor is ever demoted to `unrated` and no mutation case ever fails — the rating cost bought a number that never moved.
+63. **The window gauge with exploration left where it is; and dollar ceilings kept as ceilings** (→ v74).
+    `wins_if:` one weekly window split between driven and exploratory work shows exploration invisible in the gauge — then *"idle capacity is bounded by being free"* was right and this is over-built.
+64. **`Weight × Decay ÷ Cost` kept, with `Decay` fixed and a standing-work share cap; and the formula exactly as designed** (→ v75).
+    `wins_if:` the deterministic replay over a simulated month dispatches the top-weight intent no less often under the formula than under the lexicographic order.
+65. **The which-expiry and the *since you were last here* view only; and the reserve and the budget as designed** (→ v76).
+    `wins_if:` the founder is never away longer than the reserve's own horizon, so the predicate never fires and four call sites read a value that never changes.
+66. **Namespace directories with no number; and skill count as an output of admission, with expiry doing the rest** (→ v77).
+    `wins_if:` **R8** shows the metadata tax scales with an agent's *declared namespaces* rather than with the installed library — the generator is then the whole fix and the budget is unnecessary.
+67. **Fallback chains with no rung demotion and no frozen calibration set; and no fallback at all** (→ v78).
+    `wins_if:` the outage drill shows a three-deep chain never reaches its second link because a seat limit and a family limit resolve the same way, and calibration never moves when a model id changes.
+68. **Codex cloud as a PR reviewer only, no maker lane; and Anthropic's documented drivers as the maker lane** (→ v79).
+    `wins_if:` a longer `pmset -g log` span finds a real tail — whole days off, not twenty-minute naps — **or** Codex documents a cloud driver with a cancel path, which also clears v67's refusal.
+69. **The vendor transport adopted directly for teammates and files for `-p` children; and no agent-to-agent messaging, everything through the Operator** (→ v80).
+    `wins_if:` a quarter of team use records no lost teammate output, and a run whose only input was a peer message cannot be reconstructed from files alone — then the transport is the evidence and the file is ceremony.
+70. **`source:` and `valid_until` without the `wins_if:` register** (→ v81).
+    `wins_if:` a year in which no entry's `wins_if:` ever matches while external facts do move — the register is then decoration and every entry should be argued down and deleted rather than stored.
+71. **The three-family review panel row itself** (→ v82; deleted by the founder, DECISIONS §19).
+    `wins_if:` **R10** passes *and* Gemini is authenticated — a three-family panel becomes a capability rather than a sentence, and the row comes back with machinery under it. Note what does **not** depend on this: the repo's three live `verified_by: judge` claims and the waiver to 2026-11-17 are untouched either way.
+72. **The orchestrator's deletions of the rethink round, kept by name** (SYNTHESIS §7, the rows that are not a founder decision).
+    The rank formula's two companions — *the intent's own urgency as a second scale* and *"the Desk decomposes"* — the **menu-bar glyph** (no substrate, and a status living in two places is one that disagrees), the per-venture **`open.md`** store (ten queues, one founder, nine writer-contention points → O9), **`logbook/desk/<tick>.json` as a file per tick** (the highest-volume artifact holding an answer whose value decays in hours → O20), the dependency on **`skills-ref validate`** (licence UNKNOWN and never fetched; its four checks are re-implementable from the spec text → keep the checks), **`keel/logbook/backlog.jsonl`** (an improvement is an intent, said twice in COVERAGE → O46), the duplicate cost formula in §16.3, `analyst`'s `Bash`, `writer`'s split model default, the `Night?` column of the four-class table, three of the four copies of that table, page 1's second job, *"unread transcript count"*, the *Pareto prompt archive*, the message priority tag, and the name *venture health score*.
+    `wins_if:` any one of them is reached for by a builder who finds no replacement — each was deleted because something else already holds its job, so a builder unable to name that something is the observation that brings it back.
 
 ---
 
@@ -6968,8 +9701,43 @@ the world's door, and a record the company does not write.
 **(NEW: written by the coverage lane, against `COVERAGE.md` as it lands, never from memory)**
 
 ```
-TALLY (v2 · FINAL): IN 503 · 410 — RENAMED 90 · 157 — REFUSED 52 · 77 — OUTSIDE 13 · 14 — FOUNDER'S 13 · 13; 671 items, 137 rows changed, 5 marked `?` (8 when first written; the review settled two, the founder's interview two more)
+TALLY (v2 · FINAL): IN 505 · 410 — RENAMED 88 · 157 — REFUSED 52 · 77 — OUTSIDE 13 · 14 — FOUNDER'S 13 · 13; 671 items, 139 rows changed, 2 marked `?`
 ```
+
+*(moved 2026-09-06: the line read `IN 503 · RENAMED 90 · 137 rows changed · 5 marked ?`, correct until the rethink
+round re-placed the rows below.)* **The `?` sequence, and one correction to it:** **8** when first written · **7**
+after the review round · **5** after the founder's interview · **2** after the rethink round. The old line
+parenthesised this as *"the review settled two, the founder's interview two more"*, which does not reach 5 from 8 —
+**it was one out**, and the sequence above is taken from `COVERAGE.md`'s own dated notes rather than re-derived here.
+
+**(NEW, 2026-09-06: what the rethink round did to this table — one absence closed, three `?` rows settled, and one
+row that moved backwards)** The round read all ~640 keywords against v2 again, lane by lane, and the headline is a
+number that is hard to improve on: **it found exactly ONE keyword, of roughly six hundred and forty, absent from
+v2's own text.**
+
+- **`consent`** — *may we contact this person at all* — was the absence. **(FOUNDER, rethink 2026-09-06: D4 · v69)**
+  It closes with a **consent register**: one store, one writer, **read by the Sender before any contact**. It arrives
+  beside the erasable path — no personal datum enters the event log or memory, both hold a hash, one per-subject
+  store holds the body, and erasure deletes that row so the hash becomes *a known absence*. **Mechanism:** one
+  indirection in `bin/log` and the memory writer; two stores whose single writer `bin/check-stores` enforces
+  (ABSENT); one line on the Sender's checklist. §12 and §16 carry it.
+- **`worker-to-worker request`** and **`peer help request`** were one `?` seen twice, and **v80** settles both: a
+  message between two running agents **is a handover or an objection**, on the handover schema, one append-only file
+  each. It is not a fourth dispatch mechanism, and the vendor transport's ids are recorded as attributes and never
+  as a join key.
+- **`agent color tag`** was the third `?`, refused for want of a home. **O2** gives it one: `color:` is a field of
+  `keel/shared/roster.yml`, beside `wave`, `valid_until`, `maxTurns`, `isolation` and the anchor — REFUSED → IN
+  because a store exists to hold it, which is the only thing that was ever missing.
+- **`menu-bar agent status` moved the other way — IN → REFUSED** (deletion 23). No substrate was ever named, it is a
+  new dependency if built, and **a status living in two places is one that disagrees**. `bin/bell` (**O18**) and page
+  5's strip hold its job.
+
+**(NEW: what the one absence is evidence for, and what it is not)** One absent keyword in ~640 is evidence that the
+**coverage** is real. It is **not** evidence that the plan is right — a keyword can be placed by a sentence that
+names no mechanism, which is why every row carries a `Rule` column and why the round's other output was eighty
+mechanisms rather than more placements. **Contradictions 19 and 20 make the same point from the other side:** the
+department and hands tables were *over*-covered, rendered three and four times each, and had already drifted. Placed
+three times is not covered three times.
 
 **(NEW: what the tally must count, so that a number here cannot drift from the table beside it)** One row per founder
 item; the five dispositions summing to the total; and separately the count of `?` rows. **If the tally and
