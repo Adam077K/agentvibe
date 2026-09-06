@@ -305,3 +305,55 @@ founder rows challenged and labelled, ten decisions not on the open list with a 
 mechanism corrections that need no decision. **Nothing applied.** The founder decides what moves; the mechanism
 corrections in digest §5 wait for that reading because several sit inside founder rows. Single family, rung 4 by
 the plan's own ladder, said so by every lane.
+
+## §24 — The fixer round: three lanes, twenty-four questions merged to fourteen, the founder's answers · 2026-09-06
+
+Three fixer lanes (framer engine on Fable; A the practitioner, B the outsider, C the strategist) took the thinker
+round's 64 findings and designed what changes; their files are `rethink-2/A-practitioner.md`, `B-outsider.md`,
+`C-strategist.md`, recorded as written. Each sent up to eight questions with a default; the orchestrator merged
+the twenty-four into fourteen (overlaps: the box ×3, the first stranger ×3, founder hours ×3, row classes ×2, the
+checker key ×2, Keel's PR review ×2) and asked them in four AskUserQuestion rounds. Answers verbatim, then the
+disposition. **Founder overrules are final and are not re-litigated.**
+
+| # | Question | Answer (verbatim) | Disposition |
+|---|---|---|---|
+| E1 | The always-on box | *"dont need for now. use this mac and when cant use cloude"* | **OVERRULE of all three lanes.** No box. The night runs on this Mac; the cloud lane (v56, v79) is the fallback when the Mac cannot. The box becomes a losing image with `wins_if:`; C13's identity/autonomy split is recorded as an accepted risk on the Mac. |
+| E2 | The first stranger | *"An existing project of yours (Recommended)"* | A second, customer-facing venture from the founder's existing projects joins wave one beside the harness, chartered with `outcome:` at contact rung 2; named at intake. |
+| E3 | Founder hours per week on the harness charter | *"20 hours or no ceiling"* | `founder_hours:` exists as a charter field; the harness's number is **20**, stated as the founder's and moved by evidence; the founder said "or no ceiling", so a bind at 20 is reported, never enforced silently. Founder-minutes are measured from day one either way. |
+| E4 | Reviewing Keel's own PRs | *"Small trusted base, per-wave sign-off (Recommended)"* | The four world-touching programs (`send`, `inbound`, `watch`, `run`) founder-line-reviewed at a line budget with fixtures as the only admission; agent files generated from `roster.yml`, signed off per wave; `keel/**` otherwise lite; the vendor's flags are the floor so the launcher can narrow but never widen. |
+| E5 | Two classes of founder row | *"idk"* | The founder defers. The orchestrator applies the recommended default: v66–v81 `class: ratified`, reopenable by any engine with a reason and a falsifier through a Decide item; the new row that says so is itself ratified, so the founder can reverse it by name. |
+| E6 | Away mode (v76) | *"Away narrows, plus a burst edge (Recommended)"* | v76 amended: while away the reserve goes only to `effect: none` work whose outputs stage; no one-way default fires; a burst edge pauses Claude-seat autonomy above a founder-set rate; the reserve is held per weekly window. |
+| E7 | A checker-family API key | *"no keys, codex and gemini cli use."* | **OVERRULE of C6 and B7's key.** No API keys. The second family is the Gemini CLI (personal account, free tier) and the Codex CLI once installed, both only as `bin/run` children from the launchd context. §I row 17 closes as *no keys*; the metered-key economics stay a losing image with `wins_if:`. |
+| E8 | How many Operators | *"Model N Operators (Recommended)"* | N Operators as rows in `sessions.jsonl` with heartbeats; a which is claimed before it is answered; the founder-present gate is per venture; the cord gains `--night` and `--all`, the phone defaulting to `--night`. |
+| E9 | Auto mode on the Floor | *"Keep auto mode on the Floor (Recommended)"* | v11 amended: the managed file carries `permissions.deny` and `disableBypassPermissionsMode` only; `disableAutoMode` struck; night children run `dontAsk --restricted` with per-child `--settings` on argv (R27). |
+| E10 | The founder's own Floor transcripts | *"Keep them for mining (Recommended)"* | Long retention; night children pass `--no-session-persistence`; the erasure grep covers `~/.claude/projects`; the mining pass refuses tainted episodes; vendor retention named out of reach (v69's *settled by* amended). |
+| E11 | The outward-class ladder's top step | *"Yes, after N recall-free sends per venture"* | **OVERRULE of C's recommendation.** `first-contact` widens like any other class after N recall-free sends, per venture in the charter, narrowing by one step on any recall; the consent register and disclosure line are read at every step. |
+| E12 | Page order | *"4 → 5 → 3 → 2 → 7 → 1 → 6 (Recommended)"* | v4's order amended; pages 1, 2, 3 and 7 are adapters; page 2's tap splits into *attach* and *message*. |
+| E13 | The night on this Mac | *"Watch checks, refuses, routes to cloud (Recommended)"* | A `night_capable` predicate from `pmset` (AC, sleep off or `disablesleep`, assertions); an unattended brief is refused with the printed reason when false and routed to the cloud lane; a page-3 fact and a briefing line. This is E1's mechanism. |
+| E14 | The vanilla-runtime week | *"No, compare Keel's modes only"* | **OVERRULE of C11.** No null-hypothesis week; §20.2 row 12 stays the comparison. C11 becomes a losing image with `wins_if:`. |
+| E15 | A which budget per window | *"i dont get it, do what best for the sytem "* | The founder delegates. The orchestrator takes B's design: the Desk refuses to open a which past `decisions_per_window × horizon`, seeded at six per five-hour window and replaced by the measured answering rate from the transcript corpus (R27); one option built plus a written second unless a ten-word summary cannot separate them; the briefing's first line is decisions taken · deferred · defaulted. Recorded as an orchestrator decision inside v9 and v76, reopenable. |
+
+**What the overrules do to the lanes' designs.** E1 removes the `BOX` root every lane drew and makes A's
+`night_capable` predicate plus the cloud lane the whole answer to convergence 5; identity and autonomy share the
+Mac, stated as an accepted risk with C13's probe (a keychain read from a night run) as its standing drill. E7
+removes 17a and the Gemini key; the second family's daily count is the free tier's and the row says so. E11 raises
+the ladder's ceiling to the founder's appetite. E14 removes `NULLWEEK`. E3 and E15 keep the founder-attention
+shape (three gauges) with the founder's numbers.
+
+**Not asked, decided by the orchestrator from the three files, all reopenable:** the commodity line (`class:
+kernel | adapter | refuse` and `vendor_wins_if:` on every §L row; kernel = direction · record · truth · taste;
+§L sorted by class before §19 orders it); data-first with a constitution under the session-start byte budget and
+an archive for superseded prose; `outcome:` on the charter; the market record written only by `bin/reconcile`;
+the plant model and the dial inventory; anchors with two axes (verifier, adequacy); reversibility as a verb
+property; the dead-man lease and one stop verb; trust probation and seed packs; the rehearsal case in `golden/`
+referenced never carried; sequential skill testing joined to O41; the curator's held-out test, calibration seed,
+executable falsifiers and nightly canary; the taste control arm; the subsidy line; R12 split three ways with
+*inventing an anchor* defined; `--fallback-model` composed from the roster with `PreModelSwitch` annotating;
+`--autocompact` at full context with `PreCompact` logged; bare `-p` in tmux never `--bg`, `bin/supervise` refused
+until the daemon's semantics are read; the real `denyRead` list; the probe authored apart from the launcher; the
+anchor's canonical printed line; the bell as a wrapper; the high-water seed from `budget-guard.js`; the cold-start
+scoreboard and the first-month runbook; the carrier dimension and drill; standing intents with `valid_until`;
+mechanisms carry `wins_if:`. Where two lanes proposed different shapes for one thing, the fold takes the one that
+survives the founder's answers and names the other as its losing image. Where B and C disagree on B9 (fair
+queueing now) and B11 (sequential testing now), the fold takes C's position: v75 is replayed before it is
+replaced, and skills are provisional-joined-to-O41 until a quarter of activations exists.
