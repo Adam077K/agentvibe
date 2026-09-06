@@ -217,7 +217,7 @@ and *`confidence: LOW` on the header until one overnight* — `wins_if:` fewer t
 **v97** (*the prose as the binding document* — `wins_if:` a builder brief for any §L program fits under 8K tokens from
 the prose alone, three times running) live in §1's last column, rows v96 and v97, and are **not repeated here word for
 word** by this section's own opening rule. The same is true of v98–v106. A reader sent here for them by §0.3 or §0.7
-should read §1 rows v96–v106; no §J number is invented for them in this section, because a number that SPINE does not
+should read §1 rows v96–v106; ~~no §J number is invented for them in this section, because a number that SPINE does not~~ SPINE §J 89 and 90 now carry v96's and v97's images (added 2026-09-06 by the orchestrator on this finding), reproduced below; the other nine (v98–v106) stay in §1's last column, because a number that SPINE does not
 carry is one the fold cannot resolve.
 
 **(NEW: what the sixteen share with 55–72, and one way they differ)** Like the rethink round's eighteen, they arrive
@@ -250,3 +250,6 @@ it here should look in one of three places, not conclude it was never considered
 **(FINAL)** Everything above is kept so it can be argued for later. **Nothing here is deleted when it loses** — that
 is the whole point of writing it down, and it is why §1-v2's last column and this section exist as two views of one
 record rather than as two records.
+
+89. **§L built in §19's dependency order, every mechanism as ours** (→ v96, the commodity line; `class: ratified`). `source:` THINKER C3 · FIXER A O104 · B O93 · C O82 · DIGEST conv. 4. `wins_if:` a year in which no vendor ships any adapter's surface and every adapter had to be built by hand anyway — the sort then cost a lint and bought a delay. *Added 2026-09-06 by the orchestrator on F6's finding that v96 had no §J entry.*
+90. **The prose as the binding document** (→ v97, data-first with a constitution; `class: ratified`). `source:` THINKER B6, C18 · FIXER A O109 · B O92 · C O88/O89 · DIGEST conv. 7. `wins_if:` a builder brief for any §L program fits under 8K tokens drawn from the prose alone, three times running. *Added 2026-09-06 by the orchestrator, same finding.*

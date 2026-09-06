@@ -819,6 +819,9 @@ their `wins_if:` in §22 from the builders, written by the people who wrote the 
 88. **Gemini on every diff now** (→ v90; v78 governs). `source:` C C6 · A, B declined. `wins_if:` R11's first twenty-five pairs show the second family catching a defect the same-family reviewer missed.
 
 ---
+89. **§L built in §19's dependency order, every mechanism as ours** (→ v96, the commodity line; `class: ratified`). `source:` THINKER C3 · FIXER A O104 · B O93 · C O82 · DIGEST conv. 4. `wins_if:` a year in which no vendor ships any adapter's surface and every adapter had to be built by hand anyway — the sort then cost a lint and bought a delay. *Added 2026-09-06 by the orchestrator on F6's finding that v96 had no §J entry.*
+90. **The prose as the binding document** (→ v97, data-first with a constitution; `class: ratified`). `source:` THINKER B6, C18 · FIXER A O109 · B O92 · C O88/O89 · DIGEST conv. 7. `wins_if:` a builder brief for any §L program fits under 8K tokens drawn from the prose alone, three times running. *Added 2026-09-06 by the orchestrator, same finding.*
+
 
 ## K · The section plan for the builders
 
