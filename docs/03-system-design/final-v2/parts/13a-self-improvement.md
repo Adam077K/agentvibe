@@ -1,6 +1,6 @@
 ## 13a · How the system improves itself
 
-*obeys: v19 (skill expiry), v30 (the challenger is an agent, not a step), §E.3 (a failed candidate becomes a negative), §B.2 rows 13 and 14, `curator` and `challenger` · inherits: FINAL §12 entire — **added in the build round**, because §K omitted it and the coverage lane found the gap*
+*obeys: v19 (skill expiry), v30 (the challenger is an agent, not a step), §E.3 (a failed candidate becomes a negative), §B.2 rows 13 and 14, `curator` and `challenger`, **v89**, **v96**, **v106** (fixer round, 2026-09-06) · inherits: FINAL §12 entire — **added in the build round**, because §K omitted it and the coverage lane found the gap*
 
 **(FINAL)** Three loops at three speeds, all anchored to something outside the model, **because a system that
 improves itself by its own judgement drifts by its own judgement.** v30 is the sourced version of that sentence:
@@ -8,6 +8,12 @@ self-critique without external feedback is *measured* as harmful — *"at times,
 self-correction"* (arXiv 2310.01798, cognition.md 5) — and Reflexion's 91% pass@1 is no counterexample, its feedback
 being external (arXiv 2303.11366, cognition.md 6). Every loop below ends at something the system did not author: an
 exit code, a second agent that never read the author's reasoning, or a known answer.
+
+**(NEW: v96 · O105, fixer round 2026-09-06 — the doctrine gains one line.)** **Every
+mechanism carries `wins_if:`** — the observation under which it is wrong — beside `class: kernel | adapter | refuse`
+and `vendor_wins_if:`, the surface whose arrival forces Delete. A mechanism with no falsifier is a founder row in all
+but name (THINKER: A1–A10 · FIXER: B). The marks lint refuses an adapter naming no surface and a kernel naming none of
+direction · record · truth · taste. **Mechanism:** `rules.yml` and the marks lint (**ABSENT**, §L O105).
 
 ---
 
@@ -41,8 +47,8 @@ flowchart TB
     S5 --> N2
 ```
 
-**(NEW: the arrows between the subgraphs are what FINAL's picture left implicit, and they make this one mechanism
-rather than three.)** A stop feeds the nightly read; a promoted pattern becomes a proposal; a refused proposal is
+**(NEW: the arrows between the subgraphs are what FINAL's picture left implicit; they make this one mechanism, not
+three.)** A stop feeds the nightly read; a promoted pattern becomes a proposal; a refused proposal is
 written back as a negative by the only agent that may write memory. **Nothing improves anything in the loop it was
 found in** — v30 as topology, not advice.
 
@@ -170,13 +176,27 @@ ENFORCED; finding the thing that expired was ~~a WISH~~ and is now ABSENT with a
 turns a list of expiries into something a founder can act on in one sitting. §4 runs it on the routine window; §2
 carries the intent and charter dispositions, including v79's `cloud:` and O63's wind-down.
 
+**(NEW: O126, fixer round 2026-09-06 · THINKER: B20 · FIXER: B.)** v55's standing intents *"never finish"* — the one
+durable thing with no horizon. **A standing intent never finishes but expires**: `valid_until`, and `bin/horizon`
+forces Refresh · Deprecate · Waive with a new date. **Mechanism:** the intent schema (§2, O1) · `bin/horizon`
+(**ABSENT**, §L O126).
+
+**(NEW: O105 — a fourth disposition, for mechanisms only.)** A §L row or `bin/` program whose `vendor_wins_if:` has
+matched takes **Delete**. v19's three are untouched — nothing v19 governs has a vendor. **Mechanism:**
+`rules.yml` read by `bin/horizon` (**ABSENT**, §L O105).
+
 **(NEW: O41 — what a skill's disposition reads, and v19 stays whole)** Today a skill's expiry disposition reads
 nothing but the date. **Skill activation is logged and joined to outcomes**, so a skill that **never fired** defaults
 to **Deprecate** at expiry and a founder waiver is what keeps it. **v19 is unchanged**: retirement is still
 date-forced, and only what the disposition *reads* changes. **Mechanism:** `bin/log` (**ABSENT**, §L O41),
 **DEPENDS-ON-R14**. **(R14, OPEN)** — do any of the three CLIs emit a **skill-activation event** we can read, from
 their hook and telemetry documentation? If they do, this is a field lookup; if they do not, it is instrumentation we
-write, and §7 carries the cost either way.
+write, and §7 carries the cost either way. **(NEW: O114, fixer round 2026-09-06 · THINKER: B11 · FIXER: B; C's timing.)**
+**Admission is provisional**: the eval is a trigger smoke test, and `registry.yml` carries `evidence: {n_present,
+pass_present, n_absent, pass_absent}` from **anchored outcomes with and without the skill loaded** — v77's namespaces
+are the experiment. The decision is taken at a threshold with O25's floor, **once a quarter of activations exists**
+(§J 81).
+**Mechanism:** `keel/shared/skills/registry.yml` (**ABSENT**, §L O114; §7 owns it) · **DEPENDS-ON-R14**.
 
 ---
 
@@ -211,6 +231,20 @@ this plan's external facts once and count how many moved. §1 carries the field;
 item is a queue row, not a dispatch. And the four conditions are **struck in place above rather than deleted**: they
 are the right trigger for a system whose failures are internal, and the claim being made here is only that this
 system's are not.
+
+**(FOUNDER, fixer round 2026-09-06: E5 · v89 — *"idk"*, the default applied.)** **`class: originated`** —
+the founder's own words — is never re-litigated. **`class: ratified`** — picked from an agent's list — is **reopenable
+by any engine carrying a reason and a falsifier, through a Decide item**, never silently; sixteen of sixteen
+accepted in one round is a choice architecture, not a mandate (THINKER: B5, B16). Every option set
+carries a second option argued as long as the first; the agreement rate is a briefing number (§13.3b). The rethink now has **two external triggers**: a fetched fact that moved (v81) and a
+`wins_if:` that matched (v96), both landing as a Decide item naming the row. **Mechanism:** `class:` on every §A row
+(§1) · the marks lint refusing a second option whose only reason is *cheaper* or *no work* (**ABSENT**, §L O105) ·
+losing image: one class.
+
+**(NEW: O123, fixer round 2026-09-06 · FIXER: B.)** §4 states the Watch is **open-loop with static setpoints**: it
+rings, dispatches, refuses and opens whiches at rates nothing watches. O74's control charts (§16) extend to those four
+series, and **O20's replayer is the only offline tuning path** — never the Watch adjusting itself (v30). **Mechanism:** the briefing, extending O74 (**ABSENT**, §L O123) · **(R36,
+OPEN)** baselines the four rates.
 
 ---
 
@@ -307,13 +341,42 @@ design, so it is not adopted on a guess.)**
 
 ---
 
+### 13a.11 The cold-start scoreboard — scored before any loop above can turn
+
+**(NEW: v106 · O124 · O125, fixer round 2026-09-06 · THINKER: A1, C9, C4 · conv. 5 · FIXER: A.)** Every loop here
+improves on a record that does not exist on the first night: no handovers, no exemplars, **every anchor `unrated` by
+construction** (v73) until packs harvest. The rung-1 share cannot yet move; the honest number is *did the night run,
+and did anything come back*.
+
+**The scoreboard.** `keel/logbook/nights.jsonl`, **one row per attempted night, written only by `bin/watch`,
+`bin/run`, `bin/reconcile` and `bin/log`**: `nights_attempted · night_capable_all_night · runs_minted ·
+handovers_with_anchor_line · orphaned · founder_taps · founder_minutes · shadow_usd · contact_rung_moves`. Month-one
+success is **three things, none a share**: three consecutive rows with `orphaned = 0` and a handover each · one
+contact-rung movement recorded by the door (v85) · founder-minutes per finished intent **recorded, not targeted**
+(O95). The rung-1 share prints as *unrated* until packs harvest (v103). §21 owns the numbers.
+
+**The runbook, and whose framing *"the first month"* is.** `keel/host/RUNBOOK.md` is **generated from `rules.yml`
+where `state: absent`** plus the founder-act list, ordered by dependency, never by date — *the first month* is the
+founder's framing of E3's hours question, quoted, not scheduled. `bin/log` counts every founder act against it (O95).
+§19 puts **the bounded day first** (v106).
+
+**The count that scores this section itself** (O105): §21 gains **rows changed after the first overnight**, and the
+header carries `confidence: LOW` until then (THINKER: B1) · `wins_if:` fewer than one row in ten changes after it.
+
+**Mechanism:** `keel/logbook/nights.jsonl` (**ABSENT**, §L O124) · `keel/host/RUNBOOK.md` and its generator
+(**ABSENT**, §L O125) · `founder.act` in `bin/log` (§3). **The losing image:** the rung-1 share as month one's number
+(table below).
+
+---
+
 **Enforced by:** `scripts/ledger.mjs` — forced disposition at expiry, no open-ended waiver (**exists**, branch
 `ceo-1-1788609834`) · `scripts/check-citations.mjs` (**exists**, same branch) · git history of `.claude/agents/*.md`,
 the reversibility of every adopted prompt change (**exists**, same branch) · `bin/curate` (**ABSENT**, §13) · the
 rehearsal runner (**ABSENT**, §11.10) · `bin/skill` (**ABSENT**, §E.3) · ~~`keel/logbook/backlog.jsonl`~~ **deleted,
 O46** · the counter of redirects per intent (**ABSENT**).
 
-**Added by the rethink round of 2026-09-06**, one row per new mechanism in this section:
+**Added by the rethink round of 2026-09-06**, one row per new mechanism in this section (v96's `class` on each is
+SPINE §L's, not restated):
 
 | Mechanism | Path | State | What it does here |
 |---|---|---|---|
@@ -325,3 +388,15 @@ O46** · the counter of redirects per intent (**ABSENT**).
 | **O19** · the same-failure predicate | one shared hash | **ABSENT** | what 13a.2's stop, the sighting counter and memory dedup all rest on |
 | **O46** · the backlog | a filter over the intent store, `kind: improvement` | a deletion | the separate file goes; §18 carries it |
 | **v81** · the rethink trigger | `source:`/`valid_until` per fact-based row; a `scout` standing intent | **ABSENT**; `claim-source` **exists** in SHADOW | replaces 13a.7's four internal conditions with an external one |
+
+**Added by the fixer round of 2026-09-06**, one row per mechanism, each with the `wins_if:` v96 requires:
+
+| Mechanism | Path | class | `wins_if:` | State |
+|---|---|---|---|---|
+| **v96 · O105** · `wins_if:`, `class:`, `vendor_wins_if:` on every mechanism; a match forces Delete (intro, 13a.6, 13a.11) | `rules.yml` · the marks lint | kernel · record | v96's | **ABSENT** |
+| **v89** · a ratified row reopens via a Decide item (13a.7) | `class:` on §A rows · the marks lint | kernel · direction | a year in which no ratified row is reopened by measurement | **ABSENT** |
+| **O126** · a standing intent expires (13a.6) | the intent schema · `bin/horizon` | kernel · direction | every standing intent Refreshes on evidence for a year | **ABSENT** |
+| **O114** · skill admission provisional, decided present vs absent (13a.6) | `keel/shared/skills/registry.yml` | kernel · truth | present-runs pass no better than absent-runs after a quarter | **ABSENT**; DEPENDS-ON-**R14** |
+| **O123** · control charts on the Watch's own four rates (13a.7) | the briefing, extending O74 | kernel · record | none of the four series drifts in a year | **ABSENT**; R36 baselines |
+| **v106 · O124** · the cold-start scoreboard, written by programs only (13a.11) | `keel/logbook/nights.jsonl` | kernel · record | `bin/watch` lands before three bounded-day rows and the first three nights are clean anyway | **ABSENT** |
+| **O125** · the first-month runbook from `rules.yml`, founder acts counted against it (13a.11) | `keel/host/RUNBOOK.md` | kernel · direction | month one's act count exceeds the runbook's by a third | **ABSENT** |

@@ -1,7 +1,9 @@
 ## 14 · Mission control — seven pages, one state, and every tap opens a terminal on the Mac
 
-*obeys: §D entire, v4, v14, v15, v16, **v62** (the room's renderer, §14.4) and **v66** (the surface's identity,
-rethink round 2026-09-06) · inherits: FINAL §13 — the Floor and the Balcony are absorbed, not deleted*
+*obeys: §D entire, v4, v14, v15, v16, **v62** (the room's renderer, §14.4), **v66** (the surface's identity,
+rethink round 2026-09-06), and **v95**, **v91**, **v84** (fixer round 2026-09-06 — the page order and the two-verb
+tap, the cord's two scopes, `night_capable` on page 3) · inherits: FINAL §13 — the Floor and the Balcony are absorbed,
+not deleted*
 
 ---
 
@@ -99,7 +101,7 @@ published artifact*, and *a cloud host that reaches into the Mac*.
 | Balcony · **Last night** — the briefing | **the top strip of page 5** — and on the phone, as a published page (v38) |
 | FINAL §2.4's **read-back page** | **the intent-creation form wherever an intent is born** — page 4's *new card* and page 7's *add session* — and a published phone page for voice (v38) |
 | Balcony · **Ventures** | page 1 (the office), one venture per area |
-| Balcony · **Cord** | **a control present on every page**, not a view of its own |
+| Balcony · **Cord** | **a control present on every page**, not a view of its own — and since 2026-09-06 it reads **_stops the night, not the Floor_**: `--night` by default, `--all` behind a second tap (v91 · O85, §14.13) |
 | *(new)* | page 3, the dashboard v14 admits |
 
 **(FINAL, unchanged and still binding on the Floor.)** While the founder is on the Floor the system is **sterile**,
@@ -121,14 +123,15 @@ flowchart TB
         P5["5 · Engines · how it works"]
         P6["6 · 3D file graph"]
         P7["7 · Canvas / playground"]
-        CORD["THE CORD — present on every page"]
+        CORD["THE CORD — present on every page.<br/>Reads: stops the night, not the Floor (v91)"]
     end
     FLOOR["THE FLOOR — a terminal on the Mac.<br/>One agent. Same memory, same envelope.<br/>STERILE while the founder is in it."]
     STATE --> MC
     MC -->|"EVERY tap opens a terminal here"| FLOOR
     FLOOR -->|"work, decisions, corrections"| STATE
     MC -->|"redirect · stop · pick · retempo · drag"| STATE
-    CORD -->|"one tap"| STOPALL["Stops everything.<br/>Leaves every artifact in place."]
+    CORD -->|"one tap: --night"| STOPNIGHT["bin/stop --night: signals bin/run's process groups,<br/>stops the next dispatch. The Floor keeps running."]
+    CORD -->|"a second tap: --all"| STOPALL["bin/stop --all: also SIGTERMs every Operator session.<br/>Leaves every artifact in place (O85)."]
     VOICE["VOICE — input only.<br/>Nothing binds by voice (§C.3)"] --> STATE
 ```
 
@@ -142,15 +145,27 @@ to.
 
 | # | Page | What each tap launches | Substrate | State |
 |---|---|---|---|---|
-| 1 | The office | tap an avatar → that agent's terminal | **pixel-agents** (MIT, LICENSE read from the file, pushed 2026-09-05) — **decided v62**; §I row 12 is closed | ABSENT; enters through the tool door |
-| 2 | Agents / child flows | tap → attach to its tmux session or background session; message → write its inbox file | Claude Code **agent teams** | **substrate ships**; page ABSENT |
-| 3 | Cost · tokens · efficiency | a cost row → its run · a window row → retempo · an anomaly → the cord | the event log joined to §16's price table | ABSENT; `~/.agentvibe/events.jsonl` is the spine |
+| 1 | The office | tap an avatar → that agent's terminal | **pixel-agents** (MIT, LICENSE read from the file, pushed 2026-09-05) — **decided v62**; §I row 12 is closed — an **adapter** (v96) | ABSENT; enters through the tool door |
+| 2 | Agents / child flows | ~~tap → attach to its tmux session or background session; message → write its inbox file~~ **two verbs, declared per row: `attach:` → the tmux session `bin/run` minted; `message:` → `SendMessage` to an in-process teammate** (amended 2026-09-06: E12 / THINKER: A2 · O121, W34) | Claude Code **agent teams** · `claude agents` · tmux — an **adapter** (v96) | **substrate ships**; page ABSENT |
+| 3 | Cost · tokens · efficiency | a cost row → its run · a window row → retempo · an anomaly → the cord · **`night_capable` and its printed reason → the brief it refused** (v84, §14.6) | the event log joined to §16's price table; the vendor's `prompt_cache`, `rate_limits`, `modelPricing` (W4) — an **adapter** (v96) | ABSENT; `~/.agentvibe/events.jsonl` is the spine |
 | 4 | Tasks · tickets · PRs | **drag a card into "working on it" → launches a session and hands it the task; the card's `solo \| team` toggle decides which shape** (v60) | ours; prior art OpenAI Symphony | ABSENT; **the team part has no prior art anywhere** |
 | 5 | Engines · how it works | tap a gate → its last ten resolutions; tap a store → its schema and its one writer | the same state as every other page | ABSENT |
 | 6 | 3D file graph | tap a node → open it on the Floor | `3d-force-graph` (MIT [`api`: GitHub SPDX detection, LICENSE not read]) renders; **the extractor is ours** | ABSENT; thinnest researched area; **built LAST of the seven** (v61), after one research lane on repo-to-graph tooling |
-| 7 | Canvas / playground | add a session: worktree, project, provider, model, task, agent → launch, then attach | Langflow (MIT [`api`: GitHub SPDX detection, LICENSE not read]) as the canvas idiom | ABSENT |
+| 7 | Canvas / playground | add a session: worktree, project, provider, model, task, agent → launch, then attach | Langflow (MIT [`api`: GitHub SPDX detection, LICENSE not read]) as the canvas idiom — an **adapter** (v96) | ABSENT |
 
 ---
+
+**(FOUNDER, fixer round 2026-09-06: E12 · v95 — the order the seven are built in, and which four are commodity.)**
+The founder chose **4 → 5 → 3 → 2 → 7 → 1 → 6** from C's list (THINKER: C17, A2 · FIXER: C; A): the board with its
+*waiting on you* column and read-back form first, because it is the one page that touches a venture's work; then
+page 5's top strip, where the briefing's first line spends the founder's attention (§14.8); then the dashboard; then
+the fleet page, whose substrate ships; the canvas; the office the founder named first; and page 6 last, as v61 already
+decided. **Pages 1, 2, 3 and 7 are `adapter` under v96** — page 1 is pixel-agents plus our writer, page 2 is
+`claude agents` and `SendMessage` plus the two-verb split, page 3 reads the vendor's four fields, page 7 is the
+Langflow idiom — each the thinnest reader of a named vendor surface, carrying `vendor_wins_if:`, **Deleted when it
+matches** (§13a.6). Only page 4 and page 5's engines view are kernel work. §17.5 carries the adapter table; §19 draws
+the order. **What the founder loses:** the office arrives later than they asked. **The losing image:** §D's order, the
+office first · `wins_if:` a quarter in which visits to pages 1 and 2 end in reading and no tap acts.
 
 ### 14.3a The page manifest — how *every element is a fact or a tap* stops being a promise
 
@@ -280,8 +295,20 @@ orchestrator and then getting more subagents and what they are doing in the curr
 and who just sleep. And then when I click on it, the terminal which runs the agent on my Mac is popping up, so I can
 message it or message it directly from the mission control."*
 
-**What it shows.** The Operator and its children; who is working, who is sleeping, what each is doing on the current
-task.
+**What it shows.** ~~The Operator and its children~~ **Every Operator and its children** — N of them, each a `kind:
+operator` row in `sessions.jsonl` with a heartbeat (amended 2026-09-06: E8 / THINKER: A6 · O84, W41) — who is working,
+who is sleeping, what each is doing on the current task.
+
+**(FOUNDER, fixer round 2026-09-06: E8 · v91 · O84 — one Operator was already false.)** The plan drew one Operator;
+this Mac ran **five `ceo-*` worktrees in three terminals**, 825 commits by Claude Code to 129 by the founder (THINKER:
+A6 · W41). A premise false from the start makes the reserve, sterility and the lease misreport rather than fail. So an
+Operator instance is **a row**: `kind: operator`, venture, heartbeat from a `SessionStart`/`Stop` hook pair in
+`operator.md`'s own settings; page 2 renders every live row, and a *which* on page 4 shows **who has claimed it**
+(`claim: {operator, at}`, one-tick expiry), so two Operators cannot answer one question. The founder-present gate is
+per venture and the WIP limit counts interactive sessions. **Mechanism:**
+`sessions.jsonl` · `decide.jsonl` · `operator.md` (**ABSENT**, §L O84; §3 owns the registry, this page reads it) ·
+losing image: one Operator enforced by a lease — §J 77 · `wins_if:` a month of `sessions.jsonl` shows one live row at
+a time.
 
 **(NEW: surfaces.md's single largest finding is that this page substantially ships, and the ordering the founder asked
 for is already the vendor's.)** Claude Code **agent teams**: *"One session acts as the team lead, coordinating work,
@@ -296,8 +323,23 @@ keep their own rows.
 and tmux pane ids**; `~/.claude/teams/<team>/inboxes/<agent>.json` is the mailbox; `~/.claude/tasks/<team>/` is the
 task list; the team name is `session-` plus the first eight characters of the session id.
 
-**What each tap launches.** Tap a row → attach to that agent's terminal (§14.11). Message a row → **write the agent's
-inbox file**; entries are validated on read and malformed ones are *"removed from the file"*.
+**What each tap launches.** ~~Tap a row → attach to that agent's terminal (§14.11). Message a row → **write the agent's
+inbox file**; entries are validated on read and malformed ones are *"removed from the file"*.~~ **Two verbs, and the
+row says which** (amended 2026-09-06: E12 / THINKER: A2 · O121 · W34): **`attach:`** only where `sessions.jsonl`
+carries a tmux session name — every child `bin/run` mints is `tmux new-session -d -s <uuid8> -c <dir> claude -p …`,
+with `--tmux=classic` for the worktree agents — or where `config.json` carries a real `%N` pane id; **`message:`** for
+an in-process teammate, through the shipped `SendMessage` transport (v80), whose ids are recorded as attributes and
+never as a join key. The inbox file is that transport's on-disk form and stays read-validated; nothing here writes it
+by hand.
+
+**(THINKER: A2 · W34 — why the tap had to split.)** Forty-eight teams, 224 members, **219 `backendType: in-process`**,
+and pane ids that are the strings `"in-process"` and `"leader"`: **no teammate has a pane**, so a page promising one
+verb that always attaches would be blamed for the runtime. The founder's sentence is satisfiable for minted children
+and not for teammates, and the page says so per row. The manifest carries **`terminal: ghostty`** — the founder runs
+Ghostty, and `--tmux` wants iTerm2 — so `--teammate-mode tmux` inside tmux is a Floor habit the page detects, never a
+rule. **Mechanism:** `keel/surfaces/pages/2.yml` declaring both verbs · `bin/run` minting into tmux (**ABSENT**, §L
+O121). **The losing image:** one tap that always attaches · `wins_if:` `claude --attach` accepts an in-process teammate
+id. **How we would know:** a tap on a `-p` row opens that pane in Ghostty, latency recorded.
 
 **(NEW: the one sentence that decides how the page may touch that substrate.)** *"The team config holds runtime state
 such as session IDs and tmux pane IDs, so don't edit it by hand or pre-author it: your changes are overwritten on the
@@ -358,6 +400,28 @@ a dashboard. **Both are kept, by one rule: every number on the page names the ta
 | an anomaly | → **the cord** |
 | the quality-of-belief split — how much of what is believed is rung 1 and how much rung 4 (§11) | → the done-tests behind the rung-4 share |
 | **the portfolio strip** — every venture, its spend and its tempo *(new 2026-09-06: O12; it was page 1's second job)* | → retempo, or that venture's intents |
+| **`night_capable`** — can this Mac hold a night: AC · `sleep 0` or `disablesleep 1` · assertions, from `pmset` every tick, with the printed reason when false *(new 2026-09-06: E13 · v84 · O81)* | → the `unattended` brief it refused, and the cloud carrier it routed to where `cloud: allow` |
+| **the window gauge against its high-water mark** — the founder's `ceiling:` as a percentage, the absolute beside it *(new 2026-09-06: O115 · W39)* | → retempo that venture |
+
+**(FOUNDER, fixer round 2026-09-06: E13 · v84 · O81 — E1's mechanism, and this page is where it shows.)** The founder
+chose no box (E1): the night runs on this Mac, and the cloud lane is the fallback when the Mac cannot. So the Watch
+computes **`night_capable`** from `pmset` every tick, refuses an `unattended: true` brief with the printed reason when
+it is false, and routes it to the cloud carrier where the charter says `cloud: allow`. The measurement behind it:
+`sleep 1` on AC and battery, **391 maintenance sleeps in seven days**, 24 clamshell (THINKER: A1 · W33) — a habit the
+Watch cannot verify is a wish, so it is a predicate and a page-3 fact. §4 owns the predicate and §15 the host file
+(`keel/host/power.yml`); this page renders it and the briefing carries the line. **Mechanism:** `bin/watch` ·
+`keel/host/power.yml` · `bin/probe` (**ABSENT**, §L O81) · an **adapter** over `pmset` · losing images: a
+`disablesleep` habit gating the Watch · `wins_if:` R37 shows the Mac awake on AC every declared night unenforced; the
+always-on box — §J 73.
+
+**(NEW: O115, fixer round 2026-09-06 · THINKER: A12 · W39 — the gauge has a denominator before the first run.)** v74's
+window gauge is a fraction of an observed high-water mark, and before the first run nothing has been observed. A measured mark already
+sits on disk: `budget-guard.js`'s baseline, **peak 1,961,285 output tokens in any rolling five hours over 99
+transcripts**. `keel/logbook/window-highwater.yml` is seeded from it, marked `seed: true` and `tokenizer:
+sonnet-4.6-era`; the founder writes `ceiling:` as a percentage, this page shows the absolute beside it, and **the
+first observed week replaces the seed**. §16 owns the file; the subsidy line reads it too. **Mechanism:**
+`keel/logbook/window-highwater.yml` (**ABSENT**, §L O115) · an **adapter** over `rate_limits` · `wins_if:` the first
+charter's founder asks what a window is.
 
 **(FACT: world.md 4 — W4, and it changes what this page computes rather than what it shows.)** Four of the numbers
 above are now **structured vendor fields the page can read instead of derive**: a per-session `prompt_cache` object
@@ -519,6 +583,19 @@ engines, because the briefing answers *what happened* and this is the page that 
 to page 4 instead, as a "waiting on you" column over the one house queue (**O9**, §14.7), so that a decision sits
 beside the work it blocks. **Both remain published phone pages**, which is how they are read away from the Mac (v39).
 
+**(NEW: the briefing's first line and its last, fixer round 2026-09-06 — both spend or price the founder's attention,
+which the plan had never budgeted; conv. 1, 8.)** **The first line is *decisions taken · deferred · defaulted*, with
+the founder-minutes each cost** (E15 · v87 · O96; E3 · O95) — because the Desk now refuses to open a which past
+`decisions_per_window × horizon`, a refusal is a row, and the founder should see in one line how much of the queue they
+answered, deferred, or let fall to a default. Beside it prints **the agreement rate with the shown recommendation**
+(v89, §13.3b). Two lines further down: **the shadow subsidy line** (O116 · R35) — Σ shadow USD of unattended runs at
+list price ÷ the seat price per month, the size of the bet on §I row 1, printed from the first run. And, from E13,
+**whether `night_capable` held all night** and what it refused. §3 and §4 own the which budget, §16 owns the subsidy
+arithmetic and `founder_hours:`; this strip renders them. **Mechanism:** the briefing generator (**ABSENT**, §L O95,
+O96, O116) · `wins_if:` for the first line, v87's — a quarter with no backlog past one window's throughput and the
+second option chosen over a third of the time; for the subsidy line, it stays small for a quarter of two driven
+ventures.
+
 **(FINAL §13.4, unchanged.)** The briefing's shape is the newsroom budget meeting: what moved, what finished, what is
 stuck, **what I could not check**, what is waiting on you, what it cost, whether the books agree with the bank, what
 I got wrong, and what I would do next. The field to fight for is unchanged: **what I could not check.** A briefing
@@ -549,8 +626,8 @@ repo→3D-graph project was verified"*, and this is **the thinnest of the five s
 appetite question went to the founder, as §20 row 10.
 
 **(FOUNDER, v61: build it, and build it last of the seven.)** *"Build it, but last in the page order."* So page 6 is
-**the seventh page written**, after pages 1, 2, 3, 4, 5 and 7 — the order is by dependency and evidence, not by page
-number. Two things follow and both are the point of putting it last. **The renderer is decided and the extractor is
+**the seventh page written**, ~~after pages 1, 2, 3, 4, 5 and 7~~ after **4 → 5 → 3 → 2 → 7 → 1** (amended 2026-09-06:
+E12 · v95, §14.3) — the order is by dependency and evidence, not by page number. Two things follow and both are the point of putting it last. **The renderer is decided and the extractor is
 not**, so the page that needs original work waits for the six that do not; and **one research lane on
 repository-to-graph tooling runs before the extractor is written**, so the thinnest-evidenced area gets its evidence
 before anyone builds against it rather than after. §19 draws the dependency: page 6 is the only page that waits on
@@ -629,17 +706,26 @@ tmux has-session -t <name>                            # does it still exist
 flowchart TD
     TAP["A tap on ANY page:<br/>an avatar · a row · a card · a node · a canvas item"] --> AUTH{"v66: is this a WRITE route?<br/>Every write route checks the<br/>keychain-held token"}
     AUTH -->|"no token"| REFUSE["REFUSED, and logged.<br/>A tap is a dispatch, whatever<br/>the page calls it."]
-    AUTH -->|"token checks out"| WHO{"Does this agent<br/>already have a session?"}
-    WHO -->|"yes, a teammate"| PANE["Read its tmux pane id from<br/>~/.claude/teams/&lt;team&gt;/config.json<br/>(READ ONLY — it is overwritten on every state update)"]
-    WHO -->|"yes, a background session"| ATT["claude --attach &lt;id&gt;"]
-    WHO -->|"no"| NEW["bin/run composes the argv,<br/>mints a UUID for --session-id,<br/>and starts a detached tmux session"]
-    PANE --> ATTACH["tmux attach-session -t &lt;name&gt;<br/>in a terminal on the Mac"]
+    AUTH -->|"token checks out"| WHO{"What does the row declare? (O121)<br/>attach: · message: · neither"}
+    WHO -->|"attach: a minted -p child"| SESS["sessions.jsonl carries its tmux name:<br/>tmux new-session -d -s &lt;uuid8&gt; -c &lt;dir&gt; claude -p …<br/>(--tmux=classic for the worktree agents)"]
+    WHO -->|"attach: a teammate with a REAL %N pane id"| PANE["Read its pane id from<br/>~/.claude/teams/&lt;team&gt;/config.json<br/>(READ ONLY — overwritten on every state update;<br/>W34: no %N id exists today)"]
+    WHO -->|"neither: no session yet"| NEW["bin/run composes the argv,<br/>mints a UUID for --session-id,<br/>and starts a detached tmux session (bare -p, never --bg — O91)"]
+    SESS --> ATTACH["tmux attach-session -t &lt;name&gt;<br/>in GHOSTTY on the Mac (terminal: ghostty)"]
+    PANE --> ATTACH
     NEW --> ATTACH
-    ATT --> ATTACH
     ATTACH --> STERILE["The Floor's sterile rule begins by that act (§14.2)"]
     TAP -.->|"the founder wants to WATCH, not join"| CAP["tmux capture-pane -p -e -J -t &lt;name&gt;<br/>rendered into the page. No attach, no interference."]
-    TAP -.->|"the founder wants to MESSAGE it"| INBOX["Write ~/.claude/teams/&lt;team&gt;/inboxes/&lt;agent&gt;.json<br/>— the only write target in that directory"]
+    WHO -.->|"message: an in-process teammate"| MSG["SendMessage — the shipped transport (v80);<br/>its inbox file is the on-disk form, read-validated,<br/>never hand-written"]
 ```
+
+**(NEW: O121 · v95, fixer round 2026-09-06 — what changed in the diagram, and why.)** The old branch *yes, a teammate
+→ read its pane id* assumed a pane exists; **W34 measured that none does** (219 of 224 members `in-process`, pane ids
+that are the strings `"in-process"` and `"leader"`), so the row now declares which verb it carries and the page never
+promises an attach it cannot perform. The *background session* branch is gone with it: `bin/run` mints via **bare
+`claude -p` in a detached tmux session**, never `--bg` (O91; §J 85 keeps `--bg` as the night's carrier, `wins_if:` R31
+shows a service mode that does not idle-exit), so the pane, pgid and session id are ours. `claude --attach` remains for
+the founder's own background sessions and is not a page verb. The terminal the page opens into is **Ghostty**, named
+in the manifest.
 
 **For the founder's own sessions there is a shipped shortcut, with conditions.** `claude --teammate-mode tmux` gives
 **a pane per teammate**: *"Split panes: each teammate gets its own pane. You can see everyone's output at once and
@@ -652,15 +738,21 @@ Magic). The flag is **experimental and hidden**: *"The `--teammate-mode` flag is
 integrated terminal, Windows Terminal and Ghostty** (H). A surface that silently degrades on three common terminals is
 a surface that will be blamed for the runtime's behaviour.
 
-**Background sessions, the other route:** `claude --bg` *"Start the session as a background agent and return
-immediately. Prints the session ID and management commands"*, then `claude --attach <id>` *"Attach to a background
-session in this terminal."* `--session-id` takes a caller-supplied UUID, which is what lets the website own the id it
-later attaches to; `--name` sets a name *"shown in `/resume` and the terminal title."*
+**Background sessions, ~~the other route~~ not the night's route (amended 2026-09-06: O91 · THINKER: A7 · W38):**
+`claude --bg` *"Start the session as a background agent and return immediately. Prints the session ID and management
+commands"*, then `claude --attach <id>` *"Attach to a background session in this terminal."* It ships — and it hands
+the pane, the pgid and the lease to a vendor daemon that *"idle 5s with no clients — exit[s]"* (W38), whose lease
+semantics are unread (R31). So `bin/run` mints with bare `-p` in tmux and `--bg` is §J 85. `--session-id` still takes
+a caller-supplied UUID, which is what lets the website own the id it later attaches to; `--name` sets a name *"shown
+in `/resume` and the terminal title."*
 
 **(UNVERIFIED, and named rather than assumed.)** **AppleScript, `open -a Terminal`, and an iTerm2 AppleScript
 hand-off**: *"Not found: any primary source … I fetched none, so the obvious macOS route is unverified, not absent."*
-The design does not rest on it. **Also UNRESOLVED:** `-w` / `--worktree` and `--tmux`, which a prior measurement
-recorded and this session's fetch of the CLI reference did not document. One `claude --help` closes it.
+The design does not rest on it. ~~**Also UNRESOLVED:** `-w` / `--worktree` and `--tmux`, which a prior measurement
+recorded and this session's fetch of the CLI reference did not document. One `claude --help` closes it.~~ **Closed
+2026-09-06 (W35 · THINKER: A17):** `claude --help` 2.1.263 lists `-w/--worktree` and `--tmux[=classic]`, along with
+`--no-session-persistence`, `--settings`, `--autocompact` and `--fallback-model` — five flags the plan had mentioned
+zero times. `--tmux=classic` is what `bin/run` passes for the worktree agents (O121).
 
 **(NEW: v66 — the tap is the dispatch, so the tap is what is authenticated.)** Every route in the diagram above that
 **writes** — mint a session, attach, write an inbox file, drag a card — **checks the keychain-held token**. Reads may
@@ -688,7 +780,8 @@ disappointment.
 the question**: the two-tier index (v27, §13.4) · delta-only writes (v24, §13.3) · one writer (v25, §13.1) · and the
 **one-hour subscription cache TTL**, which is why standing prompts are byte-identical and carry no timestamp (§G.3,
 §16). A fifth, from the same place: agent teams cost *"approximately 7x more tokens … when teammates run in plan
-mode"*, so page 2's convenience has a price and §G.1 pays it with Sonnet teammates.
+mode"*, so page 2's convenience has a price and ~~§G.1 pays it with Sonnet teammates~~ **it lands at each teammate's
+own file's model — v59 struck §G.1's teammate row, and §9.2 states the cost once** (amended 2026-09-06: v59).
 
 ---
 
@@ -721,6 +814,14 @@ sound**. One no-model program, `bin/bell`, is **the only thing that may ring**, 
 `wake-me` classes, the budget, and the per-channel acted-on rate. **A channel the founder never acts on stops being a
 channel**, which is the only defence against the budget being spent on the cheapest thing to send.
 
+**(NEW: O122, fixer round 2026-09-06 · THINKER: A19 · FIXER: A — the bell is a wrapper, not a transport.)** The vendor
+already ships the transport: Remote Control push, `agentPushNotifEnabled`. `bin/bell` **wraps it** and adds only what
+the vendor does not have — the classes, the budget and the per-channel acted-on rate — which makes it an **adapter**
+under v96, the thinnest reader of a named surface. **Mechanism:** `bin/bell` over the vendor's push (**ABSENT**, §L
+O122) · `vendor_wins_if:` the push exposes an acted-on read, when the rate becomes a field · losing image: a fourth
+channel — §J 83 · `wins_if:` the vendor's push exposes no acted-on read after a quarter. The watermark half of O122 is
+§13.7's.
+
 **Why it is a program and not a page control.** Everything else in this section is reached by the founder opening it;
 a bell is the one thing that reaches *out*. That makes it an outward act in §12's sense, and outward acts here are
 performed by programs that hold no model.
@@ -732,11 +833,22 @@ v67) — revoking outward grants, finishing nothing new, leaving every artifact 
 two, because a kill that lives in a second place is a kill that disagrees** — which is exactly the risk a seven-page
 website introduces, and the reason it is a control rather than a page. §12.9 owns both halves; this page taps them.
 
+**(FOUNDER, fixer round 2026-09-06: E8 · v91 · O85 — one verb, two scopes, and the control says which.)** With N
+Operators (§14.5) *stop everything* had two readings, and a phone tap that killed the founder's own Floor mid-sentence
+would be the second. So the cord is **`bin/stop`**, one verb: **`--night`** signals `bin/run`'s process groups and
+stops dispatch — *stops the night, not the Floor*, and every page's control and the phone **default to it and are
+labelled so**; **`--all`** also `SIGTERM`s every registered Operator session and its team. Four receivers (the Watch's
+file, the process groups, the Operator sessions, the cloud carrier's cancel where one exists), **one record**. The
+dead-man lease (v102, §4) is the stop that needs nothing; the tap stays the fast path. **Mechanism:** `bin/stop` ·
+every page's control declared in the manifest (**ABSENT**, §L O85; §12 owns the verb) · **How we would know:** pull
+`--all` and count survivors; the drill's count and the record disagreeing once is the `wins_if:`.
+
 **Enforced by:** every page reading the one state and writing nothing but the inbox file and the intent log —
 **and every write route checking the token, because those two writes are a dispatch** (moved 2026-09-06: v66)
 (**ABSENT**) · `~/.agentvibe/events.jsonl` and `mission-control/`'s SSE feed (**exist** on branch
 `ceo-1-1788609834`; the spine, renamed) · the room's JSON writer (**ABSENT**) · `bin/run` as the only composer of
-argv, so that a tap on a website cannot widen a grant (**ABSENT**).
+argv, so that a tap on a website cannot widen a grant (**ABSENT**) · `bin/stop` as the one cord verb and `bin/bell` as
+the one ringer (**ABSENT**; O85, O122).
 
 **(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
 it.)**
@@ -750,3 +862,16 @@ it.)**
 | The Q&A answer renders with its ids or renders a refusal | the page's renderer | **O54** | **ABSENT** |
 | One bell, reading the classes, the budget and the per-channel acted-on rate | `bin/bell` | **O18** | **ABSENT** |
 | Page 3 reads the vendor's `prompt_cache`, `rate_limits.spend_limit`, Loops breakdown and `modelPricing` | the page's reader | **W4** | fields **ship**; the reader **ABSENT** |
+
+**(NEW: the fixer round of 2026-09-06, one row per mechanism, each with v96's `class` and `wins_if:`.)**
+
+| Mechanism | Path | From | class | `wins_if:` | State |
+|---|---|---|---|---|---|
+| Page order 4 → 5 → 3 → 2 → 7 → 1 → 6; pages 1, 2, 3, 7 are adapters (§14.3) | §19's `P4 → … → P6` | **v95** (E12) | — | visits to pages 1 and 2 end in reading and no tap acts | decided |
+| Page 2's two verbs, `attach:` and `message:`, declared per row; `terminal: ghostty` (§14.5, §14.11) | `keel/surfaces/pages/2.yml` · `bin/run` | **O121** — W34 | adapter · `claude agents` + `SendMessage` + tmux | `claude --attach` accepts a teammate id | **ABSENT** |
+| N Operators as `kind: operator` rows with heartbeats; a which claimed before it is answered (§14.5) | `sessions.jsonl` · `decide.jsonl` · `operator.md` | **v91 · O84** (E8) | kernel · record | a month of one live row at a time — §J 77 | **ABSENT** |
+| The cord as `bin/stop --night` by default, `--all` behind a second tap; *stops the night, not the Floor* (§14.2, §14.13) | `bin/stop` · every page's control | **v91 · O85** (E8) | kernel · truth | the drill's count and the record disagree once | **ABSENT** |
+| `night_capable` as a page-3 fact and a briefing line, with the refused brief behind it (§14.6, §14.8) | `bin/watch` · `keel/host/power.yml` | **v84 · O81** (E13) | adapter · `pmset` | a night with the predicate true all night ends `orphaned` | **ABSENT** |
+| The window gauge seeded from `budget-guard.js`; the absolute beside the founder's percentage (§14.6) | `keel/logbook/window-highwater.yml` | **O115** — W39 | adapter · `rate_limits` | the first charter's founder asks what a window is | **ABSENT** |
+| The briefing's first line — decisions taken · deferred · defaulted, with founder-minutes — and the subsidy line (§14.8) | the briefing generator | **O95 · O96 · O116** (E3, E15) | kernel · direction · record | v87's; the subsidy stays small for a quarter of two driven ventures | **ABSENT** |
+| `bin/bell` wraps the vendor's push, adding only classes, budget and acted-on rate (§14.13) | `bin/bell` | **O122** | adapter · the vendor's push | the acted-on rate cannot be computed after a quarter | **ABSENT** |

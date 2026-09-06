@@ -1,6 +1,7 @@
 ## 13 · Memory and knowledge — what is remembered, who writes it, and what rots
 
-*obeys: v24, v25, v26, v27, **v69** (rethink round, 2026-09-06), and §E · inherits: FINAL §10 and §11*
+*obeys: v24, v25, v26, v27, **v69** (rethink round, 2026-09-06), **v93**, **v99** (fixer round, 2026-09-06), and §E ·
+inherits: FINAL §10 and §11*
 
 ---
 
@@ -50,16 +51,19 @@ flowchart TB
         B["ALREADY-BUILT · what exists, where, what it does"]
         C["CRAFT · proven kits, examples of good"]
         O["OPEN · questions waiting on the founder"]
+        M["MARKET · house scope; one row per<br/>contact-rung movement (v99)"]
     end
-    LOG -->|"the curator reads handovers"| CUR["curator — the ONLY writer<br/>Read Write Edit Glob Grep · no Bash"]
+    LOG -->|"the curator reads handovers"| CUR["curator — the ONLY writer of six<br/>Read Write Edit Glob Grep · no Bash"]
     CUR --> F & T & N & B & C
     WATCH["The Watch: a which queued;<br/>a conflict blocking a live intent"] --> O
+    RECON["bin/reconcile — no model;<br/>MARKET's only writer (O99)"] --> M
     MEM -->|"a SLICE, assembled per run"| RUN["A run's context"]
     RUN -->|"handover.learned — a PROPOSAL,<br/>never a write"| LOG
 ```
 
 **(FINAL)** Scope, strictly: `TASTE` and `CRAFT` are the founder's and cross every venture. `FACTS`, `NEGATIVES`,
-`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **Credentials are not memory**, and
+`ALREADY-BUILT` and `OPEN` are per venture and do not cross without a promotion. **(NEW: v99 — a seventh store crosses;
+§13.2b.)** **Credentials are not memory**, and
 are never in a file — **mechanism (moved 2026-09-06: O17):** ~~a `gitleaks`-class secret scan~~ **`bin/redact`,
 the one redaction program**, run over every store write as a **rung-one anchor on the house repository on every push**
 (**ABSENT**), which §13.8 already counts among the free deterministic checks and are never in any of these files.
@@ -110,6 +114,26 @@ person can ask to have deleted was never in any of those files.
 with one writer, enforced by `bin/check-stores` (**ABSENT**) · the class and retention fields on the item schema
 (**ABSENT**). The consent register `keel/consent.yml` is the Sender's, not the curator's — §12.8b owns it, and memory
 never reads it.
+
+**(FOUNDER, fixer round 2026-09-06: E10 · v93.)** The erasure's *settled by* grepped the wrong tree: `~/.claude/projects`
+holds every stranger's body verbatim (THINKER: A4). §12.8b owns the amended *settled by*; §13.7 owns what mining may read.
+
+---
+
+### 13.2b The seventh store — the market record, and the only store the curator does not write
+
+**(NEW: O99 · v99, fixer round 2026-09-06 · THINKER: C8 · FIXER: C; B's record half.)** Only `TASTE` and `CRAFT`
+crossed ventures, and §13.6 scopes the highest-value store to the venture — so **ten ventures learn pricing from
+scratch ten times**. What crosses now is **what the world answered**: `keel/shared/market.jsonl`, one row per
+contact-rung movement — venture · intent · class (`price · channel · positioning · copy · design · offer`) · artifact
+hash · movement (rung from → to) · the record that proved it · consent ref · taint ids. **Written only by
+`bin/reconcile`**, the no-model program that reads records the company does not write, so every row is rung 1 by
+construction and the curator never touches it. Read by every venture's Desk (the `outcome:` tie-break, §2 · §4) and
+by the slice (§13.5). **The ship log (§11.9) becomes a view of it.** No method in it: *playbook* stays refused.
+
+**Mechanism:** one writer enforced by `bin/check-stores` (**ABSENT**, §L O99) · the slice rule in `bin/run`
+(**ABSENT**). **The losing image:** per-venture facts with founder-reviewed promotion · `wins_if:` a year of two
+ventures with no cross-loaded market row; the world's vote — a Desk share moved by the record — is §J 87.
 
 ---
 
@@ -162,11 +186,18 @@ same-failure test, which three other mechanisms already sit on. And a conflict t
 a conflict nobody ever returns to: **the pair becomes an item with its own owner and its own expiry**, and at expiry
 it reaches the founder as a *which* with both readings stated. Keeping both stops being a way of deferring forever.
 
-**(R9, OPEN — and it is aimed at this section's strongest rule.)** Does an unattended `-p` run **auto-compact**, and
-does it emit anything the log can see? v24 forbids a rewrite because one rewrite step took ACE from better-than-
-baseline to worse-than-baseline. If the runtime compacts a long night run on its own, **v24 is being broken in the one
-place it cannot watch**, and the answer is not a new rule but a bound on run length. One long `-p` run with
-`stream-json --verbose` settles it.
+**(R9, ~~OPEN~~ answered by O90, its residue R32 — and it is aimed at this section's strongest rule.)** Does an
+unattended `-p` run **auto-compact**, and does it emit anything the log can see? v24 forbids a rewrite because one
+rewrite step took ACE from better-than-baseline to worse-than-baseline. If the runtime compacts a long night run on
+its own, **v24 is being broken in the one place it cannot watch**, and the answer is not a new rule but a bound on run
+length. ~~One long `-p` run with `stream-json --verbose` settles it.~~ **(NEW: O90, fixer round 2026-09-06 · THINKER:
+A10 · W35.)** It does: `--autocompact` is **on by default**, so a long night run was being rewritten by the runtime
+and paying a 2x cache write on the next turn. The bound is now the argv: `bin/run` passes `--autocompact <context>`
+from a `context:` column in `prices.yml` (1,000,000 for Opus 5 and Fable 5.1; 200,000 for Haiku), so a run reaches
+`maxTurns` or its ceiling before it can compact, and a `PreCompact` hook writes `run.compacted`, so the case that
+still fires is a log row. **(R32, OPEN)** is the residue — does `PreCompact` fire under `-p`, and does a compaction
+cost the 2x write. **Mechanism:** `bin/run` · `prices.yml` (**ABSENT**, §L O90; §9 owns the column) · `wins_if:` R32
+shows the event fires and the write spike is small.
 
 **Mechanism, and two thirds of it already exist on branch `ceo-1-1788609834`.** `scripts/evict-memory.mjs` implements
 the EVICT branch exactly — an irreversible entry is never archived while its subject exists, anything cited by a live
@@ -175,6 +206,44 @@ rather than being pruned. `scripts/ledger.mjs` implements the expiry branch — 
 it is not an item, and when it comes due exactly one of Refresh, Deprecate or Waive-with-a-new-deadline is recorded.
 Both are renamed into the curator's rules rather than rebuilt. What is ABSENT: `bin/curate`, and the item schema that
 requires source, date, expiry and falsifier.
+
+---
+
+### 13.3a What grades the curator — the held-out test, the calibration seed, the executable falsifier, the canary
+
+**(NEW: O113, fixer round 2026-09-06 · THINKER: B12 · FIXER: B; C takes the seed.)** The curator grades every run and
+**nothing graded the curator**: §13.3's flowchart checks a delta's *form*, and a format check admits a well-formed
+false item. The plan's cure for a self-grading run is applied to the one agent with write authority over what the
+company believes. Four mechanisms:
+
+1. **Every case set the curator writes** — rehearsal, memory, negatives, taste — passes **O62's held-out
+   discrimination test** (§11) before it may judge; the rate prints beside it.
+2. **A founder-labelled `class: calibration` seed for memory** — v78's frozen-set idiom: items no curator may edit,
+   in `keel/golden/`, scoring its dedup and conflict decisions (O44) every pass.
+3. **A memory item's `falsifier:` must be executable** — a command with an exit code, or a URL plus a quote
+   `check-citations.mjs` resolves — never prose; `bin/check-stores` refuses the rest.
+4. **A nightly canary**: a well-formed false item from `keel/fixtures/` injected into the scratch house (O78); the
+   drill asserts something downstream refuses it.
+
+**Mechanism:** `bin/check-stores` · `keel/golden/` · `keel/fixtures/` (**ABSENT**, §L O113) · O62's runner (§11).
+**The losing images:** a format-checked curator · `wins_if:` the format check alone refuses every canary for a year;
+two curators — §J 82.
+
+---
+
+### 13.3b The taste control arm — the taste store learns the founder, not the model
+
+**(NEW: O97, fixer round 2026-09-06, with v89 · THINKER: B16, B5 · FIXER: B; C.)** A founder answering a which with
+one tap mostly takes the recommendation — sixteen of sixteen in the interview round — and a taste store built from
+those taps learns **the model's recommendations with the founder's signature on them**; O62 cannot see it, because
+*accepted* equals *recommended*. So on a founder-set fraction of whiches the recommendation is **hidden or shuffled**
+(`recommendation_shown: false` on the which row, §4's schema), and **the taste store's held-out test runs on
+control-arm whiches and Floor rejections only**. Agreement with the shown recommendation prints beside the taste score
+on the briefing — v89's agreement rate, read as a choice-architecture warning.
+
+**Mechanism:** one boolean on the which schema (§4) · the curator's pass scoring O62 on two slices (**ABSENT**, §L
+O97) · the fraction a dial in `settings.yml` (§16, O118). **The losing image:** every which shows its recommendation ·
+`wins_if:` the control arm's choices match the shown arm's (**R39**, OPEN).
 
 ---
 
@@ -205,7 +274,8 @@ these three must never be missed by one:
 
 1. the venture's `never` list,
 2. the negatives touching this exact move,
-3. the open questions blocking this intent.
+3. the open questions blocking this intent,
+4. the market rows matching this move's class (§13.2b — *added 2026-09-06: O99 · v99*).
 
 **(FINAL)** The slice is ordered by cost — the byte-identical standing prompt first, so siblings share the cache; the
 charter and the intent next; the slice last. **The slice says what it left out.** Every item carries a counter scored
@@ -254,6 +324,9 @@ handover; the answer is a NEGATIVE candidate.
 whose reproducing command names no venture path is a fact about the world, and is house scope.** *This CLI flag does
 not do what its help text says* belongs beside `CRAFT`; *this venture's checkout script fails on a clean clone* does
 not. The scope field is written by the same program that writes the command, so nothing has to decide it later.
+**(NEW: O99 extends the split, fixer round 2026-09-06 · THINKER: C8.)** A negative whose reproducing record is **a
+world reply** — a channel that never answered, a price that never converted — is house scope with `class: market`: the
+world's answer is a fact about the world, not about the venture that asked (§13.2b).
 
 **(NEW: memory.md's coverage table places this store in the world.)** A negative-knowledge log appears in **research**
 (ACE stores a failure mode as a unit with a helpfulness counter) and in one prior catalogue entry with a pre-action
@@ -282,7 +355,9 @@ costs one failed batch, not a broken system.
 
 ```mermaid
 flowchart TD
-    TR["3,060 transcripts already on the Mac<br/>SNAPSHOT — copied, never read live<br/>WATERMARK: only what is newer than the last pass (O42)"] --> LOCAL["Local pass · no window at all<br/>bin/embed — MiniLM (384 dims, Apache 2.0)<br/>+ a local index (O13)"]
+    TR["The FLOOR's transcripts only — 3,116 files, 3.1 GB, 56 a day (THINKER: A4)<br/>SNAPSHOT — copied, never read live<br/>WATERMARK: only what is newer than the last pass (O42)<br/>a night child persists NO transcript (O88)"] --> TAINT{"Episode provenance carries<br/>a taint id? (O65)"}
+    TAINT -->|"yes"| REFUSED["REFUSED — never enters the pass (v93)"]
+    TAINT -->|"no"| LOCAL["Local pass · no window at all<br/>bin/embed — MiniLM (384 dims, Apache 2.0)<br/>+ a local index (O13)"]
     LOCAL --> RED["bin/redact FIRST — the ONE redaction program (O17):<br/>credentials, third-party PII, anything a client owns.<br/>A PII positive BLOCKS here (O66)"]
     RED --> SEG["Segment into episodes<br/>by project and by date"]
     SEG --> MINE{"bin/classify sorts each episode<br/>(Qwen3-0.6B, Apache 2.0) (O13)"}
@@ -309,7 +384,21 @@ Gemini or a local model"* — and Gemini is installed, unauthenticated, one foun
 what is newer than the last pass and nothing else. The backlog pass over 3,060 files and the steady pass over last
 night's transcripts stop being two programs with two failure modes, and **`bin/mine --since` is the whole of the
 difference between them.** With it, *"unread transcript count"* — a progress bar for a backlog that clears once and
-then reads zero forever — becomes **watermark lag**, which still means something in year two (deletion 17).
+then reads zero forever — becomes **watermark lag**, which still means something in year two (deletion 17). **And it
+is a day-one program** (O122, fixer round 2026-09-06 · THINKER: A4): the corpus grows **56 files a day**.
+
+**(FOUNDER, fixer round 2026-09-06: E10 · v93 · O88 — what the pass may read, decided.)** Asked whether their own
+Floor transcripts should be capped or kept, the founder chose *"Keep them for mining"*. Three consequences. **The pass
+reads only the Floor's `~/.claude/projects`** — the founder's own sessions — and **every night child passes
+`--no-session-persistence`** (W35: it ships in 2.1.263), so a `-p` run leaves no vendor transcript; its `stream-json`
+trace in `logbook/runs/<id>/` is the record. **The pass refuses any episode whose provenance carries a taint id**
+(O65): the mining input was the one place a stranger's body could re-enter memory around §13.2a's hash. The erasure
+grep now covers `~/.claude/projects` (§12.8b). **The losing images:** cap at thirty days · `wins_if:` mining finds
+nothing older than a month worth keeping; grep `keel/` and stop · `wins_if:` the vendor ships a per-project transcript
+exclusion or an erasure verb. **(R30, OPEN)** is the test: a canary in a fixture inbound
+row, `scout` → `steward` as night children, `grep -r <canary> ~/.claude/projects` returns nothing; erase; `grep -r
+<canary> keel/` finds only the hash. **Mechanism:** `bin/run` · `bin/mine --since` · `keel/host/settings.json`
+(**ABSENT**, §L O88; the argv is §6's, the reading rule this section's).
 
 **(NEW: O13, and it is why the two local boxes above are named as programs.)** The local tier has **no reachable
 carrier**: the armed sandbox denies a loopback `bind()`, so a local model server inside a run cannot be reached, and
@@ -461,19 +550,31 @@ published failure case from a paper, not a vendor's score for its own product, a
 rather than to select one.
 
 **Enforced by:** `bin/curate` with the memory paths as its only writable scope (**ABSENT**) · the item schema
-requiring source, date, expiry and falsifier (**ABSENT**) · `scripts/evict-memory.mjs` and `scripts/ledger.mjs`
-(**exist**, branch `ceo-1-1788609834`, renamed) · the local index (**ABSENT**; deletable, rebuilt in one pass).
+requiring source, date, expiry and **an executable falsifier** (**ABSENT**; O113) · `scripts/evict-memory.mjs` and
+`scripts/ledger.mjs` (**exist**, branch `ceo-1-1788609834`, renamed) · the local index (**ABSENT**; rebuilt in one
+pass) · `bin/reconcile` as the market record's one writer (**ABSENT**; O99) · `bin/mine --since` reading the Floor's
+transcripts only (**ABSENT**; O88).
 
-**(NEW: one row per mechanism the rethink round of 2026-09-06 added to this section, with the path SPINE §L gives
-it.)**
+**(NEW: the rethink round of 2026-09-06, one row per mechanism, with SPINE §L's path and v96's `class`.)**
 
-| Mechanism | Path | From | State |
-|---|---|---|---|
-| Memory holds a hash; the body lives in one erasable per-subject store | the memory writer · `keel/subjects/<hash>.yml`; enforced by `bin/check-stores` | **v69** (D4) | **ABSENT** |
-| One redaction program, three call sites — store writes, the mining pass, the PII gate | `bin/redact` | **O17** (with **O66**) | **ABSENT** |
-| A watermark, so the backlog pass and the steady pass are one program | `bin/mine --since` | **O42** | **ABSENT** |
-| The dedup threshold calibrated on labelled pairs; a conflict pair with an owner and an expiry | the curator's pass | **O44** | **ABSENT** |
-| Slice precision, derived by the curator and never self-reported | the curator's pass | **O45** | **ABSENT** |
-| House scope for a negative whose reproducing command names no venture path | the negatives store's scope field | **O43** | **ABSENT** |
-| Eval-only bodies, generated where no agent's namespace resolves | `keel/golden/`; `check:manifest` re-pointed | **O11** | **ABSENT**; `check:manifest` exists |
-| The local tier as programs, because it has no reachable carrier | `bin/embed` · `bin/classify` | **O13** | **ABSENT**; **DEPENDS-ON-R4** |
+| Mechanism | Path | From | class | State |
+|---|---|---|---|---|
+| Memory holds a hash; the body lives in one erasable per-subject store | the memory writer · `keel/subjects/<hash>.yml`; enforced by `bin/check-stores` | **v69** (D4) | kernel · record | **ABSENT** |
+| One redaction program, three call sites — store writes, the mining pass, the PII gate | `bin/redact` | **O17** (with **O66**) | kernel · truth | **ABSENT** |
+| A watermark, so the backlog pass and the steady pass are one program | `bin/mine --since` | **O42** | kernel · record | **ABSENT** |
+| The dedup threshold calibrated on labelled pairs; a conflict pair with an owner and an expiry | the curator's pass | **O44** | kernel · taste | **ABSENT** |
+| Slice precision, derived by the curator and never self-reported | the curator's pass | **O45** | kernel · truth | **ABSENT** |
+| House scope for a negative whose reproducing command names no venture path | the negatives store's scope field | **O43** | kernel · record | **ABSENT** |
+| Eval-only bodies, generated where no agent's namespace resolves | `keel/golden/`; `check:manifest` re-pointed | **O11** | kernel · truth | **ABSENT**; `check:manifest` exists |
+| The local tier as programs, because it has no reachable carrier | `bin/embed` · `bin/classify` | **O13** | adapter · `ollama` | **ABSENT**; **DEPENDS-ON-R4** |
+
+**(NEW: the fixer round of 2026-09-06, one row per mechanism, each with the `wins_if:` v96 requires.)**
+
+| Mechanism | Path | From | class | `wins_if:` | State |
+|---|---|---|---|---|---|
+| The market record; `bin/reconcile` its only writer; the ship log a view (§13.2b, §13.6) | `keel/shared/market.jsonl` · `bin/reconcile` | **v99 · O99** | kernel · record | a year of two ventures with no cross-loaded row | **ABSENT** |
+| Mining reads the Floor's transcripts only; tainted episodes refused (§13.7) | `bin/run` · `bin/mine --since` · `keel/host/settings.json` | **v93 · O88** (E10) — R30 | adapter · `--no-session-persistence` | a fixture canary is found under `~/.claude/projects` after a night | **ABSENT** |
+| Grading the curator: held-out test, calibration seed, executable falsifiers, nightly canary (§13.3a) | `bin/check-stores` · `keel/golden/` · `keel/fixtures/` | **O113** | kernel · taste | the format check alone refuses every canary for a year | **ABSENT** |
+| The taste control arm: O62 scores on hidden-recommendation whiches and Floor rejections only (§13.3b) | the which schema · the curator's pass | **O97** (v89) — R39 | kernel · taste | control and shown arms choose alike | **ABSENT** |
+| `--autocompact` at full context, `PreCompact` logged (§13.3) | `bin/run` · `prices.yml` | **O90** (answers R9) — R32 | adapter · `--autocompact` | R32 shows the event fires and the write spike is small | **ABSENT** |
+| The watermark is a day-one program — 56 files a day (§13.7) | `bin/mine --since` | **O122** (§13's half; the bell is §14's) | kernel · record | — | **ABSENT** |
