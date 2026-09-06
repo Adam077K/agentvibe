@@ -256,8 +256,8 @@ line (**ABSENT**, O117).
 **(NEW: v104 / O118 — forty dials were uninventoried.)** (THINKER: B18) A control system with forty setpoints and no
 setpoint table is tuned by folklore. **`keel/shared/schemas/settings.yml` inventories every founder-set value** with
 `default:` · `evidence:` (the briefing line that is its feedback) · `label: measured | assumed | founder` ·
-`last_touched:`, and **the lint fails a dial with no evidence line**. SPINE §L O118 lists the dials, so the count is
-derived there and never carried here. **The briefing counts dials, and dials untouched for a quarter.** §17 inventories
+`last_touched:`, and **the lint fails a dial with no evidence line**. SPINE §L O118 lists the dials — the reserve share
+among them — so the count is derived there and never carried here. **The briefing counts dials, and dials untouched for a quarter.** §17 inventories
 the path. Losing image, dials in prose: `wins_if:` a quarter in which no evidence line moved a default.
 
 **Mechanism:** `keel/shared/schemas/settings.yml`, its lint, the briefing's count (**ABSENT**, §L O118).
@@ -437,7 +437,7 @@ to game it.)**
 for a *warn at* number: cache-read share, tokens per run, and the trust pass rate. **There is no defensible constant
 for any of them**, and a threshold picked to make a chart look decisive is exactly the kind of number this section
 refuses everywhere else. So each is plotted **against its own history** and the alarm is *this shape has moved off its
-own baseline*, which needs no constant and survives a model change, a roster change and a tokenizer change. **(O123)** The Watch's own four rates are charted the same way; **R36** baselines them (§4 owns the controller).
+own baseline*, which needs no constant and survives a model change, a roster change and a tokenizer change. **(O123 — O74 extended to the Watch's own outputs)** Its four rates are charted the same way; **R36** baselines them (§4 owns the controller).
 
 **(FINAL)** Two more lines belong in the briefing beside them and are not numbers: **the reconciliation line** — the
 books agree with the bank, or the incident — and **the week's most expensive refusal**: what was going to happen, what
