@@ -3,7 +3,7 @@
 ```
 version:    final-v2 · 2026-09-06 (rethink round applied) · one company of named agents, one website, one launcher
             ~~final-v2 · 2026-09-05~~ (moved 2026-09-06: the rethink round of DECISIONS §17–§19 is folded into every
-            section; the eighty-two rows of SPINE §A are what a section obeys)
+            section; the ~~eighty-two~~ **one hundred and six** rows of SPINE §A are what a section obeys — v83–v106 from the fixer round of 2026-09-06)
 inputs:     final/FINAL-PLAN.md (branch ceo-3-1788468144) · the founder's direction of 2026-09-05
             (docs/08-agents_work/handoffs/2026-09-05-THE-PLAN-NEXT-TEAM-PROMPT.md, byte-identical on ceo-3 and
             docs/final-plan) · seven research lanes fetched this session, recorded verbatim under final-v2/research/
@@ -12,6 +12,9 @@ inputs:     final/FINAL-PLAN.md (branch ceo-3-1788468144) · the founder's direc
             final-v2/research/room.md and final-v2/research/cloud.md (the two lanes the founder's interview asked
             for, returned the same day) · final-v2/rethink/SYNTHESIS.md, the eight thinking lanes and the sourcer
             lane synthesised — §1 the founder's sixteen decisions, §2 the eighty orchestrator fixes, §5 the
+            [continued below] · the thinker round and the fixer round of 2026-09-06 — three sealed lanes each, on
+            Fable; 64 findings (review/thinkers-digest.md), three fix designs (rethink-2/), fourteen founder answers
+            (DECISIONS §24: four overrules, two delegations) → v83–v106, O81–O127, W33–W41, R27–R40, §J 73–90 ·
             twenty-two contradictions, §7 the deletions, §8 the lane ledger · final-v2/SPINE.md, the decision
             spine every section writes from. The founder's choice, 2026-09-05: KEEL ONLY, AGAIN — THE-PLAN.md,
             mind-2, Fable's round-six design and the buy lane were NOT read, for the second round running
@@ -37,7 +40,7 @@ measured:   this branch = ceo-1-1788609834 at b2cabad = local main, TREE A of fi
             wakes, so "asleep" means the machine could not have run a process
 not:        a build plan, a schedule, a first month, a price list. Nothing here was built, installed,
             authenticated, spent, published or pushed
-companions: final-v2/SPINE.md (the ~~sixty-five~~ **eighty-two** rows and the roster, binding on every section —
+companions: final-v2/SPINE.md (the ~~sixty-five~~ ~~eighty-two~~ **one hundred and six** rows and the roster, binding on every section —
             v54–v65 are the founder's interview of 2026-09-05, and v66–v82 are the rethink round of 2026-09-06:
             sixteen founder decisions and one deletion. It also now carries §L, the eighty orchestrator
             mechanisms; §M, the thirty-two world facts that moved a row with no decision attached; and §N, the
@@ -47,6 +50,10 @@ companions: final-v2/SPINE.md (the ~~sixty-five~~ **eighty-two** rows and the ro
             plus world, room and cloud, verbatim) · final-v2/rethink/ (~~nine lane files and the synthesis~~
             eight thinking-lane files, L1-L8, plus the world lane at final-v2/research/world.md, and the synthesis
             and the founder's list beside them — corrected 2026-09-06, census C) ·
+            final-v2/review/thinker-A.md, thinker-B.md, thinker-C.md and thinkers-digest.md (three sealed thinker
+            lanes on Fable, 64 findings, and the orchestrator's digest, 2026-09-06) · final-v2/rethink-2/A-practitioner.md,
+            B-outsider.md, C-strategist.md (three sealed fixer lanes; their fourteen merged questions and the founder's
+            answers are DECISIONS §24) · final-v2/page/three-lenses-on-keel.html (the findings, presented) ·
             final-v2/page/final-plan-v2.html (169,402 bytes, 93 tiles)
 ```
 
