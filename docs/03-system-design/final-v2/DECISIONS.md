@@ -357,3 +357,39 @@ mechanisms carry `wins_if:`. Where two lanes proposed different shapes for one t
 survives the founder's answers and names the other as its losing image. Where B and C disagree on B9 (fair
 queueing now) and B11 (sequential testing now), the fold takes C's position: v75 is replayed before it is
 replaced, and skills are provisional-joined-to-O41 until a quarter of activations exists.
+
+## §25 — Challenge D's findings, decided for the fix round · 2026-09-06
+
+Sealed reviewer-readonly on Fable, `review/challenge-d.md`: **priority 1 FAIL on 3 P1, priorities 2–6 PASS with
+11 P2 and 10 P3.** Its own reading: the propagation the last two rounds failed at has largely happened; the P1s are
+stale sentences and one unstated consequence, not structural gaps. Every disposition below is orchestrator-class —
+decided from a rule already on the page or from a founder answer in §24 — and none reopens a founder row.
+
+- **P1-1** §9.5's "the day a metered key exists" struck; §J 74 cited. (E7.)
+- **P1-2** §5.3 #11 and §5.5 row 26 reworded: first-contact is step 5 of the ladder, per venture (v94). The
+  relation stated once in §12.2b: **a venture's charter `ladder:` line removes the five outward classes from that
+  venture's default never list, one step at a time as the ladder widens; everything else on the never list stays
+  never.** This is E11's meaning — the founder chose that first contact widens — made mechanical.
+- **P1-3** §15.1b gains the precondition sentence: on this Mac the night runs only when the founder has run
+  `pmset -a disablesleep 1` (or the predicate reads a held `caffeinate` assertion — R41, one measurement) and the
+  machine is on AC; otherwise `night_capable` is false every night, the fallback **holds** the brief, and month one's
+  scoreboard cannot be scored. §0.5, §4.1b and §14.6's "routed to the cloud carrier" → "held, not minted, until the
+  carrier's `stop:` is known (v67)". §20.2 row 7 re-read: the deferral stands and the consequence is now stated.
+- **P2-1** §17.1 rows 2, 6, 14 take §5.2's amended cells. **P2-2** "never expires" struck in §17.4 and §20.6 → O126.
+  **P2-3** one wording at all six sites — "one built, a second written unless a ten-word summary cannot separate
+  them (v87)" — and the O96 budget branch in §6.1's flowchart. **P2-4** `founder_hours:` is **report-only**: the
+  founder said "20 hours or no ceiling", so a bind reports on the briefing and never stops work; §2.1 states it once,
+  §16.2b agrees, §4.1 and §12.9 say in one line why it is not a gate. **P2-5** `confidence: LOW` **adopted** on the
+  header until one measured overnight (B1's instrument, cheap); the image leaves v96's last column. **P2-6** §21.1a
+  takes probation. **P2-7** §11.10 takes `provisional`. **P2-8** §20.8's R4 and R9 cells amended; SPINE §N the same.
+  **P2-9** §15.6's cell CLOSED, W35. **P2-10** one receiver list in §12.9 — **five**: the cord file, the process
+  groups, the Sender's recall window, the registered Operator sessions, the hosted lane's cancel where one exists
+  — cited by §14.13 and §3.5; `--all` from the Operator or from a page control behind a second tap, stated once.
+  **P2-11** two programs named: `bin/rehearse --r27` (O102's runner) and `bin/briefing` (the briefing generator,
+  the `keel briefing` verb), in §17.5 and §19.
+- **P3-1** §J 89–90 into §22.2b; count ninety. **P3-2** "four". **P3-3** the first line shows **founder-minutes**
+  (O95); bytes stay on the which row. **P3-4** five call sites everywhere. **P3-5** the handover's line count
+  dropped from prose; the schema owns it. **P3-6** SPINE's `class:` and `vendor_wins_if:` carried into §17.4.3 for
+  every O81–O127, O82's value included; O90's class re-read as kernel · truth (a carrier drill is ours). **P3-7**
+  one cost line each in §0.3; §13a and §5.1 cite. **P3-8** W21 into §12.3. **P3-9** four bounds in §14.12.
+  **P3-10** one clause in §20.7b: E7 governs model access; tool credentials are §17.3's.
