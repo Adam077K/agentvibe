@@ -315,11 +315,14 @@ in §17 and ordered in §19), the thirty-two world facts that moved a row with n
 **~~all thirty-two applied in place below~~ twenty-nine are applied in place below and marked *(moved 2026-09-06:
 W-n)*; three move no row at all and are recorded in SPINE §M only** *(corrected 2026-09-06 · census C: the sentence
 claimed thirty-two applications and three of the identifiers appear nowhere in the plan, so a reader checking the set
-found a hole rather than a reason)*. **The three, named so the identifier set is complete here:** **W16** — the
-`Workflow` tool's prompt footprint fell from ~5.7k to ~1k tokens, so **v35 is unchanged and cheaper**; **W28** —
-Devin's automations ship a max-concurrent-runs cap and per-automation cost attribution, so **v55 is unchanged**, and
-it feeds **D10** and **O32** rather than moving a row; **W29** — Factory's named droid taxonomy is **NOT FOUND** on a
-second page, which turns roster.md's UNVERIFIED into NOT FOUND and leaves **v1 and v2 unaffected**), and the twenty-six questions nothing resting on them can be
+found a hole rather than a reason)*. **The three, named so the identifier set is complete here, each fact and each
+binding quoted from SPINE §M rather than paraphrased:** **W16** — *"The `Workflow` tool's prompt footprint fell from
+~5.7k to ~1k tokens, with a bundled `workflow-authoring` skill"*, binding *"**v35 unchanged and cheaper**; §E's
+thirteen namespaces do not list the bundled skill"*; **W28** — *"Devin's automations ship a **max-concurrent-runs cap
+per automation** and **per-automation cost attribution**"*, binding *"**v55** — Devin ships v55's exact shape plus two
+ceilings v55 has no mechanism for; the store check refuses `every:` without a ceiling **per run**, which is a
+different cut. Feeds **v75** and **O32**"*; **W29** — *"Factory's named droid taxonomy is **NOT FOUND** on a second,
+different page"*, binding *"roster.md's UNVERIFIED becomes NOT FOUND; **v1 and v2 unaffected**"*), and the twenty-six questions nothing resting on them can be
 decided without (**SPINE §N, reproduced in §20.8** — *corrected 2026-09-06 · challenge C P3-3: this read "listed in
 §20" while §20 listed none of them; the list exists now and §20.8 is where it is*).
 
@@ -3128,7 +3131,9 @@ they are stated once here:
 - **v36 narrows the tainted row.** §F reads *"scout only"*; the holder is **`scout` and the world's door program**,
   and **no agent holding `Write`, `Edit` or `Bash` reads a tainted source raw** (8.7).
 - **The per-agent bindings are 8.7's table**, which is the roster-decided reading of the same four classes and is
-  where a reader should go for *who holds what*.
+  where a reader should go for *who holds what*. **(Still true, and truer since 2026-09-06 · census C item E:** 8.7
+  was reduced to **the binding only** — tool and holder-and-when — so it no longer carries a class or a credential
+  column to drift from this pointer or from §17.3.**)**
 
 **(NEW: the class is assigned at the door and consumed at dispatch, which is what makes it structural.)** A grant is
 argv fixed at dispatch and cannot narrow mid-run, so the class cannot be a runtime judgement. **Mechanism:**
@@ -3277,30 +3282,30 @@ the door.)**
 **(NEW: contradiction 19 — this was a third copy of the hands table, and it is now the binding column only ·
 2026-09-06 · census C)** The four-class table was written out four times — SPINE §F as the decision, §8.2, §17.3 and
 COVERAGE — and four copies of one classification is four places for a tool to be classed differently. §17.3 says in
-its own text that *"§8 keeps a pointer instead of a copy"*, and until today §8 kept a copy. **The `Class` and
-`Credential` columns are struck here: class is SPINE §F's and §8.2's, credential and disposition are §17.3's.** What
-stays is the one thing this section decides — **who may hold it, and when** — because that is the column §5's roster
-re-decided. The drift this prevents already happened once on Higgsfield, where the two tables read differently about
+its own text that *"§8 keeps a pointer instead of a copy"*, and until today §8 kept a copy. **Every column but the
+binding is struck here: class is SPINE §F's and §8.2's; credential, class and disposition at the door are §17.3's.**
+What stays is two columns — **the tool, and the binding: who may hold it under the roster, and when** — because the
+binding is the one thing this section decides and the one column §5's roster re-decided. The drift this prevents already happened once on Higgsfield, where the two tables read differently about
 the same key.
 
-| Hand | Who may hold it, under the roster | Day · night · never |
-|---|---|---|
-| the founder's signed-in Chrome | **nobody but the founder, on the Floor** | day, Floor only, forever |
-| Playwright, headless, `--isolated` | **designer** — the only agent whose row names it | night |
-| Gmail · Calendar · Drive · Notion **read** | **the world's door program** (holds no model) **and `scout`** — nobody else. `steward` holds none of them (v36) | night |
-| Gmail **send** | **the Sender**, founder-signed | never unattended until the founder widens the class |
-| Drive share · Calendar create · Notion write | **the Sender**, after a recall window | night only after the class is widened and the undo drilled |
-| Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | **designer**, on a dry branch | night after the undo is drilled |
-| Higgsfield (image · video · audio) | **writer**, rate-capped | night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
-| RunPod | **nobody** | never, until a capped key exists |
-| `claim-append` (local, `scripts/mcp/claim-append-server.mjs`, EXISTS) | **curator** does this with `Write` and needs no server. The pattern survives as the door's model | night |
-| Mem0 | **nobody** | never (8.5) |
-| Miro | nobody until an intent names it | through the door individually, or disconnected |
-| n8n | **nobody** | never — licence (v15) |
-| `git` · `node` · `bun` | **builder · tester · designer** ~~· analyst~~ — the ~~four~~ **three** that carry `Bash` *(corrected 2026-09-06: **O57** strikes `analyst`'s · census C item D)* (§5.2; architect does not) | night |
-| `gh` | builder, when a repository read is the need | night; every use needs the denial handled explicitly |
-| `gemini` | routed by section 9, not held by an agent | night |
-| **Not connected, needed first**: analytics · error tracking · read-only billing · CI API · git host read | **analyst** (the reconciliation) · **scout** | night — and **before any hand**, per 8.3 |
+| Hand | Binding — who may hold it under the roster, and when |
+|---|---|
+| the founder's signed-in Chrome | **nobody but the founder, on the Floor** — **when:** day, Floor only, forever |
+| Playwright, headless, `--isolated` | **designer** — the only agent whose row names it — **when:** night |
+| Gmail · Calendar · Drive · Notion **read** | **the world's door program** (holds no model) **and `scout`** — nobody else; `steward` holds none of them (v36) — **when:** night |
+| Gmail **send** | **the Sender**, founder-signed — **when:** never unattended until the founder widens the class |
+| Drive share · Calendar create · Notion write | **the Sender**, after a recall window — **when:** night only after the class is widened and the undo drilled |
+| Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | **designer**, on a dry branch — **when:** night after the undo is drilled |
+| Higgsfield (image · video · audio) | **writer**, rate-capped — **when:** night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
+| RunPod | **nobody** — **when:** never, until a capped key exists |
+| `claim-append` (local, `scripts/mcp/claim-append-server.mjs`, EXISTS) | **curator** does this with `Write` and needs no server; the pattern survives as the door's model — **when:** night |
+| Mem0 | **nobody** — **when:** never (8.5) |
+| Miro | nobody until an intent names it — **when:** through the door individually, or disconnected |
+| n8n | **nobody** — **when:** never — licence (v15) |
+| `git` · `node` · `bun` | **builder · tester · designer · ~~analyst~~ — the three that carry `Bash`** (§5.2; **O57** struck `analyst`'s `Bash`; architect never had one) *(corrected 2026-09-06 · census C item D)* — **when:** night |
+| `gh` | builder, when a repository read is the need — **when:** night; every use needs the sandbox's denial of `~/.config/gh` handled explicitly |
+| `gemini` | routed by section 9, not held by an agent — **when:** night |
+| **Not connected, needed first**: analytics · error tracking · read-only billing · CI API · git host read | **analyst** (the reconciliation) · **scout** — **when:** night, and **before any hand**, per 8.3 |
 
 **One measurement lived only in the struck `Credential` column and is kept here rather than lost:** Higgsfield's API
 key **failed to connect in the 2026-09-04 census session (`ENOTFOUND`)**. Every other cell of the two struck columns
