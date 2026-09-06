@@ -237,3 +237,29 @@ page; none reopens a founder row.
 - **P3-1** R20 exists in SPINE §N (the roster-size ablation); the plan simply never cites it — §21 cites it beside v31.
   **P3-2** R26 marked OPEN where it is named. **P3-3** §20 gains §20.8, the R-list (SPINE §N reproduced, with status).
   **P3-4** the CODEXTEST node and §17.7 take W19's wording.
+
+## §21b — Census C's findings, decided for the same fix round · 2026-09-06
+
+The census lane (reviewer, measurement only; `review/census-c.md`, six parts) returned **FAIL on three P1, PASS on
+everything measurable**: 29 of 31 re-measured figures match, R5's power-log span reproduces to the second, all 82 vNN
+rows and every §-reference resolve, zero ABSENT-and-unmarked paths. Twenty of SYNTHESIS §5's twenty-two contradictions
+closed. Every failure is the same class — the rethink round was applied to the early sections and not carried into the
+late ones. Dispositions, all orchestrator-class (rules already on the page decide them):
+
+- **A (P1) §19 builds the pre-v70 roster** — already challenge P1-2; wave one ten, wave two five, in §19.1's nodes,
+  §19.2's rows and §19.3's prose. **B (P1) "ten agents plus the Operator" sums to sixteen** — reworded *"ten
+  including the Operator, not eight"* at SPINE v70 (orchestrator, `f0b9d72`) and its three copies (v70 row, §3.5,
+  §20.7 D5). **C (P1) §15.8 carries the 4x-ceiling check-in W14 superseded** — struck, corrected reading as v12's
+  row, since §15.8's preamble promises nothing above contradicts it. **D (P1) shell count three ways** — §12.7 eleven
+  and §8.7's CLI row drops `analyst` (already in the fix brief; contradiction 1). **E (P2) two owners of the hands
+  table** — §8.7's thirteen-row copy reduced to a binding column, §17.3 the owner (already in the fix brief;
+  contradiction 19). **F (P3) §15.5 "§16 carries the arithmetic"** → §9.6 owns it, §16.3 restates. **G (P3) eight or
+  nine lanes** — no edit: the header's own sentence reconciles them (eight thinking lanes plus the sourcer lane); the
+  header's "nine lane files under rethink/" is corrected to eight plus `research/world.md` (already in the fix
+  brief). **H (P3) §20.6's v54 row states the old composition in the present tense** — composition struck and pointed
+  at v70; the two-waves decision itself stands.
+- **Two claims the lane could not settle under its seal:** W16/W28/W29 and R20 do exist in SPINE §M/§N (the lane was
+  sealed from SPINE by brief); the fix round carries them into the plan's §1 preamble and cites R20 beside v31.
+  COVERAGE §14's charter-field count is re-checked at reassembly.
+- **Not re-litigated:** the census's finding that the fix round itself is single-family, single-agent. Accepted risk,
+  same as every review in this repository since 2026-08-23.
