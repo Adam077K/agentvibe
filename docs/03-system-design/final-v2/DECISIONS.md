@@ -216,3 +216,24 @@ collision: O1 said `work/`, and §17.8's tree already gives `work/` to the ventu
 orchestrator; the fields are unchanged. **v69's two stores take B2's coined paths:** `keel/consent.yml` (the consent
 register) and `keel/subjects/<hash>.yml` (the erasable per-subject body). **`cacheTtl` ships `unset`** in every agent
 row: W6 gives the column, no row decides a value, and the test that would decide one is written beside the column.
+
+## §21 — Challenge C's findings, decided for the fix round · 2026-09-06
+
+Thirteen findings (4 P1 · 5 P2 · 4 P3), review/challenge-c.md. Decided by the orchestrator from rules already on the
+page; none reopens a founder row.
+- **P1-1** v18's row now reads "two places" as v51 decided; §13.8, §13a.10 and §17.2 follow. — **P1-2** §19 takes v70:
+  wave one ten, wave two five. — **P1-3** §12.7 takes §5.2's corrected count (eleven of the fourteen carry no shell) and
+  cites the generated roster (O2), not "§B.2's summary". — **P1-4** `.gemini/agents/` in §17.8 is a **generated view of
+  `roster.yml` (O2)** for the agents Gemini may stand, not a third home: v42 stands (one home), the generator is O2's
+  mechanism, and §10.8's "gap recorded" sentence is replaced by that. Recorded as the orchestrator's reading of W25 under
+  v42, reopenable by name.
+- **P2-1** v76 gets a path: `bin/log` writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch`
+  reads it — ABSENT, not WISH. — **P2-2** §5.1 rule 4 gets a mechanism: `bin/check-stores` refuses an agent file whose
+  name is on `roster.yml`'s `kind: program` list, and refuses a `model:` on any program entry — ABSENT. — **P2-4** §15.4's
+  two cadences become the founder's numbers on two obligations (`recurs:` set in the charter, like `undo_window`), never
+  a schedule in the plan; the escrow half is marked WISH with its three items named. — **P2-5** §4.5: the spinning slot is
+  one slot inside the reserve, accounted in §4.2's arithmetic, ABSENT in `bin/watch`; "re-ranks on a cadence" becomes
+  "re-ranks on every tick" — the tick is the Watch's own setting, the founder's number, not a schedule.
+- **P3-1** R20 exists in SPINE §N (the roster-size ablation); the plan simply never cites it — §21 cites it beside v31.
+  **P3-2** R26 marked OPEN where it is named. **P3-3** §20 gains §20.8, the R-list (SPINE §N reproduced, with status).
+  **P3-4** the CODEXTEST node and §17.7 take W19's wording.
