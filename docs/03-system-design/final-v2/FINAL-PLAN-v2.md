@@ -25,7 +25,9 @@ rule:       the founder wins on FINAL rows 6, 8, 10, 15 and 30; the cost of each
 measured:   this branch = ceo-1-1788609834 at b2cabad = local main, TREE A of final/CENSUS.md, carrying this
             session's own documentation commits on top · ceo-3-1788468144 at 7286420, which holds final/ ·
             docs/final-plan at 7fe8ede, the head of PR #131 · origin/main at 4770d39. Tooling on this Mac,
-            2026-09-05: claude 2.1.261 · codex ABSENT · gemini 0.38.2 present and never authenticated.
+            2026-09-05: claude 2.1.261 on 2026-09-05, 2.1.263 on 2026-09-06 — a version is a fact about a day, so
+            re-derive it with `claude --version` rather than reading it here (corrected 2026-09-06, census C) ·
+            codex ABSENT · gemini 0.38.2 present and never authenticated.
             Added 2026-09-06: the shipped Codex is 0.153.4, released 2026-09-04 (FACT: world.md 19) — nothing is
             installed here, and the number is recorded because v32's rehearsal floor of ">= 0.124.0" is
             twenty-nine minor versions stale and no longer discriminates (W19; §10.8) · and the Mac's own
@@ -42,7 +44,9 @@ companions: final-v2/SPINE.md (the ~~sixty-five~~ **eighty-two** rows and the ro
             twenty-six research questions) (moved 2026-09-06: SPINE §A) ·
             final-v2/COVERAGE.md (every item of the founder's list placed) · final-v2/DECISIONS.md (this session's
             own decisions, as they were made — §17–§19 are the rethink round) · final-v2/research/ (seven lanes
-            plus world, room and cloud, verbatim) · final-v2/rethink/ (nine lane files and the synthesis) ·
+            plus world, room and cloud, verbatim) · final-v2/rethink/ (~~nine lane files and the synthesis~~
+            eight thinking-lane files, L1-L8, plus the world lane at final-v2/research/world.md, and the synthesis
+            and the founder's list beside them — corrected 2026-09-06, census C) ·
             final-v2/page/final-plan-v2.html (100,099 bytes)
 ```
 
@@ -91,8 +95,11 @@ founder event**, at four call sites — it releases the reserve to autonomous wo
 the reserve's own horizon and snaps it back on the first tap, executes a *which*'s stated default at its intent's
 expiry with both built options archived, builds one option instead of two while away, and keys page 5's *since you
 were last here* view on the event rather than on a date. It reintroduces no approve verb and does not reverse v9: a
-silent run still cannot ask. **Mechanism:** one predicate and one field shared by four call sites — **ABSENT**, and
-§A v76 names no path for it. Second, **the whole of §0 rests on contrarian assumption 1** (§I row 16): that a
+silent run still cannot ask. **Mechanism:** one predicate and one field shared by four call sites — **`bin/log`
+writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it**, and the four call
+sites above read that one file. **ABSENT** — designed with its path named, in v50's sense, so it is ABSENT and not
+WISH ~~and §A v76 names no path for it~~ *(path set by the orchestrator 2026-09-06, DECISIONS §21 · challenge C
+P2-1)*. Second, **the whole of §0 rests on contrarian assumption 1** (§I row 16): that a
 deterministic anchor exists for most company work. Rung 1, the trust score, regression-for-free, unattended night
 work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang on it, and the
 evidence for it comes from the harness — the most anchorable venture that could have been chosen. **If it is false
@@ -304,9 +311,17 @@ founder in four `AskUserQuestion` rounds. **The founder chose the recommended op
 and each says which. **v82** is the one deletion the founder took, verbatim: *"Delete the row from the plan"*
 (DECISIONS §19). The round's other three products are deliberately **not** §1 rows and are not reproduced here,
 because they are mechanism rather than decision: the eighty mechanisms the orchestrator decided (SPINE §L, inventoried
-in §17 and ordered in §19), the thirty-two world facts that moved a row with no decision attached (SPINE §M, applied
-in place below and marked *(moved 2026-09-06: W-n)*), and the twenty-six questions nothing resting on them can be
-decided without (SPINE §N, listed in §20).
+in §17 and ordered in §19), the thirty-two world facts that moved a row with no decision attached (SPINE §M —
+**~~all thirty-two applied in place below~~ twenty-nine are applied in place below and marked *(moved 2026-09-06:
+W-n)*; three move no row at all and are recorded in SPINE §M only** *(corrected 2026-09-06 · census C: the sentence
+claimed thirty-two applications and three of the identifiers appear nowhere in the plan, so a reader checking the set
+found a hole rather than a reason)*. **The three, named so the identifier set is complete here:** **W16** — the
+`Workflow` tool's prompt footprint fell from ~5.7k to ~1k tokens, so **v35 is unchanged and cheaper**; **W28** —
+Devin's automations ship a max-concurrent-runs cap and per-automation cost attribution, so **v55 is unchanged**, and
+it feeds **D10** and **O32** rather than moving a row; **W29** — Factory's named droid taxonomy is **NOT FOUND** on a
+second page, which turns roster.md's UNVERIFIED into NOT FOUND and leaves **v1 and v2 unaffected**), and the twenty-six questions nothing resting on them can be
+decided without (**SPINE §N, reproduced in §20.8** — *corrected 2026-09-06 · challenge C P3-3: this read "listed in
+§20" while §20 listed none of them; the list exists now and §20.8 is where it is*).
 
 ---
 
@@ -333,7 +348,7 @@ decided without (SPINE §N, listed in §20).
 | **v15** | Which canvas and graph substrates are admissible | **Admitted: Langflow (MIT [`api`: GitHub SPDX detection, LICENSE not read], alive 2026-09-05) as the canvas idiom; `3d-force-graph` (MIT [`api`: GitHub SPDX detection, LICENSE not read]) as the renderer. Refused: n8n (Sustainable Use — *"only for your own internal business purposes or for non-commercial"*), Flowise (ARCHIVED, licence NOASSERTION), Gource (GPL-3.0 [`api`: GitHub SPDX detection, LICENSE not read])** | **NEW:** surfaces.md licence table, n8n's LICENSE.md read raw | n8n as the workflow surface; Flowise as the canvas |
 | **v16** | The board→session prior art | **OpenAI Symphony (Apache-2.0 [`api`: GitHub SPDX detection, LICENSE not read], last push 2026-08-19) replaces vibe-kanban as the reference.** vibe-kanban's own README now reads *"Vibe Kanban is sunsetting"* | **NEW:** surfaces.md 4, 5. **The gap that is ours to build:** *"Nothing found gives a card a team"* — every board-to-session project maps one task to one agent | FINAL §13.8's refusal of vibe-kanban as an unmaintained runtime — right conclusion, weaker reason |
 | **v17** | Bulk import of the 2,111+-skill upstream | **Blocked until `LICENSE-CONTENT` is read.** The code is MIT; a **separate `LICENSE-CONTENT` file exists and was not fetched**, and it may carry different terms for skill *content* than MIT does for code | **NEW:** skills.md licence table and gap 3. Cheap to clear, one fetch; until then no bulk vendoring | importing 2,111+ skills on the strength of the repository's MIT badge |
-| **v18** | The SKILL.md procedure collision | **The container is the open standard; the content rule is ours.** Four admissible bodies — anchor · exemplar · rehearsal case · reference. A **step list is admitted in exactly one place**: a checklist the Sender reads aloud, where the judge is absent and the act cannot be taken back | **NEW:** skills.md — the published spec recommends *"Step-by-step instructions"*, and FINAL §11 forbids procedure, so *"different artifacts wearing the same filename"*. FINAL §9.4's quadrant already decided where procedure is legitimate. **The cost, once:** an imported skill written to the spec's recommendation fails our admission and needs a pass | FINAL §11's flat refusal of the library; the spec's recommended body as written |
+| **v18** | The SKILL.md procedure collision | **The container is the open standard; the content rule is ours.** Four admissible bodies — anchor · exemplar · rehearsal case · reference. A **step list is admitted in exactly ~~one place~~ two places** **(corrected 2026-09-06: v51 widened v18 from one · challenge C P1-1)**: a checklist the Sender reads aloud, where the judge is absent and the act cannot be taken back, **and the curator's five fixed questions** | **NEW:** skills.md — the published spec recommends *"Step-by-step instructions"*, and FINAL §11 forbids procedure, so *"different artifacts wearing the same filename"*. FINAL §9.4's quadrant already decided where procedure is legitimate. **The cost, once:** an imported skill written to the spec's recommendation fails our admission and needs a pass | FINAL §11's flat refusal of the library; the spec's recommended body as written |
 | **v19** | Skill retirement | **By forced expiry.** Every skill carries `valid_until`; at expiry exactly one disposition is recorded — Refresh, Deprecate, or Waive with a new date | **NEW:** skills.md 20 — *"Nobody found retires a skill by non-use"*; the nearest shipped thing is dead-link and drift detection. **Mechanism:** `scripts/ledger.mjs` already forces this disposition and `check-citations.mjs` already blocks on a dead path — both on this branch | *"Ninety days uncalled and it leaves"* — a usage counter nobody in the world has shipped |
 | **v20** | The cheap tier | **No agent's default model is Haiku.** Haiku 4.5 appears only where the vendor sets it (the `/goal` evaluator, the auto-mode classifier). The genuinely cheap work goes to **local models on electricity** | **NEW:** models.md 5 — Haiku 4.5 retirement *"Not sooner than October 15, 2026"*, and it is the only Haiku in the published table. Locals: MiniLM 384-dim and Qwen3-0.6B, both Apache 2.0 | a Haiku executor tier; FINAL §16.7's *"local models: no shape"* read as *no work* |
 | **v21** | Where Fable 5.1 sits | **An escalation, not a default.** One named rule: an intent whose done-test has failed twice under Opus 5 and whose horizon exceeds one window. **Its availability on a subscription seat is UNVERIFIED** — models.md publishes its API price and no plan table names it; fallback is Opus 5 | **NEW:** models.md — Fable 5.1 cache reads at **0.025x** base input against 0.1x everywhere else, which is what makes a large standing context cheap to re-read; the SWE-bench Pro ranking is third-party, confidence L, and is **not** used to route | Fable as the builder's default; wshobson's tier 0 adopted as-is |
@@ -385,13 +400,13 @@ decided without (SPINE §N, listed in §20).
 | **v67** | What the cord actually stops | **Both: the launcher records each child's process group and the cord signals it; `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN** | **FOUNDER** (rethink 2026-09-06 · D2) · L3 P4, P5 · L7 P5 · L8 F · (FACT: world.md 22 — Codex shipped `Interrupt` hooks, the natural Codex-side receiver, and no row named it). **Mechanism:** one `pgid` field written by `bin/run` before exec, one signal path, a `stop:` column on §3.5's carrier table (ABSENT); `SIGTERM` is measured to give exit 143 and a resumable turn, so it stops without destroying. **The cost, once:** the Codex-cloud *maker* lane stays shut until cancellation is documented — which is §I row 15's state anyway. **Settled by:** pulling the cord mid-run, measuring time to quiescence, and whether the run resumes. Moves **v13**'s carrier table and **v56**; resolves contradiction 6 | signal only, minting unattended work on every carrier; the cord as designed — it stops the next dispatch, not the child in flight |
 | **v68** | Whether everything leaving a run passes one program | **Yes — `bin/egress`. One no-model program logs every call, filters by domain AND HTTP method, and injects credentials the agent never sees; `--strict-mcp-config` names only the proxy, and `.claude/mcp-policy.json` becomes its configuration rather than an independent control** | **FOUNDER** (rethink 2026-09-06 · D3) · L3 P1 (*tool audit log*, *credential read denial*, *prompt injection defense*, *fetched-content taint*). **Mechanism:** `bin/egress` (ABSENT); `--strict-mcp-config` ships today. It is the only proposal of the round that survives an agent being *fully* persuaded: the trifecta guarantees a leg is missing at dispatch, this keeps it missing at the syscall. **The cost, once:** one program, one hop of latency, and each server declared twice. **Settled by:** a deliberate exfiltration attempt failing at the proxy rather than at the prompt, and the proxy's call count matching the runtime's for one night. **v33** gains a mechanism; new row in §8; **R2** may still turn half of it into configuration | configuration only — measure the sandbox's documented, unused `credentials` and `network` blocks first (kept as **R2**); structural prevention with no detection, where *"every call logged"* stays unenforceable |
 | **v69** | Whether the data path is erasable by construction | **Both, now. No personal datum enters the event log or memory — both hold a hash; one erasable per-subject store holds the body; erasure deletes that row and the hash becomes *a known absence*. The consent register is a store with one writer, read by the Sender before any contact** | **FOUNDER** (rethink 2026-09-06 · D4) · L3 P2 (*data deletion request*, *data classification tags*, *data retention schedule*, *consent management* — the field's single ADD, and the one keyword of ~640 absent from v2's own text). **Mechanism:** one indirection in `bin/log` and the memory writer; two stores whose single writer `bin/check-stores` enforces (ABSENT); one line on the Sender's checklist. **The cost, once:** one indirection per inbound row, one store, one checklist line. **Settled by:** run one erasure end to end, then grep the whole tree for the subject and find nothing but hashes. Resolves contradiction 7 — *the log is never edited* (§15.3), *eviction never deletes* (§13) and *a deletion request is honoured* (§16) could not all hold | the consent register now and the erasable path when a venture has customers; as designed, where a person's data inside the log is structurally unerasable |
-| **v70** | Whether the curator and the challenger wait for wave two | **No — both join wave one, which is ten agents plus the Operator, not eight** | **FOUNDER** (rethink 2026-09-06 · D5) · L4 P2 · L7 (§35 *contrarian-review agent*) · L5 (*taste review panel*) · L6 (§19 — the support chain names three agents, none in wave one). **Moves v54's implementation and reverses nothing:** v54's own test is *"a seed file or a code path today"*, and the curator has four verified code paths on this branch — `evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs`. **Mechanism:** two agent files (ABSENT); the challenger is one read-only file, the cheapest in the roster, and wave one's only gap with a *measured* harm behind it (v30). **The cost, once:** the challenger runs single-family until Codex or Gemini lands, and its findings are labelled rung 4 rather than hidden. **Settled by:** the harness venture producing handovers nobody reads, and a count of memory proposals with no writer | curator only, the knowledge loop first; wave one as decided, promoting when founder-minutes per finished intent crosses a line the founder sets (§21.1 already measures it) |
+| **v70** | Whether the curator and the challenger wait for wave two | **No — both join wave one, which is ten ~~agents plus~~ including the Operator, not eight** *(reworded 2026-09-06 · census C item B: "plus" summed to sixteen against a fifteen-role roster; SPINE v70 carries the same wording)* | **FOUNDER** (rethink 2026-09-06 · D5) · L4 P2 · L7 (§35 *contrarian-review agent*) · L5 (*taste review panel*) · L6 (§19 — the support chain names three agents, none in wave one). **Moves v54's implementation and reverses nothing:** v54's own test is *"a seed file or a code path today"*, and the curator has four verified code paths on this branch — `evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs`. **Mechanism:** two agent files (ABSENT); the challenger is one read-only file, the cheapest in the roster, and wave one's only gap with a *measured* harm behind it (v30). **The cost, once:** the challenger runs single-family until Codex or Gemini lands, and its findings are labelled rung 4 rather than hidden. **Settled by:** the harness venture producing handovers nobody reads, and a count of memory proposals with no writer | curator only, the knowledge loop first; wave one as decided, promoting when founder-minutes per finished intent crosses a line the founder sets (§21.1 already measures it) |
 | **v71** | What makes an agent routable | **An onboarding pack, for every agent, wave one included: at least one rehearsal case with a known answer, one exemplar of its own good output with provenance, one end-to-end demonstration that its anchor actually fires, and namespaces that resolve. Without them the agent is declared and not routable** | **FOUNDER** (rethink 2026-09-06 · D6) · L2 P1 (*onboarding checklist per agent*, *agent onboarding doc*, *apprenticeship pattern*). **Mechanism:** the pack paths are declared in `keel/shared/roster.yml` (§L O2, ABSENT) and `bin/run` already refuses a brief naming a file that does not exist (v37, v45). **The cost, once:** three artifacts per agent — thirty for a ten-agent wave one. **Why it is not ceremony:** the pack is what distinguishes `writer` from *builder with a different prompt*, and in a band nobody publishes evidence for (v31) evidence is the only thing that can settle the design. **Settled by: R19** — packed against unpacked on the same known-answer cases with §E.2's runner; if the packed agent does not win, the pack is ceremony and this row is refuted by its own test | wave two only, wave one demonstrated by the harness's own work; no pack at all — *"the agent file is the onboarding"*, true about the runtime and false about the company |
 | **v72** | Whether an agent, alone among durable things, is permanent | **No. All fifteen agent files carry `valid_until`, and at expiry exactly one disposition is recorded — Refresh · Merge · Retire — with the anchored evidence attached** | **FOUNDER** (rethink 2026-09-06 · D7) · L2 P3 (*worker retirement*) · L7 (§35 *sunset-candidate review*, which extends the same idiom to a **provider position**: nothing retires Codex's foreground slot if it returns rung 4 on most checks). **Mechanism:** one frontmatter field; the forced disposition is `scripts/ledger.mjs`, already blocking on this branch. **Extends v19's idiom to §B.2 and reopens neither v1's count nor v54's waves.** **The cost, once:** a small number of founder answers a year. **Settled by:** the first expiry producing a Merge or a Retire — or a cycle where every agent Refreshes on real evidence, which is the strongest defence of fourteen available | the six wave-two business agents only, they being the roster entries with the least outside evidence; no expiry, leaving the roster the one object in the system that can only grow |
 | **v73** | Whether an anchor is itself anchored | **Every anchor carries a mutation case — a known-bad input it must fail — or is marked `unrated`; §21's rung-1 share splits into rated and unrated** | **FOUNDER** (rethink 2026-09-06 · D8) · L5 P1 (*false-positive rate*, *false-negative rate*) · L4 (*golden output archive*, whose same-set-must-not-ship half is §L **O11**). **Why:** §11.11 lists fifteen anchors and **none has ever been shown to fail when it should**; an uncalibrated anchor is a rung-4 belief wearing a rung-1 label, which is the error §11.7 built the reconciliation to catch, one level up. This repository has already shipped a change that removed a control while every test stayed green. **Mechanism:** the case is written by whoever writes the anchor, as a **rehearsal-case body under v18**, so it inherits admission and forced expiry free. **The cost, once:** one case per anchor. **Settled by:** an anchor that passes its known-bad input is unrated by definition; the first rung-1 share that falls is the system telling the truth for the first time | only the anchors that gate irreversible work; no rating, where a green check keeps meaning *nothing complained* and the plan's central claim stays an assumption |
 | **v74** | What a ceiling is denominated in | **A window gauge — tokens against an observed high-water mark, since no denominator is published — with wall clock beside it and USD kept as a shadow price. Exploration-class intents route to Gemini, local models or the Codex seat, and the Desk refuses an exploratory dispatch onto the Claude seat past a fraction the founder sets** | **FOUNDER** (rethink 2026-09-06 · D9) · L5 P3 (*budget in money*, *exploration spend*, *rate-limit cost impact*) · L6 (§31 *cross-venture resource pool* — per-venture ceilings do not compose) · L8 B · L2 (*worker cost cap* — the cap is per run and a standing intent has no aggregate). **Why:** on a subscription the dollar is a locally computed shadow of a bill nobody sends (v23), and **v22 falsified *"idle capacity is bounded by being free"*** — the weekly window is per seat and shared with Claude chat and Cowork, so a night of exploration is subtracted from the next day. **Mechanism:** one high-water file, one rule in the Desk, one `class:` on the intent (ABSENT). **The cost, once:** the reserve stops being a percentage of a quantity nobody has counted. **Settled by:** split one weekly window between driven and exploratory work — if exploration is invisible there, the old sentence was right and this is over-built. Beside **v22** and **v23**; resolves contradictions 18 and 21 | the gauge alone, with exploration left where it is; as designed, with dollar ceilings kept as ceilings — an absent ceiling is visible and a wrong one is not |
 | **v75** | How the Desk ranks | **Lexicographically: obligations first (ranked among themselves by consequence and the world's own deadline) · then work that unblocks other work · then the founder's weight band · then cheapest inside the band. `Decay` is split into its two facts, and for a standing intent it is time since last move normalised by its own cadence** | **FOUNDER** (rethink 2026-09-06 · D10) · L1 P4 (*priority queue*, *goal conflict resolver*, *ticket aging*) · L8 A (the obligation tide, standing-intent decay, the staged-output tide) · L2. **Why:** `Weight × Decay ÷ Cost` divides by measured cost, so cheap work permanently outranks expensive work, and **v55's standing intents supply an endless stream of cheap work**; `Decay` was also undefined for an intent that never expires, which is most of a ten-venture queue. **Mechanism:** one comparator and one branch — *less* code than the formula it replaces, explainable on the board, and it cannot invert the founder's weight. **The cost, once:** none beyond the comparator. **Settled by:** replay `logbook/desk/<tick>.json` over a simulated month under both orders and count dispatches of the top-weight intent — the replayer (§L **O20**) is deterministic, free, and reads a file nothing reads today. Moves §4.5 and **v55**'s implementation; resolves contradictions 21 and 22 | the formula kept with `Decay` fixed and a standing-work share cap per window; the formula as designed, where an expensive high-weight intent can starve at any weight the founder sets |
-| **v76** | What the system does while the founder is away | **It reads one derived value — the last founder event — at four call sites: release the reserve to autonomous work when the last event is older than the reserve's own horizon and snap it back on the first tap; execute a *which*'s stated default at its intent's expiry, archiving both built options; build one option instead of two while away; and give page 5 a *since you were last here* view keyed on the event, never on a date** | **FOUNDER** (rethink 2026-09-06 · D11) · L8 P1, F · L1 (*clarifying question trigger*; the which queue is unbounded at fifty sessions) · L5. **Inside the founder's own *"Keep 30% and 3/day; evidence moves them"*** (DECISIONS §15) — it changes what reads those numbers, not the numbers. **It does not reintroduce an approve verb and does not reverse v9:** a silent run still cannot ask. **Mechanism:** one predicate and one field, shared by four call sites (ABSENT). **The cost, once:** none beyond the predicate. **Settled by:** the reserve hit rate §21.1 already measures moving off *expired-unused*, and the count of second options built and never chosen falling. New row under §4.4 | the which expiry and the return view only; as designed, where a month away reads as a fault and costs a third of every window |
+| **v76** | What the system does while the founder is away | **It reads one derived value — the last founder event — at four call sites: release the reserve to autonomous work when the last event is older than the reserve's own horizon and snap it back on the first tap; execute a *which*'s stated default at its intent's expiry, archiving both built options; build one option instead of two while away; and give page 5 a *since you were last here* view keyed on the event, never on a date** | **FOUNDER** (rethink 2026-09-06 · D11) · L8 P1, F · L1 (*clarifying question trigger*; the which queue is unbounded at fifty sessions) · L5. **Inside the founder's own *"Keep 30% and 3/day; evidence moves them"*** (DECISIONS §15) — it changes what reads those numbers, not the numbers. **It does not reintroduce an approve verb and does not reverse v9:** a silent run still cannot ask. **Mechanism:** one predicate and one field, shared by four call sites — `bin/log` writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it (path set by the orchestrator, 2026-09-06, DECISIONS §21 · challenge C P2-1) — **ABSENT**, and ABSENT rather than WISH because v50 asks for a path and this row now names one. **The cost, once:** none beyond the predicate. **Settled by:** the reserve hit rate §21.1 already measures moving off *expired-unused*, and the count of second options built and never chosen falling. New row under §4.4 | the which expiry and the return view only; as designed, where a month away reads as a fault and costs a third of every window |
 | **v77** | How big the skill library may get | **As big as a measured budget allows: a per-agent startup metadata budget enforced by a checker, plus one generated directory per namespace so an agent loads only what its file declares. The import stops when the budget binds** | **FOUNDER** (rethink 2026-09-06 · D12) · L4 P3 (*skill count*, *skill lookup cost*) · L5 (*skill discovery cost*). **Why:** the published standard loads roughly **100 tokens of metadata at startup for every installed skill**, so each admitted skill taxes every unrelated run — the same shape as the manifest defect this repo already paid for at ~15,000 tokens a lookup — and the upstream advertises 2,111. **Mechanism:** one checker modelled on `scripts/check-memory-budget.mjs` (which exists and blocks), one generator pass (ABSENT); extends **v48** and §E.4. **The cost, once:** the library stops being open-ended, which is what v3's ambition needs to stay affordable. **Settled by: R8** — two trees, one with the full house library installed and one carrying only one agent's namespaces, identical prompt, comparing input tokens; if the tax scales with declared namespaces rather than the installed library, the budget is unnecessary. **v3** gains one clause | namespace directories with no number — most of the saving, none of the argument; count as an output of admission with expiry doing the rest, where a good new skill makes every unrelated task dearer forever |
 | **v78** | What happens when a model family is limited, unreachable or wrong | **A three-deep `fallback:` per agent ending in *stop and stage*; a cross-family reroute recorded as a **rung demotion** unless that family passed the rehearsal for that move class; a `class: calibration` rehearsal set that is never edited; and one provider-outage drill with the primary family denied at the launcher** | **FOUNDER** (rethink 2026-09-06 · D13) · L7 P3 (*model fallback chain*, *model-drift detection*, *vendor-lock-in avoidance*, *multiple-model second opinion*) · (FACT: world.md 19 — Codex is at 0.153.4, so **v32**'s *"version ≥ 0.124.0"* floor is 29 minor versions stale and no longer discriminates; restate it as *the installed version, recorded*). **Why:** v22 says a family limit is a reroute and never says **where a reroute goes**, and because Codex is one foreground slot and Gemini is scout-only, a seat-limit stop stops the whole company; a fallback without the demotion clause silently trades correctness for availability, and an instrument refreshed by the rule that refreshes its subject cannot detect drift. **Mechanism:** one frontmatter field × fifteen files, one `class:` field, one deny switch in `bin/run`, one drilled night (all ABSENT). **The cost, once:** one drilled night, and a reroute that says out loud it bought availability with rung. **Settled by:** the drill's completion count against a normal night, and calibration results moving when a model id changes. Moves **v22** and §11.10 | fallback chains only, vendor independence left as an architecture claim with no anchor; as designed, where the first seat limit is a company-wide stop nobody has rehearsed |
 | **v79** | Which hosted lane may MAKE when the Mac is off, and whether a venture may say no | **Decide the lane after the measurement, and add the charter field `cloud: allow \| deny`, default `deny`, now — whichever lane wins.** **R5 IS DONE (DECISIONS §19), and it prices the lane at zero for the week measured:** *"span 2026-08-30 21:44 → 2026-09-06 09:39 (156 h, all the log retains) · asleep 40.7 h (26%) in 487 episodes · zero episodes of one hour or longer · longest single sleep 0.3 h (about 20 minutes). The Mac was never off long enough for a cloud lane to have bought anything back this week."* **The caveat travels with the number:** the log covers only the span it retains, and DarkWake power-naps are counted as wakes, so *asleep* here means the machine could not have run a process | **FOUNDER** (rethink 2026-09-06 · D14; the lane decision itself stays the founder's, §I row 15) · L6 (*local-first privacy mode*, RQ2) · L7 (*interrupt-hook handling* — cancelling a hosted task is UNKNOWN, which is **v67**'s refusal) · L3 (§18) · (FACT: world.md 24 — four weeks of Codex release notes mention no cloud exec, no cancel and no #19945; **absence is not denial**, and the June–August window is unread). **Mechanism:** one charter field, refused when absent by `bin/check-stores` (ABSENT); a hosted run's output still lands as a pull request or a staged artifact the Mac reconciles on wake, never into the house directly (v56). **The cost, once:** one field. **Settled by:** the hours-off measurement — **taken**, and it says a lane buying back a small tail is not worth §I row 1 | Codex cloud as a PR reviewer only, with no maker lane and no local Codex; Anthropic's documented drivers (`claude --cloud`, Routines) as the maker lane, on the same seat as the Floor and under the same open terms clause |
@@ -1214,7 +1229,7 @@ flowchart TD
 not exist yet — said once, here, because it changes what the Operator does rather than only what the roster
 contains)** The founder chose to start with the ones that have a seed file or a code path today: the Operator,
 `builder`, `reviewer`, `architect`, `tester`, `guard`, `scout` and `designer`. **(FOUNDER, rethink 2026-09-06: D5 →
-v70)** *"Curator and challenger both join wave one"* — so wave one is **ten agents plus the Operator, not eight**,
+v70)** *"Curator and challenger both join wave one"* — so wave one is **ten ~~agents plus~~ including the Operator, not eight** *(reworded 2026-09-06 · census C item B: "plus" summed to sixteen against a fifteen-role roster; SPINE v70 carries the same wording)*,
 and v54's own test is what admits them: the curator has four verified code paths on this branch
 (`evict-memory.mjs`, `ledger.mjs`, `check-citations.mjs`, `check-memory-budget.mjs`). **The `product` dispatch of
 §3.6 still has nobody in it**, so a genuinely fuzzy request is closed the other way — the founder writes the
@@ -1385,7 +1400,8 @@ wrong and nobody notices. **Mechanism:** the field is read from settings; anyone
 **(FINAL, with the rethink round's four additions)** **Enforced by:** `bin/watch` (ABSENT; FINAL names it
 `keel/bin/watch`) · the cord file `STOP` (ABSENT) · `settings.yml` holding the tick, the reserve per window, the WIP
 limits (ABSENT) · **`bin/horizon`** (ABSENT, §L O23) · **`catch_up:` on the standing intent** (ABSENT, §L O52) ·
-**`bin/replay-desk`** (ABSENT, §L O20) · **the last-founder-event predicate** (ABSENT, v76).
+**`bin/replay-desk`** (ABSENT, §L O20) · **the last-founder-event predicate over `keel/logbook/founder.last`** —
+written by `bin/log`, read by `bin/watch` (ABSENT, v76).
 
 ---
 
@@ -1512,8 +1528,11 @@ option instead of two, because the second exists to be chosen between and nobody
 ***since you were last here*** view keyed on the event, never on a date. **This sits inside the founder's own
 numbers** — *"Keep 30% and 3/day; evidence moves them"* — and changes what reads them, not what they are. **It
 reintroduces no approve verb and does not reverse v9:** a silent run still cannot ask; a *which* whose default fires
-is a decision the founder already wrote down. **Mechanism:** one predicate and one field shared by four call sites
-(**ABSENT**; §A v76 names no path). **Settled by:** the reserve hit rate §21.1 already measures moving off
+is a decision the founder already wrote down. **Mechanism:** one predicate and one field shared by four call sites —
+**`bin/log` writes `keel/logbook/founder.last` on every founder-authored event and `bin/watch` reads it** (**ABSENT**;
+~~§A v76 names no path~~ *path set by the orchestrator 2026-09-06, DECISIONS §21 · challenge C P2-1*). The mark is
+**ABSENT** rather than **WISH** because v50 asks for a designed mechanism *with its path named*, and this now has
+one. **Settled by:** the reserve hit rate §21.1 already measures moving off
 *expired-unused*, and the count of second options built and never chosen falling.
 
 ---
@@ -1555,9 +1574,23 @@ obligation schema carries the class (**ABSENT**, §L O55); the promotion is a br
 
 **(FINAL)** **There is no success-probability estimate anywhere:** the system does not predict the value of work,
 it measures what work of that kind cost before, takes the founder's weight as given, and lets recency and expiry do
-the rest. Two escape hatches from real practice: one **spinning slot** is always held for whatever the founder asks
-next, so a spoken instruction never queues behind autonomous work; and the Desk **re-ranks on a cadence**, not on
-every event, so a noisy input cannot make it thrash.
+the rest. Two escape hatches from real practice, **both given a mechanism and a mark on 2026-09-06 (challenge C
+P2-5), because a rule with neither is a wish in a subsection where every other rule has one**: one **spinning slot**
+is always held for whatever the founder asks next, so a spoken instruction never queues behind autonomous work; and
+the Desk ~~**re-ranks on a cadence**, not on every event~~ **re-ranks on every tick**, so a noisy input cannot make it
+thrash.
+
+**The spinning slot is not a second reserve.** It is **one slot inside the reserve §4.2 already holds** — the same
+number, spent differently: the Desk stops at the reserve line as it always did, and the topmost slot below that line
+is the one it will not fill with autonomous work. Nothing new is reserved, so §4.2's arithmetic is untouched and the
+founder's one slider still sets the whole of it. **Mechanism:** one branch in `bin/watch`'s dispatch loop, holding
+the last slot above the reserve line unless the item is founder-authored (**ABSENT**). A slot held by an
+unaccounted-for rule is capacity that disappears from the gauge the founder tunes.
+
+**"On every tick" is not a schedule, and that is the whole point of the change.** The tick is `settings.yml`'s, the
+founder's number (§4.1), and the Desk re-ranks once per tick because that is when it runs at all — so a noisy input
+still cannot make it thrash, and the plan states no interval of its own. A *cadence* here would have been a second
+clock beside the Watch's, which is what §13a.3 and §18.7 refuse.
 
 **(FINAL)** The Desk records its ranking **and the gate that stopped each candidate**, at every tick, which is what
 makes *why did you not do that* answerable. **Enforced by:** `bin/watch` writes ~~`logbook/desk/<tick>.json`~~
@@ -1728,9 +1761,15 @@ all, leaving the roster the one object in the system that can only grow.
    §5.2 is the argv; `bin/probe`, ABSENT, asserts it nightly.)*
 4. **The no-model programs stay programs.** The Watch · the Sender · the world's door · the probe · the reconciler ·
    the log · the launcher · the curator's launcher · the drill · the rehearsal runner · the store check · the
-   supervisor. **A prompt injection that reaches one of these finds a program.** *(FINAL §7.4, §16.1.)*
+   supervisor. **A prompt injection that reaches one of these finds a program.** *(FINAL §7.4, §16.1. Mechanism, set
+   2026-09-06 by the orchestrator, DECISIONS §21 · challenge C P2-2: `keel/shared/roster.yml` (§L **O2**) carries the
+   twelve under `kind: program`, and `bin/check-stores` **refuses an agent file whose name is on that list** and
+   **refuses a `model:` on any program entry** — both **ABSENT**. The list is data, so promoting a program to an
+   agent is a diff on one file rather than a habit nobody can see.)*
 
-**(NEW: why rule 4 is the one most at risk from a roster, and the mechanism is a naming discipline)** Fourteen names
+**(NEW: why rule 4 is the one most at risk from a roster ~~, and the mechanism is a naming discipline~~ — it has a
+mechanism now, and this is why it needed one)** *(corrected 2026-09-06 · challenge C P2-2: a discipline somebody
+applies is what §12.10 and §13a call a wish; the two refusals above are what a program can check.)* Fourteen names
 create fourteen invitations to add a fifteenth for something that is currently a program. The test is whether the
 thing needs judgement. The Sender does not: it recomputes a ceiling, reads a checklist aloud into the log, performs
 one act, and holds a recall window. Making it an agent would put a model between the decision and the act, which is
@@ -2160,7 +2199,7 @@ Nothing is left to be discovered by a reader comparing two documents)**
 
 | Fact | What it says | What the roster does with it |
 |---|---|---|
-| 1 | Every shipped roster names its roles; ~~**zero of seven**~~ **zero of eight** ship unnamed shapes *(moved 2026-09-06: W25)* | **Adopted.** It is the founder's decision and the world agrees with it. **The eighth is Gemini CLI**, which ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in `.gemini/agents` (world.md 25) — a third provider naming its roles, and a **third agent-file location**, which is a case v42 did not contemplate. §17.8 carries the path |
+| 1 | Every shipped roster names its roles; ~~**zero of seven**~~ **zero of eight** ship unnamed shapes *(moved 2026-09-06: W25)* | **Adopted.** It is the founder's decision and the world agrees with it. **The eighth is Gemini CLI**, which ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in `.gemini/agents` (world.md 25) — a third provider naming its roles, and ~~a **third agent-file location**, which is a case v42 did not contemplate~~ **a directory generated from `roster.yml` (O2) for the agents Gemini may stand — v42's one home stands** *(corrected 2026-09-06 · challenge C P1-4)*. §17.8 carries the path and the generator |
 | 2 | Magentic-One splits by **grant** — browser, file-read, code, shell — not by domain | **Adopted as the second axis.** §5.2 splits by job *and* its `tools` column splits by grant. Both cuts are present and they are not the same cut |
 | 3 | Per-agent model is first-class frontmatter | **Adopted.** It is what makes per-agent routing a file field rather than a wish, and it removes the technical half of FINAL's objection to a file per role |
 | 4 | Coding is single-threaded, from Anthropic's own post | **Adopted as v6.** One artifact, one builder, never parallelised |
@@ -3235,24 +3274,37 @@ for it.
 them back through the door, one at a time. Today **none is admitted**; each row is its disposition when it reaches
 the door.)**
 
-| Hand | Class | Credential today | Who may hold it, under the roster | Day · night · never |
-|---|---|---|---|---|
-| the founder's signed-in Chrome | REACHES THE WORLD **+ private data** | the founder's own sessions | **nobody but the founder, on the Floor** | day, Floor only, forever |
-| Playwright, headless, `--isolated` | READ-ONLY render | none | **designer** — the only agent whose row names it | night |
-| Gmail · Calendar · Drive · Notion **read** | READ-ONLY, **tainted** | OAuth, the founder's | **the world's door program** (holds no model) **and `scout`** — nobody else. `steward` holds none of them (v36) | night |
-| Gmail **send** | REACHES THE WORLD, one-way | OAuth | **the Sender**, founder-signed | never unattended until the founder widens the class |
-| Drive share · Calendar create · Notion write | REACHES THE WORLD (a share is durable) | OAuth | **the Sender**, after a recall window | night only after the class is widened and the undo drilled |
-| Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | WRITES, reversible | OAuth / local files / API key | **designer**, on a dry branch | night after the undo is drilled |
-| Higgsfield (image · video · audio) | reversible artifact, **SPENDS credits** | API key; failed to connect in the census session (`ENOTFOUND`) | **writer**, rate-capped | night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
-| RunPod | **SPENDS MONEY at a rate** | API key, **uncapped** | **nobody** | never, until a capped key exists |
-| `claim-append` (local, `scripts/mcp/claim-append-server.mjs`, EXISTS) | WRITES LOCALLY | none | **curator** does this with `Write` and needs no server. The pattern survives as the door's model | night |
-| Mem0 | REACHES THE WORLD | unauthenticated | **nobody** | never (8.5) |
-| Miro | REACHES THE WORLD (a board others see) | unauthenticated | nobody until an intent names it | through the door individually, or disconnected |
-| n8n | REACHES THE WORLD | unauthenticated | **nobody** | never — licence (v15) |
-| `git` · `node` · `bun` | CLIs | none | **builder · tester · designer · analyst** — the four that carry `Bash` (§5.2; architect does not) | night |
-| `gh` | CLI | reads `~/.config/gh`, **which the sandbox denies** | builder, when a repository read is the need | night; every use needs the denial handled explicitly |
-| `gemini` | a **provider**, not a tool | never authenticated | routed by section 9, not held by an agent | night |
-| **Not connected, needed first**: analytics · error tracking · read-only billing · CI API · git host read | READ-ONLY | none | **analyst** (the reconciliation) · **scout** | night — and **before any hand**, per 8.3 |
+**(NEW: contradiction 19 — this was a third copy of the hands table, and it is now the binding column only ·
+2026-09-06 · census C)** The four-class table was written out four times — SPINE §F as the decision, §8.2, §17.3 and
+COVERAGE — and four copies of one classification is four places for a tool to be classed differently. §17.3 says in
+its own text that *"§8 keeps a pointer instead of a copy"*, and until today §8 kept a copy. **The `Class` and
+`Credential` columns are struck here: class is SPINE §F's and §8.2's, credential and disposition are §17.3's.** What
+stays is the one thing this section decides — **who may hold it, and when** — because that is the column §5's roster
+re-decided. The drift this prevents already happened once on Higgsfield, where the two tables read differently about
+the same key.
+
+| Hand | Who may hold it, under the roster | Day · night · never |
+|---|---|---|
+| the founder's signed-in Chrome | **nobody but the founder, on the Floor** | day, Floor only, forever |
+| Playwright, headless, `--isolated` | **designer** — the only agent whose row names it | night |
+| Gmail · Calendar · Drive · Notion **read** | **the world's door program** (holds no model) **and `scout`** — nobody else. `steward` holds none of them (v36) | night |
+| Gmail **send** | **the Sender**, founder-signed | never unattended until the founder widens the class |
+| Drive share · Calendar create · Notion write | **the Sender**, after a recall window | night only after the class is widened and the undo drilled |
+| Figma · Pencil · Stitch · Refero (Refero READ-ONLY) | **designer**, on a dry branch | night after the undo is drilled |
+| Higgsfield (image · video · audio) | **writer**, rate-capped | night, under a daily spend cap **recorded as a `provider_cap` and held at the provider — `bin/run` refuses the grant if it is `null` (O32); R21 decides whether it stays in WRITES at all**. Its publish and TikTok verbs are one-way and **never** — **the verb set itself is UNVERIFIED** (FINAL §16.3; the connected-tools list came from the 2026-09-04 session's own MCP server list) |
+| RunPod | **nobody** | never, until a capped key exists |
+| `claim-append` (local, `scripts/mcp/claim-append-server.mjs`, EXISTS) | **curator** does this with `Write` and needs no server. The pattern survives as the door's model | night |
+| Mem0 | **nobody** | never (8.5) |
+| Miro | nobody until an intent names it | through the door individually, or disconnected |
+| n8n | **nobody** | never — licence (v15) |
+| `git` · `node` · `bun` | **builder · tester · designer** ~~· analyst~~ — the ~~four~~ **three** that carry `Bash` *(corrected 2026-09-06: **O57** strikes `analyst`'s · census C item D)* (§5.2; architect does not) | night |
+| `gh` | builder, when a repository read is the need | night; every use needs the denial handled explicitly |
+| `gemini` | routed by section 9, not held by an agent | night |
+| **Not connected, needed first**: analytics · error tracking · read-only billing · CI API · git host read | **analyst** (the reconciliation) · **scout** | night — and **before any hand**, per 8.3 |
+
+**One measurement lived only in the struck `Credential` column and is kept here rather than lost:** Higgsfield's API
+key **failed to connect in the 2026-09-04 census session (`ENOTFOUND`)**. Every other cell of the two struck columns
+is carried by §17.3, which is why they could be struck at all.
 
 **The tainted read, decided. (v36, decided 2026-09-05; DECISIONS.md §8.)** SPINE §F's class table and §B.2 row 12
 disagreed about exactly one grant: §F said a tainted read is **scout only**, and the roster row gave `steward`
@@ -3886,8 +3938,9 @@ slot. **The test is the plan, not the issue closing** — 130 days of silence is
 **(NEW: this test is R10, and R10 is the hinge of the whole cross-model design.)** The table above is not one
 open question among several — **v5, v32, v78, v82 and §I row 15 all read differently depending on its answer.**
 Pass and rung 2 becomes parallel and a second family is a lane; fail and the second family is one foreground slot
-forever, at 1/N availability. **R26 is the cheap route to it**: reading the unread Codex June–August window would
-settle whether #19945 was fixed without installing anything. Both are stated in full at 10.8.
+forever, at 1/N availability. **(R26, OPEN)** is the cheap route to it *(mark added 2026-09-06 · challenge C
+P3-2 — the hinge's cheapest route was the one open question carried nowhere as open)*: reading the unread Codex
+June–August window would settle whether #19945 was fixed without installing anything. Both are stated in full at 10.8.
 
 **(NEW: the prerequisite is a founder act.)** Codex is **not installed** on this machine. Installing it and running
 the rehearsal is section 20 row 5.
@@ -4262,13 +4315,22 @@ than under the Codex one, which is a routing fact.
 
 **(FACT: world.md 25, 27 — W25 and W27. §10 has no Gemini row of any kind, and that is now a hole with a name.)**
 Gemini CLI ships **named subagents** with *"their own set of tools, MCP servers, system instructions, and context
-window"*, delegated by `@agent`, defined in `~/.gemini/agents` (personal) or `.gemini/agents` (project) — **a third
-agent-file location beside `.claude/agents/` and Codex TOML**, which v42 decided one home without contemplating.
+window"*, delegated by `@agent`, defined in `~/.gemini/agents` (personal) or `.gemini/agents` (project) — ~~**a third
+agent-file location beside `.claude/agents/` and Codex TOML**, which v42 decided one home without contemplating~~
+**(corrected 2026-09-06 · challenge C P1-4)**: it is **a generated view of `keel/shared/roster.yml` (§L O2) for the
+agents Gemini may stand**, not a third home. **v42 stands unamended** — the one home an agent file is *written* in is
+`.claude/agents/<name>.md`; `.gemini/agents/` is regenerated from the roster like `.agents/skills/` and
+`.claude/skills/` already are under v48, so nothing is authored twice and no second path can drift. §17.8 carries the
+path and the generator.
 And its releases since 0.30 are dominated by security hardening, including *"enforce fail-closed workspace trust
 and filter mcpServers in restricted mode"* — **the nearest analogue to `--restricted` in any third runtime**, and
 the thing a Gemini row in 10.5 would be written against. Gemini is carried in this plan as a price and as
-*"scout, once authenticated"*; that is thinner than the evidence now supports, and the gap is recorded rather than
-filled here.
+*"scout, once authenticated"*; that is thinner than the evidence now supports. ~~The gap is recorded rather than
+filled here.~~ **(corrected 2026-09-06 · challenge C P1-4)** **The agent-file half of the gap is filled and its owner
+is named:** `.gemini/agents/` is generated from `roster.yml` by **O2**'s generator pass (ABSENT), for the agents the
+§17.8 table says Gemini may stand — `scout` on routine work and the summarising half of the `curator`. Recorded as
+the orchestrator's reading of **W25** under **v42**, reopenable by name. What stays open is the *row* — §10.5 has no
+Gemini entry and no `--restricted` analogue written against it.
 
 **(NEW: v78 lands on this section as the thing that makes a one-slot family survivable.)** 9.4a decides a
 three-deep `fallback:` per agent ending in *stop and stage*, a **rung demotion** on any cross-family reroute not
@@ -4283,7 +4345,7 @@ lane; fail and the second family is **one foreground slot forever, at 1/N availa
 §I row 15 all read differently depending on it** — which is why it is named as the hinge rather than as one more
 open question. Its prerequisite is a founder act: Codex is not installed.
 
-**(R26 — the only cheap route to R10.)** Was **#19945** fixed between Codex 0.125 and 0.153? **Source class:** the
+**(R26, OPEN — the only cheap route to R10.)** Was **#19945** fixed between Codex 0.125 and 0.153? **Source class:** the
 unread June–August changelog window, against which three fetches already failed. It would settle R10 **without a
 local install**, which is the entire reason it is worth naming separately from R10.
 
@@ -5160,9 +5222,13 @@ read the foreign content decides.
 
 **(NEW: v1 changes how this is enforced, and makes it cheaper.)** In FINAL the split was a property of a *run's*
 loadout, checked at dispatch. With a named roster it is also a property of a **file**: `scout`'s `tools:` line carries
-no `Write` and no credential, and §B.2's own summary is the rule as a table — *ten of the fourteen carry no shell,
-five carry no write of any kind, and only four can touch source.* The check at dispatch does not go away; it now has
-something static to check against.
+no `Write` and no credential, and the roster is the rule as a table — ~~*ten* of the fourteen carry no shell~~
+**eleven of the fourteen carry no shell** *(corrected 2026-09-06: **O57** strikes `analyst`'s `Bash`; §5.2 ·
+challenge C P1-3)*, five carry no write of any kind, and only four can touch source. **Read that count from
+`keel/shared/roster.yml` (§L **O2**, ABSENT), never from a summary sentence**: §5.2 carried two hand-written counts of
+one column and both drifted from the column beside them, which is why the table, §17.1 and page 2 are generated from
+that one file or checked against it. ~~§B.2's own summary~~ is retired as the source for it. The check at dispatch
+does not go away; it now has something static to check against.
 
 **(NEW: v36 — §F's tainted class is where this rule meets the roster, and it is where the roster contradicted itself
 until it was decided.)** READ-ONLY **tainted** tools — Gmail read, Calendar read, Drive read, Notion read, the open
@@ -5790,8 +5856,10 @@ generator rule keeps them apart; without it, the archive quietly becomes an answ
 **(FINAL)** A field kit contains no steps, and this is enforced by what its sections *are*: all four headings are
 descriptive and none can hold *first do this, then do that*. **(NEW: v18 makes the same refusal at the library level,
 and names the collision honestly.)** The published SKILL.md spec recommends *"Step-by-step instructions"*; this
-system admits a step list in **exactly one place** — a checklist the Sender reads aloud, where the judge is absent and
-the act cannot be taken back. **The cost, stated once:** an imported skill written to the spec's recommendation fails
+system admits a step list in **exactly ~~one place~~ two places** **(corrected 2026-09-06: v51 widened v18 · challenge
+C P1-1)** — a checklist the Sender reads aloud, where the judge is absent and the act cannot be taken back, and **the
+curator's five fixed questions** (§13.6), admitted by **v51** on the evidence FINAL §10.7 cites: 0 of 121 free
+reflections named the cause. **The cost, stated once:** an imported skill written to the spec's recommendation fails
 our admission and needs a pass.
 
 **(NEW: v19 overrules one half of FINAL's kit lifecycle, and the half it overrules is the unshippable one.)** FINAL
@@ -6214,7 +6282,7 @@ design, so it is not adopted on a guess.)**
 | Alternative-architecture proposal | **§22's losing-images ledger**, each kept by name so it can be argued for later, plus **13a.8's queue**. **(NEW: v81)** each entry now carries `wins_if:` — the condition under which that losing image would be the better choice — so an argument for one is a check rather than a mood |
 | Contrarian-review agent | **`challenger`, §B.2 row 14** — `claude-opus-5`, Read Glob Grep, no write, routed before anything irreversible |
 | Fresh-eyes onboarding review | **v30's mechanism is the durable version:** the challenger sees the artifact and its done-test, **not** the author's reasoning. Fresh eyes as structure, not a first week |
-| Session-scoped rethink checklist | **Refused twice over.** v18 admits a step list in one place only, the Sender's checklist; and a rethink checklist inside a session is a plan-critique the run performs on itself, which v30 measures as harmful |
+| Session-scoped rethink checklist | **Refused twice over.** v18 admits a step list in ~~one place only, the Sender's checklist~~ **two places only — the Sender's checklist and the curator's five fixed questions (v51)** **(corrected 2026-09-06 · challenge C P1-1)**, and a rethink checklist is neither; and a rethink checklist inside a session is a plan-critique the run performs on itself, which v30 measures as harmful |
 
 ---
 
@@ -7274,11 +7342,22 @@ company.
 So the recovery plan is a credential plan: a password manager as the single source of truth, its emergency kit
 **printed and stored physically**, hardware keys registered **in pairs with the second off-site**, and a k-of-n split
 for the handful of secrets that unlock everything else. **The standard mistake is escrowing the vault and not the
-second factor that protects the vault.**
+second factor that protects the vault.** **(NEW: the escrow half is a WISH, and naming it that is the honest mark ·
+2026-09-06 · challenge C P2-4)** All three of those — **the printed emergency kit · the hardware keys registered in
+pairs with the second off-site · the k-of-n split** — are **WISH** in v50's sense: no mechanism is designed, no path
+is named, and none of them is a thing a program in this plan performs. They are founder acts against a vendor's
+product, and the plan's own §19 has no node for any of them. They stay because the failure they cover is real; the
+mark stops them reading as designed work.
 
-**(FINAL)** **The restore is drilled or none of this is true.** Monthly, the fleet is restored into a scratch
-directory from the remote alone and the anchors run there, with the result in the briefing. Twice a year, on a machine
-that is not this one, the company is rebuilt from the log and the escrow, and **the drill produces a number**.
+**(FINAL)** **The restore is drilled or none of this is true.** The fleet is restored into a scratch directory from
+the remote alone and the anchors run there, with the result in the briefing; and on a machine that is not this one,
+the company is rebuilt from the log and the escrow, and **the drill produces a number**. **(NEW: the two cadences are
+struck, and this is the same refusal §13a.3 and §18.7 already make · 2026-09-06 · challenge C P2-4)** ~~Monthly~~ and
+~~twice a year~~ are gone from this plan. **Each drill is one obligation row carrying `recurs:`, and the number in it
+is the founder's, set in the charter — exactly like `undo_window`, one hour by default and the founder's to set
+(§12.2).** The plan states that the drill recurs and that its result reaches the briefing; **it states no interval**,
+because a cadence written into a plan is a schedule the SPINE refuses and the plan cannot keep. `bin/watch` reads
+`recurs:` on the obligation the same way it reads `every:` on a standing intent (v55), so this costs nothing new.
 
 **(FINAL)** Credentials are **keychain references in every file, never values**: a file that contains a secret is a
 file that gets committed eventually.
@@ -7299,8 +7378,10 @@ then one detached measurement.
 the obligations store** (v44), surfaced by the briefing, with the same forced disposition every dated thing here
 carries. §12.8c holds the decision; this is the section whose plan it repairs.
 
-**Mechanism:** the drill as an obligation with `recurs: monthly` in the harness venture's obligations (**ABSENT**) ·
-rotation rows in `obligations.yml` (**ABSENT**, §L O67).
+**Mechanism:** the two drills as **two obligation rows carrying `recurs:`** in the harness venture's obligations,
+their intervals read from the charter and never written here (**ABSENT**) · rotation rows in `obligations.yml`
+(**ABSENT**, §L O67) · the escrow half — printed kit, paired hardware keys, k-of-n split — **WISH**, no mechanism
+designed *(all three marks set 2026-09-06 · challenge C P2-4)*.
 
 ---
 
@@ -7341,7 +7422,9 @@ default"* (models.md, accessed 2026-09-05). **Five minutes applies in three situ
 provider, **and the moment the account draws on credits**, which is exactly when the machine is busiest. The TTL is a
 function of billing state and shortens twelve-fold at the worst possible moment.
 
-**The consequences, unchanged from FINAL and now with the right coefficients** (§16 carries the arithmetic): the tick
+**The consequences, unchanged from FINAL and now with the right coefficients** (~~§16 carries the arithmetic~~
+**§9.6 owns the arithmetic; §16.3 restates it** — *corrected 2026-09-06 · census C item F, and §16.3's own heading
+already says so*): the tick
 period is chosen for control latency rather than for cost; runs of one shape are batched inside the TTL the Watch
 observes; **the standing prompts are byte-identical and carry no timestamp**; and the set of shapes is closed, because
 **the cache is invalidated by any change to the stable prefix including the tool definitions**, so a bespoke grant per
@@ -7463,7 +7546,7 @@ this Mac, this account and these runtimes — they are not design, and nothing a
 | Hooks: **34 events, 10 documented blocking**; `PermissionRequest` is **non-blocking** — *"Exit code 2 isn't honored for this event … Deny through the `decision` object instead"* | **runtimes.md** | §15.6 — a hook written the obvious way silently fails to deny |
 | `Monitor` is unavailable when `DISABLE_TELEMETRY` or `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set | **runtimes.md** | a trap for this repo specifically |
 | `/goal` is *"a wrapper around a session-scoped prompt-based Stop hook"*, and is unavailable under `disableAllHooks` or `allowManagedHooksOnly` | **runtimes.md** | v11 · §12.6 — the managed file omits both |
-| A goal **defers evaluation while a subagent or background shell is running**; check-ins start at 30 minutes and double to a 4x ceiling; under `-p` *"this is the only way Claude Code delivers check-ins"* | **runtimes.md** | §12.5 — an unattended run's only heartbeat |
+| A goal **defers evaluation while a subagent or background shell is running**; ~~check-ins start at 30 minutes and double to a 4x ceiling~~ **check-ins back off 30 min → 1 h → every 2 h, at most three per goal** *(moved 2026-09-06: W14 · census C item C — the struck reading is FINAL's, superseded at six other sites, and §15.8's preamble promises nothing above contradicts it)*; under `-p` *"this is the only way Claude Code delivers check-ins"* | **runtimes.md**, W14 | §12.5 — an unattended run's only heartbeat; **v12** carries the row |
 | `/goal` leaves the goal active after transient failures **including rate limits**, and terminates only on Met, Impossible, `/goal clear`, or four unrecoverable errors | **runtimes.md** | the behaviour a night wants |
 | Agent teams: experimental, off by default, **no nested teams**, one team per session, `/resume` does not restore them, `-p` never forms one; **~7x tokens in plan mode**; *"Use Sonnet for teammates"* — **our position is v59: a teammate runs on its own agent file's model**, the 7x cost stated in §9 and §16 | **surfaces.md · models.md** | §14.5 · v13 · §G.1 |
 | `~/.claude/teams/<team>/config.json` holds session ids **and tmux pane ids**, and is *"overwritten on the next state update"* | **surfaces.md** | §14.5 — read source, never a write target |
@@ -8065,8 +8148,9 @@ there.
 
 **(NEW: the four admissible bodies are the content rule, and they are ours)** **anchor** (a check with an exit code) ·
 **exemplar** (examples of good, with provenance) · **rehearsal case** (input plus known answer) · **reference** (a
-vendor fact with an expiry). A step list is admitted in exactly one place: a checklist the Sender reads aloud, where
-the judge is absent and the act cannot be taken back. **The cost, once (v18):** an imported skill written to the
+vendor fact with an expiry). A step list is admitted in exactly ~~one place~~ **two places** **(corrected 2026-09-06:
+v51 · challenge C P1-1)**: a checklist the Sender reads aloud, where the judge is absent and the act cannot be taken
+back, and **the curator's five fixed questions** (§13.6, admitted as the second step list by **v51**). **The cost, once (v18):** an imported skill written to the
 published spec's recommended *"Step-by-step instructions"* body fails our admission and needs a pass.
 
 **(FINAL §16.2, re-decided under v3 and v19)** The 134 no longer move into a holding directory read by nothing. Each
@@ -8326,7 +8410,7 @@ renderers read the same logbook.
 |---|---|---|---|---|
 | **Claude Code** (subscription) | every agent of 17.1; **the Floor, always**; the Operator | **two windows: a rolling five-hour AND a weekly, per seat, shared with Claude chat and Cowork** (v22); one-hour cache | `<agent>.claude-code.argv` — ABSENT | installed, **2.1.261** |
 | **Codex CLI** (subscription) | **day one (v5), in one position:** checker on a prepared diff, foreground, stdout to a file while inheriting the parent shell's TTY | its own window; **the only vendor publishing numeric per-window quotas** | `<agent>.codex.argv` — ABSENT | **not installed** (`command -v codex` → absent). #19945 open **130 days with no maintainer reply** |
-| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`). **(FACT: world.md 25)** it ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in **`.gemini/agents`** — an **eighth** named roster in the world (§5.8 fact 1) and a **third agent-file location**, which is a case v42 did not contemplate. §17.8 carries the path |
+| **Gemini CLI** (subscription) | scout on routine work; the summarising half of the curator | free tier 60 requests/min, 1,000/day on a personal account; paid tiers UNVERIFIED | `<agent>.gemini.argv` — ABSENT | installed **0.38.2**, never authenticated; auth state unreadable (`~/.gemini` is `denyRead`). **(FACT: world.md 25)** it ships **named subagents** with their own tools, MCP servers and context windows, delegated by `@agent` and defined in **`.gemini/agents`** — an **eighth** named roster in the world (§5.8 fact 1) and ~~a **third agent-file location**, which is a case v42 did not contemplate~~ **a generated view of `roster.yml` (O2), not a third home — v42 stands** *(corrected 2026-09-06 · challenge C P1-4)*. §17.8 carries the path and the generator |
 | **Local models** | **real work, not no work** (v20): embeddings, classification, dedup, PII detection | none — electricity | — | ABSENT. MiniLM (384 dims, Apache 2.0, 256-word-piece truncation) · Qwen3-0.6B (32,768 context, Apache 2.0); on-disk size not published |
 | **The artifact runtime** | the published phone pages: Balcony views, the briefing, the read-back. **It cannot pop a terminal**, which is why it is not the website's host (v39) | free | — | exists; measured: database, user identity, comments that wake the session |
 | **Routines** (cloud) | **refused for the Watch**: cloud-only, cannot reach anything this system stores on the Mac. **Read *no local files* narrowly** — a routine clones every selected repo per run and pushes `claude/`-prefixed branches, so it has a repository and not this laptop (cloud.md) | **1-hour minimum, confirmed verbatim**: *"The minimum interval is one hour; expressions that run more frequently are rejected."* The **daily cap exists and is published as no number** — superseding this cell's earlier *unverified*, which doubted the cap rather than its size | — | exists; **API fire endpoint documented** (§10.2a) |
@@ -8338,7 +8422,9 @@ renderers read the same logbook.
 both** (§H.1): the Operator is the founder's contact point and runs inside Claude Code; every dispatch to any provider
 goes through `keel/bin/run`. **The cost, stated once:** one foreground slot is not parallel, so **local Codex is not a
 night lane** until the headless rehearsal passes — `codex exec --json`, no controlling TTY, a non-trivial prompt,
-version ≥ 0.124.0, against known-answer cases. **(NEW, v56: that cost is about the LOCAL binary and does not govern
+~~version ≥ 0.124.0~~ **the installed version, recorded** *(moved 2026-09-06: W19 · challenge C P3-4 — Codex ships
+0.153.4, so the old floor is twenty-nine minor versions stale and is satisfied by anything installed, which means it
+no longer discriminates)*, against known-answer cases. **(NEW, v56: that cost is about the LOCAL binary and does not govern
 the row above it.)** #19945 is a local TTY defect, so it cannot reach a task running in OpenAI's sandbox — which is
 why `@codex review` is admitted today while local Codex waits on a rehearsal.
 
@@ -8433,10 +8519,13 @@ keel/                                   one private repository · the house
                                         and Gemini CLI, not .codex/skills
   .claude/skills/                       AT THE HOUSE ROOT (v48), GENERATED from shared/skills — read by Claude
                                         Code. A venture carries no skills directory; skills are not per venture
-  .gemini/agents/                       W25 · A THIRD AGENT-FILE LOCATION, per provider: Gemini CLI ships named
-                                        subagents with their own tools, MCP servers and context windows, delegated
-                                        by @agent. v42 decided ONE path and did not contemplate this case; the file
-                                        is GENERATED from shared/roster.yml (O2) for the agents Gemini may stand
+  .gemini/agents/                       W25 · A GENERATED VIEW OF shared/roster.yml (O2), not a third home
+                                        (corrected 2026-09-06, challenge C P1-4): Gemini CLI ships named subagents
+                                        with their own tools, MCP servers and context windows, delegated by @agent.
+                                        v42 STANDS — an agent file is written in ONE place, .claude/agents/<name>.md;
+                                        this directory is GENERATED from shared/roster.yml (O2) for the agents Gemini
+                                        may stand, the same way .claude/skills and .agents/skills are (v48), so
+                                        nothing is authored twice and no second path can drift
   mission-control/                      the website: seven pages, each a control, every tap opening a terminal here
     server/ client/ scripts/            seeded from mission-control/ on ceo-1-1788609834 (60 files) — §18
   logbook/
@@ -8695,8 +8784,8 @@ flowchart TD
     LICENSE(["FOUNDER ACT · fetch and read LICENSE-CONTENT<br/>one fetch; unblocks the 2,111+ (v17)<br/>DECIDED 2026-09-05: fetched at build time; row stays open"])
     HOSTED(["FOUNDER DECISION · which hosted lane may make<br/>when the Mac is off (§I row 15) — Codex cloud has no<br/>documented driver; claude --cloud and Routines do<br/>MEASURED 2026-09-06, R5 DONE: 156 h of log, asleep 40.7 h<br/>in 487 episodes, ZERO gaps of an hour — the tail this<br/>lane would buy back is zero over the week measured.<br/>The charter field cloud: allow or deny, default deny,<br/>is decided either way (v79)"])
 
-    AGENTS1["WAVE ONE · eight agent files (v54)<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change,<br/>because builder and architect declare claude-fable-5-1 (v57)"]
-    AGENTS2["WAVE TWO · seven agent files (v54)<br/>product · analyst · writer · growth · steward ·<br/>curator · challenger<br/>written when a venture needs them; each brings<br/>its own argv file with it"]
+    AGENTS1["WAVE ONE · ten agent files (v54, widened by v70)<br/>ten not eight: curator and challenger moved here 2026-09-06<br/>operator · builder · reviewer · architect · tester ·<br/>guard · scout · designer · curator · challenger<br/>.claude/agents/*.md · the model set in<br/>prompt-standard.test.mjs moves in the same change,<br/>because builder and architect declare claude-fable-5-1 (v57)"]
+    AGENTS2["WAVE TWO · five agent files (v54, narrowed by v70)<br/>five not seven: curator and challenger are wave one<br/>product · analyst · writer · growth · steward<br/>written when a venture needs them; each brings<br/>its own argv file with it"]
     ARGV["keel/shared/argv/&lt;agent&gt;.&lt;provider&gt;.argv<br/>the grant IS these strings"]
     PROBE["keel/bin/probe<br/>what a run can actually touch, nightly"]
     RUN["keel/bin/run<br/>the only thing that composes argv · mints the UUID ·<br/>writes keel/logbook/sessions.jsonl<br/>seed: mission-control/scripts/consume-dispatch.ts"]
@@ -8733,7 +8822,7 @@ flowchart TD
     EXTRACT["The repository-to-graph extractor<br/>ours; 3d-force-graph reads {nodes, links} only"]
     P6["Page 6 · 3D file graph<br/>LAST of the seven pages (v61)"]
 
-    CODEXTEST["The Codex headless rehearsal<br/>codex exec --json · no controlling TTY ·<br/>non-trivial prompt · version >= 0.124.0"]
+    CODEXTEST["The Codex headless rehearsal · R10<br/>codex exec --json · no controlling TTY ·<br/>non-trivial prompt · THE INSTALLED VERSION, RECORDED (W19)<br/>not the retired >= 0.124.0 floor: 0.153.4 ships today, so<br/>that floor is 29 minor versions stale and discriminates nothing"]
     VENTURE["3 · One real venture, driven<br/>a real done-test and a rung-1 anchor"]
     OVERNIGHT["The first measured overnight<br/>one week overnight against one week bounded"]
 
@@ -8748,6 +8837,9 @@ flowchart TD
     HOST["keel/host/ · O10<br/>plist · managed-settings template · env file ·<br/>sandbox block · denyRead list · expected macOS grants —<br/>the one place the machine is declared"]
     CONSENT["keel/consent.yml + keel/subjects/&lt;hash&gt;.yml · v69<br/>the register has ONE writer and is read by the Sender<br/>BEFORE any contact · log and memory hold a hash, never a<br/>body, so erasure deletes one subject row and the hash<br/>becomes a known absence"]
     HIGHWATER["The window high-water file · v74<br/>tokens observed, because no denominator is published ·<br/>wall clock beside it, USD kept as a shadow price"]
+    FOUNDERLAST["keel/logbook/founder.last · v76<br/>the last founder event: bin/log writes it, bin/watch<br/>reads it · ONE predicate at FOUR call sites — release the<br/>reserve and snap it back on the first tap · fire a<br/>which's stated default at expiry, archiving both options ·<br/>build one option instead of two · page 5's since you were<br/>last here, keyed on the event and never on a date"]
+    SKILLBUDGET["The per-agent startup metadata budget · v77<br/>a checker modelled on scripts/check-memory-budget.mjs,<br/>which EXISTS and blocks · 7.6a names no path for it yet ·<br/>R8 can retire it outright: if the tax scales with declared<br/>namespaces, the per-namespace generator is the whole fix"]
+    FRESH["The scout standing intent · v81<br/>re-fetches every row carrying source: and valid_until, on<br/>the free Gemini window · a changed fact opens a Decide item<br/>NAMING the row it invalidates · v55's shape, so it is data<br/>the Watch ticks and not a new program"]
 
     EGRESS["keel/bin/egress · v68<br/>ONE no-model door: every call logged, filtered by domain<br/>AND method, credentials injected that the agent never<br/>sees · --strict-mcp-config names only the proxy and<br/>mcp-policy.json becomes its configuration"]
     WORKTREE["keel/bin/worktree · O14<br/>a run NEVER creates its own — git worktree add cannot<br/>complete under the armed sandbox and escalation is<br/>unavailable to an unattended run · it is handed one"]
@@ -8853,6 +8945,14 @@ flowchart TD
     CONSENT --> SENDER
     METER --> HIGHWATER
     HIGHWATER --> WATCH
+    LOG --> FOUNDERLAST
+    FOUNDERLAST --> WATCH
+    FOUNDERLAST --> DECIDE
+    FOUNDERLAST --> P5
+    SKILL --> SKILLBUDGET
+    GEMINI --> FRESH
+    WATCH --> FRESH
+    FRESH --> DECIDE
     DOOR --> EGRESS
     EGRESS --> INBOUND
     EGRESS --> SENDER
@@ -8880,8 +8980,8 @@ in 19.2a below**, in three groups, because they arrived as a set and behave as t
 
 | ABSENT path or artifact | SPINE | Node |
 |---|---|---|
-| `.claude/agents/operator.md` and the seven other wave-one files | §B.2, §C, v54 | `AGENTS1` |
-| The seven wave-two agent files — product · analyst · writer · growth · steward · curator · challenger | §B.2, v54 | `AGENTS2` |
+| `.claude/agents/operator.md` and the ~~seven~~ **nine** other wave-one files — including `curator` and `challenger` *(moved 2026-09-06: D5 → v70)* | §B.2, §C, v54, **v70** | `AGENTS1` |
+| The ~~seven~~ **five** wave-two agent files — product · analyst · writer · growth · steward ~~· curator · challenger~~ *(moved 2026-09-06: D5 → v70 — the last two are wave one)* | §B.2, v54, **v70** | `AGENTS2` |
 | `keel/shared/argv/<agent>.<provider>.argv` | §B.1 rule 1, §H.1 | `ARGV` for wave one; each wave-two file brings its own with it (v54) |
 | `keel/bin/run` | §B.1 rule 1, §C.4, v34 | `RUN` |
 | `keel/bin/probe` | §B.1 rule 4, v34 | `PROBE` |
@@ -8920,7 +9020,11 @@ a wish)** The same completeness claim as 19.2, made against SPINE §L: **one row
 nodes means the graph is wrong.** They group into three kinds, and the kinds behave differently in a build order —
 **a store is written once and read forever, a program is a thing somebody writes, and a mechanism is a rule that
 lands inside a program that already has a node.** Only the first two are new nodes; the third joins one, which is
-why the graph grew by twenty-one nodes and not by eighty.
+why the graph grew by twenty-one nodes and not by eighty. **(NEW: three further nodes, and they are not §L's ·
+2026-09-06 · challenge C P2-3)** `FOUNDERLAST`, `SKILLBUDGET` and `FRESH` carry three **founder** rows — v76, v77 and
+v81 — that were named ABSENT in their own sections and had no node here at all. They are counted apart from the
+twenty-one on purpose: the twenty-one is what the rethink round's *mechanisms* cost, and mixing the two would spoil
+the only number in this section anyone can check.
 
 **Stores and schemas — O1–O12, plus the two the founder's rows add**
 
@@ -8934,12 +9038,13 @@ why the graph grew by twenty-one nodes and not by eighty.
 | `keel/shared/schemas/event.yml` — `schema_version` on every row | §L O6 | `SCHEMAS`; the logger change joins `LOG` |
 | The handover schema's five fields | §L O7 (**R11** is blocked on it) | `SCHEMAS`; the writer joins `RUN` |
 | `keel/shared/prices.yml` with `fetched_at` and `valid_until` | §L O8 | `PRICES` — the node exists; the two fields and the stale-row refusal are what is new |
-| `keel/logbook/decide.jsonl` | §L O9 · O49 · v76's which-expiry | `DECIDE` |
+| `keel/logbook/decide.jsonl` | §L O9 · O49 · v76's which-expiry, which is **one of v76's four call sites and not its path** — the path is the row below *(clarified 2026-09-06 · challenge C P2-3)* | `DECIDE` |
 | `keel/host/` | §L O10 | `HOST` |
 | `keel/golden/` | §L O11 (contradiction 11) | `GOLDEN` |
 | `keel/surfaces/pages/<n>.yml` | §L O12 (contradiction 9) | `PAGEMAN` |
 | `keel/consent.yml` — the register — and `keel/subjects/<hash>.yml`, the erasable per-subject store | **v69** | `CONSENT` |
 | The window high-water file | **v74** | `HIGHWATER` |
+| `keel/logbook/founder.last` — the last founder event, written by `bin/log`, read by `bin/watch`, with **one predicate over it at four call sites** *(added 2026-09-06 · challenge C P2-3)* | **v76** (§0.1a, §4.4) | `FOUNDERLAST`; the four call sites join `WATCH`, `DECIDE` and `P5` |
 
 **Programs — O13–O20, O23, O60, O78, O79, plus the founder's one**
 
@@ -8958,6 +9063,8 @@ why the graph grew by twenty-one nodes and not by eighty.
 | `keel/bin/intend` | §L O60 | `INTEND` |
 | `keel/fixtures/` | §L O78 | `FIXTURES`; `bin/drill` gains the scratch house and keeps node `DRILL` |
 | Blue-green at a tick boundary | §L O79 | joins `WATCH` and `SENDER` — free, because every tick is already crash-only |
+| The per-agent startup metadata checker — modelled on `scripts/check-memory-budget.mjs`, which EXISTS and blocks; **§7.6a names no path for it yet**, and **R8** can retire it outright *(added 2026-09-06 · challenge C P2-3)* | **v77** (§7.6a, §7.8) | `SKILLBUDGET` |
+| The `scout` standing intent that re-fetches every row carrying `source:`/`valid_until` on the free Gemini window and opens a Decide item **naming the row it invalidates** — **v55**'s shape, so it is data the Watch ticks *(added 2026-09-06 · challenge C P2-3)* | **v81** (§13a.7, §13a.10) | `FRESH`; the rows it opens land in `DECIDE` |
 
 **Mechanisms — the rules that land inside a program that already has a node**
 
@@ -8974,6 +9081,8 @@ why the graph grew by twenty-one nodes and not by eighty.
 | A terminal `blocked` state after N failures — **R18** sets N | §L O73 | `RUN`, written to the card store and the negatives store |
 | The deterministic accessibility check · the verbatim legal clause | §L O58, O59 | `P5` and `RECON`; both sit on grants and checks that exist |
 | The page manifest's readers: the census join, the citing-or-refusing Q&A | §L O70, O54 | `P2` and the page renderers, downstream of `PAGEMAN` |
+| **v77**'s one generated directory per namespace — a rule **inside** §7.1's generator, which already owns both output directories, not a second writer *(added 2026-09-06 · challenge C P2-3)* | **v77** (§7.6a), extends **v48** | `SKILL` |
+| **v81**'s `source:` and `valid_until` on every row resting on a fetched fact, and one `wins_if:` line per §22 entry — written once, by whoever wrote the row *(added 2026-09-06 · challenge C P2-3)* | **v81** (§1.1, §13a.10, §22) | no node — the fields are written into the plan itself; the program that reads them is `FRESH` |
 | Deletions and rules with no program: the project-settings grant tier, the backlog file, the parallelism axis, `analyst`'s shell, `CURATION.yml` as the failed-candidate home, the hook rewrite as spec | §L O37, O46, O69, O57, O47, O38 | no node — §18.7 carries them as fates |
 
 **(NEW: three of these paths are named more narrowly than SPINE §L names them, and the difference is recorded
@@ -8987,6 +9096,15 @@ says only *two stores*. **None of the three is a change of behaviour** — §L's
 path that differs between the spine and the build order is precisely the drift the spine exists to stop, and the
 cheapest moment to see it is now.
 
+**(NEW: three founder rows were ABSENT with no node, and the completeness claim above is what found them)** This
+table and 19.2 both claim *one row per ABSENT path*. **v76**'s last-founder-event predicate reached the graph only as
+*which-expiry* folded into `DECIDE` — one of its four call sites, standing in for the path itself. **v77**'s checker
+and per-namespace generator and **v81**'s `source:`/`valid_until` fields and `scout` standing intent were named
+ABSENT in their own sections and appeared here nowhere. All three are rows above now, with `FOUNDERLAST`,
+`SKILLBUDGET` and `FRESH` in the graph. **The lesson is about the claim, not the three rows:** a completeness claim
+is worth what it costs to falsify, and this one was falsified by reading it against §A rather than against §L —
+the founder rows carry ABSENT mechanisms too, and only §L was swept when the table was written.
+
 **(NEW: two rows are free before the first run and expensive after, and the graph cannot show that)** **O7**'s five
 handover fields and **O6**'s `schema_version` cost nothing while no run has written a row, and cost a **full backfill**
 the moment one has. They are marked *free now, backfill later* in §L for that reason, and **R11** — does a second
@@ -8998,9 +9116,11 @@ pay more for it and to lose one measurement outright.
 `codex exec --json` return output with no controlling TTY, on a current version, with a non-trivial prompt. Pass and
 rung 2 becomes parallel and a second family is a lane; fail and the second family is one foreground slot forever, at
 1/N availability. **v5, v32, v78, v82 and §I row 15 all read differently depending on it.** Note **W19** against the
-node's own label: the rehearsal floor written there as `>= 0.124.0` is twenty-nine minor versions stale against the
-shipped 0.153.4 and no longer discriminates — the floor is **the installed version, recorded**. **R26**, reading the
-unread Codex June–August changelog window, is the only cheap route to the same answer and needs no install at all.
+node's own label, **which now carries the corrected floor rather than a note beside a stale one** *(corrected
+2026-09-06 · challenge C P3-4)*: the rehearsal floor once written there as `>= 0.124.0` is twenty-nine minor versions
+stale against the shipped 0.153.4 and no longer discriminates — the floor is **the installed version, recorded**.
+**(R26, OPEN)** *(mark added 2026-09-06 · challenge C P3-2)*, reading the unread Codex June–August changelog window,
+is the only cheap route to the same answer and needs no install at all.
 
 ---
 
@@ -9036,14 +9156,20 @@ of 2026-09-05 settled, `HOSTED` is still **OPEN** (§I row 15) — it names a ch
 driver today (Codex cloud) against lanes that share the Claude seat whose terms clause is §I row 1, also open. Two
 open decisions gate one narrow lane, and nothing else in the graph waits on either of them.
 
-**(FOUNDER, v54: the roster is two nodes now, and the second one is downstream of a running venture)** `AGENTS1` is
-eight files and sits where `AGENTS` did — everything that needs a grant needs it. `AGENTS2` is the other seven, and
+**(FOUNDER, v54: the roster is two nodes now, and the second one is downstream of a running venture · sizes moved
+2026-09-06: D5 → v70)** `AGENTS1` is ~~eight~~ **ten** files and sits where `AGENTS` did — everything that needs a
+grant needs it. `AGENTS2` is the other ~~seven~~ **five**, and
 the only edge into it comes **from** `VENTURE`: they are written when a venture needs them. **No edge is drawn from
 `AGENTS2` to `ARGV`, and the omission is deliberate rather than an oversight** — that edge would close a cycle
 (`AGENTS2 → ARGV → RUN → … → VENTURE → AGENTS2`), and the cycle would be real rather than a drawing artifact, because
 wave two is written after the machine is already running. Each wave-two file therefore brings its own argv file with
 it, the same way wave one's arrives with `AGENTS1`. **What the split does not change:** all fifteen rows stay in the
-§17.1 inventory, and §5.0 states once what wave one does without.
+§17.1 inventory, and §5.0 states once what wave one does without. **(FOUNDER, rethink 2026-09-06: D5 → v70 — what
+v70 moved, and the graph moves with it)** `curator` and `challenger` are **wave one**, so both are inside `AGENTS1`
+and neither is reached through `VENTURE`: memory has a writer from the first night, and a plan about to bind is
+attacked by something that is not its author. v70 moves v54's implementation and reverses nothing — v54's own test is
+*"a seed file or a code path today"*, and `curator` has four verified code paths on this branch while `challenger` is
+one read-only file. §5.0's two tables are the same split stated once.
 
 **(FOUNDER, v61: page 6 is the only page with edges from every other page, and that is what "last" means here)**
 `P2`, `P3`, `P4`, `P5` and `P7` all point into `P6`, so the graph refuses to build it early rather than a sentence
@@ -9063,7 +9189,10 @@ is why the world's door is a node in its own right rather than a detail inside t
 **(NEW: what the rethink round of 2026-09-06 did to this graph, and the shape of the change is the finding)** It
 added **twenty-one nodes — eleven stores and schemas, ten programs — and not one new root.** Every one of them hangs
 off `LOG`, `RUN`, `STORES`, `DOOR` or `WATCH`, which is what a round of *mechanism* fixes looks like when it is
-drawn: eighty decisions (§L), and the trunk did not move. Had the round found a second architecture, this graph
+drawn: eighty decisions (§L), and the trunk did not move. **(NEW: three founder-row nodes joined on 2026-09-06 —
+`FOUNDERLAST`, `SKILLBUDGET`, `FRESH`, challenge C P2-3 — and they do not disturb this reading:** they hang off
+`LOG`, `SKILL` and `WATCH`/`GEMINI`, so the count of new roots is **still zero**, and they are counted separately
+from the twenty-one because they are founder rows and not §L mechanisms.**)** Had the round found a second architecture, this graph
 would have a second source. It has none. **Four of the twenty-one change an ordering rather than adding work.**
 `PACKS` is the sharpest — **v71 makes an agent unroutable without its onboarding pack**, so `AGENTS1 → ROSTER →
 PACKS → ROUTING → RUN` is the order, and the pack is not paperwork filed after the fact: it is what distinguishes
@@ -9211,7 +9340,7 @@ this section.
 
 | Row | What the founder decided | In their words |
 |---|---|---|
-| **v54** | The roster ships in **two waves** — eight first, the six business agents and the challenger when a venture needs them (§5.0, §17.1, §19.1) | *"Start with the eight that have seeds or code paths"* |
+| **v54** | The roster ships in **two waves** — ~~eight first, the six business agents and the challenger when a venture needs them~~ **ten including the Operator first, five when a venture needs them** *(composition moved 2026-09-06: D5 → v70 · census C item H; the two-waves decision itself stands unchanged)* (§5.0, §17.1, §19.1) | *"Start with the eight that have seeds or code paths"* |
 | **v55** | **Standing intents**: an intent that never expires, carrying a cadence or an inbound event class, dispatched by the Watch (§2.8, §4.1) | *"agents … that can run every set time or evant or something else. it to build the company like working"* |
 | **v56** | **A cloud lane for when the Mac is off** — Codex cloud is admitted as a PR reviewer today; as a maker it is UNVERIFIED, with no documented driver; the documented off-Mac maker paths are Anthropic's `--cloud`/Routines and Google's Jules (alpha) (§10, §15). Which of these may make is row 15, raised by this decision | *"When my Mac is not on … you can use codex or Gemini … But still keep it open"* |
 | **v57** | **Fable 5.1 is builder's and architect's default**, overruling v21's escalation-only rule (§9.1, §5.2, §17.1) | *"Fable as builder's and architect's default"* |
@@ -9255,7 +9384,7 @@ image, and **none of them is re-argued in this section or anywhere else.**
 | D2 | **v67** | **Both:** the launcher records each child's process group and the cord signals it; `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN |
 | D3 | **v68** | Build **`bin/egress`** — one no-model program logs every call, filters by domain and method, and injects credentials the agent never sees; `--strict-mcp-config` names only the proxy and the MCP policy file becomes its configuration |
 | D4 | **v69** | **Both now:** a hash in the log and in memory, one erasable per-subject store holding the body, and a **consent register** with one writer, read by the Sender before any contact |
-| D5 | **v70** | The **curator and the challenger both join wave one** — ten agents plus the Operator, not eight |
+| D5 | **v70** | The **curator and the challenger both join wave one** — ten ~~agents plus~~ **including** the Operator, not eight *(reworded 2026-09-06 · census C item B: "plus" summed to sixteen against a fifteen-role roster; SPINE v70 carries the same wording)* |
 | D6 | **v71** | An **onboarding pack for every agent, wave one included**. Without it the agent is declared and not routable |
 | D7 | **v72** | **All fifteen agent files carry `valid_until`**, with exactly one recorded disposition at expiry — Refresh · Merge · Retire |
 | D8 | **v73** | **Every anchor carries a mutation case** — a known-bad input it must fail — or is marked `unrated`; §21's rung-1 share splits rated and unrated |
@@ -9316,6 +9445,61 @@ Rows 16 and 17 are **assumptions this plan was already making**, promoted into r
 round that only closes decisions cannot find those; **v81 is the mechanism that makes finding them routine rather
 than dependent on eight lanes being dispatched by hand.** The count going up is not the round failing. The count
 staying at fifteen while both assumptions kept being made silently is what failure would have looked like.
+
+---
+
+### 20.8 Research first — the twenty-six questions
+
+**(NEW: §1 pointed here for the R-list and the list was not here · added 2026-09-06 · challenge C P3-3)** §1.1 says
+the round produced *"the twenty-six questions nothing resting on them can be decided without"* and sent the reader to
+§20 for them. §20 carried seventeen open decisions and FINAL §19's rows; **R5 and R12 appeared inside two of those
+rows and the other twenty-four appeared nowhere**, so a reader counting the plan's research questions from this
+document alone could not find them. **SPINE §N is reproduced below**, unchanged in substance: id · the question ·
+what it decides · status. The source class per question stays in SPINE §N and is not repeated here, because a second
+copy of it is a second thing to keep true.
+
+**Read it as the plan's own list of what it does not know.** Nothing here is a decision and nothing here has an
+owner: each is a bounded question with a source class, and **nothing resting on one can be decided without it**.
+**R10 is the hinge** — the one question whose answer changes the shape of the cross-model architecture rather than
+one of its rows; **v5, v32, v78, v82 and §I row 15 all read differently depending on it**, and **R26** is the only
+cheap route to it. **R12** is the cheapest measurement named anywhere in the round and settles §20.1's row 16, the
+row with the largest blast radius on this page. **One is DONE:** R5, measured on this Mac on 2026-09-06 and recorded
+in DECISIONS §19; it prices **v79** and closes the *measurement* half of row 15 while leaving the *decision* open.
+
+| id | The question | What it decides | Status |
+|---|---|---|---|
+| **R1** | Is the Bash sandbox's `filesystem.allowWrite` settable **per `claude -p` invocation**, or project-scoped only? | Whether the shell can be narrowed to a run's worktree, making `isolation: worktree` **enforced** rather than declared | OPEN |
+| **R2** | Does the sandbox `credentials` block inject a secret at egress without the child being able to read it, and does `network` support an HTTP-method allowlist and TLS inspection? | Whether **v68** is one config change or a program we write | OPEN |
+| **R3** | Can a non-interactive background process read a macOS keychain item without an interactive unlock, and under what ACL? | Whether §15.4's credential plan works at 3 a.m. at all — **the unattended half rests on it and nothing has tested it**. Also prices **v66**'s keychain-held token | OPEN |
+| **R4** | Can a sandboxed run reach a local model, and in which shape — server inside, server outside, or in-process? | Whether the local tier is a service or a program (**O13**). Inbound `bind()` is measured denied; **outbound connect to loopback is unmeasured** | OPEN |
+| **R5** | How many hours is the Mac actually off, when, and what is the longest single gap? | Prices **v79** — a cloud lane buying back a small tail is not worth §I row 1 | **DONE 2026-09-06** (DECISIONS §19): span 2026-08-30 21:44 → 2026-09-06 09:39, **156 h · asleep 40.7 h (26%) in 487 episodes · zero episodes of an hour or more · longest single sleep 0.3 h**. The tail is **zero** over the week measured. Caveat: only the span the log retains, and DarkWake naps count as wakes |
+| **R6** | Which inbound sources document a **polling** read with a cursor, and which need a listening socket? | Whether the world's door wakes and reads or must be reachable from the internet — **nothing lifts an inbound `bind` under the armed sandbox** | OPEN |
+| **R7** | What is the cache-read share per dispatch shape, and do `--exclude-dynamic-system-prompt-sections` and `--system-prompt-snapshot on` move it? | The premise under **v57**, under §16.3's formula, and under the tenfold reviewer divergence §16.3 records | OPEN |
+| **R8** | Does the skill metadata tax scale with the **installed library** or with the agent's **declared namespaces**? | **v77** — and if it scales with namespaces, the budget is unnecessary | OPEN |
+| **R9** | Does an unattended `-p` run **auto-compact**, and does it emit anything the log can see? | Whether **v24**, the strongest memory rule, is being broken where it cannot see. If unobservable, the answer is to bound run length | OPEN |
+| **R10** | Does `codex exec --json` return output with **no controlling TTY**, on a current version, with a non-trivial prompt? | **The single hinge of the cross-model architecture.** Pass and rung 2 becomes parallel; fail and the second family is one foreground slot forever. Note **W19**: the version floor must be restated | OPEN |
+| **R11** | Does a second model family reduce escaped defects on **our** move classes, and by how much? | Whether rung 2 outranks rung 4 on any given class, and contrarian assumption 2. **Blocked on O7's four provenance fields — cheap now, unreconstructable later** | OPEN |
+| **R12** | What fraction of a venture's real done-tests reach rung 1 **without inventing an anchor**? | **Contrarian assumption 1 (§I row 16), and with it the shape of the whole architecture.** The cheapest measurement named anywhere in the round | OPEN |
+| **R13** | Does `LICENSE-CONTENT` permit **derivative** skill bodies, not merely redistribution? | Narrower than §I row 4 and decisive: under v18 we would **rewrite** imported bodies, which is a derivative work MIT-on-the-code says nothing about | OPEN |
+| **R14** | Do any of the three CLIs emit a **skill-activation event** we can read? | Whether **O41** is instrumentation or a field lookup | OPEN |
+| **R15** | Is there any published measurement of **selection accuracy as installed-skill count rises**? | The real risk of importing thousands. If nobody has measured it, **v77**'s budget is what bounds the exposure | OPEN |
+| **R16** | Does any shipped agent system carry a **scheduling object between the goal and the run** — two objects or three? | **O1**'s shape; cognition.md's ticket table is explicitly incomplete here | OPEN |
+| **R17** | What does `/goal`'s evaluator accept as a condition, and does an **exit-code** condition behave differently from a prose one? | **O21**, which is otherwise a design argument. Now also bounded by **W14**'s three-check-in cap | OPEN |
+| **R18** | Is there measured evidence for a **re-attempt ceiling across sessions**? | The N in the attempt counter (**O73**), which is otherwise taste | OPEN |
+| **R19** | Does an **onboarding pack** change an agent's anchored pass rate? | **v71**, and whether wave two should be gated on evidence at all | OPEN |
+| **R20** | Has anyone published a **roster-size ablation between six and one hundred and fifty**? | The only fact that could responsibly move **v31** in either direction. **W30** closed the headline; the leaderboard remains unobtained | OPEN |
+| **R21** | Does any **credit-spending server expose a spend or balance read**? | **O32**: with a balance read a program can hold an absolute ceiling and Higgsfield stays in WRITES; without one it belongs in REACHES-THE-WORLD | OPEN |
+| **R22** | What does **page 3 cost to render at a year of rows**, and where is the knee? | Whether **O40** is a day-one shape or a later migration touching the one store the design says is never edited | OPEN |
+| **R23** | Is there a **concurrency ceiling on `claude -p` children**, and does the N+1th fail loudly, queue, or degrade silently? | **O71** — the board refuses a drag that would breach a bound, and no bound is a session count | OPEN |
+| **R24** | Does **pixel-agents** render ten venture areas and fifty live agents, and what is its `AgentEvent` schema and ingest rate? | **v62**'s UNVERIFIED, and the writer §14.4 says is ours to build | OPEN |
+| **R25** | What are **`/schedule`**'s semantics — interval floor, storage, headless status? | Whether **v55**'s Watch-dispatched standing intents should route through it or ignore it | OPEN |
+| **R26** | Was **#19945** fixed between Codex 0.125 and 0.153? | It would settle **R10** without a local install, and **it is the only cheap route to it** | OPEN |
+
+
+**(NEW: the numbering has no hole, and the plan had one)** **R20** — the roster-size ablation — exists in SPINE §N and
+was cited nowhere in the plan until 2026-09-06, so a reader counting from the document alone got twenty-five. It is
+cited now beside the **v31** claim in §21.2, where it belongs: it is the one fact that could move the roster size in
+either direction, and **W30** closed its headline while the leaderboard remains unobtained.
 
 ---
 
@@ -9409,6 +9593,14 @@ of those two properties would be the thing §21 opens by refusing.
 chose fourteen agents plus the Operator, with the evidence in hand: **every shipped running roster measured is 5–6,
 every roster of 150+ is a catalogue you pick from, and ten to fifteen sits in a band nobody publishes evidence for,
 in either direction.** That is an unoccupied band, not a refuted one. Which means it is measurable here first.
+
+**(R20, OPEN — the one fact that could move v31 without waiting a month, and it is the plan's only uncited research
+question · added 2026-09-06 · challenge C P3-1)** *Has anyone published a **roster-size ablation between six and one
+hundred and fifty**?* **Source class:** Google ADK, LangGraph templates, Sakana, Cognition's and Factory's rosters,
+TheAgentCompany's leaderboard (SPINE §N). **What it decides:** the only fact that could responsibly move **v31** in
+either direction. **W30** closed the headline; **the leaderboard remains unobtained**, which is why this stays OPEN.
+Read it against the row below: R20 is the *world's* answer and the routing counts are *ours*, and the plan does not
+need R20 to move — it needs to stop claiming the band is unoccupied if someone has already occupied it.
 
 | Claim | Falsified by | Where the record already exists |
 |---|---|---|
