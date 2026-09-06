@@ -428,3 +428,42 @@ structure matched: 106 rows, 127 mechanisms, 41 facts, 40 questions, 7 pages, 15
 no shell, the coverage tally of 671, the graph's 92 and 199 after round 1, and every figure about this repository's own
 suite — 48 check steps, 42 claims, 68 verdicts all PASS, 39 permission rules, 18 agent files at 18 pass · 0 fail
 · 0 warnings. Single family, one agent, rung 4 by the plan's own ladder; the lane says so of itself.
+
+## §27 — The thinker and fixer rounds close · 2026-09-06
+
+**What ran.** Three sealed thinker lanes (practitioner, outsider, strategist) read the spine, the whole plan, the
+synthesis, the world facts, the decision log and the harness; 64 findings, `review/thinker-A|B|C.md`, digest and
+page. Three sealed fixer lanes designed the answers, `rethink-2/`. Fourteen merged questions to the founder (§24),
+four of them overruled by the founder in their own words. The fold put the round into SPINE as v83–v106, O81–O127
+— every mechanism, old and new, now carrying `class: kernel | adapter | refuse` and a `vendor_wins_if:` — plus
+W33–W41, R27–R40 and §J 73–90. Six builders applied it across all twenty-five parts. A sealed challenge returned
+3 P1 · 11 P2 · 10 P3 (§25) and a sealed census returned zero dangling references, zero absent-and-unmarked paths
+and 48 of ~60 tree figures matching, with one carrier drift (§26). Two fix rounds closed all thirty. The plan
+assembles at **12,344 lines · 25 sections · 36 flowcharts**, the page at **143 tiles across 18 sections**.
+
+**What the round changed about the plan's own doctrine, and the cost of each.** The **commodity line**: a
+mechanism is kernel only if it holds direction, record, truth or taste; everything else is an adapter that names
+the vendor surface it wraps and dies when that surface ships. The cost is that an adapter breaks when the vendor
+moves, which is why each carries a date and the world lane re-fetches. **Data-first**: the binding two percent
+becomes files the prose is rendered from, with a constitution inside the runtime's own payload budget as the
+Operator's pre-flight read. The cost is voice — reasons stay in prose, rules leave it, and a reader who wants the
+why opens two files. Both are recorded as ratified rows, reopenable by name.
+
+**What the round changed about how this plan is decided.** Founder rows now carry `class: originated | ratified`
+— 28 in the founder's words, 24 picked from an agent's list — and a ratified row is reopenable by any engine that
+brings a reason and a falsifier. The plan's header carries `confidence: LOW` until one measured overnight has run,
+and §21 counts the rows whose text changes after it. That count is the round's own falsifier: if a third of them
+move, this was design ahead of contact and the next round should have been a build.
+
+**Still open, and still the founder's:** the terms (row 1), LICENSE-CONTENT at build (row 4), which hosted lane may
+make when the Mac is off (row 15 — the measurement is done, the decision is not), the panel (row 16), the landing
+order (row 17). Rows 17 and 18 closed by the founder's overrules this round. **Nothing built, installed,
+authenticated, spent, published or pushed.** `docs/final-v2` is recomposed onto `origin/docs/final-plan` and stays
+local until the founder says otherwise.
+
+**The readiness answer, recorded because the founder asked it.** The kernel is ready to build and the whole system
+is not. Three things first, in order: the data files and the constitution; `bin/log` and `bin/run`, thin over the
+vendor's own flags, with the probe authored apart; one bounded-day intent on the first-stranger venture through one
+anchor, read in the morning. Everything else — the night, the pages beyond the board, the roster past wave one,
+the cloud lane — waits behind that week's evidence. Every review of this plan was one model family reading prose,
+which by the plan's own ladder ranks and flags and certifies nothing; the only remaining test is running it.
