@@ -1,6 +1,8 @@
 ## 21 · How we would know it worked
 
-*obeys: SPINE §B.2's anchor column; v6, v31 — the roster's own claim is falsifiable; §D, v14 · inherits: FINAL §20*
+*obeys: SPINE §B.2's anchor column; v6, v31 — the roster's own claim is falsifiable; §D, v14 · **and, from the
+rethink round of 2026-09-06, v73 (the rung-1 share splits), W30 (the only outside floor), O75, O26, O45, O80, and
+R11 and R12** · inherits: FINAL §20*
 
 **(FINAL)** Not a dashboard. Six numbers on the briefing, one line each, tracked over weeks. **(NEW: and v14 changes
 where they can be looked at, not what they are)** — the founder asked for a cost, tokens and efficiency page, it is
@@ -16,7 +18,7 @@ number that has a tap is not.
 | Number | What it means | Direction |
 |---|---|---|
 | **Interventions per finished artifact** | how often the founder had to correct or redo | ↓ — the one that matters most; the only number that directly measures walking *for* versus being carried |
-| **Rung-1 fraction** | of finished work, how much was checked by something deterministic | ↑ |
+| **Rung-1 fraction**, and **(FOUNDER, rethink 2026-09-06: v73)** it splits in two — **rated** and **unrated** | of finished work, how much was checked by something deterministic — and of that, how much was checked by an anchor that has itself been shown to fail when it should. An anchor with no mutation case is `unrated` by definition | ↑ on **rated**. **The unrated share may fall first and that is the number working, not breaking** |
 | **Acted-on rate of interruptions** | of the times it woke you, how often you did something | ↑, and above the threshold |
 | **Cost per finished intent** | measured, per venture, per window | ↓ on repeated kinds of work |
 | **Reserve hit rate** | how often the reserve was needed versus expired unused | neither extreme |
@@ -27,10 +29,56 @@ most expensive refusal**, never the same four weeks running · **the harness's s
 ceiling · **founder-originated work that shipped**, above a floor, which is the capture check, and if it falls it is
 the first line of the briefing · **founder-minutes per finished intent**, falling.
 
+**(FOUNDER, rethink 2026-09-06: v73 — the first number on this page that can fall for a good reason)** §11.11 lists
+fifteen anchors and **not one has ever been shown to fail when it should**. An uncalibrated anchor is a rung-4 belief
+wearing a rung-1 label — which is exactly the error §11.7 built its reconciliation to catch, one level up — and this
+repository has already shipped a change that removed a control while every test stayed green. So **every anchor
+carries a mutation case, a known-bad input it must fail, or it is marked `unrated`**, and the rung-1 share splits
+along that line. **Mechanism:** the case is written by whoever writes the anchor, as a rehearsal-case body under v18,
+so it inherits admission and forced expiry free (ABSENT — the anchor declaration; §11). **The cost, once:** one case
+per anchor. **What it does to this page:** the first reporting period after the split will show the rung-1 fraction
+**drop**, because part of what was counted was never calibrated. **That fall is the instrument being installed, not
+the system getting worse**, and a reader who does not know that will read it exactly backwards. It is also why the
+two shares are reported separately and never summed into one number.
+
 **(NEW: v22 splits one of these in two, and it is not cosmetic)** *Cost per finished intent* and *reserve hit rate*
 are now **per window and per week**, because there are two windows per seat, shared with Claude chat and Cowork. **A
 weekly exhaustion is a different event from a five-hour one** — one is a stop, the other is a pause — and a single
 reserve number would average them into something that describes neither.
+
+---
+
+### 21.1a The outside floor, and four numbers the rethink round adds
+
+**(FACT: world.md 30a — this section's only outside comparator, and it closes a gap the roster research left open)**
+TheAgentCompany, over six job functions: ***"The most competitive agent can complete 30% of tasks autonomously."***
+Every other number on this page is measured against **our own history**, which can only say whether the system is
+improving, never whether it is any good. **Thirty per cent is the one figure from outside**, and a fourteen-agent
+design has no other.
+
+**(NEW: read the 30% narrowly or it will mislead in both directions)** It is a benchmark of simulated job-function
+tasks, not of this company's ventures, so it is **not a target and not a pass mark**. What it is good for is the
+shape of the claim: a design promising that a founder is not the bottleneck is promising something **above** the
+published state of the art, and *above* has a number now. **The honest use is as a floor on the autonomous share** —
+finished intents that reached a done-test with no founder tap, over all finished intents — and the honest reading of
+falling below it is that the roster is doing something the published art already does better. **It is not comparable
+enough to route on**, and nothing routes on it.
+
+**(NEW: four numbers the rethink round adds, and three of them exist for one reason)** Three of the four exist
+because **a self-report was grading itself** — the defect this whole section is built to refuse, appearing three
+times in machinery the plan already had.
+
+| Number | What it means | Why it did not exist | Mechanism |
+|---|---|---|---|
+| **Cost per rung movement, per venture** (**O75**) | what it cost to move a piece of work from rung 4 to rung 2, or rung 2 to rung 1 — beside cost per finished intent | **the only ROI computable honestly here**: the numerator is measured by the meter and the denominator is set by the world, so neither side is an opinion. Cost per finished intent alone rewards finishing cheap work | the briefing — ABSENT (§16) |
+| **The trust score's three consumers** (**O26**) | the launcher (below the floor on a move class, that class is **unroutable** until a rehearsal passes) · the briefing · §5.6's own falsifiability claim | **today nothing reads it.** A score with no consumer is a number that cannot be wrong, and it was carrying an argument about the roster while doing nothing | `bin/run` and the briefing — ABSENT (§5) |
+| **Slice precision** (**O45**) | of what the Floor loaded into a run, how much the run actually used — **derived by the curator from the artifact and the handover, and never self-reported** | §13.5 says *"the Desk is itself measured"* and names no measurement, so **the ranker could not be wrong**. A run reporting its own context usefulness is the same shape as a builder grading its own tests | the curator's pass — ABSENT (§13) |
+| **A calibration number per agent** (**O80**) | how often an empty `uncertain:` was followed by a defect found later | `uncertain:` is written **by the run about itself** and nothing ever checks it, so **a confidently wrong run pays nothing**. This is the number that makes the field cost something | derived by the curator — ABSENT (§3) |
+
+**(NEW: what the four have in common with the six above them)** None is a dashboard number and none is informational.
+Each one either **changes a routing decision** (O26 makes a move class unroutable; O80 makes an agent's confidence
+worth reading) or **prices a decision the founder already makes** (O75, O45). A number added to this page without one
+of those two properties would be the thing §21 opens by refusing.
 
 ---
 
@@ -95,6 +143,32 @@ predicate in `.claude/review-lenses.yml` requires ≥2 distinct model families a
 records on this branch (80 on `origin/main`), every one `verdict: PASS`, and **not one of them satisfies the `irreversible` tier's 2-of-3 multi-judge
 requirement**. *The checks ran and are green* is not *the tier was satisfied*. Accepted risk, exit condition
 **2026-11-17**.
+
+**(R-12, OPEN — and it is the cheapest measurement named anywhere in the rethink round)** The first assumption in
+that list — *most valuable company work has a deterministic anchor cheaper than the work* — is **contrarian
+assumption 1** (§20.1 row 16), and the round found that **every part of this plan treats it as settled while the
+only evidence for it comes from the most anchorable venture that could have been chosen**: the harness, whose
+anchors are `npm run check` and the probe. **The question, bounded:** what fraction of the harness venture's **first
+thirty** real done-tests reach rung 1 *without inventing an anchor*? **Why it belongs on this page and not in a
+research list:** it is the falsifier for the number at the top of this section. If the fraction is low, the rung-1
+share is not a number that can be improved — it is a number that describes one kind of work — and the architecture
+inverts: the night's product becomes built options with their costs, the morning becomes an adjudication queue, the
+taste store becomes the primary asset and **the roster shrinks**. **Nothing should be built against the inverted
+architecture before it is measured, and nothing should be built as if it cannot happen.**
+
+**(R-11, OPEN — and it is blocked on four fields that are free today)** The last assumption — *a different family is
+a good enough checker* — is not merely untestable for want of a reachable model. **It is untestable for want of
+four fields**: `maker_family`, `maker_model`, `checker_family` and `checker_model` on the handover (**O7**). Twenty-five
+paired checks from our own event log would answer *does a second family reduce escaped defects on our own move
+classes, and by how much* — and the log cannot answer it, because it does not record who checked what on which
+family. **These fields cost nothing before the first run has written a row and cannot be reconstructed after**, which
+makes this the one measurement on this page that gets more expensive the longer it is deferred, and the only one
+that can be lost outright. **What it decides:** whether rung 2 outranks rung 4 on any given class — and with it,
+contrarian assumption 2, which §11 and §9 both rest on.
+
+**(NEW: the two research questions above are stated here rather than answered here)** Both are `OPEN` in SPINE §N.
+This section names them because **an assumption with a falsifier written down is a claim, and one without is a
+premise** — and §21's whole job is the difference.
 
 **(NEW: the one number that would settle the biggest open question, and nothing else will)** FINAL §19.12's overnight
 premise is still unmeasured — **one week overnight against one week bounded, on the same venture, judged by rung

@@ -7,9 +7,12 @@ with one side is a recommendation wearing a question mark, and this section refu
 
 ---
 
-### 20.1 The fifteen, from SPINE §I
+### 20.1 The ~~fifteen~~ **seventeen**, from SPINE §I
 
-**(FOUNDER and NEW, per row)**
+**(FOUNDER and NEW, per row)** (moved 2026-09-06: SPINE §I rows 16 and 17) The rethink round added two rows and
+closed none. **Neither is a new question** — row 16 is an assumption the plan has been making since FINAL §11.2 and
+treating as settled, and row 17 is the half of row 1 nobody had written down. **An assumption that gets written as a
+row acquires two sides and an owner**, which is the whole difference between this section and a premise.
 
 | # | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
 |---|---|---|---|---|---|
@@ -27,7 +30,9 @@ with one side is a recommendation wearing a question mark, and this section refu
 | 12 | **Which room** — Generative Agents `demo` (Apache 2.0, cold) or AI Town (MIT, alive, needs Convex) | the cheapest read-only display, one JSON file | a living project, if the founder wants it maintained | the founder | **DECIDED v62** — pixel-agents (MIT, alive, reads Claude Code); Star-Office-UI and "AgentOffice" refused with reasons; the founder may still name where they saw "AgentOffice" |
 | 13 | **The first venture** and its rung-1 anchor | adoption is the intake this founder uses most | the harness is the only venture whose anchors already exist — the 48-step suite | the founder | **DECIDED v64** — *"The harness itself"* |
 | 14 | **Fourteen agents is inside an unoccupied band** | the founder's decision, taken with the evidence in hand | every shipped running roster measured is 5–6; every roster of 150+ is a catalogue you pick from | **decided; reopened only by name** | **DECIDED v54** — two waves; the eight with seeds or code paths first |
-| 15 | **Which hosted lane may MAKE when the Mac is off** — Codex cloud (`codex cloud exec`, issue-only, UNVERIFIED) · Claude Code `--cloud` and Routines (documented argv and API; shares the Claude seat) · Jules (alpha API, third family) | Anthropic's is the only fully documented driver today and costs no extra compute | it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet. **What would close it:** a vendor page or `codex cloud exec --help` on an installed binary (the measurement row 5 already names), OpenAI's terms actually read (four HTTP 403 refusals so far — `research/cloud.md` part 4), the undocumented maximum cloud-task duration, and a cancel command — none of the four is published today | the founder, with row 1 | **OPEN — raised by v56** |
+| 15 | **Which hosted lane may MAKE when the Mac is off** — Codex cloud (`codex cloud exec`, issue-only, UNVERIFIED) · Claude Code `--cloud` and Routines (documented argv and API; shares the Claude seat) · Jules (alpha API, third family) | Anthropic's is the only fully documented driver today and costs no extra compute | it is the same seat as the Floor and the same terms clause as row 1; Codex cloud is the founder's named preference and has no driver yet. **What would close it:** a vendor page or `codex cloud exec --help` on an installed binary (the measurement row 5 already names), OpenAI's terms actually read (four HTTP 403 refusals so far — `research/cloud.md` part 4), the undocumented maximum cloud-task duration, and a cancel command — none of the four is published today | the founder, with row 1 | **MEASURED (R5), and the decision is pending the founder** — see **v79**. *(moved 2026-09-06: the row read "OPEN — raised by v56", which was true and carried no number.)* The measurement D14 asked for is **taken** (DECISIONS §19), read-only from `pmset -g log` on this Mac: **span 2026-08-30 21:44 → 2026-09-06 09:39 · 156 h, all the log retains · asleep 40.7 h (26%) in 487 episodes · ZERO episodes of one hour or longer · longest single sleep 0.3 h, about twenty minutes.** The tail a hosted maker lane would buy back is **zero over the week measured**. **The caveat travels with the number:** the log covers only the span it retains, and DarkWake power-naps count as wakes, so *asleep* here means the machine could not have run a process. **What is decided either way, and is decided now:** the charter field `cloud: allow \| deny`, default `deny` (**v79**). **What shuts the lane from the other end:** **v67** — `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN, and cancelling a hosted Codex task is exactly that |
+| 16 | **Contrarian assumption 1 — that a deterministic anchor exists for most company work** (FINAL §11.2). Rung 1, the trust score, regression-for-free, unattended night work, the refusal of consensus voting and the promise that the founder is not the bottleneck all hang here | the harness venture's anchors are real and deterministic today — `npm run check` and the probe — and every part of the architecture resting on them works | **the evidence comes from the most anchorable venture that could have been chosen.** What a real venture is made of — positioning, a price, copy that converts, a design someone likes, whether to pivot — is what §11.2's own table answers with *taste* or *the founder*. **If false the architecture inverts:** the night's product becomes built options with their costs, the morning becomes an adjudication queue, the taste store becomes the primary asset, mission control's centre of gravity moves off pages 3 and 5 onto a decision queue, and **the roster shrinks** | **the measurement first, then the founder** | **OPEN — raised by the rethink round** (SYNTHESIS §6, lane L7). **Settled by R12:** what fraction of the harness venture's **first thirty** real done-tests reach rung 1 *without inventing an anchor*. It is the cheapest measurement named anywhere in the round, and **nothing should be built against the inverted architecture before it** |
+| 17 | **If row 1 answers *no*, does the architecture move to a metered API key** | a key buys the carve-out the terms name explicitly, and with it batch at 50% both directions, stacking with caching; v22's two windows stop mattering and **the reserve is redesigned** | it is a different economics and a different plan — money per token instead of a seat — and the founder has not been asked for it. It is downstream of row 1 and cannot be answered before it | the founder, after row 1 | **OPEN — raised by the rethink round** (SYNTHESIS §6, the fourth assumption). Listed rather than argued, and **deliberately carrying no expiry: attaching one would decide row 1**, which the founder kept open by their own word — that is why the synthesis refused **X2**. Its useful half is already discharged for free by **v64**, which confines automated seat access to the harness venture |
 
 ---
 
@@ -39,7 +44,7 @@ carries a disposition, and two of the five are still deferred on purpose.**
 
 | FINAL §19 | Decision | One side | The other | Whose | **Status after the founder's interview, 2026-09-05** |
 |---|---|---|---|---|---|
-| 6 | **The hook rewrite to structured tool input, and registering `budget-guard.js`** | both are correct in shape and measured; the string matcher has both bypassed and over-blocked, and the guard has **zero references in `settings.json`** today | both are edits to the judging machinery, one-way from day one | the founder | **DEFERRED to build time** — *"Neither yet — decide at build time"* |
+| 6 | **The hook rewrite to structured tool input, and registering `budget-guard.js`** | both are correct in shape and measured; the string matcher has both bypassed and over-blocked, and the guard has **zero references in `settings.json`** today | both are edits to the judging machinery, one-way from day one | the founder | **DEFERRED to build time** — *"Neither yet — decide at build time"*. **(NEW, rethink 2026-09-06: O38 and O50 take the shape and leave the act.)** Both halves now have a decided *specification* and neither has been performed: **O38** is marked **ADOPTED-AS-SPEC** in SPINE §L — deny through the `decision` object on non-blocking hook events, keep `exit 2` for the documented blocking ones — and **O50**'s answer on `budget-guard.js` is **register it**, one entry in `.claude/settings.json` against a hook that already exists (§18.4). **The founder's deferral is preserved exactly**: what was deferred is the edit to the judging machinery, which is one-way from day one, and a decided shape is not that edit |
 | 7 | **`pmset -a disablesleep 1`** | it runs with the lid shut, which is what a night lane is | it defeats thermal and battery policy, and is not a change to make on the founder's behalf | the founder | **DEFERRED to build time** — the same answer as row 6, *"Neither yet"* |
 | 8 | **Disclosure of machine-made work; the legal entity and jurisdiction per venture** | a dated founder decision with a reopen trigger | one-way doors, on the default `never` list | the founder | **DECIDED v63** — *"Disclose by default; entity per venture decided at intake"* |
 | 12 | **The overnight premise** — nobody has measured whether a crew that runs overnight beats one that stops | the first overnight starts a standing comparison: one week overnight against one week bounded on the same venture | every founder in the corpus reviews in the morning; if overnight does not beat bounded, the system runs bounded and says so | the measurement | **DECIDED: run the comparison** — *"Run the comparison; let the measurement decide"*. The premise stays a measurement, not a belief |
@@ -132,7 +137,54 @@ which hosted lane may make — that question is not answered by the research tha
 word — *"still keep it open"* — **row 4, `LICENSE-CONTENT`**, which is one fetch at build time — and **row 15, which
 hosted lane may make when the Mac is off**, raised by v56 and not settled by it. Rows 5 and 8 are **acts at build
 time** rather than choices. Everything else in 20.1 is decided, and 20.2's five rows are decided or deliberately
-deferred to the moment building starts.
+deferred to the moment building starts. *(moved 2026-09-06: this list of three was complete on 2026-09-05 and is
+not complete now — **the rethink round added rows 16 and 17**, and row 15's measurement closed while its decision
+did not. The list of five that stands is at the end of this section; this paragraph is kept as it was written,
+because what the interview left open is a different fact from what is open today.)*
+
+---
+
+### 20.7 Decided in the rethink round · 2026-09-06
+
+**(FOUNDER, DECISIONS §18)** Sixteen decisions, asked in four `AskUserQuestion` rounds from `rethink/SYNTHESIS.md`
+§1, each recorded by label and each now a row of §1-v2. **The founder chose the recommended option on all sixteen.**
+One line here with the option chosen; the row carries the reason, the mechanism, the cost stated once and the losing
+image, and **none of them is re-argued in this section or anywhere else.**
+
+| D | Row | What the founder decided |
+|---|---|---|
+| D1 | **v66** | Mission control binds **loopback**, one keychain-held token is checked on every write route, and the phone reaches it through an **authenticated tunnel** |
+| D2 | **v67** | **Both:** the launcher records each child's process group and the cord signals it; `bin/run` refuses to mint unattended work on a carrier whose `stop:` reads UNKNOWN |
+| D3 | **v68** | Build **`bin/egress`** — one no-model program logs every call, filters by domain and method, and injects credentials the agent never sees; `--strict-mcp-config` names only the proxy and the MCP policy file becomes its configuration |
+| D4 | **v69** | **Both now:** a hash in the log and in memory, one erasable per-subject store holding the body, and a **consent register** with one writer, read by the Sender before any contact |
+| D5 | **v70** | The **curator and the challenger both join wave one** — ten agents plus the Operator, not eight |
+| D6 | **v71** | An **onboarding pack for every agent, wave one included**. Without it the agent is declared and not routable |
+| D7 | **v72** | **All fifteen agent files carry `valid_until`**, with exactly one recorded disposition at expiry — Refresh · Merge · Retire |
+| D8 | **v73** | **Every anchor carries a mutation case** — a known-bad input it must fail — or is marked `unrated`; §21's rung-1 share splits rated and unrated |
+| D9 | **v74** | Ceilings are denominated in **window share** — tokens against an observed high-water mark — with wall clock beside it and USD kept as a shadow price; exploration routes off the Claude seat past a fraction the founder sets |
+| D10 | **v75** | The Desk ranks **lexicographically**: obligations · work that unblocks work · the founder's weight band · cheapest inside the band. `Decay` is split into its two facts and defined for a standing intent |
+| D11 | **v76** | **The last founder event** as one derived value at four call sites: release the reserve while away, execute a *which*'s stated default at expiry, build one option instead of two, and key the *since you were last here* view on the event rather than on a date |
+| D12 | **v77** | A **per-agent startup metadata budget**, enforced by a checker, plus one generated directory per namespace. The import stops when the budget binds |
+| D13 | **v78** | A **three-deep `fallback:`** per agent ending in *stop and stage*; a cross-family reroute recorded as a **rung demotion** unless rehearsed; a frozen `class: calibration` set; and one provider-outage drill |
+| D14 | **v79** | **Measure the hours off first** — done, R5 — and add the charter field **`cloud: allow \| deny`, default `deny`**, now, whichever lane wins |
+| D15 | **v80** | A message between two running agents is **a handover or an objection**, on the handover schema, one append-only file each; an ask carries a deadline and a stated fallback; the vendor transport's ids are attributes and never a join key |
+| D16 | **v81** | **`source:` and `valid_until` on every SPINE row resting on a fetched fact**, a `scout` standing intent that re-fetches them, a changed fact opening a Decide item **naming the row it invalidates** — and one **`wins_if:`** line per losing image |
+
+**(FOUNDER, DECISIONS §19 — one deletion, and it is the only thing this round removed from the plan by founder
+decision)** **v82**: §11.3's three-family review panel row is **deleted**, in the founder's words — *"Delete the row
+from the plan."* **The repository's three live `verified_by: judge` claims and the founder waiver running to
+2026-11-17 are untouched**; this deletes a sentence in the plan, not a claim in the ledger. What stands in its
+place is **v78**'s fallback chains and frozen calibration set, with the two-family route running through the
+no-model launcher, **outside any Claude session**. It carries no falsifier, because a deletion cannot have one; what
+would reopen it is a reachable non-Anthropic model, which is **R10**.
+
+**(NEW: what "the recommended option on all sixteen" does and does not tell you)** It is a fact about the round and
+not a verdict on it. Sixteen for sixteen is the shape of a synthesis whose options were **well separated** — or of
+one whose alternatives were **not written strongly enough to win**, and the two look identical from the tally alone.
+**What makes it checkable is that every rejected option was kept by name**: §J 55–71 record the losing image of each
+of these rows, and **v81 gives each one a `wins_if:` line** — the observation under which the rejected option becomes
+the better answer. A decision whose alternative is stored with the condition that would revive it is a decision that
+can be wrong out loud. That is the register §22 now carries for all seventy-two.
 
 ---
 
@@ -142,3 +194,27 @@ that writes builder's file, whichever way 20.1 row 2 is answered. **And v57 make
 than at some later escalation** — `claude-fable-5-1` is now the declared `model:` of `builder` and `architect`, both
 wave one, so the pinned set must admit it before either file can load. If Fable turns out to be unreachable on the
 seat, the fallback is `claude-opus-5` and the pinned set still has to be correct.
+
+---
+
+**(NEW, 2026-09-06: what is still open when this section closes, and it is five things)** After the interview of
+2026-09-05 and the rethink round of 2026-09-06, **five rows of 20.1 are open and everything else is decided, an act
+at build time, or a measurement.** Naming them beats counting them:
+
+- **Row 1 — the terms.** Open **by the founder's own word**: *"still keep it open"*. OpenAI's terms returned HTTP 403
+  and are unread; Google's are unfetched. It carries **no expiry on purpose**, and row 17 is why: attaching one would
+  decide it.
+- **Row 4 — `LICENSE-CONTENT`.** One fetch at build time. It gates the bulk import and nothing else in the graph.
+- **Row 15 — which hosted lane may make.** The *measurement* is closed (R5, above) and the *decision* is not. **Do
+  not read one as the other**: what the number says is that the tail is zero over the week measured, which is an
+  argument and not a choice. The charter field `cloud: allow \| deny` is decided either way (v79).
+- **Row 16 — contrarian assumption 1.** Raised by the rethink round and settled by **R12**, the cheapest measurement
+  named anywhere in it. **This is the row with the largest blast radius on this page**, because the architecture
+  inverts if it is false, and it has been treated as settled everywhere in v2 without ever being asked.
+- **Row 17 — the metered key.** Downstream of row 1 and unanswerable before it.
+
+**(NEW: two of the five were raised by the round that was meant to close things, and that is the correct outcome)**
+Rows 16 and 17 are **assumptions this plan was already making**, promoted into rows with two sides and an owner. A
+round that only closes decisions cannot find those; **v81 is the mechanism that makes finding them routine rather
+than dependent on eight lanes being dispatched by hand.** The count going up is not the round failing. The count
+staying at fifteen while both assumptions kept being made silently is what failure would have looked like.

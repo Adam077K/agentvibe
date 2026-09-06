@@ -1,7 +1,8 @@
 ## 18 · What exists today, and its fate
 
 *obeys: v1 (the eighteen agent files become fifteen, not three), v3, v4, v6, v13, v25, v26, v35, **v62** (18.5's
-room substrate and the finding it overturns) · inherits: FINAL §17*
+room substrate and the finding it overturns) · **and, from the rethink round of 2026-09-06, SPINE §L O46, O37,
+O50 and O47, SYNTHESIS §7 deletion 19, and §J 72 as the full list of what leaves** · inherits: FINAL §17*
 
 **(NEW: three of FINAL §17's rows are re-decided, and one of them inverts)** FINAL wrote this table against three
 shapes, a holding directory and one Balcony. v1 replaces the shapes with fifteen named files, v3 replaces the holding
@@ -58,7 +59,7 @@ v2 retires eleven and re-seeds six.
 
 | Exists today | Measured | Fate | In v2 it is |
 |---|---|---|---|
-| 134 curated skills, `CURATION.yml`, 7 routers + INDEX, `MANIFEST.json` | 135 entries under `.claude/skills/`; 462 and 870 lines | **RENAMED** | **the library** (17.2). Not held: each of the 134 re-enters through the eval or expires at its `valid_until`. **`check:curation` retires with the old shape; `check:manifest` is RE-POINTED, not retired (§7.7)** — it becomes the drift check between the one Markdown source and the two generated directories; their rule survives as *a skill names its body class and its expiry or it does not load* |
+| 134 curated skills, `CURATION.yml`, 7 routers + INDEX, `MANIFEST.json` | 135 entries under `.claude/skills/`; 462 and 870 lines | **RENAMED** | **the library** (17.2). Not held: each of the 134 re-enters through the eval or expires at its `valid_until`. **~~`check:curation` retires with the old shape~~; `check:manifest` is RE-POINTED, not retired (§7.7)** — it becomes the drift check between the one Markdown source and the two generated directories; their rule survives as *a skill names its body class and its expiry or it does not load*. **(NEW: O47, moved 2026-09-06)** `CURATION.yml` and its check **SURVIVE**: a failed skill candidate is written *there*, house scope, beside every cut this repository has already recorded with the test that made it — not into a per-venture negatives store, where a house-scope fact would be relearned once per venture. The admission record gains the **body hash**, and a changed hash voids admission until re-eval (§7) |
 | `.claude/skills/routers/INDEX.md` and the seven namespace routers | 8 entries | **SURVIVES** | the two-tier discovery shape, which is now also the vendor's default for memory (v27). It is the reason a lookup costs ~1,070 tokens instead of ~15,000 |
 | Six playbooks — `.claude/playbooks/` | 6 files, 284 lines | **ABSORBED into the Operator** | a playbook declared the stages a category of work passes and the claims required to exit each, and never the method. **Under v1 the Operator holds exactly that**: which agent a stage routes to (17.1's last column in §B.2), and what anchor exits it. The rule that made playbooks work — *a stage may not state method* — becomes the Operator's own constraint, enforced today by `schema-lint.js` refusing `steps:`, `how:`, `method:`, `implementation:` |
 | `.claude/lenses.yml` | 201 lines | **ABSORBED** | domain procedure becomes **the agent's own file**. v2's whole premise is that expertise is a named agent rather than a lens applied to a shape, so the lens file's content moves into fifteen bodies and the file goes |
@@ -74,7 +75,7 @@ v2 retires eleven and re-seeds six.
 | `.claude/hooks/pre-tool-use.sh`, the armed sandbox, the worktree protocol | 676 lines; `sandbox.enabled: true`, `failIfUnavailable: true`; no `network` key | **SURVIVES** | run physics. `git worktree add` stays the one escalated command. **The `network` and `credentials` blocks are added**; the string matcher becoming structured-input matching is a founder decision (§20) |
 | `.claude/hooks/session-start.js` | 259 lines; emits 2,941 bytes under a 4,096 ceiling | **RENAMED** | the Floor's loader: charter, envelope, slice. **The 9.2x cut is the reason it works** — at 27KB the runtime truncated it and the payload never reached agent context |
 | `.claude/hooks/schema-lint.js` | 1,947 lines | **ABSORBED** | see 18.1. **`PS-WORKFLOW-CONTAINMENT` survives verbatim** (v35): `Workflow` absent from every agent file, deliberately, because the gate may not be invocable by the thing it gates. `grep -c '^tools:.*Workflow' .claude/agents/*.md` → 0, and the zero is the guarantee |
-| `.claude/hooks/budget-guard.js` | 204 lines; **zero references in `settings.json`** | **RENAMED** | the stall detector in the Watch. Registering it is a founder act and is a §20 row |
+| `.claude/hooks/budget-guard.js` | 204 lines; **zero references in `settings.json`** | **RENAMED** | the stall detector in the Watch. ~~Registering it is a founder act and is a §20 row~~ **(NEW: O50)** its fate is **register**: a fuse that is not wired is a memory of a fuse, and this one has been unwired on every branch it has existed on. **Mechanism:** one entry in `.claude/settings.json` — the hook exists, so nothing is written but the registration. What the founder deferred (FINAL §19 row 6, DECISIONS §15) is the **act at build time**, not the fate; the same split O38 makes for the hook rewrite (§12) |
 | `.claude/hooks/gsa-check-update.js`, `gsa-context-monitor.js`, `gsa-statusline.js`, `stop.sh` | part of 8 files / 3,579 lines; `stop.sh` exists with **no `Stop` event registered** | **RETIRED** | gone. **And `stop.sh` is the caution v2 inherits**: v11 keeps `disableAllHooks` and `allowManagedHooksOnly` out of the managed file so `/goal` survives, which means **a run can register its own Stop hook**. The cost is stated once and the probe checks it nightly |
 | `CLAUDE.md` | 886 lines | **RENAMED** | the Floor's standing context, stripped of archaeology. The archaeology moves to the logbook. **Byte-identical and carrying no timestamp**, because the subscription cache TTL is one hour |
 | `.claude/memory/DECISIONS.md`, `evict-memory.mjs`, the archive volumes | 424 lines / ~39,543 bytes; 1,125 lines; two volumes | **RENAMED** | the curator's rules: nothing deleted to meet a cap, irreversible entries pinned, a stub under every heading, capped rotating volumes. **v25 gives the "one writer" an agent with a name** |
@@ -128,7 +129,7 @@ where that is argued. FINAL §13.8 is kept by name as a losing image (§J.51).
 | `bin/fleet-install.mjs` | 1,053 lines | **RENAMED** | `keel adopt`: stamps a repository with the templates and **verifies** the port rather than assuming it |
 | `bin/install.js`, `install-war-room.sh`, `init-from-template.sh` | 308, 149, 147 lines | **RETIRED** | three installers for one act. `keel adopt` is the one |
 | `war-room/` | 4 entries, 62 files; does **not** contain `fleet-install.mjs` | **ABSORBED** | the tmux layer is the five documented commands of 17.5, not a vendored dashboard |
-| `.mcp.json`, `.claude/mcp-policy.json` | 12 and 65 lines | **RENAMED** | designer's one server and scout's read-only servers; the per-server allow/deny shape is the tool file's seed |
+| `.mcp.json`, `.claude/mcp-policy.json` | 12 and 65 lines | **RENAMED** | designer's one server and scout's read-only servers; the per-server allow/deny shape is the tool file's seed. **(FOUNDER, rethink 2026-09-06: D3 · v68)** and `mcp-policy.json`'s fate narrows in the same move: it becomes **`bin/egress`'s configuration file**, not an independent control. It was a policy whose calls no hook could see; `--strict-mcp-config` names only the proxy, and the rules in this file are what the proxy reads. §8 carries the door and the program |
 | `docs/02-competitive/` — the catalogue and five reference studies | TREE B only for `expansion/` and `reference-systems/` — `open-source.md` 1,083 · `hands.md` 901 · `concepts.md` 2,157 lines, 5 studies. `LANDSCAPE.md`, `MOAT.md`, `POSITIONING.md` and `competitors/` (237 lines) are on both trees | **SURVIVES** | the door's catalogue. **Every entry re-verified against its LICENSE before admission** — v15 is what that rule caught: n8n's own LICENSE.md, read raw, says internal or non-commercial only |
 | The design record — v2, WAKE, WATCH, the minds, v3, Keel, round-5, round-6, `final/` | 86 design docs on TREE B; Keel 2,682 lines | **SURVIVES** | as record: the priors of this plan. Every decision against them is a row of §1-v2, with the losing image kept by name |
 | `final/CENSUS.md` | the measurements this section rests on | **SURVIVES** | the census of TREE A and TREE B. §17 and §18 are re-measured against it rather than re-derived |
@@ -136,3 +137,54 @@ where that is argued. FINAL §13.8 is kept by name as a losing image (§J.51).
 **(NEW: two things this table does not say)** It does not say when any of this happens — §19 gives dependency and no
 schedule. And it does not say that a RETIRED artifact was wrong: `coding.js` and `research.js` are retired because
 **nothing invoked them**, and `reviewer.md` is retired because it carries a shell, not because it reviewed badly.
+
+---
+
+### 18.7 What the rethink round takes out before it is built
+
+**(NEW: the rethink round of 2026-09-06 — SYNTHESIS §7, and SPINE §J 72 is the same list kept by name)** The four
+fates above are fates of things that **exist**. This table is the other half of a fate table and it did not exist
+before this round: eighteen things v2 had **designed and not built**, withdrawn now, plus two that exist on this
+branch today. The mark for a designed thing withdrawn before anything is written is **WITHDRAWN** — it is not
+RETIRED, because nothing was ever built to retire, and the distinction matters when a builder later looks for it.
+
+**(NEW: the rule that makes a withdrawal safe)** **Every row names what holds its job instead.** A deletion with no
+successor is a capability loss wearing the word *simplify*; a deletion whose job something else already does is free.
+That predicate is also this list's own falsifier, and SPINE §J 72 states it: *a builder who reaches for one of these
+and can name no replacement is the observation that brings it back*.
+
+| What goes | Exists? | Why it goes | What holds its job |
+|---|---|---|---|
+| **`keel/logbook/backlog.jsonl`** — the improvement backlog as its own store | designed, ABSENT | **O46.** COVERAGE says twice that an improvement **is an intent**; a second store for the same object is a second place it can be true | a filter over the intent store where `kind: improvement`. §13a keeps the loop; it loses the file |
+| **The project-`settings.json` tier of tool grants** | **YES** — `.claude/settings.json` on this branch carries 39 allow/deny rules | **O37**, with **W7** as independent support: `--restricted` *"ignores user, project and local settings files"*, so on the `-p` carrier this tier is already ignored outright. A third tier neither the argv nor the managed file owns is a grant nobody reviews | grants live in exactly **two** places: the argv `bin/run` composes, and the managed file a running process cannot clear (§12) |
+| **The dependency on `skills-ref validate`** | designed, ABSENT | **Deletion 19.** Its licence is **UNKNOWN and was never fetched** — the same defect v17 caught in the skills upstream, one level down in the toolchain | **its four checks are kept** and re-implemented from the spec text. This is a dropped *dependency*, not a dropped check, and §7 carries the checks |
+| **`logbook/desk/<tick>.json` as a file per tick** | designed, ABSENT | **O20.** The highest-volume artifact in the design, holding an answer whose value decays in hours, read by nothing | the Desk's ranking becomes **event-log rows**, and `bin/replay-desk` reads them. §4 |
+| **The per-venture `open.md` store** | designed, ABSENT | **O9.** Ten queues, one founder, nine writer-contention points | one house-level `keel/logbook/decide.jsonl`, rendered by pages 4 and 5. §14 |
+| **`analyst`'s `Bash`** · **`writer`'s split model default** | designed, ABSENT | **O57** (contradiction 4). The only read-class agent holding a shell, contradicting §C.1's own placement of it; and a routing decision living in the one copy no table reviews | `bin/reconcile` does the arithmetic (v47); `writer`'s split becomes a **§G.1 row with a named trigger**. §5, §9 |
+| **The rank formula's two companions** — *the intent's own urgency as a second scale*, and the sentence *"the Desk decomposes"* | designed, ABSENT | **Deletions 3 and 4**, riding with the founder's **v75**. One person and two dials for one decision, the second derivable; and a sentence assigning a model's job to a no-model program | the founder's weight band is the one dial (§4.5); decomposition is the work-item store's, **O1** |
+| **The menu-bar glyph** | designed, ABSENT | **Deletion 23.** No substrate was ever named, it is a new dependency if built, and **a status living in two places is one that disagrees** | page 5's top strip and `bin/bell` (**O18**), which is the only thing that may ring. §14 |
+| **Page 1's second job** — the portfolio and the venture toggle | designed, ABSENT | **Deletion 24** (contradiction 9). §14.4's own guard rails say page 1 is *never where a decision is made*, and the toggle is a decision | the portfolio moves to **page 3's strip**; the page manifest (**O12**) is what makes the rule checkable rather than stated |
+| **The four-class hands table, three of its four copies** · its **`Night?`** column | designed, ABSENT | **Deletions 12 and 14** (contradiction 19). Four renderings of one table drift; the admitted-tool file already carries a horizon and the door's is the enforced one | **§F is the decision** and **§17.3 is the inventory copy**. §8 points at §F rather than restating it |
+| **Two of the three department tables** | designed, ABSENT | **Deletion 8** (contradiction 20) — three renderings of eight rows, already drifted on customer service | generated from `roster.yml` (**O2**). §5 |
+| **The duplicate cost formula (§16.3's copy)** | designed, ABSENT | **Deletion 20** (contradiction 15). Two implementations of one check disagree, which this repository has already paid for | **§9.6 owns the formula**; §16.3 keeps only its tenfold-divergence argument and cites it |
+| **`--max-budget-usd` from the control section, and its three other restatements** | designed, ABSENT | **Deletion 13.** A stall fuse explained four times invites a fifth misreading | **§16.5 owns it**, as one thing with one job |
+| **Dollar ceilings *as ceilings*** | designed, ABSENT | **Deletion 21**, and the founder's **v74**: on a subscription the dollar is a locally computed shadow of a bill nobody sends, and **an absent ceiling is visible while a wrong one is not** | a **window gauge** — tokens against an observed high-water mark — with wall clock beside it and USD kept as a shadow price. §16 |
+| **The message priority tag** | designed, ABSENT | **Deletion 22.** A second ranking that will disagree with the Desk's, deleted **before** it is built rather than after | the Desk's lexicographic order (**v75**). §4 |
+| **The name *venture health score*** | designed, ABSENT | **Deletion 33.** It survives on two pages and invites the composite the plan refuses | the three raw numbers, ordered by the worst one. §14, §21 |
+| ***"Unread transcript count"*** as a surfaced number | designed, ABSENT | **Deletion 17.** A progress bar for a backlog that clears once | **watermark lag** (**O42**), which stays meaningful in year two. §13 |
+| **The *Pareto prompt archive*** as a distinct artifact | designed, ABSENT | **Deletion 18.** Git history is already the archive | two numbers on `scores.jsonl` are the frontier. §13 |
+| **The renamed *model specialization map***, and *"on a cadence"* in the model-drift row | designed, ABSENT | **Deletion 29.** A renamed thing gets rebuilt; a cadence is a schedule the SPINE forbids | one routing table (**O5**); the drift trigger is an **event**, not a clock. §9 |
+| **Codex `/goal`'s four sentences** | designed, ABSENT | **Deletion 28.** `C`/medium confidence, two 308-redirected sources, used by no row — **and a feature described at length reads as one relied upon** | one line in §10.6's gap list |
+| **The blanket OUTSIDE on §17 for the house** | designed, ABSENT | **Deletion 25.** v64 makes the harness the venture, and it deploys by editing the programs that dispatch and send | §17 carries the house's own deployment as inventory, not as an exclusion |
+| **The *reason* under COVERAGE §11's refusal** — *"one founder, one Mac"* | designed, ABSENT | **Deletion 32.** The refusal stands; its reason is falsified by §15.4's **own restore drill**, which produces a second machine | cite the **lease** (**O16**) instead: the Watch refuses to tick and the Sender refuses to act without it, so the drill's clone can do neither |
+
+**(NEW: what this table is not)** It is not a claim that any of these was wrong to design. Three of them —
+`backlog.jsonl`, `open.md` and the per-tick Desk file — are ordinary shapes that lost to a **cheaper shape with the
+same job**, and one, the project-settings tier, lost to a **vendor fact published after it was written**. And two
+rows point the other way: `CURATION.yml` and its check (§18.3) and `budget-guard.js` (§18.4) both **exist and gain**
+work in this round rather than losing it, which is the same round's evidence that the list is not a tidy-up.
+
+**(NEW: one deletion of the round is the founder's and is not on this list)** §11.3's three-family review panel row
+is deleted by **v82**, in the founder's words — *"Delete the row from the plan"*. It is a row of the plan rather than
+an artifact with a fate, so §11 states it in place and §20.7 records the decision. **The repository's three live
+`verified_by: judge` claims and the founder waiver running to 2026-11-17 are untouched by it.**
