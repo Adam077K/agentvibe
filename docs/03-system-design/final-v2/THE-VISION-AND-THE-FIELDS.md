@@ -1,55 +1,53 @@
-# Keel — the vision, and every field the system has to have an answer for
+# The vision, and every field it has to have an answer for
 
-*Written 2026-09-07 for the founder. Part one is the system stated whole, in plain language. Part two is
-the field map: every domain the system must take a position on, with its sub-fields, so that nothing
-important is missing merely because nobody named it. **The map is deliberately larger than the plan.**
-A field with no answer yet is a field that has been found; a field nobody listed is a field that gets
-discovered during an incident.*
+*Written 2026-09-07. Part one is the thing itself, described as what it would be to have it — not as
+anything already designed or built. Part two is the field map: every domain such a thing must take a
+position on, written as plain questions anyone would ask, in nobody's vocabulary but the ordinary one.*
 
 ---
 
-## Part one · The system, stated whole
+## Part one · The vision
 
-**Keel is a company that one person owns and almost never operates.** Not a person with better tools —
-a person with a company. The founder supplies direction and taste; the system supplies everything
-between an intention and a finished thing that a stranger paid for. It runs several ventures at once,
-it keeps running while the founder sleeps or is away, and it hands back, each morning, a short account
-of what it did, what it learned, what it spent, and the small number of questions that genuinely
-needed a human. Its ambition is not to answer faster. It is to **hold direction over time** — to still
-be pointed at the right thing in week nine, having been corrected in week three, without the founder
-having to remember why.
+**One person owns a company and does not operate it.** That is the whole of it. Not a person with
+better tools, not a person who works faster — a person who has an organisation. They bring the things
+that are actually theirs: what to go after, what good looks like, what they would never put their name
+to, and the handful of calls that turn on their own money and appetite. Everything between an intention
+and a finished thing that a real stranger paid for belongs to the system.
 
-**Four things are the system's own and everything else is a wrapper.** *Direction* — what this company
-is for, whose intents bind, and what may never be done in its name. *Record* — an append-only account of
-what happened, who decided it, what it cost, and what was believed at the time. *Truth* — a discipline
-that separates what was measured from what was asserted, and refuses to let the second wear the clothes
-of the first. *Taste* — the judgement that a thing is good enough to put a name on. Everything else the
-system does today, the vendors will eventually ship: better models, better tool-calling, better
-sandboxes, better browsers. Those are rented. The four above are the keel, which is why they are built
-rather than bought, and why every mechanism the system owns is marked with which of the two it is.
+**It should be able to run a business end to end, and more than one at a time.** Decide what to build,
+build it, put it in front of people who have never heard of it, find out what they think, sell to them,
+support them afterwards, keep the books, stay on the right side of the rules, and notice when the whole
+thing should change direction. Several of these at once, at different stages, without the owner holding
+them all in their head.
 
-**It is a team, not a pipeline.** Agents hold roles with real boundaries: one that produces cannot be
-the one that judges; one that judges cannot edit what it judged; the thing being gated cannot invoke its
-own gate. They hand work to each other on a written form, they may object, they escalate rather than
-guess, they are asked to say what they could *not* determine, and they carry an expiry date so the
-roster can shrink as well as grow. Their disagreements are evidence and get recorded rather than
-resolved by whoever spoke last.
+**It should keep going when the owner is not there.** Asleep, travelling, or simply thinking about
+something else. Work should continue overnight, questions should queue rather than block, and what
+happened should be waiting in a form that takes minutes rather than hours to absorb. Being away for a
+week should cost momentum, not control.
 
-**It runs itself, and improves itself, inside a boundary the founder sets.** It takes a standing
-intention and moves it without being driven. It works at night on this machine and on hosted lanes when
-the machine is off. It reads its own transcripts, notices where it wasted the founder's attention or its
-own budget, and proposes changes to its own rules — which the founder ratifies or refuses, and which are
-then reopenable by name rather than argued again from scratch. It widens its own permissions only by
-earning them: a ladder, where each rung is unlocked by a run of clean results and revoked by one bad
-one. It knows what it costs, against a window rather than a fiction, and it stops rather than overrun.
+**It should behave like an organisation rather than a machine.** Real roles with real boundaries.
+Workers who hand things to each other properly, who argue when they disagree, who say when something is
+beyond them instead of guessing, who know what they are bad at. It should be possible to add a role,
+change one, or retire one that is not earning its place — and for the whole thing to still be
+coherent afterwards.
 
-**The scarcest input is the founder's attention, and the whole design is organised around spending it
-well.** A question reaches them only when it turns on their money, their machine, their hours, their
-business, or their appetite for risk. Everything else is decided from rules already written down, and
-recorded so it can be reopened by name. What reaches them is shaped to be read: the answer first, the
-numbers and the warnings intact, and short enough that a tired person at the end of a day still takes it
-in. The system's success condition is not throughput. It is that **the founder can be absent, return,
-and still be in charge.**
+**It should get better on its own.** Notice where it wasted effort or attention. Learn from what it
+did, not only from what it was told. Propose changes to the way it works and put them to the owner
+rather than drifting. Earn more freedom by being right repeatedly, and lose it by being wrong. The
+version running in a year should be better than the one running today because it made itself so, not
+because someone rebuilt it.
+
+**It has to be trustworthy enough that not checking is safe.** That is the hard part and the whole
+point. The owner has to be able to leave something running and not lie awake about it — which means the
+system knows what it cannot do, stops rather than guesses, tells the truth about what happened
+including the parts that went badly, and never quietly makes something look finished that is not. A
+system that is usually right and occasionally invents something is worse than no system, because it
+cannot be left alone.
+
+**And the ambition underneath all of it: that one person can build and run what used to need a company
+of people.** Not answers arriving faster. A different scale of what a single person can own, decide,
+and be responsible for — with their judgement still at the centre of it, and everything else lifted off
+them.
 
 ---
 
