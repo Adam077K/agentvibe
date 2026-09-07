@@ -55,328 +55,340 @@ and still be in charge.**
 
 ## Part two · The field map
 
-**How to read this.** Each numbered field is a domain the system must take a position on. Under it are
-the sub-fields — the specific questions inside it that need a decision, a mechanism, or an explicit
-refusal. **An honest "refused, and here is why" is a complete answer.** A silence is not.
+**How to read this.** Each numbered field is a domain the system has to take a position on. Under it are
+plain questions — the things anyone building a company that mostly runs itself would eventually have to
+answer, whether or not they had ever seen this plan.
+
+**These questions are deliberately written without our vocabulary and without our answers.** A question
+phrased in the language of a design already chosen can only find the gaps that design anticipated. The
+point of this list is the opposite: to be answerable by someone who has never read a line of the plan,
+so that a missing answer shows up as missing rather than as already handled.
+
+**An honest "we refuse this, and here is why" is a complete answer. A silence is not.**
 
 ---
 
 ### 1 · Direction and intent — what the company is trying to do
 
-Mission and its statement form · the charter as a thing every run reads · goal and sub-goal structure ·
-intent versus candidate work · standing intents and their cadence · one-off intents and their expiry ·
-done-tests written before work starts · binding versus proposed goals · who may author an intent · the
-read-back that makes an intent binding · intent ownership · priority and ranking · the ranking's tie-break ·
-goal conflict resolution · dependencies and readiness · opportunity detection · unsolicited work policy ·
-the parking lot · abandonment and stop criteria · sunk-cost exclusion · pivot triggers · wrong-goal
-detection · blocked and stalled states · what clears a block · intent decay · the north-star question
-and whether to refuse it · scope boundaries and out-of-scope recording · reversibility of a direction
-change · what a venture may never do in the company's name
+What is this company for, and who is allowed to say? · How is a goal written down so it still means the
+same thing in three months? · What separates a real commitment from an idea someone had? · How does an
+instruction become binding, and how does the person giving it know it was understood the way they meant
+it? · Who may set direction, and who may only propose? · How do you know a goal is finished? · Who
+decides what matters most when two goals want the same resources? · What happens to a goal nobody has
+touched in a long time? · How is a goal abandoned, and by whom? · What tells you a goal was the wrong
+goal rather than badly executed? · How do you change a goal without losing the reason it existed? · How
+far ahead should anything be planned? · What work is allowed to start without being asked for? · Where
+do ideas go that are good but not now? · How does a goal that depends on another goal get sequenced? ·
+What is off-limits entirely, and who wrote that list? · How does the company notice an opportunity it
+was not looking for? · When does persistence become stubbornness?
 
 ### 2 · Work and tasks — how an intention becomes moves
 
-The work item and its fields · decomposition into moves · the unit of a single run · move-level
-outcomes · task states and their transitions · queueing and the work store · WIP limits · batching ·
-task dependencies and ordering · retry ladders and the re-attempt ceiling · same-failure detection ·
-idempotency and replay · partial completion · handoff at the boundary of a run · task expiry ·
-cancellation mid-flight · the cord that stops a running child · what a stop leaves behind ·
-resumability · checkpointing · the definition of done, per class of work · acceptance evidence ·
-rework and its cost · task provenance — which intent, which decision, which agent
+How does something large become something a worker can actually start? · What is the smallest useful
+unit of work? · How does a piece of work carry its purpose with it, so whoever picks it up knows why? ·
+What states can work be in, and what moves it between them? · How much work should be in progress at
+once? · What happens when work is blocked, and what would unblock it? · How many times should something
+be attempted before it is treated as impossible? · How do you tell a new failure from the same failure
+again? · If the same work runs twice by accident, what happens? · How is half-finished work handed to
+someone else? · How is work stopped in the middle, and what is left behind? · Can stopped work be
+resumed, and from where? · What does "done" mean for different kinds of work, and who checks? · What
+evidence should accompany finished work? · How is rework counted, and does anyone notice when it is
+high? · How do you trace a finished thing back to the decision that asked for it?
 
 ### 3 · Agents and the roster — who does the work
 
-The agent file and its schema · role definition and boundaries · the count and why it is that count ·
-which roles exist on day one versus later waves · specialisation versus generality · the producing /
-judging separation · read-only roles and why they carry no write tool · shims and name-squatting ·
-agent creation — who may add one · agent expiry and forced disposition · retirement, merge, refresh ·
-trust levels and probation · the widening ladder and its rungs · demotion on a bad result · agent
-capability declarations · tool grants per agent · model assignment per agent · fallback chains when a
-family is unreachable · concurrency per agent · cost caps per agent · the curator · the challenger ·
-the operator and how many of them · cold-start routability · how an agent becomes discoverable ·
-agent-to-agent trust · what an agent may never delegate
+What roles need to exist, and how would you know if one is missing? · How many workers is the right
+number, and what would tell you it is wrong? · Should a worker be a generalist or a specialist? · What
+must never be done by the same worker that did something else? · Who is allowed to create a new role? ·
+How does a role change over time? · When should a role be removed, and who notices that it should? · How
+much should a new worker be trusted, and how does that change? · What does a worker have to do to be
+given more freedom? · What takes freedom away again? · What can each worker actually reach, and who
+decided? · How does a worker know what the others are doing? · What happens when two workers disagree? ·
+Who arbitrates, and on what basis? · How does a worker know a task is beyond it? · What must a worker
+never hand to someone else? · How does a new worker learn how things are done here?
 
-### 4 · Agent cognition — how a single agent thinks
+### 4 · How a worker thinks — the reasoning itself
 
-Reasoning depth and when to spend it · planning before acting · the read-before-write discipline ·
-hypothesis and falsification · self-correction and when to stop correcting · uncertainty expression ·
-saying what could not be determined · confidence calibration · overconfidence detection · the
-distinction between measured and asserted · asking versus assuming · escalation criteria · the stopping
-rule · loop detection and breaking · context contamination on retry · clean-restart versus contaminated
-retry · attention to instructions versus drift · instruction conflict resolution · prompt structure and
-what belongs where · reasoning traces and whether to keep them · thinking budgets · the difference
-between a probe that measures the mechanism and one that measures the model · adversarial self-review ·
-knowing which questions are above its pay grade
+When is it worth thinking longer, and when is that waste? · Should a plan be made before acting, and
+when is planning procrastination? · How much should be understood before anything is changed? · How does
+a worker tell what it knows from what it is assuming? · How does it express not being sure? · Is its
+confidence actually related to being right? · When should it ask rather than decide? · When should it
+decide rather than ask? · What makes it stop and say a thing cannot be done? · How does it notice it is
+going in circles? · When a first attempt fails, is trying again from the same place a good idea? · How
+does it avoid drifting from what it was actually asked? · What does it do when two instructions
+conflict? · How does it check its own work without simply agreeing with itself? · How would it discover
+that its whole approach was wrong, rather than its execution? · What does it do with something it could
+not determine? · How does it avoid measuring the wrong thing and believing the result?
 
-### 5 · Orchestration and dispatch — how work reaches an agent
+### 5 · Getting work to the right worker — orchestration
 
-The dispatch decision · brief construction and what a brief must carry · dispatch by reference versus by
-value · the payload size boundary · fan-out width · depth and nesting limits · sequential versus
-parallel · the swarm shape for large work · one writer per artifact · file-level conflict avoidance ·
-lane sealing and independence · convergence as signal · the return schema · return validation ·
-what counts as delivery of a message to a running lane · waking an idle lane · double-writer detection ·
-work stealing and rebalancing · the orchestrator's own defect surface — summary compression · dispatch
-cost accounting · which engine has which tool, checked against the deliverable · timeouts and what a
-timeout means · orphan and zombie cleanup
+Who decides which worker does what? · How much context does a worker need to start, and how much is
+too much? · When should work be split among several workers, and when does splitting cost more than it
+saves? · How deep should delegation go before it becomes unmanageable? · What should a worker return
+when it is finished, and how is that checked? · How do you stop two workers editing the same thing? ·
+How do you know a message actually reached a worker? · What happens to a worker that has stopped
+listening? · How is work redistributed when one worker is overloaded? · Whose job is it to notice that
+the overall effort is off track? · What is lost when someone summarises another worker's findings? ·
+How long is too long to wait for a result, and what does silence mean? · What happens to work that was
+started and abandoned?
 
-### 6 · Memory and context — what is remembered and what is carried
+### 6 · Memory and context — what is remembered, and what is carried
 
-Working context versus durable memory · the context window as a budget · what is loaded at session
-start · payload size against the runtime's own limit · two-tier discovery — index then detail · what is
-never preloaded · compaction and when it fires · what compaction costs · cache loss after compaction ·
-context contamination · session boundaries · resumption and what survives it · cross-session facts ·
-the long-term memory file and its caps · decision memory, append-only · archive rotation and eviction ·
-eviction rules and what is pinned · stub-on-archive so citations still resolve · per-project versus
-global memory · user preferences and how they are learned · customer language and pain phrases · the
-codebase map · what is regenerated versus hand-written · memory write authority — who may write what ·
-memory conflict and precedence · staleness detection · the difference between a fact and a fact that was
-true when written · forgetting as a deliberate act · what a night child receives, and what binds it
+What must a worker know before it can start, and where does it get it? · What is worth remembering
+beyond a single piece of work? · How does the company remember a decision, as opposed to a fact? · What
+should be forgotten on purpose? · How do you tell something that is still true from something that was
+true when it was written? · What happens when the record contradicts itself? · Who is allowed to write
+to memory, and who only reads? · How much can a worker hold at once, and what happens at the limit? ·
+What is dropped first when there is not room for everything? · What does a worker lose when it starts
+fresh, and does that matter? · How does a long piece of work survive being interrupted? · How is
+knowledge shared between workers without shipping everything to everyone? · What should be remembered
+about the person who owns the company — preferences, habits, past corrections? · How does the company
+avoid learning the wrong lesson from one bad experience? · How does memory stay small enough to be
+useful?
 
-### 7 · Knowledge and learning — what the company knows
+### 7 · Knowledge — what the company knows and how it learns
 
-The knowledge store and its shape · sources and their provenance · access dates on everything ·
-research questions as first-class objects · open versus answered versus refused · re-specification when
-a question was malformed · the negatives store — what was tried and did not work, and why · handovers as
-knowledge · mining transcripts for what was learned · what makes a lesson durable enough to write down ·
-the difference between a lesson and an anecdote · knowledge decay and expiry · contradiction detection
-across documents · reconciling two sources that disagree · absence of evidence versus evidence of
-absence · the unread window problem · citation and whether it resolves · dead-path detection · knowledge
-that only exists in one agent's head · onboarding a new agent into what is known
+How does the company know what it knows? · Where does a fact come from, and when was it last true? ·
+How are open questions tracked, so they do not quietly become assumptions? · What was tried before and
+did not work, and how would anyone find that out? · How does a lesson get written down, and who decides
+it is worth writing? · How is a lesson told apart from an anecdote? · What happens when two sources
+disagree? · How do you handle not finding something — is that an answer or a gap? · How is knowledge
+kept from going stale without re-checking everything constantly? · What knowledge exists only in one
+worker's head, and what happens when that worker is gone? · How does someone new get up to speed
+without reading everything? · How does the company avoid confidently repeating something it once got
+wrong?
 
-### 8 · Skills and capability — what the system can do
+### 8 · Capability — what the company can actually do
 
-The skill as a unit · skill authoring · skill discovery and its cost · the router pattern · selection
-accuracy as the library grows · the measured degradation threshold · curation and what gets cut · the
-record of every cut and the test that made it · drift between the directory and the decision ·
-vendoring versus referencing · licence obligations on imported bodies · derivative work and attribution ·
-skill activation events and whether the runtime emits one · skill effectiveness measurement · dead
-skills · overlapping skills competing for selection · per-agent skill budgets · skills versus playbooks
-versus prompts — which layer owns what
+What is the company capable of, and how is that written down? · How does a new capability get added? ·
+How do you know a capability actually works rather than merely being listed? · How does a worker find
+the right capability at the moment it needs it? · What happens when there are so many capabilities that
+choosing between them becomes the hard part? · How do you tell an unused capability from an unnecessary
+one? · What happens when two capabilities overlap? · Who is allowed to use what, and why not everyone? ·
+When is it better to build a capability than to rent one? · When does a rented capability become a
+dependency you cannot leave? · What obligations come with something borrowed from someone else?
 
-### 9 · Tools and hands — how the system touches things
+### 9 · Reaching things — how the company touches the world
 
-The tool inventory · tool granting per agent · capability declarations that must be backed by real
-configuration · tools that exist versus tools that are named · the MCP server boundary · project-scope
-versus user-scope servers · which servers hold credentials · policy over servers and what it governs ·
-shadow versus blocking enforcement · tool call auditing · tool failure and its signature · distinguishing
-a tool that refused from a tool that failed · rate limits per tool · tool cost · tool latency budgets ·
-browser automation and its risks · file system access · shell access and who has it · network access ·
-the local model tier and whether it can be a service · new tool admission — who decides
+What can the company actually reach — files, accounts, services, the network, the machine itself? · Who
+granted each of those, and can it be taken back? · How does the company know something worked, versus
+appeared to work? · How does it tell a refusal from a failure? · What happens when something it depends
+on is slow, or down, or has changed? · How much can one action cost before someone should be asked? ·
+What is expensive enough to need permission every time? · What should never be reachable at all? · How
+does a new connection get approved? · What record is kept of what was touched?
 
-### 10 · The world's door — what comes in
+### 10 · What comes in from outside
 
-Inbound sources and their inventory · polling versus listening · cursor-based reads · change feeds and
-their completeness guarantees · retention windows on each source · sources that need a public endpoint ·
-webhook relay when no endpoint exists · deduplication · ordering · the wake decision — what is worth
-waking for · triage and classification of inbound · attacker-influenceable text · quarantine of fetched
-content · the taint that travels with untrusted text · separating the run that reads from the run that
-acts · prompt injection through tool output · what the system does with an instruction it finds in data ·
-inbound rate and burst handling · source authentication · source failure and silent stopping
+Where does new information arrive from? · How does the company find out something happened without
+watching constantly? · What is worth reacting to, and what can wait? · How does it avoid reacting twice
+to the same thing? · How does it know it did not miss something while it was not looking? · What does it
+do with a message that is trying to manipulate it? · How does it tell instructions from data? · Should
+the thing that reads the outside world be the same thing that acts on it? · What happens when the volume
+suddenly spikes? · How does it notice that a source has silently stopped sending?
 
-### 11 · Outbound and the world — what goes out
+### 11 · What goes out into the world
 
-The Sender and what it gates · staged versus sent · the tap and who releases it · outward classes and
-their ladder · the first stranger · what may be sent unattended · approval before send · content review
-before send · voice and whether it sounds like the company · irreversibility of a send · retraction ·
-publishing and its permanence · rate limits on outbound · identity — whose name is on it · disclosure
-that a machine wrote it · outbound in a venture's name versus the company's · the record of what was
-sent · bounce and failure handling
+What may be sent, published, or spent without a person seeing it first? · Who is the company speaking
+as? · How does anyone know a machine wrote it? · What cannot be taken back once it is out? · How is
+something retracted, and what does that cost? · How does the company sound like itself rather than like
+anything else? · What will it never say? · How does a first approach to a stranger differ from a
+follow-up? · How much outward activity is too much? · What record is kept of what was said to whom? ·
+Who is accountable when something goes out wrong?
 
-### 12 · Communication and handover — between agents, and to the founder
+### 12 · Communication — between workers, and with the owner
 
-The handover form and its required fields · handover as the unit of transfer · objections and how they
-travel · asks with a deadline and a stated fallback · what happens when nobody answers · peer-to-peer
-messaging and its transport · message provenance · lost-update surfaces · the difference between a
-message sent and a message delivered · escalation paths · the briefing and what it must contain · the
-bell — when to interrupt a human · what may never be written by a model · the wake message · status
-without noise · the shape of anything a human reads · answer-first discipline · protecting numbers and
-warnings from compression · what a control that refuses silently teaches — nothing
+How does one worker tell another what it found and what it left undone? · How does a worker object to
+something rather than silently comply? · How does a worker ask a question and keep working meanwhile? ·
+What happens when nobody answers? · How does something reach the owner, and how urgently? · What is
+worth waking a person for, and what can wait until morning? · How does a day's work get summarised so it
+can actually be read? · What must never be softened or dropped when something is shortened? · How does
+the owner give a correction that sticks? · How does the company know a correction was understood? · What
+does a person need to see to feel in control without doing the work themselves?
 
-### 13 · Truth and evidence — how a claim comes to be believed
+### 13 · Truth — how the company knows what is actually so
 
-The claim as a first-class object · claim kinds · scope — global, project, local · what verifies a
-claim · deterministic checks versus judgement · the evidence ladder and its rungs · what the bottom rung
-means — proves nothing · anchors and what an anchor is · anchor rungs · resolvers and their contract ·
-a resolver never passing what it could not check · unresolved as distinct from pass and from fail ·
-expiry on every durable claim · forced disposition at expiry — refresh, deprecate, waive · waivers and
-their deadlines · a lapsed waiver failing harder than none · shadow mode and measuring friction before
-enforcing · which failures block from day one · the judge panel · model-family independence · why a
-single-family panel is not a panel · claim citations in prose and whether they resolve · declared debt
-and its ratchet · fabrication detection · the difference between a cell and a check
+What separates something the company measured from something it was told? · What separates something it
+was told from something it inferred? · How is a statement substantiated, and by what? · What counts as
+enough evidence for different kinds of claims? · How does a belief expire? · What happens when a belief
+comes due and nobody has re-checked it? · Who is allowed to say a thing is settled? · How does the
+company avoid believing itself simply because it said something confidently? · How does it record that
+it does not know? · What does it do when the only available evidence comes from a source with an
+interest in the answer? · How would the company discover it had been wrong about something for a long
+time?
 
-### 14 · Quality and review — how work is judged
+### 14 · Judging the work — quality and review
 
-Review as an out-of-band act · the reviewer who cannot edit · review lenses and what each judges ·
-lens selection per change · risk tiering · what raises a tier · the gate and what it blocks · who may
-override a gate — nobody · the verdict and its binding to a specific diff · hash-binding versus signing ·
-forgeability of a verdict · multi-judge panels · two-of-three · the second opinion and where it comes
-from · adversarial review · what a review of a review finds · sealed review and independence ·
-convergence across postures as signal · false positives and the cost of over-blocking · a control people
-route around · test quality — a test that passes while asserting nothing · mutation and whether the test
-would notice · negative controls · pinning a known bug rather than leaving it prose
+Who decides that work is good enough? · Should the thing that made it be involved in judging it? · What
+is being judged — correctness, safety, cost, taste, all of them? · How does the standard differ by what
+is at stake? · What cannot ship without review, and what can? · Can a review be overridden, and by whom? ·
+How do you know a review was actually done rather than nodded through? · What makes two independent
+reviews genuinely independent? · When several reviewers agree, does that mean more than one reviewer
+agreeing with itself? · How much friction is review allowed to add before people avoid it? · How do you
+test that the tests would actually notice a problem? · What happens to a defect nobody is going to fix
+soon?
 
-### 15 · Control and safety — what stops a bad thing
+### 15 · Safety — what stops a bad thing happening
 
-The threat model, written down · accident versus injection versus insider · blast radius per act ·
-what one unattended run can destroy · reversibility as the permission axis · one-way versus two-way
-doors · the may-alone decision and what makes it at runtime · deterministic guards versus model
-judgement · which controls exist when no human is watching · hooks and where they are registered ·
-which settings tier survives which invocation · enumerating dangerous forms versus allowing one safe
-region · the guard that documents its own defects · ceilings and what they are denominated in · the
-cord · what a stop needs to work · kill and cleanup · quiescence · the dead-man's switch · drills and
-rehearsals · the failure nobody has rehearsed · defence in depth versus a single point · a control
-whose failure is silent
+What is the worst thing that could plausibly happen here? · Which of those are accidents, which are
+someone attacking, and which are the system misunderstanding? · How much damage can one bad action do
+before anything notices? · What is easy to undo and what is not? · Which actions need a person, always? ·
+What protection still works when nobody is watching? · How does the company stop something already in
+progress? · How does it know the stop worked? · What happens if the protection itself fails — does
+everything stop, or does everything continue? · What has never been rehearsed? · How would anyone notice
+a protection that has quietly stopped protecting? · What is protected by nothing but a written rule?
 
-### 16 · Permissions and identity — who may do what
+### 16 · Permission and identity — who may do what
 
-The permission model and its axis · permission modes · allow lists and deny lists · which verb widens
-and which narrows · scope of each setting — project, user, managed · which tier a child inherits ·
-per-run permission carriers · the settings file the dispatcher owns · never accepting a settings file as
-a parameter · credential storage · credential scope — dedicated and revocable versus the founder's own ·
-keychain and its lock policy · what fails fast versus what hangs · secrets in environment versus files ·
-egress credential injection · what the proxy sees · identity of the actor · attribution of an action ·
-impersonation and what is forbidden · terms of service as a constraint · first-party versus third-party
-boundaries · what may never be modified
+On what basis is permission granted — the person, the task, the risk, the reversibility? · How does the
+company know who is asking? · What does a worker inherit from whoever started it, and what does it lose? ·
+How is permission narrowed for a specific piece of work? · Where are credentials kept, and who can reach
+them? · Should a worker ever hold the owner's own credentials? · How is access revoked quickly? · What
+happens when a credential is unavailable — does work stop, or does it proceed without? · How does the
+company avoid one worker being able to grant itself more access? · What outside rules constrain what may
+be done at all, and who is keeping track of them?
 
-### 17 · Runtime and execution — where and how it runs
+### 17 · Where the work runs
 
-The machine and its capacity · concurrency ceilings · the instrument that detects the crossing · memory
-per child · swap as the real signal · process trees and which one a control governs · the sandbox and
-what it actually covers · nested execution · what a child inherits · what a child loses · headless
-invocation · TTY and its absence · detached execution and its known failures · exit codes and their
-meanings · silent failure — exit zero with no output · distinguishing two failures that look identical ·
-worktrees and isolation · protected paths · escalation for a single command · the launcher and what it
-records · process groups and signalling · logs and where they go · the sensor the controller lacks
+What machine or machines does this run on, and what happens when they are unavailable? · How many things
+can run at once before quality or speed suffers? · How would anyone notice that limit being crossed? ·
+What does one unit of work cost in machine resources? · What happens when something started by something
+else needs the same protections — does it get them? · How does the company tell a thing that failed from
+a thing that did nothing? · What does a silent success look like, and how is it distinguished from a
+real one? · How is work kept from interfering with other work? · What is recorded about a run so it can
+be understood later? · What happens to work in progress when the machine sleeps or restarts?
 
-### 18 · Models and providers — which minds do the work
+### 18 · The thinking capacity itself — which minds do the work
 
-Model selection per task class · cost per tier · escalation to a stronger model and when · downgrade to
-a cheaper one · effort levels · model identifiers and their churn · a retired identifier failing a lint ·
-provider inventory · provider reachability · what is documented versus what is inferred · vendor pages
-that contradict each other · vendor pages that contradict measurement · second-family routing · why a
-second family matters · rung demotion on a cross-family reroute · the calibration set that is never
-edited · drift detection · a family limit as a company-wide stop · provider outage drills · terms per
-provider · automated access clauses · what a subscription permits · usage windows and their reset ·
-which limit actually binds
+How is it decided how much thinking a piece of work deserves? · When should something more capable be
+brought in, and when is that waste? · What happens when the preferred capacity is unavailable? · Is
+depending on a single supplier a risk worth taking? · What would it take to move to another? · How does
+the company know whether a substitute did as well? · How does it notice that the same request now
+produces a different quality of answer than it used to? · What are the terms of what is being used, and
+do they permit this? · What limits exist, when do they reset, and which one actually binds? · What
+happens when a limit is reached in the middle of something?
 
-### 19 · Scheduling and the night — when work happens
+### 19 · When work happens
 
-The watch and its tick · what wakes it · sleep and the machine's real off-hours · measuring spans
-rather than episodes · a metric that cannot return the wrong answer · catch-up after a missed run ·
-coalescing versus running every miss · schedulers available and their floors · cloud lanes and what they
-may do · hosted output landing as a proposal rather than into the house · reconciliation on wake ·
-night capability as a computed predicate · refusing to start a night that cannot finish · the bounded
-day versus the open night · time zones and fixed resets · what is schedulable because its reset is fixed
+What decides that now is the time to do something? · What runs on a schedule and what runs in
+response to an event? · What happens to scheduled work that was missed? · Should missed work all run, or
+only the most recent? · How does the company know whether it is capable of doing the work right now? ·
+What should it refuse to start rather than start badly? · How is unattended work different from
+attended work? · What is safe to do while nobody is watching, and what is not? · How does the owner find
+out what happened while they were away? · What happens to work that spans a gap in availability?
 
-### 20 · Cost and economics — what it spends and what it earns
+### 20 · Money, cost and value
 
-The budget and its denomination · a window gauge against an observed high-water mark · wall clock beside
-it · a shadow dollar price and what it is not · the bill nobody sends · per-intent ceilings · per-venture
-ceilings · why per-venture ceilings do not compose · the reserve · exploration versus driven work ·
-which seat exploration runs on · idle capacity and what it buys · cost per finished intent · cost per
-founder-minute · unit economics of a venture · pricing · make versus buy · vendor spend caps and which
-providers expose one · balance reads · spend alerts · what happens at the ceiling · overage policy ·
-the cost of a control, measured in work refused
+What does this cost to run, and against what is that measured? · What is the difference between money
+spent and capacity consumed? · How much may be spent without asking? · How is a budget divided between
+competing work? · What happens at the ceiling — stop, ask, or continue? · How is exploratory work paid
+for differently from committed work? · What does a finished piece of work cost, and does anyone track
+that? · What is the cost of the owner's own time, and is it counted? · How does the company know whether
+something was worth doing? · What is the unit economics of the thing being sold? · How is a price set? ·
+When is it cheaper to buy than to build?
 
-### 21 · Surfaces and interfaces — how the founder sees and steers
+### 21 · How the owner sees and steers
 
-The pages and their order · the phone as the primary surface · the briefing page · the scoreboard · the
-floor — where the founder works alongside · mission control · the portfolio view · the child-flow view ·
-what renders live versus what is a record · notification policy · what may interrupt · what waits for
-morning · the read-back before a binding act · the which — a decision put to the founder · the shape of
-a which · batching decisions into one round · the founder's measured throughput · rejection rate as a
-signal about relevance, not throughput · voice input · voice output · accessibility · what a surface
-must never claim
+What does the owner look at, and how often? · What is the first thing they see in the morning? · How is
+a day's activity made comprehensible in a short time? · What is shown live and what is a record? · How
+does the owner intervene mid-flight? · How is a decision put to them, and what makes a good one? · How
+many decisions is too many in one sitting? · What does the owner need in order to trust a summary they
+did not verify? · How does the interface avoid claiming more certainty than exists? · What should be
+visible from a phone, standing up, in thirty seconds? · How does someone catch up after being away for
+a week?
 
-### 22 · The founder boundary — attention, decisions, authority
+### 22 · The boundary around the owner
 
-Which questions only the founder can answer · money, machine, hours, business, risk · everything else
-decided and recorded, reopenable by name · founder hours as a budgeted input · the decision budget per
-window · originated versus ratified decisions · what may never be re-litigated · how an overrule is
-recorded · how a withdrawn disposition is marked so it cannot resurface · the founder as the only
-approver of irreversible acts · away mode · the burst edge · what happens when the founder is
-unreachable · succession and continuity · the founder's own transcripts as training material · consent
-for that · the difference between direction and micromanagement
+Which decisions genuinely require this particular person? · What can be decided without them and simply
+recorded? · How is a past decision revisited without re-arguing it from scratch? · What is settled and
+must not be reopened? · How does the company know when it has spent too much of their attention? · What
+happens when they are unreachable? · What happens when they change their mind? · How is a decision
+recorded so that a stranger reading it later understands why? · What happens to this company if that
+person is not available for a month? · How does the owner stay in charge without becoming the
+bottleneck?
 
-### 23 · Self-improvement — how the system gets better
+### 23 · Getting better over time
 
-The improvement loop · noticing a defect in its own operation · proposing a rule change · who ratifies ·
-the record of what changed and why · harness self-edit as an irreversible act · the eval loop · a
-frozen calibration set · rehearsals · measuring whether a change helped · regression detection ·
-learning from a failed run versus a successful one · the curator's nightly pass · knowledge proposals
-with no writer · retiring what is no longer used · the plan's own text expiring · counting the rows that
-change after the first real run · what would falsify the whole design
+How does the company notice it did something badly? · How does a lesson become a change in how things
+are done? · Who approves a change to the company's own rules? · How do you tell an improvement from a
+change? · How would you know a change made things worse? · What is measured to say the company is better
+this month than last? · How does it learn from work that succeeded, not only from failures? · What
+should be reviewed periodically even when nothing seems wrong? · How does the company avoid changing
+itself so often that nothing stabilises? · What would falsify the whole approach?
 
-### 24 · Ventures and the portfolio — many companies at once
+### 24 · Running more than one thing at once
 
-The venture as an object · venture charter · what crosses ventures and what must not · shared taste ·
-shared knowledge versus isolated beliefs · cross-venture resource contention · ranking across ventures ·
-venture lifecycle — start, run, park, kill · the kill criteria · a venture's own done-tests · the first
-stranger per venture · venture-level permissions · a venture saying no to a capability · reporting per
-venture · the portfolio view · what the founder owns versus what a venture owns
+What makes two efforts genuinely separate? · What should be shared between them, and what must not be? ·
+How is attention divided when both want it? · How does one effort's failure stay contained? · When is a
+new effort worth starting? · When should one be stopped, and who decides? · How is each judged, given
+they may be at different stages? · What does the owner see across all of them at once? · How does
+something learned in one get used in another without contaminating it?
 
-### 25 · Departments and domains — the business functions
+### 25 · The kinds of work a company has to do
 
-Product — specs, prioritisation, acceptance criteria · design — the system, the render, the critique ·
-engineering — decomposition, review, merge discipline · data and analytics — metrics, events, dashboards ·
-marketing and content — voice, campaigns, calendar · sales and growth — funnel, outreach, conversion ·
-customer service — support, onboarding, retention, churn diagnosis · finance — bookkeeping, forecasting,
-runway · legal — contracts, terms, IP, disclosure · research — market, competitive, sourced enquiry ·
-operations — vendors, subscriptions, renewals · each department's lens, and why a lens is not an agent
+Deciding what to build and for whom · designing how it looks and feels · building it · testing it ·
+running it once it exists · finding the people who might want it · talking to them · selling · supporting
+them afterwards · keeping the books · staying on the right side of rules and contracts · researching
+what is true about the market · negotiating with suppliers · hiring and its equivalent here · and the
+question underneath all of them: does each of these need its own worker, or is it a way of working that
+any worker can adopt?
 
-### 26 · Data and privacy — what is held and about whom
+### 26 · Information about people
 
-Data inventory · personal data and where it lives · customer data isolation · retention policy ·
-deletion and whether it is real · transcripts and what they contain · mining transcripts and consent ·
-anonymisation · data in prompts · data leaving the machine · third-party processors · residency ·
-encryption at rest and in transit · access logging · the right to be forgotten · what the system may
-learn about the founder · what it may learn about a customer · what it may never store
+What information does the company hold, and about whom? · Where did it come from and was it given
+willingly? · How long is it kept, and what causes it to be deleted? · Is deletion real? · What leaves
+this machine, and to whom? · What can the company learn about the person who owns it, and is that
+consented to? · What is recorded about a customer that they would be surprised by? · What should never
+be stored at all? · Who can see what, and is that logged?
 
-### 27 · Legal and compliance — the outside constraints
+### 27 · Rules from outside
 
-Terms of service per vendor · automated access clauses · subscription versus API boundaries ·
-first-party versus third-party use · what constitutes reselling · licences on imported material ·
-copyleft and its reach · attribution obligations · derivative works · undeclared upstream licences ·
-disclosure that a machine authored something · advertising and claims substantiation · contracts and who
-may sign · liability · insurance · regulatory triggers by jurisdiction · the acts only a human may
-perform · when to ask a lawyer rather than an agent
+What outside rules apply here, and who is tracking them? · What are the terms of the services being
+used, and do they permit this use? · What obligations come with borrowed material? · Who may enter into
+an agreement on the company's behalf? · What must be disclosed, and to whom? · What claims may be made
+publicly, and what must be substantiated first? · What actions may only be taken by a human being? ·
+When is it time to ask a professional rather than work it out internally? · Who is liable when something
+goes wrong?
 
-### 28 · Deployment and operations — getting things live
+### 28 · Keeping it running
 
-Environments · configuration and its tiers · secrets management · build and release · CI and what blocks ·
-the deterministic floor versus the judged layer · rollback · migrations and their irreversibility ·
-feature flags · monitoring · alerting and who is woken · on-call when there is one person · incident
-response · post-incident record · uptime expectations for a one-person company · backups · restore,
-tested · disaster recovery · what happens if the machine dies
+How does something get from finished to actually live? · What must pass before that happens? · How is it
+undone if it turns out to be wrong? · Which changes cannot be undone? · How does anyone know the system
+is healthy right now? · Who is told when it is not? · What happens at three in the morning when there is
+only one person? · What is backed up, and has restoring it ever been tried? · What happens if the machine
+is lost entirely? · How much downtime is actually acceptable here?
 
-### 29 · Growth and external communications — how the company is seen
+### 29 · Being seen from outside
 
-Positioning · the audience and its language · landing pages · content and its cadence · SEO and
-generative-engine visibility · social presence · community · the launch · outreach and its ladder ·
-first contact with a stranger · reputation · what a mistake in public costs · the voice guide · what the
-company will not say · measurement of growth versus vanity
+Who is the audience, and what do they already believe? · What does the company say it is? · Where do
+people encounter it? · How is attention earned rather than bought? · What is published, how often, and
+by whom? · How is a first impression handled differently from an ongoing relationship? · What does a
+public mistake cost, and how is it corrected? · How is real interest told apart from vanity numbers? ·
+What reputation is being built, and would the owner be comfortable if it were described back to them?
 
-### 30 · Culture, onboarding and the record — how the company holds itself
+### 30 · How the company holds itself together
 
-What the company values and how that shows in a decision · onboarding a new agent · onboarding a human
-collaborator · the handoff document and what it must carry · read-order for a newcomer · what a
-newcomer must not re-litigate · session records and their caps · decision logs · the archive · naming
-and identity per session · provenance on every artifact · strike-don't-delete as a discipline · why the
-wrong reading is kept beside the right one · the honest caveat that travels with every summary
+What does this company value, and how would that show up in a hard decision? · How does someone new —
+person or worker — learn how things are done? · What must a newcomer be told not to re-open? · What
+record is kept of a period of work, and who reads it later? · How is an account written for whoever comes next, so it is
+still useful in six months? · How does the company keep its history without drowning in it? · How is a
+correction recorded alongside what it corrected, rather than instead of it? · What does the company do
+when it discovers it has been telling itself something untrue?
 
-### 31 · Failure, recovery and continuity — when it goes wrong
+### 31 · When things go wrong
 
-Failure taxonomy · silent failure and how it is detected · a control that is green while checking
-nothing · a metric that cannot return the wrong answer · false regressions from location · flaky versus
-deterministic · the retry that contaminates · partial work and how it is recovered · a lane killed
-mid-write · concurrent writers on one artifact · snapshotting before overwrite · what is lost when a
-session ends · resumption fidelity · the corrupted record · reconciling two accounts of one event ·
-graceful degradation · what the system does when it cannot tell whether it succeeded
+What kinds of failure are there, and are they treated differently? · How is a failure that announces
+itself distinguished from one that does not? · How would anyone notice a check that passes without
+checking anything? · How is an intermittent problem told from a consistent one? · What happens to work
+that was interrupted halfway? · What happens when two things changed the same thing at once? · How is
+conflicting evidence about one event reconciled? · What does the company do when it cannot tell whether
+it succeeded? · How does it degrade — badly all at once, or gracefully? · What is the first thing to
+check when something is wrong?
 
-### 32 · Measurement and instruments — knowing what is actually true
+### 32 · Knowing what is actually true about itself
 
-What is measured versus what is assumed · the instrument for each claim · an instrument that cannot
-detect the crossing · choosing the unit before the measurement · a positive control on every negative
-result · attribution by verbatim signature rather than by an action having failed · a probe that names
-what it tests · baseline drift · stating a delta rather than an absolute when the baseline moves ·
-sample size and replication · one run is not a result · the measurement that falsifies its own premise ·
-figures in prose versus commands · re-derivation over recall · who checks the checker
+For each thing the company believes about itself, what would show it to be false? · Is the measurement
+capable of returning a bad answer if there were one? · Was the right unit chosen before measuring, or
+after? · Is there a case where the expected result does not appear, to prove the test works? · Does one
+observation count as a result? · How is a change told apart from noise? · When the baseline is moving,
+what is safe to claim? · Is a number written down, or the way to work it out again? · Who checks the
+thing that does the checking? · What has never been measured because nobody thought to?
