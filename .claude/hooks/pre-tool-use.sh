@@ -365,6 +365,112 @@ seg_match() {
 #
 # Emits exactly one line: SPECIAL| · LOOPBACK| · LOCAL|<detail> · PUBLIC| · BAD|<reason>.
 # Callers map those to a verdict. Anything unrecognised is a refusal at the call site.
+# ── Which URLs does a curl invocation actually fetch? ─────────────────────────
+#
+# The curl rule used to find URLs with `grep -oE 'https?://…'`, so `curl example.com` — which
+# curl resolves to http://example.com and fetches — reached the network with nothing classifying
+# it. That is NOT a policy gap: the policy already says external is refused and loopback allowed,
+# and a bare host is an external fetch. It is a PARSING gap, the same shape as the other eleven —
+# a rule that recognises one spelling and misses the conventional one. So the parser is completed
+# and the policy is untouched.
+#
+# THE FACT THAT MAKES THIS SAFE: in curl, every positional operand IS a URL. Filenames, headers
+# and data never appear as positionals — they are values of flags. So the whole problem is knowing
+# which flags consume the token after them, and `curl -o localhost.txt https://evil/x` must not
+# read the FILENAME as a host.
+#
+# FAILURE DIRECTION IS CHOSEN, NOT ACCIDENTAL. An unrecognised flag is assumed to TAKE A VALUE, so
+# its argument is skipped. That can miss a URL behind an exotic flag — leaving today's behaviour,
+# a known gap — and cannot invent a host out of a filename. Over-blocking here is the failure that
+# makes someone route around the guard, so the enumeration is pointed the other way.
+#
+# Emits one absolute URL per line, scheme added where curl would add it. `ERROR|<reason>` if the
+# segment cannot be tokenised, which the caller treats as a refusal.
+curl_urls() {
+  _SEG="$1" python3 <<'PYEOF'
+import os, re, shlex
+
+seg = os.environ.get('_SEG', '')
+
+# Flags whose NEXT token is a value, not a URL. Generous on purpose: a flag listed here can only
+# cause a miss, while one wrongly absent turns its argument into a phantom host.
+SHORT_VALUE = set('AbcCdDeEFHKmoPQrtTuUwxXyYz')
+SHORT_BOOL = set('afgGiIjJklLnNOpqRsSvV0123456#BMh')
+LONG_VALUE = {
+    'user-agent', 'cookie', 'cookie-jar', 'continue-at', 'data', 'data-raw', 'data-binary',
+    'data-urlencode', 'dump-header', 'referer', 'cert', 'cert-type', 'key', 'key-type', 'cacert',
+    'capath', 'form', 'form-string', 'header', 'config', 'max-time', 'connect-timeout', 'output',
+    'proxy', 'proxy-user', 'request', 'range', 'upload-file', 'user', 'write-out', 'time-cond',
+    'resolve', 'retry', 'retry-delay', 'retry-max-time', 'interface', 'limit-rate', 'max-filesize',
+    'max-redirs', 'oauth2-bearer', 'unix-socket', 'aws-sigv4', 'hostpubmd5', 'egd-file', 'random-file',
+    'trace', 'trace-ascii', 'stderr', 'netrc-file', 'pass', 'pubkey', 'ciphers', 'dns-servers',
+    'local-port', 'proto', 'proto-default', 'tlsuser', 'tlspassword', 'happy-eyeballs-timeout-ms',
+    'expect100-timeout', 'speed-limit', 'speed-time', 'ftp-port', 'quote', 'telnet-option', 'variable',
+}
+LONG_BOOL = {
+    'silent', 'verbose', 'location', 'insecure', 'fail', 'fail-with-body', 'head', 'include',
+    'compressed', 'globoff', 'no-buffer', 'remote-name', 'remote-header-name', 'show-error',
+    'progress-bar', 'get', 'ipv4', 'ipv6', 'http1.1', 'http2', 'http3', 'tlsv1.2', 'tlsv1.3',
+    'version', 'help', 'netrc', 'no-progress-meter', 'parallel', 'raw', 'ssl', 'ssl-reqd',
+    'path-as-is', 'anyauth', 'basic', 'digest', 'negotiate', 'ntlm', 'create-dirs', 'append',
+    'junk-session-cookies', 'list-only', 'no-keepalive', 'proxytunnel', 'tcp-nodelay', 'trace-time',
+}
+# The token that ends this curl's argument list: a redirection, or the start of another command.
+STOP = re.compile(r'^(\d*(>>?|<)|&|\||;|\(|\))')
+
+try:
+    toks = shlex.split(seg, posix=True)
+except ValueError:
+    print('ERROR|a curl command could not be tokenised (unbalanced quote), so its URLs could not be evaluated.')
+    raise SystemExit(0)
+
+urls = []
+i = 0
+while i < len(toks):
+    if toks[i] != 'curl' and not toks[i].endswith('/curl'):
+        i += 1
+        continue
+    j = i + 1
+    endopts = False
+    while j < len(toks):
+        u = toks[j]
+        if STOP.match(u):
+            break
+        if not endopts and u == '--':
+            endopts = True
+        elif not endopts and u.startswith('--'):
+            name = u[2:].split('=', 1)[0]
+            if '=' in u[2:]:
+                if name == 'url':
+                    urls.append(u[2:].split('=', 1)[1])
+            elif name == 'url':
+                if j + 1 < len(toks) and not STOP.match(toks[j + 1]):
+                    urls.append(toks[j + 1])
+                j += 1
+            elif name in LONG_BOOL:
+                pass
+            else:
+                j += 1                      # LONG_VALUE, and every unrecognised long flag
+        elif not endopts and u.startswith('-') and len(u) > 1:
+            # Only the LAST flag of a cluster can consume the next token: `-sO` is two booleans,
+            # `-so out.txt` ends in -o and takes the filename.
+            if u[-1] in SHORT_BOOL:
+                pass
+            else:
+                j += 1                      # SHORT_VALUE, and every unrecognised short flag
+        else:
+            urls.append(u)                  # a positional operand: in curl, that is a URL
+        j += 1
+    i = max(j, i + 1)
+
+for u in urls:
+    # curl defaults a scheme-less operand to http://, so the guard must classify what curl fetches
+    # rather than what was typed. `://` present means the operand already names its own scheme,
+    # including ones this hook refuses outright (file://, ftp://) -- url_class judges those.
+    print(u if '://' in u else 'http://' + u)
+PYEOF
+}
+
 url_class() {
   _URL="$1" python3 <<'PYEOF'
 import os, ipaddress, unicodedata
@@ -812,10 +918,12 @@ PYEOF
     # opposite policy: the browser refuses the local network, curl allows ONLY loopback.
     #
     # Per SEGMENT, so a loopback call in one command cannot license an external call in the next.
-    # STATED LIMIT, unchanged and deliberately not widened here: a curl with no scheme
-    # (`curl example.com`) still reaches the network and is still allowed, because this rule only
-    # sees things matching `https?://`. That is a real gap and it is reported, not silently fixed —
-    # closing it belongs with a decision about whether `curl` needs an allowlist of its own.
+    # WHICH URLs is answered by `curl_urls`, not by a grep for `https?://`. That grep could not see
+    # `curl example.com`, which curl resolves to http://example.com and fetches — an external fetch
+    # the policy above already refuses, reaching the network because the PARSER never handed it to
+    # the classifier. Completing the parser closes it without moving the policy a millimetre:
+    # `example.com` classifies public and is refused exactly as `http://example.com` already was,
+    # and `localhost:3000` classifies loopback and is allowed exactly as it already was.
     #
     # BOUNDED ON PURPOSE. One `url_class` runs per URL — measured 82ms for one, 136ms for two,
     # against this file's stated 200ms budget — so an unbounded loop over URLs in a command an
@@ -826,19 +934,25 @@ PYEOF
     if printf '%s' "$command" | grep -qE '\bcurl\b'; then
       while IFS= read -r _seg; do
         printf '%s' "$_seg" | grep -qE '\bcurl\b' || continue
-        for _u in $(printf '%s' "$_seg" | grep -oE 'https?://[^[:space:]"'"'"'`|;>&)]+'); do
+        _found=$(curl_urls "$_seg") || block "a curl command could not be evaluated — refusing. This hook fails closed."
+        case "$_found" in
+          ERROR*) block "curl refused: ${_found#ERROR|}" ;;
+        esac
+        while IFS= read -r _u; do
+          [ -n "$_u" ] || continue
           _curl_urls_seen=$((_curl_urls_seen + 1))
           [ "$_curl_urls_seen" -le 12 ] || block "this command carries more than 12 URLs, which is past the point where this hook will check each one. Split it into separate commands so every URL is evaluated."
           _cv=$(url_class "$_u") || block "a curl URL could not be evaluated — refusing. This hook fails closed."
           case "$_cv" in
             LOOPBACK*) : ;;
             PUBLIC*)   block "curl to an external URL is blocked: $_u
-   Only loopback is allowed. Wrap external HTTP calls in an API route, or use WebFetch." ;;
+   Only loopback is allowed. Wrap external HTTP calls in an API route, or use WebFetch.
+   (A bare host is an external URL: curl reads 'example.com' as 'http://example.com'.)" ;;
             LOCAL*)    block "curl into the local network is blocked: ${_cv#LOCAL|}" ;;
             BAD*)      block "curl URL refused: ${_cv#BAD|}" ;;
             *)         block "the curl URL guard returned nothing readable — refusing. This hook fails closed." ;;
           esac
-        done
+        done <<< "$_found"
       done <<< "$_segments"
     fi
 

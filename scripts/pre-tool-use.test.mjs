@@ -197,6 +197,84 @@ test('BLOCKS past the URL cap rather than checking only some of them', () => {
   assert.equal(runHook(compact(bash(cmd))), BLOCK, 'a guard that silently stops checking is the failure mode this file exists against')
 })
 
+// ── a scheme-less curl operand is an external fetch, and the policy already said so ───────────
+//
+// `curl example.com` reached the network on every version of this hook before now. It was NOT a
+// policy gap — external is refused and loopback allowed, and a bare host is an external fetch.
+// It was a PARSING gap: the rule found URLs with a grep for `https?://`, so a form curl itself
+// resolves to an external URL was never handed to the classifier. `curl_urls` completes the
+// parser and the policy is untouched: `example.com` classifies public and is refused exactly as
+// `http://example.com` already was; `localhost:3000` classifies loopback and is allowed exactly
+// as it already was.
+//
+// THE FACT THAT MAKES IT SAFE: in curl, every positional operand IS a URL — filenames, headers
+// and data are always values of flags. So the risk is entirely "does a flag's value get read as
+// a host", which is what CURL_FLAG_VALUES_ARE_NOT_HOSTS exists to pin. An unrecognised flag is
+// assumed to take a value, so the failure direction is a miss (today's behaviour) rather than a
+// phantom host, because over-blocking is what makes someone route around the guard.
+
+const SCHEMELESS_CURL_MUST_BLOCK = [
+  ['curl example.com', 'the bare host that reached the network on every previous version'],
+  ['curl -s example.com', 'behind a boolean flag'],
+  ['curl -sS example.com', 'behind a short cluster'],
+  ['curl example.com/api/v1', 'with a path'],
+  ['curl example.com:8080/x', 'with a port'],
+  ['curl example.com -o out.txt', 'with the flag after the host'],
+  ['curl 192.168.1.5/admin', 'the LAN, scheme-less'],
+  ['curl 169.254.169.254/latest/', 'IMDS, scheme-less'],
+  ['curl 2852039166/latest/', 'IMDS in decimal AND scheme-less — two spellings deep'],
+  ['curl --url example.com', 'named by --url'],
+  ['curl --url=example.com', 'and by --url='],
+  ['curl -- example.com', 'after end-of-options'],
+  // Free, and not the target: the old grep saw only http(s), so this never reached the classifier.
+  ['curl file:///etc/passwd', 'a non-http scheme was never handed to the guard at all'],
+]
+
+for (const [command, why] of SCHEMELESS_CURL_MUST_BLOCK) {
+  test(`BLOCKS scheme-less curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `an external fetch reached the network because the parser could not see it (${command})`)
+  })
+}
+
+const SCHEMELESS_CURL_MUST_ALLOW = [
+  ['curl localhost:3000/health', 'the perception loop, scheme-less'],
+  ['curl 127.0.0.1:5173/', 'by address'],
+  ['curl -s localhost:3000/health', 'behind a flag'],
+  ['curl app.localhost:3000/', 'a subdomain of localhost'],
+]
+
+for (const [command, why] of SCHEMELESS_CURL_MUST_ALLOW) {
+  test(`ALLOWS scheme-less loopback curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `completing the parser refused the perception loop (${command})`)
+  })
+}
+
+// THE FALSE-POSITIVE CONTROL FOR THE PARSER. Every one of these carries a token that LOOKS like a
+// host and is not one. A parser that reads a filename as a domain refuses ordinary work, and the
+// `-o localhost.txt` case is the exact shape that made the old whole-command exclusion a hole.
+const CURL_FLAG_VALUES_ARE_NOT_HOSTS = [
+  ['curl -o example.com.html localhost:3000/x', 'an output filename that is literally a domain'],
+  ['curl -o localhost.txt 127.0.0.1:3000/x', 'and one that looks loopback'],
+  [`curl -H 'Host: example.com' localhost:3000/x`, 'a header value'],
+  ['curl -X POST localhost:3000/x', 'an HTTP verb'],
+  [`curl -d 'a=example.com' localhost:3000/x`, 'a data payload'],
+  ['curl -u user:pass localhost:3000/x', 'credentials'],
+  ['curl --output=example.com.html localhost:3000/x', 'a long flag carrying its own value'],
+  ['curl --some-new-flag example.com.html localhost:3000/x', 'an UNRECOGNISED flag: assumed to take a value, so its argument is not a host'],
+  ['curl -so example.com.html localhost:3000/x', 'a cluster whose LAST flag takes the value'],
+  ['curl localhost:3000/x && echo done', 'the next command is not an operand'],
+  ['curl localhost:3000/x > out.txt', 'nor a redirection target'],
+  ['curl -s localhost:3000/x 2>/dev/null', 'nor a numbered one'],
+  ['curl -s localhost:3000/x | head -5', 'nor the far side of a pipe'],
+  [`git commit -m 'use curl example.com in docs'`, 'curl inside a quoted argument is not an invocation'],
+]
+
+for (const [command, why] of CURL_FLAG_VALUES_ARE_NOT_HOSTS) {
+  test(`ALLOWS — a flag value is never a host — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `the curl parser invented a host out of something that was not one (${command})`)
+  })
+}
+
 const SPELLING_MUST_BLOCK = [
   ['FOO=1 npx cowsay hi', 'an env prefix defeated an anchor that demanded start-of-string or a separator'],
   [`bash -c 'npx cowsay hi'`, 'wrapping defeated the same anchor'],
