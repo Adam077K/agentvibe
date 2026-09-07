@@ -620,3 +620,116 @@ invocation.** Neither vendor page looks alarming read alone.
 **The single-family caveat binds every line above.** One model family, reading its own system and its own
 vendor's documentation about itself, on one day. The `irreversible` tier's two-of-three multi-judge and the
 two-model-family predicate are unmet on all of it. Accepted risk, exit condition 2026-11-17.
+
+---
+
+## §30 — "do all": the hook, the classifier, and the night's real floor · 2026-09-07
+
+**The founder's authorisation, verbatim: *"do all"***, answering a list whose items were the hook fix, a
+settling measurement, the folds, and the handoff. Three founder acts on that list remain theirs and are
+untouched: installing the R33 probe, creating capped credentials, and sending or withholding the vendor
+report. **Nothing pushed, nothing merged, no live settings or policy file modified.**
+
+### R46 — ANSWERED, in two halves that must not be collapsed
+
+**No classifier in a `-p` child.** Every child's `system/init` reports `permissionMode: "default"`; auto
+mode is unreachable by both routes, and **`--permission-mode auto` is accepted, exits 0, prints no
+warning and silently resolves to `default`** while every other mode is honoured verbatim. A flag that
+reads as success and does nothing.
+
+**But the hook fires** — depth 1, depth 2, and under `--permission-prompts none` — read from
+`PreToolUse` `hook_response` events rather than inferred. **The feared depth-2 gap does not occur**, and
+`permissions.deny` is evaluated *before* the hook.
+
+**The net is not uniformly weaker.** It is weaker where the 29 allow rules blanket-pass (`node *`,
+`python3 *`, `git *`, `gh *`) and **stronger for anything unlisted, which auto-denies rather than being
+judged. The allow list is the night's real permission surface.**
+
+**And the classifier is not a fixed control:** three of the adversary lane's four refusals did not
+reproduce. It is a model deciding per call — genuinely strong, and not something a design can rely on.
+
+### The apparent contradiction, settled
+
+Two lanes appeared to disagree about whether the hook reaches the night. **Both were right; the
+difference was scope.** `--restricted` **discards the project tier entirely — `Bash`, the `PreToolUse`
+hook, and the `permissions` block, allow *and* deny.** Proven by a cell where `--tools` restored the
+shell, the probe command **ran and emitted its marker**, and **zero hook events appeared in the stream** —
+so the registration is discarded, not merely unreachable. Confirmed independently by a file tool that
+survives `--restricted` natively.
+
+**The consequence for `bin/run`, and it is the sentence to carry:** `--tools` restores the shell
+**without restoring either control**, and that is the obvious repair a dispatcher reaches for the moment
+`--restricted` takes its shell away. **`--settings` is the only lever measured to restore them**, which
+is O131's justification arriving from a second direction: the dispatcher must supply the file because
+under `--restricted` nothing else does.
+
+### The hook's own defects — two fixed, twelve recorded
+
+**Fixed, on `fix/hook-separator-bypass`, three commits, unpushed and unmerged pending founder sign-off:**
+
+1. **The separator bypass.** Five rules matched `<tool>` + a class excluding `;` + `<destructive-call>`,
+   so a match could not span a semicolon. Two children, same instruction: one wrote the call directly and
+   was blocked; the other bound it to a `const` first and **the hook returned exit 0**. Neither was told
+   to evade, and **the one that got through wrote the more conventional style.** Fixed by normalising —
+   splitting on *unquoted* separators, one splitter, five call sites — **not** by widening the pattern,
+   which would have restored the false positives the class was added to prevent. **Twelve negative
+   controls green in both cells**, each of them refused by the naive fix, which is what makes this a
+   narrowing rather than a widening.
+2. **The removal rule allowed a variable-spelled home directory** while blocking the tilde form — the
+   same directory, two spellings, opposite verdicts. **Fixed by inversion**: refused unless every target
+   is shown strictly inside the project root or the scratchpad, with unresolvable values refused rather
+   than guessed at. Two pre-existing false positives fixed in the allow direction as a bonus. **Cost
+   measured on 14 realistic cleanup shapes, not assumed:** five newly refused, all unresolvable
+   expansions, and the scratchpad variable is the one that will bite.
+
+**Recorded and NOT fixed — `review/hook-gaps.md`, twelve pre-existing gaps.** **Eight are reachable by
+an agent writing conventional style with zero intent to evade. None requires an insider. None needs a
+shell parser** — three fall to the segmenter already built, three are one-line regexes, one needs a
+quote-stripper in the pass that exists, one reuses the URL classifier the hook already contains. **One
+follow-up, not twelve**, authorised as a separate third commit so the founder may take the first two
+and leave it.
+
+**The framing that unifies both fixed defects and R1 of the twelve: an enumeration of spellings is
+defeated by the conventional spelling.** That is the same shape as `allowWrite` only widening while
+`denyWrite` narrows. **A denylist of dangerous forms can never be complete; an allowlist of one safe
+region can.**
+
+### The night-safety design — recorded as shape, not adopted
+
+**Safety cannot come from permission, because every control that judges an act needs a model in the loop
+and every model in the loop is asleep.** *A night run should be safe because of what it does not hold,
+not because of what it was told.* Thirteen layers ranked, **nine ABSENT**; hooks sit near the bottom
+precisely because they are what a persuaded or looping run walks through — **and the semicolon bypass is
+that, measured, with no persuasion involved at all.**
+
+**§L gained a fourth status value, `CANDIDATE`, and the orchestrator ratifies it.** Recording a
+recommendation the founder has not taken as `ADOPTED` would be false; as `ABSENT` it would lose the
+distinction between *designed but not adopted* and *adopted but not built*. Added with a strike on §L's
+own "three values" line rather than silently. O133–O135 (capped credential · night keychain · taint
+flag) carry it.
+
+### Method this round earned
+
+- **Attribute a control by verbatim signature, never by an action having failed.** One cell was the trap
+  in the act: the action failed, and not because of the hook. **Reasoning from a failure is what made two
+  capable lanes appear to contradict each other for half a day.** Companion to the panel's *a probe that
+  names what it is testing measures the model, not the mechanism.*
+- **A lane caught its own wrong measurement before it shipped**, and the correction is kept in the source
+  because the wrong reading would have aimed the fix at the wrong hole. A wrong diagnosis that produces a
+  plausible fix is the expensive kind.
+- **The guard refused this session five times while documenting itself** — a probe command, a commit
+  message, vendor documentation quoted into a file, and twice while writing the file describing its own
+  bugs. **A guard that prevents its own defects being written down is a guard whose defects do not get
+  fixed.** Over-blocking a document stays, because it is far cheaper than under-blocking a command; the
+  right cure is a real shell parser, not a looser rule.
+- **Engine capability must be checked against the deliverable.** `sourcer` has neither `Write` nor
+  `Bash`; **`reviewer` has `Bash` but no `Write`.** Three lanes this round returned findings as messages
+  for that reason, on the orchestrator's bad advice, now corrected in `LONG-TERM.md`.
+- **The orchestrator's summaries were corrected by lanes four times today** — the power-cable
+  disposition, the sleep figure, the MCP credential label, and a row recorded as "closed and re-opened"
+  that was never closed. **A lane measures precisely; the orchestrator compresses; the compression is
+  what propagates.** Every one was caught by a lane checking the file rather than accepting the brief.
+
+**Single-family caveat binds all of it.** One model family measuring its own runtime and reviewing its
+own guard, in one day. The `irreversible` tier's two-of-three multi-judge and two-model-family
+predicates are unmet throughout. Accepted risk, exit condition 2026-11-17.
