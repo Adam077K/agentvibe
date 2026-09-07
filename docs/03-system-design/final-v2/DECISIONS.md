@@ -467,3 +467,33 @@ vendor's own flags, with the probe authored apart; one bounded-day intent on the
 anchor, read in the morning. Everything else — the night, the pages beyond the board, the roster past wave one,
 the cloud lane — waits behind that week's evidence. Every review of this plan was one model family reading prose,
 which by the plan's own ladder ranks and flags and certifies nothing; the only remaining test is running it.
+
+## §28 — Closing the research: the founder's answers · 2026-09-07
+
+Thirty-nine of SPINE §N's forty-one questions stood open. The orchestrator triaged them rather than interviewing
+on all thirty-nine, because most are not the founder's to answer: **twelve are documentary** (a vendor page, a
+licence, a changelog, a published measurement), **five are measurements that spawn nothing**, **twelve are
+measurements that spawn a `claude -p` child**, and the remaining ten need the system running and cannot close in
+planning. Three lanes were dispatched on the twenty-nine (`scratchpad/research-close-brief.md`), each forbidden
+to install, authenticate, spend or write outside the scratchpad, and required to record a blocked question with
+the exact act it needs.
+
+| # | Question | Answer | Disposition |
+|---|---|---|---|
+| F1 | Install the Codex CLI now | *"Install it now (Recommended)"* | The founder installs; a lane then runs the headless rehearsal on five known-answer cases. This unblocks **R10** (the TTY bug the cross-model design hinges on), **R26**, the rehearsal, and **§I row 5**. The standing "nothing installed" constraint is lifted for this one act by this decision and nothing else. |
+| F2 | The R27 rating sitting, thirty of the founder's own past tasks | *"Skip it, accept row 16 open"* | **OVERRULE of the orchestrator's recommendation, and it is final.** §I row 16 — whether a deterministic anchor exists for most company work — **stays open by decision, not by oversight**. R27(b) is not run. The consequence is stated once and not re-litigated: the architecture is untested against non-software work until the first venture supplies its own thirty (R27(c)), and every review's finding that R12 on the harness cannot falsify the assumption stands unanswered. |
+| F3 | A temporary background agent for two measurements | *"Allow a temporary one, removed after (Recommended)"* | Lane C may register one LaunchAgent, take the reading, unload and delete it, and must report both the measurement and the removal with the commands. **R33**'s sleep half and **R29**'s concurrency knee come into scope; R33's reboot half still needs an act only the founder can take. |
+| F4 | How open row 1, the terms, is settled | *"A lane reads them and reports, you decide after (Recommended)"* | Applied. **And it should not have been asked** — see the standing instruction below. |
+
+**Standing instruction, given by the founder in the same breath and applying from here on:** *"I wanted to give
+me only the answers that only I can answer. Most of them I think you can do the right decision on your own."*
+F1, F2 and F3 qualify: an install on their machine, half an hour of their attention, a background agent
+registered on their Mac. **F4 did not** — *have a lane read the terms and report* is an orchestrator-class
+decision made from rules already on the page, and asking it spent the founder's attention on a question with one
+sensible answer. That is the same resource every review in this round named as the scarcest, and the round's own
+`founder_hours:` and which-budget mechanisms exist to protect it. The test from here: a question reaches the
+founder only if it turns on their money, their machine, their hours, their business or their appetite for risk.
+Everything else the orchestrator decides and records, reopenable by name.
+
+**What this does not change.** No key is bought (E7 stands). No box is bought (E1 stands). Nothing is pushed. The
+ten questions that need a running system are named as such and are not being guessed at.
