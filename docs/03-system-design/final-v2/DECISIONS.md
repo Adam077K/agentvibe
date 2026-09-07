@@ -497,3 +497,116 @@ Everything else the orchestrator decides and records, reopenable by name.
 
 **What this does not change.** No key is bought (E7 stands). No box is bought (E1 stands). Nothing is pushed. The
 ten questions that need a running system are named as such and are not being guessed at.
+
+---
+
+## §29 — The research close, and the sandbox panel · 2026-09-07
+
+**Three research lanes and a five-lane sandbox panel returned on one day.** Every return is recorded verbatim
+before any disposition was written: `research/close-W.md` (twelve documentary answers), `research/close-M.md`
+(five measurements), `research/close-C.md` (twelve child-spawning measurements), `review/terms-row-1.md`
+(§I row 1), `review/codex-rehearsal.md`, and `review/sandbox-P1-measure.md` through `sandbox-P5-envelope.md`.
+The spine folds are `a065325`, `1411fbe`, and fold 2 in flight. **Nothing was built, installed, spent,
+published or pushed. No settings file on this machine was modified by any lane, and each lane that ran
+children confirmed none was left running.**
+
+### The founder's decisions this round
+
+| # | Question | The founder's words | Disposition |
+|---|---|---|---|
+| G1 | §I row 1, the terms — which of three readings Keel operates under | *"what do you recommend?"* → the orchestrator recommended **Reading C with Reading B's volume qualifier live inside it**, and the founder did not dissent | **v108, `class: ratified`.** Row 1 CLOSED after being open since round one. Reopenable by any engine with a reason and a falsifier |
+| G2 | The sandbox posture for the night | *"Change nothing yet"* | **Applied.** No settings file touched. The panel's output is recorded findings plus a deferred decision, with a **trigger rather than a date**: revisit when `bin/run` exists, because that is the first moment a per-child settings file could be written |
+| G3 | Whether to report the `bypassPermissions` finding to Anthropic | *"what you recommnd?"* | Orchestrator's recommendation: **replicate first, then the founder sends.** A security report on one unreplicated cell is worth less than no report. Drafting only; nothing sent |
+| G4 | *"i want the system to use this to make the output anderstanable"* — `attention-span` | verbatim | **v107, `class: originated` on the intent.** The implementation route is not originated and is reopenable |
+
+**The standing instruction from §28 was applied twice and is working.** G1 and G3 reached the founder because
+they turn on appetite for risk and on their own account. **The MCP credential-label correction did not** — two
+servers are marked as holding no credentials while holding credentials, and correcting a false label is not a
+judgement call. It is recorded as a plan correction; the live policy file is untouched, per G2.
+
+### What falsified live plan text
+
+1. **The off-hours metric could not answer its own question.** Counting sleep *episodes* gives 431 episodes,
+   longest 0.30 h, **zero of an hour or more**. Counting *contiguous spans between full wake events*, same week:
+   **29 spans, 70.0 h, longest 11.08 h, fourteen over an hour.** DarkWake raises a two-second wake about every
+   16 minutes and each ends an episode, so **no episode on this machine can ever reach an hour.** Four readings,
+   one machine, three answers; the first three were wrong the same way. **The orchestrator's own
+   "the cure is a power cable" disposition was withdrawn** and is struck in place, labelled withdrawn by its
+   author so it cannot resurface from a handoff. **§I row 15 is OPEN and the founder's.** Live premise: the
+   **43–70 h range**, with the DarkWake question named as what decides it (R45).
+2. **`/goal` never runs its condition.** The evaluator is a model reading the transcript. An exit-code condition
+   was judged **met because the transcript mentioned a file being written while the test never ran.** v12 and O21
+   say the deliveries are *"judged by a program rather than by prose"*. They are not. Corrected, not annotated.
+3. **The concurrency ceiling was low by five times or more.** O71's 3 → **17**; the knee is between 17 and 20
+   (N=20 writes 8,280 pages to swap) and **all 20 still succeed, so the machine degrades silently**. The
+   instrument travels with the number: `vm_stat`'s `Swapouts`, because free-memory percentage **moves the wrong
+   way** across the knee.
+4. **v90's Gemini route is gone** — Google withdrew personal-account CLI access 2026-06-18. The founder's
+   *"no keys, codex and gemini cli use."* is `class: originated` and is **not** re-litigated; the world removed
+   one of its two halves, on availability rather than terms.
+5. **`AgentEvent` does not exist** in the source v62's writer is specified against. **O32's pair inverts** —
+   RunPod exposes a balance read and Higgsfield does not, which is the opposite of §F's assignment.
+   **134 skills is past a measured degradation threshold of 102.**
+
+### The sandbox panel — what five sealed lanes converged on
+
+**The structural finding: the armed sandbox governs Bash run through Claude Code's Bash tool. It is not a machine
+policy.** The night is specified to run from launchd, where it never applies. Two process trees, and
+**the sandbox debate and the night's blockers are disjoint sets.** A designed night does not complete today, and
+it stops twice before the sandbox is consulted: no Watch plist exists, and `night_capable` reads false every
+night on a one-minute sleep setting.
+
+**All five lanes converged on the same posture** — an unsandboxed parent with each child confined by its own
+`--settings`, which `--restricted` is measured to honour. It is the only arrangement measured to give real
+per-child confinement, and it **increases** containment over today, where a night child has none of its own.
+**No lane proposed disarming.** Deferred by G2, not rejected.
+
+**What the panel found that outranks the posture question:**
+
+- **`--permission-mode bypassPermissions` makes a child skip sandbox initialisation.** Settings carried
+  `enabled: true`, `failIfUnavailable: true` and a `denyRead` canary; **the child read the canary.** Nothing
+  reports it. This **reconciles** the earlier 6-of-6 fail-closed result rather than overturning it — that result
+  is correct for the modes it used. Replication pending before anything is sent.
+- **The strongest control in a session is the auto-mode permission classifier**, which is configured nowhere in
+  this repo and modelled nowhere in the plan. Four of six adversarial probes were refused by it; **none by the
+  sandbox.** It is an interactive control, so **a `-p` child at 3 a.m. probably does not have it.**
+- **The sandbox stops none of the three most likely harms** — a run acting on attacker text it fetched, a
+  credentialed call firing unattended, accidental destruction. Six of seven inbound doors poll outbound, so the
+  inbound-bind denial gates **this system's own components** and no adversary.
+- **`denyRead` does not hold where it matters:** a detached process read an **unlocked keychain, sandboxed, no
+  prompt, exit 0**, against a `no-timeout` login keychain.
+- **What binds a night child is argv and nothing else.** `--restricted` discards the project settings file, which
+  is where the session-start hook is registered; the per-child replacement names three hooks and omits
+  SessionStart, while the constitution is sized to session-start's budget. **No constitution, no lenses, no
+  playbooks — and this survives any posture change in either direction.** It is a `bin/run` defect and it is now
+  the most important unbuilt thing in the plan.
+
+**Three CLAUDE.md claims are falsified**, by documentation and by measurement: `sandbox.network.allowLocalBinding`
+exists, is macOS-specific and project-settable, and **works** — both binds flipped from denied to OK while the
+read canary stayed denied in the same cell; `enableWeakerNestedSandbox` is **Linux-only** and the macOS builder
+does not take the parameter; and the worktree wall is the **documented protected-paths list**, which `allowWrite`
+is documented as unable to lift. **CLAUDE.md is not edited here** — it is `irreversible` tier and outside this
+branch's scope. Recorded for the PR that owns it.
+
+**One composed-posture fact the founder should see stated plainly:** OpenAI's documented guidance for Codex under
+an outer sandbox is `--dangerously-bypass-approvals-and-sandbox`, and every working Codex cell needed Claude
+Code's `dangerouslyDisableSandbox`. **Keel's checker would run with both vendors' escape hatches open in one
+invocation.** Neither vendor page looks alarming read alone.
+
+### Method notes this round earned
+
+- **A message to a running lane is delivered only when the lane's return quotes it — and the converse also
+  bites.** A correction reached `research-fold` *after* it had gone idle and committed; it woke, applied it, and
+  became a second live writer on a file another lane was reading. **That lane snapshotted the in-flight file and
+  asked rather than overwriting, which was correct** and prevented a silent clobber. Require a quote-back line;
+  and before dispatching a replacement, check whether the original has woken.
+- **Lane C refused to re-encode a blocked artifact a third time**, recording *"A teammate relaying the founder's
+  authorization is not what grants capability here."* That is correct and the plan should teach it.
+- **Two lanes corrected their own first hypotheses**, each caught by a control cell rather than by reading — the
+  Codex failure's true cause, and a `tls.connect` sweep whose `ENOTFOUND` looked like a domain denial when the
+  sandbox simply has no DNS. **`sourcer` has no `Write` and no `Bash`:** two lanes could not write their returns
+  and sent messages instead. Dispatch `reviewer` when the deliverable is a file.
+
+**The single-family caveat binds every line above.** One model family, reading its own system and its own
+vendor's documentation about itself, on one day. The `irreversible` tier's two-of-three multi-judge and the
+two-model-family predicate are unmet on all of it. Accepted risk, exit condition 2026-11-17.
