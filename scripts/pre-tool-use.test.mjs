@@ -134,6 +134,88 @@ for (const command of MUST_ALLOW) {
   })
 }
 
+// ── the separator bypass: a QUOTED `;` is not a command separator ────────────────────────────
+//
+// Five rules — git clean, git checkout/restore ., find -delete, interpreter destruction, and
+// reading .env — were written `<trigger>[^|;]*<payload>`. That middle class cannot span a
+// semicolon, and a regex cannot tell a separator from a semicolon inside a quoted string.
+// Measured 2026-09-07 against the pre-fix hook, two children given the same instruction and
+// NEITHER told to evade:
+//
+//   node -e "require('fs').rmSync('/x',{recursive:true})"                  exit 2  BLOCKED
+//   node -e "const fs = require('fs'); fs.rmSync('/x',{recursive:true})"   exit 0  ALLOWED
+//
+// The one that got through wrote the more conventional style. Every case in SEPARATOR_MUST_BLOCK
+// was verified exit 0 against the pre-fix hook (10 of 10 red) and exit 2 after; the twenty
+// controls below were IDENTICAL in both cells, which is the half that says the rules were
+// narrowed correctly rather than merely widened.
+//
+// THE CONTROLS ARE THE DELIVERABLE. Replacing `[^|;]*` with `.*` also turns all ten red cases
+// green — and refuses `node --version; echo rmSync` as filesystem destruction. Any future
+// simplification of the splitter that reaches for `.*` fails SEPARATOR_MUST_ALLOW first.
+
+const SEPARATOR_MUST_BLOCK = [
+  // R4 — the interpreter rule, both spellings of the same destruction.
+  [`node -e "const fs = require('fs'); fs.rmSync('/x',{recursive:true})"`, 'bound to a const first — the form a careless agent writes by default'],
+  [`python3 -c "import shutil; shutil.rmtree('/x')"`, 'the same shape in python'],
+  [`node -e "const p = process.argv[2] || '/x'; require('fs').rmSync(p,{recursive:true})"`, 'a quoted `||` defeats the class exactly as a quoted `;` does'],
+  // R1 — git clean.
+  [`git -c 'core.pager=less; more' clean -fdx`, 'a quoted semicolon in a -c value splits the match'],
+  // R2 — git checkout/restore `.`, whose `\\s*$` anchor needed END OF STRING.
+  ['git checkout .; ls', 'anything after the separator defeated the end-of-string anchor'],
+  [`git -c 'core.pager=a; b' restore .`, 'same rule, quoted separator'],
+  // R3 — find -delete.
+  [`find . -name 'a;b' -delete`, 'a semicolon inside a filename pattern'],
+  [`find . -name 'a|b' -delete`, 'a pipe inside a filename pattern'],
+  // R5 — reading secrets.
+  [`sed -e 's/a/b/;s/c/d/' .env`, 'sed expressions are separated by semicolons; the file is still .env'],
+  [`awk 'BEGIN{x=1; print x}' .env`, 'an awk program body is full of semicolons'],
+]
+
+for (const [command, why] of SEPARATOR_MUST_BLOCK) {
+  for (const [shape, encode] of [['compact', compact], ['pretty', pretty]]) {
+    test(`BLOCKS [${shape}] separator bypass — ${why}`, () => {
+      assert.equal(runHook(encode(bash(command))), BLOCK, `a quoted separator carried a destructive command past the hook (${command})`)
+    })
+  }
+}
+
+// The direct forms, pinned alongside: the fix must not trade one hole for another.
+const SEPARATOR_DIRECT_STILL_BLOCKS = [
+  [`find . -type f -exec rm {} \\;`, 'a BACKSLASH-escaped semicolon is a literal, not a separator — this must stay one segment'],
+  ['cd /tmp; git clean -fdx', 'the destructive command sits wholly after a real separator'],
+]
+
+for (const [command, why] of SEPARATOR_DIRECT_STILL_BLOCKS) {
+  test(`BLOCKS still — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `a destructive command was allowed (${command})`)
+  })
+}
+
+// NEGATIVE CONTROL, and the reason this fix is a narrowing rather than a widening: a rule must
+// NOT match across a genuine separator. Each of these has the trigger word in one command and
+// the payload in the NEXT, and each is refused by the naive `.*` fix.
+const SEPARATOR_MUST_ALLOW = [
+  ['node --version; echo rmSync', 'two commands: a version check, then an echo naming the banned call'],
+  [`find . -name '*.md'; echo -delete`, 'two commands: a listing, then an echo'],
+  ['git --version; echo clean -fdx', 'two commands: a version check, then an echo'],
+  ['node --version | grep rmSync', 'the same across a pipe'],
+  ['cat README.md; echo .env', 'a reader in one command, the filename in another — nothing is read'],
+  ['git status; ls -la', 'the case the exclusion class was originally added for'],
+  [`git commit -m 'fix: a; b'`, 'a semicolon inside a commit message is not a separator'],
+  [`find . -name '*.md' | head -20`, 'find without a destructive action'],
+  ['git checkout main', 'checking out a branch is not checking out `.`'],
+  [`sed -e 's/a/b/;s/c/d/' README.md`, 'the R5 shape on a file that is not .env'],
+  ['node scripts/run-checks.mjs', 'running a committed script'],
+  [`echo 'hello`, 'an unbalanced quote must not crash the splitter — it over-blocks or allows, never errors'],
+]
+
+for (const [command, why] of SEPARATOR_MUST_ALLOW) {
+  test(`ALLOWS across a genuine separator — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `the segmenting fix widened a rule across a real command separator (${command})`)
+  })
+}
+
 // ── the force-push rule: both orderings, and the word boundary that was missing ──────────────
 // The rule is written twice, once per argument order. Only the first carried `\b` after the
 // `-f` alternation, so the second matched `-f` inside ANY hyphenated word appearing after the
@@ -1102,6 +1184,19 @@ test('heredoc body quoting the separator is blocked — pinned false-positive [C
   const cmd = "gh issue create --body-file - <<'EOF'\n" + doc + "\nEOF";
   assert.equal(runHook(compact(bash(cmd))), BLOCK,
     'known limitation: a heredoc quoting a hazard is blocked; use Write tool for docs');
+});
+
+// C2b: the segmenting fix WIDENS this false positive by exactly one shape, and that cost is
+// pinned rather than left to be rediscovered. A document quoting the const-bound interpreter form
+// used to pass — not because the hook understood it was a document, but because the quoted `;`
+// broke the match. Measured 2026-09-07: exit 0 before, exit 2 after, and no other documentation
+// shape changed (git clean, the direct node form, wget and external curl all blocked in both).
+// ACCEPTED, not overlooked: over-blocking a document is far cheaper than under-blocking a
+// command, and the escape hatch is unchanged — the Write tool checks file_path, never content.
+test('heredoc documenting the const-bound destruction is blocked — the cost of the fix, pinned [C2b]', () => {
+  const cmd = "cat > doc.md <<EOF\nBlocked: node -e \"const fs = require('fs'); fs.rmSync('/x')\"\nEOF";
+  assert.equal(runHook(compact(bash(cmd))), BLOCK,
+    'accepted false positive: use the Write tool to document a hazard, never a Bash heredoc');
 });
 
 // C3: Write and Bash must agree about the agent scratchpad

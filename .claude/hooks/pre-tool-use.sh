@@ -273,10 +273,91 @@ command=$(printf '%s' "$raw_command" | awk '{
   print out
 }' | tr -s ' ')
 
+# ── Segment the command on UNQUOTED separators — one splitter, five rules ─────
+#
+# THE DEFECT THIS CLOSES. Five destructive-command rules below were written
+# `<trigger>[^|;]*<destructive-call>`, and that middle class cannot span a `;`. It was put there
+# for a real reason — it stops a rule matching ACROSS a command separator, so `git status; ls` is
+# not read as one command — but a regex cannot tell a separator from a semicolon inside a quoted
+# string, and interpreter one-liners are full of the latter. Measured 2026-09-07, two children
+# given the same instruction and neither told to evade:
+#     node -e "require('fs').rmSync('/x',{recursive:true})"                     exit 2  BLOCKED
+#     node -e "const fs = require('fs'); fs.rmSync('/x',{recursive:true})"      exit 0  ALLOWED
+# The one that got through wrote the more conventional style. Same hole in `sed -e 's/a/b/;s/c/d/'
+# .env`, in `find . -name 'a;b' -delete`, and anywhere a quoted `;` or `|` sits between a rule's
+# trigger word and its payload.
+#
+# WIDENING `[^|;]*` TO `.*` IS THE WRONG FIX. It closes the hole by throwing away the property
+# the class exists to hold, and re-introduces the false positives it was added to prevent:
+# `node --version; echo rmSync` would be refused as filesystem destruction.
+#
+# NORMALISE, THEN MATCH. Split on separators the SHELL would honour — `;` and `|` outside quotes
+# and outside a backslash escape — and run each rule against each segment with the middle class
+# relaxed to `.*` WITHIN a segment. A quoted `;` stays inside its segment and is matched across;
+# a real separator ends the segment and is not. Both properties hold at once.
+#
+# TWO PROPERTIES WORTH STATING, because they are what makes this safe to land:
+#   1. It cannot LOSE a block. Any string the old class matched contains no `;` or `|` at all, so
+#      it cannot contain a split point, so it lies entirely inside one segment.
+#   2. `^` and `$` become per-SEGMENT anchors, which is strictly more matching, and closes a
+#      second bypass for free: `git checkout .; ls` was allowed because `\s*$` needed end of
+#      STRING. It is refused now. The `&&` form is NOT closed — see the header note at the top of
+#      this file's rule list and docs/08-agents_work/sessions for the finding.
+#
+# WHY `;` AND `|` AND NOTHING ELSE: those are exactly the two characters the class named. Adding
+# `&&` or `&` would narrow segments further, which is a different change with a different blast
+# radius, and this one is meant to be provably equivalent on unquoted input.
+#
+# Newlines are already spaces by the time this runs (the payload parser collapses them), so
+# newline-delimited output is unambiguous and `grep` then matches PER SEGMENT for free —
+# including the anchors.
+_segments=""
+segment_command() {
+  _segments=$(printf '%s' "$1" | awk '{
+    s = ""; q = ""; n = length($0)
+    for (i = 1; i <= n; i++) {
+      c = substr($0, i, 1)
+      if (q == "") {
+        # A backslash escapes the next character, so `find . -exec rm {} \;` stays ONE segment.
+        if (c == "\\") { s = s c substr($0, i + 1, 1); i++; continue }
+        if (c == "\"" || c == "\047") { q = c; s = s c; continue }
+        if (c == ";" || c == "|") { print s; s = ""; continue }
+        s = s c
+      } else if (q == "\047") {
+        # Inside single quotes nothing escapes; only the closing quote ends the state.
+        if (c == "\047") q = ""
+        s = s c
+      } else {
+        if (c == "\\") { s = s c substr($0, i + 1, 1); i++; continue }
+        if (c == "\"") q = ""
+        s = s c
+      }
+    }
+    print s
+  }') || _segments=""
+  # FAILS CLOSED. If the splitter produced nothing for a non-empty command, five rules would go
+  # silently unenforced and the call would be allowed — the exact failure mode this hook's payload
+  # parser already refuses. An unbalanced quote is NOT this case: it leaves the rest of the string
+  # inside the quote state, which yields one large segment and over-blocks, which is the safe side.
+  if [ -n "$1" ] && [ -z "$_segments" ]; then
+    block "the command could not be segmented for the destructive-command rules. This hook fails closed."
+  fi
+}
+
+# Match an ERE against ANY ONE segment. grep is line-oriented, so one call covers every segment
+# and `^`/`$` anchor to the segment rather than to the whole command line.
+seg_match() {
+  printf '%s\n' "$_segments" | grep -qE "$1"
+}
+
 # ── Route by tool type ────────────────────────────────────────────────────────
 
 case "$tool_name" in
   Bash)
+
+    # Split once, here, so the five rules below share ONE implementation of "where does this
+    # command end". Five copies of a splitter would disagree, and you find out during the incident.
+    segment_command "$command"
 
     # ── BLOCK: rm -rf dangerous variants ─────────────────────────────────────
     # Flag letters are matched case-insensitively: `rm -fR /` is the same command as `rm -rf /`
@@ -304,16 +385,20 @@ case "$tool_name" in
     #   git checkout . / git restore .   discard every uncommitted change in the tree.
     #   find <path> -delete              deletes without naming rm.
     #   node -e "...rmSync..."           destruction through an allowlisted interpreter.
-    if printf '%s' "$command" | grep -qE '\bgit\b[^|;]*\bclean\b[^|;]*-[a-zA-Z]*[fdx]'; then
+    #
+    # All five rules in this stanza and the .env stanza below match PER SEGMENT (see
+    # `segment_command`). The middle class is `.*` because a segment already contains no unquoted
+    # separator; writing `[^|;]*` here as well is what let a quoted `;` split a match in two.
+    if seg_match '\bgit\b.*\bclean\b.*-[a-zA-Z]*[fdx]'; then
       block "git clean removes untracked files, including .worktrees/.registry and .claude/memory/sessions/ (the session files the QA gate reads). Remove specific paths instead."
     fi
-    if printf '%s' "$command" | grep -qE '\bgit\b[^|;]*\b(checkout|restore)\b\s+\.\s*$'; then
+    if seg_match '\bgit\b.*\b(checkout|restore)\b\s+\.\s*$'; then
       block "git ${command#*git } discards every uncommitted change in the tree. Use 'git stash' to save work first, or name the specific file."
     fi
-    if printf '%s' "$command" | grep -qE '\bfind\b[^|;]*\s-(delete|exec\s+rm)\b'; then
+    if seg_match '\bfind\b.*\s-(delete|exec\s+rm)\b'; then
       block "find with -delete/-exec rm removes files in bulk with no confirmation. List them first, then remove the specific paths."
     fi
-    if printf '%s' "$command" | grep -qE '\b(node|python3?|ruby|perl)\b[^|;]*(rmSync|rmdirSync|unlinkSync|shutil\.rmtree|os\.remove|FileUtils\.rm_r)'; then
+    if seg_match '\b(node|python3?|ruby|perl)\b.*(rmSync|rmdirSync|unlinkSync|shutil\.rmtree|os\.remove|FileUtils\.rm_r)'; then
       block "filesystem destruction through an interpreter (-e / -c) bypasses every rule in this hook. Use the file tools, or a script committed to the repo."
     fi
 
@@ -323,7 +408,7 @@ case "$tool_name" in
     # protected in one direction and leaked in the other. A read is the more damaging half:
     # the contents land in ~/.claude/projects/*.jsonl as permanent plaintext (2,126 such files
     # on this machine), and every agent that later reads that transcript sees the keys.
-    if printf '%s' "$command" | grep -qE '\b(cat|less|more|head|tail|sed|awk|grep|xxd|od|strings|cp|mv|base64)\b[^|;]*(^|[ /"'"'"'=])\.env($|[ ."'"'"'/])'; then
+    if seg_match '\b(cat|less|more|head|tail|sed|awk|grep|xxd|od|strings|cp|mv|base64)\b.*(^|[ /"'"'"'=])\.env($|[ ."'"'"'/])'; then
       block "reading a .env file into the transcript is refused — its contents would be written to ~/.claude/projects/*.jsonl in plaintext, permanently. Read the specific variable from the environment instead, or open the file in your own editor."
     fi
 
