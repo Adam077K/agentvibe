@@ -979,7 +979,7 @@ anything not in the inputs marked UNVERIFIED.
 
 ---
 
-## L · Mechanisms decided by the orchestrator in the rethink round (O1–O80), the fixer round (O81–O127) and the research close (O128–O130)
+## L · Mechanisms decided by the orchestrator in the rethink round (O1–O80), the fixer round (O81–O127), the research close (O128–O130) and the sandbox panel (O131)
 
 **These are not founder decisions and they are not §A rows.** Each follows from a rule already on this page, a
 measured fact, or a contradiction inside v2 — the class DECISIONS §10 and §12 settled without the founder.
@@ -997,7 +997,7 @@ this branch today.
 **Two columns on every row since 2026-09-06 (v96, O105).** `class` is `kernel` (direction · record · truth ·
 taste), `adapter` (naming the vendor surface) or `refuse`; `vendor_wins_if:` is the surface whose arrival forces
 Delete (`—` where none is conceivable). O1–O80: C-strategist §2 C3's sort where it names the row **(C)**, else
-**(NEW)**. **L.4** (O81–O127) carries `wins_if:` too, and so does **L.5** (O128–O130).
+**(NEW)**. **L.4** (O81–O127) carries `wins_if:` too, and so do **L.5** (O128–O130) and **L.6** (O131). ~~Both lines above read *(O128–O130)* as the last range~~ **(amended 2026-09-07: the heading was one row behind its own table — L.6 and O131 landed in fold 3 and neither line moved. Re-derive, never quote: `grep -c '^| \*\*O[0-9]' SPINE.md` → 131.)**
 
 **A `DEPENDS-ON-R` whose R has been answered does not become `ADOPTED` by that fact alone.** The research
 close of 2026-09-07 answered four of them and each resolved differently: **R22** made O40 conditional on a
