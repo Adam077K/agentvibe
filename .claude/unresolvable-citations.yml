@@ -84,3 +84,91 @@ citations:
   - id: c-lens-independence-unbacked
     scope: none
     why: 'MODEL-DIVERSITY.md §11, "claims to record when the index is next regenerated" — not yet recorded'
+
+  # ── ADDED 2026-09-07 · the final-v2 review round ────────────────────────────────────────────
+  # Four lanes closed their files with a "claims this lane emits / would register" table, in
+  # backticked prose, ahead of ledger entries none of them could create — two say so in the
+  # heading ("proposed; nothing appended ... this lane holds no `claim-append`"). That is 19
+  # citations of ids that do not exist, and it turned `ledger lint` and `test:ledger` red.
+  #
+  # TWO of the nineteen became real project claims, in
+  # docs/08-agents_work/sessions/2026-09-07-builder-ledger-citations.md, because each has a
+  # deterministic check over this repository's own live configuration:
+  # c-night-child-carries-no-project-hooks and c-allowwrite-only-widens. The seventeen below
+  # did not, and the reason is the same shape for most of them: the measurement was a CELL —
+  # a live `claude` child, a locked keychain, a provider account — and the only re-check
+  # spawns one. `ledger verify` runs on every `npm run check`, so a claim like that would
+  # spend money and a model call per check run, and would be nondeterministic besides. The
+  # rest are framing about the unratified final-v2 plan, whose verifiers name files
+  # (roster.yml, charter.yml, keel/shared/routing.yml, bin/check-stores) that do not exist.
+  #
+  # None of the seventeen is a defect in the lane that wrote it. A review finding recorded in
+  # a review file is doing its job there; what it is not, yet, is a claim anything can resolve.
+
+  - id: c-roster-shell-count-drifted
+    scope: none
+    why: L2 lane framing about the unratified final-v2 plan — the verifier it names is a check over roster.yml, which does not exist in this repo
+
+  - id: c-charter-field-count-three-ways
+    scope: none
+    why: L2 lane framing — the verifier it names is bin/check-stores against charter.yml, and neither exists in this repo
+
+  - id: c-agents-have-no-expiry
+    scope: none
+    why: L2 lane framing about the plan fifteen-agent roster and a lint for valid_until in agent frontmatter — neither the roster nor the lint exists
+
+  - id: c-trust-score-has-no-consumer
+    scope: none
+    why: L2 lane framing about plan section 11.10 — there is no scores.jsonl in this repo to grep for a reader
+
+  - id: c-analyst-band-contradiction
+    scope: none
+    why: L2 lane framing about a planned analyst role — no analyst agent file and no band table exist here to lint
+
+  - id: c-l7-family-provenance-absent
+    scope: none
+    why: L7 lane framing, and its own named falsifier is already met — parts/06-a-run.md declares maker_family and checker_family, added by fix round D on the same day L7 was written
+
+  - id: c-l7-routing-has-three-homes
+    scope: none
+    why: L7 lane framing about SPINE prose, whose named falsifier is a keel/shared/routing.yml that does not exist — no deterministic check can be written over it
+
+  - id: c-l7-rung2-unmeasured
+    scope: none
+    why: L7 lane framing — an asserted absence in an event log that has never run, so nothing in this repo resolves it either way
+
+  - id: c-l7-calibration-set-expires
+    scope: none
+    why: L7 lane framing about two unratified plan rows (v18 and v19), not a fact about anything this repo runs
+
+  - id: c-l7-cloud-cancel-unknown
+    scope: none
+    why: L7 lane framing — an absence of vendor documentation, which would need a source claim with a URL and a quote rather than a command, and the lane held no fetch
+
+  - id: c-keychain-lock-fails-fast
+    scope: none
+    why: measured once by close-C R3 kc2.py against a locked login keychain — re-running it needs an interactively locked keychain no check run can guarantee, and the script is not in this repo
+
+  - id: c-max-budget-binds-no-account
+    scope: none
+    why: night-safety proposes it while stating the lane did not check which providers offer a spend cap — its own largest unverified premise, not a measurement
+
+  - id: c-tool-absence-is-the-only-unwalkable-control
+    scope: none
+    why: proposed as scope global with verified_by judge and no panel — this repo already carries three empty-panel judge claims that resolve unresolved forever, and a fourth adds a would_block and no knowledge
+
+  - id: c-restricted-removes-bash
+    scope: none
+    why: measured in review/restricted-hook-cell.md cell B (34 built-in tools to 29, no Bash) — the only re-check spawns a live claude child, and ledger verify runs on every npm run check
+
+  - id: c-project-tier-binds-only-the-floor
+    scope: none
+    why: measured in close-C R28 cells D and E and settled by review/restricted-hook-cell.md — re-running it spawns a live claude child, so no step of this suite can resolve it
+
+  - id: c-reversibility-compiles-not-enforces
+    scope: none
+    why: proposed as scope global with verified_by judge and no panel, and it is a judgement about two runtimes rather than a fact any command checks
+
+  - id: c-restricted-composes-with-settings
+    scope: none
+    why: measured in review/restricted-hook-cell.md cells C and D2 — like c-restricted-removes-bash, the only re-check spawns a live claude child
