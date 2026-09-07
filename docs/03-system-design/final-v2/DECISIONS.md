@@ -520,9 +520,19 @@ children confirmed none was left running.**
 | G4 | *"i want the system to use this to make the output anderstanable"* — `attention-span` | verbatim | **v107, `class: originated` on the intent.** The implementation route is not originated and is reopenable |
 
 **The standing instruction from §28 was applied twice and is working.** G1 and G3 reached the founder because
-they turn on appetite for risk and on their own account. **The MCP credential-label correction did not** — two
+they turn on appetite for risk and on their own account. ~~**The MCP credential-label correction did not** — two
 servers are marked as holding no credentials while holding credentials, and correcting a false label is not a
-judgement call. It is recorded as a plan correction; the live policy file is untouched, per G2.
+judgement call.~~ **(corrected 2026-09-07, by fold 3 against the file itself — the orchestrator overstated this
+and it is the same defect this round found twice elsewhere: a lane's two accurate facts compressed into one
+inaccurate sentence.)** **What `.claude/mcp-policy.json` actually says:** the rule is **scope, not server name**.
+It governs the two servers this repo configures, `playwright` and `claim-append`; **neither holds a credential,
+which is precisely why the policy blocks nothing.** The credential-holding servers are **user-scope and absent
+from the policy entirely**, so there is no false label on them to correct — and the file **states that limit
+about itself**, unprompted: *"absent means no project-scope server is governed … That is a stated limit, not a
+hidden one."* **The gap is one of scope, not of labelling**, and it is a wider gap than a wrong label would have
+been. One arguable label survives, and it is one server: `playwright` is `credentialed: false` in a file whose
+own `_deny_why` records that the browser carries live session cookies. Recorded as a plan correction; the live
+policy file is untouched, per G2. SPINE §M **W55** carries the measured version.
 
 ### What falsified live plan text
 
