@@ -1003,7 +1003,7 @@ this branch today.
 **Two columns on every row since 2026-09-06 (v96, O105).** `class` is `kernel` (direction · record · truth ·
 taste), `adapter` (naming the vendor surface) or `refuse`; `vendor_wins_if:` is the surface whose arrival forces
 Delete (`—` where none is conceivable). O1–O80: C-strategist §2 C3's sort where it names the row **(C)**, else
-**(NEW)**. **L.4** (O81–O127) carries `wins_if:` too, and so do **L.5** (O128–O130) and **L.6** (O131). ~~Both lines above read *(O128–O130)* as the last range~~ **(amended 2026-09-07: the heading was one row behind its own table — L.6 and O131 landed in fold 3 and neither line moved. Re-derive, never quote: `grep -c '^| \*\*O[0-9]' SPINE.md` → 131.)**
+**(NEW)**. **L.4** (O81–O127) carries `wins_if:` too, and so do **L.5** (O128–O130) and **L.6** (O131). ~~Both lines above read *(O128–O130)* as the last range~~ **(amended 2026-09-07: the heading was one row behind its own table — L.6 and O131 landed in fold 3 and neither line moved. Re-derive, never quote — and note that **this very sentence carried a frozen `→ 131` and went stale within the day**, which is the defect the rule exists against, committed by the person writing the rule down. The command is the durable half: `grep -c '^| \*\*O[0-9]' SPINE.md`. **L.7** (O132–O135) landed after it.)**
 
 **A `DEPENDS-ON-R` whose R has been answered does not become `ADOPTED` by that fact alone.** The research
 close of 2026-09-07 answered four of them and each resolved differently: **R22** made O40 conditional on a

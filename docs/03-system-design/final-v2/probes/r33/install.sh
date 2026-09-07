@@ -18,7 +18,8 @@
 #
 # NOTE ON THE ACL, because it is the whole point: the item is created WITHOUT
 # `-A`, so its access list trusts only the creating binary. That is the
-# realistic case. If the probe logs rc=51 (errSecInteractionNotAllowed) or a
+# realistic case. If the probe logs a non-zero rc -- measured as rc=152 on this
+# machine, twice, which is errSecInteractionNotAllowed -- or a
 # prompt appears, that IS the finding — it means a scheduled job cannot reach a
 # credential unattended, which decides how the night is allowed to authenticate.
 
