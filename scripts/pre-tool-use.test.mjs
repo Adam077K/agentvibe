@@ -134,6 +134,109 @@ for (const command of MUST_ALLOW) {
   })
 }
 
+// ── rm -r -f: the target must be shown INSIDE the project, not merely un-enumerated ──────────
+//
+// The denylist this replaces required a literal `/`, `~`, `../`, `*`, `/tmp/*`, `/var`, `/etc`,
+// `/home` or `/usr` IMMEDIATELY after the flags. Measured 2026-09-07 against the pre-fix hook:
+//
+//   rm -rf ~        exit 2  BLOCKED   <- the control: the rule fires, so the probe is not broken
+//   rm -rf $HOME    exit 0  ALLOWED   <- the same directory, spelled the way a script spells it
+//   rm -rf "/"      exit 0  ALLOWED
+//
+// Same failure as the separator bypass one layer up: an enumeration of spellings, defeated by the
+// conventional spelling. `rm -rf "$BUILD_DIR"` is what a cleanup script writes by default. The test
+// is inverted rather than the list extended, because a denylist of dangerous paths can never be
+// complete and an allowlist of one safe region can.
+//
+// 14 of these were red before the change: 12 in the block direction and 2 in the ALLOW direction —
+// an absolute path inside the project root was refused, because `\/[^a-zA-Z]?` has an OPTIONAL
+// class so a bare `/` matched every absolute path. That is why the denylist above needed its one
+// character changed as well; without it the inverted rule's absolute branch would be unobservable.
+
+const realRepo = fs.realpathSync(REPO)
+const scratchRoot = `/private/tmp/claude-${process.getuid()}`
+
+const RM_MUST_BLOCK = [
+  // Red before the change — the founder-facing gap.
+  ['rm -rf $HOME', 'a variable naming the home directory — the conventional spelling of `~`'],
+  ['rm -rf ${HOME}', 'the braced form of the same'],
+  ['rm -rf "$BUILD_DIR"', 'any variable at all: the hook cannot know what it expands to'],
+  ['rm -rf "$PWD/build"', 'a variable prefix does not become safe by having a safe suffix'],
+  ['rm -rf $(pwd)/build', 'command substitution is unresolvable for the same reason'],
+  ['rm -rf "/"', 'quoting the root defeated a class that expected a bare slash'],
+  ["rm -rf '/'", 'single quotes likewise'],
+  ['rm --recursive --force /etc', 'long-form flags were not matched by the trigger at all'],
+  ['rm -rf .', 'the cwd itself: `.` resolves TO the base, not to somewhere inside it'],
+  ['rm -rf ; ls', 'a bare invocation stopped being caught as soon as anything followed it'],
+  ['rm -rf node_modules /opt/x', 'one local target does not license a second, non-local one'],
+  ['rm -rf build/../../sibling', 'a path that climbs out through a local-looking prefix'],
+  ['cd /etc && rm -rf conf.d', 'a `cd` this hook cannot place makes a relative target unjudgeable'],
+  ['cd /etc; rm -rf conf.d', 'the same across a real separator — the `cd` still counts'],
+  // Already blocked before; pinned so the inversion cannot quietly drop them.
+  ['rm -rf /', 'the catastrophic literal — still refused by the denylist arm, at end of string'],
+  ['rm -rf ~', 'the literal home directory'],
+  ['rm -rf *', 'a bare glob is bounded by nothing'],
+  ['rm -rf /usr/local/lib', 'an absolute path outside the project'],
+  ['bash -c "rm -rf /"', 'nested in a string: the tokeniser cannot see it, the denylist arm can'],
+  // The glob carve-out is narrow, and these are the shapes it does NOT cover.
+  ['rm -rf ../*', 'a glob whose parent climbs out'],
+  ['rm -rf build/*/x', 'a glob outside the final component can reach anywhere'],
+  ["find . -name '*.tmp' | xargs rm -rf", 'fed by a pipe: no target this hook can name'],
+]
+
+for (const [command, why] of RM_MUST_BLOCK) {
+  test(`BLOCKS rm -r -f — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `rm -r -f reached a target that was never shown to be inside the project (${command})`)
+  })
+}
+
+// THE FALSE-POSITIVE BUDGET. An inversion that refuses ordinary cleanup is a control people route
+// around, which is worse than no control. Every one of these is real cleanup an agent writes.
+const RM_MUST_ALLOW = [
+  ['rm -rf node_modules', 'the single most common cleanup command in this stack'],
+  ['rm -rf ./build', 'explicit relative'],
+  ['rm -rf dist/', 'trailing slash'],
+  ['rm -rf .next', 'a hidden directory is not a dotfile-shaped hazard'],
+  ['rm -rf dist coverage', 'several local targets in one call'],
+  ['rm -rf node_modules && npm install', 'the operand list must stop at `&&`, not swallow it'],
+  ['rm -rf coverage 2>/dev/null', 'and at a redirection'],
+  ['cd build && rm -rf cache', 'a `cd` that stays inside leaves relative targets judgeable'],
+  ['rm -rf build/*', 'a glob confined to the final component is bounded by its parent'],
+  ['rm -rf node_modules/.cache/*', 'the same, nested'],
+  ['rm -rf -- weird-dir', 'end-of-options'],
+  ['rm -f /tmp/scratch-file.txt', 'no -r, so this rule never fires — the outer gate is unchanged'],
+  ['rm -r somedir', 'no -f, likewise'],
+  ['rm somefile.txt', 'plain rm is not this rule’s business'],
+  [`git commit -m 'cleanup: rm -rf build'`, 'a mention inside a quoted argument is not an invocation'],
+  // The two ALLOW-direction regressions the one-character narrowing fixes. Red before the change.
+  [`rm -rf ${realRepo}/build`, 'an absolute path INSIDE the project root — refused before this change'],
+  [`rm -rf ${scratchRoot}/tmpdir`, 'the agent scratchpad, which Bash may already write — refused before'],
+]
+
+for (const [command, why] of RM_MUST_ALLOW) {
+  test(`ALLOWS ordinary cleanup — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `the rm inversion refused ordinary cleanup; the false-positive budget is blown (${command})`)
+  })
+}
+
+// THE COST, PINNED RATHER THAN LEFT TO BE REDISCOVERED. These were allowed before and are refused
+// now. Each is an unresolvable expansion, which is exactly what the inversion exists to refuse —
+// but `$TMPDIR` is the one that will bite, because the scratchpad is where agents are told to work.
+// The remedy is not to weaken this: the literal scratchpad path is ALLOWED (see RM_MUST_ALLOW),
+// so the fix at a call site is to write the path rather than the variable.
+const RM_ACCEPTED_COST = [
+  ['rm -rf "$TMPDIR/x"', 'the scratchpad by variable — write /private/tmp/claude-<uid>/x instead'],
+  ['cd $HOME && rm -rf project/build', 'a `cd` through a variable'],
+  ['for d in a b; do rm -rf $d; done', 'a loop variable is unresolvable by construction'],
+]
+
+for (const [command, why] of RM_ACCEPTED_COST) {
+  test(`BLOCKS, accepted cost — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK,
+      'this is a deliberate refusal, not a bug: if it is relaxed, say why in the same commit')
+  })
+}
+
 // ── the separator bypass: a QUOTED `;` is not a command separator ────────────────────────────
 //
 // Five rules — git clean, git checkout/restore ., find -delete, interpreter destruction, and

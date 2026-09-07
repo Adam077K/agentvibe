@@ -365,13 +365,223 @@ case "$tool_name" in
     # were literal lowercase.
     if printf '%s' "$command" | grep -qE 'rm\s+-[a-zA-Z]*[rR][a-zA-Z]*[fF]|rm\s+-[a-zA-Z]*[fF][a-zA-Z]*[rR]'; then
       # Specifically block rm -rf targeting /, ~, *, /tmp broad, etc.
-      if printf '%s' "$command" | grep -qE 'rm\s+(-[a-zA-Z]+\s+)*(\/[^a-zA-Z]?|~|\.\.\/|\*|\/tmp\/?\*|\/var|\/etc|\/home|\/usr)'; then
+      #
+      # ONE CHARACTER CHANGED HERE, AND IT IS THE ONLY EDIT TO THIS STANZA: `\/[^a-zA-Z]?` became
+      # `\/([^a-zA-Z]|$)`. The class was OPTIONAL, so a bare `/` matched and this arm refused EVERY
+      # absolute path — including one inside the project. That made it impossible for the inverted
+      # rule below to allow `rm -rf $PROJECT_ROOT/build`, so its absolute-path branch would have
+      # been unobservable: a guarantee no reader could test, which is worse than no guarantee.
+      # The `|$` keeps the catastrophic literal `rm -rf /` refused BY THIS ARM at end of string,
+      # which the naive drop of `?` would have handed entirely to the new rule. Verified both ways
+      # in scripts/pre-tool-use.test.mjs. `/opt/data` and `/Users/…` now fall through to the
+      # inverted rule, which refuses them for being outside the root rather than for starting
+      # with a slash — same verdict, stated for the right reason.
+      if printf '%s' "$command" | grep -qE 'rm\s+(-[a-zA-Z]+\s+)*(\/([^a-zA-Z]|$)|~|\.\.\/|\*|\/tmp\/?\*|\/var|\/etc|\/home|\/usr)'; then
         block "rm -rf on a dangerous path. Use targeted removal instead: rm -f <specific-file>."
       fi
       # rm -rf with no path (bare) or trailing space = block
       if printf '%s' "$command" | grep -qE 'rm\s+-rf\s*$'; then
         block "Bare rm -rf with no path. Specify the exact file or directory."
       fi
+    fi
+
+    # ── BLOCK: rm -r -f whose target is not demonstrably INSIDE the project ──
+    #
+    # THE STANZA ABOVE IS A DENYLIST OF SPELLINGS, AND IT CANNOT BE COMPLETED. Its alternation
+    # requires a literal `/`, `~`, `../`, `*`, `/tmp/*`, `/var`, `/etc`, `/home` or `/usr`
+    # IMMEDIATELY after the flag cluster. `$` and `"` are not in that set, so measured 2026-09-07:
+    #
+    #     rm -rf ~          exit 2   BLOCKED   <- the rule fires, so this is not a broken probe
+    #     rm -rf $HOME      exit 0   ALLOWED   <- the same directory, spelled the way a script spells it
+    #     rm -rf "/"        exit 0   ALLOWED
+    #     rm -rf ${HOME}    exit 0   ALLOWED
+    #
+    # `rm -rf /opt/data` was FIRST WRITTEN HERE as a fourth ALLOWED row and that was wrong —
+    # measured at exit 2 on the unmodified hook. The optional class in `\/[^a-zA-Z]?` means a bare
+    # `/` matches, so that arm refused every absolute path. Kept as a correction rather than
+    # deleted: the denylist's real hole is unquoted-and-unvariabled RELATIVE and expanded forms,
+    # not "paths it forgot to list", and getting that wrong would have aimed the fix at the wrong
+    # thing.
+    #
+    # That is the SAME failure as the separator bypass this file was edited to close, one layer up:
+    # an enumeration of spellings, defeated by the conventional spelling. `rm -rf "$BUILD_DIR"` is
+    # what a cleanup script writes by default — no evasion, no unusual style.
+    #
+    # SO THE TEST IS INVERTED, and inversion rather than a longer denylist is the whole point.
+    # A denylist of dangerous paths can never be complete; an allowlist of one safe region can.
+    # `rm` with BOTH -r and -f is refused unless EVERY target can be SHOWN to lie strictly inside
+    # the project root or the agent scratchpad. Anything the hook cannot resolve — `$VAR`, a glob,
+    # a backtick, `~` — is refused, because the hook cannot know what it expands to and guessing is
+    # exactly how the denylist above came to allow `rm -rf $HOME`.
+    #
+    # THIS IS PURELY ADDITIVE. The denylist above is left byte-for-byte intact and still runs first,
+    # so nothing that blocks today stops blocking, and this rule can only ADD refusals. That matters
+    # because the tokeniser below cannot see inside `bash -c "rm -rf /"` — the old whole-string regex
+    # can, and still does. Two overlapping rules are the right shape here precisely because their
+    # blind spots are different.
+    #
+    # WHAT IT COSTS, MEASURED NOT ASSUMED — see scripts/pre-tool-use.test.mjs:
+    #   refused now: `rm -rf "$TMPDIR/x"` · `rm -rf "$PWD/build"` · `rm -rf $(pwd)/build` ·
+    #                `cd $HOME && rm -rf project/build` · `for d in a b; do rm -rf $d; done`
+    #                — every one an unresolvable expansion, which is the whole point ·
+    #                `rm -rf .` (resolves TO the base, not inside it) · `find … | xargs rm -rf`
+    #                (no target the hook can name) · `cd /etc && rm -rf conf.d`
+    #   still allowed: `rm -rf node_modules` · `./build` · `dist/` · `.next` · `dist coverage` ·
+    #                `rm -rf build/*` and `node_modules/.cache/*` (glob confined to the final
+    #                component) · `rm -rf x && npm install` · `rm -rf coverage 2>/dev/null` ·
+    #                `cd build && rm -rf cache` · any absolute path under the project root or the
+    #                scratchpad · `rm -f <anything>` (no -r, so this rule never fires)
+    #   AND TWO PRE-EXISTING FALSE POSITIVES ARE FIXED, not introduced: `rm -rf $PROJECT_ROOT/build`
+    #                and `rm -rf /private/tmp/claude-<uid>/x` were refused before this change.
+    #
+    # STATED LIMIT: a relative target is judged against wherever the command runs, and the shell's
+    # working directory is NOT visible to a PreToolUse hook. A `cd` in the SAME command is caught.
+    # A `cd` performed in a PREVIOUS tool call is not, and cannot be without a cwd oracle. That
+    # residual is no worse than the denylist it replaces, which also judged `rm -rf etc` local.
+    if printf '%s' "$command" | grep -qE '\brm\b'; then
+      _rm_root=$(cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null && pwd -P) || _rm_root=""
+      [ -n "$_rm_root" ] || block "the project root could not be resolved, so no rm target can be shown to be inside it. This hook fails closed."
+      # Segments come from the ONE splitter above — this rule does not get its own idea of where a
+      # command ends. Passed by environment rather than stdin so the python arrives as a heredoc and
+      # needs no shell escaping; a backslash or a $ mangled by bash is how the SSRF fix broke once.
+      _rm_verdict=$(
+        _SEGMENTS="$_segments" _ROOT="$_rm_root" _SCRATCH="/private/tmp/claude-${UID:-$(id -u 2>/dev/null)}" \
+        python3 <<'PYEOF'
+import os, re, shlex
+
+root = os.path.normpath(os.environ.get('_ROOT', ''))
+scratch = os.path.normpath(os.environ.get('_SCRATCH', ''))
+segments = os.environ.get('_SEGMENTS', '').split('\n')
+
+def out(s):
+    print(s)
+    raise SystemExit(0)
+
+# Characters whose value this hook cannot know. A target carrying one is UNRESOLVED, never local:
+# $HOME, `pwd`, ~ and $(…) are precisely how the denylist above came to allow a home-directory wipe.
+EXPAND = set('$`~')
+# Glob characters are treated separately, and NOT as automatically unresolved. Refusing every glob
+# also refuses `rm -rf build/*`, which is ordinary cleanup, and a control people route around is
+# worse than no control. A glob confined to the FINAL path component can only expand to children of
+# its parent -- `*` never matches `.` or `..` -- so if that parent is provably local, every
+# expansion is. A glob anywhere else (`*`, `../*`, `build/*/x`) can reach outside and is refused.
+# CAVEAT, stated rather than discovered: if the parent is a symlink pointing out of the project,
+# the expansion follows it. This hook is a guardrail against accident, not containment.
+GLOB = set('*?[]')
+# A token that begins a redirection or another command ends the operand list. Without this,
+# `rm -rf build && npm install` would read `&&`, `npm` and `install` as targets and refuse a
+# completely ordinary line.
+STOP = re.compile(r'^(\d*(>>?|<)|&|\||;|\(|\))')
+
+def unresolved(t):
+    return (not t) or any(c in EXPAND for c in t)
+
+def glob_base(t):
+    """The part of a target that must be shown local. For `build/*` that is `build`, because the
+    glob is confined to the final component. For `*`, `../*` and `build/*/x` it is the target
+    itself, which still carries a glob and is therefore refused by the caller."""
+    head, sep, tail = t.rpartition('/')
+    if sep and any(c in GLOB for c in tail) and not any(c in GLOB for c in head):
+        return head if head else '/'
+    return t
+
+def abs_inside(t):
+    cand = os.path.normpath(t)
+    for base in (root, scratch):
+        if base and base != os.sep and cand.startswith(base + os.sep):
+            return True
+    return False
+
+def rel_inside(t):
+    # '/B' is a sentinel base. '.' normalises TO the base rather than under it, so `rm -rf .`
+    # is refused; 'a/../../b' escapes and is refused; 'dist/' and './build' resolve under it.
+    return os.path.normpath(os.path.join('/B', t)).startswith('/B' + os.sep)
+
+toklists = []
+for seg in segments:
+    try:
+        toklists.append(shlex.split(seg, posix=True))
+    except ValueError:
+        out('BLOCK|the command could not be tokenised (unbalanced quote), so no rm target could be shown to lie inside the project.')
+
+# A `cd` the hook cannot place makes every RELATIVE target unjudgeable for the whole command --
+# `cd /etc; rm -rf conf.d` splits into two segments and the `cd` must still count against the rm.
+# Bare `cd` (which goes to $HOME) and `cd -` (the previous directory) are both unplaceable.
+relative_ok = True
+for toks in toklists:
+    for i, t in enumerate(toks):
+        if t in ('cd', 'pushd'):
+            tgt = None
+            for u in toks[i + 1:]:
+                if STOP.match(u):
+                    break
+                if u.startswith('-') and len(u) > 1:
+                    continue
+                tgt = u
+                break
+            if tgt is None or tgt == '-' or unresolved(tgt) or not (
+                    abs_inside(tgt) if os.path.isabs(tgt) else rel_inside(tgt)):
+                relative_ok = False
+
+for toks in toklists:
+    i = 0
+    while i < len(toks):
+        if toks[i] != 'rm' and not toks[i].endswith('/rm'):
+            i += 1
+            continue
+        recursive = force = endopts = False
+        operands = []
+        j = i + 1
+        while j < len(toks):
+            u = toks[j]
+            if STOP.match(u):
+                break
+            if not endopts and u == '--':
+                endopts = True
+            elif not endopts and u.startswith('--'):
+                if u[2:] == 'recursive':
+                    recursive = True
+                elif u[2:] == 'force':
+                    force = True
+            elif not endopts and u.startswith('-') and len(u) > 1:
+                for ch in u[1:]:
+                    if ch in 'rR':
+                        recursive = True
+                    elif ch == 'f':
+                        force = True
+            else:
+                operands.append(u)
+            j += 1
+        # Only `rm` carrying BOTH -r and -f reaches the strict test. `rm -f file` is untouched.
+        if recursive and force:
+            if not operands:
+                out('BLOCK|rm -r -f names no target this hook can read (a bare invocation, or one fed by a pipe such as `xargs rm -rf`). Name the exact directory.')
+            for t in operands:
+                if unresolved(t):
+                    out('BLOCK|rm -r -f "' + t + '" carries a value this hook cannot resolve (a variable, a command substitution or ~), so it cannot be shown to be inside the project. Write the path literally.')
+                base = glob_base(t)
+                if any(c in GLOB for c in base):
+                    out('BLOCK|rm -r -f "' + t + '" carries a glob outside its final path component, so its expansion is not bounded by any directory this hook can name.')
+                if os.path.isabs(base):
+                    if not abs_inside(base):
+                        out('BLOCK|rm -r -f "' + t + '" is an absolute path outside the project root (' + root + ') and outside the agent scratchpad.')
+                else:
+                    if not relative_ok:
+                        out('BLOCK|rm -r -f "' + t + '" follows a `cd` this hook cannot place, so the target cannot be shown to be inside the project.')
+                    if not rel_inside(base):
+                        out('BLOCK|rm -r -f "' + t + '" does not resolve to a path strictly inside the directory it runs in.')
+        i = max(j, i + 1)
+
+out('ALLOW|')
+PYEOF
+      ) || block "the rm target check could not be evaluated — refusing. This hook fails closed."
+      case "$_rm_verdict" in
+        ALLOW*) : ;;
+        BLOCK*) block "${_rm_verdict#BLOCK|}
+   rm -r -f is refused unless every target is demonstrably inside the project root or the agent
+   scratchpad. A denylist of dangerous paths can never be complete; this is the allowlist side." ;;
+        *)      block "the rm target check returned nothing readable — refusing. This hook fails closed." ;;
+      esac
     fi
 
     # ── BLOCK: destruction that never spells "rm" ────────────────────────────
