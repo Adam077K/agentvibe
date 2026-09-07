@@ -4,6 +4,10 @@
 Posture in one line: **the only lane with a shell — turn the four untried settings into facts, or
 record honestly that they stayed untried.***
 
+> **Round 2 appended as §8 after PROBE REDIRECT 1.** §8 extends §2 and **supersedes §5 R4**.
+> `allowLocalBinding` does more than §2 measured; `sandbox.workspace` is a dead end; two further
+> settings paths are closed. Read §8 before acting on §5.
+
 **All four are closed. Two came back negative, two positive, and one of the positives contradicts a
 standing claim in `CLAUDE.md`.** A fifth finding nobody asked for is the most important thing in this
 file, and it is in §0.
@@ -291,3 +295,153 @@ exposed to that — exit codes, `errno 1`, HTTP 403 vs 401 vs 405, a canary stri
 and I have given the cell name for every one so any reader can re-run them. The *interpretation* is
 single-family throughout, and §4 is a live example of why that matters: my first hypothesis about the
 Codex TLS failure was wrong, and only a control cell caught it.
+
+---
+
+# 8 · Round 2 — PROBE REDIRECT 1
+
+*Added after the lane's first return. The lead redirected probe #1 as aimed at the wrong OS and named
+two new targets. **§8 extends §2 and supersedes §5 R4**, which understated what `allowLocalBinding`
+does. Round-2 cost: 7 more `claude -p` children (25 in total for the lane) and one free control run in
+the lane's own shell.*
+
+**On the redirect itself: it and this lane converged independently on probe #1.** The lead read the
+vendor docs; §1 read the shipped binary and ran the cells. Both landed on Linux-only, for
+non-overlapping reasons — the docs say *"Run the Linux sandbox inside an unprivileged container"*, and
+the binary hands the key only to the bubblewrap builder while the Seatbelt builder does not accept the
+parameter. **It was also tried on macOS despite that** (`C7_weaker_defaultpm`) and failed identically
+to its control. So the long shot was taken, and it missed. Nothing to report loudly.
+
+## 8.1 · `network.allowLocalBinding` does MORE than documented — both directions, all depths
+
+One key, one cell, five readouts. `F1_control` is identical but for the key; `F3`, `F4` and `F5` are
+three further negative controls carrying the same probe. `READ_CANARY=DENIED` in `F1`/`F2`/`F3` proves
+the sandbox was armed and the settings file in force.
+
+| probe | `F1_control` (no key) | `F2_localbinding` (`allowLocalBinding: true`) |
+|---|---|---|
+| `BIND_TCP_D1` — direct bind | `DENIED:PermissionError:1` | **`BIND_OK:60487`** |
+| `BIND_TCP_D2` — **grandchild** (`subprocess`) | `PermissionError [Errno 1]` | **`BIND_OK:60488`** |
+| `BIND_TCP_D3` — **great-grandchild** (`/bin/sh -c` wrapper) | `PermissionError [Errno 1]` | **`BIND_OK:60489`** |
+| `CONNECT_OLLAMA_11434` — **outbound to the live Ollama** | `DENIED:PermissionError:1` | **`CONNECT_OK: HTTP/1.0 200 OK`** |
+| `CONNECT_DRIVER` — outbound to an arbitrary loopback port | `DENIED:PermissionError:1` | **`CONNECT_OK: HTTP/1.0 200 OK`** |
+
+**Three things here contradict what the redirect expected, and all three are good news.**
+
+1. **The depth-2 caveat does not reproduce.** Issue #18545's shape — a daemon forked by a wrapper
+   failing at `bind` — was tested at two extra depths, including a `/bin/sh -c` wrapper, which is the
+   `bun test`-spawns-a-runner shape. All three depths bind. Reported separately as asked; there is no
+   depth cliff on 2.1.263.
+2. **The outbound half works too.** The redirect said *"do not expect to fix the outbound half"*, on
+   the strength of open issue #28018. On this machine, at this version, `allowLocalBinding: true`
+   **alone** — no `allowedDomains` entry for localhost — carried an HTTP request to the live Ollama on
+   `127.0.0.1:11434` and got `200`. **This supersedes close-C R4 and its conclusion that "the local
+   model tier cannot be a service."** It can. I cannot explain the divergence from #28018 and did not
+   try; the honest statement is that it works here and the tracker says it did not work for someone
+   else, so anyone relying on it should re-run `childprobe2.py` on their own machine.
+3. **`check:mc` is fixable, and here is the end-to-end proof.** Reproducing the exact documented
+   signature without installing anything (`mission-control/node_modules` is absent and installing is
+   outside the brief), a three-line `Bun.serve({port:0})`:
+
+   | cell | result |
+   |---|---|
+   | lane's own armed shell (free control) | `SERVE_FAIL code=EADDRINUSE errno=0` |
+   | `G1_bun_armed_ctrl` | `SERVE_FAIL code=EADDRINUSE errno=0` |
+   | `G2_bun_localbinding` | **`SERVE_OK port=60916`** |
+
+   `errno=0` is the synthetic code `CLAUDE.md` already identified as not-a-real-`EADDRINUSE` (macOS
+   returns 48). **One key clears it.** `check:mc`'s exclusion from the suite, and the reasoning in
+   `SANDBOX.md` that closed its acceptance questions, both rest on a belief now measured false.
+
+## 8.2 · `sandbox.workspace` — CLOSED, NEGATIVE. It is a namespace collision, not a confinement key
+
+**It is inert as a Bash-sandbox setting, and it is not the missing carrier the envelope bands need.**
+
+`F3_workspace` set `sandbox.workspace: "<scratchpad>/ws"` and is byte-identical to `F1_control` on
+every readout — `WRITE_OUTSIDE_WS=WRITE_OK`, no confinement of any kind. `READ_CANARY=DENIED` in the
+same cell proves the settings file was read and honoured, so this is inertness, not a typo.
+
+The documentary half agrees and explains why it looked promising. `sandbox.workspace` appears in the
+binary exactly three times, always in one list: `sandbox.coworkSurface · sandbox.codeSurface ·
+sandbox.chatSurface · sandbox.workspace · sandbox.authentication · connectors.extensions ·
+connectors.mcp · telemetry.otlp · limits.tokenLimits · appearance.featureDiscovery`. That is the
+**managed enterprise config tree**, where `sandbox` names the Claude *cloud workspace surface* — a
+different `sandbox` from the Seatbelt one. Its zod declaration is
+`workspace:pJ.WorkspaceConfig.optional()`, sitting beside `codeSurface`, `chatSurface`, `models`,
+`plugins`, `telemetry`, `mcp` and `authentication`. It is not in the Bash sandbox schema, not in the
+`restrictive:` policy table that lists every real sandbox key, and not in the sensitive-settings list.
+
+**So the peer lane's highest-value-per-minute cell is a dead end**, and the "confine to this worktree"
+problem is still unsolved by any documented key. The answer remains §5 R3: cwd plus `denyWrite`.
+
+## 8.3 · `filesystem.allowRead` — CLOSED, POSITIVE, and it is surgical
+
+**It re-opens a file inside a `denyRead` region, exactly as documented.** `F4_allowRead` set
+`denyRead: ["/Users/adamks/.codex"]` with `allowRead: ["/Users/adamks/.codex/config.toml"]`:
+
+- `READ_CODEX_CONFIG=READABLE:1B` — the config is readable
+- `READ_CODEX_AUTH=DENIED:PermissionError:1` — `auth.json` in the same directory stays denied
+
+**But it does not give what it appears to give, and this is the part to carry forward.** It is a
+narrower fix than lifting the deny *for loading config* — and Codex authenticates from `auth.json`,
+in `chatgpt` auth mode with stored tokens. A sandboxed Codex that can actually reach the provider must
+read that file. So `denyRead` + `allowRead` **cannot** produce a working Codex whose token is hidden
+from the sandboxed shell. The one mechanism designed for that — `credentials.files` with `mask` —
+carries the vendor's own note that *"On macOS and Windows `mask` currently degrades to `deny`."*
+
+**Conclusion: on macOS there is no way to let Codex authenticate while withholding its token from the
+shell it runs in.** Choose: a Codex that works and whose shell can read the token, or a protected
+token and no Codex. That is a real constraint, not a configuration gap, and §5 R5's advice — run Codex
+unsandboxed and spend the complexity budget elsewhere — gets stronger, not weaker.
+
+## 8.4 · Which settings path works for User-or-managed keys: `--settings` DOES
+
+**Measured, not inferred.** `F5_fsdisabled` delivered `filesystem.disabled: true` through
+`--settings <file>` and it took effect: `READ_CANARY=CANARY-P1-9d4e` — the `denyRead` in that same
+file stopped biting, i.e. filesystem confinement switched off — while `BIND_*` and
+`CONNECT_*` stayed denied, precisely as the key's description promises ("skip filesystem isolation
+entirely while keeping network and seccomp isolation"). `READ_CODEX_AUTH` also flipped to readable,
+matching "Drops the read protection from filesystem.denyRead and credentials.files deny entries."
+
+The binary states the tier rule verbatim for the credentials keys — *"Only honored from user,
+managed/policy, or CLI (`--settings`)"*, with project settings *"ignored"*. **So `--settings` is the
+CLI tier and is honoured.** The lead's instinct was right and now has a measurement behind it.
+
+> **This is a security finding, not just a plumbing one.** `filesystem.disabled: true` in a
+> `--settings` file switches off the filesystem half of the sandbox — `denyRead` included — from the
+> command line. Any dispatcher that lets a brief, a playbook or an untrusted input choose the settings
+> file handed to `claude -p` has handed over filesystem confinement entirely. Combined with §0
+> (`bypassPermissions` skips sandbox init outright), **there are now two distinct ways for a child to
+> end up unconfined while its settings still say `"enabled": true`.** Keel's dispatcher should
+> construct child settings itself, from a fixed template, and never accept one as a parameter.
+
+## 8.5 · Revised recommendation ranking
+
+**R4 is promoted and rewritten. It was ranked "best benefit-to-cost ratio"; it is now simply the
+first thing to do after R1.**
+
+**R4′ · Set `sandbox.network.allowLocalBinding: true`.** *Protects against:* nothing. *Prevents:* an
+inbound loopback listener and outbound loopback connections — neither of which is a threat from a
+process that already runs as the founder. *Buys:* `check:mc` back in the suite (§8.1, measured end to
+end), the local model tier usable as a service (§8.1, `200` from Ollama), and `SANDBOX.md`'s two
+acceptance questions genuinely reopened. Cost: one line. **A control that stops nothing real and
+blocks work every day is exactly what the brief said is worse than no control, and this is the clearest
+instance of it in the whole panel.**
+
+**New: R7 · The dispatcher must build child settings from a fixed template it owns.** *Protects
+against:* the two silent unconfinement paths in §0 and §8.4. *Prevents:* per-run settings flexibility,
+which nothing currently needs. Cost: none.
+
+**§5 R1, R2, R3, R5 and R6 stand unchanged.**
+
+## 8.6 · Round-2 additions to §6 and §7
+
+**What would prove round 2 wrong:** `allowLocalBinding`'s outbound half failing on another machine —
+issue #28018 says it did for someone, so treat §8.1's outbound result as machine-and-version-scoped
+until someone re-runs it. And `F3`'s inertness would be overturned by any vendor page documenting
+`sandbox.workspace` as a filesystem key; there is none today.
+
+**Still could not determine:** whether `network.strictAllowlist` and `network.tlsTerminate` are
+honoured through `--settings`. §8.4 establishes the *tier* works for one User-or-managed key
+(`filesystem.disabled`) and the binary states the same rule for the credentials keys, so the
+expectation is yes — but neither was exercised, and `tlsTerminate` remains untested from §7.
