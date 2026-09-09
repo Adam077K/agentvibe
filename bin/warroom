@@ -2166,6 +2166,26 @@ except:
   # then refuse to build the replacement, which is worse than either failure on
   # its own: the corrupt snapshot would cost them the session they still had.
   #
+  # WHY THIS REFUSES WHILE THE BRANCH GUARD BELOW SKIPS. The two look
+  # inconsistent and are not: they are told apart by CAUSE, not by severity.
+  #
+  #   A MISSING BRANCH IS ROUTINE. `${SESSION} done N` closes a CEO and deletes
+  #   its branch, so a snapshot written before that names a branch which is
+  #   legitimately gone. The snapshot is intact and correct; the world moved.
+  #   Skipping that entry and restoring the rest is the right answer, and it is
+  #   what the guard below has always done.
+  #
+  #   A NON-NUMERIC PANE NUMBER IS CORRUPTION. Nothing this program does can
+  #   produce one — `n` is written from a loop counter. Its presence means the
+  #   file is not what it claims to be, and the rest of it cannot be trusted
+  #   either. Restoring "the rest" of a file that is provably malformed is
+  #   guessing, so the whole restore is refused and the founder is told which
+  #   entry to look at.
+  #
+  # The test for which arm a future case belongs in: can normal operation of
+  # this program produce it? Routine, so skip. Otherwise it is corruption, so
+  # refuse.
+  #
   # `^[0-9]+$` and not str.isdigit(): isdigit() accepts '٣' and other Unicode
   # digits that a bash `[0-9]` glob rejects, and two predicates for one question
   # disagree exactly once, in the case nobody tested.
@@ -2267,7 +2287,12 @@ for i, c in enumerate(d.get('ceos',[])):
     # starts firing, that is a bug report about the up-front check, not a feature.
     case "$n" in ''|*[!0-9]*) continue ;; esac
 
-    # Guard: skip if branch is empty or not a ceo-* branch
+    # Guard: skip if branch is empty or not a ceo-* branch.
+    #
+    # This SKIPS where the pane-number check above REFUSES, deliberately: a
+    # branch that is gone is routine — `${SESSION} done N` deletes it — so the
+    # snapshot is still correct and only the world moved. Corruption refuses;
+    # routine drift skips. Full reasoning at the up-front validation block.
     if [ -z "$branch" ] || [[ "$branch" != ceo-* ]]; then
       echo "  ⚠ CEO-$n: invalid branch '$branch' in snapshot. Skipping."
       continue
