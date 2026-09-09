@@ -1,0 +1,305 @@
+{
+  "persona": "strategist",
+  "round": 2,
+  "changed_mind_on": [
+    {
+      "position_id": "P1",
+      "from": "The smallest company is defined by seven capabilities it deliberately cannot have, stated as properties of the design — including that it cannot reach a stranger without a human clearing a blocking-human gate.",
+      "to": "Three of those seven are LIVE CAPABILITIES on this machine today, so they are not absences to be preserved but revocations that have not happened. A refusal of something you already hold has a diff, a tier and a founder permission; stated as an absence it reads as free and is not. By my own standard three rows of my P1 table were WISH and I failed to label them — the anti-roadmap's own defect, committed by the persona whose job is to catch it.",
+      "because_of": "risk-modeler:P2"
+    },
+    {
+      "position_id": "P1",
+      "from": "'Runs unattended' = the registered rope PLUS the stall ceiling PLUS a kill switch, with budget-guard.js supplying the first two.",
+      "to": "The rope only. The stall ceiling fails toward passing — sinceLastArtifact sums recentTurns and recentTurns discards turns older than RETAIN_HOURS = 6 (re-derived today at scripts/lib/usage.js:40), so the ceiling fires LESS the deeper the machine is stuck, and a 24/7 loop exceeds six hours on night one. Compounded by an account-wide numerator over a repo-local denominator. The system has NO working repetition detector, gap #6 is not closed by registering the guard, and neither defect can be fixed before a mission id exists on the row.",
+      "because_of": "architect:P4"
+    },
+    {
+      "position_id": "P3",
+      "from": "The demand trigger is a new CI check on the diff, in the shape of check-registration.mjs's dead-path check: nothing merges unless the diff contains a caller AND the caller resolves to a live mission blocked on the missing capability.",
+      "to": "WITHDRAWN as a standalone mechanism and folded into the ONE hasCaller predicate as its second half. The birth certificate already exists four times — build-skill-routers.mjs for skills, check-suite.test.mjs for test files, check-gates.mjs for gates, EXCLUDED for suite steps — with four exemption conventions and no shared code. My P3 was a fifth instance of exactly that shape, condemned by my own N4, which I missed because I was watching for duplicate CLASSIFIERS and not duplicate PREDICATES. One predicate: the caller must exist (architect/visionary/risk-modeler half) and must resolve to a live blocked mission (my half). This removes a mechanism from my count instead of adding one.",
+      "because_of": "architect:P8"
+    },
+    {
+      "position_id": "P4",
+      "from": "Every .out-of-scope/ entry carries a retire_on DATE, resolved by claim-freshness's exact behaviour.",
+      "to": "The primary key is a reopen CONDITION; a date only where no counter exists. Seventeen refusals with dates is seventeen objects that come due on a calendar and force a written disposition even when nothing changed — converting a refusal, my cheapest asset, into carrying cost. Six of my eight deferrals already carry countable conditions (>=100 archive artifacts, >=50 dispatches with outcomes, N balcony actions, a second project existing, a failure class three times) and I wrote them that way without noticing they were the better mechanism. On my list that leaves two dated entries, not seventeen.",
+      "because_of": "adversary:P6"
+    },
+    {
+      "position_id": "P2",
+      "from": "A ceiling on governed artifacts is a governor worth installing, at high confidence but no particular urgency.",
+      "to": "It is a PRECONDITION of the first pack, not a follow-up. The frontmatter schema is a closed 15-key allowlist so a pack: key fails the lint, and the Agent dispatch tool has no tools parameter — so the only pack shape the runtime supports today is one generated agent file per engine x pack. That is roster growth by multiplication, the exact pressure that took this repo to 26 agents and forced the collapse to 7. Four pack families times seven engines re-runs it.",
+      "because_of": "architect:P11"
+    },
+    {
+      "position_id": "P5",
+      "from": "Refuse to grow L1, enforced by P3's demand trigger applied to the STEPS list.",
+      "to": "Downgraded to a stated POLICY whose only enforcement is the birth certificate's mission half, since P3 no longer exists as a separate mechanism. Absent that predicate it is a WISH and is labelled one. I would rather label it than have it found.",
+      "because_of": "architect:P8"
+    },
+    {
+      "position_id": "P12",
+      "from": "The council convenes on irreversible-tier forks only, gated by the existing classifier.",
+      "to": "That gate is necessary and is not what failed. The council's cost cap must be a MECHANISM — a counter something reads — before the board convenes a second time, and if it cannot be, the board convenes only under the founder's hand. On run one, with five Opus agents and the founder's full attention, the board held one of its three own rules: no persona had an agent file, the $3 cap is referenced by no script or hook or CI step, and the escalation path names Linear (absent) and Telegram (refused by Decision 5 the day before). A deliberation organ that suspends its only hard constraint on run one is the built-and-never-wired shape performed by the thing meant to catch it.",
+      "because_of": "adversary:P7"
+    }
+  ],
+  "peer_critiques": [
+    {
+      "persona": "adversary",
+      "position_id": "P4",
+      "critique": "FATAL, and it is the test rather than the thesis. The thesis — the system has a demand problem and every proposal treats demand as solved — is right, and adversary:P2's beeond measurement is the most useful number any room produced. But P4's separating experiment is: wire design.js, wait seven days of ordinary work, count invocations; still zero means the diagnosis is demand and the whole §8 agenda is aimed at the wrong thing. The confound sits inside the adversary's own document: adversary:P2 measured that ordinary work on this machine IS harness work — 2026-08-31, eight beeond commits, all eight harness; 172 session files, one touching a venture. So seven days of ordinary work is seven days in which no design task is scheduled, and a zero measures the absence of design WORK, not the absence of design DEMAND. The treatment and the confound are the same variable. Run as specified it returns zero with near-certainty and licenses a conclusion it did not earn, and by build-order step 5 that conclusion gates the entire company's build order behind an IF AND ONLY IF. This is the mirror image of the defect my own P14 refuses in the first mission: an exit that cannot fail informatively, versus one that cannot fail at all. FOR THE POSITION TO SURVIVE, one of two things must be true: (1) the seven days must contain at least one task that cannot complete without a design pass — which means the test FOLLOWS a mission rather than gating it, reversing the adversary's own ordering, and that real cost is why this is fatal rather than serious; or (2) the inference is demoted from dispositive to informative, using the discipline visionary:P11 already wrote for this exact shape — 'a finding, never an automatic action' — and the IF AND ONLY IF in build-order step 5 is deleted. I prefer (2) because it is free, and note that it also rescues adversary's build-order step 1, whose third metric (one unsolicited human response) is readable at n=1 and is rung 1 of the evidence ladder. The tripwire in step 2 is the only mechanism anyone proposed that would make the experiment actually happen and it belongs in the plan regardless.",
+      "severity": "fatal"
+    },
+    {
+      "persona": "risk-modeler",
+      "position_id": "P5",
+      "critique": "SERIOUS. The position insists the outbound wrapper ships as ONE artifact carrying all four properties — dry-run default, hash-bound send, named-human register, rate ceiling — because they share a code path and shipping three of four ships a gap. The unit is unbuildable today by the risk-modeler's own two other statements: open question 3 says every rate ceiling needs a number and 'I will not invent one', and the refuse list forbids a budget: field that nothing counts. So one of the four properties is blocked on a founder decision nobody has made, and writing it before the number exists is refused by the same document — which makes the whole wrapper hostage to a missing number. Repair: ship the three that are buildable and make the fourth a DECLARED BLOCK with clearable_by: a daily dollar ceiling from the founder. That is the blocked-row shape my P3 half depends on, and it turns 'we are waiting on a person' from an omission into a record. Serious rather than fatal because the ordering claim the position actually defends — the wrapper before inbound — survives intact and I agree with it.",
+      "severity": "serious"
+    },
+    {
+      "persona": "visionary",
+      "position_id": "P1",
+      "critique": "SERIOUS, and deliberately not a restatement of the concession the visionary already made honestly in its own counter. Rungs 0-1 are not the flywheel turning slowly; they are a DIFFERENT INSTRUMENT. A rung-1 result and a rung-4 result recorded in the same field with only a rung: annotation to separate them is how 'a stranger understood it' gets reported as 'someone paid' — and the world verifier that P1 puts everything downstream of is precisely what consumes that field. N1 (union, never average) has been applied to judge panels by four of five personas and by NOBODY to the evidence ladder, where the same failure is available and more consequential. Repair: rung: is mandatory on every done-test and the ladder REFUSES aggregation across rungs — a schema refusal in the same shape as refusing a summed total in a judge output.",
+      "severity": "serious"
+    },
+    {
+      "persona": "visionary",
+      "position_id": "P5",
+      "critique": "SERIOUS, and about the input rather than the idea. The founder-preference corpus is good and it is the one proposal creating a store outside the four STARTUP-OS §6 declares, which my P7 refuses — but the stronger objection is measured. Preference pairs are written only when the founder picks A over B, and the only place that happens is the balcony: 7 views, 1 that acts, and an escalation Inbox empty on every project ever. The visionary's own what_must_be_true concedes the dependency — 'no input if the balcony surfaces no forks' — but treats the balcony's EXISTENCE as the precondition. The measurement says the precondition is a balcony that has been USED, which is a different and unmet thing. Repair: P5 is downstream of a measured balcony action, which is P9's N, now doing work for two positions.",
+      "severity": "serious"
+    },
+    {
+      "persona": "architect",
+      "position_id": "P8",
+      "critique": "MINOR, and it is agreement with an addition. The measurement that the birth certificate exists four times with four exemption conventions is the most useful single finding for my lane, because it condemned my own P3 under my own N4. The addition: the four exemption conventions differ in a way that matters to the anti-roadmap, and unused_reason's shape (a 40-character length floor plus a fails-when-used rule) is the only one that makes an exemption COST something to write. Converge the other three on that shape, not on a new one — an exemption that is cheap to write is how a refusal decays into a formality.",
+      "severity": "minor"
+    },
+    {
+      "persona": "adversary",
+      "position_id": "P1",
+      "critique": "MINOR, and the adversary half-names the tension itself. P1 says the harness sits on the three-week abandonment curve and a 24/7 loop yields more dead projects reached faster; P12 refuses the 'tenth attempt' framing and establishes that nothing here failed in the ordinary sense; the counter concedes that 'a prerequisite is not a project — it does not have to beat an abandonment base rate'. Those cannot all be load-bearing at once, and in my reading P12 is the one that survives. Minor because refusing a framing you were handed and recording why is the most credible act any persona performed in Round 1, and because P1's underlying measurement (eleven projects over twenty commits, nine dead) is sound and useful whatever it is taken to prove.",
+      "severity": "minor"
+    }
+  ],
+  "remaining_dissent": [
+    {
+      "position_id": "P2",
+      "holds_because": "Cheap to reverse is not cheap to carry. architect:P12 sorts the bill of materials by cost-to-reverse and concludes the reversible half — packs, personas, council, board, missions file, balcony views, FIELDS — should be built 'fast, loose and continuously'. Reversibility is a property of ONE CHANGE; carrying cost is a property of the ACCUMULATED SET, and the sort collapses two different axes. Every artifact in adversary:P6's supersession record was in the cheap reversible half — the session-file count superseded five times, the suite denominator four, the .qa count twice, the branch name five, the main sha four times in one day — each individually trivial to fix, each fixed repeatedly, and the aggregate is a 637-line document whose main content is corrections to itself. Nothing in that record was hard to reverse and all of it was expensive to hold. The architect's own evidence points away from the architect's conclusion: the roster reached 26 agents one cheap reversible file at a time, the collapse to 7 was correct and expensive, and architect:P11 says the pack shape re-runs that multiplication. 'Fast and loose on the reversible half' is a description of how the last nine phases were built; it produced 48 check steps and one venture task, and not one of the 48 was hard to reverse. I am not arguing for slow — speed belongs on the MISSION side and the ceiling belongs on the ARTIFACT side, and 'reversible' is the wrong predicate for deciding which is which. The right predicate is the one visionary:P14 reached independently: flywheel, feeder, or inventory. Inventory that is cheap to delete is still inventory while it is held.",
+      "against": ["architect:P12"]
+    },
+    {
+      "position_id": "P1",
+      "holds_because": "The hook's scope rule is right for the founder and wrong for the loop, and the distinguishing variable is unrecorded. risk-modeler:P2 refuses to widen pre-tool-use.sh over the founder's own user-scope MCP servers, on the grounds that this repo should not govern the founder's Gmail during the founder's own interactive session and that widening is the inverted #96.3 resolution CLAUDE.md warns about. For an interactive session that is exactly right and I agree. The loop is not an interactive session — the entire premise is that it runs while the founder sleeps — so 'the founder's own session' is the wrong frame for a 3am dispatch that inherits those servers. The risk-modeler's own open question 4 records that at least one live dispatch path carried tiktok_publish, sandbox_exec, Gmail send and an authenticated Chrome to an agent no repo file granted them, and its own P14 item 8 names the founder as a single point of failure for every human gate — which the scope rule silently assumes is present. Confirmed today: the PreToolUse matcher is Bash|Edit|Write|NotebookEdit|mcp__ so the call DOES reach the hook, and mcp-policy.json governs two servers (playwright, claim-append) in mode: shadow, neither of them the dangerous one. My P1 claims the smallest company cannot reach a stranger; today it can; and the layer that would stop it has been declared out of scope for a reason that holds only in the case that is not the dangerous one. The answer is neither 'widen the hook' nor 'leave it alone' — it is that who initiated the session is a fact nothing records.",
+      "against": ["risk-modeler:P2"]
+    },
+    {
+      "position_id": "P8",
+      "holds_because": "'Trust last' is not 'trust never', and last is how things get built. visionary:P1's reasoning sequences trust behind the world's verdict, citing T1's own note that it is downstream and cannot be built first, and the visionary's build order places it eighth and forced-last. I refuse it for year one outright, and the difference is not scheduling: open-source.md §16 records that nothing across 177 surveyed repositories implements worker trust — highest cost, least precedent in the entire catalogue — and the architecture REMOVES THE SUBJECT, because fresh context per move plus a pack that is a grant and a stop means there is no persistent worker for trust to accrue to. What varies between two dispatches is the grant, and the grant is already the security boundary. Gap #10 is not deferred, it is ANSWERED, and an answered gap should leave the list rather than sit at the bottom of it where a quiet month will promote it.",
+      "against": ["visionary:P1"]
+    }
+  ],
+  "convergence": [
+    "Registering budget-guard.js is the single highest-agreement item in the meeting and it is not something any engine can do — all five build orders contain it, from five different lenses, and it is a founder permission on an irreversible-tier file. Re-derived today: grep -c budget-guard .claude/settings.json -> 0. Supported by strategist:P1, architect:P14, risk-modeler:P7, adversary:P9, and the visionary's build order item 5 (which carries it outside any numbered position).",
+    "A task id on every event row is forced and cannot be retrofitted. visionary:P3 and architect:P3 both place it first in their build orders, strategist places it second, and adversary reaches it from the cost side (cost-per-mission is answerable by nobody without it). architect:P3 measured the corpus at 3,813 events with zero task/mission/run/session ids, and architect:P5 adds that the loop's only brake cannot be made correct without it. Supported by visionary:P3, architect:P3, architect:P5, strategist:P1.",
+    "No done-test may be resolved by the producing model, and all four rooms that state it cite the same 0.543-against-a-0.741-self-consistent-panel measurement. adversary:P8 does not dispute the rule — it accepts the reasoning and attacks the consequence (an unbounded stream of per-pack founder approvals on the critical path of a system premised on human absence), which is a different and live disagreement. Supported by strategist:P14 and risk-modeler:P5, which state it inside a numbered position, plus the architect's and the visionary's refuse lists, which carry it outside one.",
+    "Union, never average: no score summed from judge outputs anywhere, and design.js's total field is the named live instance of the defect. Supported by visionary:P7, which names design.js's summed total directly, and strategist:P1, whose 'cannot judge quality' row rests on the same measurement, plus the architect's and the risk-modeler's refuse lists.",
+    "One risk classifier, extended and never paralleled — including by a small helper answering 'is this outbound?'. Re-derived today: the classifier's public surface is classifyFile/classifyFiles and its only input is a normalised path string. Supported by strategist:P6 (N4), visionary:P11, architect:P6, risk-modeler:P1.",
+    "No outbound spend before a rate limit exists that something enforces; money is the one axis this repo's vocabulary cannot express, because every tier it has is about reversibility or blast radius. Supported by strategist:P10, visionary:P12, risk-modeler:P7, adversary:P10.",
+    "blocking-human by TYPE is what makes 24/7 safe rather than by policy, it is already built as the only structural impossibility in the tree, and it has zero consumers that route an act through it. Supported by strategist:P1 (N8), visionary:P9, risk-modeler:P4.",
+    "Built-and-never-wired must be prevented at merge rather than detected afterwards, and the predicate must be built once rather than a fifth time. Supported by visionary:P10, risk-modeler:P3, architect:P8, strategist:P3 — with adversary:P4 dissenting that it is a demand signal misread as an engineering defect. Convergence on the mechanism, live disagreement on what its output proves.",
+    "Every persona independently confessed, from a sealed room, that its own proposal is too large: risk-modeler's counter concedes 'three controls, not thirteen'; adversary refuses 'any new mechanism before the demand test, including mechanisms I would otherwise support'; architect's counter concedes 'a founder can read my build order as phase ten'; visionary classifies most of the repo as inventory; strategist's counter conceded fourteen stopping mechanisms. Five rooms, no cross-visibility, one shape. It is the board's strongest finding and it is about the board — and the support for it sits in each persona's strongest_counter field rather than in any numbered position, which is itself the point: not one of the five proposed the mechanism that would have caught what all five confessed."
+  ],
+  "updated_positions": [
+    {
+      "id": "P1",
+      "claim": "REVISED. The smallest system that deserves the name 'company' is five state files and five mechanisms, and its defining property is the list of things it deliberately cannot do — but three of those seven refusals are REVOCATIONS, not absences: outbound mail, publishing and remote execution are live capabilities today, and the blocking-human gate that would stop them has no consumer. A refusal that is not yet true is a WISH by this document's own standard.",
+      "reasoning": "Unchanged in shape: one mission in flight, one move at a time with fresh context, real hands, stops itself, every row carrying a task id, a done-test resolved by something that is not the producer, and the world asked whether it worked with unresolved reported when it cannot be checked. Three corrections from Round 2. (1) 'Runs unattended' is the rope ONLY — the stall ceiling fails toward passing at RETAIN_HOURS = 6 and divides an account-wide numerator by a repo-local denominator, so no repetition detector exists and neither defect is fixable before a mission id is on the row. (2) 'Knows whether it worked' requires the ladder to refuse aggregation ACROSS rungs, or rung 1 gets reported as rung 4. (3) 'Cannot reach a stranger' is not a property of the design; it is work that has not been done, and the layer that would do it has been declared out of scope by a peer for a reason that holds only for interactive sessions.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§3 the shape (four state files) and §4 a pack is a grant and a stop",
+        "docs/02-competitive/expansion/concepts.md:§2 P5 WIP limit of one at the mission level",
+        "docs/02-competitive/expansion/concepts.md:§4 W1 a `world` verifier on the ledger, fail-closed; §4 W2 the evidence ladder",
+        "MEASURED 2026-09-02: PreToolUse matcher is Bash|Edit|Write|NotebookEdit|mcp__ and .claude/mcp-policy.json is mode: shadow over servers [playwright, claim-append] — the outbound call reaches the hook and is ungoverned",
+        "MEASURED 2026-09-02: .claude/gates.yml declares outbound-approval as kind: human; its namers are check-gates.mjs, gates.test.mjs, one playbook stage, schema-lint spelling and documentation — no consumer routes an act through it",
+        "MEASURED 2026-09-02: scripts/lib/usage.js:40 const RETAIN_HOURS = 6"
+      ],
+      "confidence": "high",
+      "territories": ["01", "02", "03", "08", "14"]
+    },
+    {
+      "id": "P2",
+      "claim": "REVISED — URGENCY RAISED. The mechanism list gets a declared ceiling and the goal tree does not; above the ceiling, adding a governed artifact requires retiring one. This is a PRECONDITION of the first pack, not a governor to install later.",
+      "reasoning": "The frontmatter schema is a closed 15-key allowlist so a pack: key fails the lint, and the Agent dispatch tool exposes no tools parameter — so the only pack shape the runtime supports today is one generated agent file per engine x pack. Four pack families times seven engines re-runs the multiplication that took this repo to 26 agents and forced the collapse to 7. Mechanism unchanged: a count check in the check suite's own suite against a declared ceiling, the shape of the byte-budget ratchet already governing DECISIONS.md. A ceiling does not stop growth; it makes raising the ceiling an act someone performs rather than a drift nobody notices.",
+      "evidence": [
+        "docs/02-competitive/expansion/concepts.md:§10 X4 a ratchet — no new pack without a retired one",
+        "CLAUDE.md:§Project State — 48-step suite, superseded readings of 46, 30 and 29 across three days",
+        "docs/03-system-design/STARTUP-OS.md:§1 the roster axis was wrong (26 agents to 7 engines)",
+        "CLAUDE.md:§Memory — the byte-budget ratchet on DECISIONS.md is the existing mechanism of this shape",
+        "r1-architect.json:P11 — closed 15-key frontmatter allowlist; no tools parameter on the Agent dispatch tool"
+      ],
+      "confidence": "high",
+      "territories": ["02", "04", "12", "14"]
+    },
+    {
+      "id": "P3",
+      "claim": "WITHDRAWN AS A STANDALONE MECHANISM. The demand trigger becomes the second half of ONE hasCaller predicate: an added artifact must be referenced by a live caller AND that caller must resolve to a mission in MISSIONS.yml with state in_flight carrying a `blocked` row naming the missing capability, authored before the diff.",
+      "reasoning": "My Round-1 version was a fifth independent implementation of a predicate that already exists four times — skills, test files, gates, suite steps — with four exemption conventions and no shared code. That is condemned by my own N4, and I missed it because I was watching for duplicate classifiers rather than duplicate predicates. One predicate, one file, five artifact types, my mission clause as its second conjunct. The honest weakness is unchanged and worth restating: this is the most gameable thing I proposed, since anyone with repo-write can author a mission and a block — the same bounded guarantee qa-lead-pass.yml documents about itself. It stops drift, not a determined author. The bootstrap exemption must be a ledger claim with a valid_until so it expires rather than drifts, and the exemption convention should converge on unused_reason's shape (a length floor plus a fails-when-used rule), because an exemption that is cheap to write is how a refusal decays into a formality.",
+      "evidence": [
+        "docs/02-competitive/expansion/concepts.md:§10 X1 the birth certificate — nothing created without a caller in the same diff",
+        "docs/03-system-design/STARTUP-OS.md:§1b the census — six exist unwired, three genuinely absent, one works",
+        "CLAUDE.md:§Risk-Tiered QA Gate — the verdict record is hash-bound, not signed",
+        "r1-architect.json:P8 — four existing birth-certificate implementations with four exemption conventions",
+        "r1-risk-modeler.json:P3 — the birth certificate at position ZERO of the build order"
+      ],
+      "confidence": "med",
+      "territories": ["12", "01", "02", "04"]
+    },
+    {
+      "id": "P4",
+      "claim": "REVISED. Refusals must be data or this document is a wish — but the primary key of an `.out-of-scope/` entry is a reopen CONDITION, not a retire_on DATE. A date is the fallback only where no counter exists.",
+      "reasoning": "The premise holds and is re-measured: `ls -d .out-of-scope` returns absent, and a refusal held only by a document decays silently within weeks. What changed is the cost. Every artifact is a claim, every claim needs an expiry, every expiry needs a disposition, and every disposition is another artifact — the record is 637 lines of STATUS.md whose main content is corrections to itself. Seventeen refusals on a calendar is seventeen forced dispositions even when nothing about the world changed, which converts my cheapest asset into carrying cost. A condition costs zero until the counter moves, and six of my eight deferrals already carried countable conditions: >=100 artifacts in an archive, >=50 recorded dispatches with outcomes, N balcony actions, a second project existing, the same failure class three times. That leaves two dated entries, not seventeen. Mechanism: existence and category check in CI, with claim-freshness governing only the dated minority.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§8b consolidated steal list item 9 — `.out-of-scope/`, record rejections with reasoning before code",
+        "docs/02-competitive/expansion/concepts.md:§15 A6 any rule stated without its mechanism",
+        "CLAUDE.md:§Rules — rule 9, claims expire and expiry forces a disposition",
+        "MEASURED 2026-09-02: ls -d .out-of-scope -> absent",
+        "r1-adversary.json:P6 — the supersession record as a cost curve, not documentation hygiene"
+      ],
+      "confidence": "high",
+      "territories": ["12", "09", "14"]
+    },
+    {
+      "id": "P5",
+      "claim": "DOWNGRADED TO POLICY. No new step enters the check suite unless it fails on a defect found in work that is not about the harness — enforced by the birth certificate's mission clause, or labelled WISH.",
+      "reasoning": "The reasoning is unchanged and the measurement stands: 30,446 of 47,285 script lines are test code, verifying a machine whose external output is one venture task, and the suite is the single largest consumer of the founder's build attention. What changed is honesty about enforcement. P5's stated mechanism was P3's trigger; P3 is now a clause inside someone else's predicate, so P5 no longer owns a mechanism and must say so. Where this is wrong, if it is wrong: a check that would have caught a real defect but has not yet. The counter-argument is that this is exactly the reasoning that produced 48 steps and one venture, and that the eight exit-code-guard bypasses were found by an independent review rather than by a pre-emptive check.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§2 Decision 1 — keep L1, rebuild everything above it",
+        "CLAUDE.md:§Project State — the 48-step suite and the eight exit-code-guard bypasses found by independent review",
+        "MEASURED 2026-09-02: find scripts -name '*.test.mjs' | xargs cat | wc -l = 30446 against non-test 16839"
+      ],
+      "confidence": "med",
+      "territories": ["08", "12", "13"]
+    },
+    {
+      "id": "P6",
+      "claim": "HELD, with a stronger reason. Take beads, Temporal, pyribs/ShinkaEvolve, inspect_ai and projectmem as ideas; refuse all five as dependencies in year one.",
+      "reasoning": "Unchanged: each introduces a second source of truth for something this system already computes, and an unwired dependency is worse than an unimplemented idea because it looks done. Round 2 adds a measurement I did not have. adversary:P3 records that beeond spent a full working day on 2026-08-26, twenty-one commits, undoing what the harness template did to it — removing another company's brand, pricing and ICP from 22 agent files, deleting a 1,395-file foreign agent kit, repointing nine pre-flight blocks at a docs tree that never existed. So harness surface has a non-zero cost that has ALREADY BEEN PAID ONCE, by the only venture that ever used it, and it was paid in decontamination rather than in psychology. That is a better argument than 'it looks done' and it applies to every dependency, every generated pack file, and every refusal I convert into a governed artifact.",
+      "evidence": [
+        "docs/02-competitive/expansion/open-source.md:§1 the five I would be most annoyed to see dropped",
+        "docs/02-competitive/expansion/concepts.md:§15 A5 a second implementation of risk classification",
+        "docs/03-system-design/STARTUP-OS.md:§8b the meta-finding — built and never wired is endemic",
+        "r1-adversary.json:P3 — beeond's 2026-08-26 decontamination day, twenty-one commits"
+      ],
+      "confidence": "high",
+      "territories": ["01", "05", "08", "12"]
+    },
+    {
+      "id": "P7",
+      "claim": "HELD. Refuse a fifth memory store. The four declared in STARTUP-OS §6 are the whole memory system for year one: no vector store, no mem0, no episodic index, no transcript retrieval.",
+      "reasoning": "Memory is where unwired code accumulates fastest, because nothing fails when memory is not read: 2,936 transcripts, nothing reads them, and no test has ever gone red over it. A missing check fails loudly; a missing recall returns a plausible answer. Round 2 tests this against visionary:P5's preference corpus, which is the strongest proposed fifth store — and I do not refuse it on the store rule, which would be arguing form over substance. I refuse it on its input: pairs are written only when the founder picks between candidates, and the only surface where that happens has 7 views, 1 that acts, and an Inbox empty on every project ever. A store fed by an unused surface is inventory by construction.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§6 memory — four stores, one rule each",
+        "docs/02-competitive/expansion/concepts.md:§15 A4 RAG over the 2,936 transcripts as a memory",
+        "docs/02-competitive/expansion/00-TERRITORY.md:current state — 2,936 transcripts on disk, nothing reads them; mission control 7 views, 1 acts",
+        "r1-visionary.json:P5 — the preference corpus and its own what_must_be_true"
+      ],
+      "confidence": "med-high",
+      "territories": ["05", "04", "12"]
+    },
+    {
+      "id": "P8",
+      "claim": "HELD, and it is a dissent rather than a deferral. Refuse worker trust, apprenticeship, promotion, demotion and retirement outright for year one. The grant is the entire trust model. Gap #10 is ANSWERED, not deferred, and an answered gap should leave the list.",
+      "reasoning": "Three converging reasons, unchanged: nothing across 177 surveyed repositories implements it (highest cost, least precedent in the catalogue); trust is a statistical object needing a volume of outcomes year one will not produce; and decisively, the architecture removes the subject — fresh context per unit of work plus a pack that is a grant and a stop means there is no persistent worker for trust to accrue to. Round 2 sharpens the disagreement rather than softening it: visionary sequences trust eighth and forced-last, and 'last' is how things get built. An item at the bottom of a build order gets promoted in a quiet month; an item removed from the list does not.",
+      "evidence": [
+        "docs/02-competitive/expansion/open-source.md:§16 item 1 — worker trust, apprenticeship and retirement: a genuine build, not a buy",
+        "docs/02-competitive/expansion/concepts.md:§9 T6 the competing position — no trust at all, only reach",
+        "docs/03-system-design/STARTUP-OS.md:§4 why `tools:` must stay — the line between able and unable",
+        "docs/03-system-design/STARTUP-OS.md:§7 fresh context per unit of work",
+        "r1-visionary.json:P1 reasoning — trust downstream of the world's verdict, and build order item 8, trust forced last"
+      ],
+      "confidence": "high",
+      "territories": ["02", "09"]
+    },
+    {
+      "id": "P9",
+      "claim": "HELD, and now load-bearing for a second position. No voice, no phone, no second surface until the terminal balcony has been used to approve, redirect or retarget a running mission N times, with N declared in advance.",
+      "reasoning": "Unchanged: 7 views, 1 acts, and an escalation Inbox empty on every project ever is not a missing feature but a measurement, and what it measures is that the surface has never been the bottleneck. Round 2 gives N a second consumer: visionary:P5's preference corpus needs a balcony that has been USED, not a balcony that exists, so the same threshold gates both. risk-modeler:P11 adds the property I was missing — an escalation must be a distinct TERMINAL VALUE rather than a row among two hundred, generalising PR #115. I take that: it is not a new surface, it is a type distinction inside the existing one, and typed events.jsonl already exists.",
+      "evidence": [
+        "docs/02-competitive/expansion/00-TERRITORY.md:current state — mission control 7 views, 1 acts; the escalation Inbox empty on every project ever",
+        "docs/02-competitive/expansion/concepts.md:§8 V1-V5 voice as a first-class surface",
+        "docs/02-competitive/expansion/concepts.md:§10 X2 last-use telemetry — the retirement trigger is zero calls, not an opinion",
+        "r1-risk-modeler.json:P11 — a refusal must be a distinct terminal value, not a log line"
+      ],
+      "confidence": "med",
+      "territories": ["10", "12"]
+    },
+    {
+      "id": "P10",
+      "claim": "HELD, four-room convergence. Refuse every tool grant that spends money outside model tokens until an absolute rate limit exists that something enforces.",
+      "reasoning": "Money is the missing axis: every tier this repo has is about reversibility or blast radius, and ad spend, GPU-seconds and postage need a rate no mechanism here can express. A 24/7 loop with a spend hand and no rate limit has unbounded downside against bounded upside, and git revert does not undo it. Round 2 adds the sequencing consequence from risk-modeler:P5 and P7: the rate ceiling is the one property of the outbound wrapper that cannot be built, because it needs a dollar number the founder has not given and the risk-modeler's own refuse list forbids writing a budget field nothing counts. So this refusal should be recorded as a declared BLOCK with clearable_by: a daily ceiling from the founder, rather than as a preference — which makes it the first real test of whether workers author blocks instead of improvising around them, the assumption my own strongest counter says nothing has ever tested.",
+      "evidence": [
+        "docs/02-competitive/expansion/hands.md:§8 — money is the missing axis; the riskiest capabilities are already granted",
+        "docs/02-competitive/expansion/hands.md:§6 item 13 — Meta Ads MCP, the best forcing function and the worst thing to connect first",
+        "docs/02-competitive/expansion/concepts.md:§7 R5 absolute rate limits, independent of reasoning — currently WISH",
+        "r1-risk-modeler.json:P7 and open question 3 — every rate ceiling needs a number and I will not invent one"
+      ],
+      "confidence": "high",
+      "territories": ["03", "09", "13"]
+    },
+    {
+      "id": "P11",
+      "claim": "HELD. Refuse a global sandbox disable as the fix for the second model family. Narrow, per-command exemptions only.",
+      "reasoning": "The sandbox is a guardrail against accident and a 24/7 unattended loop is the accident case, at the exact hour when nobody is watching. A blanket disable trades the one control that is armed and tested for a convenience that two narrow exemptions deliver anyway, and the refusal's enforcement predates the refusal: npm run test:sandbox fails if enabled or failIfUnavailable is flipped, and CI runs it. risk-modeler:P13 reaches the identical conclusion independently and adds the diagnosis I only half had: both pulled Ollama models are RETIRED on a six-month-stale version pin while the account and runtime work, so this is built-and-never-wired in the capability layer rather than a structural impossibility, and the distance to a multi-family panel is one pull plus one narrow exemption. Stop describing it as impossible.",
+      "evidence": [
+        "docs/02-competitive/expansion/hands.md:§0.3 the second model family is reachable, and the sandbox is what hides it",
+        "CLAUDE.md:§Project State — the sandbox is a guardrail against accident, not containment against the agent",
+        "CLAUDE.md:§Project State — single-family review is an accepted risk to 2026-11-17",
+        "r1-risk-modeler.json:P13 — both runtimes installed, two different sandbox causes, both model pins retired"
+      ],
+      "confidence": "high",
+      "territories": ["09", "11", "08"]
+    },
+    {
+      "id": "P12",
+      "claim": "REVISED. The council convenes on irreversible-tier forks only, gated by the existing classifier — AND its cost cap must be a mechanism something reads before it convenes a second time. Absent that, it convenes only under the founder's hand.",
+      "reasoning": "Said from inside a board meeting, which is the only honest place to say it. The tier gate is necessary and is not what failed on run one. adversary:P7 measured what did: zero of seven personas have agent files, so the board is convened by prompt rather than by the roster its own spec names; the $3 cap is referenced by no script, hook, CI step or package script, so it is prose, and it was suspended on run one; and the escalation path names Linear (absent from the tree) and Telegram (refused by founder Decision 5, taken the day before). Under the best conditions this system will ever have — five Opus agents, the founder's full attention, one supervised run — it held one of its three own rules. That is a data point about rule-holding, and the thesis it bears on is that the system will hold its rules at 3am while nobody watches. Metaswarm's convergence discipline is still the right internal shape and should be taken as-is: fresh instances per round, zero cross-visibility, a 3-iteration cap, then human escalation with an iteration-history table.",
+      "evidence": [
+        "docs/08-agents_work/board-meetings/2026-09-01-startup-os/r0-shared.md:hard caps — the spec's $3 cap exceeded by design",
+        "docs/03-system-design/STARTUP-OS.md:§7 a persona may never be dispatched to produce",
+        "docs/03-system-design/STARTUP-OS.md:§8b Metaswarm — fresh instances, no cross-visibility, 3-round cap, then escalate",
+        "CLAUDE.md:§Risk-Tiered QA Gate — scripts/lib/classifier.js, one file computes the tier of a path",
+        "r1-adversary.json:P7 — no agent files, the cap enforced by nothing, an escalation path naming two absent systems"
+      ],
+      "confidence": "high",
+      "territories": ["08", "13", "14"]
+    },
+    {
+      "id": "P13",
+      "claim": "HELD, and now honestly mechanism-less. Refuse phase numbers; continuous landings, each useful alone. Its only enforcement was P3's demand trigger, which is now a clause in someone else's predicate.",
+      "reasoning": "A phase number is a promise that a set of work ships together, which makes the last item hostage to the first and makes abandonment expensive because abandoning it means admitting the number was wrong. Omnigent shipped fifteen releases in ten weeks with the phrase 'Phase N' appearing nowhere; this repo organises around phases and has nine phases and one venture task. There is no check that catches a phase number in a plan document and inventing a lint for prose vocabulary would be theatre. What makes it real is that work which must justify itself against a live blocked mission cannot be batched, because missions do not arrive in batches — so the mechanism for this rule is another rule's mechanism, and after Round 2 that other rule lives in the architect's predicate rather than mine. Worth saying plainly rather than claiming an enforcement that does not exist.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§8b Omnigent — fifteen releases in ten weeks, 'Phase N' appears nowhere; nine phases and one venture task",
+        "docs/08-agents_work/board-meetings/2026-09-01-startup-os/r0-shared.md:founder decisions session 2 — cadence after planning is continuous, no phase numbers",
+        "r1-architect.json:P8 — the one hasCaller predicate that now carries the mission clause"
+      ],
+      "confidence": "med",
+      "territories": ["12", "14"]
+    },
+    {
+      "id": "P14",
+      "claim": "HELD AND EXTENDED. Refuse to arm the loop before the non-producer done-test resolver binds; the first mission's done-test may not contain a quality judgement, rung 0 and rung 1 only; AND the evidence ladder must refuse aggregation across rungs.",
+      "reasoning": "Relentlessness is the easy half — Ralph proves it is four lines. The done-test is what makes relentless walking different from a token furnace, and the resolver cannot be the producer at 0.543 against a panel only 0.741 self-consistent. Arm the loop first and the first thing it does at 3am is satisfy itself, producing a RECORD of successes that becomes the input to every downstream mechanism — bad outcome data is worse than none because it is actionable. Round 2 adds the third clause, which nobody proposed: N1 (union, never average) has been applied to judge panels by four of five personas and by nobody to the evidence ladder, where the same failure is available and worse, because the ladder feeds the world verifier that visionary:P1 puts everything downstream of. A rung-1 result and a rung-4 result in one field with only an annotation between them is how 'a stranger understood it' is reported as 'someone paid'. Mechanism for all three: schema refusal, the shape schema-lint.js already uses to refuse `steps:` in a playbook stage.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§4 a design PASS/BLOCK judge measured 0.543 against a panel only 0.741 self-consistent",
+        "docs/02-competitive/expansion/concepts.md:§15 A3 a model scoring its own work",
+        "docs/02-competitive/expansion/concepts.md:§4 W2 the evidence ladder — declare which rung, never report a lower rung as a higher one",
+        "docs/03-system-design/STARTUP-OS.md:§2 Decision 7 — the first mission is a synthetic landing page",
+        "r1-visionary.json:P1 — everything downstream of the world verdict, which consumes the rung field"
+      ],
+      "confidence": "high",
+      "territories": ["01", "08"]
+    }
+  ],
+  "strongest_counter": "Five sealed rooms independently confessed that their own proposals were too large, and my answer to that is another filter — a ceiling whose only job is to bound mechanisms. The count is better than it was: nine of my fourteen positions build nothing, and after folding P3 into the architect's predicate and downgrading P5 to a labelled policy, three of my positions are mechanisms rather than five. A refusal has no caller, cannot become unwired, needs no expiry check to keep working, and in visionary:P14's vocabulary is negative inventory. But adversary:P6 landed the objection I did not anticipate and cannot close. A refusal costs nothing to RUN and it does cost something to HOLD: someone must consult the list before proposing, and `.out-of-scope/` in CI checks a MERGE, not a PROPOSAL. The filtering conversation — a board meeting exactly like this one — is where the cost of a refusal is actually paid, and it is precisely where no mechanism reaches. Moving the expiry from calendar to counter reduces the carrying cost; it does not put a mechanism on the proposal. Worse, and this is the part I would not want a synthesizer to soften: my Round-1 P1 described seven capabilities the smallest company 'cannot' have, and risk-modeler:P2 measured that three of them are live right now — outbound mail, publishing and remote execution all return exit 0 from the only blocking hook, and the blocking-human gate that would stop them has no consumer. I wrote an intended system in the present tense. That is the identical defect as prose describing enforcement that does not exist, which is the defect this repository was built to catch, committed by the persona whose entire job is to catch it. If the board discounts my positions by one notch on that basis it is entitled to. The second objection I still cannot mechanise is the one from Round 1: STARTUP-OS §1b already concluded the rebuild is small, so if most of the remaining work is WIRING then a refusal-heavy posture is fighting a war already won, and adversary's demand test — repaired to a finding rather than a gate — would settle in seven days what this meeting has spent five rooms arguing."
+}

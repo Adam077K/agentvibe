@@ -1,0 +1,180 @@
+{
+  "persona": "architect",
+  "round": 1,
+  "thesis": "The system is one substrate and four layers, and the substrate is smaller than anything proposed. Exactly five components are load-bearing: identity on every event row (a task id through logEvent), the capability grant plus the probe that proves it arrived, the policy seam, the claim ledger, and the done-test as a resolver kind. Everything else across the fourteen territories — packs, personas, council, board, missions, balcony, FIELDS, voice, trust, retirement — is a leaf: wrong-in-a-week, rebuilt-in-a-week, reversible by git revert. The headline correction is that Decision 1's 'Keep L1' names one thing that is really two with different reach: the claim ledger's unit is an assertion and follows the system into video, pricing and copy, while the verdict binding's unit is sha256(git diff) and structurally cannot. The build order is forced at only three edges — identity before everything because a column added later has no history under it, the grant-arrival probe before any pack because the grant is measured unreliable with cause unknown, and the classifier's input domain widened from path to action before any pack holds an outbound tool. Everything else is preference, and should be built fast, loose and continuously to match the founder's stated cadence.",
+  "positions": [
+    {
+      "id": "P1",
+      "claim": "'Keep L1' is one decision covering two components with different reach, and the split must be explicit before the first non-code mission.",
+      "reasoning": "scripts/verdict.mjs declares its own subject as sha256 of a git diff. A published video, a sent email, a live landing page and a price change have no diff, therefore no subject, therefore no verdict record. The claim ledger is the opposite by construction and says so in its first paragraph — a pricing model, a market number, a positioning statement have no diff to gate. Carried forward as a single item, the first non-code mission discovers the gate does not apply by shipping.",
+      "evidence": ["scripts/verdict.mjs:17 (subject = sha256 of git diff)", "docs/03-system-design/CLAIM-LEDGER.md §1 Why a claim and not a diff", "docs/03-system-design/STARTUP-OS.md §2 Decision 1"],
+      "confidence": "high",
+      "territories": ["08", "14"]
+    },
+    {
+      "id": "P2",
+      "claim": "The capability grant is the load-bearing primitive of the whole L2 rebuild and it is measured unreliable in the arriving direction, cause unknown. The reachability probe is a day-one component, not a territory-03 nicety.",
+      "reasoning": "The ledger's own claim records that the grant NARROWS reliably (builder held zero mcp__* tools in all observations) but that whether it ARRIVES is uncertain — 24 playwright tools on 2026-08-16, zero across three independent designer dispatches on 2026-08-17, configuration intact, cause unknown — and the claim is marked configuration_only:true, meaning the ledger checked the config and not the behaviour. A second, fully measured transformation compounds it: a declared tool list is an upper bound, not the set. Glob and Grep are silently dropped whenever Bash is declared beside them (orchestrator 7 to 5, builder 6 to 4, reviewer 4 to 2, sourcer 5 to 5 as the negative control). designer declares [Read, Write, Edit, Bash, Glob, Grep], so the one engine holding the browser grant receives four of six and nothing reports it. Until a probe runs green on a schedule, every pack in the system is a hypothesis and the failure mode is silent absence rather than error.",
+      "evidence": [".claude/ledger/index.json c-mcp-grant-binds-through-agent-dispatch", "scripts/probe-agent-tool-inheritance.mjs header (declared list is an upper bound)", "scripts/lib/check-suite.js EXCLUDED['test:probe-agent-tool-inheritance'] (CONTAINED, exit 0, claude 2.1.246)", ".claude/agents/designer.md tools line", "docs/02-competitive/expansion/concepts.md H2"],
+      "confidence": "high",
+      "territories": ["03", "02", "09", "11"]
+    },
+    {
+      "id": "P3",
+      "claim": "Identity on the row is the only true retrofit blocker in the design, it is measurably absent, and it costs one field in one function with five callers today.",
+      "reasoning": "Measured across the whole real event corpus at ~/.agentvibe/events.jsonl: 3,813 events, and the complete set of keys ever written is artifact/at/body_sha256/by/claim/code/decision/detail/details/dry_run/enforcement/event/file/host/id/kind/mode/reason/resolver/rule/safelist/scope/server/stall_output/status/tier/tool/ts/url/window_output. No task_id, no mission_id, no run_id, no session_id. The one id present appears on 10 of 3,813 events and is a claim-append error code. Every downstream territory question is a GROUP BY on the missing column: cost per mission, cost per surviving artifact, trust per pack-times-field, last-use telemetry for retirement, the balcony row a founder taps, the post-mortem. scripts/lib/events.js exposes exactly one writer, logEvent, with five callers. CAST could not answer 'what did this task cost' and had to heuristically join on a 60-second time window because there was no foreign key — that is not a mistake made late, it is one that cannot be unmade.",
+      "evidence": ["MEASURED 2026-09-02: ~/.agentvibe/events.jsonl, 3,813 events, full key census", "scripts/lib/events.js:55 logEvent (5 callers: budget-guard.js, ledger.mjs, ledger.test.mjs, events.js, claim-append.js)", "docs/03-system-design/STARTUP-OS.md §8b consolidated steal list item 7", "docs/02-competitive/expansion/concepts.md CT2"],
+      "confidence": "high",
+      "territories": ["07", "13", "10", "12"]
+    },
+    {
+      "id": "P4",
+      "claim": "The stall ceiling — nominated as the loop's primary circling brake — has a measured six-hour blind spot and fails toward passing. Fix it before the loop exists, not after.",
+      "reasoning": "sinceLastArtifact sums recentTurns, and recentTurns discards every turn older than RETAIN_HOURS = 6. Measured in this worktree: last durable artifact 2026-08-31T11:20Z, retention horizon 2026-09-02T01:48Z, so the artifact predates the horizon by 38.5 hours and those tokens are uncounted. The direction of the error is what makes it a defect: the longer the circling continues, the smaller the reported number becomes relative to truth, so the ceiling fires less the deeper the machine is stuck. It does not return unresolved — it returns an integer that looks like a measurement and is a truncation, which is Rule 10 violated inside the component nominated to enforce it. A 24/7 unattended loop exceeds six hours on its first night.",
+      "evidence": ["scripts/lib/usage.js:40 RETAIN_HOURS = 6", "scripts/lib/usage.js:103 recentTurns horizon filter", "scripts/lib/usage.js:244 sinceLastArtifact", "MEASURED 2026-09-02: artifact predates horizon by 38.5h", "docs/03-system-design/STARTUP-OS.md §8b anti-repetition"],
+      "confidence": "high",
+      "territories": ["01", "07", "13", "12"]
+    },
+    {
+      "id": "P5",
+      "claim": "The stall counter divides an account-wide numerator by a repo-local denominator, and the seam opens the moment two missions run at once.",
+      "reasoning": "recentTurns says of itself 'every turn inside the retention horizon, across every project' and walks ~/.claude/projects — measured, 2,944 transcripts across 54 project directories. lastArtifactAt is anchored at opts.repoRoot || process.cwd() — one git log, one sessions directory, one events log. Demonstrated by running both roots in the same second: this worktree gave a session-file artifact at 07:12Z and the main checkout gave a commit at 2026-08-31T11:20Z, two genuinely different denominators, and both returned an identical 61,410 output tokens. With Decision 2's resting state working a goal tree and territory 14 running several ventures, each mission's stall counter will include every other mission's tokens, so a productive lane is throttled by a stuck one and a stuck lane is masked by a productive one. The rope stops measuring circling and starts measuring overall busyness, which is the window ceiling already sitting beside it. The fix requires filtering turns by producing mission, which is impossible until a row carries a mission id — so the loop's only working brake cannot be made correct without P3.",
+      "evidence": ["scripts/lib/usage.js:103 recentTurns ('across every project')", "scripts/lib/usage.js:186 lastArtifactAt (opts.repoRoot || process.cwd())", "MEASURED 2026-09-02: two roots, two artifact kinds, identical 61,410 tokens; 2,944 transcripts / 54 project dirs"],
+      "confidence": "high",
+      "territories": ["01", "07", "13", "14"]
+    },
+    {
+      "id": "P6",
+      "claim": "The classifier's input domain is a file path and worldly actions have none. R1's REACH axis is a signature change to the one file A5 forbids duplicating, and it must land before any pack holds an outbound tool.",
+      "reasoning": "The classifier's public surface is classifyFile(file, rules) and classifyFiles(files, rules); every rule in qa-tier-floor.yml is a pattern glob matched against a normalised path string. 'Send this email', 'publish this video', 'spend $200 on Meta Ads' and 'message this customer' have no path — they are tool calls. hands.md reaches the same conclusion from the capability side: money is the missing axis, every tier here is about reversibility or blast radius, and ad spend, GPU-seconds and postage need a rate limit no mechanism can express. So R1 is not a new axis over an existing input, it is a widening of the input domain from path to action, in an irreversible-tier file. If the loop gains outbound hands first, someone under pressure writes a small separate 'is this outbound' check, and that is the second implementation arriving by the side door — the exact defect classify.mjs's own header warns about and which this repo has already suffered once.",
+      "evidence": ["scripts/lib/classifier.js:132 classifyFile(file, rules)", "scripts/lib/classifier.js:179 module.exports", ".claude/qa-tier-floor.yml rules[].pattern", "docs/02-competitive/expansion/hands.md §8 sentence 3 (money is the missing axis)", "docs/02-competitive/expansion/concepts.md A5, R1"],
+      "confidence": "high",
+      "territories": ["09", "03", "13"]
+    },
+    {
+      "id": "P7",
+      "claim": "Rule 10 is written one-directional and must become symmetric before the ledger can ever leave shadow. Measured: three of eight would_block findings are environment, not defect.",
+      "reasoning": "The stated invariant is 'no resolver returns pass when it could not check' and it is silent about fail. ledger verify --offline in this worktree returns 46 claims, 84 pass, 8 would_block, 0 block — and c-mission-control-rail, c-mission-control-trusted-roots and c-mission-control-cross-site-refused all report 'fail: exit 1, expected 0'. All three run bun test inside mission-control, mission-control/node_modules is absent in this worktree, and none of the three declares evidence.unchecked_exit — the field CLAIM-LEDGER.md §2 documents for exactly this case. So the ledger reports a broken claim where the truth is an unmeasured one. In shadow that costs nothing; on promotion, a fresh checkout fails the build for a missing bun install and every contributor learns the ledger cries wolf. Note also that CLAUDE.md states the count is 5 and that 'it stays 5' — it is 8, and nobody edited the prose.",
+      "evidence": ["MEASURED 2026-09-02: node scripts/ledger.mjs verify --offline → 46 claims, 84 pass, 8 would_block, 0 block", "MEASURED: mission-control/node_modules absent; all three claims lack evidence.unchecked_exit", "docs/03-system-design/CLAIM-LEDGER.md §2 evidence.unchecked_exit", "docs/03-system-design/CLAIM-LEDGER.md §3 the one invariant", "CLAUDE.md Project State (states 5 would_block)"],
+      "confidence": "high",
+      "territories": ["08", "09", "12"]
+    },
+    {
+      "id": "P8",
+      "claim": "The birth certificate already exists four times, for four artifact types, with four different exemption conventions and no shared predicate. Build the predicate once; a fifth instance is the disease it treats.",
+      "reasoning": "X1's 'Enforced by' line claims check-registration.mjs already implements the hard half via the dead-path check. It does not — that check runs reference-to-existence (a governing doc mentions a path, so the path must exist), and X1 needs existence-to-reference (an artifact exists, so a caller must name it). The reverse direction does exist, four times independently: skills in build-skill-routers.mjs (orphan = in no namespace, with no exemption mechanism at all), test files in check-suite.test.mjs (orphan = not named by package.json, exempted by a free-prose JS map with no length floor), gates in check-gates.mjs (orphan = named by no playbook, exempted by unused_reason at 40 characters minimum and failing if carried while used), and suite steps via EXCLUDED in check-suite.js. Four implementations of one predicate with four exemption shapes and no shared code — the A5 failure realised four-fold inside the machinery meant to prevent it. And workflows are governed by none of the four, which is why design.js and research.js have zero callers and nothing noticed.",
+      "evidence": ["scripts/check-registration.mjs:120 (dead-path runs reference→existence)", "scripts/build-skill-routers.mjs:76 (skills orphan check, no exemption)", "scripts/check-suite.test.mjs:3160 TEST_FILES_RUN_BY_NOTHING", "scripts/check-gates.mjs:226 unused_reason (≥40 chars)", "scripts/lib/check-suite.js:143 EXCLUDED", "docs/02-competitive/expansion/concepts.md X1, A5"],
+      "confidence": "high",
+      "territories": ["12", "04", "02"]
+    },
+    {
+      "id": "P9",
+      "claim": "'Wire what exists' has a runtime constraint under it that the agenda does not name: only a main session can invoke a workflow, so design.js and research.js are not wire-able by either a dispatched engine or a server-side loop.",
+      "reasoning": "Measured: every reference to design.js and research.js in the tree is prose, a tier rule, or a path string in a test fixture — classifier.test.mjs:75 uses the path for tier classification and produce-verdict.test.mjs:562 asserts the path must NOT reach the gate session. Zero executable callers for all three producing workflows, against roughly sixty references for qa.js including run-checks.mjs, load-qa.mjs and ci.yml. The constraint: Workflow is a main-session tool. probe-workflow-reach.mjs measured 0 of 55 recorded Workflow calls from a sidechain against 57,590 subagent Bash calls; probe-agent-tool-inheritance.mjs returned CONTAINED, exit 0, with a --agent orchestrator session offered five tools and Workflow not among them; grep -c '^tools:.*Workflow' returns 0 across all eighteen agent files. gates.yml states the consequence: a missing tool reads as a silent no-op rather than an error. So a dispatched engine cannot invoke design.js, and a loop beside the mission-control server cannot either because crosscheck.test.ts bans a shell call under server/** at zero exceptions. Only a main session can — meaning the creativity machinery is reachable only when the founder is typing, which is the complaint that opened this rethink. The containment is correct and should be kept, but it governs gate and producer workflows as one class, and nothing distinguishes 'contained on purpose' from 'unreachable by accident'.",
+      "evidence": ["MEASURED 2026-09-02: zero executable callers for design.js, research.js, coding.js", ".claude/gates.yml 'A PLAYBOOK NAMES A GATE. ONLY THE SESSION INVOKES ONE'", "scripts/probe-workflow-reach.mjs (0 of 55 sidechain calls)", "scripts/lib/check-suite.js EXCLUDED['test:probe-agent-tool-inheritance'] (CONTAINED verdict)", "mission-control/test/crosscheck.test.ts:290 (no shell in server/**)", "docs/03-system-design/STARTUP-OS.md §8 item 1"],
+      "confidence": "high",
+      "territories": ["11", "12", "02", "09"]
+    },
+    {
+      "id": "P10",
+      "claim": "The policy seam is the right consolidation and its reach must be measured before its handlers are designed, because PreToolUse currently sees neither a dispatch nor a fetch.",
+      "reasoning": "Omnigent's policy-as-code collapses five planned subsystems into one shape and should be taken. But the founder decision fixes the substrate to the eight unused hook events with pre-tool-use.sh untouched, and the live matcher is 'Bash|Edit|Write|NotebookEdit|mcp__' — five tool classes, with Task, WebFetch, WebSearch and Read all absent. Two consequences land on live proposals: H3's taint tracking has no hook at its actual source, because foreign instructions enter context via WebFetch and WebSearch and neither reaches the hook; and a dispatch is invisible to the seam because Task is unmatched, which is the natural place to check budget, WIP, trust or a kill switch before spend begins — budget-guard.js's own header records that the Phase 6 gate required the ceiling to fire before dispatch. Two honest repairs exist: widen the matcher (a settings.json edit, irreversible tier, founder-only) or accept that the seam governs tool use and not tool dispatch and put those checks in the dispatcher. The precedent for not measuring first is exact: 52 agent files once declared mcpServers while no MCP config existed anywhere.",
+      "evidence": ["MEASURED 2026-09-02: .claude/settings.json PreToolUse matcher = 'Bash|Edit|Write|NotebookEdit|mcp__'", "MEASURED: only SessionStart and PreToolUse are registered, 2 of 10 hook events", "docs/02-competitive/expansion/concepts.md H3", ".claude/hooks/budget-guard.js:13 (ceiling must fire before dispatch)", ".claude/hooks/schema-lint.js:104-113 (a field that looks like a boundary and enforces nothing)"],
+      "confidence": "high",
+      "territories": ["09", "03", "07", "11"]
+    },
+    {
+      "id": "P11",
+      "claim": "A pack cannot be a new frontmatter key and the runtime offers no way to grant tools at dispatch time. Decision 3's mechanism is undecided and it blocks first.",
+      "reasoning": "Two measured walls. First, the agent-file frontmatter schema is a closed 15-key allowlist in schema-lint.js — name, description, model, effort, tools, maxTurns, color, isolation, skills, mcpServers, risk_tier_default, escalates_to, escalates_when, return_contract, pre_flight_reads — whose own comment explains that an unknown key is decoration by definition and will be mistaken for a grant, citing the mcpServers failure across 52 files. So a pack: key fails the lint, and editing schema-lint.js is irreversible tier. Second, the Agent dispatch tool's parameters are description, prompt, subagent_type, model, isolation, name and team_name — there is no tools and no mcpServers, so a grant can only come from an agent file on disk. That leaves exactly two shapes, neither chosen: one generated agent file per engine-times-pack, which works today and is roster growth by multiplication (the pressure that took this repo to 26 agents and forced the collapse to 7, and which X4's ratchet exists to resist); or a pack as a separate file composed at dispatch, which is the better design and which the runtime does not support. Every other L2 question is downstream of this.",
+      "evidence": [".claude/hooks/schema-lint.js:353-360 KNOWN_FM_KEYS (closed 15-key allowlist)", ".claude/hooks/schema-lint.js:104-113 (the mcpServers decoration failure across 52 files)", "Agent tool parameter schema (no tools/mcpServers parameter)", "docs/03-system-design/STARTUP-OS.md §2 Decision 3, §4", "docs/02-competitive/expansion/concepts.md X4"],
+      "confidence": "high",
+      "territories": ["02", "03", "09"]
+    },
+    {
+      "id": "P12",
+      "claim": "Cost to reverse should drive sequencing, and it splits the bill of materials cleanly into a slow half and a fast half.",
+      "reasoning": "Unbounded to reverse: identity on the row, because history written without the column is permanently unattributable. High: the event schema (consumers accumulate and a shape change breaks every reader at once) and the grant model (packs, personas and the balcony all encode assumptions about what a worker holds). Medium: widening the classifier, and the policy seam's settings.json edits. Not reversible at all: anything outbound — git revert does not unsend an email or unpublish a video, which is ADR-001's own test. Cheap, days: packs, personas, council, board, missions file, balcony views, FIELDS. The operating rule this yields is that the reversible half should be built fast, loose and continuously — matching the founder's stated cadence of small landings with no phase numbers and Omnigent's fifteen releases in ten weeks with 'Phase N' appearing nowhere — while the five load-bearing components are built slowly, once, each with a named mechanism. Treating both halves at the same speed is what produced nine phases and one venture task.",
+      "evidence": ["docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md (the git revert test)", "docs/03-system-design/STARTUP-OS.md §8b (Omnigent changelog, no 'Phase N')", "CLAUDE.md Project State (nine phases)", "docs/08-agents_work/board-meetings/2026-09-01-startup-os/r0-shared.md (cadence is continuous, no phase numbers)"],
+      "confidence": "med",
+      "territories": ["14", "12", "09"]
+    },
+    {
+      "id": "P13",
+      "claim": "The ledger caught a false belief about its own substrate, dispositioned it and named its successor, while the prose quoting it is still stale. That is the argument for keeping the ledger as foundation and for putting every durable fact in it.",
+      "reasoning": "Two ledger claims assert opposite things about the same mechanism: c-mcp-hook-matcher-must-name-the-tool says an MCP call reaches pre-tool-use.sh only if the matcher names that exact tool and that every other MCP tool is unhooked; c-mcp-matcher-names-the-prefix-and-policy-decides says every mcp__* call reaches the hook because the matcher names the prefix. The apparent contradiction is already resolved by the mechanism: verify reports the first as deprecated, with a disposition recording that the change-detector fired and was right, that PR #73 moved both pinned strings, that the assert is retained unedited because a stale assert preserved beside its correction is the ledger's own argument for expiry, and that it is succeeded by the second claim. The live matcher is the successor's version. Meanwhile CLAUDE.md still teaches the deprecated claim as a live registered fact. The data caught its own error, recorded the correction and pointed at the replacement; the prose beside it did not and cannot. Any durable fact in the new system — a pack's grant, a field's best practice, a done-test threshold, a trust level — belongs in the ledger with an expiry.",
+      "evidence": ["MEASURED 2026-09-02: node scripts/ledger.mjs verify --offline (deprecation disposition text)", ".claude/ledger/index.json (both claims)", "MEASURED: .claude/settings.json matcher is the prefix form", "CLAUDE.md Project State ('Durable facts are claims now' bullet, still citing the deprecated claim)"],
+      "confidence": "high",
+      "territories": ["05", "08", "12"]
+    },
+    {
+      "id": "P14",
+      "claim": "budget-guard.js is registered in no settings file; its 1,422 events came from being run by hand. The rope protects nothing today, and registering it is founder-gated — which makes it a blocker on the loop.",
+      "reasoning": "Measured: grep for budget-guard returns 0 in .claude/settings.json, 0 in ~/.claude/settings.json, and no match in either settings.local.json. Yet the event log holds 474 budget.block and 948 budget.allowed_safelisted events between 2026-08-26 and 2026-09-01. The guard executes when a person runs it and never fires as a hook, so the event volume must not be read as the thing being live. Registering it edits .claude/settings.json, which is irreversible tier and denied to the write tools, and the shared context records that none of the three founder-only permissions is yet authorised. The loop cannot safely run before that permission is granted, because the rope is the only thing standing between an unattended loop and the founder's own five-hour quota. This is a dependency from a leaf onto a decision only a person can make, and it should be surfaced now rather than discovered at 3am.",
+      "evidence": ["MEASURED 2026-09-02: grep -c budget-guard → 0 in all four settings files; 1,422 budget events on disk", "docs/08-agents_work/board-meetings/2026-09-01-startup-os/r0-shared.md (three founder-only permissions, none authorised)", ".claude/qa-tier-floor.yml (.claude/settings.json is irreversible, enforcement block)", "docs/03-system-design/STARTUP-OS.md §2 Decision 8"],
+      "confidence": "high",
+      "territories": ["13", "09", "01"]
+    }
+  ],
+  "what_must_be_true": [
+    "The MCP grant can be made to arrive reliably across an Agent dispatch. If it cannot, 'workers = capability packs' is not implementable on this runtime and L2 needs a different shape — probably one main session per mission rather than dispatched workers.",
+    "The runtime lets a pack exist as something other than a hand-written agent file. Otherwise the roster grows by multiplication (engines times packs) and X4's ratchet becomes load-bearing far earlier than planned.",
+    "The founder grants the three permissions. The rope cannot be registered, the second model family cannot be tested, and the hook bypass cannot be closed without them; all three are irreversible tier by this repo's own classifier.",
+    "A task_id is available at the point logEvent is called. If an id cannot be threaded across a dispatch boundary, D0 is harder than one field and must be re-scoped before it is promised.",
+    "Non-diff work either gets a binding of some kind, or the board accepts explicitly that video, content and outbound work run with the claim ledger only and no verdict record.",
+    "RETAIN_HOURS = 6 is a performance budget rather than a correctness assumption, so it can be raised or made to report unresolved past the horizon without breaking the guard's latency (measured warm at 0.08s)."
+  ],
+  "refuse": [
+    {
+      "what": "A second risk classifier in any form, including a small helper answering 'is this outbound?'",
+      "why": "scripts/classify.mjs's own header: two implementations of risk classification will disagree, and you find out during the incident. It has already happened here once, when qa-lead-pass.yml computed a stricter second answer. Widen classifyFile into classifyAction; never parallel it."
+    },
+    {
+      "what": "A fifth independent birth-certificate check for a new artifact type.",
+      "why": "Four already exist (skills, test files, gates, suite steps) with four different exemption conventions and no shared code. A fifth instance commits the disease it is meant to treat. Build one hasCaller predicate and migrate the four."
+    },
+    {
+      "what": "Any done-test whose resolver is the producing model.",
+      "why": "A3, plus the local measurement: a design PASS/BLOCK judge scored 0.543 against a panel only 0.741 self-consistent. The done-test must be deterministic, external, or human."
+    },
+    {
+      "what": "A total: field summed from judge outputs, anywhere in the new design.",
+      "why": "A1 — union, never average. design.js already sums four 0-10 axes and sorts, and it is the one creativity mechanism in the repo, using the exact selector the repo's own evidence says does not work."
+    },
+    {
+      "what": "Deleting or weakening PS-WORKFLOW-CONTAINMENT to make design.js reachable.",
+      "why": "The zero is the guarantee — the gate may not be invocable by the thing it gates, the same reason reviewer carries no Write. Split the declaration by workflow kind (gate versus producer) instead of removing the containment."
+    },
+    {
+      "what": "A pack that names a tool no probe has confirmed arrives.",
+      "why": "P2. H2's own failure clause says it: where a read-only or dry-run invocation does not exist, record the grant as unprobed rather than assuming it works. A believed capability is worse than a missing one."
+    },
+    {
+      "what": "Building the mission tree before the loop.",
+      "why": "Not forced by any dependency. A loop with one hardcoded goal is a complete, testable loop; MISSIONS.yml can hold a single entry for a month without anything above it being wrong. Sequencing it first is preference wearing the costume of architecture."
+    },
+    {
+      "what": "Any rule in the new design stated without its enforcing mechanism.",
+      "why": "A6 and the standing rule. CLAUDE.md's rules table once carried eight rules with zero enforcement; the cure was labelling them ADVISORY honestly. Label it WISH so it can be argued with."
+    }
+  ],
+  "build_order": [
+    "1. task_id through logEvent — forced by retrofit impossibility. Five call sites today, unbounded cost later, and the loop's only working brake (P5) cannot be made correct without it. This is the single item that a synthetic mission cannot teach you, because the mission that teaches you has already run without it.",
+    "2. Rule 10 made symmetric, plus evidence.unchecked_exit on the three mission-control claims — forced by P7. Roughly an hour of work, and a precondition for ever promoting the ledger out of shadow: a gate that reports a missing bun install as a false claim never gets promoted.",
+    "3. The grant-arrival probe (H2), generalised from four agents to every pack and put on a schedule — forced by P2. Everything in L2 is a hypothesis until it runs green, and the existing probe is already hermetic (fake CLI in a temp dir, no model turn, no credentials, 22 of 22 in 22.4s).",
+    "4. Fix the stall counter's six-hour truncation to return unresolved past the horizon — forced by P4, and it must land before the loop rather than after, because it fails toward passing and a 24/7 loop exceeds six hours on night one.",
+    "5. One hasCaller predicate with the four call sites migrated to it — forced by P8. Afterwards workflows, packs, personas and commands become config entries rather than a fifth implementation.",
+    "6. Widen classifyFile into classifyAction, keeping classifyFile as the path-shaped special case — forced by P6, and it must land before any pack holds an outbound tool, because afterwards someone writes the second classifier under pressure.",
+    "THEN, in whatever order the founder prefers, because these are leaves and reversible in days: the loop with one hardcoded goal, the balcony's three verbs, packs, personas, the council, FIELDS/, and missions as a tree.",
+    "FOUNDER-GATED and blocking step 4 and the loop: register budget-guard.js, close the ( npx --version ) bypass, test gemini. All three are irreversible tier and none is authorised."
+  ],
+  "open_questions": [
+    "Can a pack be composed at dispatch time, or must it be a file on disk? This blocks the shape of the entire L2 layer and is answerable by one experiment against the runtime.",
+    "Why did the designer's MCP grant arrive on 2026-08-16 and not on 2026-08-17, with configuration intact? Cause unknown, and it is the single most load-bearing unknown in the bill of materials.",
+    "Where does the loop live? It determines whether producing workflows are reachable at all (P9) and whether a task_id can cross the dispatch boundary (P3).",
+    "Does non-diff work get a binding? If yes, what is the subject function for a published video or a sent email? If no, that should be stated in the design rather than discovered by shipping.",
+    "Is RETAIN_HOURS = 6 a performance budget or an arbitrary constant? The correct fix in P4 differs depending on the answer — raise it, make the truncation unresolved, or both.",
+    "Should the four existing exemption conventions converge on unused_reason's shape (a length floor plus a fails-when-used rule), which is the strongest of the four, or on something new?"
+  ],
+  "strongest_counter": "That I have described a better truth machine, and the founder said the truth machine was the mistake. Four of my six forced build-order items are repairs to existing L1 machinery — symmetric Rule 10, the stall counter, hasCaller, the classifier's domain. A founder who has watched nine phases produce 171 session files about the harness and one venture task can read my build order as phase ten, and would not obviously be wrong: the census says six of ten asked-for things already exist unwired, and my answer is largely a set of instruments to detect unwiring better. An instrument is not a landing page. The honest counter-methodology is to build the synthetic mission first (Decision 7), let it fail, and let what actually breaks select the components — which is what Omnigent's fifteen releases in ten weeks look like from outside, and which would have found the grant-arrival problem in an afternoon rather than a board meeting. What I would say back is narrow: of my five load-bearing components, exactly one is genuinely un-discoverable-by-doing — the task id, because the mission that teaches you that you need it has already run without it. The other four are all discoverable by attempting the synthetic mission, and would be found faster that way. So the defensible minimum is much smaller than my build order: add the id, then run the mission, then let the failures pick the rest. I would still argue for the grant probe before the mission, because a silent capability absence produces a confusing failure rather than an instructive one — the beeond lesson exactly, where eleven mockups were made, none could be looked at, and the diagnosis cost a design round. But that is an argument about the cost of one afternoon, not about architecture, and the board should weigh it as such."
+}

@@ -1,0 +1,177 @@
+{
+  "persona": "visionary",
+  "round": 1,
+  "thesis": "By September 2028 the difference between a company and a very fast contractor is whether the machine got better at its business, and only three things in the 420 options can make that happen: an outcome loop that records what the world did with an artifact, an archive of creative range plus a corpus of the founder's own choices, and a global field store that makes venture three cheaper than venture one. Everything else on the table is either a feeder that raises the rate of an input to one of those, or inventory that grows, costs to hold, and returns nothing until something reads it. Most of what this repo has built and most of what the expansion studies surfaced is inventory: 134 skills cited by 0 of 18 agents, 2,936 transcripts nothing reads, 15 MCP servers 2 agents can reach, 171 session files essentially all about the harness. The repo has nevertheless invented the one mechanism that converts inventory into a flywheel, forced expiry with a compelled disposition, and today it points at a single object type. The strategic move is to point it at every store, sequence the build behind the two things that are genuinely not retrofittable (the task id and the policy seam), and measure the one ratio that detects the way this ends badly: harness work versus venture work.",
+  "positions": [
+    {
+      "id": "P1",
+      "claim": "The world's verdict is the only true flywheel, and four other proposals are strictly downstream of it, which makes the build order forced rather than preferred.",
+      "reasoning": "Trust promotion, bandit allocation across creative directions, cost per surviving artifact, and the one company metric all read an outcome signal that does not exist today. T1's own failure note states the sequencing explicitly: trust is downstream of the world's verdict and cannot be built first. Mechanism: a fifth resolver, verified_by: world, in scripts/lib/resolvers.js, where the registration shape for five resolvers already exists and scripts/ledger.test.mjs already pins unresolved as distinct from pass for every one. Rule 10 governs absolutely: unreachable instrument resolves unresolved, never pass.",
+      "evidence": ["concepts.md:§4 W1", "concepts.md:§9 T1 Fails when", "00-TERRITORY.md:The twelve things never named, item 5", "concepts.md:§17 item 4"],
+      "confidence": "high",
+      "territories": ["08", "01", "12"]
+    },
+    {
+      "id": "P2",
+      "claim": "Forced expiry with a compelled disposition is this repo's one invention that converts inventory into a flywheel, and it should govern every store rather than only claims.",
+      "reasoning": "A store that only grows is inventory; a store whose entries come due and force refresh, deprecate or waive improves as a function of time. Packs, skills, personas, field files, tool grants and shipped-register entries rot the same way as claims and faster, which STARTUP-OS.md §6 says in terms about short-form video best practice. Mechanism: retire_on on every governed artifact resolved by claim-freshness's exact shape, which fails once the date passes, refuses a waiver with no until, and fails harder on a lapsed waiver than on none. New object type, existing mechanism, no new subsystem. Known failure: mass expiry in a quiet month produces a batch waiver, so stagger dates at creation.",
+      "evidence": ["STARTUP-OS.md:§6 Memory", "concepts.md:§10 X3", "CLAUDE.md:Rules (All Agents) rule 9"],
+      "confidence": "high",
+      "territories": ["12", "05", "04", "02"]
+    },
+    {
+      "id": "P3",
+      "claim": "The task id is the only irreversible decision in the first month; everything else in this document can be added in month nine at ordinary cost.",
+      "reasoning": "CAST cannot answer what a task cost because there is no foreign key, and it needs a heuristic 60-second time-window join between dispatch_decisions and agent_runs. The consolidated steal list marks it cannot be retrofitted. Mechanism: the dispatch wrapper refuses to dispatch without an id, the row schema requires it, and a suite check asserts no row lacks one. Mint a parent/child pair from the start, because adding a hierarchy later has the identical retrofit problem.",
+      "evidence": ["STARTUP-OS.md:§8b CAST", "STARTUP-OS.md:§8b consolidated steal list, item 7", "concepts.md:§14 CT2"],
+      "confidence": "high",
+      "territories": ["07", "10", "12", "13"]
+    },
+    {
+      "id": "P4",
+      "claim": "The first thing that runs unattended should be the daily capability probe, and its job is to mint the first task id and write the first balcony row rather than to be valuable.",
+      "reasoning": "It exercises the loop's home, the row schema and the id wire with zero blast radius, so the parts that cannot be retrofitted get real traffic where being wrong is free. Its output is useful anyway: three connected MCP servers need re-auth, two fail outright, both second-family model pins were retired six months ago, and the one command that reports all of it is run by nothing. Mechanism: claude mcp list plus the H2 reachability probe on a Claude-native scheduled task, writing a row. Territory 03 has no oracle today and this is the cheapest one available.",
+      "evidence": ["hands.md:§0.1 The MCP roster, with health", "hands.md:§6 free-today item 5", "hands.md:§8 sentence 1", "STARTUP-OS.md:§8 question 2"],
+      "confidence": "med",
+      "territories": ["03", "11", "10"]
+    },
+    {
+      "id": "P5",
+      "claim": "The founder's preference corpus is the company's moat by 2028, it is currently destroyed at the end of every session, and capturing it does not contradict the rule that taste enters once.",
+      "reasoning": "Every time the founder picks A over B, that information is lost when the session ends. Two hundred pairs, each with the pick and one sentence of why, is a calibration asset no vendor sells and that exists only as a by-product of running. §7 forbids re-asking the founder for taste at every step; C21 forbids forgetting what they already said, and the spec does not currently state that these are compatible, which matters because a careless reading of §7 forbids the exact mechanism that makes taste compound. Mechanism: the balcony's approve/redirect surface writes the pair since it is the only place a founder choice happens, the judge dispatch injects the N most relevant pairs, and a test asserts the injection. WISH on the why being accurate, since a one-line rationalisation may not be the real reason and nothing can check it. Pairs carry expiry per P2.",
+      "evidence": ["concepts.md:§1e C21", "STARTUP-OS.md:§7 Taste enters once, at the top"],
+      "confidence": "med",
+      "territories": ["05", "08", "14"]
+    },
+    {
+      "id": "P6",
+      "claim": "Global FIELDS scope is the only cross-venture compounding in the entire design, and it is the whole economic argument for calling this a company rather than a fast contractor.",
+      "reasoning": "Decision 9 settles the split; what has not been said is why it matters more than it looks. Without it every venture pays full price to learn the same field. Decision 4, built for this Mac for the founder, does not conflict: global here means across the founder's ventures, not across customers. Mechanism: the ledger already carries scope on every claim and already fails a global/project claim with no expiry, so the concept is live; add a lint that a global field file names no project proper noun, with a marked example block excluded from the check. Field files carry three annotated exemplars rather than only rules, per C16, and the exemplars expire like anything else.",
+      "evidence": ["STARTUP-OS.md:§2 Decision 9", "STARTUP-OS.md:§6 Memory table", "concepts.md:§14 K3", "concepts.md:§1 C16"],
+      "confidence": "med",
+      "territories": ["04", "05", "14"]
+    },
+    {
+      "id": "P7",
+      "claim": "The archive is the creative asset and the winner is only the cell we shipped from this time; the repo's one creativity mechanism currently uses the selector its own evidence rejects.",
+      "reasoning": "The founder's complaint is that the system loses creativity to playbooks. The fix is not a better playbook or a better judge, it is refusing to discard five candidates to keep one. design.js sums four 0-10 scores into a total and sorts, against §7's union-never-average rule and a measured design judge at 0.543 against a panel only 0.741 self-consistent. Mechanism: an archive/ directory per project with one file per occupied behavioural cell; a suite check that a design round producing no new occupied cell records filled: 0 rather than success; descriptors declared in the pack so schema-lint.js can refuse a QD phase with no descriptors, the same shape as its existing rule for mcpServers no config backs. Selection is a tested select() in scripts/lib: eliminate any candidate with a P1 finding, prefer fewest distinct P2s, break ties by archive distance. Known failure: if both descriptors proxy quality, every cell fills with the same thing and the archive is theatre.",
+      "evidence": ["concepts.md:§1b C2", "concepts.md:§1c C17", "concepts.md:How to read this — the design.js finding", "STARTUP-OS.md:§7 Union, never average"],
+      "confidence": "med",
+      "territories": ["04", "08", "12"]
+    },
+    {
+      "id": "P8",
+      "claim": "The policy seam is the only architectural choice on the table that makes later work smaller, which is what compounding means at the architecture layer.",
+      "reasoning": "Five separately planned subsystems — budget guard, QA gate, tool grants, approval gates, loop stopping rules — are one shape: an event fires, typed handlers vote, the strictest verdict wins, side effects withheld until the verdict is final. Build any of the five first and the seam gets built twice. Omnigent's cost gate fails closed when a model has no catalogue price, which is this repo's Rule 10 applied to money; two systems reaching the same rule from opposite directions is the strongest evidence available that it is right. Mechanism: built on the eight hook events currently unused with pre-tool-use.sh untouched, which the founder settled in session 2. Precedence in code, not prose: first DENY short-circuits, ASK accumulates, a later DENY still wins.",
+      "evidence": ["STARTUP-OS.md:§8b Omnigent", "STARTUP-OS.md:§8b consolidated steal list, item 1", "r0-shared.md:Founder decisions since the spec, session 2"],
+      "confidence": "high",
+      "territories": ["09", "13", "01"]
+    },
+    {
+      "id": "P9",
+      "claim": "Two-tier gates by type are what make 24/7 possible at all: there is no unattended night without a gate class the machine structurally cannot clear, however autonomous it becomes.",
+      "reasoning": "Safety by type rather than by policy is the difference between an unattended Tuesday that is boring and one that is frightening. Trust must make blocking-human gates rarer, never clearable. Mechanism: the gate kinds already exist — .claude/gates.yml declares four gates, one kind: command and three kind: human, a human gate has no run: and writing one is refused, and scripts/gates.test.mjs blocks via npm run test:playbooks. The addition is GSD's rule that blocking-human is never auto-approved even in full-auto mode.",
+      "evidence": ["STARTUP-OS.md:§8b GSD — two-tier checkpoint gate", "STARTUP-OS.md:§8b consolidated steal list, item 2", "concepts.md:§7 R3", "CLAUDE.md:Project State — Wave 2 item 2.2"],
+      "confidence": "high",
+      "territories": ["09", "01", "02"]
+    },
+    {
+      "id": "P10",
+      "claim": "The birth certificate protects the flywheel's denominator and is the only proposal that prevents built-and-never-wired rather than detecting it after the fact.",
+      "reasoning": "Four of four studied systems carry the defect in code today, and this repo diagnoses the disease better than anyone studied without taking its own medicine. Every existing cure — the dead-path check, PS-WORKFLOW-CONTAINMENT, check:curation, stop condition 7 — detects after the fact. Every unwired artifact inflates the count of what the system has while contributing nothing to what it does, corrupting the denominator of every metric including SI4. Mechanism: a CI check on the diff requiring, for each added artifact of a governed type, a reference from a governed caller set; scripts/check-registration.mjs already implements the hard half. Known hole and it is real: a caller can be a stub that satisfies the check and invokes nothing, so X2's last-use telemetry is required to close it, instrumented at the dispatch chokepoint rather than per artifact.",
+      "evidence": ["STARTUP-OS.md:§8b The meta-finding", "concepts.md:§10 X1", "concepts.md:§10 X2", "concepts.md:§17 item 1"],
+      "confidence": "high",
+      "territories": ["12", "02", "04"]
+    },
+    {
+      "id": "P11",
+      "claim": "The ratio of harness work to venture work is the stop condition nobody will set, and it is the only mechanism that detects the way this story ends badly.",
+      "reasoning": "This is the position I would fight hardest for. 171 session files essentially all about the harness; nine phases shipped and one venture task; no venture work has ever run through this harness, recorded as an accepted risk so it is a choice rather than an oversight — which is honest, and is also exactly how a system spends two years polishing itself. Mechanism: a monthly count over session-file frontmatter classifying each by the paths it affects, reading scripts/lib/classifier.js rather than paralleling it, because classify.mjs's own header warns that two implementations of risk classification disagree and you find out during the incident, and A5 forbids a second one. N consecutive months of harness work exceeding venture work is a finding, never an automatic action.",
+      "evidence": ["STARTUP-OS.md:§1 four facts table", "CLAUDE.md:Project State — Known and accepted", "STARTUP-OS.md:§8b Omnigent changelog observation", "concepts.md:§15 A5"],
+      "confidence": "high",
+      "territories": ["12", "14", "01"]
+    },
+    {
+      "id": "P12",
+      "claim": "Money is the axis with no mechanism, and a loop that walks relentlessly while holding a live ad account is the specific combination that turns that gap into a bill git revert cannot refund.",
+      "reasoning": "Every tier this repo has is about reversibility or blast radius; ad spend, GPU-seconds and postage need a rate limit and nothing here can express one. Meanwhile the riskiest capabilities are already granted — publishing to TikTok, sending mail as the founder, remote code execution, an authenticated Chrome — while PostHog, Sentry and a read-only Stripe key are not connected. Mechanism: absolute rate limits on outbound action independent of reasoning, expressed as policy handlers on the P8 seam; reversibility and blast radius declared on the tool grant rather than the call; dry-run by default on outbound tools following #116's shape, where an unknown flag is refused instead of performing the non-dry action. Meta Ads is the best forcing function for the risk tier and the worst thing to connect before that tier exists.",
+      "evidence": ["hands.md:§8 sentence 3", "hands.md:§8 sentence 2", "hands.md:§6 item 13", "concepts.md:§7 R5, R2, R4"],
+      "confidence": "med",
+      "territories": ["09", "13", "03"]
+    },
+    {
+      "id": "P13",
+      "claim": "Negative knowledge is the cheapest compounding asset, the one most likely to be dropped, and the only one that makes a second venture structurally faster before FIELDS has depth.",
+      "reasoning": "It compounds by removing cost rather than adding capability, so it never looks urgent and never demos well. There is essentially one small implementation in the world under MIT, with a gate that warns before an agent repeats a failed fix. Mechanism: DEAD-ENDS/ with a file per failed approach; negative claims of the form X does not work because Y carrying a reproducing command, which makes them resolvable by the existing command verifier rather than by anyone's memory; help requests carry what I tried, so negative knowledge is a by-product of asking rather than a separate discipline. Known failure: a dead end recorded once and never expired becomes a false constraint, so apply P2 — X does not work rots as fast as X works.",
+      "evidence": ["concepts.md:§6 N1, N2, N3", "open-source.md:§1 item 5 riponcm/projectmem", "open-source.md:§16 item 5"],
+      "confidence": "med",
+      "territories": ["05", "12", "04"]
+    },
+    {
+      "id": "P14",
+      "claim": "Every governed artifact should declare whether it compounds, and anything declared inventory must name the thing that reads it.",
+      "reasoning": "The endemic failure is not that people build unwired things; it is that nothing forces the author to say at creation which of three kinds of thing they are building. Flywheel: output improves as a function of prior output. Feeder: raises the rate of an input to a flywheel, linear and valuable, never compounding. Inventory: grows, costs to hold, returns nothing until something reads it. Inventory is a legitimate answer for a corpus or a log, but inventory naming no reader is the exact object this repo keeps producing. Mechanism: a compounds: flywheel|feeder|inventory field checked by schema-lint.js, with inventory additionally requiring read_by: naming a real caller resolved by the dead-path check check-registration.mjs already performs. The declaration is falsifiable rather than merely stated: X2's last-use telemetry contradicts a flywheel declaration with zero events in 90 days, and that contradiction is the retirement queue's entry criterion. Known failure, and it is the obvious one: everyone declares flywheel, so this position is void without P10's second half.",
+      "evidence": ["INVENTED"],
+      "confidence": "med",
+      "territories": ["12", "02", "04"]
+    }
+  ],
+  "what_must_be_true": [
+    "The loop has an agreed home and actually runs unattended. STARTUP-OS.md §8 question 2 is open; the control plane structurally cannot spawn because crosscheck.test.ts bans a shell call under server/ at zero exceptions, deliberately, having closed three RCEs. Without a home, every position here plans a system that still begins where a person types.",
+    "At least one instrument reports a world outcome. Without one, P1 resolves unresolved forever and the sequencing argument becomes an argument for waiting.",
+    "The founder authorises registering budget-guard.js, or the loop runs with no spend brake and no circling brake. It is Decision 8 already built and verified by execution, registered nowhere, and registering it edits .claude/settings.json, which is irreversible tier and denied to the write tools. None of the three founder-only permissions is authorised yet.",
+    "The synthetic first mission of Decision 7 actually runs, and its done-test names an evidence rung above 0. A rung-0 pass reported as success is how the machine learns to lie to itself for two years.",
+    "The founder keeps choosing between candidates. The archive-and-preference flywheel has no input if the balcony surfaces no forks; a system that never asks the founder to pick between two things produces no preference corpus and its judges never improve.",
+    "Goal-sized rows stay goal-sized. The founder watches 2-4 rows a day; if a move's granularity drifts below that, the balcony becomes a log and steering stops."
+  ],
+  "refuse": [
+    {
+      "what": "A memory built over the 2,936 transcripts.",
+      "why": "Retrieval cannot distinguish a corrected belief from a current one, so it resurrects exactly the errors the supersession discipline exists to bury (concepts.md §15 A4). Take them as instrumentation — a ~50-line regex correction classifier, plus negative mining and session archaeology — never as memory (concepts.md §12 M1-M4; STARTUP-OS.md §8b Metaswarm)."
+    },
+    {
+      "what": "Any score summed from judge outputs, any weights on voices, and any done-test whose resolver is the producing model.",
+      "why": "concepts.md §15 A1, A2, A3. Weak judges are excellent finders and useless scorers; weighted voting is an average wearing a costume; self-evaluation has a documented self-preference bias and a local measurement at 0.543 against a panel only 0.741 self-consistent. This includes the total field in design.js today."
+    },
+    {
+      "what": "A second implementation of risk classification.",
+      "why": "scripts/classify.mjs's own header says two implementations will disagree and you find out during the incident, and it has already happened here once when qa-lead-pass.yml computed a stricter second answer. Extend scripts/lib/classifier.js; never parallel it (concepts.md §15 A5; CLAUDE.md Risk-Tiered QA Gate)."
+    },
+    {
+      "what": "The 177-repository menu as a build plan.",
+      "why": "open-source.md §0 states it is deliberately unfiltered and nothing in it is decided. Adopt only where a named gap has no in-repo answer, and only behind the birth certificate, or the adoption becomes the next generation of unwired inventory."
+    },
+    {
+      "what": "Enterprise breadth — 21 harnesses in 4 modes, the 8-provider cloud sandbox matrix, mobile codebases, multi-tenant schemas.",
+      "why": "Already correctly rejected in STARTUP-OS.md §8b Omnigent 'Reject'. Take the Executor convention and the approval wire format; refuse the surface area. One founder, one Mac, one harness."
+    },
+    {
+      "what": "Connecting any write-capable money or publishing hand before the reach tier and rate limits exist.",
+      "why": "hands.md §6 item 13 states the trap exactly: Meta Ads is the best possible forcing function for the risk tier and the worst possible thing to connect before that tier exists. The 24/7 loop is what converts this from a theoretical ordering into a real one."
+    },
+    {
+      "what": "Trust as a field anyone can set.",
+      "why": "Any trust system where trust can be asserted is a trust system that will be asserted (concepts.md §9 T1). Recompute the effective level at every dispatch so a hand-edited value is simply overwritten, with a test asserting a tampered stored level changes nothing, or do not have trust at all."
+    }
+  ],
+  "build_order": [
+    "1. Task id and row schema. FORCED: not retrofittable. CAST needs a heuristic 60-second join because it lacks a foreign key, and steal-list item 7 says so in one line (concepts.md CT2; STARTUP-OS.md §8b CAST). Parent/child pair from the first commit.",
+    "2. The policy seam, carrying blocking and blocking-human as types. FORCED: five planned subsystems are one shape, so building any of them first builds the seam twice (STARTUP-OS.md §8b Omnigent, steal items 1 and 2). Built on the eight unused hook events, pre-tool-use.sh untouched.",
+    "3. The world resolver plus a rung: field on every done-test. FORCED: trust, bandits, cost-per-surviving-artifact and the company metric all read it and none can precede it (concepts.md W1, W2, T1).",
+    "4. First unattended run — the capability probe writing a row. FORCED by risk shape rather than dependency: it exercises steps 1-3 with zero blast radius, and its payload is the only capability oracle that exists (hands.md §0.1, §6 item 5).",
+    "5. Register budget-guard.js as the loop's circling brake. FORCED before any relentless walking: the stall ceiling is the only repetition detector anyone has, and both reference loops studied have none — Auto-Co's anti-circling rule is one line of prose enforced by nothing and Ralph's is a hardcoded nudge string (STARTUP-OS.md §8b anti-repetition). Founder-only action, currently unauthorised.",
+    "6. Missions, the loop, and the synthetic first mission. Decisions 2 and 7.",
+    "7. Archive and preference pairs. FORCED to follow 6: there is no founder choice to capture until the machine produces forks (concepts.md C2, C21).",
+    "8. Trust. FORCED to be last by T1's own failure note — it is downstream of the world's verdict and cannot be built first.",
+    "PREFERRED rather than forced, and cheap enough to take early anyway: the birth certificate (P10), DEAD-ENDS/ (P13), and the harness-versus-venture ratio (P11)."
+  ],
+  "open_questions": [
+    "Where the loop lives. STARTUP-OS.md §8 question 2 is open. My positions assume the Claude-native scheduled task beside the server; if that is rejected, P4's sequencing argument survives but its vehicle does not.",
+    "What a move is. STARTUP-OS.md §8 question 4. It determines the fresh-context boundary, the cycle cost, and what a balcony row means. The founder's 2-4 goal-sized rows a day constrains it from above; nothing constrains it from below.",
+    "Whether the second model family survives contact. gemini is installed and never executed and the sandbox hides it because ~/.gemini is in denyRead; both Ollama pins are retired although the account authenticates, which proves the runtime works (hands.md §0.3). One test settles it and it spends the founder's Google quota.",
+    "Whether one-founder volume can ever populate the outcome loop often enough for anything to compound. This is my strongest counter, stated below.",
+    "Whether the persona board is a feeder or inventory. It produces framed choices, which produce preference pairs, which is a real contribution — or it produces documents nobody chooses between. This meeting is the first data point and should be measured that way.",
+    "Which behavioural descriptors are orthogonal to quality for each artifact type. C2 fails entirely on bad descriptors and the choice is a human design judgement per artifact type that nobody has made."
+  ],
+  "strongest_counter": "The outcome loop may never produce a signal at one-founder volume, in which case I have sequenced the entire company behind an instrument that reports unresolved for eighteen months. The evidence sits in the documents I am citing: W1's own failure note says most instruments are third-party APIs that will be unreachable most of the time and the system will report unresolved far more often than pass; W4 says that at one-founder traffic nearly everything is below the minimum detectable effect so the mechanism mostly says cannot tell; SI3 states plainly that A/B on the system's own prompts is probably not achievable at this volume. If that is right, P1 is wrong expensively — trust never promotes so everything stays supervised forever, bandits have no reward, and the company metric has a zero denominator and cannot even be computed. The competing thesis is coherent and deserves fair statement: at n=1 the founder is the only oracle that reliably answers, so compound on founder preference and field knowledge instead, both of which arrive on every cycle with no third-party auth, no traffic threshold and no power calculation. That is a smaller ambition than a company that learns from the world, and it is achievable now rather than conditionally. My rebuttal does not fully close the gap: two rungs of the evidence ladder are reachable at n=1 without any instrument — it renders, and a stranger understands it in five seconds — and W5 adds a third that is free and mechanically observable for internal work, whether the founder used it twice unprompted more than 48 hours apart. So the loop can turn slowly on rungs 0-1 plus W5 while rungs 2-4 wait for traffic, and the ladder is worth building even if rung 2 never arrives, because it stops a rung-0 result being reported as a rung-2 claim. But that is a slower flywheel than I have argued for. The honest, conditional form of my thesis: the outcome loop is the only true flywheel, and at this volume it may turn too slowly to be the thing everything else waits on. If the board concludes that, the correct response is not to drop P1 but to build the archive and the field store in parallel rather than downstream, and to accept that trust does not get built in the first year."
+}

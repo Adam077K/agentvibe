@@ -1,0 +1,11 @@
+{
+  "subject": "6e8564dfe16e2190500d9715e81baf9bffbc718dd2fbb3e5bf69d4d61c03708d",
+  "base": "e8c8ae5dc92c1d1048805fac9eb29de5ff47f95c",
+  "tier": "full",
+  "tier_driver": "scripts/merge-gate.test.mjs",
+  "verdict": "PASS",
+  "by": "qa.js-panel",
+  "run_id": "wf_2148d4fd-6ff",
+  "evidence": "Binding QA panel, wf_2148d4fd-6ff: 7 agents, 648211 subagent tokens, 810s, 0 errors. Oracle PASSED before any panel agent was dispatched (npm run check pass; typecheck skipped, no TS project covers the diff; semgrep skipped, not installed). dimensions_failed: [] — every dimension completed including both critical ones (correctness, security), so neither BLOCK condition applies. Zero block-eligible findings; 3 advisory P3 fast-follows (dead-isjudgedirtracked-unused, tests-unused-isjudgedirtracked, redundant-env-expr-produceVerdict). JUDGE SELF-CHECK FAILED AND SAID SO: reviewer-readonly holds no shell, so its repo-wide search for isJudgeDirTracked resolved against the session root (main) rather than the named tree and returned zero matches; it disclosed it could not confirm the checkout and inferred the 3 advisories were false positives. Verified by the orchestrator with controls: the symbol IS in the tree under review (produce-verdict.mjs:675 export, test.mjs:1319 import-only), session root 0/0, positive control produceVerdict 3/3, negative control 0. THE THREE ADVISORIES ARE REAL, not false positives; the judge inference is void, the PASS is not — dimension reviewers hold Bash, reached the tree, and cited :675 correctly. STANDING CAVEAT, recorded not waived: single model family, no independent 2-of-3 multi-judge; does not bind at full tier but bounds how this PASS is read.",
+  "recorded_at": "2026-09-01T07:54:59.765Z"
+}

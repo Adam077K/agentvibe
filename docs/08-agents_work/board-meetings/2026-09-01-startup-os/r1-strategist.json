@@ -1,0 +1,288 @@
+{
+  "persona": "strategist",
+  "round": 1,
+  "thesis": "The problem was never a shortage of ambition; it was that ambition was spent on the machine instead of through it. Measured in this worktree 2026-09-02: 172 session files and 1 that touches a venture; 858 commits; 45,430 lines of docs; and 30,446 lines of test code against 16,839 lines of producing script, a 1.8:1 ratio of verification to production. So the anti-roadmap's job is to make growth conditional on external output, and to notice that most of the ~420-item catalogue does not need refusing on judgement — the smallest honest version of this company simply does not have the problems those items solve. Four of the twelve never-named gaps DISSOLVE under refusals (transcripts-as-memory, what-to-do-next, worker trust, self-explanation), three are already half-built, and of the five that are real work two are deferrable — leaving exactly the three STARTUP-OS §8 already named: goals, the loop, hands. The smallest thing that deserves the name company holds one mission across sessions, dispatches one move with fresh context, produces with real hands, stops itself on budget or stall, records every row against a task id, has a done-test resolved by something that is not the producer, and asks the world whether it worked while reporting `unresolved` when it cannot check. That is six mechanisms out of ~420, or 1.4%. Think big is not refused, it is relocated: to the depth of the goal tree, to distance travelled per human touch, and to the fifteen hands already bought and currently broken. The mechanism list is the one thing that gets a ceiling.",
+  "positions": [
+    {
+      "id": "P1",
+      "claim": "The smallest system that deserves the name 'company' is five state files and six mechanisms, and its defining property is the list of things it deliberately cannot do: run two missions, judge quality, learn from its transcripts, hold a persistent worker, speak, spend money, or reach a stranger without a human clearing a `blocking-human` gate.",
+      "reasoning": "The framing's three properties map to three implementations and no more. Runs unattended = the loop plus budget-guard's rope and stall ceiling plus a kill-switch file. Produces something = one pack (tools grant + done + stop_after) with fresh context per move. Knows whether it worked = a done-test whose resolver is never the producer, plus `verified_by: world` fail-closed. State lives in MISSIONS.yml (one in_flight ever), BOARD.md, packs/*.yml, .out-of-scope/, and an event log where every row carries a task id from the first row. L1 is kept unchanged. The cannot-do list is the load-bearing half, because each line is a problem the system therefore does not need to solve — a WIP limit of one eliminates the priority-function problem outright rather than deferring it.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§3 the shape (four state files) and §4 a pack is a grant and a stop",
+        "docs/03-system-design/STARTUP-OS.md:§1b budget-guard.js — rolling window ceiling plus stall ceiling against the last durable artifact, never the agent's own claim to be done",
+        "docs/02-competitive/expansion/concepts.md:§2 P5 WIP limit of one at the mission level",
+        "docs/02-competitive/expansion/concepts.md:§4 W1 a `world` verifier on the ledger, fail-closed",
+        "docs/02-competitive/expansion/concepts.md:§14 CT2 a real task id on every row, from day one",
+        "docs/02-competitive/expansion/00-TERRITORY.md:The twelve things never named — items 3, 10, 12"
+      ],
+      "confidence": "high",
+      "territories": ["01", "02", "08", "14"]
+    },
+    {
+      "id": "P2",
+      "claim": "The mechanism list gets a declared ceiling; the goal tree does not. Above the ceiling, adding a governed artifact (pack, persona, workflow, command, skill, check-suite step) requires retiring one.",
+      "reasoning": "Rosters grow monotonically and this one carries the scar: 26 agents collapsed to 7 engines in a single correction, where the correction was right and the growth that forced it was never resisted at the margin. The check suite went 29 to 30 to 46 to 48 steps inside three days while external output stayed at one venture task. A ceiling does not stop growth. It makes raising the ceiling an act someone performs rather than a drift nobody notices — which is the same inversion of burden that made the claim ledger work.",
+      "evidence": [
+        "docs/02-competitive/expansion/concepts.md:§10 X4 a ratchet — no new pack without a retired one",
+        "CLAUDE.md:§Project State — 48-step suite, superseded readings of 46, 30 and 29 across three days",
+        "docs/03-system-design/STARTUP-OS.md:§1 the roster axis was wrong (26 agents to 7 engines)",
+        "CLAUDE.md:§Memory — the byte-budget ratchet on DECISIONS.md is the existing mechanism of this shape"
+      ],
+      "confidence": "high",
+      "territories": ["02", "04", "12", "14"]
+    },
+    {
+      "id": "P3",
+      "claim": "The demand trigger: nothing new merges unless the same diff contains a caller AND that caller resolves to a mission in MISSIONS.yml with state in_flight carrying a `blocked` row that names the missing capability, authored before the diff.",
+      "reasoning": "X1's birth certificate prevents built-and-never-wired. It does not prevent built-and-wired-to-nothing-anyone-needed, which is the failure mode of nine phases: six of ten things the founder asked for already existed and were connected to nothing, so the wire is necessary and not sufficient. The trigger converts 'think big' from a plan into a queue — the catalogue does not shrink, it waits. Honest weakness, stated rather than discovered: this is the most gameable proposal here, since anyone with repo-write can author a mission and a block. It is the same bounded guarantee qa-lead-pass.yml already documents about itself — hash-bound, not signed — and it stops drift, not a determined author. The forced five predate any mission, so the bootstrap exemption must be a ledger claim with a valid_until, expiring rather than drifting.",
+      "evidence": [
+        "docs/02-competitive/expansion/concepts.md:§10 X1 the birth certificate — nothing created without a caller in the same diff",
+        "docs/03-system-design/STARTUP-OS.md:§1b the census — six exist unwired, three genuinely absent, one works",
+        "docs/03-system-design/STARTUP-OS.md:§8b the meta-finding — built-and-never-wired in four of four studied systems",
+        "CLAUDE.md:§Risk-Tiered QA Gate — the verdict record is hash-bound, not signed",
+        "CLAUDE.md:§Rules — scripts/check-registration.mjs dead-path check is the existing mechanism of this shape"
+      ],
+      "confidence": "med",
+      "territories": ["12", "01", "02", "04"]
+    },
+    {
+      "id": "P4",
+      "claim": "Refusals must be data with an expiry or this entire document is a wish. Create `.out-of-scope/` — one file per refusal carrying reasoning, evidence and a `retire_on` date — and refuse a merge whose category is listed there until the refusal is explicitly retired.",
+      "reasoning": "A refusal decays silently, because nobody notices the absence of a decision not to build something. That is worse than an unenforced rule, which at least reads as a claim someone can check. CLAUDE.md's Rules table carried eight unenforced rules and the cure was labelling them honestly rather than deleting them. `.out-of-scope/` is GSD's practice and already sits at #9 on this repo's own consolidated steal list, and it is absent from disk — measured 2026-09-02, `ls -d .out-of-scope` returns nothing. Expiry gives it claim-freshness's exact behaviour: fails once the date passes, refuses a waiver with no `until`, and a lapsed waiver fails harder than none.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§8b consolidated steal list item 9 — `.out-of-scope/`, record rejections with reasoning before code",
+        "docs/02-competitive/expansion/concepts.md:§15 A6 any rule stated without its mechanism",
+        "docs/02-competitive/expansion/concepts.md:§10 X3 sunset by default — everything carries a retire_on",
+        "CLAUDE.md:§Rules — rule 9, claims expire and expiry forces a disposition"
+      ],
+      "confidence": "high",
+      "territories": ["12", "09", "14"]
+    },
+    {
+      "id": "P5",
+      "claim": "Refuse to grow L1. No new step enters the 48-step check suite unless it fails on a defect found in work that is not about the harness.",
+      "reasoning": "L1 is the best thing in this repo and Decision 1 keeps it. It is also where 30,446 of 47,285 script lines live, measured 2026-09-02, and it verifies a machine whose external output is one venture task. The suite is the single largest consumer of the founder's build attention. Nothing here proposes deleting a check; the refusal stops the suite consuming attention the mission needs. Where this is wrong, if it is: a check that would catch a real defect that has not shipped yet. The counter to that counter is that this reasoning is what produced 48 steps and one venture, and that the eight exit-code-guard bypasses were found by independent review rather than by a pre-emptive check.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§2 Decision 1 — keep L1, rebuild everything above it",
+        "CLAUDE.md:§Project State — the 48-step suite and the eight exit-code-guard bypasses found by independent review",
+        "MEASURED 2026-09-02: find scripts -name '*.test.mjs' | xargs cat | wc -l = 30446 against non-test 16839"
+      ],
+      "confidence": "med",
+      "territories": ["08", "12", "13"]
+    },
+    {
+      "id": "P6",
+      "claim": "Take the five headline open-source projects as ideas and refuse all five as dependencies in year one: beads, Temporal, pyribs/ShinkaEvolve, inspect_ai, projectmem.",
+      "reasoning": "Each is better in isolation than what we would write, and each introduces a second source of truth for something this system already computes: beads duplicates MISSIONS.yml, Temporal duplicates the loop's own record, projectmem duplicates the ledger's shape, inspect_ai duplicates the panel, and pyribs searches an archive that does not yet exist. A5 names the failure — two implementations will disagree and you find out during the incident — and this repo has lived it once already when qa-lead-pass.yml computed a stricter second tier than the classifier. The sharper reason is psychological rather than architectural: an unwired dependency is worse than an unimplemented idea because it looks done, and a package.json entry manufactures the feeling of capability at zero capability. Built-and-never-wired is present in four of four studied systems; adding dependencies is the cheapest way to make more of it.",
+      "evidence": [
+        "docs/02-competitive/expansion/open-source.md:§1 the five I would be most annoyed to see dropped",
+        "docs/02-competitive/expansion/concepts.md:§15 A5 a second implementation of risk classification",
+        "docs/03-system-design/STARTUP-OS.md:§8b the meta-finding — built and never wired is endemic",
+        "CLAUDE.md:§Risk-Tiered QA Gate — the qa-lead-pass.yml second-classifier incident"
+      ],
+      "confidence": "high",
+      "territories": ["01", "05", "08", "12"]
+    },
+    {
+      "id": "P7",
+      "claim": "Refuse a fifth memory store. The four declared in STARTUP-OS §6 are the whole memory system for year one: no vector store, no mem0, no episodic index, no transcript retrieval.",
+      "reasoning": "Memory is where unwired code accumulates fastest because nothing fails when memory is not read. The proof is on this machine: 2,936 transcripts, nothing reads them, and no test has ever gone red over it. A missing check fails loudly; a missing recall returns a plausible answer. Each of the four stores has a scope and an expiry rule, and FIELDS/ inherits the ledger's forced disposition — the mechanism that makes memory shrink as well as grow. No proposed fifth store has one. mem0 stays where it already is, an unauthenticated server in the roster, and its being logged out is not a bug to fix this year.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§6 memory — four stores, one rule each",
+        "docs/02-competitive/expansion/concepts.md:§15 A4 RAG over the 2,936 transcripts as a memory",
+        "docs/02-competitive/expansion/hands.md:§0.1 the MCP roster — mem0 needs authentication",
+        "docs/02-competitive/expansion/00-TERRITORY.md:current state — 2,936 conversation transcripts on disk, nothing reads them"
+      ],
+      "confidence": "med",
+      "territories": ["05", "04", "12"]
+    },
+    {
+      "id": "P8",
+      "claim": "Refuse worker trust, apprenticeship, promotion, demotion and retirement. Adopt T6, the competing position: no trust at all, only reach. The grant is the entire trust model.",
+      "reasoning": "Three converging reasons and the third is decisive. First, open-source.md §16 records that nothing in the surveyed world implements it — a genuine build, not a buy — making it the highest-cost, lowest-precedent item in the catalogue. Second, trust is a statistical object needing a volume of outcomes year one will not produce. Third, the architecture removes the subject: fresh context per unit of work plus a pack that is a grant and a stop means there is no persistent worker for trust to accrue to. What varies between two dispatches is the grant, and the grant is already the security boundary — an agent cannot research its way into holding a tool it was not granted. This is what makes the refusal load-bearing rather than prudent: gap #10 is not deferred, it is answered.",
+      "evidence": [
+        "docs/02-competitive/expansion/open-source.md:§16 item 1 — worker trust, apprenticeship and retirement: a genuine build, not a buy",
+        "docs/02-competitive/expansion/concepts.md:§9 T6 the competing position — no trust at all, only reach",
+        "docs/03-system-design/STARTUP-OS.md:§4 why `tools:` must stay — the line between able and unable, and the security boundary",
+        "docs/03-system-design/STARTUP-OS.md:§7 fresh context per unit of work"
+      ],
+      "confidence": "high",
+      "territories": ["02", "09"]
+    },
+    {
+      "id": "P9",
+      "claim": "Refuse voice, phone and any second surface until the terminal balcony has been used to approve, redirect or retarget a running mission N times, with N declared in advance.",
+      "reasoning": "Mission control has 7 views, 1 acts, and the escalation Inbox has been empty on every project ever. That is not a missing feature; it is a measurement, and what it measures is that the surface has never been the bottleneck. Building a third surface over a surface with zero recorded actions is the endemic defect performed deliberately. The founder does talk to this system by voice and that is a real observation, but it is an observation about input convenience, and a surface nobody acts through does not become useful by being easier to reach. N must be declared before the balcony is built or it will be set retroactively to whatever number was reached.",
+      "evidence": [
+        "docs/02-competitive/expansion/00-TERRITORY.md:current state — mission control 7 views, 1 acts; the escalation Inbox has been empty on every project ever",
+        "docs/02-competitive/expansion/concepts.md:§8 V1-V5 voice as a first-class surface",
+        "docs/02-competitive/expansion/concepts.md:§10 X2 last-use telemetry — the retirement trigger is zero calls, not an opinion",
+        "docs/03-system-design/STARTUP-OS.md:§8 open question 5 — it is a read-only mirror"
+      ],
+      "confidence": "med",
+      "territories": ["10", "12"]
+    },
+    {
+      "id": "P10",
+      "claim": "Refuse every tool grant that spends money outside model tokens — ad platforms, GPU rental, postage, paid-per-call APIs — until an absolute rate limit exists that something enforces.",
+      "reasoning": "hands.md §8 states the gap exactly: money is the missing axis, every tier this repo has is about reversibility or blast radius, and ad spend, GPU-seconds and postage need a rate limit no mechanism here can express. Its §6 names Meta Ads MCP as the best possible forcing function for the risk tier and the worst possible thing to connect before that tier exists. A 24/7 unattended loop with a spend hand and no rate limit has unbounded downside against bounded upside, and unlike almost every other risk here, git revert does not undo it. Note the inversion that makes this urgent in the other direction: publishing to TikTok, sending mail as the founder, remote code execution and an authenticated Chrome are live right now, while PostHog, Sentry and a read-only Stripe key are not connected. This position governs the next grant; auditing the existing ones is separate and more urgent.",
+      "evidence": [
+        "docs/02-competitive/expansion/hands.md:§8 the three sentences — money is the missing axis; the riskiest capabilities are already granted",
+        "docs/02-competitive/expansion/hands.md:§6 item 13 — Meta Ads MCP, the best forcing function and the worst thing to connect first",
+        "docs/02-competitive/expansion/concepts.md:§7 R5 absolute rate limits on outbound action, independent of reasoning — currently WISH",
+        "docs/03-system-design/STARTUP-OS.md:§4 the pack `tools:` grant as the enforced boundary"
+      ],
+      "confidence": "high",
+      "territories": ["03", "09", "13"]
+    },
+    {
+      "id": "P11",
+      "claim": "Refuse a global sandbox disable as the fix for the second model family. Narrow, per-command exemptions only.",
+      "reasoning": "Both second-family runtimes are invisible to a sandboxed agent for two different reasons: ~/.gemini sits in denyRead so gemini dies reading its own config, and ollama needs a loopback bind the sandbox denies — the same mechanism that makes check:mc fail. The tempting fix is flipping sandbox.enabled. But CLAUDE.md is explicit that the sandbox is a guardrail against accident and not containment against the agent, and a 24/7 unattended loop IS the accident case, at the exact hour nobody is watching. And note what is actually broken: both pulled Ollama models are retired on a version pin nobody watched while the account authenticates fine. That is not a sandbox problem at all — it is built-and-never-wired in the capability layer, and one `ollama pull` plus one narrow exemption is the whole distance to the multi-family panel carried as accepted risk to 2026-11-17.",
+      "evidence": [
+        "docs/02-competitive/expansion/hands.md:§0.3 the second model family is reachable, and the sandbox is what hides it",
+        "CLAUDE.md:§Project State — the OS sandbox is a guardrail against accident, not containment against the agent",
+        "CLAUDE.md:§Project State — npm run test:sandbox fails if enabled is flipped, and CI runs it",
+        "CLAUDE.md:§Project State — single-family review is an accepted risk to 2026-11-17"
+      ],
+      "confidence": "high",
+      "territories": ["09", "11", "08"]
+    },
+    {
+      "id": "P12",
+      "claim": "Refuse the council as a standing organ. It convenes on irreversible-tier forks only, gated by the existing classifier — never on a routine move, never on a schedule.",
+      "reasoning": "Said from inside a board meeting, which is the only honest place to say it. This convening exceeds its own spec's $3 cap by founder instruction, and the spec's limit of 8 per month exists because deliberation is the most expensive thing this system can do per unit of decision. A council that convenes routinely becomes the org chart returning through the side door, and the wall against that is already written — a persona may never be dispatched to produce. The complement is that a persona may not be dispatched cheaply either, or the wall wears down by traffic. Take Metaswarm's convergence rule as-is: fresh instances every round with zero visibility into prior findings, a 3-iteration cap, then human escalation carrying an iteration-history table.",
+      "evidence": [
+        "docs/08-agents_work/board-meetings/2026-09-01-startup-os/r0-shared.md:hard caps — the spec's $3 cap exceeded by design",
+        "docs/03-system-design/STARTUP-OS.md:§7 a persona may never be dispatched to produce",
+        "docs/03-system-design/STARTUP-OS.md:§8b Metaswarm — fresh instances, no cross-visibility, 3-round cap, then escalate",
+        "CLAUDE.md:§Risk-Tiered QA Gate — scripts/lib/classifier.js, one file computes the tier of a path"
+      ],
+      "confidence": "med",
+      "territories": ["08", "13", "14"]
+    },
+    {
+      "id": "P13",
+      "claim": "Refuse phase numbers. Continuous landings, each useful alone — and this position is the argument for why the founder's cadence decision is load-bearing rather than stylistic.",
+      "reasoning": "Omnigent shipped fifteen releases in ten weeks with no vendor harness ever dropped, and the phrase 'Phase N' appears nowhere in its changelog. This repo organises around phases and rewrites and has nine phases and one venture task. A phase number is a promise that a set of work ships together, which makes the last item hostage to the first, and makes a phase that turns out to be wrong expensive to abandon because abandoning it means admitting the number was wrong. Continuous landings carry no such hostage. Mechanism: WISH. There is no check for a phase number in a plan document and inventing a prose-vocabulary lint would be theatre. What makes it real is P3's demand trigger — work that must justify itself against a live mission cannot be batched into a phase, because missions do not arrive in batches. The mechanism for this rule is another rule's mechanism, and that is worth saying plainly rather than claiming an enforcement that does not exist.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§8b Omnigent — fifteen releases in ten weeks, the phrase Phase N appears nowhere; nine phases and one venture task",
+        "docs/08-agents_work/board-meetings/2026-09-01-startup-os/r0-shared.md:founder decisions session 2 — cadence after planning is continuous, no phase numbers"
+      ],
+      "confidence": "med",
+      "territories": ["12", "14"]
+    },
+    {
+      "id": "P14",
+      "claim": "Refuse to arm the loop before the non-producer done-test resolver binds. Forced ordering, not preference. And the first mission's done-test may not contain a quality judgement — rung 0 and rung 1 only.",
+      "reasoning": "The relentlessness is the easy half; Ralph proves it is four lines. The done-test is what makes relentless walking different from a token furnace, and the resolver cannot be the producer: a design PASS/BLOCK judge measured 0.543 against a panel only 0.741 self-consistent. Arm the loop first and the first thing it does at 3am is satisfy itself. The second-order reason is about evidence rather than cost — a self-certifying loop produces a RECORD of successes that becomes the input to every downstream mechanism, and bad outcome data is worse than none because it is actionable. Applied to Decision 7's synthetic landing page: that mission spans three of the four pack families and only one has a resolver today that is not the producing model, so if the acceptance test of the whole system carries a quality gate then the acceptance test is unresolvable — which is how a machine passes itself. This is a consequence of A3 and the 0.543 measurement, not a preference, and it respects Decision 6 rather than reopening it: all four families exist, they simply do not all have a resolvable exit on day one.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§4 a design PASS/BLOCK judge measured 0.543 against a panel only 0.741 self-consistent",
+        "docs/02-competitive/expansion/concepts.md:§15 A3 a model scoring its own work",
+        "docs/02-competitive/expansion/concepts.md:§4 W2 the evidence ladder — declare which rung, never report a lower rung as a higher one",
+        "docs/03-system-design/STARTUP-OS.md:§9 the Ralph loop — the done-test doing the stopping",
+        "docs/03-system-design/STARTUP-OS.md:§2 Decision 7 — the first mission is a synthetic landing page"
+      ],
+      "confidence": "high",
+      "territories": ["01", "08"]
+    }
+  ],
+  "what_must_be_true": [
+    "The founder accepts that year one produces a deliberately narrow machine: one mission at a time, one resolvable pack family dispatched unattended, and a balcony with one surface.",
+    "A worker reliably AUTHORS a `blocked` row with `clearable_by:` when it cannot reach a capability, instead of improvising around the gap and failing quietly. Nothing in this repo has ever tested whether it does, and the demand trigger depends on it.",
+    "`budget-guard.js` can actually be registered — it edits .claude/settings.json, which is irreversible tier and denied to the write tools, so it needs a founder action that is not yet authorised.",
+    "A definition exists for 'a mission that is not about the system', or the demand trigger is gameable by naming the harness a venture. Proposed: the mission's done-test must resolve against something outside this repository.",
+    "The task id lands on the first row of the event log and not the hundredth. CAST proved it cannot be retrofitted.",
+    "The founder is willing to see `unresolved` far more often than `pass` from the world verifier, and to read that as honesty rather than failure.",
+    "Refusals recorded in `.out-of-scope/` are honoured by future sessions, which requires the CI check — a refusal held only by this document decays silently within weeks."
+  ],
+  "refuse": [
+    {
+      "what": "Summing or averaging judge outputs into a score, anywhere, permanently.",
+      "why": "design.js today sums four 0-10 axes into a `total` and sorts — the exact selector STARTUP-OS §7 forbids and the repo's own 0.543 measurement discredits. Weak judges are excellent finders and useless scorers. Mechanism: schema-lint refuses a numeric aggregation field in a judge output, the same shape as its existing refusal of `steps:` in a playbook stage. Smallest diff in this document, largest correction."
+    },
+    {
+      "what": "A done-test whose resolver is the producing model.",
+      "why": "Protects every exit condition in the system. Mechanism: dispatch refuses a move whose goal names the producer as resolver."
+    },
+    {
+      "what": "Weighted voting among personas.",
+      "why": "An average wearing a costume, and it requires a trust model for opinions that cannot be validated at this volume. Auto-Co's Munger veto is the cautionary instance: prose in CLAUDE.md, all 14 personas at model: inherit, nothing checking disagreement occurred."
+    },
+    {
+      "what": "A second implementation of risk classification, or of any concept the repo already computes once.",
+      "why": "It has already happened here: qa-lead-pass.yml computed a stricter second answer than the classifier. Extend scripts/lib/classifier.js, never parallel it."
+    },
+    {
+      "what": "Dispatching a persona to produce.",
+      "why": "This is the wall that stops the org chart returning. Enforced by the persona holding no producing tools."
+    },
+    {
+      "what": "Retrieval over the 2,936 transcripts as memory.",
+      "why": "Transcripts are full of confidently-stated superseded beliefs and retrieval cannot distinguish a corrected belief from a current one, so this resurrects exactly what the supersession discipline exists to bury. Take as instrumentation, and only as a report a human reads — never as a context injection. Mechanism: a structural rule that no pack or agent references a transcript path, the PS-WORKFLOW-CONTAINMENT shape."
+    },
+    {
+      "what": "Passing what could not be checked — a resolver that fails open.",
+      "why": "Rule 10. Ralph's shipped judge fails open twice: on error, and when the verdict tool was never called. The field ships the bug. Enforced today by scripts/ledger.test.mjs pinning `unresolved` as distinct from `pass` for every resolver."
+    },
+    {
+      "what": "Auto-approving a `blocking-human` gate, however autonomous the run.",
+      "why": "This is what makes 24/7 safe by type rather than by policy. Enforced by .claude/gates.yml: a `human` gate has no `run:` and writing one is refused."
+    },
+    {
+      "what": "Adopting beads, Temporal, pyribs/ShinkaEvolve, inspect_ai or projectmem as dependencies in year one.",
+      "why": "Each adds a second source of truth for something already computed here, and an unwired dependency is worse than an unimplemented idea because it looks done. Take the designs; record each refusal in .out-of-scope/ with the file in this repo that computes the same concept."
+    },
+    {
+      "what": "A fifth memory store, including a vector index or mem0.",
+      "why": "Memory is where unwired code accumulates fastest, because nothing fails when memory is not read — proven here by 2,936 transcripts and no red test."
+    },
+    {
+      "what": "Worker trust, apprenticeship, promotion, demotion and retirement.",
+      "why": "Highest cost and least precedent in the catalogue (open-source.md §16: a genuine build, not a buy), and the architecture removes the subject — fresh context per move means there is no persistent worker to trust. The grant is the whole trust model."
+    },
+    {
+      "what": "Voice, phone and any second surface.",
+      "why": "7 views, 1 acts, and the escalation Inbox has been empty on every project ever. A third surface over a surface with zero recorded actions is the endemic defect performed deliberately. Reopens at N recorded balcony actions, N declared in advance."
+    },
+    {
+      "what": "The evolutionary-search family — quality-diversity archive, island model, novelty search, bandit allocation.",
+      "why": "The most intellectually attractive block in the catalogue, and it needs a corpus of artifacts year one will not produce. Diversity machinery over an archive of nine is theatre. Reopens at 100 artifacts in one project's archive."
+    },
+    {
+      "what": "Any tool grant that spends money outside model tokens.",
+      "why": "Money is the missing axis and no mechanism here can express a rate limit. Unbounded downside against bounded upside, and git revert does not undo it. Stands until R5 is no longer a WISH."
+    },
+    {
+      "what": "Disabling the sandbox globally to reach the second model family.",
+      "why": "The sandbox is a guardrail against accident, and a 24/7 unattended loop is the accident case. Narrow per-command exemptions instead. Already enforced by npm run test:sandbox, which fails if `enabled` is flipped."
+    },
+    {
+      "what": "Template extraction, fleet rollout and multi-project operation.",
+      "why": "Decision 4 already scopes this to one Mac and one founder; the extension is that a template of a system that has never run once is a template of nothing. Reopens when a second project exists AND the first has shipped an artifact that survived a world verdict."
+    },
+    {
+      "what": "Phase numbers.",
+      "why": "A phase number makes its last item hostage to its first and makes abandonment expensive, because abandoning it means admitting the number was wrong. Nine phases, one venture task. Mechanism: WISH on its own; real only via the demand trigger, since missions do not arrive in batches."
+    }
+  ],
+  "build_order": [
+    "1. Register budget-guard.js. FORCED FIRST because it is simultaneously the rope (Decision 8), the stall ceiling, and the field's only working anti-circling detector — and arming a 24/7 loop without it is the most expensive mistake available. It is already built and verified by execution and registered nowhere. It needs a founder permission; registering it edits .claude/settings.json, which is irreversible tier.",
+    "2. A real task id on every event row. FORCED SECOND because it cannot be retrofitted — CAST proved it, and its cost figures now need a heuristic 60-second time-window join for want of a foreign key. Cost per surviving artifact, the retirement queue, founder-interventions-per-artifact and replay-based explanation all read this one field.",
+    "3. The non-producer done-test resolver. FORCED BEFORE THE LOOP, because a loop that self-certifies produces a record of successes that poisons every downstream mechanism, and bad outcome data is worse than none because it is actionable.",
+    "4. The loop, minimal. Ralph's shape: fenced by 1, recorded by 2, exited by 3. Plus a steer file polled at loop boundaries and a kill-switch file checked at every dispatch — two files, and the only answer to 'you cannot steer something already running'.",
+    "5. The `world` verifier, fail-closed. FORCED BEFORE A SECOND MISSION, because without it nothing distinguishes a mission that worked from a mission that finished. Expect `unresolved` far more often than `pass`, and say so in advance so it does not read as failure.",
+    "ALONGSIDE 1: `.out-of-scope/` with dates. Costs an hour, and everything after it depends on refusals being durable.",
+    "EVERYTHING ELSE IN THE CATALOGUE IS DEMAND-TRIGGERED — queued behind a mission blocked on its absence, not rejected."
+  ],
+  "open_questions": [
+    "Is the demand trigger's bootstrap exemption one window with an expiry, or a standing allowance for 'harness work'? A standing allowance reproduces the last nine months exactly.",
+    "What counts as a mission that is not about the system? Without a definition the trigger is gameable by naming the harness a venture.",
+    "Does the founder accept a deliberately mediocre year one on design, video and content? The four pack families are decided; whether all four get resolvable exits before any is dispatched unattended is not.",
+    "What is N for P9 — how many balcony actions before a second surface is earned? It must be declared before the balcony is built or it will be set retroactively.",
+    "Which currently-granted hands should be REVOKED rather than merely not extended? Publish-to-TikTok, send-as-founder and remote code execution are live now; P10 governs only the next grant, and nothing in this document governs the existing ones.",
+    "Does refusing the evolutionary-search family contradict the founder's central complaint that the system loses creativity to playbooks? I argue no, because the creativity fix is killing the score (C1/C17), which is in scope and small. It is the closest call here.",
+    "Who resolves a rung-1 done-test ('a stranger understands it in five seconds') when there is no stranger? If the answer is the founder, the first mission is not unattended and Decision 7's acceptance test is weaker than it looks."
+  ],
+  "strongest_counter": "The founder's diagnosis is that almost everything built is a stopping mechanism rather than a producing one, and this document is fourteen stopping mechanisms — the disease performed with more rigour than the disease usually manages. The sharper, structural form: a demand trigger can only fire for capabilities the system already has enough of to notice missing. A mission blocked on a hand that does not exist does not generate a `blocked` row; it generates a worker that tries something else, fails quietly, and gets abandoned. So the trigger risks running as a ratchet in the wrong direction, freezing the capability set at whatever it was the day the rule landed — which is exactly how organisations stop being able to do new things. My defence is partial: the trigger keys on `blocked`, which is AUTHORED with a `clearable_by:` naming what would clear it, not on `failed`, which is observed after the fact — and `clearable_by: <a capability that does not exist>` is a legitimate block. But that depends on workers reliably authoring blocks rather than improvising around gaps, and nothing here has ever tested whether they do. The second objection is the one I find harder: STARTUP-OS §1b already concluded the rebuild is small — six unwired, three absent, one working — so if most of the remaining work is WIRING, a refusal-heavy posture is fighting a war that was already won, and the moment needs execution rather than another filter. My answer is that ~420 options is precisely the condition under which a settled small plan becomes large again, and the filtering conversation is where that happens. But that answer is an assertion about this board's discipline and I cannot mechanise it."
+}

@@ -1520,132 +1520,112 @@ test('usage names every flag the code reads — it named five of seven', () => {
   assert.match(refused.stderr, /record accepts: .*--dry-run/, refused.stderr);
 });
 
-// ── THE DIFF BUFFER — verdict.mjs reads a WHOLE-BRANCH diff and must not be bounded by accident ──
+// ── W · THE BUFFER CEILING, AND THE REFUSALS IT MUST NOT BE MISTAKEN FOR ─────────────────────
 //
-// WHAT FAILED HERE, and it was live on the blocking path. `git()` in verdict.mjs carried no
-// `maxBuffer`, so Node's 1 MiB default applied to a call whose output grows with the branch.
-// `integration/design-layer` crossed it on 2026-08-29 and `test:run-gate` went red: no subject
-// could be computed, therefore no verdict recorded or checked, therefore qa-lead-pass.yml
-// unsatisfiable — on exactly the long-lived branches that most need a gate.
-//
-// WHY THESE TESTS ARE SHAPED LIKE THIS. `assert.equal(options.maxBuffer, 64*1024*1024)` would
-// assert the constant and pass whatever the behaviour, which is the vacuity this repo keeps
-// finding in its own controls. These EXERCISE THE SIZE instead: build a repo whose diff crosses
-// the cliff, run the real CLI over it, and pin the cliff by removing the option and watching the
-// same fixture fail. If the mutant passes, the test is not testing the fix.
+// Every cell below went GREEN against an unmutated tree and RED under the mutation named beside
+// it. Before these existed, twelve separate mutations of this behaviour — including inverting the
+// predicate that decides whether a directory is ours to delete — left the whole 48-step suite
+// byte-identical to a pristine run. Nothing in the repository asserted a line of it.
 
-/** Node's documented default `maxBuffer` for `execFileSync` — the cliff these tests straddle. */
-const SIZE_CLIFF = 1024 * 1024;
-
-/**
- * A body of at least `bytes`, in PRINTABLE LINES. Random or NUL-bearing content makes git call the
- * file binary and emit `Binary files ... differ` — about 40 bytes — so a "1.5 MB fixture" would
- * produce a diff far under the cliff and the test would pass without ever crossing it.
- */
-const textOfAtLeast = (bytes) => `${'d'.repeat(78)}\n`.repeat(Math.ceil(bytes / 79));
-
-/**
- * The OPTIONS OBJECT of verdict.mjs's git call, extracted from source so a mutation is checked
- * against the code rather than against a comment. The prose above the call names `maxBuffer`
- * several times; a whole-file regex would read those and report a mutation that did not apply.
- */
-function gitOptions(source) {
-  const at = source.indexOf("execFileSync('git', args, {");
-  assert.notEqual(at, -1, 'verdict.mjs no longer spells its git call the way this test locates it');
-  const open = source.indexOf('{', at);
-  const close = source.indexOf('});', open);
-  assert.ok(close > open, 'could not find the end of the git() options object in verdict.mjs');
-  return source.slice(open, close);
-}
-
-/**
- * verdict.mjs with one edit, in a temp tree, so a mutation is EXECUTED rather than argued.
- * `./lib/classifier.js` is its only relative dependency and is re-exported rather than copied, so
- * the mutant runs against the real one. `subject` needs nothing else from the harness root.
- */
-function mutantVerdict(transform) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'verdict-mutant-'));
+/** A repo whose diff is `bytes` long, with origin/main resolvable. */
+function bigDiffRepo(bytes) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'verdict-buffer-'));
   tmpRoots.push(root);
-  const src = fs.readFileSync(VERDICT, 'utf8');
-  const out = transform(src);
-  fs.mkdirSync(path.join(root, 'lib'), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, 'lib', 'classifier.js'),
-    `module.exports = require(${JSON.stringify(path.join(REPO, 'scripts', 'lib', 'classifier.js'))});\n`
-  );
-  const file = path.join(root, 'verdict.mjs');
-  fs.writeFileSync(file, out);
-  // REALPATH, AND THIS IS LOAD-BEARING. verdict.mjs guards its CLI with
-  // `path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))`, and
-  // `path.resolve` does not resolve symlinks. On macOS `os.tmpdir()` is `/tmp/...`, a symlink to
-  // `/private/tmp/...`, so argv[1] and import.meta.url disagree, the guard fails, and the mutant
-  // EXITS 0 HAVING DONE NOTHING. Measured 2026-08-29: the first version of these tests read that
-  // silent no-op as "the mutant computed a subject over the cliff" — a vacuous mutation wearing a
-  // pass. The proof-of-life assertion in each test below exists for the same reason.
-  return { file: fs.realpathSync(file), src, out };
+  git(root, ['init', '-q', '.']);
+  git(root, ['config', 'user.email', 't@t']);
+  git(root, ['config', 'user.name', 't']);
+  fs.writeFileSync(path.join(root, 'seed.txt'), 'seed\n');
+  git(root, ['add', '-A']);
+  git(root, ['commit', '-qm', 'base']);
+  git(root, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+  fs.writeFileSync(path.join(root, 'big.txt'), 'x'.repeat(bytes).replace(/(.{100})/g, '$1\n'));
+  git(root, ['add', '-A']);
+  git(root, ['commit', '-qm', 'big']);
+  return root;
 }
 
-const subjectOf = (mod, proj) => run('node', [mod, 'subject', '--repo', proj, '--ref', BRANCH, '--json']);
+const subjectAt = (repo, env) => run('node', [VERDICT, 'subject', '--repo', repo, '--ref', 'HEAD', '--json'], REPO, env);
+const withCeiling = (v) => ({ ...process.env, VERDICT_MAX_BUFFER_BYTES: v });
 
-test('a whole-branch diff ABOVE Node default maxBuffer still produces a subject', () => {
-  const { proj } = fixture({ workFile: 'big.txt', workBody: textOfAtLeast(SIZE_CLIFF + 256 * 1024) });
-  const r = subjectOf(VERDICT, proj);
-  assert.equal(r.code, 0, `verdict refused an ordinary large diff: ${r.stderr}`);
-  const out = JSON.parse(r.stdout);
-  // CONTROL: without this the test can pass on a fixture that never crossed the cliff.
-  assert.ok(
-    out.bytes > SIZE_CLIFF,
-    `CONTROL: the fixture diff is ${out.bytes} bytes and does not cross the ${SIZE_CLIFF}-byte cliff this test exists to cross`
-  );
-  assert.match(out.subject, /^[0-9a-f]{64}$/, 'no subject came back');
+test('W-1 — a diff past Node\'s 1 MiB default is readable, and the same repo is a working control', () => {
+  const repo = bigDiffRepo(1_500_000);
+  // DENOMINATOR, read before the verdict. Measured from the file, not from `git diff` — the test
+  // helper above has no maxBuffer of its own, which is the very defect under test one level up.
+  const bytes = fs.statSync(path.join(repo, 'big.txt')).size;
+  assert.ok(bytes > 1024 * 1024, `the fixture must exceed the old 1 MiB ceiling, got ${bytes}`);
+  const r = subjectAt(repo);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /"subject": "[0-9a-f]{64}"/);
 });
 
-test('MUTATION: remove maxBuffer and the SAME fixture refuses — and the cliff is where Node puts it', () => {
-  const { file, src, out } = mutantVerdict((s) => s.replace('\n      maxBuffer: GIT_MAX_OUTPUT,', ''));
-  assert.notEqual(out, src, 'the mutation did not apply — verdict.mjs does not spell the option this way');
-  // THE POST-STATE, not merely "the bytes differ". A mutation runner that checks only that
-  // something changed will score an edit it did not mean as applied; two lanes hit exactly that
-  // on 2026-08-29. Assert what the mutation was FOR: the option is gone from the options object.
-  assert.match(gitOptions(src), /maxBuffer/, 'CONTROL: the shipped source carries no maxBuffer to remove');
-  assert.doesNotMatch(gitOptions(out), /maxBuffer/, 'the mutation changed bytes but left maxBuffer in the git() options');
-
-  // PROOF OF LIFE FIRST, and the order is deliberate. UNDER the cliff the mutant must still
-  // compute a subject: that proves the harness actually EXECUTES it, which a silent no-op would
-  // not, and it is what makes the failure below about SIZE rather than about a broken mutant.
-  const under = fixture({ workFile: 'big.txt', workBody: textOfAtLeast(256 * 1024) });
-  const mutantUnder = subjectOf(file, under.proj);
-  assert.equal(mutantUnder.code, 0, `the mutant failed BELOW the cliff too, so its failure is not about size: ${mutantUnder.stderr}`);
-  assert.notEqual(mutantUnder.stdout.trim(), '', 'the mutant exited 0 printing NOTHING — it never ran, so nothing below is evidence');
-  assert.ok(JSON.parse(mutantUnder.stdout).bytes < SIZE_CLIFF, 'CONTROL: the under-cliff fixture is not under the cliff');
-
-  // OVER the cliff, the same mutant must fail. If it does not, these tests do not exercise the fix.
-  const over = fixture({ workFile: 'big.txt', workBody: textOfAtLeast(SIZE_CLIFF + 256 * 1024) });
-  const mutantOver = subjectOf(file, over.proj);
-  assert.notEqual(mutantOver.code, 0, 'the mutant computed a subject over the cliff — the option under test does nothing');
-  assert.match(mutantOver.stderr, /ENOBUFS/, `expected the buffer overflow, got: ${mutantOver.stderr}`);
-
-  // RED/GREEN over ONE fixture: the shipped module passes precisely where the mutant failed.
-  const shipped = subjectOf(VERDICT, over.proj);
-  assert.equal(shipped.code, 0, `the shipped module failed where only the mutant should: ${shipped.stderr}`);
+test('W-2 — over the ceiling it REFUSES, names the limit, and does not blame the repository', () => {
+  const repo = bigDiffRepo(1_500_000);
+  const r = subjectAt(repo, withCeiling('1024'));
+  assert.equal(r.code, 2, 'a subject that could not be read is a refusal, never a pass');
+  assert.match(r.stderr, /produced more than 1024 bytes/);
+  assert.match(r.stderr, /Nothing is established/);
+  assert.match(r.stderr, /VERDICT_MAX_BUFFER_BYTES/);
+  // The remedy names the COMMAND's output. ENOBUFS trips on either stream, so "raise it above the
+  // diff size" is wrong advice whenever it was stderr that overflowed.
+  assert.doesNotMatch(r.stderr, /above the diff size/);
+  // MUST NOT FIRE: the same repo, same command, default ceiling.
+  assert.equal(subjectAt(repo).code, 0, 'CONTROL: the fixture is capable of succeeding');
 });
 
-test('past ANY bound the failure is a REFUSAL, never a subject over a truncated read', () => {
-  // 64 MiB MOVES the cliff; it does not remove it, and verdict.mjs says so in source. This pins the
-  // half that matters: beyond the bound the call THROWS and the catch turns it into a Refusal, so
-  // the outcome is a blocked merge and never a forged verdict. Rule 10, executed. A bound of 1024
-  // stands in for "any branch large enough" without building a 64 MiB fixture.
-  const { file, out } = mutantVerdict((s) =>
-    s.replace('const GIT_MAX_OUTPUT = 64 * 1024 * 1024;', 'const GIT_MAX_OUTPUT = 1024;')
-  );
-  assert.match(out, /const GIT_MAX_OUTPUT = 1024;/, 'the mutation did not apply');
-  assert.match(gitOptions(out), /maxBuffer/, 'CONTROL: the shrunken bound is not wired into the git call');
+test('W-3 — a malformed ceiling is REFUSED and names itself, never silently defaulted', () => {
+  const repo = bigDiffRepo(200);
+  for (const bad of ['abc', '0', '-5', '3.5', 'ten']) {
+    const r = subjectAt(repo, withCeiling(bad));
+    assert.equal(r.code, 2, `${bad} should refuse, got ${r.code}`);
+    assert.match(r.stderr, /VERDICT_MAX_BUFFER_BYTES=/, `${bad}: the refusal must name the knob`);
+    assert.doesNotMatch(r.stderr, /cannot resolve/, `${bad}: a config refusal must not be relabelled`);
+  }
+  // MUST NOT FIRE: a well-formed value on the same arm still works, so the loop is not just failing.
+  assert.equal(subjectAt(repo, withCeiling('  4096  ')).code, 0, 'CONTROL: a padded valid value is accepted');
+});
 
-  const { proj } = fixture({ workFile: 'big.txt', workBody: textOfAtLeast(64 * 1024) });
-  const r = subjectOf(file, proj);
-  assert.notEqual(r.code, 0, 'a diff past the bound produced a subject — that is a subject over a partial read');
-  // Proof of life: a mutant that never ran also prints nothing and would satisfy the line below.
-  // ENOBUFS on stderr can only come from the call this test is about.
-  assert.match(r.stderr, /ENOBUFS/, `the mutant did not reach the git call — nothing here is evidence: ${r.stderr}`);
-  assert.equal(r.code, 2, `overflow must exit 2 (Refusal), not ${r.code}: ${r.stderr}`);
-  assert.doesNotMatch(r.stdout, /"subject"/, 'a subject was printed despite the overflow');
+test('W-4 — a run-level refusal is not relabelled as an unresolvable base', () => {
+  // rev-parse's own ~41 bytes overflow first at these ceilings, INSIDE mergeBase's catch. Every
+  // value here is well-formed, so the malformed-input path cannot account for it.
+  const repo = bigDiffRepo(200);
+  for (const tiny of ['1', '10', '40', ' 12 ']) {
+    const r = subjectAt(repo, withCeiling(tiny));
+    assert.equal(r.code, 2, `${tiny}`);
+    assert.match(r.stderr, /produced more than/, `${tiny}: must report the limit it hit`);
+    assert.doesNotMatch(r.stderr, /cannot resolve "origin\/main"/, `${tiny}: origin/main resolves in this repo`);
+  }
+});
+
+test('W-5 — MUST NOT FIRE: a base that genuinely does not resolve still says so', () => {
+  // The guard against curing the relabel by deleting the message. Widening the predicate must not
+  // swallow the case the message was written for.
+  const repo = bigDiffRepo(200);
+  git(repo, ['update-ref', '-d', 'refs/remotes/origin/main']);
+  const r = subjectAt(repo);
+  assert.equal(r.code, 2);
+  assert.match(r.stderr, /cannot resolve "origin\/main"/);
+  assert.match(r.stderr, /Fetch it first/);
+});
+
+test('W-6 — an unreadable committed record is a REFUSAL, never reported as absent', () => {
+  // Rule 10's mirror. `absent` tells an operator to record a verdict they already have.
+  const repo = bigDiffRepo(200);
+  const sub = JSON.parse(subjectAt(repo).stdout).subject;
+  const big = 'z'.repeat(20_000);
+  const rec = run('node', [VERDICT, 'record', '--repo', repo, '--ref', 'HEAD',
+    '--verdict', 'PASS', '--by', 'probe', '--evidence', big]);
+  assert.equal(rec.code, 0, rec.stderr);
+  git(repo, ['add', '-A', '.qa']);
+  git(repo, ['commit', '-qm', 'verdict']);
+  const recBytes = fs.statSync(path.join(repo, '.qa', 'verdicts', `${sub}.json`)).size;
+  assert.ok(recBytes > 5000, `DENOMINATOR: the record must exceed the probe ceiling, got ${recBytes}`);
+
+  // MUST NOT FIRE: at the default ceiling the record is found and binds.
+  const ok = run('node', [VERDICT, 'check', '--repo', repo, '--ref', 'HEAD', '--json']);
+  assert.equal(ok.code, 0, ok.stderr);
+  assert.match(ok.stdout, /"ok": true/);
+
+  const blind = run('node', [VERDICT, 'check', '--repo', repo, '--ref', 'HEAD', '--json'], REPO, withCeiling('5000'));
+  assert.equal(blind.code, 2, 'could-not-read must be exit 2 (unresolved), not exit 1 (absent)');
+  assert.doesNotMatch(blind.stdout, /"reason": "absent"/, 'absence must not be asserted for an unread record');
 });

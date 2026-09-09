@@ -534,12 +534,349 @@ export type GateRouting =
       floor: string;
       /** How many files the router classified — the DENOMINATOR behind `required`. */
       files: number;
-      /** The ref the router classified, named so a reader can check what was measured. */
+      /**
+       * The ref the router was ASKED about, verbatim — which CAN BE SYMBOLIC, and that is why the
+       * field below exists rather than this one being trusted alone.
+       *
+       * MEASURED, both arms producing both outcomes, `scripts/run-gate.mjs` at `d559dbe`:
+       *   --ref origin/main...feat/w3-caller  ->  ref "origin/main...feat/w3-caller"   SYMBOLIC
+       *                                           invocation.args.ref "origin/main...d559dbe…"
+       *   no --ref (the default path)         ->  ref "origin/main...d559dbe…"          they agree
+       *
+       * `run-gate.mjs` states in capitals that THE EMITTED TIP IS ALWAYS THE RESOLVED SHA — true of
+       * `invocation.args.ref`, which it pins, and NOT of this top-level field. A branch name is a
+       * moving target: the record says "gated at feat/x" and feat/x is somewhere else tomorrow.
+       */
       ref: string;
+      /**
+       * The resolved 40-hex tip the router pinned. **NEVER NULL** — a routing that could not pin a
+       * tip is `decided: false`, carrying the router's own reason.
+       *
+       * THE VALUE A READER SHOULD QUOTE, and the only one. This was `string | null` beside a
+       * `refTipReason` explaining the null, which put a third state into a type whose whole job is
+       * to make the tip unambiguous — and the dedupe key built on it then collapsed every
+       * unpinnable entry to ONE key per root, failing toward SKIPPING a panel. Measured on the
+       * shipped router: 5 of 5 null-tip returns carry a reason, so refusing loses no diagnosis.
+       *
+       * WHAT THE OLD FORM ADMITTED AND THIS ONE DOES NOT: a decided routing with no pinned tip.
+       * WHY IT IS REFUSED: without a pinned tip nothing can tell one diff from another, so every
+       * unpinnable entry for a root collapsed into one key and distinct diffs were merged.
+       *
+       * THE REASON FIRST WRITTEN HERE WAS FALSE, and it is the row the collapse was authorised on.
+       * It read "nothing that can succeed — a tip `verdict.mjs` cannot resolve cannot carry a
+       * binding verdict either". `produce-verdict.mjs` mentions `verdictRef` on ONE line, to say it
+       * deliberately does not read it (control: 35 lines mentioning `invocation`), and it is spawned
+       * with no ref, so it re-derives from its own router call. The router failing to pin a tip
+       * implies nothing about whether the producer would have succeeded.
+       *
+       * NAMED RESIDUAL: for a foreign router that cannot pin `verdictRef` yet emits a sound
+       * `invocation.args.ref`, this skips a panel that could have run — 1 before this change, 0
+       * after. Unreachable from the shipped router, whose flagless call always pins.
+       */
+      refTip: string;
       /** What would run the gate. Present when one is required. */
       invocation: GateInvocation | null;
     }
   | { decided: false; why: string };
+
+/**
+ * What happened when this consumer asked `scripts/produce-verdict.mjs` to produce a verdict.
+ *
+ * THE RECEIPT IS NOT THE OUTCOME, AND THIS TYPE EXISTS BECAUSE THEY LOOK ALIKE. The producer
+ * launches a gate session and then reads `.qa/verdicts/` with the JUDGE's `verdict.mjs`; its exit
+ * code is a summary of that reading, but a summary is not the reading. A consumer that mapped an
+ * exit code straight to a state would report `produced` for any process that happened to exit 0 —
+ * a launcher that no-oped, a stub on PATH, a producer killed after it had already printed. So the
+ * state is taken from the producer's own `--json` payload and the exit code is required to AGREE
+ * with it; disagreement, an unparseable payload, a signal, or a timeout is `unresolved`.
+ *
+ * THERE IS NO `passed` MEMBER, FOR THE SAME REASON `GateOutcome` HAS NONE AND `consumed` WAS
+ * REPLACED BY `exited-clean`. "I could not check" must not be spellable as "it passed". `produced`
+ * is not a synonym for it either: it says a record was read that binds this exact diff and reads
+ * PASS — a fact about an ARTIFACT, which is why it is the only state that can only come from one.
+ *
+ * `not-asked` IS A THIRD THING, NEVER FOLDED INTO `unresolved`. "The gate was not required, so
+ * nothing was spent" and "the gate ran and established nothing" take opposite remedies, and a
+ * total that mixes them tells an operator neither. Absence of the field entirely is a FOURTH fact —
+ * a record written by a build that had no producer wired — and is likewise never any of these.
+ */
+export type VerdictProduction =
+  | {
+      /** Taken from the producer's payload, cross-checked against its exit code. */
+      state: 'produced' | 'blocked' | 'not-required';
+      /** The producer's own reason string, carried verbatim. */
+      reason: string;
+      /** The exit code that agreed with `state`. Present because agreement is the check. */
+      exitCode: number;
+      /** The subject the producer reported, when it reported one — evidence, not decoration. */
+      subject?: string;
+      /** The HEAD the producer read after the launch, when it reported one. */
+      head?: string;
+    }
+  | {
+      /** Nothing was established: the producer refused, was killed, or could not be read. */
+      state: 'unresolved';
+      reason: string;
+      exitCode?: number;
+      signal?: string;
+    }
+  | {
+      /** This consumer never asked. `why` says which of the several reasons applied. */
+      state: 'not-asked';
+      why: string;
+    }
+  | {
+      /**
+       * A panel for THIS EXACT SUBJECT was already launched earlier in the same consumer run.
+       *
+       * ITS OWN STATE, NOT `not-asked`. Measured: 5 pending entries against one root and one diff
+       * produced 5 observed producer invocations, because all three cost filters are PER ENTRY
+       * while the thing being paid for is PER DIFF — and a panel ending REFUSED writes no binding
+       * record, so the producer's own short-circuit (PRODUCED or BLOCKED only) does not catch the
+       * second entry. That is precisely the case where the money was already spent.
+       *
+       * `not-asked` would have been wrong twice over: it already means "the gate did not require
+       * this", and it would hide that a panel DID run for these bytes, one entry earlier.
+       */
+      state: 'already-launched';
+      /**
+       * The subject shared with the earlier entry, or `null` when no subject could be computed and
+       * the run deduped by resolved tip instead.
+       *
+       * IT WAS TYPED `string` AND DOCUMENTED AS "the subject shared with the entry that did pay",
+       * while the fallback path put a KEY in it — `<root>\0tip:<sha>`, which is not a subject and
+       * never was. A field whose documentation is true on one branch is a field a reader is
+       * entitled to misread on the other.
+       */
+      subject: string | null;
+      /** The id of the entry that made the earlier attempt. Never this entry's own id. */
+      firstEntryId: string;
+      /**
+       * What that earlier attempt established, so this record does not have to promise it.
+       *
+       * THE `why` USED TO ASSERT THREE THINGS IT COULD NOT KNOW — that a panel was launched, that
+       * it produced an outcome, and that the earlier record carries one. With a producer that
+       * throws on its first line, all three were false and the record said them anyway. Recording
+       * the earlier STATE means the reader is told what happened instead of promised it.
+       */
+      firstState: VerdictProduction['state'];
+      why: string;
+    };
+
+/**
+ * Every state, from ONE table, for the same reason `DISPATCH_STATUS_KIND` is one table.
+ *
+ * `spend` says whether reaching this state can have cost a panel run (2.5–3.8M tokens, 40–50
+ * minutes), and `satisfies` means a new state cannot be added without answering it.
+ *
+ * NOTHING READS THIS PROGRAMMATICALLY, AND THE SENTENCE HERE USED TO IMPLY OTHERWISE. It said the
+ * marking "makes a run's total spend readable off the queue" — true only of a person opening the
+ * file, because zero readers exist for the field in `server/` or anywhere else. It is a
+ * documented invariant a future reader could total by hand, not a feature.
+ */
+const VERDICT_PRODUCTION_SPEND = {
+  produced: 'maybe',
+  blocked: 'maybe',
+  'not-required': 'no',
+  unresolved: 'maybe',
+  'not-asked': 'no',
+  // THIS ENTRY DID NOT PAY. An earlier entry in the same run did, and its record carries the
+  // outcome. Marking it `'no'` is what makes a run's total spend readable off the queue.
+  'already-launched': 'no',
+} satisfies Record<VerdictProduction['state'], 'maybe' | 'no'>;
+
+/** Every state this build knows, derived from the table above so a reader cannot drift from it. */
+export const VERDICT_PRODUCTION_STATES = Object.keys(VERDICT_PRODUCTION_SPEND) as
+  readonly VerdictProduction['state'][];
+
+/**
+ * The producer's four documented exit codes, and the state each one may confirm.
+ *
+ * AN ALLOW-LIST, NOT A SWITCH WITH A DEFAULT. `produce-verdict.mjs` documents
+ * `PRODUCED 0 · BLOCKED 1 · REFUSED 2 · NOT_REQUIRED 3`, plus `64` for usage — and 64 is
+ * deliberately outside the four so it can never be read as one. Anything not listed here (a spawn
+ * failure, a signal, a future fifth code, `64`) is `unresolved`: this build does not know what it
+ * means, and guessing in the direction of a pass is the one direction that must be impossible.
+ */
+const PRODUCER_EXIT_STATE = {
+  0: 'produced',
+  1: 'blocked',
+  2: 'unresolved',
+  3: 'not-required',
+} as const satisfies Record<number, VerdictProduction['state']>;
+
+/**
+ * The producer's own name for each terminal state, which is what its payload carries.
+ *
+ * Two vocabularies, mapped in one place. The producer says `PRODUCED`/`BLOCKED`/`REFUSED`/
+ * `NOT_REQUIRED`; the queue says `produced`/`blocked`/`unresolved`/`not-required`. `REFUSED` maps
+ * to `unresolved` because that is what it means — "the gate ran and established nothing" — and
+ * keeping the queue's word for it means a reader of a dispatch record never has to learn two.
+ */
+const PRODUCER_OUTCOME_STATE = {
+  PRODUCED: 'produced',
+  BLOCKED: 'blocked',
+  REFUSED: 'unresolved',
+  NOT_REQUIRED: 'not-required',
+} as const satisfies Record<string, VerdictProduction['state']>;
+
+/**
+ * The bounds the producer's spawn is given — DECLARED HERE SO A DELETION GOES RED.
+ *
+ * Both were removable from the spawn call with the suite green at 126/0, which makes them
+ * decoration rather than controls. They are values now, in a module a test imports, so removing
+ * either from the call site breaks the reference and removing them from here fails an assertion.
+ *
+ * `timeoutMs` is DELIBERATELY LOOSER than the producer's own `--timeout` default of one hour: one
+ * authority for the panel budget, and it is the producer's, so its bounded refusal — which carries
+ * a reason — wins whenever it can. This is the outer backstop for a hang before that timer applies.
+ *
+ * `maxBufferBytes` is raised from Node's 1MB default because the payload carries the producer's
+ * reason strings, which are long by design; an ENOBUFS there is safe (`unresolved`) but throws
+ * away a panel run that had already been paid for.
+ */
+export const PRODUCER_SPAWN_LIMITS = {
+  timeoutMs: 70 * 60 * 1000,
+  maxBufferBytes: 16 * 1024 * 1024,
+  /**
+   * The bound for `verdict.mjs subject`, which is a hash of a diff and not a panel.
+   *
+   * ITS OWN NUMBER, because 70 minutes is the wrong bound for a 70-millisecond command — measured
+   * at 74/71/67ms. A round that extracted these limits and added a test asserting the producer
+   * spawn declares both then introduced a SECOND spawn with neither, which is the shape of every
+   * control this repo has lost: the rule was written and the next call site did not get it.
+   */
+  subjectTimeoutMs: 60 * 1000,
+} as const;
+
+/** The completed spawn of the producer, normalised — the only input the classification reads. */
+export interface ProducerRun {
+  /** The exit code, or `null` when the process did not exit normally. */
+  status: number | null;
+  /** The signal that killed it, or `null`. Mutually exclusive with a meaningful `status`. */
+  signal: string | null;
+  /** A spawn-family error code (`ENOENT`, `ETIMEDOUT`, …), or `null` when the spawn itself worked. */
+  spawnCode: string | null;
+  /** Whatever the producer printed on stdout, however malformed. */
+  stdout: string;
+  /** The error message, when the spawn threw. */
+  message?: string;
+}
+
+/**
+ * Turn a completed producer run into a state — the whole of the caller's judgement, in one pure
+ * function so that the consumer's shell code cannot quietly acquire a second opinion.
+ *
+ * THE ORDER OF THE CHECKS IS THE DESIGN. A signal or a spawn error is settled BEFORE stdout is
+ * read, because a producer killed at 49 minutes may have already printed a payload describing a
+ * state it had not yet reached, and a timeout that inherited that payload would report a spend as
+ * a result. Then the payload is required, then the payload's outcome is required to be one of the
+ * four, then the exit code is required to AGREE. Only a run that passes all four gets a state that
+ * is not `unresolved`.
+ */
+export function classifyVerdictProduction(run: ProducerRun): VerdictProduction {
+  if (run.signal) {
+    // THE TIMEOUT LANDS HERE, NOT IN THE SPAWN-ERROR BRANCH BELOW. Node reports an `execFileSync`
+    // timeout as a SIGTERM kill carrying `code: 'ETIMEDOUT'`, and testing `signal` first is what
+    // makes "it was taken away" beat "it never started" — the right precedence, because a killed
+    // producer may have printed a payload for a state it had not yet reached.
+    const timedOut = run.spawnCode === 'ETIMEDOUT';
+    return {
+      state: 'unresolved',
+      signal: run.signal,
+      reason: timedOut
+        ? `the producer exceeded its time budget and was killed by ${run.signal}; whatever it had printed describes a run that did not finish`
+        : `the producer was killed by ${run.signal}; whatever it had printed describes a run that did not finish`,
+    };
+  }
+  if (run.spawnCode) {
+    // A TIMEOUT DOES **NOT** ARRIVE HERE, and this comment used to say it did. `execFileSync`'s
+    // `timeout` kills the child, so Node sets BOTH `signal: 'SIGTERM'` and `code: 'ETIMEDOUT'` —
+    // and `signal` is tested above, so a real timeout is settled there and never reaches this
+    // branch. The old text described a shape Node does not produce, and the fixture that
+    // "covered" it modelled the same impossible shape, so the pair agreed with each other and
+    // with nothing else. What DOES arrive here is a spawn that never ran the program: ENOENT,
+    // EACCES, ENOEXEC, E2BIG. Kept as a complement rather than an enumeration, for the reason
+    // consume-dispatch.ts gives at its own spawn-error branch.
+    return {
+      state: 'unresolved',
+      reason: `the producer could not be run to completion (${run.spawnCode}): ${run.message ?? 'no detail'}`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(run.stdout) as Record<string, unknown>;
+  } catch {
+    return {
+      state: 'unresolved',
+      reason: `the producer printed no readable JSON, so its exit code is the only thing left and an exit code is not a verdict: ${run.stdout.slice(0, 200)}`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    return {
+      state: 'unresolved',
+      reason: 'the producer printed JSON that is not an object, so no outcome could be read from it',
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  const declared = payload.outcome;
+  // LOOKED UP WITHOUT WIDENING, AND `tsc` IS WHAT SAID SO. Written first as
+  // `(TABLE as Record<string, VerdictProduction['state']>)[declared]`, which types the result as
+  // EVERY state including `not-asked` — a value this branch can never produce and the return type
+  // below rightly refuses. `bun test` does not typecheck and would have shipped it; the cure is to
+  // read the table through its own key type so the union stays as narrow as the table is.
+  // OWN PROPERTY, NEVER `in`. `in` walks the prototype chain, so `{"outcome":"toString"}` found a
+  // FUNCTION and skipped the "declares no outcome this build knows" branch — then failed the exit
+  // cross-check instead, reporting a DISAGREEMENT where the truth is an unknown word. No bypass
+  // (all 16 combinations still land `unresolved`) but the wrong diagnosis, which is what an
+  // operator acts on. Same reading for the exit table below.
+  const mapped = typeof declared === 'string'
+    && Object.prototype.hasOwnProperty.call(PRODUCER_OUTCOME_STATE, declared)
+    ? PRODUCER_OUTCOME_STATE[declared as keyof typeof PRODUCER_OUTCOME_STATE]
+    : undefined;
+  if (mapped === undefined) {
+    return {
+      state: 'unresolved',
+      reason: `the producer's payload declares no outcome this build knows (${JSON.stringify(declared)}); known: ${Object.keys(PRODUCER_OUTCOME_STATE).join(', ')}`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  // KEPT, AND INERT TODAY — stated rather than implied. Reverting this half to `in` is provably
+  // equivalent while the keys are the numbers 0–3: no prototype member coerces to "0".."3", so
+  // there is no input that separates them and no test can fail for it. It is symmetry with the
+  // outcome table above, where the same change IS falsifiable and its test fires, kept so the two
+  // lookups cannot drift if this table ever gains a string key. It prevents nothing right now.
+  const expected = typeof run.status === 'number'
+    && Object.prototype.hasOwnProperty.call(PRODUCER_EXIT_STATE, run.status)
+    ? PRODUCER_EXIT_STATE[run.status as keyof typeof PRODUCER_EXIT_STATE]
+    : undefined;
+  if (expected === undefined || expected !== mapped) {
+    // THE CROSS-CHECK, AND IT IS THE POINT OF THE WHOLE FUNCTION. Two independent statements about
+    // one run — a payload and an exit code — must agree, or this build knows less than either of
+    // them claims. A payload saying PRODUCED behind an exit code that does not mean PRODUCED is
+    // the exact shape a stub, a truncated write or a wrapper script produces.
+    return {
+      state: 'unresolved',
+      reason: `the producer's payload says ${String(declared)} and its exit code ${String(run.status)} says ${expected ?? 'nothing this build knows'} — two statements about one run, disagreeing`,
+      ...(typeof run.status === 'number' ? { exitCode: run.status } : {}),
+    };
+  }
+  const reason = typeof payload.reason === 'string' ? payload.reason : 'the producer gave no reason';
+  if (mapped === 'unresolved') {
+    return { state: 'unresolved', reason, exitCode: run.status as number };
+  }
+  const subject = typeof payload.subject === 'string' ? payload.subject : undefined;
+  const head = typeof payload.head === 'string' ? payload.head : undefined;
+  return {
+    state: mapped,
+    reason,
+    exitCode: run.status as number,
+    ...(subject === undefined ? {} : { subject }),
+    ...(head === undefined ? {} : { head }),
+  };
+}
 
 /**
  * How a dispatch was launched — the routing decision, recorded rather than inferred.
@@ -758,6 +1095,25 @@ export function readDeclaredMaxTurns(root: string, agent: string): number | null
  * returns `underivable` carrying the reason, so an unreadable agent file can never be mistaken for
  * a checked one.
  */
+/**
+ * THIS FUNCTION HANDLES NO REF, AND THE NOTE IS HERE BECAUSE TWO BRIEFS SAID IT DID.
+ *
+ * A routed item twice attributed to `deriveGateReachability` the defect *"records the router's
+ * top-level `ref`, which can carry a symbolic tip."* The defect is REAL. It is not here, and it
+ * could not be: this reads `<root>/.claude/agents/<agent>.md`, parses one `tools:` line, and
+ * returns a `GateRecord` — which has no ref field. Both call sites pass `(entry.root, agent)`.
+ * Measured on the whole body: zero `ref`, `git` or `rev-parse` tokens, against 18 `ref` hits
+ * elsewhere in this file as the control that the search works.
+ *
+ * THE REAL SITE IS `routeGate` IN `mission-control/scripts/consume-dispatch.ts`, which reads the
+ * router's JSON. Fixed there — see `GateRouting.refTip`. Measured, both arms:
+ * `--ref origin/main...feat/x` emits a SYMBOLIC top-level `ref` beside a RESOLVED
+ * `invocation.args.ref`; the default path emits both resolved, which is why reading the top-level
+ * field alone looked correct.
+ *
+ * A probe selecting on THIS symbol therefore returns ~zero whether or not the defect is fixed — it
+ * finds only the import line as diff context. Select on `refTip` or `verdictRef` instead.
+ */
 export function deriveGateReachability(root: string, agent: string): GateRecord {
   const file = path.join(root, '.claude', 'agents', `${agent}.md`);
   let text: string;
@@ -867,6 +1223,22 @@ export interface DispatchEntry {
    * CONTEXT FOR AN `exited-clean`, NOT A DIAGNOSIS OF ONE. Absent means this build did not read it.
    */
   declaredMaxTurns?: number | null;
+  /**
+   * What came back when this consumer asked the repo's producer to produce a verdict.
+   *
+   * ABSENT MEANS NO PRODUCER WAS WIRED when this line was written — a fact about the BUILD, not
+   * about the dispatch, and different from every state the field can hold. `{state: 'not-asked'}`
+   * means this build had a producer and decided not to spend it, and says which reason applied.
+   * Neither is ever a pass, and neither may be read as one.
+   *
+   * THAT SENTENCE WAS BRIEFLY FALSE AND IS TRUE AGAIN. Writing the terminal record before the
+   * verdict step left a durable line with this field absent, so absence also meant "a panel may
+   * have run and its outcome was lost" — two facts in one representation, introduced by the fix
+   * that reordered the writes. Every line this build emits after a launch now carries the field,
+   * starting with an explicit `unresolved` written before the producer returns, so absence is once
+   * more a statement about the build alone.
+   */
+  verdictProduction?: VerdictProduction;
 }
 
 /**

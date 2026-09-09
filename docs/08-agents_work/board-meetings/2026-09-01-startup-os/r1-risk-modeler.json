@@ -1,0 +1,268 @@
+{
+  "persona": "risk-modeler",
+  "round": 1,
+  "thesis": "This system's fatal risks are not capability risks but BINDING risks — the gap between a control existing and a control being in the path of the action it names. I measured all three catastrophic modes as already live: a TikTok video and caption classify `tier=lite · enforcement=shadow` because the one classifier's only input is file paths and no worldly act touches a risky path; `mcp__higgsfield__tiktok_publish`, `mcp__higgsfield__sandbox_exec` and `mcp__claude_ai_Gmail__send_message` each return exit 0 from the only blocking hook in the repository with no block, no warning and no log line; and the only stop mechanism that exists, `budget-guard.js`, is registered zero times while its measurement library runs live. Three structural properties carry almost all of the achievable safety and the repo already owns each mechanism: reach declared on the GRANT rather than the call with effective tier = max(path, reach) in the ONE classifier; a `kind: human` gate that has no `run:` and where writing one is REFUSED, which is the only structural impossibility in the tree and it has zero consumers; and every outbound tool defaulting to the reversible branch with the irreversible branch requiring a second call carrying the artifact's hash. Against that, a large share of residual risk cannot be closed and must be named — the sandbox is a guardrail not containment, Bash is a general capability, a verdict is hash-bound not signed, and no reasoning-layer control survives prompt injection. The single most consequential sequencing decision is that inbound must come after the outbound wrapper, because inbound plus outbound with nothing between them is injection-to-irreversible-action in one hop.",
+  "positions": [
+    {
+      "id": "P1",
+      "claim": "The enforcement spine is structurally blind to every act that can end the company, and this is measured, not inferred. `node scripts/classify.mjs assets/promo.mp4 posts/launch.txt` returns `tier=lite · enforcement=shadow` for both — a video and caption about to be published under the company's name, unattended.",
+      "reasoning": "`scripts/lib/classifier.js` exposes only `classifyFile(file, rules)` and `classifyFiles(files, rules)`. Its sole input is paths. Every `enforcement: block` row in the tier floor is a file glob — migrations, `.github/workflows/**`, `.claude/agents/**`, `.claude/settings.json`, `.mcp.json` — and the reason given for the group is exactly right, `git revert` does not undo them. A posted letter, a sent email and a charged card are the same class with no file to name. Cure: `reach` as a second axis on the SAME classifier, effective tier = max of the two, and reach declared on the GRANT not the call so it is declared once, at the moment a capability enters the system, rather than hundreds of times at call sites.",
+      "evidence": [
+        "MEASURED 2026-09-01: node scripts/classify.mjs assets/promo.mp4 posts/launch.txt -> tier=lite enforcement=shadow, floor=lite",
+        "scripts/lib/classifier.js:179-187 (module.exports: classifyFile, classifyFiles — path-only API)",
+        ".claude/qa-tier-floor.yml:50-81 (every enforcement:block row is a file glob)",
+        "docs/02-competitive/expansion/concepts.md:§7 R1 and R2",
+        "docs/02-competitive/expansion/hands.md:§5.2B (the missing axis is money, the only one with a rate)"
+      ],
+      "confidence": "high",
+      "territories": ["09", "03", "02", "13"]
+    },
+    {
+      "id": "P2",
+      "claim": "The catastrophic MCP surface reaches the only blocking hook in the repository and is allowed silently. Driving `.claude/hooks/pre-tool-use.sh` with real PreToolUse payloads: `tiktok_publish` exit 0, `sandbox_exec` exit 0, Gmail `send_message` exit 0, all with empty stderr — against controls `rm -rf /` exit 2 and external `curl` exit 2.",
+      "reasoning": "This is by design, and the design is defensible: `.claude/mcp-policy.json`'s rule is SCOPE not server name, and a server absent from both the policy and `.mcp.json` is the founder's own and not this repo's business. The consequence for an unattended company is that the ungoverned half is the dangerous half. The policy governs exactly two servers — playwright (allow 21, deny 3) and claim-append (allow 1) — both `credentialed: false`, in `mode: shadow`; and `claude mcp list` this session reports playwright as `Failed to connect — CONNECTION_CLOSED`. The one server with a per-tool policy is the one that cannot connect. Do NOT fix by widening the hook: that is the inverted resolution of the #96.3 template CLAUDE.md warns about. Fix at three layers — the frontmatter grant (per worker, lint-enforced, measured to narrow), the vendor's deny/ask globs (per machine, enforced above this repo's bugs, currently `ask: 0` and zero MCP rules), and a repo-owned wrapper (per action).",
+      "evidence": [
+        "MEASURED 2026-09-01: piped PreToolUse JSON to .claude/hooks/pre-tool-use.sh — mcp__higgsfield__tiktok_publish exit=0, mcp__higgsfield__sandbox_exec exit=0, mcp__claude_ai_Gmail__send_message exit=0, Task exit=0; controls rm -rf / exit=2, curl external exit=2",
+        ".claude/hooks/pre-tool-use.sh:52-77 (MCP decision table: 'server in neither policy nor .mcp.json -> ALLOW, no log')",
+        ".claude/mcp-policy.json:_doc and servers (2 servers, mode: shadow)",
+        "MEASURED: claude mcp list -> playwright: Failed to connect — CONNECTION_CLOSED",
+        "MEASURED: .claude/settings.json permissions — allow 29, deny 10 (all Bash), ask 0, zero MCP rules",
+        "docs/02-competitive/expansion/hands.md:§5.1 pattern 1 (deny/ask accept full mcp__* globs; allow needs a literal server prefix)",
+        "docs/02-competitive/expansion/hands.md:§5.2A (the riskiest hands are already granted and the safest are not)"
+      ],
+      "confidence": "high",
+      "territories": ["09", "03"]
+    },
+    {
+      "id": "P3",
+      "claim": "Built-and-never-wired is the top-ranked risk, not a housekeeping concern, because it disarms the fix for every other row on my table. The only proposal that PREVENTS rather than detects it is the birth certificate: nothing merges without a caller in the same diff, as a CI step.",
+      "reasoning": "The base rate here is high and independently counted from several directions: STARTUP-OS §1b's census is six of nine rows unwired; `grep -c budget-guard .claude/settings.json` -> 0; `outbound-approval` has one namer (a playbook stage carrying no dispatch block) and zero consumers across workflows, scripts, .github and bin; `design.js` has zero invocations ever; 1 of 4 workflows runs; 1 of 7 mission-control views acts; 0 of 18 agents cite a mental model; 0 of 8 board personas had agent files. A reach axis nothing calls, a wrapper nothing routes through and a gate nothing resolves are indistinguishable from absence — and worse than absence, because the founder will believe the system is bounded when it is not. Mechanism: a step in `scripts/lib/check-suite.js` (which owns the one step list and whose drift is caught by `test:check-suite`) asserting that a newly-added executable declaration is referenced by something that runs. `scripts/check-registration.mjs`'s dead-path check is the same shape pointed the other way.",
+      "evidence": [
+        "docs/03-system-design/STARTUP-OS.md:§1b (census: six exist unwired, three absent, one works)",
+        "MEASURED: grep -c 'budget-guard' .claude/settings.json -> 0; .claude/hooks/budget-guard.js exists (9,771 bytes)",
+        "MEASURED: grep -rn outbound-approval -> named by .claude/playbooks/launch-landing-page.yml:40 and schema-lint.js:1721 only",
+        "docs/03-system-design/ROSTER-SIZE.md:341 (grep -rl outbound-approval across workflows/scripts/.github/bin returns nothing)",
+        "docs/02-competitive/expansion/00-TERRITORY.md:§Standing rules (built-and-never-wired is endemic, in this repo and all five systems studied)",
+        "docs/02-competitive/expansion/concepts.md:§17 item 1 (X1, the birth certificate)"
+      ],
+      "confidence": "high",
+      "territories": ["09", "12", "08"]
+    },
+    {
+      "id": "P4",
+      "claim": "`blocking-human` by TYPE is the only autonomy control that survives 3am, and it is already built and has zero consumers. `.claude/gates.yml` declares a `kind: human` gate that has no `run:`, and `scripts/check-gates.mjs` REFUSES one written with a `run:`.",
+      "reasoning": "That refusal is the only structural impossibility in the repository — no configuration, mode or reasoning chain can clear it, because the impossibility lives in the type rather than in a policy someone must remember. Before `gates.yml`, 'a human must decide' and 'nothing implements this' were the same string in the same array and no reader could tell them apart. Anything with `blast_radius: stranger|public` or `reversible: no` should be a `human` gate because of what it IS. The class is exactly the one hands §3.6 names — irreversible by physics, not by policy — and the repo already has the right instinct written down: migration, deploy and harness self-edit block from day one because `git revert` does not undo them. A letter is the same class and the vocabulary extends. Also read `gate: qa-verdict` correctly: a command gate VERIFIES (is a PASS committed and sha256-bound to this diff) and does not PRODUCE; nothing in gates.yml can run the panel.",
+      "evidence": [
+        ".claude/gates.yml:102-204 (4 gates: qa-verdict kind:command; founder-approval, outbound-approval, migration-approval kind:human)",
+        ".claude/gates.yml:20-33 (kind:command any exit other than 0 or 1 is unresolved; kind:human has no run: and writing one is refused)",
+        "docs/02-competitive/expansion/concepts.md:§7 R3 (GSD two-tier gates, blocking vs blocking-human)",
+        "docs/02-competitive/expansion/hands.md:§3.6 (irreversible by physics, not by policy)",
+        "docs/02-competitive/expansion/hands.md:§5.1 pattern 8"
+      ],
+      "confidence": "high",
+      "territories": ["09", "01", "11"]
+    },
+    {
+      "id": "P5",
+      "claim": "Every outbound tool must default to the reversible branch and require a SEPARATE send call carrying the artifact's hash. The hash is not ceremony — it is what converts a two-step protocol into a review surface.",
+      "reasoning": "The failure direction is asymmetric: a missed send costs nothing, a wrong send cannot be recalled, so the refusal belongs on the not-sending side. The generalisable precedent is this repo's own #116 — `verdict.mjs` refusing an unknown flag INSTEAD of performing the non-dry action, after a mistyped `--dry-run` was dropped in silence and the real thing ran. R4's stated failure is that workers chain both calls immediately; requiring the hash means the second call must reference an artifact that already exists on disk and is inspectable, so at minimum the artifact was written. `higgsfield`'s `virality_predictor` is a free pre-publication oracle to feed this — the first non-code oracle available without building anything — but it is a done-test INPUT, never a resolver, because A3 forbids a model scoring its own work.",
+      "evidence": [
+        "docs/02-competitive/expansion/concepts.md:§7 R4",
+        "CLAUDE.md:§Project State (#116 — verdict.mjs refuses an unknown flag instead of performing the non-dry action)",
+        "docs/02-competitive/expansion/hands.md:§1.1 point 2 (virality_predictor as the nearest thing to a verdict from the world)",
+        "docs/02-competitive/expansion/concepts.md:§15 A3 (0.543 judge vs 0.741 self-consistent panel)"
+      ],
+      "confidence": "high",
+      "territories": ["09", "03", "08"]
+    },
+    {
+      "id": "P6",
+      "claim": "Prompt injection converts every grant into the attacker's grant, and only two properties survive it: credential-scoped grants, and separating the world-reading engine from the world-acting engine. Refuse any pack that grants both.",
+      "reasoning": "Probability is only moderate today because inbound does not exist — hands §3.2 opens 'Today: it cannot' — and becomes near-certain the day an RSS poller, a Gmail label watcher, a Monitor on a ws: source, or a fetched web page enters the loop. Of the ten permission patterns surveyed, exactly one is called out as surviving prompt injection: credential-scoped grants, because the grant lives in the token rather than in the model's cooperation. The second property costs nothing today and already exists as a shipped pattern: `sourcer` carries `tools: [Read, Glob, Grep, WebSearch, WebFetch]` with no Write and no Edit, plus one narrow MCP grant. Reading and acting in one context is the injection path; in two contexts with a hash-bound artifact between them, the artifact is a review surface. Also take the vendor's narrowing for free — Linear's /readonly endpoint, Supabase's tool groups with storage off by default, Google Ads read-only BY CONSTRUCTION while Meta's writes.",
+      "evidence": [
+        "docs/02-competitive/expansion/hands.md:§5.1 pattern 5 (the only pattern that survives prompt injection)",
+        "docs/02-competitive/expansion/hands.md:§5.1 pattern 4 (vendors ship the narrow version)",
+        "docs/02-competitive/expansion/hands.md:§5.1 pattern 2 (sourcer: mcpServers [claim-append] with no Write, no Edit)",
+        "docs/02-competitive/expansion/hands.md:§3.2 (inbound: today it cannot)",
+        "docs/02-competitive/expansion/hands.md:§2.3 (Google Ads read-only vs Meta Ads read+write — same category, one vendor narrowed it for you)"
+      ],
+      "confidence": "high",
+      "territories": ["09", "03", "06"]
+    },
+    {
+      "id": "P7",
+      "claim": "Money is the one risk axis with a RATE, and no tier in this repository can express one. A pack's `budget:` field is a WISH until a counter at the wrapper exists, and per the repo's own standing rule it should not be written until then.",
+      "reasoning": "hands §5.2B states it exactly: every proposed dimension is already in this repo's vocabulary except money, because '$X per day' cannot be expressed by any tier this repo has, and Meta Ads, RunPod pods and Lob all need it. Meta Ads is the sharpest instance in the whole study — first-party, OAuth-gated, read AND write on a real ad account, so an agent can create a campaign, set a budget, launch higgsfield creative, read the result and iterate with no human, continuously, at 3am. The cure is R5: absolute ceilings enforced at the wrapper independent of reasoning, because every reasoning-based control can be reasoned around and a cap that binds regardless of argument is the only control that survives a persuasive plan. `budget-guard.js` is the working precedent — a ceiling with a safelist, plus an override demanding a written reason logged with the numbers. STARTUP-OS §4's standing rule makes this binary: sixteen war-room routines once declared budgets nothing read. `higgsfield` exposing `balance`/`transactions` in-band is useful but 'can check' is not a mechanism; the mechanism is the wrapper refusing.",
+      "evidence": [
+        "docs/02-competitive/expansion/hands.md:§5.2B (the missing axis is money, the only one with a rate)",
+        "docs/02-competitive/expansion/hands.md:§2.3 (Meta Ads MCP — unbounded financial, irreversible, external)",
+        "docs/02-competitive/expansion/concepts.md:§7 R5",
+        "docs/03-system-design/STARTUP-OS.md:§4 (if budget: is not enforced by something that can stop a worker, the field is not written)",
+        "docs/02-competitive/expansion/hands.md:§1.1 (higgsfield balance / show_plans_and_credits / transactions)"
+      ],
+      "confidence": "high",
+      "territories": ["13", "09", "03"]
+    },
+    {
+      "id": "P8",
+      "claim": "The kill switch must live in the SUPERVISOR, not in the prompt, and it does not exist today: `grep -rln 'kill.switch|killswitch|KILL_SWITCH|emergency.stop'` returns three hits, all three in documents describing the gap, and zero in code.",
+      "reasoning": "A stop instruction in an agent's context is a request the model participates in. A stop-file the runner stats before each iteration is a fact it does not. Everything needed is installed: `launchd` with `KeepAlive` as the supervisor (Auto-Co's outer daemon, already on the machine), `launchctl unload` as the true kill, `WatchPaths` making a directory both inbox and stop-file, and `claude -p --allowedTools <narrow list>` as the loop body — a complete 24/7 worker with a per-run capability grant using only what exists today. Do NOT build the loop on `CronCreate`: its own schema says jobs live only in the session, nothing is written to disk, the job is gone when Claude exits, `durable` has no effect, jobs fire only while the REPL is idle, and recurring tasks auto-expire after 7 days. Beyond stop, the steering verb worth stealing is LangGraph's third option — approve / EDIT / reject — which is the direct answer to gap #4, with MCP elicitation as the wire format. Note the flagged caveat: `roots`, `sampling` and `logging` are deprecated as of protocol 2026-07-28; elicitation is not.",
+      "evidence": [
+        "MEASURED 2026-09-01: grep -rln kill-switch/killswitch/emergency-stop across the tree -> only 00-TERRITORY.md, concepts.md, open-source.md; zero code hits",
+        "docs/02-competitive/expansion/hands.md:§3.1 (four scheduling mechanisms; CronCreate fine print; the claude -p + launchd sentence)",
+        "docs/02-competitive/expansion/00-TERRITORY.md:§The twelve things never named, item 4",
+        "docs/02-competitive/expansion/hands.md:§5.1 pattern 9 (elicitation; roots/sampling/logging deprecated, elicitation is not; LangGraph approve/edit/reject)"
+      ],
+      "confidence": "high",
+      "territories": ["01", "09", "11", "10"]
+    },
+    {
+      "id": "P9",
+      "claim": "Blocked must be AUTHORED and stalled must be COMPUTED, and the measurement half is already built: `budget-guard.js`'s stall ceiling counts since the last durable artifact on disk — a commit, a claim event, or a session file — and NEVER the agent's own claim to be done.",
+      "reasoning": "Territory gap #6 is that blocked and stalled look identical, which is a detection-latency amplifier: it does not cause the irreversible event, it delays the founder finding out about one. A worker WRITES a blocker record naming what it needs; stalled is a clock reading no durable artifact in N minutes. Two different sources — a file the agent wrote and a filesystem timestamp — so they cannot be confused by construction. The 'never the agent's own claim' clause is load-bearing and is the same principle as A3: a model may not be the resolver of its own completion. This is one sentence of design, near-zero cost, and it makes an entire class of confusion structurally impossible.",
+      "evidence": [
+        "docs/02-competitive/expansion/concepts.md:§17 item 5 (B1 — blocked is authored, stalled is computed)",
+        "docs/03-system-design/STARTUP-OS.md:§1b (budget-guard stall ceiling counted since the last durable artifact, never the agent's own claim to be done)",
+        "docs/02-competitive/expansion/00-TERRITORY.md:§The twelve things never named, item 6",
+        "MEASURED: scripts/lib/usage.js exports lastArtifactAt, sinceLastArtifact — the measurement runs"
+      ],
+      "confidence": "high",
+      "territories": ["01", "05", "10"]
+    },
+    {
+      "id": "P10",
+      "claim": "Contacting a real person wrongly is the worst available autonomous mistake, and the cure is a named-human register checked by the outbound wrapper, fail-closed by construction — an unparseable recipient is not on the list.",
+      "reasoning": "It is unrecoverable in a way no code change is, and nothing currently stands between this system and anyone's inbox: Gmail `send_message` is live, connected, and returns exit 0 from the hook. Deterministic string matching, no model in the loop, and adding someone is a founder act. The failure R6 names is replies — answering an inbound message means contacting someone never pre-approved — and the fix is that reply-in-thread is a distinct, NARROWER permission, never a general send, with first contact as the thing requiring approval. The platform rate limits are a design constraint rather than a footnote: LinkedIn ~100 calls/day/member; Reddit 100 QPM, 1 post per 10 minutes for new accounts, karma/age rules, and $0.24/1,000 calls once commercial under a hand-reviewed contract. A 'post everywhere continuously' design dies on those; a 'post thoughtfully, rarely, per platform' design does not.",
+      "evidence": [
+        "docs/02-competitive/expansion/concepts.md:§7 R6",
+        "MEASURED: mcp__claude_ai_Gmail__send_message -> pre-tool-use.sh exit 0, no stderr",
+        "docs/02-competitive/expansion/hands.md:§2.3 (LinkedIn and Reddit hard platform limits)",
+        "docs/02-competitive/expansion/hands.md:§1.8 (Gmail/Calendar/Drive — the founder's own surfaces)"
+      ],
+      "confidence": "high",
+      "territories": ["09", "14", "03", "06"]
+    },
+    {
+      "id": "P11",
+      "claim": "The balcony is a safety mechanism, not an interface preference. With the founder watching 2–4 rows a day, an escalation delivered as one row among two hundred is an escalation that did not arrive — and that is how every correctly-built control on this list fails silently.",
+      "reasoning": "The structural property is PR #115's, generalised: a refusal must be a distinct TERMINAL VALUE, not a log line. Before #115 a gate that reviewed nothing was byte-indistinguishable from one that ran every reviewer and found defects. Applied here: the escalation channel must be a different channel from the activity log, and an escalation must be a type the balcony cannot render as an ordinary row — it occupies a queue whose count the founder sees before anything else. Typed `events.jsonl` already exists via scripts/lib/events.js and mission-control already buckets by `event`; the missing piece is the type distinction. `say` and `afplay` are installed, so a spoken escalation costs nothing and works offline, which is the zero-cost half of gap #9. Accept the cost honestly: if the founder is asleep, a human gate stops the work. That is the correct trade — measure human-gate stops per night, and if the count is high, change what the loop attempts overnight rather than weakening the gate.",
+      "evidence": [
+        "CLAUDE.md:§Project State (#115 — a refusal is a terminal value distinct from a block)",
+        "docs/08-agents_work/board-meetings/2026-09-01-startup-os/r0-shared.md (founder decision: balcony rows are goal-sized, 2–4 a day)",
+        "docs/02-competitive/expansion/hands.md:§3.3 (say + afplay, the zero-cost voice channel already installed)",
+        "docs/02-competitive/expansion/concepts.md:§7 R3 'fails when' (count human-gate stops per night)",
+        "MEASURED: scripts/lib/events.js resolves an events.jsonl path; none exists in this worktree"
+      ],
+      "confidence": "med",
+      "territories": ["10", "09", "06"]
+    },
+    {
+      "id": "P12",
+      "claim": "Bash is a general capability and no set of shell rules can bound it. `node -e \"fetch(1)\"` and `python3 -c \"import urllib\"` both return exit 0 from the blocking hook, and `echo x > .env` returns 0 where `Write` to `.env` returns 2. Move the boundary to the credential; do not add more rules.",
+      "reasoning": "An enumerate-the-bad list can never be completed, and this repository has already written that lesson down: pre-tool-use.sh's own MCP comment calls unlisted-is-denied the cure for 'the enumeration failure this file's own SSRF guard was rewritten to stop repeating'. Adding a `node -e` rule buys `perl -e`, `ruby -e`, `bun -e`, a heredoc into sh, and a script written to disk then executed. A shell that can do anything on a machine holding no usable outbound credential has a bounded blast radius; a perfectly-ruled shell on a machine holding a live ad-account token does not. Two narrower observations worth keeping: the `( npx --version )` bypass is REAL but rule-specific — rm and curl survive subshells, brace groups and eval, so it is an anchoring defect in one rule and also a canary about the class; and the Bash-vs-Write divergence on `.env` is the exact pattern CLAUDE.md documents, now measured live.",
+      "evidence": [
+        "MEASURED 2026-09-01: node -e exit 0; python3 -c exit 0; ( npx --version ) exit 0 vs npx --version exit 2; ( rm -rf / ) exit 2; { rm -rf / ; } exit 2; eval \"rm -rf /\" exit 2; C=curl; $C https://evil… exit 2; Bash 'echo x > .env' exit 0 vs Write .env exit 2",
+        ".claude/hooks/pre-tool-use.sh:§MCP policy header (the enumeration failure the SSRF guard was rewritten to stop repeating)",
+        "docs/03-system-design/STARTUP-OS.md:§1b (A LIVE BYPASS IN A BLOCKING HOOK)",
+        "CLAUDE.md:§Git Worktree Protocol (Bash-vs-Write divergence; two instances, opposite correct resolutions)"
+      ],
+      "confidence": "high",
+      "territories": ["09", "03"]
+    },
+    {
+      "id": "P13",
+      "claim": "The second model family is not structurally unreachable — it is unwired on a six-month-stale version pin, and Rule 10 is already handling the consequence honestly by returning `unresolved` rather than `pass`.",
+      "reasoning": "CLAUDE.md states in four places that no non-Anthropic model is reachable from inside Claude Code. hands §0.3 measured a better diagnosis: BOTH second-family runtimes are installed and both are invisible to a sandboxed agent for two DIFFERENT reasons — `~/.gemini` is in the sandbox denyRead so gemini dies reading its own config, and ollama talks to loopback 127.0.0.1:11434 which the sandbox denies, the identical mechanism behind check:mc's EADDRINUSE with errno 0. Both cells recover with the sandbox disabled. The sting: both pulled ollama models are RETIRED (glm-5 2026-07-15, kimi-k2.5 2026-07-31), and a retirement notice is not an auth failure — the account works, the runtime works, the pins are stale and nothing watched. So this is P3/built-and-never-wired appearing in the capability layer, and the distance to a multi-family panel is `ollama pull <current model>` plus one sandbox exemption. Accept the current single-family posture with its existing 2026-11-17 exit condition, and stop describing it as impossible.",
+      "evidence": [
+        "docs/02-competitive/expansion/hands.md:§0.3 (gemini and ollama both installed, both invisible under the sandbox, both models retired)",
+        "docs/03-system-design/SANDBOX.md:Finding 5 (no inbound/loopback setting; errno 0 is the tell)",
+        "CLAUDE.md:§Project State (single-family review is an accepted risk, exit condition 2026-11-17)",
+        "CLAUDE.md:§Rules table rule 10 (a resolver never passes what it could not check; ledger.test.mjs pins unresolved as distinct from pass)"
+      ],
+      "confidence": "high",
+      "territories": ["08", "11", "09"]
+    },
+    {
+      "id": "P14",
+      "claim": "A meaningful share of residual risk cannot be closed by any mechanism and must be accepted and NAMED, because a design that implies otherwise is worse than one that admits it.",
+      "reasoning": "Eight items, each with its source. (1) The sandbox is a guardrail against accident, not containment — `dangerouslyDisableSandbox` is a vendor escape hatch and the agent-config paths cannot be exempted by any setting, only by `filesystem.disabled` which lifts everything. (2) Bash is general (P12). (3) No reasoning-layer control survives prompt injection; only the credential and the wrapper hold. (4) A verdict is hash-bound, not signed — hash-binding stops an INHERITED verdict, not a FORGED one, and anyone with repo-write can author one. (5) The panel is single-family until a second family is reachable. (6) A policy file is an ordinary file: deleting `mcp-policy.json` disarms it, which that file states about itself. (7) A blocking-human gate stops overnight work when the founder is asleep — the correct trade, to be measured rather than argued. (8) The founder is a single point of failure for every human gate and watches 2–4 rows a day. Naming these is the same discipline as Rule 10 applied to the design rather than to a resolver.",
+      "evidence": [
+        "docs/03-system-design/SANDBOX.md:Finding 2 (guardrail against accident, not containment — do not describe it as containment)",
+        "docs/03-system-design/SANDBOX.md:Finding 3 (the agent-config paths cannot be exempted; filesystem.disabled is the only switch)",
+        "CLAUDE.md:§Risk-Tiered QA Gate and §Project State (the verdict record is hash-bound, not signed)",
+        ".claude/mcp-policy.json:_deleting_this_file (deleting the file turns the mechanism off — a stated limit, not a hidden one)",
+        "docs/02-competitive/expansion/concepts.md:§15 A6 (refuse a proposal that reads as enforcement while nothing checks it)",
+        "MEASURED: .claude/settings.json sandbox.enabled true, failIfUnavailable true, no network key"
+      ],
+      "confidence": "high",
+      "territories": ["09", "11", "08"]
+    }
+  ],
+  "what_must_be_true": [
+    "The founder authorises registering budget-guard.js in .claude/settings.json — it is irreversible tier, denied to the write tools, and it is the only stop mechanism that exists. Without it every control below runs inside a window nothing bounds.",
+    "`reach` is added to scripts/lib/classifier.js as a second axis and NOT implemented anywhere else. A second implementation of risk classification is refused outright; the repo has already paid for that lesson once.",
+    "Reach is declared on the tool GRANT, not on the call site, and a pack granting a tool with no reversible:/blast_radius: declaration is invalid — enforced the way schema-lint.js already fails an mcpServers declaration no configuration backs.",
+    "Every credentialed outbound MCP server carries `credentialed: true` in the policy, which blocks regardless of mode, or the shadow setting makes the policy advisory exactly where it matters.",
+    "The catastrophic per-tool surface on a coarse-grained server is reachable ONLY through a repo-owned wrapper, or mcp-policy.json's scope rule gains an explicit third case for credentialed user-scope servers. Frontmatter grants are per server and the risk is per tool; nothing else closes that gap.",
+    "The outbound wrapper is one artifact carrying all four properties — dry-run default, hash-bound send, named-human register, rate ceiling — because they share a code path and shipping three of four ships a gap.",
+    "The kill check lives in the launchd wrapper script, not in any agent's prompt or instructions.",
+    "Inbound is built AFTER the outbound wrapper, never before.",
+    "Human-gate stop counts are recorded from the first unattended night, so the autonomy/safety trade is measured rather than argued.",
+    "The birth-certificate CI check exists before the other controls, or the measured base rate says they join the six unwired mechanisms and produce a false sense of safety."
+  ],
+  "refuse": [
+    {
+      "what": "A second implementation of risk classification.",
+      "why": "scripts/classify.mjs's own header: 'Two implementations of risk classification will disagree, and you find out during the incident.' It has already happened here — qa-lead-pass.yml computed a stricter second answer and demanded a tier on session files the classifier tiers trivial. Extend scripts/lib/classifier.js; never parallel it. (concepts.md §15 A5)"
+    },
+    {
+      "what": "Any done-test whose resolver is the producing model.",
+      "why": "Documented self-preference bias, plus the local measurement: a design PASS/BLOCK judge scored 0.543 against a panel only 0.741 self-consistent. The done-test must be deterministic, external, or human. (concepts.md §15 A3)"
+    },
+    {
+      "what": "A `budget:` field that nothing counts.",
+      "why": "STARTUP-OS §4's standing rule: if budget: is not enforced by something that can stop a worker, the field is not written. Sixteen war-room routines once declared budgets that nothing read. Writing the field before the counter exists manufactures exactly the false safety that P3 warns about."
+    },
+    {
+      "what": "A pack granting a world-reading tool and a world-acting tool together.",
+      "why": "That pairing in one context IS the prompt-injection path. Split them and put a hash-bound artifact between, so the artifact becomes a review surface. sourcer is the existing exemplar: WebSearch and WebFetch with no Write and no Edit."
+    },
+    {
+      "what": "`ask:` rules as the primary 3am control.",
+      "why": "An unanswered ask fails closed, which is acceptable, but it converts every autonomous run into a stall and gives the founder no way to distinguish 'waiting for you' from 'refused'. blocking-human by TYPE is the right primitive; the vendor's ask/deny globs are a machine-wide backstop, and today there are zero of either for MCP."
+    },
+    {
+      "what": "Widening pre-tool-use.sh to govern the founder's own user-scope servers.",
+      "why": "Wrong layer, and it is the inverted resolution of the #96.3 template CLAUDE.md explicitly warns about. The hook's scope rule is right: this repo should not govern the founder's Gmail during the founder's own interactive session. Narrow at the grant; backstop at the vendor's deny globs; route the catastrophic tools through a wrapper."
+    },
+    {
+      "what": "Describing the sandbox as containment.",
+      "why": "SANDBOX.md Finding 2 states it directly and the repo has a standing rule against claiming enforcement that does not exist. dangerouslyDisableSandbox is a documented escape hatch; every worktree created in one recorded session needed it."
+    },
+    {
+      "what": "`CronCreate` as the 24/7 scheduler.",
+      "why": "Its own schema: jobs live only in the Claude session, nothing is written to disk, the job is gone when Claude exits, `durable` has no effect, jobs fire only while the REPL is idle, and recurring tasks auto-expire after 7 days. A company built on it dies at the first exit and reports nothing. Use launchd with KeepAlive."
+    },
+    {
+      "what": "Averaging panel scores, and weights on voices.",
+      "why": "Carried from concepts.md §15 A1 and A2, not re-argued. Weak judges are excellent finders and useless scorers; weighted voting is an average wearing a costume and requires a trust model that cannot be validated at this volume. Union, never average."
+    }
+  ],
+  "build_order": [
+    "0 — The birth certificate: nothing merges without a caller in the same diff, as a step in scripts/lib/check-suite.js. FORCED FIRST because it changes the survival rate of every item after it, and the measured base rate of building the alternative is high enough that five new controls would otherwise produce five new unwired mechanisms plus a false sense of safety.",
+    "1 — Register budget-guard.js. FORCED because it is the only stop that exists, is already built and verified by execution, applies a safelist so landing work is never blocked, and announces its own fail-open. Every mitigation below runs inside a window nothing currently bounds. Founder act: .claude/settings.json is irreversible tier and denied to the write tools.",
+    "2 — `reach` as a second axis on classifier.js, declared on the grant. FORCED because until it exists every outbound grant classifies lite/shadow — measured — so every gate, tier and review downstream is computing the wrong answer confidently. Enforcement rows go in .claude/qa-tier-floor.yml; grant validity is enforced by schema-lint.js in the shape it already uses for unbacked mcpServers.",
+    "3 — The outbound wrapper as ONE artifact: dry-run default, hash-bound send, named-human register, rate ceiling. FORCED as a unit because the four share a code path and splitting them ships three of four and a gap; FORCED at this position because it is what blocking-human gates attach to and what gives gate: outbound-approval its first consumer.",
+    "4 — The kill file and the supervisor: launchd KeepAlive + WatchPaths + claude -p --allowedTools. FORCED before any unattended run, because a loop that cannot be stopped is not a loop that may be started. The check lives in the wrapper script, not in the prompt.",
+    "5 — Inbound last, deliberately: RSS, Gmail label polling, Monitor on a ws: source. FORCED to be last because inbound plus outbound with nothing between them is injection-to-irreversible-action in one hop. This is the single most consequential sequencing decision in this lane and it holds whether three controls are built or thirty."
+  ],
+  "open_questions": [
+    "Do `permissions.deny` rules in settings.json bind inside a DISPATCHED subagent? The frontmatter grant is measured to bind across Agent dispatch (c-mcp-grant-binds-through-agent-dispatch), the settings-layer deny is not, and P2's 'vendor-enforced backstop' rests on it. Probe: deny one harmless MCP tool, dispatch an engine that would otherwise hold it, register the result as a claim. Until then this is unresolved, never pass.",
+    "How is a coarse-grained server narrowed at all? higgsfield is ONE server with 84 tools spanning generate_image and tiktok_publish/sandbox_exec. Frontmatter grants are per server; the risk is per tool. Extending mcp-policy.json's scope rule to credentialed user-scope servers is the cleanest available answer and it contradicts that file's own stated design principle. This needs a founder decision, not a preference.",
+    "What is the founder's actual risk appetite in dollars per day per venture? Every rate ceiling needs a number and I will not invent one. Money is the only axis with a rate and the only one where the mechanism is trivial once the number exists.",
+    "Which dispatch path handed me the full user-scope tool roster? I was launched as a teammate rather than via Agent(subagent_type:), so this does not falsify the 2026-08-16 measurement that builder receives zero MCP tools — but it establishes that at least one live dispatch path carries tiktok_publish, sandbox_exec, Gmail send and the founder's authenticated Chrome to an agent no repo file granted them. Which paths narrow, and which do not, determines whether the frontmatter grant is a real boundary or one path's boundary.",
+    "Is there any check that fails a measurement published from a stale worktree? SANDBOX.md Finding 4 records a worktree 170 commits behind main producing a wrong published citation. The dead-path check refuses a pinned line number, which is a partial cure. I did not find a completeness check and did not search exhaustively.",
+    "Should `higgsfield`'s virality_predictor feed a done-test as an INPUT, given that the done-test's resolver must not be a model? My reading is yes as input, never as resolver — but the boundary between 'a model-scored input to a deterministic threshold' and 'a model scoring the work' deserves an explicit ruling before it is built."
+  ],
+  "strongest_counter": "Every control I propose is a stopping mechanism, and the founder's core complaint is that almost everything already built here is a stopping mechanism rather than a producing one. 00-TERRITORY.md says the system loses creativity to playbooks, and the census's central illustration is a wiring failure, not a safety failure: design.js existed, was never invoked, and cost a design round. A reach axis, a human gate, a dry-run wrapper, a contact register and a rate ceiling compose into a machine that is safe because it does nothing at 3am — and R3 concedes exactly this in its own 'fails when': overnight work stops constantly at human gates and the loop's autonomy is theatre. The sharper version turns my own top-ranked risk against me: if the base rate of a control actually being wired is as poor as I measured, then five new controls mostly produce five new UNWIRED mechanisms plus a false sense of safety, which is strictly worse than none because the founder will believe the system is bounded when it is not. On my own evidence that is the likeliest outcome of adopting my list wholesale. What I concede to it is VOLUME: build three controls, not thirteen — the reach axis, the outbound wrapper, and blocking-human by type — measure human-gate stops from the first night, and treat a high count as a signal to change what the loop attempts overnight rather than to add a fourth control. What I do not concede is the ORDERING. The counter-argument attacks volume and my answer to it is volume; it does not touch the sequence, and the sequence is where the irreversible mistakes live. Inbound before the outbound wrapper is injection-to-action in one hop, and that is true whether you build three controls or thirty."
+}

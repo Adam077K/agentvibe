@@ -1,0 +1,11 @@
+{
+  "subject": "7aa9fe2815662797302604e39e9241c4dccb57a9f3e5a3157d3c62a405a7b3ea",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/consume-dispatch.ts",
+  "verdict": "PASS",
+  "by": "builder-w3-caller",
+  "run_id": null,
+  "evidence": "tsc --noEmit exit 0; dispatch.test.ts 150 pass 0 fail (baseline 91); sentinel arm unreached at 150/0 with read-back; null-tip-through mutation 145/5; author-recorded, single model family",
+  "recorded_at": "2026-08-29T00:32:20.273Z"
+}

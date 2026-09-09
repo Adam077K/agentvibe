@@ -89,68 +89,98 @@ class Refusal extends Error {
   constructor(message, code = 2) {
     super(message);
     this.code = code;
+    // A refusal about THIS RUN — how it was invoked, or a limit it hit — rather than about the
+    // repository. Callers that replace a low-level message with a friendlier one must not replace
+    // these: see `mergeBase` and `readCommitted`.
+    //
+    // IT WAS NAMED `config` AND COVERED ONLY MALFORMED INPUT while the comment claimed the whole
+    // class. An ENOBUFS refusal is equally a fact about this process and was NOT marked, so
+    // `mergeBase` relabelled it: ceilings of 1, 10, 40 and " 12 " — every one well-formed — reported
+    // `cannot resolve "origin/main"` on a repo where origin/main resolves, because rev-parse's own
+    // 41-byte output overflowed first. The comment stated the class; the predicate covered one
+    // member of it. Widening the predicate to the class is the fix.
+    this.aboutThisRun = false;
   }
 }
 
-/**
- * A BOUND ON GIT'S OUTPUT, AND IT MOVES THE CLIFF RATHER THAN REMOVING IT.
- *
- * `computeSubject()` hashes a WHOLE-BRANCH DIFF, so this call's output grows with the branch and
- * has no natural ceiling. It carried no `maxBuffer` at all, which meant Node's default of 1 MiB —
- * and `integration/design-layer` crossed it. Measured 2026-08-29 by bisecting this exact call across
- * the branch: `3b64a9a` returned normally at 1,041,526 bytes — under the 1,048,576 cap — and the very
- * next commit threw `ENOBUFS` at 1,050,273. Same args, same cwd, only this option differing.
- *
- * Do not quote a byte count for the CURRENT branch: it grows with every commit. Derive it —
- *   node scripts/verdict.mjs subject --repo . --ref HEAD --json     # prints subject, base and bytes
- *
- * *Superseded 2026-08-29: the pair above read "1,026,873 bytes at 3b64a9a" and "returns 1,100,001
- * bytes". Both were CHARACTER counts of a utf8-decoded string, labelled as bytes, and `maxBuffer` is
- * measured in BYTES — so the figure was compared against a cap in the wrong unit and sat 14,653 under
- * the true value. This repo's prose is full of multibyte punctuation, which is the whole of the gap.
- * The bisection landed on the right pair of commits either way, and the argument is unchanged.*
- *
- * WHY THIS IS AN INCIDENT AND NOT A NUISANCE. `verdict.mjs check` is on the BLOCKING path of
- * `.github/workflows/qa-lead-pass.yml`. While this call throws, no subject can be computed, so no
- * verdict can be recorded or checked, and the gate this repo calls sacred becomes UNSATISFIABLE on
- * exactly the long-lived branches that most need it. Ours was the first to cross 1 MiB. It will not
- * be the last.
- *
- * WHAT SAVED IT WAS RULE 10, NOT LUCK. `execFileSync` THROWS on overflow rather than returning a
- * short read, the catch below turns that into a `Refusal` (exit 2), and a refusal is a distinct
- * terminal value from a pass. So the failure was a BLOCKED merge and never a FORGED verdict: at no
- * point was a truncated diff hashed and presented as a subject. That property does not depend on
- * the number below, and it must survive any change to it.
- *
- * 64 MiB IS A BOUND, NOT A REMOVAL, and saying so is the point. A branch whose diff exceeds it
- * fails exactly as before — `ENOBUFS`, caught, refused — and it still never truncates. The value is
- * the higher of the two already in use: FIVE sync git call sites under `scripts/` set a bound, four
- * at 32 MiB (`ledger.mjs` x2, `evict-memory.mjs`, `lib/claim-append.js`) and one at 64
- * (`vendor-provenance.mjs`), and `.claude/hooks/schema-lint.js` sets 64 outside `scripts/`. Both 64s
- * read blob CONTENT, which is the closest thing here to what this call does. Re-derive rather than
- * trusting the list:
- *   grep -rn "execFileSync('git'" scripts/ .claude/hooks/ | grep -v '\.test\.'
- *
- * *Superseded 2026-08-29: this said "the SIX other sync git call sites ... which set 32-64 MiB" and
- * listed `lib/resolvers.js` among them. That is not a git call site — it is `spawnSync(binPath, argv)`
- * dispatching the EXTERNAL JUDGE, and its bound is `JUDGE_MAX_OUTPUT` = 8 MiB, outside the range the
- * same sentence quoted. So the enumeration justifying this choice miscounted by one and misclassified
- * the entry it added. The choice stands; the evidence offered for it did not, which is exactly the
- * class of defect this session spent the day removing elsewhere.*
- */
-const GIT_MAX_OUTPUT = 64 * 1024 * 1024;
+/** A refusal about this run — invocation or limit — which no caller may re-label as a repo fact. */
+function runRefusal(message) {
+  const r = new Refusal(message);
+  r.aboutThisRun = true;
+  return r;
+}
 
-function git(repo, args) {
+// THE SUBJECT IS A WHOLE DIFF, AND NODE'S DEFAULT CEILING IS 1 MiB.
+//
+// `execFileSync` buffers the child's stdout and kills it at `maxBuffer`, defaulting to 1 MiB. The
+// subject here is `git diff <base>..<ref>` over the entire change, so any diff past a megabyte —
+// a vendored file, a lockfile, a generated artifact — made the subject UNREADABLE. Measured on a
+// fixture repo before this constant existed: a 1,530,571-byte diff exited 2 with stdout empty,
+// against a 120-byte control on the same repo that exited 0 with a subject.
+//
+// It failed SAFE — exit 2, a Refusal, never a pass, because `git()` throws and nothing downstream
+// reads a subject it did not get. That is why this was a message defect before it was a limit
+// defect, and why raising the ceiling alone would have been the smaller half of the fix.
+//
+// 256 MiB is chosen to sit far above any diff a human reviews and far below a figure that would
+// let the buffer itself become the failure. It is not a promise that a 256 MiB diff is reviewable;
+// it is the point past which "this could not be read" stays the honest answer.
+const MAX_BUFFER_DEFAULT = 256 * 1024 * 1024;
+const MAX_BUFFER_ENV = 'VERDICT_MAX_BUFFER_BYTES';
+
+/**
+ * The stdout ceiling for git, as a positive integer of bytes.
+ *
+ * DECLARE WHAT IS READ AND REFUSE THE REST. The override exists so the ENOBUFS path can be driven
+ * by a test with a diff of a few hundred bytes — without it, the input that defeats this fix is a
+ * quarter-gigabyte fixture, which is to say the fix would ship untested. A malformed value is a
+ * REFUSAL, never a silent fall back to the default: an operator who mistyped a ceiling has said
+ * something about how this run should behave, and quietly substituting a different ceiling answers
+ * a question they did not ask. Same direction as #116 refusing an unknown flag instead of
+ * performing the non-dry action.
+ */
+function maxBuffer(env = process.env) {
+  const raw = env[MAX_BUFFER_ENV];
+  if (raw === undefined || raw === '') return MAX_BUFFER_DEFAULT;
+  if (!/^[0-9]+$/.test(raw.trim())) {
+    throw runRefusal(`${MAX_BUFFER_ENV}="${raw}" is not a whole number of bytes. Refusing rather than guessing a ceiling.`);
+  }
+  const n = Number(raw.trim());
+  if (!Number.isSafeInteger(n) || n <= 0) {
+    throw runRefusal(`${MAX_BUFFER_ENV}="${raw}" must be a positive integer of bytes. Refusing rather than guessing a ceiling.`);
+  }
+  return n;
+}
+
+function git(repo, args, env = process.env) {
+  const limit = maxBuffer(env);
   try {
     return execFileSync('git', args, {
       cwd: repo,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
-      maxBuffer: GIT_MAX_OUTPUT,
+      maxBuffer: limit,
     });
   } catch (e) {
+    const cmd = `git ${args.slice(0, 2).join(' ')}`;
+    // NAME WHAT HAPPENED, NOT WHAT IT RESEMBLES. `spawnSync git ENOBUFS` is the message Node
+    // produces here, and it reads as a fault in git or in the repository. It is neither: the
+    // command succeeded and this process declined to hold the answer. A reader who is told "git
+    // diff failed" goes looking at the diff; a reader told the output exceeded a named ceiling
+    // that a named variable raises can act. A refusal that arrives as the wrong diagnosis is a
+    // refusal nobody can act on.
+    if (e.code === 'ENOBUFS') {
+      // NODE TRIPS ENOBUFS ON EITHER STREAM, so the remedy names the COMMAND'S output, not the
+      // diff. Measured: a 529-byte stderr against a 119-byte diff told the operator to raise a
+      // ceiling "above the diff size" while it already sat ~4x above it.
+      throw runRefusal(
+        `${cmd} produced more than ${limit} bytes on stdout or stderr, so this run could not read ` +
+        `its answer. Nothing is established — this is a limit of this process, not a fact about the ` +
+        `change or the repository. Raise ${MAX_BUFFER_ENV} above that command's output size.`
+      );
+    }
     const detail = (e.stderr || e.message || '').toString().trim().split('\n')[0];
-    throw new Refusal(`git ${args.slice(0, 2).join(' ')} failed: ${detail}`);
+    throw new Refusal(`${cmd} failed: ${detail}`);
   }
 }
 
@@ -162,7 +192,15 @@ function git(repo, args) {
 export function mergeBase(repo, ref, base = 'origin/main') {
   try {
     git(repo, ['rev-parse', '--verify', '--quiet', `${base}^{commit}`]);
-  } catch {
+  } catch (e) {
+    // A CATCH THAT DISCARDS ITS REASON REPORTS A CAUSE IT DID NOT CHECK. This block exists to
+    // replace git's low-level "unknown revision" with an actionable one, and that is right for a
+    // ref that genuinely will not resolve. It is wrong for a refusal raised BEFORE any subprocess
+    // ran: with a malformed ceiling this reported `cannot resolve "origin/main"` on a repository
+    // where origin/main resolves fine, sending the reader to fetch a ref they already have.
+    // Measured on a fixture: five malformed values, five identical wrong diagnoses, all exit 2 —
+    // the exit code was correct throughout, which is what made it survive a first reading.
+    if (e instanceof Refusal && e.aboutThisRun) throw e;
     throw new Refusal(
       `cannot resolve "${base}" in ${repo}. Fetch it first (git fetch origin main). ` +
         'Refusing rather than inventing a base to diff against.'
@@ -204,11 +242,25 @@ export function verdictPath(subject) {
   return path.join(VERDICT_DIR, `${subject}.json`);
 }
 
-/** Read the verdict out of the REF'S TREE. An uncommitted verdict is not a verdict. */
+/**
+ * Read the verdict out of the REF'S TREE. An uncommitted verdict is not a verdict.
+ *
+ * RULE 10'S MIRROR: A RESOLVER MUST NOT ASSERT ABSENCE FOR SOMETHING IT COULD NOT CHECK. This
+ * `catch` returned null for every failure, and null means `reason: "absent"` — so a record that is
+ * committed and binds was reported as missing, telling an operator to record a verdict they already
+ * have, on `qa-lead-pass.yml`'s blocking path. Measured: a 20,301-byte record with a 119-byte diff
+ * reads `PASS bound to 577ba3f1…` at the default ceiling and `{"ok":false,"reason":"absent"}` at a
+ * ceiling of 5000. Both exit codes were defensible — 0 and 1 — which is why only the message gave
+ * it away.
+ *
+ * A run-level refusal now propagates (exit 2, unresolved). Only a genuine "this path is not in that
+ * tree" becomes null.
+ */
 function readCommitted(repo, ref, subject) {
   try {
     return git(repo, ['show', `${ref}:${verdictPath(subject)}`]);
-  } catch {
+  } catch (e) {
+    if (e instanceof Refusal && e.aboutThisRun) throw e;
     return null;
   }
 }

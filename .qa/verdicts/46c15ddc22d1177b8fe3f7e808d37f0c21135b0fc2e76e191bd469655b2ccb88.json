@@ -1,0 +1,11 @@
+{
+  "subject": "46c15ddc22d1177b8fe3f7e808d37f0c21135b0fc2e76e191bd469655b2ccb88",
+  "base": "32b3c72c9da0b68de44ca59af013328ec4f2d930",
+  "tier": "full",
+  "tier_driver": "scripts/produce-verdict.mjs",
+  "verdict": "PASS",
+  "by": "builder-w26-panel-findings",
+  "run_id": null,
+  "evidence": "main was RED since #126 and every PR green: J-9/J-10/J-12/J-13 called the live run-gate.mjs, so a branch (non-empty origin/main...HEAD) passed and main (empty range) returned NOT_REQUIRED. CI at 32b3c72 FAILED on 'Merge gate'; e8c8ae5 success. PROVEN IN THE BREAKING STATE, not on this branch: detached at origin/main, emptiness asserted first (0 files; control branch=2; router files=0 gateRequired=false 'empty diff'), fix applied as working-tree changes so HEAD never moves — fix REVERTED rc=1 141 pass 4 fail; fix APPLIED rc=0 145 pass 0 fail. CONTROL on a non-empty range: BOTH arms rc=0, which is why no reviewer or panel could see it. Fix routes the four cells through the existing routerRunner/routerJson seam and pins the tip to the tree's real HEAD (crossCheckArgs refuses a synthetic sha). Advisory redundant-env-expr closed after confirming it re-derived the SAME source. Advisories tests-unused/dead-isjudgedirtracked closed by WIRING into J-14 on the REFUSED path, where fs.existsSync is structurally blind because the tree is kept either way. NON-VACUITY, two mutations: inverting ephemeral turns J-14 red with J-9/J-10/J-12; deleting the REFUSED disarm makes J-14 the ONLY failing cell, and excluding J-14 the suite is 78 pass 0 fail rc=0. produce-verdict.test.mjs 74/4 -> 79 pass 0 fail; test:merge-gate rc=1 -> rc=0 145 pass; npm run check 48 of 48, 0 failed, rc=0. Single author, single model family, no independent panel: the checks ran and are green is not the tier was satisfied.",
+  "recorded_at": "2026-09-01T08:57:21.664Z"
+}

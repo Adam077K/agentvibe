@@ -1,0 +1,11 @@
+{
+  "subject": "693fd585fa3d1ccb3931d82e5c413ffe6b8adf2c00f3f688a018e2011203a36b",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "scripts/produce-verdict.mjs",
+  "verdict": "PASS",
+  "by": "builder-w3-instruments",
+  "run_id": null,
+  "evidence": "1.5MB-diff fixture with 120B control; defeating input at ceiling 1024 still refuses with the corrected message; must-not-fire cell at 99MB passes; 4 malformed ceilings each refused naming themselves; negative control on a deleted origin/main still reports cannot-resolve; judge-dir 3 cells incl. must-not-fire; test:merge-gate 126 pass 0 fail",
+  "recorded_at": "2026-08-28T22:20:01.477Z"
+}
