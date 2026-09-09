@@ -862,14 +862,16 @@ function warroomEval(p, script, { args = [], path: PATH_ = process.env.PATH } = 
   return { code: r.status, out: (r.stdout ?? '').trim(), err: r.stderr ?? '' };
 }
 
-test('pane_number_of reads the targets the launcher builds, and falls back to pane 1', (t) => {
+test('pane_number_of reads the targets the launcher builds, and REFUSES one it cannot', (t) => {
   // Two-digit panes and session names that themselves contain the markers are
   // shapes no launch can reach — cmd_start caps at 8 — so they are called
   // directly. That the function is LOAD-BEARING is established by the grid and
   // paste tests above, not here.
   // MUTATION: `n="${n%%.*}"` → `n="${n:0:1}"` → CEO-12 answers 1. Red.
-  // MUTATION: drop the `*:CEO-*)` arm → CEO-3.1 answers 1. Red.
-  // MUTATION: drop the `*:GRID.*)` arm → GRID.3 answers 1. Red.
+  // MUTATION: drop the `*:CEO-*)` arm → CEO-3.1 is refused. Red.
+  // MUTATION: drop the `*:GRID.*)` arm → GRID.3 is refused. Red.
+  // MUTATION: put the silent `n=1` fallback back in place of the refusal arm →
+  // red on all three unreadable targets at once.
   const p = project(t);
   const of = (target) => warroomEval(p, `pane_number_of ${sq(target)}`);
 
@@ -883,43 +885,66 @@ test('pane_number_of reads the targets the launcher builds, and falls back to pa
     // the window, not off the first occurrence anywhere in the string.
     ['ceo-grid:CEO-2.1', '2'],
     ['my-ceo:GRID.4', '4'],
-    // The fallback, and every way into it.
-    ['proj:HQ', '1'], // a window that is not a CEO pane at all
-    ['proj:CEO-.1', '1'], // an empty pane number is not a pane number
-    ['proj:CEO-x.1', '1'], // nor is a non-numeric one
   ]) {
     const r = of(target);
-    assert.equal(r.code, 0, `${target}: ${r.err}`);
+    assert.equal(r.code, 0, `${target} should parse: ${r.err}`);
     assert.equal(r.out, n, target);
+  }
+
+  // And every way into the refusal. Pane 1 is a plausible answer and a wrong
+  // one: a pane on an engine nobody asked for is indistinguishable from a
+  // working pane until someone reads a whole session.
+  //
+  // Nothing this program BUILDS reaches these — every target it constructs is
+  // `…:CEO-N.x` or `…:GRID.N`. What reaches them is a target built from DATA:
+  // cmd_restore takes the pane number out of a snapshot file, so a corrupt
+  // snapshot is the live case, and it is exactly where guessing is worst.
+  for (const target of ['proj:HQ', 'proj:CEO-.1', 'proj:CEO-x.1']) {
+    const r = of(target);
+    assert.notEqual(r.code, 0, `${target} must be refused, not guessed at`);
+    assert.equal(r.out, '', `${target} must print no pane number at all`);
+    assert.ok(r.err.includes(`'${target}'`), `the refusal must name the target it could not read: ${r.err}`);
   }
 });
 
-test('the pane_number_of fallback resolves to PANE ONE, not to a hardcoded engine', (t) => {
-  // "Falls back to 1" and "falls back to claude" are different statements and
-  // only one of them is what the code does — but they are indistinguishable on
-  // a machine where pane 1 is claude, which is every default machine. So this
-  // makes pane 1 codex and asks the SEAM, not the parser: what would
-  // send_launch_engine actually type into a target it could not parse?
+test('a target pane_number_of cannot read stops the launch instead of guessing an engine', (t) => {
+  // A refusal is only worth something if it reaches the caller, and this one
+  // comes back through a command substitution — where `local eng="$(…)"` makes
+  // the assignment the command whose status bash reports, and the refusal is
+  // discarded before anyone can test it. So this asserts on the SEAM rather
+  // than on the parser: nothing may be typed into a pane that could not be
+  // identified.
   //
-  // Recorded because it is contested: a review recommended making this fallback
-  // LOUD — refuse rather than guess, since a pane on an engine nobody asked for
-  // looks exactly like a working one. bin/warroom keeps the silent fallback
-  // deliberately and says so above pane_number_of. This test pins what ships;
-  // if the refusal lands, this is the test that moves with it.
-  // MUTATION: `case "$n" in ''|*[!0-9]*) n=1 ;; esac` → `n=""` → engine_for_pane
-  // "" matches no override and answers claude for both. Red on the first.
+  // Note what the two halves rule out together. The first says an unreadable
+  // target types nothing; on its own that is also satisfied by a
+  // send_launch_engine that types nothing ever. The second is the control that
+  // closes it.
+  // MUTATION: drop the `|| exit 1` from send_launch_engine's
+  // `n="$(pane_number_of "$target")"` → the launch carries on with an empty
+  // pane number. Red.
+  // MUTATION: restore the silent `n=1` fallback in pane_number_of → the
+  // unreadable target is launched on pane 1's engine. Red.
   const p = project(t);
-  const typedForHQ = (override) => {
-    const sh = shim(t);
-    const r = warroomEval(p, 'send_launch_engine "proj:HQ"', { args: ['--engine', override], path: sh.path });
-    assert.equal(r.code, 0, r.err);
-    const call = tmuxCalls(sh).find((c) => c[0] === 'send-keys' && c[2] === 'proj:HQ' && c[4] === 'Enter');
-    assert.ok(call, 'send_launch_engine must type something into the target it was given');
-    return call[3];
-  };
+  const sh = shim(t);
 
-  assert.match(typedForHQ('1:codex'), /^codex\b/, "an unparseable target takes pane 1's engine, whatever it is");
-  assert.equal(typedForHQ('2:codex'), 'claude', "and pane 2's override must not reach it");
+  const refused = warroomEval(p, 'send_launch_engine "proj:HQ"', {
+    args: ['--engine', '1:codex'],
+    path: sh.path,
+  });
+  assert.notEqual(refused.code, 0, `an unreadable target must stop the launch: ${refused.out}`);
+  assert.deepEqual(
+    tmuxCalls(sh).filter((c) => c[0] === 'send-keys'),
+    [],
+    'and nothing may be typed into any pane'
+  );
+
+  // The control: the same call, the same shim, a target it CAN read.
+  const ok = warroomEval(p, 'send_launch_engine "proj:CEO-1"', {
+    args: ['--engine', '1:codex'],
+    path: sh.path,
+  });
+  assert.equal(ok.code, 0, ok.err);
+  assert.match(launchLines(tmuxCalls(sh)).get('proj:CEO-1'), /^codex\b/);
 });
 
 // ── --bare, on the copy of the rule that ships ───────────────
