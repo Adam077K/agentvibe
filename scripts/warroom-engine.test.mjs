@@ -12,15 +12,20 @@
  * finding that defect in its own controls and says so in CLAUDE.md, so every
  * case below runs `bin/warroom` as a subprocess and asserts on what it DID.
  *
- * Nothing here starts tmux, creates a worktree, or writes into the project.
- * `warroom engine` exists precisely so the resolution is observable without
- * them — see the comment above cmd_engine.
+ * THE FILE HAS TWO HALVES, AND THE SPLIT IS THE POINT. The first half runs
+ * `warroom engine` — the inspection command, which starts nothing: no tmux, no
+ * worktree, no write into the project — plus three source-level guards that
+ * read bin/warroom without running it. The second half, under THE REAL LAUNCH
+ * PATH at the bottom of this file, runs `cmd_start` for real against a fake
+ * tmux and a throwaway git repo. It exists because a binding QA review found
+ * that the inspection path was the ONLY one this suite exercised, and named the
+ * consequence exactly: reverting the multi-pane `check_deps` fix would have
+ * kept every test in the first half green.
  *
  * Each test names, in its own body, the mutation that was applied to
- * bin/warroom to watch it fail. All eight were confirmed red before being
- * committed green; the mutations are recorded rather than the fact of having
- * run them, because a claim that a test was verified is only useful if the next
- * person can repeat it.
+ * bin/warroom to watch it fail; the mutations are recorded rather than the fact
+ * of having run them, because a claim that a test was verified is only useful
+ * if the next person can repeat it.
  */
 
 import { test } from 'node:test';
@@ -28,7 +33,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -441,4 +446,462 @@ test('every help line starts its description at the same column', (t) => {
   assert.equal(cols.size, 1,
     `help descriptions start at ${cols.size} columns:\n` +
     [...cols].map(([c, l]) => `  col ${c}: ${l}`).join('\n'));
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  THE REAL LAUNCH PATH
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Every test above this line runs `warroom engine`. A binding QA review found
+// that this was the whole of the coverage and said what it cost:
+//
+//   "the new suite exercises only cmd_engine, the one path where the refusal
+//    genuinely propagates — the real launch path (cmd_start → check_deps →
+//    send_launch_engine → pane_number_of) has no test at all, so reverting the
+//    multi-pane fix would keep the suite green."
+//
+// The suite HAD been mutation-tested, and four tests went red. That was real
+// evidence and it was evidence of the wrong thing: a mutation that turns a test
+// red answers "is this test vacuous", never "is this test pointed at the code
+// that ships". Both questions have to be asked, and only the first one was.
+//
+// The launch path talks to tmux, which is why it went untested. So these tests
+// put a FAKE tmux on PATH that records its argv to a file and answers the three
+// queries the path asks. What a pane is actually told to run stops being
+// observable only by starting a war room and looking, and becomes a string:
+// `send-keys ␟ -t ␟ proj:CEO-2 ␟ codex -c developer_instructions="$(cat …)" ␟
+// Enter`. Asserting on that recorded argv is the entire difference between this
+// half of the file and the half above it.
+
+/** Fake-tmux argv separators: unit between arguments, record between calls. */
+const US = '\x1f';
+const RS = '\x1e';
+
+const FAKE_TMUX = [
+  '#!/bin/sh',
+  '# Fake tmux — records argv, then answers only what the launch path asks:',
+  '#   has-session  → 1, so cmd_start builds a session instead of prompting',
+  '#   capture-pane → a ready prompt, so both ready-waits return immediately',
+  '#   list-windows → the CEO windows cmd_start greps for before it injects',
+  '# Everything else is a no-op success, which is what tmux looks like to this',
+  '# program: it never reads tmux back except through those three.',
+  '{ for a in "$@"; do printf \'%s\\037\' "$a"; done; printf \'\\036\'; } >> "@LOG@"',
+  'case "$1" in',
+  '  has-session)  exit 1 ;;',
+  '  capture-pane) printf \'❯ \\n\' ;;',
+  '  list-windows) i=1; while [ "$i" -le 8 ]; do echo "CEO-$i"; i=$((i+1)); done ;;',
+  'esac',
+  'exit 0',
+  '',
+].join('\n');
+
+// create_worktree captures git's stderr into `$(mktemp)`, and macOS's mktemp
+// with no template ignores TMPDIR entirely: it reaches for the per-user Darwin
+// temp directory, which this repo's armed Bash sandbox denies. The launcher
+// then loses the whole worktree step to `mkstemp failed: Operation not
+// permitted`. GNU mktemp on a CI runner honours TMPDIR and needs none of this;
+// the shim exists so the launch path is runnable on the machine it is developed
+// on. With a template argument it defers to the real program.
+const FAKE_MKTEMP = [
+  '#!/bin/sh',
+  '[ "$#" -gt 0 ] && exec /usr/bin/mktemp "$@"',
+  'f="${TMPDIR:-/tmp}/wr-mktemp.$$.$(date +%s)"',
+  ': > "$f" || exit 1',
+  'printf \'%s\\n\' "$f"',
+  '',
+].join('\n');
+
+/**
+ * A PATH holding a recording `tmux`, a real `python3`, and a stub for each
+ * engine named in `engines`. An engine left out of that list is genuinely
+ * ABSENT — which is what makes the missing-binary tests real rather than mocked.
+ *
+ * python3 is symlinked in one binary at a time rather than by adding its
+ * directory to PATH: on this machine python3 lives in /usr/local/bin, and
+ * putting a whole directory on PATH risks it also holding a real `claude` or
+ * `codex` and silently defeating the guard under test.
+ */
+function shim(t, { engines = ['claude', 'codex'] } = {}) {
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'warroom-shim-'));
+  const log = path.join(bin, 'tmux-argv.log');
+  fs.writeFileSync(path.join(bin, 'tmux'), FAKE_TMUX.replace('@LOG@', log));
+  fs.chmodSync(path.join(bin, 'tmux'), 0o755);
+  fs.writeFileSync(path.join(bin, 'mktemp'), FAKE_MKTEMP);
+  fs.chmodSync(path.join(bin, 'mktemp'), 0o755);
+  for (const e of engines) {
+    fs.writeFileSync(path.join(bin, e), '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(path.join(bin, e), 0o755);
+  }
+  const py = execFileSync('sh', ['-c', 'command -v python3'], { encoding: 'utf8' }).trim();
+  assert.ok(py, 'these tests need a real python3: check_deps requires one');
+  fs.symlinkSync(py, path.join(bin, 'python3'));
+  t.after(() => fs.rmSync(bin, { recursive: true, force: true }));
+  return { dir: bin, log, path: `${bin}:/usr/bin:/bin` };
+}
+
+/** Every fake-tmux invocation, as an array of argv arrays, in order. */
+function tmuxCalls(sh) {
+  if (!fs.existsSync(sh.log)) return [];
+  return fs
+    .readFileSync(sh.log, 'utf8')
+    .split(RS)
+    .filter((r) => r !== '')
+    .map((r) => r.split(US).slice(0, -1));
+}
+
+/**
+ * `tmux send-keys -t <target> <line> Enter` — the shell line a pane was told to
+ * RUN, keyed by target. The HQ window is excluded: it runs a status script, not
+ * an engine.
+ */
+function launchLines(calls) {
+  const out = new Map();
+  for (const c of calls) {
+    if (c[0] !== 'send-keys' || c[1] !== '-t' || c.length !== 5 || c[4] !== 'Enter') continue;
+    if (!/(CEO-\d+|GRID\.\d+)/.test(c[2])) continue;
+    out.set(c[2], c[3]);
+  }
+  return out;
+}
+
+/**
+ * The tmux subcommands that only READ. Declared as an allowlist and everything
+ * else treated as a mutation, rather than the other way round: a deny-list of
+ * state-changing subcommands is a list someone has to remember to extend, and
+ * the one they forget is the one that leaks out of a run that was refused.
+ */
+const TMUX_READS = new Set([
+  'has-session',
+  'list-sessions',
+  'list-windows',
+  'list-panes',
+  'display-message',
+  'capture-pane',
+  'show-environment',
+  'showenv',
+]);
+
+/** Every tmux call that changed something: created, typed, set or killed. */
+function mutatingTmuxCalls(calls) {
+  return calls.filter((c) => !TMUX_READS.has(c[0]));
+}
+
+/** `tmux send-keys -t <target> -l <text>` — what was PASTED into a pane. */
+function pastes(calls) {
+  const out = new Map();
+  for (const c of calls) {
+    if (c[0] === 'send-keys' && c[1] === '-t' && c[3] === '-l') out.set(c[2], c[4]);
+  }
+  return out;
+}
+
+/**
+ * A project cmd_start can actually launch into. `project()` above fakes .git
+ * with an empty directory, which is enough for check_deps and nothing else;
+ * create_worktree runs `git worktree add … main`, so the repo and the branch
+ * both have to be real.
+ */
+function launchableProject(t, opts = {}) {
+  const p = project(t, opts);
+  fs.rmSync(path.join(p.dir, '.git'), { recursive: true, force: true });
+  const git = (...a) =>
+    execFileSync('git', ['-C', p.dir, '-c', 'commit.gpgsign=false', ...a], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      // The founder's own git config must not reach a test fixture: a global
+      // hooksPath or signing key would make this pass or fail per machine.
+      env: { ...process.env, HOME: p.home, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' },
+    });
+  git('init', '-q', '-b', 'main');
+  git('config', 'user.email', 'warroom-test@example.invalid');
+  git('config', 'user.name', 'warroom test');
+  git('commit', '-q', '--allow-empty', '-m', 'init');
+  return p;
+}
+
+let runSeq = 0;
+
+/**
+ * Run bin/warroom on the REAL launch path, returning what it printed and every
+ * tmux call it made.
+ *
+ * Output goes to a FILE rather than a pipe on purpose. cmd_start leaves
+ * capture_session_id polling in the background for up to ten seconds; a
+ * background child holding the write end of a pipe keeps that pipe open, and
+ * every launch test would wait out the full ten seconds for a process that had
+ * already exited.
+ */
+function launch(p, args, sh) {
+  const outFile = path.join(p.home, `run-${runSeq++}.out`);
+  const fd = fs.openSync(outFile, 'w');
+  const r = spawnSync('bash', [WARROOM, '--config', p.config, ...args], {
+    env: { ...process.env, HOME: p.home, PATH: sh.path, TMPDIR: p.home },
+    stdio: ['ignore', fd, fd],
+    timeout: 90_000,
+  });
+  fs.closeSync(fd);
+  return { code: r.status, out: fs.readFileSync(outFile, 'utf8'), calls: tmuxCalls(sh) };
+}
+
+// ── cmd_start, mixed engines ─────────────────────────────────
+
+test('cmd_start launches pane 2 on codex and panes 1 and 3 on claude, read from the tmux argv', (t) => {
+  // The inspection test above asserts the same three engines from `engine 3`
+  // output. This one asserts them from what tmux was told to type, which is the
+  // only place a founder's pane gets its program from.
+  // MUTATION: in launch_claude_in_window, `$(engine_for_pane "$n")` →
+  // `$(engine_for_pane 1)` → CEO-2's recorded line becomes `claude`. Red.
+  // MUTATION: drop the WARROOM_ENGINE_OVERRIDES loop from engine_for_pane → same.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['3', '--engine', '2:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+
+  const lines = launchLines(r.calls);
+  assert.deepEqual([...lines.keys()].sort(), ['proj:CEO-1', 'proj:CEO-2', 'proj:CEO-3']);
+  assert.equal(lines.get('proj:CEO-1'), 'claude');
+  assert.equal(lines.get('proj:CEO-3'), 'claude');
+  // WHICH ENGINE, and that it was given a preamble — deliberately not the exact
+  // spelling of the codex line. That is pinned once, by the inspection tests
+  // above; pinning it twice would mean two files to edit the next time the line
+  // legitimately changes, and there is a live proposal to change it.
+  assert.match(lines.get('proj:CEO-2'), /^codex\b/, 'pane 2 must be told to run codex');
+  assert.notEqual(lines.get('proj:CEO-2'), 'codex', 'and a non-bare codex pane is given the CEO preamble');
+});
+
+test('a codex pane is NOT also pasted into, and pane_number_of is what decides that', (t) => {
+  // cmd_start calls `inject_ceo_prompt "$SESSION:CEO-$i.1"` with no engine
+  // argument, so the only thing that tells it pane 2 is Codex is
+  // pane_number_of parsing "proj:CEO-2.1". A Codex pane already carries the
+  // preamble on its launch line; pasting again delivers it twice.
+  // MUTATION: make pane_number_of `printf 1` unconditionally → CEO-2.1 resolves
+  // claude and is pasted. Red on the first assertion.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['3', '--engine', '2:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+
+  const pasted = pastes(r.calls);
+  assert.deepEqual(
+    [...pasted.keys()].sort(),
+    ['proj:CEO-1.1', 'proj:CEO-3.1'],
+    'exactly the claude panes are pasted into'
+  );
+  assert.match(pasted.get('proj:CEO-1.1'), /^@"ceo \(agent\)" /);
+  assert.match(pasted.get('proj:CEO-1.1'), /SENTINEL_BODY_ALPHA/);
+});
+
+// ── check_deps, with more than one pane ──────────────────────
+
+test('a binary missing for pane 3 refuses the run before tmux is touched', (t) => {
+  // THE ANTI-REVERT TEST, and the gap the review named: both existing
+  // missing-binary cases are count=1, where `check_deps "$count"` and the old
+  // pane-1-only check are indistinguishable.
+  // MUTATION: `check_deps "$count"` → `check_deps` in cmd_start (its state
+  // before the multi-pane fix) → count defaults to 1, only pane 1's claude is
+  // checked, it is present, and the whole session gets built. Red on all four.
+  const p = launchableProject(t);
+  const sh = shim(t, { engines: ['claude'] }); // codex is genuinely not installed
+  const r = launch(p, ['3', '--engine', '3:codex'], sh);
+
+  assert.equal(r.code, 1, `must refuse the run: ${r.out}`);
+  assert.match(r.out, /codex not found/, 'must name the binary pane 3 would have needed');
+  assert.doesNotMatch(r.out, /claude not found/, 'claude is present — naming it is the old pane-1 bug');
+  assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'no worktree may be created');
+  // A refused run must leave the tmux server as it found it. Reads are fine;
+  // anything that sets, creates or types is not, because a run that never
+  // started has no business having changed the machine.
+  assert.deepEqual(
+    mutatingTmuxCalls(r.calls),
+    [],
+    'a run refused for a missing binary must change nothing in tmux'
+  );
+});
+
+test('the same run is allowed once the missing binary is present', (t) => {
+  // The control for the test above. Without it, "refused" could be an artefact
+  // of the fixture — a 3-pane mixed run that never launches for some unrelated
+  // reason would satisfy every assertion up there.
+  // MUTATION: none needed; this is the negative half of the pair.
+  const p = launchableProject(t);
+  const sh = shim(t, { engines: ['claude', 'codex'] });
+  const r = launch(p, ['3', '--engine', '3:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+  assert.match(launchLines(r.calls).get('proj:CEO-3'), /^codex\b/);
+});
+
+// ── pane_number_of on the path that depends on it ────────────
+
+test('grid mode resolves every pane engine through pane_number_of, from the target alone', (t) => {
+  // cmd_grid_start calls `send_launch_claude "$SESSION:GRID.$i"` with NO engine
+  // argument — unlike normal mode, which passes one. So the string
+  // "proj:GRID.3" is the ONLY carrier of the fact that pane 3 is Codex, and
+  // pane_number_of is the only thing that reads it. This is the real dependency
+  // the review said had zero coverage.
+  // MUTATION: delete the `*:GRID.*)` arm of pane_number_of → GRID.3 launches
+  // `claude`. Red.
+  // MUTATION: `printf '%s' "$n"` → `printf 1` → same.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['3', '--grid', '--engine', '3:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+
+  const lines = launchLines(r.calls);
+  assert.deepEqual([...lines.keys()].sort(), ['proj:GRID.1', 'proj:GRID.2', 'proj:GRID.3']);
+  assert.equal(lines.get('proj:GRID.1'), 'claude');
+  assert.equal(lines.get('proj:GRID.2'), 'claude');
+  assert.match(lines.get('proj:GRID.3'), /^codex\b/);
+  assert.notEqual(lines.get('proj:GRID.3'), 'codex', 'and it is given the preamble, as a non-bare pane');
+});
+
+/** Shell-quote a value for a `bash -c` string. */
+const sq = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
+
+/**
+ * Call one of bin/warroom's own functions directly.
+ *
+ * Sourcing the launcher with `help` runs the router's help arm and stops,
+ * leaving every function defined — so this exercises the real definition rather
+ * than a transcription of it into the test. Used only for inputs cmd_start
+ * cannot produce: it caps at 8 panes, so no launch will ever hand
+ * pane_number_of a two-digit window.
+ */
+function warroomEval(p, script, { args = [], path: PATH_ = process.env.PATH } = {}) {
+  const src =
+    `. ${sq(WARROOM)} --config ${sq(p.config)} ${args.map(sq).join(' ')} help >/dev/null 2>&1\n` + script;
+  const r = spawnSync('bash', ['-c', src], {
+    encoding: 'utf8',
+    env: { ...process.env, HOME: p.home, PATH: PATH_, TMPDIR: p.home },
+    timeout: 30_000,
+  });
+  return { code: r.status, out: (r.stdout ?? '').trim(), err: r.stderr ?? '' };
+}
+
+test('pane_number_of reads the targets the launcher builds, and falls back to pane 1', (t) => {
+  // Two-digit panes and session names that themselves contain the markers are
+  // shapes no launch can reach — cmd_start caps at 8 — so they are called
+  // directly. That the function is LOAD-BEARING is established by the grid and
+  // paste tests above, not here.
+  // MUTATION: `n="${n%%.*}"` → `n="${n:0:1}"` → CEO-12 answers 1. Red.
+  // MUTATION: drop the `*:CEO-*)` arm → CEO-3.1 answers 1. Red.
+  // MUTATION: drop the `*:GRID.*)` arm → GRID.3 answers 1. Red.
+  const p = project(t);
+  const of = (target) => warroomEval(p, `pane_number_of ${sq(target)}`);
+
+  for (const [target, n] of [
+    ['proj:CEO-1', '1'],
+    ['proj:CEO-3.1', '3'],
+    ['proj:CEO-12.1', '12'], // a pane number is not one character wide
+    ['proj:GRID.3', '3'],
+    ['proj:GRID.12', '12'],
+    // A session whose own NAME carries the markers. The parse has to key off
+    // the window, not off the first occurrence anywhere in the string.
+    ['ceo-grid:CEO-2.1', '2'],
+    ['my-ceo:GRID.4', '4'],
+    // The fallback, and every way into it.
+    ['proj:HQ', '1'], // a window that is not a CEO pane at all
+    ['proj:CEO-.1', '1'], // an empty pane number is not a pane number
+    ['proj:CEO-x.1', '1'], // nor is a non-numeric one
+  ]) {
+    const r = of(target);
+    assert.equal(r.code, 0, `${target}: ${r.err}`);
+    assert.equal(r.out, n, target);
+  }
+});
+
+test('the pane_number_of fallback resolves to PANE ONE, not to a hardcoded engine', (t) => {
+  // "Falls back to 1" and "falls back to claude" are different statements and
+  // only one of them is what the code does — but they are indistinguishable on
+  // a machine where pane 1 is claude, which is every default machine. So this
+  // makes pane 1 codex and asks the SEAM, not the parser: what would
+  // send_launch_engine actually type into a target it could not parse?
+  //
+  // Recorded because it is contested: a review recommended making this fallback
+  // LOUD — refuse rather than guess, since a pane on an engine nobody asked for
+  // looks exactly like a working one. bin/warroom keeps the silent fallback
+  // deliberately and says so above pane_number_of. This test pins what ships;
+  // if the refusal lands, this is the test that moves with it.
+  // MUTATION: `case "$n" in ''|*[!0-9]*) n=1 ;; esac` → `n=""` → engine_for_pane
+  // "" matches no override and answers claude for both. Red on the first.
+  const p = project(t);
+  const typedForHQ = (override) => {
+    const sh = shim(t);
+    const r = warroomEval(p, 'send_launch_engine "proj:HQ"', { args: ['--engine', override], path: sh.path });
+    assert.equal(r.code, 0, r.err);
+    const call = tmuxCalls(sh).find((c) => c[0] === 'send-keys' && c[2] === 'proj:HQ' && c[4] === 'Enter');
+    assert.ok(call, 'send_launch_engine must type something into the target it was given');
+    return call[3];
+  };
+
+  assert.match(typedForHQ('1:codex'), /^codex\b/, "an unparseable target takes pane 1's engine, whatever it is");
+  assert.equal(typedForHQ('2:codex'), 'claude', "and pane 2's override must not reach it");
+});
+
+// ── --bare, on the copy of the rule that ships ───────────────
+
+test('--bare on the real launch path: no preamble on the codex line, no paste for claude', (t) => {
+  // BARE_MODE → with_preamble is computed twice — once in send_launch_engine,
+  // once in cmd_engine — and only cmd_engine's copy had a test. This runs the
+  // other one, which is the copy a founder's pane actually obeys.
+  // MUTATION: delete `[ "${BARE_MODE:-0}" -eq 1 ] && with_preamble=0` from
+  // send_launch_engine → CEO-2's line grows -c developer_instructions. Red.
+  // MUTATION: `if [ "$bare_mode" -eq 0 ]` → `-ge 0` in cmd_start → a paste
+  // appears in bare mode. Red on the third assertion.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const bare = launch(p, ['2', '--bare', '--engine', '2:codex'], sh);
+  assert.equal(bare.code, 0, bare.out);
+
+  const bareLines = launchLines(bare.calls);
+  assert.equal(bareLines.get('proj:CEO-1'), 'claude', 'claude launches bare either way');
+  assert.equal(bareLines.get('proj:CEO-2'), 'codex', 'bare codex carries NO developer_instructions');
+  assert.deepEqual([...pastes(bare.calls).keys()], [], '--bare pastes into nothing');
+
+  // The control: the same two panes without --bare. Two runs differing in one
+  // flag is what makes the assertions above about the flag rather than about
+  // the fixture.
+  const p2 = launchableProject(t);
+  const sh2 = shim(t);
+  const dressed = launch(p2, ['2', '--engine', '2:codex'], sh2);
+  assert.equal(dressed.code, 0, dressed.out);
+  assert.notEqual(
+    launchLines(dressed.calls).get('proj:CEO-2'),
+    'codex',
+    'without --bare the same pane IS given a preamble — otherwise the assertion above says nothing'
+  );
+  assert.deepEqual([...pastes(dressed.calls).keys()], ['proj:CEO-1.1']);
+});
+
+// ── Parse-time refusal, measured against what launched ───────
+
+test('a well-formed override naming an unknown engine is refused at parse time, launching nothing', (t) => {
+  // MUTATION: `engine_require_known "${_tok#*:}"` → `"${_tok%%:*}"` in the
+  // router's validation loop — it then validates the PANE NUMBER instead of the
+  // engine name, still exits 1, and passes every other test in this file. Red
+  // here, on the assertion that the message names 'codek'.
+  // MUTATION: delete the engine_require_known call from the `[0-9]*:*)` arm →
+  // exit 0, three worktrees, a full tmux log. Red on the other three.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['3', '--engine', '2:codek'], sh);
+
+  assert.equal(r.code, 1, 'must exit non-zero');
+  assert.match(r.out, /unknown engine 'codek'/, 'the refusal must name the ENGINE, not the pane number');
+  assert.match(r.out, /--engine 2:codek/, 'and must name the token it came from');
+  assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'no worktree may be created');
+  // Parse time is before the program does anything, so today this is literally
+  // zero tmux calls. Asserted as "changed nothing" rather than "called nothing"
+  // so that adding a read-only probe to the router is not a test failure.
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'nothing may reach tmux after a parse-time refusal');
+
+  // AT PARSE TIME, and that word is the whole finding. Launch commands also
+  // resolve and validate every pane before they build anything, so deleting the
+  // router's check changes nothing observable about a launch — the refusal just
+  // arrives from somewhere else and looks identical. A command that resolves no
+  // pane at all is what tells the two apart: `help` prints and exits 0 if the
+  // flag was never validated where it was PARSED.
+  const viaHelp = launch(p, ['help', '--engine', '2:codek'], sh);
+  assert.equal(viaHelp.code, 1, 'the flag is refused whatever command follows it');
+  assert.match(viaHelp.out, /unknown engine 'codek'/);
+  assert.doesNotMatch(viaHelp.out, /Usage:/, 'and the refusal comes before the command runs');
 });
