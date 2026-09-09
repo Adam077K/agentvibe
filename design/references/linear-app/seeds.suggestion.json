@@ -1,0 +1,35 @@
+{
+  "type": {
+    "ui": {
+      "base": 10,
+      "increment": 1,
+      "steps": 7
+    },
+    "display": {
+      "base": 24,
+      "increment": 24,
+      "steps": 3
+    },
+    "leading": {
+      "peak": 1.714,
+      "peakAt": 14,
+      "falloff": null,
+      "exponent": null,
+      "displayRatio": 1.198
+    },
+    "tracking": {
+      "zeroAt": null,
+      "slope": null
+    },
+    "family": {
+      "sans": "\"Inter Variable\", \"SF Pro Display\", -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+      "mono": "\"Berkeley Mono\", ui-monospace, \"SF Mono\", Menlo, monospace"
+    }
+  },
+  "notes": [
+    "display: the +24 run from 24 covers 3 of 7 measured display size(s); 18, 20, 32, 64 sit outside it. Display bands are commonly geometric — treat this arithmetic fit as a suggestion, not a description.",
+    "leading: peak excludes 2 under-sampled size(s) (11px n=3, 16px n=4) — a size carried by a handful of elements is not this reference's leading",
+    "leading: falloff and exponent are null BY CONSTRUCTION, not by failure: the curve is prescribed by design systems (Radix, Tailwind) and these references are SITES, which set line-height per component rather than as a function of size. They are authored constants in seeds.json and no reference can supply them.",
+    "tracking: r2 = 0.072 is below 0.5; the sizes do not lie on a line, so no zeroAt/slope is emitted"
+  ]
+}

@@ -1,0 +1,708 @@
+{
+  "url": "https://vercel.com",
+  "viewport": "1440x900",
+  "scrolled": true,
+  "title": "Agentic Infrastructure - Vercel",
+  "type": {
+    "sizes": [
+      {
+        "value": 11,
+        "count": 10,
+        "share": 0.061
+      },
+      {
+        "value": 12,
+        "count": 7,
+        "share": 0.043
+      },
+      {
+        "value": 14,
+        "count": 122,
+        "share": 0.748
+      },
+      {
+        "value": 16,
+        "count": 13,
+        "share": 0.08
+      },
+      {
+        "value": 24,
+        "count": 5,
+        "share": 0.031
+      },
+      {
+        "value": 56,
+        "count": 5,
+        "share": 0.031
+      },
+      {
+        "value": 64,
+        "count": 1,
+        "share": 0.006
+      }
+    ],
+    "bands": {
+      "ui": {
+        "sizes": [
+          12,
+          14,
+          16
+        ],
+        "fit": {
+          "base": 12,
+          "increment": 2,
+          "steps": 3,
+          "uncoveredInRange": []
+        }
+      },
+      "display": {
+        "sizes": [
+          24,
+          56,
+          64
+        ],
+        "fit": {
+          "base": 56,
+          "increment": 8,
+          "steps": 2
+        }
+      },
+      "below": [
+        11
+      ]
+    },
+    "steps": [
+      {
+        "from": 11,
+        "to": 12,
+        "increment": 1,
+        "ratio": 1.091,
+        "integer": true
+      },
+      {
+        "from": 12,
+        "to": 14,
+        "increment": 2,
+        "ratio": 1.167,
+        "integer": true
+      },
+      {
+        "from": 14,
+        "to": 16,
+        "increment": 2,
+        "ratio": 1.143,
+        "integer": true
+      },
+      {
+        "from": 16,
+        "to": 24,
+        "increment": 8,
+        "ratio": 1.5,
+        "integer": true
+      },
+      {
+        "from": 24,
+        "to": 56,
+        "increment": 32,
+        "ratio": 2.333,
+        "integer": true
+      },
+      {
+        "from": 56,
+        "to": 64,
+        "increment": 8,
+        "ratio": 1.143,
+        "integer": true
+      }
+    ],
+    "uiSteps": [
+      {
+        "from": 12,
+        "to": 14,
+        "increment": 2,
+        "ratio": 1.167,
+        "integer": true
+      },
+      {
+        "from": 14,
+        "to": 16,
+        "increment": 2,
+        "ratio": 1.143,
+        "integer": true
+      }
+    ],
+    "allIncrementsInteger": true,
+    "leading": [
+      {
+        "size": 11,
+        "leadingRatio": 1.818,
+        "count": 10,
+        "samples": [
+          {
+            "value": 1.818,
+            "count": 9
+          },
+          {
+            "value": 1.5,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 12,
+        "leadingRatio": 1.333,
+        "count": 7,
+        "samples": [
+          {
+            "value": 1.333,
+            "count": 6
+          },
+          {
+            "value": 1.667,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 14,
+        "leadingRatio": 1.429,
+        "count": 122,
+        "samples": [
+          {
+            "value": 1.429,
+            "count": 112
+          },
+          {
+            "value": 1.5,
+            "count": 10
+          }
+        ]
+      },
+      {
+        "size": 16,
+        "leadingRatio": 1.5,
+        "count": 13,
+        "samples": [
+          {
+            "value": 1.5,
+            "count": 13
+          }
+        ]
+      },
+      {
+        "size": 24,
+        "leadingRatio": 1.333,
+        "count": 5,
+        "samples": [
+          {
+            "value": 1.333,
+            "count": 3
+          },
+          {
+            "value": 1.1,
+            "count": 2
+          }
+        ]
+      },
+      {
+        "size": 56,
+        "leadingRatio": 1,
+        "count": 5,
+        "samples": [
+          {
+            "value": 1,
+            "count": 5
+          }
+        ]
+      },
+      {
+        "size": 64,
+        "leadingRatio": 1,
+        "count": 1,
+        "samples": [
+          {
+            "value": 1,
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "leadingNormalAt": [],
+    "tracking": [
+      {
+        "size": 11,
+        "trackingEm": 0.0182,
+        "count": 10,
+        "samples": [
+          {
+            "value": 0.0182,
+            "count": 9
+          },
+          {
+            "value": 0,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 12,
+        "trackingEm": 0,
+        "count": 7,
+        "samples": [
+          {
+            "value": 0,
+            "count": 7
+          }
+        ]
+      },
+      {
+        "size": 14,
+        "trackingEm": 0,
+        "count": 122,
+        "samples": [
+          {
+            "value": 0,
+            "count": 122
+          }
+        ]
+      },
+      {
+        "size": 16,
+        "trackingEm": 0,
+        "count": 13,
+        "samples": [
+          {
+            "value": 0,
+            "count": 10
+          },
+          {
+            "value": -0.02,
+            "count": 3
+          }
+        ]
+      },
+      {
+        "size": 24,
+        "trackingEm": -0.04,
+        "count": 5,
+        "samples": [
+          {
+            "value": -0.04,
+            "count": 3
+          },
+          {
+            "value": -0.05,
+            "count": 2
+          }
+        ]
+      },
+      {
+        "size": 56,
+        "trackingEm": -0.06,
+        "count": 5,
+        "samples": [
+          {
+            "value": -0.06,
+            "count": 5
+          }
+        ]
+      },
+      {
+        "size": 64,
+        "trackingEm": -0.06,
+        "count": 1,
+        "samples": [
+          {
+            "value": -0.06,
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "families": [
+      {
+        "value": "GeistSans, \"GeistSans Fallback\"",
+        "count": 147
+      },
+      {
+        "value": "\"Geist Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, \"Liberation Mono\", \"DejaVu Sans Mono\", \"Courier New\", monospace, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "count": 16
+      }
+    ],
+    "weights": [
+      {
+        "value": 400,
+        "count": 106
+      },
+      {
+        "value": 450,
+        "count": 13
+      },
+      {
+        "value": 500,
+        "count": 44
+      }
+    ]
+  },
+  "colour": {
+    "text": [
+      {
+        "value": "rgb(77, 77, 77)",
+        "count": 87
+      },
+      {
+        "value": "rgb(23, 23, 23)",
+        "count": 59
+      },
+      {
+        "value": "lab(80.976 0 -0.0000119209)",
+        "count": 6
+      },
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 3
+      },
+      {
+        "value": "rgb(41, 122, 58)",
+        "count": 3
+      },
+      {
+        "value": "rgb(143, 143, 143)",
+        "count": 3
+      },
+      {
+        "value": "rgb(0, 114, 245)",
+        "count": 1
+      },
+      {
+        "value": "rgb(0, 112, 243)",
+        "count": 1
+      }
+    ],
+    "background": [
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 12
+      },
+      {
+        "value": "rgb(250, 250, 250)",
+        "count": 7
+      },
+      {
+        "value": "rgb(23, 23, 23)",
+        "count": 6
+      },
+      {
+        "value": "lab(7.78201 -0.0000149012 0)",
+        "count": 2
+      },
+      {
+        "value": "rgb(235, 235, 235)",
+        "count": 1
+      },
+      {
+        "value": "oklab(0.984799 0.0000446141 0.0000197291 / 0.5)",
+        "count": 1
+      },
+      {
+        "value": "rgb(0, 112, 243)",
+        "count": 1
+      }
+    ],
+    "pairs": [
+      {
+        "fg": "rgb(77, 77, 77)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 14,
+        "bold": false,
+        "count": 80,
+        "contrast": 8.099,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 14,
+        "bold": false,
+        "count": 27,
+        "contrast": 17.176,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 11,
+        "bold": false,
+        "count": 9,
+        "contrast": 17.176,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 14,
+        "bold": false,
+        "count": 6,
+        "contrast": 17.928,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(77, 77, 77)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 16,
+        "bold": false,
+        "count": 5,
+        "contrast": 8.099,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 56,
+        "bold": false,
+        "count": 5,
+        "contrast": 17.176,
+        "wcagFloor": 3
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 24,
+        "bold": false,
+        "count": 5,
+        "contrast": 17.176,
+        "wcagFloor": 3
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 16,
+        "bold": false,
+        "count": 3,
+        "contrast": 17.176,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(41, 122, 58)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 12,
+        "bold": false,
+        "count": 3,
+        "contrast": 5.331,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(143, 143, 143)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 14,
+        "bold": false,
+        "count": 3,
+        "contrast": 3.098,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(23, 23, 23)",
+        "size": 16,
+        "bold": false,
+        "count": 2,
+        "contrast": 17.928,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 16,
+        "bold": false,
+        "count": 2,
+        "contrast": 17.928,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(77, 77, 77)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 12,
+        "bold": false,
+        "count": 2,
+        "contrast": 8.453,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(0, 114, 245)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 16,
+        "bold": false,
+        "count": 1,
+        "contrast": 4.444,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(23, 23, 23)",
+        "size": 14,
+        "bold": false,
+        "count": 1,
+        "contrast": 17.928,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 64,
+        "bold": false,
+        "count": 1,
+        "contrast": 17.176,
+        "wcagFloor": 3
+      },
+      {
+        "fg": "rgb(23, 23, 23)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 12,
+        "bold": false,
+        "count": 1,
+        "contrast": 17.928,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(0, 112, 243)",
+        "bg": "rgb(250, 250, 250)",
+        "size": 12,
+        "bold": false,
+        "count": 1,
+        "contrast": 4.363,
+        "wcagFloor": 4.5
+      }
+    ],
+    "belowWcagAA": 3
+  },
+  "spacing": {
+    "margin": [
+      {
+        "value": -64,
+        "count": 1
+      },
+      {
+        "value": -24,
+        "count": 2
+      },
+      {
+        "value": -20,
+        "count": 1
+      },
+      {
+        "value": -8,
+        "count": 1
+      },
+      {
+        "value": -6,
+        "count": 2
+      },
+      {
+        "value": -2,
+        "count": 81
+      },
+      {
+        "value": -1,
+        "count": 34
+      },
+      {
+        "value": 2,
+        "count": 1
+      },
+      {
+        "value": 4,
+        "count": 1
+      },
+      {
+        "value": 6,
+        "count": 1
+      },
+      {
+        "value": 8,
+        "count": 2
+      },
+      {
+        "value": 12,
+        "count": 24
+      },
+      {
+        "value": 32,
+        "count": 1
+      },
+      {
+        "value": 40,
+        "count": 1
+      },
+      {
+        "value": 80,
+        "count": 1
+      },
+      {
+        "value": 208,
+        "count": 2
+      },
+      {
+        "value": 215.5,
+        "count": 2
+      },
+      {
+        "value": 276,
+        "count": 2
+      },
+      {
+        "value": 719.203,
+        "count": 1
+      },
+      {
+        "value": 1155.19,
+        "count": 1
+      }
+    ],
+    "padding": [
+      {
+        "value": 1,
+        "count": 6
+      },
+      {
+        "value": 2,
+        "count": 504
+      },
+      {
+        "value": 4,
+        "count": 35
+      },
+      {
+        "value": 6,
+        "count": 38
+      },
+      {
+        "value": 8,
+        "count": 43
+      },
+      {
+        "value": 12,
+        "count": 20
+      },
+      {
+        "value": 16,
+        "count": 14
+      },
+      {
+        "value": 20,
+        "count": 12
+      },
+      {
+        "value": 24,
+        "count": 7
+      },
+      {
+        "value": 32,
+        "count": 2
+      },
+      {
+        "value": 40,
+        "count": 5
+      }
+    ]
+  }
+}

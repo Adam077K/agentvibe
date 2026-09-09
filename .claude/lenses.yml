@@ -133,16 +133,51 @@ lenses:
     requires_claims: [external-fact]
     sources: ["git:.claude/agents/research-lead.md@cda6de9", "git:.claude/agents/researcher.md@cda6de9"]
 
+  # THE DESIGN LENS HELD A CRITIC'S CHECKLIST WHERE THE PRODUCTION PROCEDURE BELONGED.
+  #
+  # All five of its steps were judging actions — look at the render, evaluate against the
+  # system, check the small screen, express findings as measured differences, name what
+  # works. Not one was a making action, and its `sources:` say why: both were rehoused from
+  # `design-critic.md` and `design-lead.md`. Nobody noticed because the slot was full.
+  #
+  # Compare, in this same file: `growth` reads captured customer language BEFORE drafting a
+  # line and blocks when none exists; `engineering` decomposes, tiers risk, isolates a
+  # worktree, verifies the branch, gates the merge. Those are making actions. `design` had
+  # none, so the one engine whose output is judged on craft was given no procedure for
+  # producing it.
+  #
+  # The seven steps added ahead of the five come from DESIGN-CAPABILITY.md section 7, which
+  # derived them from measured reference ramps rather than from taste. The five judging
+  # steps are kept: the perception loop is still half the work.
+  #
+  # BE CLEAR ABOUT WHAT THIS ACHIEVES. No code path loads a lens `procedure:` and acts on
+  # it — the only readers are the linter, the session-start index row, check-gates.mjs and
+  # consume-dispatch.ts, which lists playbook filenames and never opens one. This procedure
+  # is ADVISORY by this repository's own taxonomy. It reaches an engine through the
+  # session-start index and its pre-flight reads, and nothing enforces the read. What binds
+  # design work is a `npm run check` step, and nothing else.
   - id: design
-    summary: "Visual craft, hierarchy, and perception-loop iteration"
+    summary: "Building the type, colour, spacing and motion system, then judging the render against it"
     applies_to: [designer]
     procedure:
+      - "Fix the three human seeds first — base colour, the size increment, the typeface — then derive every other value from them"
+      - "Build the UI type band by absolute increment, +1 or +2px across roughly 12-20px, never by a modular ratio"
+      - "Derive the display band separately by a larger increment, and join it to the UI band with a jump rather than an interpolation"
+      - "Set line-height as a curve peaking near 1.5 at 16-18px, and tracking monotone with size, positive below 14px"
+      - "Assign colour by role against the 12-step scale: 1-2 backgrounds, 3-5 component, 6-8 borders, 9-10 fills, 11-12 text"
+      - "Compose the hierarchy in greyscale first and add colour last, so size, weight, space and containment carry it"
+      - "Give every animation a named duration and easing token, and a reduced-motion substitution rather than a blanket disable"
       - "Look at the rendered result rather than reasoning about the source"
       - "Evaluate against the written design system, not against personal taste"
       - "Check the small-screen rendering, not only the wide one"
       - "Express findings as a measured difference from a stated rule"
       - "Name what already works, so it survives the next iteration"
     refuses:
+      - "a value with no line back to a stated rule or a measured reference"
+      - "a display band interpolated from the UI band, or either band derived from the other"
+      - "a constant line-height held across a whole size range"
+      - "colour introduced before the greyscale hierarchy stands on its own"
+      - "a design-quality score, where the honest output is a list of findings"
       - "feedback such as 'the spacing looks off' with no measurement"
       - "reviewing from source when the rendered output is available"
       - "criticism with nothing named as working"

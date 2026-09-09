@@ -1,0 +1,93 @@
+# Lane · runtimes · 2026-09-05
+
+## Questions answered
+
+Claude Code: answered from primary vendor docs, including the feature the founder's phrase points at — Claude Code has **both** a `/loop` and a `/goal`, and `/goal` runs headless. Codex: `codex exec` and issue #19945 answered from primary sources; **`/goal` is answered only from search summaries and third-party pages** — the two primary URLs 308-redirected and following them would have exceeded the 25-call ceiling. Terms: Anthropic quoted verbatim; **OpenAI's terms page returned HTTP 403 and was not read.** I measured nothing; every mark below is `D` (documented, quoted) or `C` (claimed). Access date for all: 2026-09-05.
+
+## Findings — Claude Code loops, goals, hooks, subagents, drive-another-CLI
+
+**`/goal` is the feature that answers the founder's question and it is absent from the prior lane and from FINAL-PLAN.** `D`, high. <https://code.claude.com/docs/en/goal>. *"The `/goal` command sets a completion condition and Claude keeps working toward it without you prompting each step. After each turn, a small fast model checks whether the condition holds."* Three verdicts: Not yet met, Met, Impossible. It terminates on Met, on Impossible, on `/goal clear`, or on four unrecoverable errors (auth failure, exhausted credit balance, unclearable context overflow, unavailable model); *"After any other failure, including transient errors such as rate limits and overloaded servers, Claude Code leaves the goal active."*
+
+**`/goal` works headless in one invocation.** `D`, high. *"Setting a goal with `-p` runs the loop to completion in a single invocation"*, shown as `claude -p "/goal CHANGELOG.md has an entry for every PR merged this week"`, with *"Add `--output-format stream-json --verbose` to emit each message as the loop runs."* Condition limit 4,000 characters. Bound it inside the condition: *"include a turn or time clause in the condition, such as `or stop after 20 turns`."*
+
+**`/goal` is a Stop hook, and managed settings can kill it.** `D`, high. *"`/goal` is a wrapper around a session-scoped prompt-based Stop hook."* Therefore: *"`/goal` is also unavailable when `disableAllHooks` is `true` after settings precedence applies, or when `allowManagedHooksOnly` is set in managed settings."* Evaluator defaults to Haiku; `ANTHROPIC_DEFAULT_HAIKU_MODEL` changes it *everywhere the small fast model is used*, not only for `/goal`.
+
+**Background work defers evaluation.** `D`, high. If a subagent or background shell is running at turn end, evaluation is skipped. Check-ins start at 30 minutes and double to a 4× ceiling; `CLAUDE_CODE_GOAL_CHECKIN_MINUTES` sets the first interval, `0` disables. *"In a non-interactive session, such as one started with `-p`, this is the only way Claude Code delivers check-ins."*
+
+**`/loop` is time-driven and session-scoped.** `D`, high. <https://code.claude.com/docs/en/scheduled-tasks>. *"Tasks are session-scoped: they live in the current conversation and stop when you start a new one."* Three forms: interval + prompt (fixed cron), prompt only (Claude picks 1 min–1 h each iteration), bare `/loop` (built-in maintenance prompt, or `.claude/loop.md` / `~/.claude/loop.md`, truncated beyond 25,000 bytes). Tools are `CronCreate` / `CronList` / `CronDelete`, 5-field cron, 50 tasks per session, deterministic jitter up to 30 minutes, **7-day expiry**, `CLAUDE_CODE_DISABLE_CRON=1` disables the lot. Hard limit: *"Tasks only fire while Claude Code is running and idle."*
+
+**The three scheduling tiers, from the vendor's own table.** `D`, high. Cloud Routines: no machine, no open session, **1-hour minimum interval**, no local files (fresh clone). Desktop scheduled tasks: machine on, no open session, 1-minute minimum, local files. `/loop`: machine on **and** session open, 1 minute, inherits the session's MCP servers and permission mode.
+
+**`ScheduleWakeup` and `Monitor`.** `D`, high. <https://code.claude.com/docs/en/tools-reference>. ScheduleWakeup: *"To end the loop instead, Claude calls it with `stop: true`, which cancels the pending wakeup … The pending wakeup appears in `session_crons` in Stop hook input."* Monitor: *"Runs a command in the background and feeds each output line back to Claude … Can also open a WebSocket and treat each incoming message as an event."* Monitor's availability carries a trap for this repo: *"It is also not available when `DISABLE_TELEMETRY` or `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set."*
+
+**Hooks: 34 events, 10 documented as blocking.** `D`, medium (the page renders two tables; my fetch merged them). Blocking: PreToolUse, UserPromptSubmit, UserPromptExpansion, Stop, SubagentStop, TeammateIdle, TaskCreated, TaskCompleted, ConfigChange, PostToolBatch. Explicitly non-blocking, and the sharp one: PermissionRequest — *"Exit code 2 isn't honored for this event and the permission flow proceeds unchanged. Deny through the `decision` object instead."* Also non-blocking: StopFailure, PostToolUse, PostToolUseFailure.
+
+**Subagents.** `D`, high. <https://code.claude.com/docs/en/sub-agents>. Depth 3 by default (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`), 20 concurrent (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`), *"Concurrent subagent limit reached"* on overflow. **Vendor-documented, and it independently confirms this repo's own containment rule:** *"The `Workflow` tool is removed from all subagents via the first filter applied to subagent tool sets. Subagents cannot invoke workflows."* Frontmatter carries `mcpServers` (inline or by reference, *"connected when the subagent starts and disconnected when it finishes"*), `isolation: worktree`, `memory`, `background`, `effort`, `maxTurns`, `skills`, `hooks`, `experimental.cacheTtl`. Spawn allowlisting is `Agent(worker, researcher)` in the `tools:` line.
+
+**`claude agents` is a scriptable fleet view.** `D`, high, and new against FINAL-PLAN. *"Open agent view to monitor and dispatch parallel background sessions. Use `--cwd <path>` … or `--json` to print active sessions as a JSON array for scripting (`--json --all` also includes completed background sessions)."* Caveat in the same entry: *"Opening agent view requires an interactive terminal."*
+
+**Flags.** `D`, high. `--session-id`: *"must be a valid UUID"*. `--max-budget-usd`: *"Spend from subagents counts toward the cap. Once spend reaches the cap, spawning another subagent fails with `Budget limit reached`"*, requires v2.1.217+. `--output-format`: `text`, `json`, `stream-json`. `--restricted` requires v2.1.248+ and *"removes the built-in tools that run commands or code, and WebFetch, unless you name them individually in `--tools`, not through the `default` preset."* `--continue` skips `/loop`-first sessions unless `-p` is also passed. **`-w`, `--worktree` and `--tmux` did not appear in my fetch of the CLI reference** — the prior lane measured them; treat as unconfirmed here.
+
+**The messaging socket is Channels, and it is an MCP push, not a socket.** `D`, high. <https://code.claude.com/docs/en/channels>. Research preview; flags absent from `--help`. *"A channel is an MCP server that pushes events into your running Claude Code session."* Gate: *"Being in `.mcp.json` isn't enough to push messages: a server also has to be named in `--channels`."* Requires claude.ai or Console auth; unavailable on Bedrock, Google Cloud Agent Platform, Microsoft Foundry. Under `-p`: *"tools that need terminal input, such as multiple-choice questions and plan mode approval, are disabled so the session never stalls waiting for input."*
+
+**Driving another CLI.** No vendor-documented mechanism beyond the Bash tool. `claude import codex` / `claude import gemini` read the other vendors' config (prior lane, `M`, not re-measured here).
+
+## Findings — Codex CLI loops, goals, exec, sandbox, config, #19945 state
+
+**`codex exec`, primary and quoted.** `D`, high. <https://learn.chatgpt.com/docs/non-interactive-mode>. *"While `codex exec` runs, Codex streams progress to `stderr` and prints only the final agent message to `stdout`."* Flags read today that the prior lane did not record: **`--full-auto` is deprecated** (*"use `--sandbox workspace-write` instead"*), and `-o` has the long form `--output-last-message`. Otherwise as the prior lane had it: `--json` (JSON Lines: `thread.started`, `turn.started`, `turn.completed`, `turn.failed`, `item.*`), `--output-schema`, `--ephemeral`, `--ignore-user-config`, `--ignore-rules`, `--skip-git-repo-check`, `codex exec resume --last | <SESSION_ID>`.
+
+**#19945 is still open, 130 days on, with no maintainer reply.** `D`, high. <https://github.com/openai/codex/issues/19945>, read 2026-09-05. Title *"codex exec silently crashes with no output when stdio is detached from TTY (0.124.0+)"*; opened 2026-04-28; labels `CLI`, `bug`, `exec`; **no comments and no OpenAI maintainer response visible**. Mechanism: *"the process produces no error, no panic message, no log entry — just an empty result."* Workaround: *"Wrapping with `script -qfc "codex exec ..." /dev/null` restores function."* Second workaround, foreground with stdout redirected to a file while inheriting the parent shell's TTY. Piping through `tee` or `tail` in a detached process group does **not** resolve it.
+
+**Codex has `/goal`, not `/loop`.** `C`, medium — search summaries and third-party pages only. Shipped in CLI **0.128.0, 2026-04-30**. Surface: `/goal <objective>`, `/goal pause`, `/goal resume`, `/goal clear`. States: pursuing, paused, achieved, unmet, **budget_limited**. A goal carries its own positive token budget and *"When the active goal reaches its token budget, the runtime marks it budget_limited."* Two tracker items are themselves evidence: openai/codex **#20536**, *"Document the /goal CLI command and Goals lifecycle in slash-command docs"*, and **#34215**, *"Goal mode cannot increase its token budget and resume after becoming budget_limited"*. A third-party title states Codex has no `/loop`; scheduling is *"Automations"* or a shell loop around `codex exec`. **Whether `/goal` works under `codex exec` is not established.**
+
+**Codex app-server exists and is drivable.** `C`, low-medium. A third-party runtime documents handing turns to it, *"with terminal commands, file edits, sandboxing, and MCP tool calls all executing inside Codex's runtime."* Not verified against OpenAI docs.
+
+Not re-read this session, and unchanged from the prior lane's marks: `--sandbox` modes, `requirements.toml`, TOML subagents, hooks behind `codex_hooks = true`, `AGENTS.md`.
+
+## Findings — driving both from one system (each option with its evidence)
+
+- **Claude Code drives `codex exec` from Bash.** Mechanism exists — Bash tool plus a documented stdout/stderr contract, `--json`, `--output-schema`, `-o`. **This is exactly the shape #19945 breaks**: no controlling TTY plus a non-trivial prompt. The reporter's own note is that the `script -qfc` cure *"is incompatible with normal background / parallel job execution"*, which is what a crew is. `D` on both halves.
+- **Codex drives `claude -p`.** No documented mechanism either way. The receiving surface is documented (`-p --output-format stream-json`, `--session-id`, `--max-budget-usd`). Codex would need a sandbox mode permitting the spawn. `D` on the surface, nothing on the pairing.
+- **A third program drives both** (FINAL-PLAN's Desk). Each vendor documents a headless invocation, a session id, resume, an instructions file, a `SKILL.md` bundle, and MCP. `D`.
+- **One MCP server serves both.** Claude Code takes per-subagent `mcpServers`; Codex takes per-agent `mcp_servers` in TOML. `D` / prior lane.
+- **Channels as the inbound seam.** An external program can push into a *live* Claude Code session through an allowlisted channel plugin. Research preview, Anthropic-auth only, and gated twice (`--channels` plus the org allowlist). `D`.
+- **Third-party routers (Amp two-family, OpenCode).** Not fetched — ceiling. Gap.
+
+## Terms (quoted lines about automation/driving a CLI on a subscription, per vendor)
+
+**Anthropic Consumer Terms, §3 Use of our Services.** `D`, high on the quote. Prohibited: *"Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."* Also: *"You may not share your Account login information, Anthropic API key, or Account credentials with anyone else."* And: *"To develop any products or services that compete with our Services … or resell the Services."* <https://www.anthropic.com/legal/consumer-terms>
+
+The carve-out is API key, and the escape hatch is *"where we otherwise explicitly permit it."* Whether Anthropic's own documented `claude -p`, `--agents`, Routines and `/goal`-under-`-p` constitute that explicit permission on a subscription is **not resolved by this document**, and I found no page resolving it. Confidence on the interpretation: low. Confidence on the quote: high.
+
+**OpenAI.** Not read. <https://openai.com/policies/terms-of-use> returned **HTTP 403**.
+
+## What this changes against FINAL-PLAN §5.2/§7.5/§14.6 (facts only, row references, no recommendation)
+
+- **§14.6, "Policy seam" row, Claude Code cell** reads *"32 hook events, 12 blocking."* Today's page yields **34 events and 10 documented as blocking**. Both numbers move; my count is medium confidence and the page is the arbiter.
+- **§14.6, "Subagents" row** — depth 3 and 20 concurrent confirmed as `D`. Add a fact the table has no cell for: `Workflow` is vendor-documented as removed from every subagent, which is an independent citation for the repo's own `PS-WORKFLOW-CONTAINMENT`.
+- **§14.6 has no row for loops or goals.** Both runtimes now ship a goal primitive: Claude Code `/goal` (`D`, headless-capable) and Codex `/goal` 0.128+ (`C`, headless status unknown). Claude Code additionally ships `/loop`, cron tools, Monitor and three scheduling tiers; Codex is reported to ship none of these.
+- **§7.5, maker/scout/checker rows** — `--max-budget-usd` now has documented semantics: subagent spend counts toward it, and overflow fails a spawn with `Budget limit reached` (v2.1.217+). Unchanged: the question of whether it binds on a subscription.
+- **§7.5's managed-settings premise collides with `/goal`.** The section writes a managed settings file so it outranks argv. `allowManagedHooksOnly` in managed settings makes `/goal` unavailable, and `disableAllHooks` does too. Two design choices, one file.
+- **§7.5, Codex column** — add `--output-schema`, `-o/--output-last-message`, `--json`; note `--full-auto` is deprecated.
+- **§5.2, Codex window row** — #19945 verified still open on 2026-09-05 with no maintainer reply, 130 days after opening. The row stands as written.
+- **§5.2, "no metered key"** — the Anthropic clause above names an API key as the carve-out from the automation prohibition, so the no-key choice and the automation question are the same question, not two.
+- **The plan's §1 row 30** ("Codex after a headless rehearsal") — the rehearsal is now specifiable from primary text: `codex exec --json`, no controlling TTY, non-trivial prompt, on a version ≥ 0.124.0.
+
+## Gaps
+
+1. **Codex `/goal` has no primary citation here.** <https://learn.chatgpt.com/docs/developer-commands?surface=cli> and <https://learn.chatgpt.com/use-cases/follow-goals> are the 308 targets; two calls closes this.
+2. **OpenAI's terms are unread** (403). The whole OpenAI half of the terms question is open.
+3. **Whether Codex `/goal` runs under `codex exec`** — unestablished, and it is the hinge for using Codex's goal feature from a driver.
+4. Whether Anthropic's documented headless features constitute the *"explicitly permit"* carve-out on a subscription.
+5. The meaning of the trailing Yes/No column in the Claude Code tools reference (`Monitor` Yes, `Workflow` Yes, `ScheduleWakeup` No, `Agent` No). I did not capture the header and will not guess it.
+6. `-w`, `--worktree`, `--tmux` did not appear in my CLI-reference fetch. Prior lane has them as measured.
+7. Routines' own page, desktop scheduled tasks, `/schedule`, Remote Control, agent teams, and the `workflows` page were not fetched.
+8. Codex config reference, `requirements.toml`, `codex mcp`, Automations, and whether Codex can serve as an MCP server — all still the prior lane's marks; I added nothing.
+9. Third-party routers not researched.
+10. **Nothing here was measured.** No runtime ran; `codex` remains uninstalled and I attempted no install.
+
+## Sources fetched (count) · failed fetches
+
+**10 pages fetched successfully:** Claude Code CLI reference, hooks, sub-agents, scheduled-tasks, goal, tools-reference, channels; Codex non-interactive-mode; GitHub issue openai/codex#19945; Anthropic Consumer Terms. **3 web searches.** **3 failures:** `developers.openai.com/codex/cli/slash-commands` (308 → learn.chatgpt.com, not followed, ceiling), `developers.openai.com/codex/use-cases/follow-goals` (308, same), `openai.com/policies/terms-of-use` (**403**). 25 of 25 calls spent.
+
+Sources: [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference) · [hooks](https://code.claude.com/docs/en/hooks) · [subagents](https://code.claude.com/docs/en/sub-agents) · [scheduled tasks](https://code.claude.com/docs/en/scheduled-tasks) · [goal](https://code.claude.com/docs/en/goal) · [tools reference](https://code.claude.com/docs/en/tools-reference) · [channels](https://code.claude.com/docs/en/channels) · [Codex non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode) · [openai/codex#19945](https://github.com/openai/codex/issues/19945) · [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms) · [openai/codex#20536](https://github.com/openai/codex/issues/20536) · [openai/codex#34215](https://github.com/openai/codex/issues/34215)

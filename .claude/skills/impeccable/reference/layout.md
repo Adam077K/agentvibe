@@ -1,3 +1,8 @@
+> **Scripts not present — run nothing, do it by hand.** There is no
+> `.claude/skills/impeccable/scripts/` directory in this repository and no `impeccable` package is
+> installed, so **every `*.mjs` command below will fail.** Each one names a step: carry it out yourself.
+> The procedure around the commands is intact and still applies. Full note: [SKILL.md](../SKILL.md).
+
 Layout turns product priority into reading order, grouping, rhythm, and usable space. Diagnose the structural problem before moving boxes.
 
 ---

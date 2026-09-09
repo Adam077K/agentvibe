@@ -1,0 +1,11 @@
+{
+  "subject": "ff2e6ef818cd272c87a0db0be16162b0c5d65941fb89aab6aec1ae8346df688b",
+  "base": "4770d3901e13249bb391b18b8799e4f14299161b",
+  "tier": "full",
+  "tier_driver": "bin/fleet-install.mjs",
+  "verdict": "PASS",
+  "by": "ceo-1 (orchestrator) · Workflow .claude/workflows/qa.js · run wf_18fe9e47-e6e",
+  "run_id": "wf_18fe9e47-e6e",
+  "evidence": "tier=full binding gate, oracle-first, 7 agents / 0 errors, over origin/main...a404ba7 — THE MERGE CANDIDATE ITSELF, re-run after main moved (#128, #130) invalidated the earlier PASS bound to 8d1dd44. verified=0 confirmed=0 dimensions_failed=[] critical_gap=[] blockers=[]. Four advisory findings, none block-eligible at this tier, recorded as fast-follows: P2 fleet-install.test.mjs header claims it is unwired while this same diff wires it into the blocking suite; P2 maxBuffer fix in produce-verdict.mjs and run-gate.mjs has no test exercising it; P2 loadCitationExemptions() validation branches uncovered in ledger.test.mjs; P3 tmpDir helper byte-identical across three new test files. Items 2 and 3 are the same class: a control exists and nothing proves it still works. Judge held no shell by construction and executed nothing; one bounded existence check confirmed all six cited paths resolve. Single Anthropic model family — satisfies the deterministic floor, does NOT satisfy the irreversible-tier 2-of-3 multi-judge across >=2 model families; accepted risk, exit 2026-11-17.",
+  "recorded_at": "2026-09-09T11:29:55.990Z"
+}

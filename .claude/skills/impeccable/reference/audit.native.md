@@ -1,3 +1,8 @@
+> **Scripts not present — run nothing, do it by hand.** There is no
+> `.claude/skills/impeccable/scripts/` directory in this repository and no `impeccable` package is
+> installed, so **every `*.mjs` command below will fail.** Each one names a step: carry it out yourself.
+> The procedure around the commands is intact and still applies. Full note: [SKILL.md](../SKILL.md).
+
 Run systematic **technical** quality checks on a native app (`ios` / `android` / `adaptive`) and generate a comprehensive report. Don't fix issues; document them for other commands to address.
 
 This is a code-level audit, not a design critique. Audit from source (SwiftUI / UIKit / Compose / React Native / Flutter); no browser tooling or `detect.mjs` applies. Score against the platform reference(s): [ios.md](ios.md) / [android.md](android.md), both for `adaptive`. Read them before scoring if Setup hasn't already. The report skeleton mirrors [audit.md](audit.md); keep the two in sync when changing it.

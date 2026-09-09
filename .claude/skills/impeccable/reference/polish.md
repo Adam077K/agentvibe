@@ -1,3 +1,8 @@
+> **Scripts not present — run nothing, do it by hand.** There is no
+> `.claude/skills/impeccable/scripts/` directory in this repository and no `impeccable` package is
+> installed, so **every `*.mjs` command below will fail.** Each one names a step: carry it out yourself.
+> The procedure around the commands is intact and still applies. Full note: [SKILL.md](../SKILL.md).
+
 > **Additional context needed**: quality bar and shipping constraints.
 
 Polish is refinement, never concealed redesign. Preserve the incumbent visual world, content, behavior, and everything outside scope. If the concept itself is wrong, say so and recommend redesign or `bolder` instead of smuggling in a replacement.

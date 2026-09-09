@@ -1,0 +1,88 @@
+{
+  "_comment": [
+    "STATED RULES, HELD AGAINST THE MEASURED CORPUS. Run: node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json",
+    "A rule lives here so it can be KILLED. Three were killed during the research that commissioned this harness, and the two that died are kept in this file rather than deleted from it — a deleted rule teaches nobody why it was wrong, and the same rule gets proposed again next quarter.",
+    "Every rule must carry a `statement` a person can disagree with. A rule with no statement is a threshold nobody chose."
+  ],
+  "_expected_verdict": [
+    "expected_verdict IS CHECKED, and `expected` above it is not. The prose field carries the reasoning",
+    "a person needs; this one carries the single word a test can compare. Both are here because",
+    "collapsing them would lose the reasoning, and keeping only the prose is what let",
+    "ui-increments-are-integer sit at 'HELD across the captured corpus' while the harness returned",
+    "CONTESTED — a recorded result that drifted with nothing to notice.",
+    "The comparison runs in scripts/extract-reference.test.mjs, which `npm run test:merge-gate` runs,",
+    "which is a step of `npm run check`. Re-derive the verdicts with:",
+    "  node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json --refs design/references --json",
+    "If a verdict changes because the corpus was re-captured, UPDATE THIS FIELD AND SAY WHY IN `expected`.",
+    "Never update it to make a test pass without reading what moved: the whole point of the file is that",
+    "a rule can be killed by a measurement, and a silent edit here is how that stops happening."
+  ],
+  "_leading_curve": [
+    "NOT A RULE IN THIS FILE, AND HERE IS WHY — recorded so nobody adds it. The leading curve",
+    "lineHeight(s) = peak - (|s-peakAt|/peakAt)^exponent * falloff is cited to Radix and Tailwind.",
+    "Those are design SYSTEMS, which PRESCRIBE. Every reference in design/references/ is a SITE,",
+    "which sets line-height per component. Holding a prescription against a population that never",
+    "undertook to follow it is a category error, so measuring it here would produce a refutation",
+    "that means nothing. The falsifier is for rules about what references DO."
+  ],
+  "rules": [
+    {
+      "id": "min-step-ratio-1125",
+      "kind": "min-adjacent-ratio",
+      "value": 1.125,
+      "band": "ui",
+      "statement": "adjacent steps in a type scale must differ by at least 1.125x",
+      "origin": "scripts/design-probe.mjs MIN_STEP_RATIO, which this repo enforced as a p2 finding until 2026-08-29. THIS RULE IS NOW DEAD AND THIS HARNESS IS WHY: the constant, scaleGaps() and the type-scale-near-duplicates finding survive only as a deletion record on integration/design-layer. It is kept stated here rather than deleted, because a rule removed without its refutation left beside it gets re-proposed next quarter by someone who never saw the measurement.",
+      "expected": "REFUTED against FOUR of the five committed references — linear.app, stripe.com, docs.stripe.com AND play.grafana.org — plus mission-control; CONTESTED over the full corpus only because vercel.com conforms, and vercel's verdict turns on band membership, not on vercel. The arithmetic: a run of increment d at size s gives 1 + d/s, so ANY UI band stepping by d/s < 0.125 violates — a +1 increment anywhere above 9px does (1 + 1/9 = 1.111), and so does play.grafana.org's +0.6 at 12px (1.05). CORRECTED 2026-08-29: this field named three references and OMITTED play.grafana.org, which the harness reports as VIOLATES on 1.05 and 1.111 — re-derive with `node scripts/extract-reference.mjs --against design/rules/type-scale.rules.json --refs design/references --json`. It also generalised over '+1 increments' alone, which is what let grafana's fractional step read as outside the rule when it is the deepest violation in the corpus. expected_verdict was and remains CONTESTED — a fourth violator does not move it, because vercel.com still conforms. That is exactly why the omission survived: the verdict this file is checked on was right while the reason recorded beside it was wrong, and only expected_verdict is asserted (scripts/extract-reference.test.mjs).",
+      "expected_verdict": "CONTESTED"
+    },
+    {
+      "id": "six-sizes-is-restraint",
+      "kind": "max-distinct-sizes",
+      "value": 6,
+      "band": "ui",
+      "statement": "a disciplined UI band uses no more than 6 distinct sizes",
+      "origin": "an orchestrator synthesis of 2026-08-28 that read mission-control's 6 sizes as restraint",
+      "expected": "a count cannot see near-duplicates; this rule passed mission-control's +0.5 ramp, which is what made it worth killing",
+      "expected_verdict": "CONTESTED"
+    },
+    {
+      "id": "must-have-display-band",
+      "kind": "requires-band",
+      "value": "display",
+      "statement": "a real interface has a display band above its UI band",
+      "origin": "a category error, stated so it can be checked",
+      "expected": "HELD across the captured corpus — and this rule's death is the one finding in the file that DID NOT SURVIVE re-measurement. It was killed on the evidence that play.grafana.org 'ships 12 14 and nothing else', which reproduces exactly WITHOUT a scroll pass and is false WITH one: scrolled, grafana renders 15.4/16.8/18.2/28 above its UI band. So the rule that was declared a category error is currently HELD by 5 of 5 references. Reproduce both readings: `--no-scroll` against `--scroll` (the default). The lesson is not that the rule is right; it is that a rule killed on one measurement dies again or lives again when the instrument improves, and this file is where that gets noticed.",
+      "expected_verdict": "HELD"
+    },
+    {
+      "id": "ui-increments-are-integer",
+      "kind": "integer-increments",
+      "band": "ui",
+      "statement": "every adjacent increment in the UI band is a whole number of pixels",
+      "origin": "the observation this harness was built to test: five references build the UI band on +1 or +2, while mission-control uses +0.5 repeatedly",
+      "expected": "CONTESTED, 1 of 5 — and this entry read 'HELD across the captured corpus' until 2026-08-29, which was false. play.grafana.org measures +0.6 and +1.4 in its UI band: it runs a MULTIPLICATIVE scale off a 14px base, so fractional pixels are produced by construction rather than by carelessness. The neighbouring must-have-display-band WAS updated when the scroll pass changed grafana's measurement and this one was not, in the same file, on the same day — which is why `expected_verdict` below is now compared by a test instead of being prose nobody runs. mission-control still violates it, and that part was and is the finding.",
+      "expected_verdict": "CONTESTED"
+    },
+    {
+      "id": "ui-increments-are-one-or-two",
+      "kind": "increment-in",
+      "value": [1, 2],
+      "band": "ui",
+      "statement": "UI-band increments are +1 or +2 and nothing else",
+      "origin": "the stronger form of the rule above",
+      "expected": "unknown — this is the one in the file whose answer was not decided before it was run",
+      "expected_verdict": "CONTESTED"
+    },
+    {
+      "id": "ui-increments-are-integer-where-used",
+      "kind": "integer-increments",
+      "band": "ui",
+      "minCount": 3,
+      "statement": "every adjacent increment in the UI band is a whole number of pixels, counting only sizes the reference renders at least 3 times",
+      "origin": "the same rule as ui-increments-are-integer, restated over sizes that carry real text. Both are kept BECAUSE THEY DISAGREE: play.grafana.org renders 12.6px on exactly one element, which is enough to violate the unfiltered form and not enough to mean anything about grafana's system. Which of the two is the real rule is a judgement, and the harness's job is to make the two answers visible rather than to pick one.",
+      "expected": "differs from ui-increments-are-integer on at least one reference; if it never does, one of the two is redundant and should be deleted",
+      "expected_verdict": "CONTESTED"
+    }
+  ]
+}

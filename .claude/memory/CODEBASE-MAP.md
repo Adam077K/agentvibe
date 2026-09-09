@@ -36,6 +36,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run build:manifest` | `node scripts/build-skills-manifest.mjs` |
 | `npm run build:map` | `node scripts/gen-codebase-map.mjs` |
 | `npm run build:routers` | `node scripts/build-skill-routers.mjs` |
+| `npm run build:tokens` | `node scripts/build-tokens.mjs` |
 | `npm run check` | `node scripts/run-checks.mjs` |
 | `npm run check:ci-chains` | `node scripts/check-ci-chains.mjs` |
 | `npm run check:citations` | `npm run test:citations && node scripts/check-citations.mjs` |
@@ -64,6 +65,8 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:warroom-parity` | `bash -n scripts/warroom-parity.sh` |
 | `npm run check:warroom-template` | `bash -n war-room/bin/PROJECT_NAME.tmpl` |
 | `npm run curate:skills` | `node scripts/curate-skills.mjs` |
+| `npm run design-probe` | `node scripts/design-probe.mjs` |
+| `npm run fleet:install` | `node bin/fleet-install.mjs` |
 | `npm run gate` | `node scripts/run-gate.mjs` |
 | `npm run gates` | `node scripts/check-gates.mjs` |
 | `npm run ledger:build` | `node scripts/ledger.mjs build` |
@@ -78,7 +81,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run probe:stop-reason` | `node scripts/probe-stop-reason.mjs` |
 | `npm run probe:workflow-reach` | `node scripts/probe-workflow-reach.mjs` |
 | `npm run test:budget` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/usage.test.mjs` |
-| `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs` |
+| `npm run test:check-suite` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs scripts/fleet-instal` |
 | `npm run test:citations` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-citations.test.mjs` |
 | `npm run test:claims` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/claims.test.mjs` |
 | `npm run test:classifier` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/classifier.test.mjs` |
@@ -91,13 +94,13 @@ it, so a hook that changes posture changes this map with it.
 | `npm run test:hooks` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/session-start.test.mjs` |
 | `npm run test:launcher-permissions` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/launcher-permissions.test.mjs` |
 | `npm run test:ledger` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/ledger.test.mjs` |
-| `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs` |
+| `npm run test:lenses` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs scripts/build-tokens.test` |
 | `npm run test:memory` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-memory-budget.test.mjs` |
 | `npm run test:merge-gate` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdi` |
 | `npm run test:playbooks` | `node --require ./scripts/protected-write-tripwire.cjs --test --test-concurrency=1 scripts/playbooks.test.mjs s` |
 | `npm run test:pre-tool-use` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs` |
 | `npm run test:probe-agent-tool-inheritance` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-agent-tool-inheritance.test.mjs` |
-| `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs` |
+| `npm run test:probe-readonly` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs scripts/design-pr` |
 | `npm run test:probe-stop-reason` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs` |
 | `npm run test:probe-workflow-reach` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-workflow-reach.test.mjs` |
 | `npm run test:protected-write` | `node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs` |
@@ -130,6 +133,7 @@ it, so a hook that changes posture changes this map with it.
 
 | File | Subject |
 |---|---|
+| `scripts/build-tokens.test.mjs` | the gate over the token generator. |
 | `scripts/check-citations.test.mjs` | mutation gate for the citation-range checker. |
 | `scripts/check-dispatch-agenttype.test.mjs` | the mutation gate for the dispatch-identity checker. |
 | `scripts/check-dispatch-flush.test.mjs` | the regression gate for the 64KB stdout truncation. |
@@ -142,7 +146,11 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/claim-append.test.mjs` | the gate in scripts/lib/claim-append.js. |
 | `scripts/claims.test.mjs` | tests for the claim parser and schema. |
 | `scripts/classifier.test.mjs` | the tier map, tested BY EXECUTION against a path list. |
+| `scripts/design-lib.test.mjs` | the pins on the design layer's shared arithmetic. |
+| `scripts/design-probe.test.mjs` | the negative controls that make the design probe binding. |
 | `scripts/evict-memory.test.mjs` | mutation gate for the typed memory eviction. |
+| `scripts/extract-reference.test.mjs` | the falsification harness, driven by real measurements. |
+| `scripts/fleet-install.test.mjs` | every property tested by constructing the input that DEFEATS it. |
 | `scripts/gates.test.mjs` | every rule tested by constructing the input that DEFEATS it. |
 | `scripts/launcher-permissions.test.mjs` | the autonomy dial, and the model it made inert. |
 | `scripts/ledger.test.mjs` | the resolvers, and the invariant that holds the ledger up. |
@@ -168,15 +176,15 @@ it, so a hook that changes posture changes this map with it.
 
 ## What the system asserts
 
-49 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+52 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
 | Kind | Count |
 |---|---|
-| behavior | 17 |
+| behavior | 18 |
 | external-fact | 9 |
-| internal-fact | 16 |
+| internal-fact | 18 |
 | runtime-capability | 7 |
 
 Browse them with `npm run ledger:views`; sweep for expiry with `npm run ledger:sweep`.

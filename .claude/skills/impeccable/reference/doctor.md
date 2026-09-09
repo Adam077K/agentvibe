@@ -1,4 +1,13 @@
-Report and repair drift between this project's Impeccable artifacts and what the installed version reads: PRODUCT.md, DESIGN.md and its `.impeccable/design.json` sidecar, `.impeccable/config.json`, persisted surface briefs, and the design hook.
+> **This file documents a feature this repository does not have.** It reconciles a project's
+> artifacts against *the installed version of Impeccable* — `.impeccable/design.json`,
+> `.impeccable/config.json`, persisted surface briefs, the design hook — and **none of that exists
+> here.** No `impeccable` package is installed, so there is no installed version to drift from and
+> no sidecar to repair. Unlike most of this skill, the procedure below **cannot be carried out by
+> hand**: there is nothing to compare against. Read it as a description of the absent feature, not
+> as instructions. Full note: [SKILL.md](../SKILL.md).
+
+Report and repair drift
+ between this project's Impeccable artifacts and what the installed version reads: PRODUCT.md, DESIGN.md and its `.impeccable/design.json` sidecar, `.impeccable/config.json`, persisted surface briefs, and the design hook.
 
 This is maintenance, not design. Do not redesign anything, do not open files outside the ones the report names, and do not run any other command as a side effect.
 

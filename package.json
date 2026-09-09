@@ -1,23 +1,24 @@
 {
   "name": "gsa-startup-kit",
   "version": "1.1.0",
-  "description": "AI Agent Kit for Claude Code & Antigravity \u2014 autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
+  "description": "AI Agent Kit for Claude Code & Antigravity — autonomous startup team (CEO, C-suite, Workers) with 147 expert skills",
   "bin": {
     "gsa-startup-kit": "bin/install.js"
   },
   "scripts": {
+    "fleet:install": "node bin/fleet-install.mjs",
     "check": "node scripts/run-checks.mjs",
     "check:ci-chains": "node scripts/check-ci-chains.mjs",
     "check:figures": "node scripts/check-figures.mjs",
     "test:figures": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-figures.test.mjs",
-    "test:check-suite": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs",
+    "test:check-suite": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs scripts/fleet-install.test.mjs",
     "test:tier-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-tier-gate.test.mjs",
     "test:sandbox": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/sandbox-config.test.mjs",
     "check:mc": "node mission-control/check.mjs",
-    "test:probe-readonly": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs",
+    "test:probe-readonly": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-readonly.test.mjs scripts/design-probe.test.mjs",
     "test:pre-tool-use": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/pre-tool-use.test.mjs",
     "test:run-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/run-gate.test.mjs",
-    "test:merge-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdict.test.mjs",
+    "test:merge-gate": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/merge-gate.test.mjs scripts/produce-verdict.test.mjs scripts/extract-reference.test.mjs",
     "verdict": "node scripts/verdict.mjs",
     "test:skill-clamp": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/skill-clamp.test.mjs",
     "test:probe-stop-reason": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/probe-stop-reason.test.mjs",
@@ -29,7 +30,7 @@
     "probe:agent-tool-inheritance": "node scripts/probe-agent-tool-inheritance.mjs",
     "gate": "node scripts/run-gate.mjs",
     "gates": "node scripts/check-gates.mjs",
-    "test:lenses": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs",
+    "test:lenses": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/lenses.test.mjs scripts/build-tokens.test.mjs scripts/design-lib.test.mjs",
     "test:provenance": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/provenance-portability.test.mjs",
     "vendor:provenance": "node scripts/vendor-provenance.mjs",
     "check:ledger": "npm run test:claims && npm run test:classifier && npm run test:ledger && npm run check:ledger-lint && npm run check:ledger-build && npm run check:ledger-verify",
@@ -80,12 +81,14 @@
     "usage": "node -e \"const u=require('./scripts/lib/usage.js');const w=u.windowUsage({});console.log(w.output_tokens.toLocaleString()+' output tokens in the rolling '+w.window_hours+'h window')\"",
     "build:map": "node scripts/gen-codebase-map.mjs",
     "check:map": "node scripts/gen-codebase-map.mjs --check",
+    "build:tokens": "node scripts/build-tokens.mjs",
     "curate:skills": "node scripts/curate-skills.mjs",
     "check:curation": "node scripts/curate-skills.mjs --check",
     "build:routers": "node scripts/build-skill-routers.mjs",
     "check:routers": "node scripts/build-skill-routers.mjs --check",
     "measure:bash": "node scripts/measure-bash-usage.mjs",
-    "test:protected-write": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs"
+    "test:protected-write": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/protected-write.test.mjs",
+    "design-probe": "node scripts/design-probe.mjs"
   },
   "files": [
     "bin/",

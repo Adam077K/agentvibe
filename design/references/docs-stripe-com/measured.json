@@ -1,0 +1,814 @@
+{
+  "url": "https://docs.stripe.com",
+  "viewport": "1440x900",
+  "scrolled": true,
+  "title": "Stripe Documentation",
+  "type": {
+    "sizes": [
+      {
+        "value": 12,
+        "count": 1,
+        "share": 0.005
+      },
+      {
+        "value": 13,
+        "count": 89,
+        "share": 0.447
+      },
+      {
+        "value": 14,
+        "count": 57,
+        "share": 0.286
+      },
+      {
+        "value": 16,
+        "count": 45,
+        "share": 0.226
+      },
+      {
+        "value": 21,
+        "count": 5,
+        "share": 0.025
+      },
+      {
+        "value": 24,
+        "count": 1,
+        "share": 0.005
+      },
+      {
+        "value": 32,
+        "count": 1,
+        "share": 0.005
+      }
+    ],
+    "bands": {
+      "ui": {
+        "sizes": [
+          12,
+          13,
+          14
+        ],
+        "fit": {
+          "base": 12,
+          "increment": 1,
+          "steps": 3,
+          "uncoveredInRange": []
+        }
+      },
+      "display": {
+        "sizes": [
+          16,
+          21,
+          24,
+          32
+        ],
+        "fit": {
+          "base": 16,
+          "increment": 8,
+          "steps": 3
+        }
+      },
+      "below": []
+    },
+    "steps": [
+      {
+        "from": 12,
+        "to": 13,
+        "increment": 1,
+        "ratio": 1.083,
+        "integer": true
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "increment": 1,
+        "ratio": 1.077,
+        "integer": true
+      },
+      {
+        "from": 14,
+        "to": 16,
+        "increment": 2,
+        "ratio": 1.143,
+        "integer": true
+      },
+      {
+        "from": 16,
+        "to": 21,
+        "increment": 5,
+        "ratio": 1.313,
+        "integer": true
+      },
+      {
+        "from": 21,
+        "to": 24,
+        "increment": 3,
+        "ratio": 1.143,
+        "integer": true
+      },
+      {
+        "from": 24,
+        "to": 32,
+        "increment": 8,
+        "ratio": 1.333,
+        "integer": true
+      }
+    ],
+    "uiSteps": [
+      {
+        "from": 12,
+        "to": 13,
+        "increment": 1,
+        "ratio": 1.083,
+        "integer": true
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "increment": 1,
+        "ratio": 1.077,
+        "integer": true
+      }
+    ],
+    "allIncrementsInteger": true,
+    "leading": [
+      {
+        "size": 12,
+        "leadingRatio": 1.667,
+        "count": 1,
+        "samples": [
+          {
+            "value": 1.667,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 13,
+        "leadingRatio": 1.462,
+        "count": 88,
+        "samples": [
+          {
+            "value": 1.462,
+            "count": 85
+          },
+          {
+            "value": 1.538,
+            "count": 3
+          }
+        ]
+      },
+      {
+        "size": 14,
+        "leadingRatio": 1.429,
+        "count": 43,
+        "samples": [
+          {
+            "value": 1.429,
+            "count": 42
+          },
+          {
+            "value": 1,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 16,
+        "leadingRatio": 1.5,
+        "count": 38,
+        "samples": [
+          {
+            "value": 1.5,
+            "count": 28
+          },
+          {
+            "value": 1.625,
+            "count": 9
+          },
+          {
+            "value": 1.75,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 24,
+        "leadingRatio": 1.167,
+        "count": 1,
+        "samples": [
+          {
+            "value": 1.167,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 32,
+        "leadingRatio": 1.25,
+        "count": 1,
+        "samples": [
+          {
+            "value": 1.25,
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "leadingNormalAt": [
+      {
+        "value": 14,
+        "count": 13
+      },
+      {
+        "value": 16,
+        "count": 7
+      },
+      {
+        "value": 21,
+        "count": 5
+      }
+    ],
+    "tracking": [
+      {
+        "size": 12,
+        "trackingEm": 0,
+        "count": 1,
+        "samples": [
+          {
+            "value": 0,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 13,
+        "trackingEm": 0,
+        "count": 89,
+        "samples": [
+          {
+            "value": 0,
+            "count": 89
+          }
+        ]
+      },
+      {
+        "size": 14,
+        "trackingEm": 0,
+        "count": 57,
+        "samples": [
+          {
+            "value": 0,
+            "count": 57
+          }
+        ]
+      },
+      {
+        "size": 16,
+        "trackingEm": 0,
+        "count": 45,
+        "samples": [
+          {
+            "value": 0,
+            "count": 45
+          }
+        ]
+      },
+      {
+        "size": 21,
+        "trackingEm": 0,
+        "count": 5,
+        "samples": [
+          {
+            "value": 0,
+            "count": 5
+          }
+        ]
+      },
+      {
+        "size": 24,
+        "trackingEm": 0,
+        "count": 1,
+        "samples": [
+          {
+            "value": 0,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "size": 32,
+        "trackingEm": 0,
+        "count": 1,
+        "samples": [
+          {
+            "value": 0,
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "families": [
+      {
+        "value": "Menlo, Consolas, monospace",
+        "count": 89
+      },
+      {
+        "value": "-apple-system, \"system-ui\", \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+        "count": 86
+      },
+      {
+        "value": "-apple-system, \"system-ui\", \"Segoe UI\", Roboto, \"Helvetica Neue\", Ubuntu, sans-serif",
+        "count": 22
+      },
+      {
+        "value": "\"Source Code Pro\", Menlo, Monaco, monospace",
+        "count": 2
+      }
+    ],
+    "weights": [
+      {
+        "value": 400,
+        "count": 123
+      },
+      {
+        "value": 500,
+        "count": 31
+      },
+      {
+        "value": 600,
+        "count": 36
+      },
+      {
+        "value": 700,
+        "count": 9
+      }
+    ]
+  },
+  "colour": {
+    "text": [
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 59
+      },
+      {
+        "value": "rgb(84, 105, 212)",
+        "count": 51
+      },
+      {
+        "value": "rgb(26, 44, 68)",
+        "count": 27
+      },
+      {
+        "value": "rgb(133, 217, 150)",
+        "count": 27
+      },
+      {
+        "value": "rgb(65, 69, 82)",
+        "count": 12
+      },
+      {
+        "value": "rgb(60, 66, 87)",
+        "count": 7
+      },
+      {
+        "value": "rgb(105, 115, 134)",
+        "count": 7
+      },
+      {
+        "value": "rgb(80, 97, 122)",
+        "count": 2
+      },
+      {
+        "value": "rgb(228, 171, 128)",
+        "count": 2
+      },
+      {
+        "value": "rgb(127, 211, 237)",
+        "count": 2
+      },
+      {
+        "value": "rgb(163, 172, 185)",
+        "count": 2
+      },
+      {
+        "value": "rgb(39, 57, 81)",
+        "count": 1
+      }
+    ],
+    "background": [
+      {
+        "value": "rgb(247, 250, 252)",
+        "count": 8
+      },
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 7
+      },
+      {
+        "value": "rgb(84, 105, 212)",
+        "count": 7
+      },
+      {
+        "value": "rgb(212, 222, 233)",
+        "count": 6
+      },
+      {
+        "value": "rgb(244, 247, 250)",
+        "count": 4
+      },
+      {
+        "value": "rgb(39, 57, 81)",
+        "count": 1
+      },
+      {
+        "value": "rgba(255, 255, 255, 0.75)",
+        "count": 1
+      },
+      {
+        "value": "rgba(255, 255, 255, 0.85)",
+        "count": 1
+      },
+      {
+        "value": "rgb(125, 139, 164)",
+        "count": 1
+      },
+      {
+        "value": "rgb(42, 47, 69)",
+        "count": 1
+      },
+      {
+        "value": "rgb(105, 115, 134)",
+        "count": 1
+      }
+    ],
+    "pairs": [
+      {
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 13,
+        "bold": false,
+        "count": 56,
+        "contrast": 13.199,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(84, 105, 212)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 16,
+        "bold": false,
+        "count": 36,
+        "contrast": 4.829,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(26, 44, 68)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 14,
+        "bold": false,
+        "count": 27,
+        "contrast": 14.116,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(133, 217, 150)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 13,
+        "bold": false,
+        "count": 27,
+        "contrast": 7.771,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(84, 105, 212)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 14,
+        "bold": false,
+        "count": 7,
+        "contrast": 4.829,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(60, 66, 87)",
+        "bg": "rgb(244, 247, 250)",
+        "size": 14,
+        "bold": false,
+        "count": 6,
+        "contrast": 9.261,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(105, 115, 134)",
+        "bg": "rgb(247, 250, 252)",
+        "size": 16,
+        "bold": false,
+        "count": 6,
+        "contrast": 4.556,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(65, 69, 82)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 21,
+        "bold": true,
+        "count": 5,
+        "contrast": 9.555,
+        "wcagFloor": 3
+      },
+      {
+        "fg": "rgb(65, 69, 82)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 14,
+        "bold": false,
+        "count": 5,
+        "contrast": 9.555,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(84, 105, 212)",
+        "bg": "rgb(244, 247, 250)",
+        "size": 14,
+        "bold": false,
+        "count": 3,
+        "contrast": 4.492,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(84, 105, 212)",
+        "bg": "rgb(247, 250, 252)",
+        "size": 14,
+        "bold": false,
+        "count": 2,
+        "contrast": 4.607,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(84, 105, 212)",
+        "bg": "rgba(255, 255, 255, 0.85)",
+        "size": 14,
+        "bold": false,
+        "count": 2,
+        "contrast": 4.829,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(228, 171, 128)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 13,
+        "bold": false,
+        "count": 2,
+        "contrast": 6.559,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(127, 211, 237)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 13,
+        "bold": false,
+        "count": 2,
+        "contrast": 7.821,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(39, 57, 81)",
+        "size": 14,
+        "bold": false,
+        "count": 1,
+        "contrast": 11.73,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(65, 69, 82)",
+        "bg": "rgb(247, 250, 252)",
+        "size": 16,
+        "bold": false,
+        "count": 1,
+        "contrast": 9.116,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(80, 97, 122)",
+        "bg": "rgb(244, 247, 250)",
+        "size": 14,
+        "bold": false,
+        "count": 1,
+        "contrast": 5.862,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(39, 57, 81)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 14,
+        "bold": false,
+        "count": 1,
+        "contrast": 11.73,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(65, 69, 82)",
+        "bg": "rgba(255, 255, 255, 0.75)",
+        "size": 32,
+        "bold": true,
+        "count": 1,
+        "contrast": 9.555,
+        "wcagFloor": 3
+      },
+      {
+        "fg": "rgb(105, 115, 134)",
+        "bg": "rgba(255, 255, 255, 0.75)",
+        "size": 24,
+        "bold": false,
+        "count": 1,
+        "contrast": 4.776,
+        "wcagFloor": 3
+      },
+      {
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(84, 105, 212)",
+        "size": 16,
+        "bold": false,
+        "count": 1,
+        "contrast": 4.829,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(60, 66, 87)",
+        "bg": "rgba(255, 255, 255, 0.75)",
+        "size": 16,
+        "bold": false,
+        "count": 1,
+        "contrast": 9.957,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(80, 97, 122)",
+        "bg": "rgb(255, 255, 255)",
+        "size": 12,
+        "bold": true,
+        "count": 1,
+        "contrast": 6.303,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 13,
+        "bold": true,
+        "count": 1,
+        "contrast": 13.199,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(84, 105, 212)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 14,
+        "bold": false,
+        "count": 1,
+        "contrast": 2.733,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(163, 172, 185)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 14,
+        "bold": true,
+        "count": 1,
+        "contrast": 5.757,
+        "wcagFloor": 4.5
+      },
+      {
+        "fg": "rgb(163, 172, 185)",
+        "bg": "rgb(42, 47, 69)",
+        "size": 13,
+        "bold": false,
+        "count": 1,
+        "contrast": 5.757,
+        "wcagFloor": 4.5
+      }
+    ],
+    "belowWcagAA": 2
+  },
+  "spacing": {
+    "margin": [
+      {
+        "value": -14,
+        "count": 1
+      },
+      {
+        "value": -12,
+        "count": 2
+      },
+      {
+        "value": -8,
+        "count": 1
+      },
+      {
+        "value": -1,
+        "count": 9
+      },
+      {
+        "value": 3,
+        "count": 1
+      },
+      {
+        "value": 4,
+        "count": 24
+      },
+      {
+        "value": 8,
+        "count": 3
+      },
+      {
+        "value": 10,
+        "count": 1
+      },
+      {
+        "value": 12,
+        "count": 3
+      },
+      {
+        "value": 16,
+        "count": 12
+      },
+      {
+        "value": 20,
+        "count": 2
+      },
+      {
+        "value": 24,
+        "count": 10
+      },
+      {
+        "value": 28,
+        "count": 1
+      },
+      {
+        "value": 35.5,
+        "count": 2
+      },
+      {
+        "value": 36,
+        "count": 1
+      },
+      {
+        "value": 48,
+        "count": 8
+      },
+      {
+        "value": 100,
+        "count": 1
+      }
+    ],
+    "padding": [
+      {
+        "value": 1,
+        "count": 12
+      },
+      {
+        "value": 2,
+        "count": 12
+      },
+      {
+        "value": 4,
+        "count": 19
+      },
+      {
+        "value": 6,
+        "count": 2
+      },
+      {
+        "value": 8,
+        "count": 16
+      },
+      {
+        "value": 10,
+        "count": 6
+      },
+      {
+        "value": 12,
+        "count": 42
+      },
+      {
+        "value": 16,
+        "count": 16
+      },
+      {
+        "value": 20,
+        "count": 4
+      },
+      {
+        "value": 24,
+        "count": 3
+      },
+      {
+        "value": 32,
+        "count": 2
+      },
+      {
+        "value": 48,
+        "count": 2
+      }
+    ]
+  }
+}

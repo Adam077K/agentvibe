@@ -1,7 +1,34 @@
 # Rehoused from: .claude/agents/design-lead.md and .claude/agents/design-critic.md
 # (Steps 1-7), plus .claude/commands/design.md.
+#
+# TWO DEFECTS THIS FILE CARRIED, BOTH FIXED HERE.
+#
+# 1. NO STAGE MANUFACTURED THE SYSTEM. `reference` assumed the rules already existed and
+#    `build` was measured against them, so a screen with no written type scale entered the
+#    playbook and left it with a verdict about a system nobody had authored. Refactoring UI
+#    orders the making work the other way round - choose a personality, limit the choices,
+#    establish spacing and sizing, establish the type scale, define the shades up front -
+#    and every one of those is a making action with an output a later stage consumes. That
+#    is the `manufacture` stage.
+#
+# 2. CRITIQUE AND FORMAL REVIEW WERE ONE STAGE. Figma states the distinction plainly:
+#    "Critiques are intentionally different than formal product reviews. They are not about
+#    making major product decisions." Merged, people lobby instead of critiquing. They are
+#    separated here along the line the evidence actually supports rather than by adding a
+#    stage: conformance BINDS and quality INFORMS. The two `review(...)` exits and the gate
+#    are the binding half, resolved by measurement. The `judgment` claim is the informing
+#    half, and it returns findings - a design-quality score would be about 0.543 accurate
+#    against a panel that is 0.741 self-consistent, which is a biased coin on a merge path.
+#
+# Both readings are sourced from docs/03-system-design/DESIGN-CAPABILITY.md, sections 3.4,
+# 6.1, 7 and 15.3.
+#
+# WHAT THIS DOES NOT DO. No code path loads a playbook's stages and acts on them - the
+# readers are the linter, check-gates.mjs, and consume-dispatch.ts, which lists filenames.
+# The stages below are advisory; only `gate: qa-verdict` resolves to a process, and what it
+# resolves is whether a PASS is committed and bound by sha256 to this exact diff.
 playbook: design-pass
-summary: "Bring an already-working screen up to the standard, judged against a written system"
+summary: "Bring a screen up to a written standard, manufacturing that standard first when it does not exist"
 triggers: ["/design"]
 
 stages:
@@ -11,18 +38,30 @@ stages:
     exit:
       - "criterion(design-system-rules-identified)"
 
+  - id: manufacture
+    goal: "Author the rules themselves when the reference stage found none: bands, roles, spacing, motion"
+    lenses: [design]
+    exit:
+      - "criterion(type-bands-derived-by-increment)"
+      - "criterion(colour-roles-assigned-across-the-scale)"
+      - "claim(kind=internal-fact, verified_by=command)"
+    dispatch:
+      - task: "Derive the UI and display type bands, the colour role scale, the spacing steps and the motion tokens"
+        engine: designer
+
   - id: build
     goal: "Make the change, then look at what rendered rather than at what was written"
     lenses: [design]
     exit:
-      - "claim(kind=judgment, verified_by=judge)"
+      - "criterion(every-value-traces-to-a-rule)"
     dispatch:
-      - task: "Spacing, type scale, colour and state coverage"
+      - task: "Compose the screen from the manufactured system, greyscale hierarchy first"
         engine: designer
 
   - id: critique
-    goal: "Judge the rendered result, naming every finding as a measured difference from a rule"
+    goal: "Judge twice and keep the two apart: conformance by measurement, quality as findings that decide nothing"
     exit:
       - "review(lens=craft)"
       - "review(lens=accessibility)"
+      - "claim(kind=judgment, verified_by=judge)"
     gate: qa-verdict

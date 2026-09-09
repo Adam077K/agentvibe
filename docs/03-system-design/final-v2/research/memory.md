@@ -1,0 +1,84 @@
+# Lane · memory and knowledge · 2026-09-05
+
+## Questions answered
+
+All five sub-questions have evidence. The context-collapse paper is identified and quoted with its numbers. Two of the three CLIs' memory is sourced from primary docs; Gemini CLI's is search-synthesised after two direct doc fetches 404'd. Session-mining prior art was searched and the honest result is that none exists in the shape §10.5 describes. I used 26 tool calls against a 25 ceiling; the extra one was a local grep for the compaction table.
+
+## Findings — the three CLIs' own memory
+
+| CLI | Mechanism | What persists | What is lost | Source |
+|---|---|---|---|---|
+| **Claude Code** | Four CLAUDE.md tiers (managed policy · `~/.claude/CLAUDE.md` · `./CLAUDE.md` or `./.claude/CLAUDE.md` · `CLAUDE.local.md`), "concatenated into context rather than overriding each other", root-down. Plus `.claude/rules/` with `paths:` frontmatter loading only when Claude reads matching files. Plus `@path` imports, max 4 hops. | Auto memory at `~/.claude/projects/<project>/memory/`: `MEMORY.md` index + one topic file per memory, four types — `user`, `feedback`, `project`, `reference`. "The first 200 lines of `MEMORY.md`, or the first 25KB, whichever comes first, are loaded at the start of every conversation." Topic files load on demand only. Excluded from the `cleanupPeriodDays` retention sweep. A `modified` ISO-8601 frontmatter field records write time (v2.1.214+). | "Content beyond that threshold is not loaded at session start." After `/compact`: "Project-root CLAUDE.md survives compaction… If an instruction disappeared after compaction, it was given only in conversation, lives in a nested CLAUDE.md that hasn't reloaded yet, or is a path-scoped rule that hasn't matched a file since." Subagents: "The main conversation's auto memory isn't loaded into subagents; the exception is a fork." | code.claude.com/docs/en/memory · code.claude.com/docs/en/context-window · accessed 2026-09-05 · **H** |
+| **Codex** | `AGENTS.md`. Global `~/.codex/AGENTS.md`, then a walk from git root down to cwd. "Codex concatenates files from the root down, joining them with blank lines"; closer files win because "they appear later in the combined prompt". `project_doc_max_bytes` 32 KiB default. | Nothing beyond the files you write. | **No memory feature at all.** "Codex rebuilds the instruction chain on every run (and at the start of each TUI session), so there is no cache to clear manually." | learn.chatgpt.com/docs/agent-configuration/agents-md · accessed 2026-09-05 · **H** |
+| **Gemini CLI** | `GEMINI.md`, hierarchical: `~/.gemini/GEMINI.md` global, project/ancestor upward search, sub-directory scan; all found files concatenated and "sent to the model with every prompt". `/memory show`, `refresh`, `add`, `list`. | `save_memory` tool "appends the provided fact to a special GEMINI.md file located in the user's home directory", "stored under a `## Gemini Added Memories` section". | No expiry, no provenance, no dedupe, no per-project scope — the memory is one global append-only heading. "Not intended for storing large amounts of data or conversational history." | search synthesis of github.com/google-gemini/gemini-cli docs · accessed 2026-09-05 · **M** (direct fetches 404'd) |
+
+## Findings — memory architectures and benchmarks
+
+1. **The context-collapse paper is ACE, arXiv 2510.04618, published 2025-10-06.** Definition: *"'Context collapse' arises when an LLM is tasked with fully rewriting the accumulated context at each adaptation step. As the context grows large, the model tends to compress it into much shorter, less informative summaries, causing a dramatic loss of information."* The case study: **at step 60 the context held 18,282 tokens at 66.7% accuracy; at the next step it collapsed to 122 tokens and 57.1%, below the 63.7% baseline.** Cure: incremental delta updates over itemised bullets, each with "a unique identifier and counters tracking helpfulness". Results: **+10.6% agents, +8.6% finance**; offline AppWorld vs GEPA **-82.3% adaptation latency, -75.1% rollouts**; online FiNER vs Dynamic Cheatsheet **-91.5% latency, -83.6% token dollar cost**. arxiv.org/abs/2510.04618 and /html/2510.04618v1 · accessed 2026-09-05 · **H**
+2. **Letta's page now says "Dreaming", not "sleep-time agents".** *"Dreaming uses background subagents to review recent conversations, consolidate useful lessons, and update memory without interrupting your active work."* Trigger: *"after a set number of completed agent steps or when the context window is compacted."* Option: *"Agent reviews before applying."* The page **does not state** that the primary agent lacks tools to edit its own core memory. docs.letta.com/guides/agents/sleep-time-agents · accessed 2026-09-05 · **H** for the quotes, **L** for the older architecture claim.
+3. **OpenAI shipped a memory "dreaming" feature for ChatGPT** that rewrites stale memories over time, e.g. "You're going to Singapore in July" → "You went to Singapore in July 2026". The page returned **403**; this is a search-snippet quote only. openai.com/index/chatgpt-memory-dreaming/ · accessed 2026-09-05 · **L**
+4. **2026 benchmark numbers, all vendor-run.** Mem0's own post: **LoCoMo 92.5 · LongMemEval 94.4 · BEAM-1M 64.1**, dated 2026-05-11; mean retrieval tokens 6.7K–7.0K; P50 latency ≤1.1s. BEAM is ICLR 2026, ten capabilities up to 10M tokens, and is *"designed so that no current memory architecture saturates it."* LoCoMo's stated limit: *"the average context length is modest by 2026 standards, and the dataset does not explicitly score knowledge updates."* mem0.ai/blog/ai-memory-benchmarks-in-2026 · accessed 2026-09-05 · **M** (vendor)
+5. **The numbers are disputed at the methodology level.** Zep found three errors in Mem0's evaluation of Zep — user role assigned to both participants, timestamps appended to messages rather than the `created_at` field, sequential rather than parallel search *"artificially inflating Zep's reported search latency"* — and reports **75.14% ± 0.17 J score, ~10% relative over Mem0 Graph**, p95 search latency **0.632s vs the 0.778s Mem0 reported**. On the dataset itself: *"Category 5 was unusable due to missing ground truth answers"*, questions about images where the information is absent, wrong-speaker attribution, ambiguous questions. blog.getzep.com, published 2025-05-06, modified 2026-06-03 · accessed 2026-09-05 · **H**
+6. **Forgetting has research but almost no shipped implementation.** `mcp-memory-service` implements exponential decay with a configurable half-life; MemoryBank used an Ebbinghaus forgetting curve; FiFA benchmarks budget-aware policies such as Priority Decay. Mem0's own post concedes: *"Real memory systems have to forget… There is no widely adopted public benchmark that scores these dynamics directly."* Search-level · accessed 2026-09-05 · **M**
+
+## Findings — knowledge carriers: skills vs RAG vs fine-tune vs just-in-time research
+
+1. **Skills are three-level progressive disclosure and Anthropic publishes no numbers for them.** *"At startup, the agent pre-loads the `name` and `description` of every installed skill into its system prompt"*; the full `SKILL.md` loads on judged relevance; bundled files are *"the third level (and beyond) of detail, which Claude can choose to navigate and discover only as needed."* The post makes **no comparison to fine-tuning or RAG and gives no token or accuracy measurement.** anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills · accessed 2026-09-05 · **H**
+2. **Just-in-time retrieval is the stated Anthropic position.** *"Rather than pre-processing all relevant data up front, agents built with the 'just in time' approach maintain lightweight identifiers… and use these references to dynamically load data into context at runtime using tools."* Sub-agent economics: *"Each subagent might explore extensively, using tens of thousands of tokens or more, but returns only a condensed, distilled summary of its work (often 1,000-2,000 tokens)."* On compaction: *"Overly aggressive compaction can result in the loss of subtle but critical context whose importance only becomes apparent later."* On external memory: *"The agent regularly writes notes persisted to memory outside of the context window."* anthropic.com/engineering/effective-context-engineering-for-ai-agents · accessed 2026-09-05 · **H**
+3. **Voyager is the only measured skill-library-vs-nothing comparison found.** **3.3x more unique items, 2.3x longer distances, tech-tree milestones up to 15.3x faster** (wooden 15.3x, stone 8.5x, iron 6.4x); **63 unique items in 160 prompting iterations**; the only method to reach diamond tier. arXiv 2305.16291 · accessed 2026-09-05 · **M** (search synthesis of the paper's abstract)
+4. **The rules-file format has converged into a portable artifact.** Claude Code's `/init` reads `.cursor/rules/`, `.cursorrules` and `.github/copilot-instructions.md`; with `CLAUDE_CODE_NEW_INIT=1` it also reads `AGENTS.md`, `.devin/rules/`, `.windsurf/rules/` and `.clinerules`. `/import` (v2.1.213+) *"appends a one-time copy of instruction files such as AGENTS.md to the matching CLAUDE.md and carries over MCP servers, commands, subagents, and skills."* code.claude.com/docs/en/memory · **H**
+5. **Fine-tuning as a knowledge carrier for coding agents: no source found.** Not searched to exhaustion — see Gaps.
+
+## Findings — session-mining prior art
+
+| Tool | What it does | Does it mine into knowledge? | Source |
+|---|---|---|---|
+| `simonw/claude-code-transcripts` | Converts session JSONL to mobile-friendly HTML with pagination | No — publishing | github.com/simonw/claude-code-transcripts · **M** |
+| `claude-conversation-extractor` (PyPI) | Extracts, searches and backs up chat history from `~/.claude/projects` | No — export and grep | pypi.org/project/claude-conversation-extractor · **M** |
+| `claude-devtools` | Parses transcripts into a chronological conversation, per-tool renderers, cross-session search | No — a viewer | claude-dev.tools/docs/transcripts · **M** |
+| Claude Code auto memory | Turns in-session corrections into four typed note kinds, written by the acting agent during the session | **Partly** — typed extraction, but incremental and live, never a batch pass over an existing corpus | code.claude.com/docs/en/memory · **H** |
+| Letta dreaming / ChatGPT dreaming | Background review of recent conversations into consolidated memory | **Partly** — recent conversations, not an archive | docs.letta.com · **H** / openai.com · **L** |
+
+**Nothing found mines an existing transcript archive into preferences, negatives or examples.** Three tools read the corpus; all three render it for humans. The format warning matters: *"The entry format is internal to Claude Code and changes between versions, so scripts that parse these files directly can break on any release."*
+
+## Coverage of the founder's §04/§05 items by any shipped system
+
+| Item | System | Mechanism |
+|---|---|---|
+| Taste profile | Claude Code auto memory | `type: user` + `type: feedback` notes, written by Claude, plain markdown, editable via `/memory` |
+| Brand voice profile | **none found** | Carried by convention in CLAUDE.md / rules; no first-class store in any of the three CLIs |
+| Negative knowledge log | ACE (research) · projectmem (prior catalogue) | ACE bullets store "failure mode" as a unit with a helpfulness counter; projectmem has typed events plus a pre-action gate. **No CLI ships one.** |
+| Golden output archive | **none found** | Voyager's verified-before-stored skill library is the nearest analogue, and it stores code, not outputs |
+| Memory provenance tag | Partial — Claude Code `modified` field; Graphiti `valid_from`/`valid_until`; ACE bullet IDs | Claude Code records **write time only, not source**. No shipped CLI records where a memory came from. |
+| Intentional forgetting | ChatGPT dreaming (**L**) · Claude Code (manual) | Claude Code excludes memory from the retention sweep — deletion is a human or Claude edit, never automatic |
+| Memory decay function | `mcp-memory-service` · MemoryBank (research) | Exponential decay with configurable half-life; Ebbinghaus curve. **None of the three CLIs.** |
+| Learned-field expiry | **none found shipped** | This repo's `valid_until` + forced disposition is ahead of every system surveyed |
+| Memory conflict resolution | mem0 (ADD/UPDATE/DELETE/NOOP) · ACE curator | Not in any CLI |
+| Memory search index | basic-memory (SQLite) | Claude Code has **no index**; topic files are read by name on demand |
+| Cross-agent memory sharing | Claude Code — explicitly **not** | Main-conversation auto memory is not loaded into subagents except a fork; subagent memory is a separate directory |
+
+## What this changes against FINAL-PLAN §10/§11
+
+1. §10.3's unnamed "context collapse" paper is **ACE, arXiv 2510.04618**, and is now citable with 18,282 → 122 tokens and 66.7% → 57.1%. The delta-not-rewrite rule §10.3 states is exactly what the paper demonstrates, including the helpfulness counter §10.6 already asks for.
+2. §10.1 attributes to Letta "a primary that talks and acts with no tools to edit its own core memory". **The current Letta page for that feature does not say this** — it describes background subagents under the name "Dreaming". The sentence needs re-sourcing or re-wording.
+3. §10.1's separation-of-writer principle now has a second shipped instance (ChatGPT dreaming) and one shipped counter-example: **Claude Code's auto memory is written by the acting agent, in-session.**
+4. §10.5's premise holds. No tool was found that mines a transcript archive into taste, negatives or already-built. Three tools read the corpus and render it.
+5. §11.1's provisional-until-proven field kit has one measured precedent, Voyager, with the numbers above. The Anthropic skills post offers **no measurement** to compare a curated library against it.
+6. Claude Code's `MEMORY.md` index (200 lines / 25KB, index loaded, topic files on demand) is **the same two-tier shape** this repo built for skills discovery. It is now a shipped default rather than a local invention.
+7. Every §05 discipline item — expiry, provenance, conflict resolution, decay — is **absent from all three CLIs**. Codex has no memory; Gemini CLI appends facts to one global heading with no expiry or dedupe.
+8. Benchmark numbers in this field are vendor-run on a dataset a competing vendor calls partly unusable. Any §10 claim resting on "mem0 scores X" is a claim about a self-report.
+
+## Gaps
+
+- The **"What survives compaction" table body** in the Claude Code docs rendered as an elided line; only the surrounding prose is quoted. The row-by-row list is unverified.
+- **openai.com dreaming page returned 403.** Its facts are search-snippet only, confidence L.
+- **No Letta page found stating the primary/sleep-time memory-edit split.** The documented URL now serves a differently-named feature.
+- **No independent, non-vendor 2026 memory benchmark run found.** Every number in the benchmark section is self-reported by a system's own authors.
+- **No measured skills-vs-RAG-vs-fine-tune comparison exists** in anything fetched. Anthropic's skills post gives zero numbers.
+- **Fine-tuning as a knowledge carrier was not searched.** Devin's knowledge features and Cursor rules were not fetched directly, only via Claude Code's `/init` list.
+- **Gemini CLI facts are search-synthesised.** Two direct documentation fetches returned 404.
+- A-MEM, LangMem and MemBench were not fetched this lane; the first two are covered in the prior catalogue, MemBench is uncovered.
+
+## Sources fetched (count) · failed fetches
+
+**26 tool calls** (one over the 25 ceiling): 14 WebFetch, 6 WebSearch, 6 local reads/greps. **10 fetches succeeded**: Claude Code memory, Claude Code context-window, Anthropic context engineering, Anthropic agent skills, arXiv 2510.04618 (abstract and HTML), Letta dreaming, Codex AGENTS.md, mem0 benchmarks, Zep rebuttal. **4 failed**: `google-gemini.github.io/gemini-cli/docs/cli/configuration.html` (404), `raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/cli/configuration.md` (404), `openai.com/index/chatgpt-memory-dreaming/` (403), `developers.openai.com/codex/guides/agents-md/` (308 redirect, refetched successfully at the new host).
