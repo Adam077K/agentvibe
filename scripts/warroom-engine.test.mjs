@@ -386,3 +386,59 @@ test('the launcher hardcodes no project name — it is one program for many proj
     `bin/warroom names a project in executable code:\n${offenders.join('\n')}\n` +
     'Use ${SESSION} or ${SESSION_UPPER}, which resolve from the per-project config.');
 });
+
+// ── HELP MUST DOCUMENT EVERY COMMAND THE ROUTER ACCEPTS ─────────────────────
+//
+// `prune-branches` had a dispatch entry and a cmd_ function and appeared
+// nowhere in `help` — discoverable only by reading the source or by being told.
+// The engine commands were added to help by hand, which is exactly how the next
+// one gets forgotten.
+//
+// This derives BOTH lists from the file and compares them, so the check keeps
+// working for commands that do not exist yet. A hand-maintained list of
+// expected commands would need editing by the same person who forgot to edit
+// help, which is no check at all.
+test('help documents every command the router dispatches', () => {
+  const src = fs.readFileSync(WARROOM, 'utf8');
+
+  // The router: `  <name>)  cmd_...` inside the final case statement.
+  const dispatched = new Set();
+  for (const m of src.matchAll(/^ {2}([a-z][a-z0-9|_-]*)\)\s*(?:cmd_|$)/gm)) {
+    for (const alt of m[1].split('|')) {
+      if (['help', '-h', '--help', '*'].includes(alt)) continue;
+      dispatched.add(alt);
+    }
+  }
+  assert.ok(dispatched.size > 15, `expected a real dispatch table, found ${dispatched.size}`);
+
+  // The help block: every `echo "    ${SESSION} <word>` line.
+  const documented = new Set();
+  for (const m of src.matchAll(/echo "\s+\$\{SESSION\}\s+([a-z][a-z0-9_-]*)/g)) documented.add(m[1]);
+
+  const undocumented = [...dispatched].filter((c) => !documented.has(c)).sort();
+  assert.deepEqual(undocumented, [],
+    `these commands dispatch but are absent from help: ${undocumented.join(', ')}`);
+});
+
+// Alignment is not cosmetics here: the help block is the only interface most
+// people ever read, and a column that wanders reads as an afterthought. The
+// engine lines shipped one column short and two of them had a single space.
+test('every help line starts its description at the same column', (t) => {
+  const p = project(t);
+  const r = warroom(p, ['help']);
+  assert.equal(r.code, 0, `help exited ${r.code}: ${r.err}`);
+
+  const cols = new Map();
+  for (const raw of r.out.split('\n')) {
+    const line = raw.replace(/\u001b\[[0-9;]*m/g, '');       // strip colour, count characters
+    const m = line.match(/^ {4}proj ((?:\S+ ?){1,3}?) {2,}(\S)/);
+    if (!m) continue;
+    // `send`/`inbox`/`clap`/`events`/`brief` are a deliberately wider block.
+    if (/^(send|inbox|clap|events|brief)\b/.test(m[1])) continue;
+    cols.set(line.indexOf(m[2]), line.trim());
+  }
+  assert.ok(cols.size > 0, 'matched no help lines — the regex, not the help, is wrong');
+  assert.equal(cols.size, 1,
+    `help descriptions start at ${cols.size} columns:\n` +
+    [...cols].map(([c, l]) => `  col ${c}: ${l}`).join('\n'));
+});
