@@ -1,0 +1,11 @@
+{
+  "subject": "c63d6e701a516a40af0df7a95078b230c6ba000945a62c6c2cbdff8b2fd1152f",
+  "base": "4ddc5c6a22c799f7b868f26545c507b03719944b",
+  "tier": "full",
+  "tier_driver": "bin/fleet-install.mjs",
+  "verdict": "PASS",
+  "by": "ceo-1 (orchestrator) · Workflow .claude/workflows/qa.js · run wf_0daa9146-ea9",
+  "run_id": "wf_0daa9146-ea9",
+  "evidence": "tier=full binding gate, oracle-first, 7 agents / 0 errors, over origin/main...8d1dd44: verified=0 confirmed=0 dimensions_failed=[] critical_gap=[]; 4 advisory P3 (SSRF DNS-rebinding TOCTOU, duplicated git exec helper, maxBuffer fix mutation-tested on 1 of 3, untested loadCitationExemptions branches), none block-eligible at this tier. THE PANEL RAN ON 8d1dd44, NOT ON THIS SUBJECT. Delta 8d1dd44..HEAD under the subject pathspec is exactly one file, docs/08-agents_work/sessions/2026-09-09-ceo-vision-fields-and-the-binding-gate.md, +15 lines, classifier tier=trivial. No panel dimension is affected by it; re-record rather than re-run is the judgement, and this sentence is what makes it auditable. Single Anthropic model family; Codex CLI second opinion unreachable (Codex #19945) — accepted risk, exit 2026-11-17, not a satisfied requirement.",
+  "recorded_at": "2026-09-09T10:38:02.120Z"
+}
