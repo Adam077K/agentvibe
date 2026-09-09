@@ -98,11 +98,27 @@ _cfg_checked() {
   printf '%s' "$val"
 }
 
-# `|| exit 1` on every one of these, and it is load-bearing: _cfg_checked runs in
-# a command substitution, so its own `exit` ends the SUBSHELL. A plain assignment
-# reports the substitution's status, so the refusal is testable here — which
-# `local var="$(…)"` would have thrown away. That is the same defect this file
-# fixed on the engine path; it does not get to come back in through the config.
+# `|| exit 1` on every one of these, because _cfg_checked runs in a command
+# substitution and its own `exit` ends the SUBSHELL. A plain assignment reports
+# the substitution's status, so the refusal is testable here — which
+# `local var="$(…)"` would have thrown away. Same defect this file fixed on the
+# engine path; it does not get to come back in through the config.
+#
+# BUT IT IS NOT LOAD-BEARING ON ALL FIVE, AND THE DIFFERENCE IS WORTH KNOWING
+# BEFORE YOU TIDY IT. Measured by deleting the guard one key at a time:
+#
+#   state_dir · display_name · entry_ceo  → LOAD-BEARING. Delete it and the run
+#     exits 0 with the value silently defaulted. state_dir is the sharp one: it
+#     falls back to "$HOME/.$SESSION" and the refusal it just printed does
+#     nothing.
+#   session · project_dir                 → INERT. The `[ -z "$SESSION" ] ||
+#     [ -z "$PROJECT_DIR" ]` block below exits 1 on its own, and the message has
+#     already reached stderr from inside the substitution.
+#
+# They are kept uniform deliberately: five identical lines cannot be got wrong,
+# and the next key added is covered whichever kind it turns out to be. Do not
+# test this on `session`, find it does nothing, and conclude it is decorative —
+# that reasoning is correct about the line you tested and wrong about the file.
 SESSION="$(_cfg_checked session name)" || exit 1
 PROJECT_DIR="$(_cfg_checked project_dir path)" || exit 1
 
@@ -260,9 +276,15 @@ engine_require_known() {
 # Where this session's resolved map lives. `--engine 2:codex` used to exist only
 # in the process that parsed it, so `${SESSION} grid` and `${SESSION} restore` —
 # separate invocations of this program — silently put pane 2 back on the default
-# and the founder had no way to see it but to read the pane. The map is rewritten
-# whenever a war room starts and removed when one is killed, so a stale choice
-# cannot outlive its session.
+# and the founder had no way to see it but to read the pane.
+#
+# THREE things keep a stale map from outliving its session, and it took all three
+# because `${SESSION} kill` is only one of the ways a war room ends. `kill` calls
+# engines_forget; a fresh `${SESSION} start` with no live tmux session clears it
+# before resolving; and any start rewrites it wholesale rather than merging.
+# Without the middle one, a `tmux kill-session`, a crash or a reboot left a map
+# that OUTRANKS `engine:` in .warroom.yml — so an edited config said claude, the
+# panes came up codex, and nothing was printed either way.
 ENGINES_STATE_FILE="$PROJECT_STATE_DIR/engines"
 
 # The engine pane N would get, and WHERE it came from, as one tab-separated pair
@@ -297,6 +319,10 @@ engine_candidate_for_pane() {
 # tmux work, so an unknown engine stops the run instead of reaching a pane.
 engines_resolve() {
   local n pair eng whence
+  # Nothing named, nothing resolved. Without this, a zero-argument call set the
+  # flag over an EMPTY map, so WARROOM_ENGINES_RESOLVED stopped meaning "the map
+  # is populated" and check_deps' fallback would then decline to populate it.
+  [ "$#" -gt 0 ] || return 0
   for n in "$@"; do
     pair="$(engine_candidate_for_pane "$n")"
     eng="${pair%%$'\t'*}"
@@ -1163,6 +1189,18 @@ cmd_start() {
     echo "✗ CEO count must be 1–8. Got: $count"; exit 1
   fi
 
+  # A map that outlived its session must not outrank the config. engines_forget
+  # runs from `${SESSION} kill`, which is only ONE of the ways a war room ends —
+  # `tmux kill-session`, a crash and a reboot never reach it. Left behind, the
+  # map's precedence rung sits ABOVE `engine:` in .warroom.yml, so an edited
+  # config saying claude lost silently to a stale `2:codex`. Cleared here, before
+  # resolution, and only when no session of ours is live: a start while one IS
+  # live either attaches to it or kills it a few lines down, and in the attach
+  # case the map still belongs to the session the founder is rejoining.
+  if ! { command -v tmux >/dev/null 2>&1 && tmux has-session -t "$SESSION" 2>/dev/null; }; then
+    engines_forget
+  fi
+
   # Resolve every pane's engine ONCE, here, before check_deps and before tmux
   # builds anything. A refusal at this point exits the program; the same refusal
   # inside the substitution that used to feed check_deps exited a child shell and
@@ -1985,9 +2023,20 @@ cmd_grid_view() {
     return 0
   fi
 
-  # Build GRID window from existing CEO windows
-  local ceo_windows
-  mapfile -t ceo_windows < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-" | sort)
+  # Build GRID window from existing CEO windows.
+  #
+  # NOT `mapfile`: it is a bash 4 builtin and this script's shebang is
+  # `#!/bin/bash`, which on macOS is 3.2.57 — the founder's interpreter. There it
+  # is `mapfile: command not found`, and because `local ceo_windows` DECLARES the
+  # name without making it an array, `${#ceo_windows[@]}` is then **1**, not 0.
+  # So the `count -eq 0` guard below did not fire: `grid` built exactly one pane
+  # and silently dropped every other CEO. Measured on both interpreters — the
+  # loop below gives 2 for two windows and 0 for none on 3.2.57 and on 5.3.9.
+  local -a ceo_windows=()
+  local _wname
+  while IFS= read -r _wname; do
+    [ -n "$_wname" ] && ceo_windows+=("$_wname")
+  done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-" | sort)
   local count=${#ceo_windows[@]}
 
   if [ "$count" -eq 0 ]; then
@@ -1997,32 +2046,49 @@ cmd_grid_view() {
   # `grid` is a SECOND invocation of this program, so it knows nothing about the
   # `--engine` flags that started the session. It reads them back from the map
   # this war room recorded, and resolves them here where a refusal still exits.
-  engines_resolve $(seq 1 "$count")
+  #
+  # Resolve the CEO NUMBERS, never `seq 1 $count`. A count is not a set of pane
+  # numbers: after one `${SESSION} done`, the windows are CEO-1 and CEO-3 and the
+  # count is 2, so `seq` resolved a pane 2 that does not exist and never resolved
+  # CEO-3 at all.
+  local grid_ns=""
+  for _wname in "${ceo_windows[@]}"; do
+    grid_ns="$grid_ns ${_wname#CEO-}"
+  done
+  engines_resolve $grid_ns
   check_engine_deps
   engines_prepare
 
   # Get wt_paths for all CEOs
   local -a ceo_wt_paths
-  for wname in "${ceo_windows[@]}"; do
+  for _wname in "${ceo_windows[@]}"; do
     local n
-    n=$(echo "$wname" | sed 's/CEO-//')
+    n="${_wname#CEO-}"
     local wtp
-    wtp=$(tmux display-message -t "$SESSION:$wname" -p "#{pane_current_path}" 2>/dev/null)
+    wtp=$(tmux display-message -t "$SESSION:$_wname" -p "#{pane_current_path}" 2>/dev/null)
     ceo_wt_paths[$n]="$wtp"
   done
 
-  # Create GRID window
+  # Create GRID window.
+  #
+  # THE ENGINE IS PASSED EXPLICITLY, and that third argument is the whole fix.
+  # Left off, send_launch_engine infers the engine from the target — and a GRID
+  # target names a POSITION, not a CEO. Position equals CEO number only until the
+  # first `${SESSION} done N`: after that, CEO-3 sits in GRID.2, the launcher
+  # resolved pane 2's engine, and a Codex CEO came back as Claude with nothing
+  # printed. The number is already computed here for the worktree path; it was
+  # simply never handed to the launcher.
   local first_n
-  first_n=$(echo "${ceo_windows[0]}" | sed 's/CEO-//')
+  first_n="${ceo_windows[0]#CEO-}"
   tmux new-window -t "$SESSION" -n "GRID" -c "${ceo_wt_paths[$first_n]}"
-  send_launch_claude "$SESSION:GRID.1"
+  send_launch_claude "$SESSION:GRID.1" "" "$(engine_for_pane "$first_n")"
 
   if [ "$count" -ge 2 ]; then
     for i in $(seq 1 $(( count - 1 )) ); do
       local n
-      n=$(echo "${ceo_windows[$i]}" | sed 's/CEO-//')
+      n="${ceo_windows[$i]#CEO-}"
       tmux split-window -h -t "$SESSION:GRID" -c "${ceo_wt_paths[$n]}"
-      send_launch_claude "$SESSION:GRID.$(( i + 1 ))"
+      send_launch_claude "$SESSION:GRID.$(( i + 1 ))" "" "$(engine_for_pane "$n")"
     done
   fi
 
@@ -2033,7 +2099,14 @@ cmd_grid_view() {
   fi
 
   tmux select-window -t "$SESSION:GRID"
-  [ -z "$TMUX" ] && tmux attach -t "$SESSION"
+  # `[ … ] && …` as the LAST command makes the test's own result the function's
+  # exit status: run from inside tmux, $TMUX is set, the test is false, and a
+  # `grid` that built everything correctly returned 1. Pre-existing — identical
+  # on 60e522b — and invisible until a test asserted the exit code, because the
+  # founder runs this from inside tmux where it always failed, and from outside
+  # where `attach` masks it. An explicit return is the whole fix.
+  if [ -z "$TMUX" ]; then tmux attach -t "$SESSION"; fi
+  return 0
 }
 
 # Feature D1 — Restore last saved session
