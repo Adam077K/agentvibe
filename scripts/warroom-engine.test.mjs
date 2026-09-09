@@ -575,7 +575,7 @@ const FAKE_TMUX = [
   'case "$1" in',
   '  has-session)  exit @HAS_SESSION@ ;;',
   '  capture-pane) printf \'❯ \\n\' ;;',
-  '  list-windows) i=1; while [ "$i" -le 8 ]; do echo "CEO-$i"; i=$((i+1)); done ;;',
+  '  list-windows) @WINDOWS@ ;;',
   'esac',
   'exit 0',
   '',
@@ -619,9 +619,18 @@ const FAKE_MKTEMP = [
  */
 const PANE_EXEC = 'case "$1$5" in "send-keysEnter") ( eval "$4" ) >/dev/null 2>&1 ;; esac';
 
-function shim(t, { engines = ['claude', 'codex'], sessionExists = false, executePaneLines = false } = {}) {
+function shim(
+  t,
+  { engines = ['claude', 'codex'], sessionExists = false, executePaneLines = false, windows = null } = {}
+) {
   const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'warroom-shim-'));
   const log = path.join(bin, 'tmux-argv.log');
+  // `windows` names the CEO windows a running session holds. The default 1..8 is
+  // what cmd_start greps its own freshly-made windows out of; a test about a
+  // session with a GAP in its CEO numbers has to say so.
+  const windowsCase = windows
+    ? `printf '%s\\n' ${windows.map((w) => `'${w}'`).join(' ')}`
+    : 'i=1; while [ "$i" -le 8 ]; do echo "CEO-$i"; i=$((i+1)); done';
   // `sessionExists` is what makes "a refused restore destroys nothing" a real
   // assertion. With no session running, cmd_restore skips its kill-session
   // unconditionally, so a validation placed BELOW that kill would still record
@@ -631,6 +640,7 @@ function shim(t, { engines = ['claude', 'codex'], sessionExists = false, execute
     FAKE_TMUX.replace('@LOG@', log)
       .replace(/@HAS_SESSION@/g, sessionExists ? '0' : '1')
       .replace('@PANE_EXEC@', executePaneLines ? PANE_EXEC : ':')
+      .replace('@WINDOWS@', windowsCase)
   );
   fs.chmodSync(path.join(bin, 'tmux'), 0o755);
   fs.writeFileSync(path.join(bin, 'mktemp'), FAKE_MKTEMP);
@@ -797,14 +807,18 @@ let runSeq = 0;
  * every launch test would wait out the full ten seconds for a process that had
  * already exited.
  */
-function launch(p, args, sh) {
+function launch(p, args, sh, { env = {} } = {}) {
   const seq = runSeq++;
   const outFile = path.join(p.home, `run-${seq}.out`);
   const errFile = path.join(p.home, `run-${seq}.err`);
   const outFd = fs.openSync(outFile, 'w');
   const errFd = fs.openSync(errFile, 'w');
+  // TMUX is pinned OFF unless a caller asks otherwise. It leaks in from
+  // whoever ran the suite — a founder running `npm test` inside their own war
+  // room has it set, a CI runner does not — and bin/warroom branches on it.
+  // Inheriting it would make these tests pass or fail by where they were run.
   const r = spawnSync('bash', [WARROOM, '--config', p.config, ...args], {
-    env: { ...process.env, HOME: p.home, PATH: sh.path, TMPDIR: p.home },
+    env: { ...process.env, HOME: p.home, PATH: sh.path, TMPDIR: p.home, TMUX: '', ...env },
     stdio: ['ignore', outFd, errFd],
     timeout: 90_000,
   });
@@ -1326,6 +1340,154 @@ test('the charset rule is what stops the injection: the payload never runs', (t)
     assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${key}: a refused config must build nothing`);
     assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, `${key}: and create no worktree`);
   }
+});
+
+// ── `grid` the SUBCOMMAND, which is not `--grid` the flag ────────────────
+//
+// The suite drove `--grid` (cmd_grid_start) and drove `grid` (cmd_grid_view)
+// zero times. Those are different functions, and the difference is exactly
+// where a defect can hide: cmd_grid_start creates panes 1..N for CEOs 1..N, so
+// grid POSITION and CEO NUMBER are equal and resolving by the wrong one is
+// invisible. cmd_grid_view builds a grid from windows that ALREADY EXIST, and
+// after a `done` those numbers have a gap in them.
+//
+// That is the same shape as the miss that shipped last time: exercise the path
+// where the defect cannot appear, and the suite stays green through it.
+
+/** `send-keys -t <target> <line> Enter`, keyed by target, from the raw calls. */
+function typedLines(calls) {
+  return new Map(
+    calls.filter((c) => c[0] === 'send-keys' && c.length === 5 && c[4] === 'Enter').map((c) => [c[2], c[3]])
+  );
+}
+
+/**
+ * A session whose live CEOs are `ceos` — `{ n, engine }` — recorded the way a
+ * real war room records them, in $PROJECT_STATE_DIR/engines. Writing the file
+ * rather than calling a helper is deliberate: that file IS the interface
+ * between one invocation and the next, and a second invocation is the whole
+ * subject here.
+ */
+function runningSession(t, ceos, configExtra = {}) {
+  const p = configuredProject(t, configExtra);
+  const stateDir = path.join(p.home, '.proj');
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(path.join(stateDir, 'engines'), ceos.map((c) => `${c.n}\t${c.engine}`).join('\n') + '\n');
+  return p;
+}
+
+for (const [label, ceos] of [
+  ['both on codex', [{ n: 2, engine: 'codex' }, { n: 5, engine: 'codex' }]],
+  // The discriminating case. With both panes on the same engine, a run that
+  // resolved by position would still be right by accident.
+  ['one of each', [{ n: 2, engine: 'codex' }, { n: 5, engine: 'claude' }]],
+]) {
+  test(`the grid subcommand gives each pane ITS CEO's engine, not its position's — ${label}`, (t) => {
+    // CEO-2 and CEO-5 are live and CEO-1, 3 and 4 are gone: a session after a
+    // couple of `done`s, which is the ordinary state of a war room that has
+    // been running for an afternoon. Grid pane 1 holds CEO-2 and grid pane 2
+    // holds CEO-5, so position and number disagree for both of them.
+    //
+    // `engine: claude` is in the config on purpose: it is what a run that fails
+    // to find the recorded engine falls back to, so a wrong answer is a
+    // PLAUSIBLE answer rather than an empty one.
+    //
+    // MUTATION: drop the explicit engine argument from pane 1's
+    // `send_launch_claude "$SESSION:GRID.1" "" "$(engine_for_pane "$first_n")"`
+    // → it resolves through pane_number_of("…:GRID.1") → pane 1, which is not a
+    // live CEO here. Red on BOTH cases.
+    // MUTATION: drop it from the split-pane call instead → red on `one of each`
+    // and GREEN on `both on codex`. That is the whole reason the inverted case
+    // exists: with both panes on the same engine, resolving by position is
+    // right by accident.
+    // MUTATION: put `mapfile` back in place of the read loop → `mapfile:
+    // command not found` on the bash this script's shebang selects (3.2.57),
+    // no CEO windows are found at all, and the command refuses. Red on both.
+    const p = runningSession(t, ceos, { engine: 'claude' });
+    const sh = shim(t, { sessionExists: true, windows: ['CEO-2', 'CEO-5'] });
+    const r = launch(p, ['grid'], sh);
+
+    assert.equal(r.code, 0, `grid must build: ${r.out}`);
+    const lines = typedLines(r.calls);
+    assert.deepEqual(
+      [...lines.keys()].sort(),
+      ['proj:GRID.1', 'proj:GRID.2'],
+      `expected one launch per live CEO: ${r.out}`
+    );
+
+    // Grid panes are numbered 1..N in the order the CEO windows sorted.
+    const expected = ceos.map((c) => c.engine);
+    assert.match(
+      lines.get('proj:GRID.1'),
+      new RegExp(`^${expected[0]}\\b`),
+      `grid pane 1 holds CEO-${ceos[0].n}, which is on ${expected[0]}`
+    );
+    assert.match(
+      lines.get('proj:GRID.2'),
+      new RegExp(`^${expected[1]}\\b`),
+      `grid pane 2 holds CEO-${ceos[1].n}, which is on ${expected[1]}`
+    );
+  });
+}
+
+test('the grid subcommand checks the binaries the LIVE CEOs need, not positions 1..N', (t) => {
+  // The other half of resolving by CEO number, and the half the two tests above
+  // cannot see. They pass whether `engines_resolve` is given the real numbers
+  // or the positions, because each pane is handed its engine explicitly and
+  // engine_for_pane falls back to reading the map anyway. What the pre-
+  // resolution actually decides is which binaries check_engine_deps looks for.
+  //
+  // CEO-3 and CEO-5 are live, so positions 1..2 name NEITHER of them: resolving
+  // by position finds nothing in the map, answers claude twice, checks only
+  // claude, and builds a grid with a Codex pane that has no codex to run.
+  //
+  // MUTATION: `engines_resolve $grid_ns` → `engines_resolve $(seq 1 "$count")`
+  // → the missing binary is not noticed and the grid is built. Red.
+  const p = runningSession(t, [{ n: 3, engine: 'codex' }, { n: 5, engine: 'claude' }], { engine: 'claude' });
+  const sh = shim(t, { sessionExists: true, windows: ['CEO-3', 'CEO-5'], engines: ['claude'] });
+  const r = launch(p, ['grid'], sh);
+
+  assert.notEqual(r.code, 0, `a grid with an uninstallable engine must refuse: ${r.out}`);
+  assert.match(r.out, /codex not found/, 'and name the binary CEO-3 would have needed');
+  assert.deepEqual(
+    r.calls.filter((c) => c[0] === 'send-keys'),
+    [],
+    'refusing after building the grid would be too late'
+  );
+});
+
+test('the grid subcommand does not report failure when it succeeded from inside tmux', (t) => {
+  // Found by the test above rather than looked for. cmd_grid_view ends with
+  //
+  //   [ -z "$TMUX" ] && tmux attach -t "$SESSION"
+  //
+  // and that is the LAST command in the function. Run from inside tmux the test
+  // is false, the `&&` short-circuits, and the function — and so the script —
+  // exits 1 having done its job correctly. Inside tmux is not an edge case
+  // here: it is where you switch a war room you are already looking at.
+  //
+  // The same shape as the rest of this branch, pointed the other way. Elsewhere
+  // a failure reported success; here a success reports failure, and a caller
+  // that checks the status cannot tell it from a grid that could not be built.
+  // It was invisible from either side: from inside tmux it always failed, and
+  // from outside `attach` masked it.
+  //
+  // MUTATION: restore `[ -z "$TMUX" ] && tmux attach -t "$SESSION"` as the last
+  // command of the function, in place of the `if` and the explicit `return 0`.
+  // Red on the second assertion and on nothing else.
+  const p = runningSession(t, [{ n: 2, engine: 'codex' }], { engine: 'claude' });
+  const sh = shim(t, { sessionExists: true, windows: ['CEO-2'] });
+
+  const outside = launch(p, ['grid'], sh, { env: { TMUX: '' } });
+  assert.equal(outside.code, 0, `from outside tmux it already exits 0: ${outside.out}`);
+
+  const inside = launch(p, ['grid'], sh, { env: { TMUX: '/tmp/tmux-501/default,1,0' } });
+  assert.equal(
+    inside.code,
+    0,
+    'a grid switch that did everything asked of it must not report failure ' +
+      'just because the caller was already attached'
+  );
 });
 
 // ── The choice outlives the process that parsed it ───────────
