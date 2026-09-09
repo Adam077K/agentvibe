@@ -565,14 +565,14 @@ const RS = '\x1e';
 const FAKE_TMUX = [
   '#!/bin/sh',
   '# Fake tmux — records argv, then answers only what the launch path asks:',
-  '#   has-session  → 1, so cmd_start builds a session instead of prompting',
+  '#   has-session  → @HAS_SESSION@ (1 = no session running, 0 = one is)',
   '#   capture-pane → a ready prompt, so both ready-waits return immediately',
   '#   list-windows → the CEO windows cmd_start greps for before it injects',
   '# Everything else is a no-op success, which is what tmux looks like to this',
   '# program: it never reads tmux back except through those three.',
   '{ for a in "$@"; do printf \'%s\\037\' "$a"; done; printf \'\\036\'; } >> "@LOG@"',
   'case "$1" in',
-  '  has-session)  exit 1 ;;',
+  '  has-session)  exit @HAS_SESSION@ ;;',
   '  capture-pane) printf \'❯ \\n\' ;;',
   '  list-windows) i=1; while [ "$i" -le 8 ]; do echo "CEO-$i"; i=$((i+1)); done ;;',
   'esac',
@@ -606,10 +606,17 @@ const FAKE_MKTEMP = [
  * putting a whole directory on PATH risks it also holding a real `claude` or
  * `codex` and silently defeating the guard under test.
  */
-function shim(t, { engines = ['claude', 'codex'] } = {}) {
+function shim(t, { engines = ['claude', 'codex'], sessionExists = false } = {}) {
   const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'warroom-shim-'));
   const log = path.join(bin, 'tmux-argv.log');
-  fs.writeFileSync(path.join(bin, 'tmux'), FAKE_TMUX.replace('@LOG@', log));
+  // `sessionExists` is what makes "a refused restore destroys nothing" a real
+  // assertion. With no session running, cmd_restore skips its kill-session
+  // unconditionally, so a validation placed BELOW that kill would still record
+  // no kill and the test would pass on the code it exists to reject.
+  fs.writeFileSync(
+    path.join(bin, 'tmux'),
+    FAKE_TMUX.replace('@LOG@', log).replace(/@HAS_SESSION@/g, sessionExists ? '0' : '1')
+  );
   fs.chmodSync(path.join(bin, 'tmux'), 0o755);
   fs.writeFileSync(path.join(bin, 'mktemp'), FAKE_MKTEMP);
   fs.chmodSync(path.join(bin, 'mktemp'), 0o755);
@@ -751,15 +758,25 @@ let runSeq = 0;
  * already exited.
  */
 function launch(p, args, sh) {
-  const outFile = path.join(p.home, `run-${runSeq++}.out`);
-  const fd = fs.openSync(outFile, 'w');
+  const seq = runSeq++;
+  const outFile = path.join(p.home, `run-${seq}.out`);
+  const errFile = path.join(p.home, `run-${seq}.err`);
+  const outFd = fs.openSync(outFile, 'w');
+  const errFd = fs.openSync(errFile, 'w');
   const r = spawnSync('bash', [WARROOM, '--config', p.config, ...args], {
     env: { ...process.env, HOME: p.home, PATH: sh.path, TMPDIR: p.home },
-    stdio: ['ignore', fd, fd],
+    stdio: ['ignore', outFd, errFd],
     timeout: 90_000,
   });
-  fs.closeSync(fd);
-  return { code: r.status, out: fs.readFileSync(outFile, 'utf8'), calls: tmuxCalls(sh) };
+  fs.closeSync(outFd);
+  fs.closeSync(errFd);
+  const stdout = fs.readFileSync(outFile, 'utf8');
+  const stderr = fs.readFileSync(errFile, 'utf8');
+  // `out` stays the two streams together, because most assertions here do not
+  // care which one a message came out of. `err` is separate for the ones that
+  // do: a refusal printed to stdout is invisible to a caller that redirects it,
+  // and this launcher is run from shims and scripts.
+  return { code: r.status, out: stdout + stderr, err: stderr, calls: tmuxCalls(sh) };
 }
 
 // ── cmd_start, mixed engines ─────────────────────────────────
@@ -1050,79 +1067,76 @@ test('a well-formed override naming an unknown engine is refused at parse time, 
   assert.doesNotMatch(viaHelp.out, /Usage:/, 'and the refusal comes before the command runs');
 });
 
-// ── Restore: the trade is the OPPOSITE of a fresh start ──────
+// ── Restore: refuse the whole thing, and destroy nothing ─────
 
-test('a corrupt snapshot entry is skipped and named, the good panes restore, and the run exits non-zero', (t) => {
-  // A fresh start with a bad engine ABORTS: nothing exists yet, so refusing
-  // costs nothing. A restore is a RECOVERY, and its input is a file that may
-  // have rotted — so one bad entry must not condemn the panes that are still
-  // recoverable. Founder's call, and the two halves of it are what this pins:
-  // the good panes come back, AND the bad one is never guessed at.
+test('a corrupt snapshot entry refuses the WHOLE restore, building nothing and destroying nothing', (t) => {
+  // A snapshot is DATA read back off disk, so cmd_restore validates every pane
+  // number it names BEFORE it builds or destroys anything, and one bad entry
+  // refuses the whole restore. Skip-and-continue was considered and rejected: a
+  // war room that is running and silently missing a CEO is the same
+  // indistinguishable-from-working failure the engine refusal exists to
+  // prevent, one level up. Nobody re-reads a restored session to count panes.
   //
-  // The assertion that carries the finding is the third: the corrupt entry is
-  // launched on NO target. The original defect this whole seam exists to stop
-  // is an unreadable pane number quietly resolving to pane 1's engine, and a
-  // restore is exactly where it would happen unseen — nobody re-reads a
-  // restored session to check which program each pane is running.
+  // DESTROYS NOTHING is the half that is easy to get wrong, and it is why
+  // `sessionExists: true` is set below. cmd_restore kills a running session
+  // before it rebuilds. Validation placed after that kill would destroy the
+  // founder's live war room and THEN refuse to build the replacement — strictly
+  // worse than either failure alone, because the corrupt snapshot costs them
+  // the session they still had. With no session running the kill is skipped
+  // anyway, so a test without this flag would pass on exactly that code.
   //
-  // Note it is asserted over the RAW send-keys calls, not through
-  // launchLines(): that helper only matches `CEO-<digits>` and `GRID.<digits>`
-  // targets, so a launch into `proj:CEO-x.1` — precisely the failure — would be
-  // invisible to it. A filter that cannot see the defect is not a check.
-  //
-  // MUTATION: delete `case "$n" in ''|*[!0-9]*) continue ;; esac` from the
-  // restore loop → the corrupt entry proceeds, its branch exists, a window is
-  // built for it, and send_launch_engine then refuses the unreadable target and
-  // exits — so CEO-3 never restores at all. Red on the target list.
-  // MUTATION: `exit 1` → `exit 0` in the restore_skipped branch → a restore
-  // that dropped a CEO reports success. Red on the status.
-  // MUTATION: drop the line that prints `$snapshot_bad` → the warning still
-  // warns but stops naming WHICH entry it could not place. Red on 'x'.
-  // Deliberately not the whole warning block: removing that also zeroes
-  // restore_skipped, so the test would go red on the exit code and prove
-  // nothing about the message.
-  // MUTATION: `send_launch_claude "$SESSION:CEO-$n.1"` →
-  // `send_launch_claude "$SESSION:CEO-$n.1" "" "$(engine_for_pane 1)"` → CEO-3
-  // comes back on claude. Red on the engine assertion, and on the control.
-  // MUTATION: a second `local restore_skipped=0` after the up-front scan — the
-  // shadowing re-declaration that discarded the count and let a partial restore
-  // exit 0. Red on the status. This one is not hypothetical: it is the defect
-  // this test found in the change that introduced the skip.
+  // MUTATION: move the `if [ -n "$snapshot_bad" ]` refusal block from above the
+  // kill-session to below it → a kill-session is recorded before the refusal.
+  // Red on the destroys-nothing assertion and ONLY on that one, which is why it
+  // is separate from builds-nothing rather than folded into one check.
+  // MUTATION: delete the refusal block → the restore proceeds, the corrupt
+  // entry reaches send_launch_engine, and it exits there instead. Red on
+  // builds-nothing and on destroys-nothing.
+  // MUTATION: `exit 1` → `exit 0` in the refusal → red on the status.
+  // MUTATION: drop the line that prints `$snapshot_bad` → the refusal still
+  // refuses but stops naming WHICH entry it could not place. Red on 'x'.
+  // MUTATION: drop the `>&2` from the refusal's echoes → red on the stderr
+  // assertions alone. A refusal on stdout is invisible to a caller that
+  // redirects it, and this launcher is run from shims and scripts.
   const p = restorableProject(t, [
     { n: 1, branch: 'ceo-1' },
     // The branch for this one EXISTS, so the pane number is the only thing
-    // wrong with it and the only thing that can cause the skip.
+    // wrong with it and the only thing that can cause the refusal.
     { n: 'x', branch: 'ceo-x' },
     { n: 3, branch: 'ceo-3' },
   ]);
-  const sh = shim(t);
+  const sh = shim(t, { sessionExists: true });
   const r = launch(p, ['restore', 'latest', '--engine', '3:codex'], sh);
 
-  // 3. The run must not read as clean.
-  assert.equal(r.code, 1, `a restore that dropped a CEO must exit non-zero: ${r.out}`);
+  assert.equal(r.code, 1, `a corrupt snapshot must refuse the restore: ${r.out}`);
 
-  // 2. Nothing was typed into a target built from the corrupt entry.
-  const launched = r.calls
-    .filter((c) => c[0] === 'send-keys' && c[4] === 'Enter' && c[2] !== 'proj:HQ')
-    .map((c) => c[2]);
+  // BUILDS NOTHING — not "the corrupt pane was skipped", but no pane at all, so
+  // there is no half-built session to clean up and no partial war room to
+  // mistake for a whole one.
   assert.deepEqual(
-    launched.sort(),
-    ['proj:CEO-1.1', 'proj:CEO-3.1'],
-    'the corrupt entry must not be launched on ANY target — least of all pane 1\'s engine'
+    r.calls.filter((c) => c[0] === 'send-keys').map((c) => c[2]),
+    [],
+    'a refused restore must launch nothing, not even the entries it could read'
   );
 
-  // 1. The recoverable panes did come back, each on its own engine.
-  const lines = launchLines(r.calls);
-  assert.equal(lines.get('proj:CEO-1.1'), 'claude');
-  assert.match(lines.get('proj:CEO-3.1'), /^codex\b/, 'a skipped entry must not disturb the panes after it');
+  // DESTROYS NOTHING — the session the founder still has must survive a
+  // snapshot that cannot be read.
+  assert.deepEqual(
+    r.calls.filter((c) => c[0] === 'kill-session'),
+    [],
+    'a refused restore must not kill the running session it declined to replace'
+  );
 
-  // 4. And it said so, naming what it could not place. Asserted as three
-  // properties rather than as a sentence: the wording of this warning has
-  // already changed once mid-review, and a test that pins prose makes the next
-  // improvement to that prose look like a regression.
-  assert.match(r.out, /⚠/, 'the skip must be presented as a warning');
-  assert.match(r.out, /'x'/, "and must name the identifier it could not place");
-  assert.match(r.out, /skip/i, 'and must say it was skipped');
+  // And nothing else moved either: no window, no setenv, no layout.
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused restore must change nothing in tmux');
+
+  // It named what it could not place, on STDERR. Asserted as properties rather
+  // than as a sentence: this message's wording has already changed twice during
+  // review, and a test that pins prose makes the next improvement to it look
+  // like a regression.
+  assert.match(r.err, /'x'/, 'the refusal must name the identifier it could not place');
+  assert.match(r.err, /refus/i, 'and must say that it is refusing');
+  assert.match(r.err, /restore/i, 'and what it is refusing');
 });
 
 test('a snapshot with no corrupt entry restores clean and exits zero', (t) => {
