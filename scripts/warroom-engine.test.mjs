@@ -571,6 +571,7 @@ const FAKE_TMUX = [
   '# Everything else is a no-op success, which is what tmux looks like to this',
   '# program: it never reads tmux back except through those three.',
   '{ for a in "$@"; do printf \'%s\\037\' "$a"; done; printf \'\\036\'; } >> "@LOG@"',
+  '@PANE_EXEC@',
   'case "$1" in',
   '  has-session)  exit @HAS_SESSION@ ;;',
   '  capture-pane) printf \'❯ \\n\' ;;',
@@ -606,7 +607,19 @@ const FAKE_MKTEMP = [
  * putting a whole directory on PATH risks it also holding a real `claude` or
  * `codex` and silently defeating the guard under test.
  */
-function shim(t, { engines = ['claude', 'codex'], sessionExists = false } = {}) {
+/**
+ * What a pane's shell does with the line tmux typed into it. Off by default,
+ * because most tests want to READ the line rather than run it.
+ *
+ * This is the SECOND PARSE the config charset rule exists to protect, and
+ * modelling it is what turns "the launcher exited non-zero" into "and here is
+ * what would have happened if it had not". Measured: with `_cfg_checked`
+ * neutered, a `$(…)` in `session` or in `state_dir` fires here and nowhere
+ * else in this harness.
+ */
+const PANE_EXEC = 'case "$1$5" in "send-keysEnter") ( eval "$4" ) >/dev/null 2>&1 ;; esac';
+
+function shim(t, { engines = ['claude', 'codex'], sessionExists = false, executePaneLines = false } = {}) {
   const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'warroom-shim-'));
   const log = path.join(bin, 'tmux-argv.log');
   // `sessionExists` is what makes "a refused restore destroys nothing" a real
@@ -615,7 +628,9 @@ function shim(t, { engines = ['claude', 'codex'], sessionExists = false } = {}) 
   // no kill and the test would pass on the code it exists to reject.
   fs.writeFileSync(
     path.join(bin, 'tmux'),
-    FAKE_TMUX.replace('@LOG@', log).replace(/@HAS_SESSION@/g, sessionExists ? '0' : '1')
+    FAKE_TMUX.replace('@LOG@', log)
+      .replace(/@HAS_SESSION@/g, sessionExists ? '0' : '1')
+      .replace('@PANE_EXEC@', executePaneLines ? PANE_EXEC : ':')
   );
   fs.chmodSync(path.join(bin, 'tmux'), 0o755);
   fs.writeFileSync(path.join(bin, 'mktemp'), FAKE_MKTEMP);
@@ -741,6 +756,31 @@ function restorableProject(t, entries) {
   fs.writeFileSync(
     path.join(snaps, '2026-01-01-000000.json'),
     JSON.stringify({ saved_at: 1767225600, project_dir: p.dir, grid_mode: false, ceos }, null, 2)
+  );
+  return p;
+}
+
+/**
+ * A launchable project whose .warroom.yml is rewritten with `overrides` merged
+ * over the defaults, so ONE value can be made hostile.
+ *
+ * project()'s `configExtra` cannot do this: `_cfg` takes the FIRST matching
+ * line, so an appended `session:` never wins and the test would silently be
+ * exercising the safe value.
+ */
+function configuredProject(t, overrides) {
+  const p = launchableProject(t);
+  const cfg = {
+    session: 'proj',
+    project_dir: p.dir,
+    state_dir: path.join(p.home, '.proj'),
+    ...overrides,
+  };
+  fs.writeFileSync(
+    p.config,
+    Object.entries(cfg)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n') + '\n'
   );
   return p;
 }
@@ -1146,6 +1186,146 @@ test('a corrupt snapshot entry refuses the WHOLE restore, building nothing and d
   assert.match(r.err, /'x'/, 'the refusal must name the identifier it could not place');
   assert.match(r.err, /refus/i, 'and must say that it is refusing');
   assert.match(r.err, /restore/i, 'and what it is refusing');
+});
+
+// ── .warroom.yml is INPUT, and the charset rule is the control ───────────
+//
+// The injection fix has two halves and only one of them had a test. The
+// QUOTING half is covered above, by the state_dir-with-a-space case. The
+// CHARSET half — `_cfg_checked` refusing a shell metacharacter at parse time,
+// before any path derived from a value is built — was asserted by a comment and
+// by nothing else. Replacing its body with a plain `_cfg` reintroduced
+// arbitrary code execution while the whole suite stayed green, which is this
+// repo's named failure class: a security control that can be deleted without
+// anything going red.
+
+/** Each metacharacter, and a payload that would create `@C@` if it ever ran. */
+const SHELL_PAYLOADS = [
+  ['command substitution', '$(touch @C@)'],
+  ['backticks', '`touch @C@`'],
+  ['a semicolon', '; touch @C@'],
+];
+
+test('a shell metacharacter in a config value is refused at parse time, whatever the command', (t) => {
+  // Every key that `_cfg_checked` guards, against every metacharacter. `help`
+  // is the command precisely because it is the most harmless one there is: the
+  // config is parsed before the router dispatches, so the refusal must not
+  // depend on what was asked for.
+  // MUTATION: replace _cfg_checked's body with `_cfg "$1"` → every one of these
+  // exits 0. Red.
+  // MUTATION: drop the `|| exit 1` from
+  // `PROJECT_STATE_DIR="$(_cfg_checked state_dir path)"` → _cfg_checked's own
+  // `exit 1` ends only the command substitution, the status is discarded, the
+  // variable is empty, and the `[ -z … ] && <default>` line below silently
+  // supplies a default. The run continues and exits 0. Red.
+  //
+  // MEASURED AND SURVIVING, recorded because it corrects a comment in
+  // bin/warroom: the same mutation applied to the SESSION assignment changes
+  // nothing observable. `session` and `project_dir` are followed by an
+  // emptiness check that exits 1 on its own, and _cfg_checked's message has
+  // already reached stderr from inside the substitution. So `|| exit 1` is
+  // load-bearing on state_dir, display_name and entry_ceo, and inert on the
+  // two the comment above it calls out by example. Not a hole in this test —
+  // there is no behaviour there to assert.
+  const p = configuredProject(t, {});
+  for (const [key, kind] of [
+    ['session', 'name'],
+    ['state_dir', 'path'],
+    ['entry_ceo', 'path'],
+  ]) {
+    for (const [label, payload] of SHELL_PAYLOADS) {
+      const canary = path.join(p.home, `CANARY-${key}-${label.replace(/\W+/g, '-')}`);
+      fs.writeFileSync(
+        p.config,
+        Object.entries({
+          session: 'proj',
+          project_dir: p.dir,
+          state_dir: path.join(p.home, '.proj'),
+          [key]: `${key === 'session' ? 'proj' : path.join(p.home, 'x')}${payload.replace('@C@', canary)}`,
+        })
+          .map(([k, v]) => `${k}: ${v}`)
+          .join('\n') + '\n'
+      );
+      const r = warroom(p, ['help']);
+      assert.notEqual(r.code, 0, `${key} (${kind}) with ${label} must be refused: ${r.out}`);
+      assert.equal(fs.existsSync(canary), false, `${key} with ${label}: nothing may run`);
+      assert.ok(r.err.includes(`'${key}'`), `the refusal must name the key: ${r.err}`);
+      assert.match(r.err, /refused, not quoted/, 'and say why it is refused rather than escaped');
+    }
+  }
+});
+
+test('an ordinary config passes, including the characters the rule deliberately allows', (t) => {
+  // The control, and it guards the rule from the other side. Without it every
+  // assertion above is equally satisfied by a launcher that refuses every
+  // config it is given — and a charset tightened until it is "safe" would break
+  // a founder whose $HOME has a space in it, which the rule allows on purpose.
+  // MUTATION: drop the space from the `path` character class, i.e.
+  // `*[!A-Za-z0-9._/~+-]*` → this refuses and goes red, while every refusal
+  // assertion above still passes.
+  const p = configuredProject(t, {});
+  const dir = path.join(p.home, 'a dir+with-allowed.chars');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    p.config,
+    `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${dir}\n`
+  );
+
+  const r = warroom(p, ['engine', '2']);
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(
+    panes(r).map((x) => x.engine),
+    ['claude', 'claude']
+  );
+});
+
+test('the charset rule is what stops the injection: the payload never runs', (t) => {
+  // The assertion the exit code cannot make. A non-zero exit says the launcher
+  // stopped; it does not say the payload had not already fired on the way.
+  //
+  // The canary is real here and MEASURED, not assumed. With _cfg_checked's body
+  // replaced by `_cfg "$1"`, and the fake tmux executing what it was told to
+  // type: `state_dir` fires through the codex launch line's
+  // `${WARROOM_CEO_PREAMBLE:-<path>}`, and `session` fires through the HQ line,
+  // which splices ${SESSION} into a string a pane's shell parses. Both were
+  // watched firing before this test was written.
+  //
+  // `entry_ceo` is deliberately NOT canaried: it is only ever read with a
+  // quoted `cat`, reaches no pane line, and its canary did not fire under the
+  // mutant. Asserting it here would look like coverage and be worth nothing —
+  // which is the exact defect this test exists to close. Its refusal is
+  // covered above.
+  //
+  // MUTATION: replace _cfg_checked's body with `_cfg "$1"` → the canary FIRES
+  // and the run exits 0. Red on the first assertion, which is the effect one.
+  for (const [key, args, prefix] of [
+    ['state_dir', ['1', '--engine', 'codex'], 'st'],
+    ['session', ['1'], 'proj'],
+  ]) {
+    const p = launchableProject(t);
+    const canary = path.join(p.home, `FIRED-${key}`);
+    const base = key === 'session' ? prefix : path.join(p.home, prefix);
+    fs.writeFileSync(
+      p.config,
+      Object.entries({
+        session: 'proj',
+        project_dir: p.dir,
+        state_dir: path.join(p.home, '.proj'),
+        [key]: `${base}$(touch ${canary})`,
+      })
+        .map(([k, v]) => `${k}: ${v}`)
+        .join('\n') + '\n'
+    );
+
+    const sh = shim(t, { executePaneLines: true });
+    const r = launch(p, args, sh);
+
+    // EFFECT FIRST. If the payload ran, nothing else about this run matters.
+    assert.equal(fs.existsSync(canary), false, `${key}: the payload must never reach a shell`);
+    assert.notEqual(r.code, 0, `${key}: and the launcher must refuse`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${key}: a refused config must build nothing`);
+    assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, `${key}: and create no worktree`);
+  }
 });
 
 // ── The choice outlives the process that parsed it ───────────
