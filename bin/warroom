@@ -1603,6 +1603,17 @@ cmd_grid_start() {
 # that agrees with the first only until someone edits one of them.
 cmd_engine() {
   local count="${1:-3}" i eng
+  # `engine render <name>` prints exactly what a pane of that engine is told.
+  # Both renderings come from render_ceo_preamble and therefore from the one
+  # source file, which is the property worth being able to check: edit
+  # .claude/entry/ceo.md and BOTH outputs move. If one of them ever stops
+  # moving, someone has written the CEO's identity down twice.
+  if [ "$count" = "render" ]; then
+    engine_require_known "${2:-}" "engine render"
+    render_ceo_preamble "$2"
+    echo ""
+    return 0
+  fi
   if ! [[ "$count" =~ ^[0-9]+$ ]]; then
     echo "Usage: ${SESSION} engine [N]   — show the engine and launch line for panes 1..N"; exit 1
   fi
@@ -3623,7 +3634,7 @@ case "$CMD" in
   ls)             cmd_ls ;;
   task)           cmd_task "${ARGS[1]}" "${ARGS[2]}" ;;
   grid)           cmd_grid_view ;;
-  engine)         cmd_engine "${ARGS[1]:-3}" ;;
+  engine)         cmd_engine "${ARGS[1]:-3}" "${ARGS[2]:-}" ;;
   restore)        cmd_restore "${ARGS[1]:-}" ;;
   clear-sessions)   cmd_clear_sessions ;;
   prune-branches)   cmd_prune_branches ;;
@@ -3668,6 +3679,7 @@ case "$CMD" in
     echo "    ${SESSION} [N] --engine E   Run every CEO on engine E (claude|codex; default claude)"
     echo "    ${SESSION} [N] --engine N:E Run CEO-N on engine E — repeatable, mixes with the above"
     echo "    ${SESSION} engine [N]       Show the engine + launch line for each pane; starts nothing"
+    echo "    ${SESSION} engine render E  Print the CEO preamble exactly as engine E receives it"
     echo "    ${SESSION} add               Add CEO mid-run"
     echo "    ${SESSION} done <N>          Handoff and close CEO-N"
     echo "    ${SESSION} kill              Destroy war room + clean worktrees + save snapshot"

@@ -49,7 +49,7 @@
     "check:warroom-template": "bash -n war-room/bin/PROJECT_NAME.tmpl",
     "check:warroom-installer": "node --check scripts/warroom-install.mjs",
     "check:warroom-parity": "bash -n scripts/warroom-parity.sh",
-    "test:warroom": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/warroom-install.test.mjs scripts/warroom-template-guard.test.mjs",
+    "test:warroom": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/warroom-install.test.mjs scripts/warroom-template-guard.test.mjs scripts/warroom-engine.test.mjs",
     "warroom:fleet": "node scripts/warroom-install.mjs fleet",
     "warroom:check": "node scripts/warroom-install.mjs check",
     "lint:agents": "node .claude/hooks/schema-lint.js",
