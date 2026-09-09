@@ -686,21 +686,55 @@ function pastes(calls) {
  * create_worktree runs `git worktree add … main`, so the repo and the branch
  * both have to be real.
  */
+const gitIn = (p, ...a) =>
+  execFileSync('git', ['-C', p.dir, '-c', 'commit.gpgsign=false', ...a], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    // The founder's own git config must not reach a test fixture: a global
+    // hooksPath or signing key would make this pass or fail per machine.
+    env: { ...process.env, HOME: p.home, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' },
+  });
+
 function launchableProject(t, opts = {}) {
   const p = project(t, opts);
   fs.rmSync(path.join(p.dir, '.git'), { recursive: true, force: true });
-  const git = (...a) =>
-    execFileSync('git', ['-C', p.dir, '-c', 'commit.gpgsign=false', ...a], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      // The founder's own git config must not reach a test fixture: a global
-      // hooksPath or signing key would make this pass or fail per machine.
-      env: { ...process.env, HOME: p.home, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' },
-    });
-  git('init', '-q', '-b', 'main');
-  git('config', 'user.email', 'warroom-test@example.invalid');
-  git('config', 'user.name', 'warroom test');
-  git('commit', '-q', '--allow-empty', '-m', 'init');
+  gitIn(p, 'init', '-q', '-b', 'main');
+  gitIn(p, 'config', 'user.email', 'warroom-test@example.invalid');
+  gitIn(p, 'config', 'user.name', 'warroom test');
+  gitIn(p, 'commit', '-q', '--allow-empty', '-m', 'init');
+  return p;
+}
+
+/**
+ * A launchable project plus a session snapshot for cmd_restore to read, and a
+ * real `ceo-*` branch for every entry that names one.
+ *
+ * The branches matter: cmd_restore skips an entry whose branch does not exist,
+ * with its own message. A fixture without them would see the corrupt entry
+ * skipped for the wrong reason, and the test would pass having proved nothing
+ * about the pane-number guard it is aimed at.
+ *
+ * `entries` is `[{ n, branch }]`, and `n` is deliberately free-form: a snapshot
+ * is DATA read back off disk, not argv, which is the whole reason cmd_restore
+ * has to guard it.
+ */
+function restorableProject(t, entries) {
+  const p = launchableProject(t);
+  for (const b of new Set(entries.map((e) => e.branch))) gitIn(p, 'branch', b, 'main');
+  const ceos = entries.map(({ n, branch }) => ({
+    n,
+    branch,
+    wt_path: path.join(p.dir, '.worktrees', branch),
+    task: '',
+    start_ts: 0,
+    session_id: '',
+  }));
+  const snaps = path.join(p.home, '.proj', 'snapshots');
+  fs.mkdirSync(snaps, { recursive: true });
+  fs.writeFileSync(
+    path.join(snaps, '2026-01-01-000000.json'),
+    JSON.stringify({ saved_at: 1767225600, project_dir: p.dir, grid_mode: false, ceos }, null, 2)
+  );
   return p;
 }
 
@@ -1014,4 +1048,99 @@ test('a well-formed override naming an unknown engine is refused at parse time, 
   assert.equal(viaHelp.code, 1, 'the flag is refused whatever command follows it');
   assert.match(viaHelp.out, /unknown engine 'codek'/);
   assert.doesNotMatch(viaHelp.out, /Usage:/, 'and the refusal comes before the command runs');
+});
+
+// ── Restore: the trade is the OPPOSITE of a fresh start ──────
+
+test('a corrupt snapshot entry is skipped and named, the good panes restore, and the run exits non-zero', (t) => {
+  // A fresh start with a bad engine ABORTS: nothing exists yet, so refusing
+  // costs nothing. A restore is a RECOVERY, and its input is a file that may
+  // have rotted — so one bad entry must not condemn the panes that are still
+  // recoverable. Founder's call, and the two halves of it are what this pins:
+  // the good panes come back, AND the bad one is never guessed at.
+  //
+  // The assertion that carries the finding is the third: the corrupt entry is
+  // launched on NO target. The original defect this whole seam exists to stop
+  // is an unreadable pane number quietly resolving to pane 1's engine, and a
+  // restore is exactly where it would happen unseen — nobody re-reads a
+  // restored session to check which program each pane is running.
+  //
+  // Note it is asserted over the RAW send-keys calls, not through
+  // launchLines(): that helper only matches `CEO-<digits>` and `GRID.<digits>`
+  // targets, so a launch into `proj:CEO-x.1` — precisely the failure — would be
+  // invisible to it. A filter that cannot see the defect is not a check.
+  //
+  // MUTATION: delete `case "$n" in ''|*[!0-9]*) continue ;; esac` from the
+  // restore loop → the corrupt entry proceeds, its branch exists, a window is
+  // built for it, and send_launch_engine then refuses the unreadable target and
+  // exits — so CEO-3 never restores at all. Red on the target list.
+  // MUTATION: `exit 1` → `exit 0` in the restore_skipped branch → a restore
+  // that dropped a CEO reports success. Red on the status.
+  // MUTATION: drop the line that prints `$snapshot_bad` → the warning still
+  // warns but stops naming WHICH entry it could not place. Red on 'x'.
+  // Deliberately not the whole warning block: removing that also zeroes
+  // restore_skipped, so the test would go red on the exit code and prove
+  // nothing about the message.
+  // MUTATION: `send_launch_claude "$SESSION:CEO-$n.1"` →
+  // `send_launch_claude "$SESSION:CEO-$n.1" "" "$(engine_for_pane 1)"` → CEO-3
+  // comes back on claude. Red on the engine assertion, and on the control.
+  // MUTATION: a second `local restore_skipped=0` after the up-front scan — the
+  // shadowing re-declaration that discarded the count and let a partial restore
+  // exit 0. Red on the status. This one is not hypothetical: it is the defect
+  // this test found in the change that introduced the skip.
+  const p = restorableProject(t, [
+    { n: 1, branch: 'ceo-1' },
+    // The branch for this one EXISTS, so the pane number is the only thing
+    // wrong with it and the only thing that can cause the skip.
+    { n: 'x', branch: 'ceo-x' },
+    { n: 3, branch: 'ceo-3' },
+  ]);
+  const sh = shim(t);
+  const r = launch(p, ['restore', 'latest', '--engine', '3:codex'], sh);
+
+  // 3. The run must not read as clean.
+  assert.equal(r.code, 1, `a restore that dropped a CEO must exit non-zero: ${r.out}`);
+
+  // 2. Nothing was typed into a target built from the corrupt entry.
+  const launched = r.calls
+    .filter((c) => c[0] === 'send-keys' && c[4] === 'Enter' && c[2] !== 'proj:HQ')
+    .map((c) => c[2]);
+  assert.deepEqual(
+    launched.sort(),
+    ['proj:CEO-1.1', 'proj:CEO-3.1'],
+    'the corrupt entry must not be launched on ANY target — least of all pane 1\'s engine'
+  );
+
+  // 1. The recoverable panes did come back, each on its own engine.
+  const lines = launchLines(r.calls);
+  assert.equal(lines.get('proj:CEO-1.1'), 'claude');
+  assert.match(lines.get('proj:CEO-3.1'), /^codex\b/, 'a skipped entry must not disturb the panes after it');
+
+  // 4. And it said so, naming what it could not place. Asserted as three
+  // properties rather than as a sentence: the wording of this warning has
+  // already changed once mid-review, and a test that pins prose makes the next
+  // improvement to that prose look like a regression.
+  assert.match(r.out, /⚠/, 'the skip must be presented as a warning');
+  assert.match(r.out, /'x'/, "and must name the identifier it could not place");
+  assert.match(r.out, /skip/i, 'and must say it was skipped');
+});
+
+test('a snapshot with no corrupt entry restores clean and exits zero', (t) => {
+  // The control for the test above. Without it, "exits 1" and "two panes" are
+  // equally satisfied by a restore that is simply broken — and the INCOMPLETE
+  // warning would be indistinguishable from a restore that always warns.
+  // MUTATION: none needed; this is the negative half of the pair.
+  const p = restorableProject(t, [
+    { n: 1, branch: 'ceo-1' },
+    { n: 3, branch: 'ceo-3' },
+  ]);
+  const sh = shim(t);
+  const r = launch(p, ['restore', 'latest', '--engine', '3:codex'], sh);
+
+  assert.equal(r.code, 0, r.out);
+  assert.doesNotMatch(r.out, /INCOMPLETE/, 'a complete restore must not warn that it is partial');
+  const lines = launchLines(r.calls);
+  assert.deepEqual([...lines.keys()].sort(), ['proj:CEO-1.1', 'proj:CEO-3.1']);
+  assert.equal(lines.get('proj:CEO-1.1'), 'claude');
+  assert.match(lines.get('proj:CEO-3.1'), /^codex\b/);
 });
