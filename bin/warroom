@@ -222,6 +222,25 @@ WARROOM_ENGINE_FALLBACK="claude"
 WARROOM_ENGINE_DEFAULT=""
 WARROOM_ENGINE_OVERRIDES=""
 
+# The resolved engine for pane N, populated ONCE per invocation by
+# engines_resolve, running in the MAIN shell.
+#
+# THIS ARRAY EXISTS BECAUSE `exit` CANNOT LEAVE A SUBSHELL, and the refusal below
+# is this feature's central safety guarantee. It was unreachable on the real
+# launch path: `local eng="$(engine_for_pane …)"` and `done < <(engines_in_use …)`
+# both run the resolver in a child shell, where `exit 1` ends the child and
+# nothing else. A bad `engine:` printed its error, did NOT stop the run, resolved
+# to the EMPTY STRING, matched no `case` arm, and typed an empty line into a live
+# pane — the dead-pane failure the comments here claim to eliminate, produced by
+# the code that claims it.
+#
+# The cure is shape, not sprinkled `|| exit 1`: resolve and validate every pane
+# ONCE, at the top level of the command that will launch it, before check_deps
+# and before tmux builds anything. Then no refusal ever has to cross a subshell
+# boundary. Everything downstream is a lookup in this array.
+WARROOM_PANE_ENGINES=()
+WARROOM_ENGINES_RESOLVED=0
+
 engine_is_known() {
   case " $WARROOM_ENGINES " in *" $1 "*) return 0 ;; *) return 1 ;; esac
 }
@@ -238,37 +257,127 @@ engine_require_known() {
   fi
 }
 
-# The engine for pane N. First hit wins:
-#   1. --engine N:<name>     per-pane override
-#   2. --engine <name>       this invocation's default
-#   3. engine: in .warroom.yml
-#   4. claude
-engine_for_pane() {
+# Where this session's resolved map lives. `--engine 2:codex` used to exist only
+# in the process that parsed it, so `${SESSION} grid` and `${SESSION} restore` —
+# separate invocations of this program — silently put pane 2 back on the default
+# and the founder had no way to see it but to read the pane. The map is rewritten
+# whenever a war room starts and removed when one is killed, so a stale choice
+# cannot outlive its session.
+ENGINES_STATE_FILE="$PROJECT_STATE_DIR/engines"
+
+# The engine pane N would get, and WHERE it came from, as one tab-separated pair
+# so the precedence is implemented exactly once.
+#
+# PURE: it never validates and never exits, which is what makes it safe to call
+# from a command substitution. Validation belongs to engines_resolve, which runs
+# where an exit is worth something.
+#
+# First hit wins:
+#   1. --engine N:<name>          per-pane override for this invocation
+#   2. --engine <name>            this invocation's default
+#   3. $ENGINES_STATE_FILE        what this running war room was started with
+#   4. engine: in .warroom.yml    the project's standing choice
+#   5. claude
+engine_candidate_for_pane() {
   local n="$1" tok eng=""
   for tok in $WARROOM_ENGINE_OVERRIDES; do
     case "$tok" in "${n}:"*) eng="${tok#*:}" ;; esac
   done
-  if [ -n "$eng" ]; then
-    engine_require_known "$eng" "--engine ${n}:${eng}"
-    printf '%s' "$eng"; return 0
-  fi
-  if [ -n "$WARROOM_ENGINE_DEFAULT" ]; then
-    engine_require_known "$WARROOM_ENGINE_DEFAULT" "--engine"
-    printf '%s' "$WARROOM_ENGINE_DEFAULT"; return 0
-  fi
+  [ -n "$eng" ] && { printf '%s\t--engine %s' "$eng" "${n}:${eng}"; return 0; }
+  [ -n "$WARROOM_ENGINE_DEFAULT" ] && { printf '%s\t--engine' "$WARROOM_ENGINE_DEFAULT"; return 0; }
+  eng="$(engine_persisted_for_pane "$n")"
+  [ -n "$eng" ] && { printf '%s\t%s' "$eng" "$ENGINES_STATE_FILE, where this war room recorded its engines"; return 0; }
   eng="$(_cfg engine)"
-  if [ -n "$eng" ]; then
-    engine_require_known "$eng" "engine: in $WARROOM_CONFIG"
-    printf '%s' "$eng"; return 0
-  fi
-  printf '%s' "$WARROOM_ENGINE_FALLBACK"
+  [ -n "$eng" ] && { printf '%s\tengine: in %s' "$eng" "$WARROOM_CONFIG"; return 0; }
+  printf '%s\tthe built-in default' "$WARROOM_ENGINE_FALLBACK"
 }
+
+# Resolve and validate the engines for the panes named, in the MAIN shell.
+# Every command that launches a pane calls this before check_deps and before any
+# tmux work, so an unknown engine stops the run instead of reaching a pane.
+engines_resolve() {
+  local n pair eng whence
+  for n in "$@"; do
+    pair="$(engine_candidate_for_pane "$n")"
+    eng="${pair%%$'\t'*}"
+    whence="${pair#*$'\t'}"
+    # This exit is at the top level of the calling command, so it exits the
+    # PROGRAM. That is the whole point of resolving here rather than at the seam.
+    engine_require_known "$eng" "$whence"
+    WARROOM_PANE_ENGINES[$n]="$eng"
+  done
+  WARROOM_ENGINES_RESOLVED=1
+}
+
+# The engine for pane N. A lookup once engines_resolve has run — which is the
+# case on every launch path. The fallback resolution is a BACKSTOP for callers
+# that only inspect; it still refuses an unknown value, and when it is called
+# from a substitution the refusal cannot exit the program, so the empty result
+# is caught by the `*)` arms in engine_launch_cmd / render_ceo_preamble and by
+# send_launch_engine's empty-line check.
+engine_for_pane() {
+  local n="$1" pair eng
+  if [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ]; then
+    printf '%s' "${WARROOM_PANE_ENGINES[$n]}"; return 0
+  fi
+  pair="$(engine_candidate_for_pane "$n")"
+  eng="${pair%%$'\t'*}"
+  engine_require_known "$eng" "${pair#*$'\t'}"
+  printf '%s' "$eng"
+}
+
+# The engine recorded for pane N by the invocation that started this war room.
+engine_persisted_for_pane() {
+  local n="$1" _n _eng
+  [ -f "$ENGINES_STATE_FILE" ] || return 0
+  while IFS=$'\t' read -r _n _eng; do
+    if [ "$_n" = "$n" ] && [ -n "$_eng" ]; then printf '%s' "$_eng"; return 0; fi
+  done < "$ENGINES_STATE_FILE"
+  return 0
+}
+
+# Rewrite the map for the panes named. A whole rewrite, never an append, so a
+# restart cannot inherit half of an older session's choices.
+engines_persist() {
+  local n
+  mkdir -p "$PROJECT_STATE_DIR" 2>/dev/null
+  : > "$ENGINES_STATE_FILE" 2>/dev/null || return 0
+  for n in "$@"; do
+    [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ] && \
+      printf '%s\t%s\n' "$n" "${WARROOM_PANE_ENGINES[$n]}" >> "$ENGINES_STATE_FILE"
+  done
+  return 0
+}
+
+engines_forget_pane() {
+  local n="$1" tmp
+  [ -f "$ENGINES_STATE_FILE" ] || return 0
+  tmp="$ENGINES_STATE_FILE.$$"
+  awk -F'\t' -v n="$n" '$1 != n' "$ENGINES_STATE_FILE" > "$tmp" 2>/dev/null \
+    && mv "$tmp" "$ENGINES_STATE_FILE" 2>/dev/null
+  rm -f "$tmp" 2>/dev/null
+  return 0
+}
+
+# Add or replace ONE pane's entry — for `add`, which creates a single pane into a
+# session whose other panes are already running and must not be re-declared.
+engines_persist_pane() {
+  local n="$1"
+  [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ] || return 0
+  mkdir -p "$PROJECT_STATE_DIR" 2>/dev/null
+  engines_forget_pane "$n"
+  printf '%s\t%s\n' "$n" "${WARROOM_PANE_ENGINES[$n]}" >> "$ENGINES_STATE_FILE" 2>/dev/null
+  return 0
+}
+
+engines_forget() { rm -f "$ENGINES_STATE_FILE" 2>/dev/null; return 0; }
 
 # The executable that must be on PATH for an engine.
 engine_binary() {
   case "$1" in
     claude) printf 'claude' ;;
     codex)  printf 'codex' ;;
+    *) echo "✗ internal: no binary is known for engine '$1'." >&2; return 1 ;;
   esac
 }
 
@@ -276,16 +385,20 @@ engine_install_hint() {
   case "$1" in
     claude) printf 'Install Claude Code first.' ;;
     codex)  printf 'Install the Codex CLI first: npm i -g @openai/codex' ;;
+    *) printf 'No install hint is known for this engine.' ;;
   esac
 }
 
-# Every engine this invocation will actually launch, deduplicated. check_deps
-# verifies exactly these and no others — a founder who never asks for Codex is
-# never told to install it.
+# Every engine this invocation will actually launch, deduplicated, read from the
+# resolved map. check_deps verifies exactly these and no others — a founder who
+# never asks for Codex is never told to install it.
+#
+# It reads the array rather than resolving, so the process substitution that
+# feeds check_deps carries nothing whose exit status would be swallowed.
 engines_in_use() {
-  local count="${1:-1}" i eng seen=" "
-  for i in $(seq 1 "$count"); do
-    eng="$(engine_for_pane "$i")" || exit 1
+  local n eng seen=" "
+  for n in "${!WARROOM_PANE_ENGINES[@]}"; do
+    eng="${WARROOM_PANE_ENGINES[$n]}"
     case "$seen" in *" $eng "*) ;; *) seen="$seen$eng "; printf '%s\n' "$eng" ;; esac
   done
 }
@@ -304,7 +417,7 @@ engines_in_use() {
 # affordances the shared body mentions that Codex does not have, and restates
 # the one constraint that must survive translation.
 CEO_CODEX_ADAPTER='ENGINE NOTE — you are Codex, not Claude Code. The instructions below are the standing CEO brief for this project; follow them, with these four substitutions:
-- There is no `Agent` tool and no `.claude/agents/` dispatch. Where the brief says to dispatch an engine, READ that engine'"'"'s file under .claude/agents/ as your operating contract and do that work yourself in this pane.
+- There is no `Agent` tool and no `.claude/agents/` dispatch — and ENGINE TOOL SCOPING IS NOT ENFORCED IN THIS PANE. A Claude Code sub-agent that declares no `Write` and no `Edit` structurally cannot write; you can, whatever file you have read. So where the brief says to dispatch an engine, you may READ that engine'"'"'s file under .claude/agents/ as your operating contract and do that work yourself ONLY IF its `tools:` line declares `Write` or `Edit`. If it does not, STOP and report that the task needs a Claude Code pane — do not read a read-only engine'"'"'s file and act as it. An agent that can edit what it reviews will review what it can edit, and in this pane that boundary is prose, not a control.
 - You ARE the CEO for this pane. Do NOT spawn a CEO sub-agent, and do not delegate the CEO role to a sub-agent under any name.
 - There are no /color or /name slash commands. Skip them; they set Claude Code session identity and have no Codex equivalent.
 - `@"name (agent)"` mentions do not exist. Refer to engines by their file path.
@@ -444,15 +557,27 @@ engine_launch_cmd() {
 # the same preamble on its command line at launch (engine_launch_cmd), so
 # pasting here would deliver it twice. Returning early is the whole difference.
 inject_ceo_prompt() {
-  local target="$1"
-  local eng="${2:-$(engine_for_pane "$(pane_number_of "$target")")}"
+  local target="$1" eng="$2" n
+  # Declared first and assigned second, deliberately: `local eng="$(…)"` makes
+  # the assignment the command whose status bash reports, so the substitution's
+  # own status — including a refusal — is discarded before anyone can test it.
+  if [ -z "$eng" ]; then
+    n="$(pane_number_of "$target")" || return 1
+    eng="$(engine_for_pane "$n")" || return 1
+  fi
   [ "$eng" = "claude" ] || return 0
   tmux send-keys -t "$target" -l "$(render_ceo_preamble claude)"
 }
 
-# Best-effort pane number from a tmux target like "SESSION:CEO-3.1" or
-# "SESSION:GRID.3". Used only to resolve an engine when a caller did not pass
-# one; falls back to 1, which resolves to the session default.
+# The pane number in a tmux target like "SESSION:CEO-3.1" or "SESSION:GRID.3".
+# Used to resolve an engine when a caller did not pass one; falls back to 1,
+# which resolves to pane 1's engine — NOT to a hardcoded engine, which is the
+# distinction scripts/warroom-engine.test.mjs pins.
+#
+# The review recommended making this fallback loud. It is deliberately left
+# silent: every target this program actually builds is `…:CEO-N.x` or
+# `…:GRID.N`, both parseable, and the suite pins the fallback's value. Changing
+# it belongs with the test that asserts it, in one change, not here.
 pane_number_of() {
   local t="$1" n=""
   case "$t" in
@@ -463,27 +588,50 @@ pane_number_of() {
   printf '%s' "$n"
 }
 
+# --bare means "no CEO agent/preamble". ONE function, because it was two: this
+# rule was computed in send_launch_engine and again in cmd_engine, and the copy
+# the tests exercised was the one that never launches anything. Two
+# implementations of one rule agree until someone edits one of them.
+with_preamble() {
+  if [ "${BARE_MODE:-0}" -eq 1 ]; then printf '0'; else printf '1'; fi
+}
+
 # ─────────────────────────────────────────────────────────────
 #  HELPERS
 # ─────────────────────────────────────────────────────────────
 
-check_deps() {
-  if ! command -v tmux &>/dev/null; then
-    echo "✗ tmux not found. Run: brew install tmux"; exit 1
-  fi
-  # Check the engines that will ACTUALLY launch, and name the missing one. This
-  # was a hardcoded `command -v claude`, which is the wrong question the moment
-  # a pane runs Codex: a Codex-only war room was refused for the absence of a
-  # program it was never going to start, and a missing `codex` was not caught at
-  # all — it surfaced as a dead pane after tmux had already built the session.
+require_tmux() {
+  command -v tmux &>/dev/null && return 0
+  echo "✗ tmux not found. Run: brew install tmux"; exit 1
+}
+
+# Check the engines that will ACTUALLY launch, and name the missing one. This
+# was a hardcoded `command -v claude`, which is the wrong question the moment a
+# pane runs Codex: a Codex-only war room was refused for the absence of a program
+# it was never going to start, and a missing `codex` was not caught at all — it
+# surfaced as a dead pane after tmux had already built the session.
+#
+# The process substitution reads the ALREADY RESOLVED map. It used to resolve
+# inside the substitution, where engine_require_known's exit could reach nothing
+# but the child shell.
+check_engine_deps() {
   local _eng _bin
   while IFS= read -r _eng; do
     [ -n "$_eng" ] || continue
-    _bin="$(engine_binary "$_eng")"
+    _bin="$(engine_binary "$_eng")" || exit 1
     if ! command -v "$_bin" &>/dev/null; then
       echo "✗ $_bin not found. $(engine_install_hint "$_eng")"; exit 1
     fi
-  done < <(engines_in_use "${1:-1}")
+  done < <(engines_in_use)
+}
+
+check_deps() {
+  require_tmux
+  # The caller resolves the panes it is about to create, before this runs. The
+  # optional count is a fallback for a caller that has only a count; it still
+  # resolves in the main shell, so its refusal still exits the program.
+  [ "$WARROOM_ENGINES_RESOLVED" -eq 1 ] || engines_resolve $(seq 1 "${1:-1}")
+  check_engine_deps
   if ! command -v python3 &>/dev/null; then
     echo "✗ python3 not found. Required for cost tracking and event logging."; exit 1
   fi
@@ -589,16 +737,32 @@ send_launch_engine() {
   # bun/bunx/npm — 304 calls — plus printf, timeout and sleep. Those six entries were added to
   # settings.json in the same change, so ordinary work still flows and anything that prompts is
   # now a genuine signal about what agents reach for.
+  #
+  # DECLARE FIRST, ASSIGN SECOND. `local eng="$(…)"` makes `local` the command
+  # whose status bash reports, so a refusal inside the substitution was thrown
+  # away here — and the substitution is a subshell, so the refusal could not have
+  # exited the program even if the status had survived. Both halves are why the
+  # engines are resolved up front now and this is a lookup.
   local target=$1
   local resume=$2
-  local eng="${3:-$(engine_for_pane "$(pane_number_of "$target")")}"
-  # A Codex pane carries its preamble on the launch line, so it must know here
-  # whether this is a bare session. Claude ignores the flag — it is pasted into
-  # afterwards by inject_ceo_prompt, exactly as before.
-  local with_preamble=1
-  [ "${BARE_MODE:-0}" -eq 1 ] && with_preamble=0
+  local eng=$3
+  local n cmdline
+  if [ -z "$eng" ]; then
+    n="$(pane_number_of "$target")" || exit 1
+    eng="$(engine_for_pane "$n")" || exit 1
+  fi
+  # A pane whose engine carries its brief on the launch line must know here
+  # whether this is a bare session; the other is pasted into afterwards by
+  # inject_ceo_prompt, exactly as before. One rule, one function — see
+  # with_preamble.
+  cmdline="$(engine_launch_cmd "$eng" "$resume" "$(with_preamble)")"
+  if [ -z "$cmdline" ]; then
+    echo "✗ refusing to launch $target: no launch line for engine '$eng'." >&2
+    echo "  An empty line typed into a live pane is the dead pane this refusal exists to prevent." >&2
+    exit 1
+  fi
   wait_for_shell_prompt "$target"
-  tmux send-keys -t "$target" "$(engine_launch_cmd "$eng" "$resume" "$with_preamble")" Enter
+  tmux send-keys -t "$target" "$cmdline" Enter
 }
 
 # Retained name. Six call sites and any project shim still use it.
@@ -990,10 +1154,13 @@ cmd_start() {
     echo "✗ CEO count must be 1–8. Got: $count"; exit 1
   fi
 
-  # Pass the pane count so every engine this run will launch is checked, not
-  # only pane 1's. A mixed session that asks for Codex in pane 3 must fail
-  # before tmux builds anything.
-  check_deps "$count"
+  # Resolve every pane's engine ONCE, here, before check_deps and before tmux
+  # builds anything. A refusal at this point exits the program; the same refusal
+  # inside the substitution that used to feed check_deps exited a child shell and
+  # let the run continue with an empty engine.
+  engines_resolve $(seq 1 "$count")
+  check_deps
+  engines_prepare
 
   if tmux has-session -t "$SESSION" 2>/dev/null; then
     if [ "$grid_mode" -eq 1 ]; then
@@ -1045,6 +1212,12 @@ cmd_start() {
 
   # Prune stale worktree refs
   git -C "$PROJECT_DIR" worktree prune 2>/dev/null
+
+  # Record what this war room was started with. `--engine 2:codex` lived only in
+  # the process that parsed it, so the NEXT invocation — `grid`, `restore` —
+  # silently put pane 2 back on the default. Written here, after the decision to
+  # start is final, and removed by `kill`.
+  engines_persist $(seq 1 "$count")
 
   echo ""
   echo -e "  ${BOLD}╔══════════════════════════════════════╗${RESET}"
@@ -1168,7 +1341,7 @@ cmd_start() {
 }
 
 cmd_add() {
-  check_deps
+  require_tmux
 
   if ! tmux has-session -t "$SESSION" 2>/dev/null; then
     echo "✗ No war room running. Start with: ${SESSION} [N]"; exit 1
@@ -1177,6 +1350,15 @@ cmd_add() {
   local n
   n=$(next_ceo_number)
   [ "$n" -gt 8 ] && echo "✗ Maximum 8 CEOs." && exit 1
+
+  # The pane about to be created is the one whose engine has to be checked. A
+  # bare `check_deps` checked pane 1 — the one pane `add` never creates — so
+  # `--engine 5:codex` on a machine without codex built the window first and
+  # died inside it.
+  engines_resolve "$n"
+  check_deps
+  engines_prepare
+  engines_persist_pane "$n"
 
   echo "  + Spawning CEO-$n..."
   if spawn_ceo "$n"; then
@@ -1360,6 +1542,9 @@ print(json.dumps(d, indent=2))
     sed -i '' "/^ceo-${n}:/d" "$WORKTREES_DIR/.registry" 2>/dev/null
   fi
   rm -f "$WORKTREES_DIR/ceo-${n}.task" "$WORKTREES_DIR/ceo-${n}.session" 2>/dev/null
+  # This pane's engine goes with the pane. `add` reuses the lowest free number,
+  # so a leftover entry would hand a brand-new CEO the closed one's engine.
+  engines_forget_pane "$n"
 
   tmux kill-window -t "$SESSION:CEO-$n"
   echo "  ✓ CEO-$n closed"
@@ -1367,6 +1552,12 @@ print(json.dumps(d, indent=2))
 
 cmd_kill() {
   if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    # No session, so nothing to kill — but a map may be left over from a session
+    # someone ended with `tmux kill-session` instead. Clearing it here is the
+    # cheap half of "a stale map must not outlive its session"; the other half is
+    # that cmd_start and cmd_restore both REWRITE the map rather than merge into
+    # it, so a leftover cannot survive the next start either.
+    engines_forget
     echo "  No war room running."; exit 0
   fi
 
@@ -1428,6 +1619,10 @@ cmd_kill() {
 
   echo "  Cleaning up worktrees..."
   remove_worktrees
+
+  # The engine map belongs to the session, not to the project. Left behind, it
+  # would hand the next war room a choice nobody made in it.
+  engines_forget
 
   tmux kill-session -t "$SESSION"
 
@@ -1613,7 +1808,12 @@ cmd_grid_start() {
   local count=${1:-3}
   local bare_mode=${2:-0}
 
-  check_deps 2>/dev/null || true
+  # Was `check_deps 2>/dev/null || true`, which discarded exactly the error this
+  # rewrite exists to surface: a grid asking for `--engine 3:codex` on a machine
+  # without codex built the whole tmux grid and then failed inside a pane.
+  engines_resolve $(seq 1 "$count")
+  check_deps
+  engines_prepare
 
   echo "  Starting grid mode with $count panes..."
 
@@ -1743,12 +1943,15 @@ cmd_engine() {
   if ! [[ "$count" =~ ^[0-9]+$ ]]; then
     echo "Usage: ${SESSION} engine [N]   — show the engine and launch line for panes 1..N"; exit 1
   fi
+  # Resolve here, at this command's top level, so a bad engine refuses the way
+  # it refuses on the launch path — same call, same shell, same exit.
+  engines_resolve $(seq 1 "$count")
   echo ""
   echo -e "  ${BOLD}Engines${RESET}  (default: $WARROOM_ENGINE_FALLBACK · known: $WARROOM_ENGINES)"
   echo ""
   for i in $(seq 1 "$count"); do
     eng="$(engine_for_pane "$i")" || exit 1
-    printf '  CEO-%-3s %-8s %s\n' "$i" "$eng" "$(engine_launch_cmd "$eng" "" "$([ "${BARE_MODE:-0}" -eq 1 ] && echo 0 || echo 1)")"
+    printf '  CEO-%-3s %-8s %s\n' "$i" "$eng" "$(engine_launch_cmd "$eng" "" "$(with_preamble)")"
   done
   echo ""
   printf '  resume form: '
@@ -1781,6 +1984,13 @@ cmd_grid_view() {
   if [ "$count" -eq 0 ]; then
     echo "✗ No CEO windows found."; exit 1
   fi
+
+  # `grid` is a SECOND invocation of this program, so it knows nothing about the
+  # `--engine` flags that started the session. It reads them back from the map
+  # this war room recorded, and resolves them here where a refusal still exits.
+  engines_resolve $(seq 1 "$count")
+  check_engine_deps
+  engines_prepare
 
   # Get wt_paths for all CEOs
   local -a ceo_wt_paths
@@ -1964,6 +2174,19 @@ except:
   # Read grid_mode flag — default false for backward compat with old snapshots
   local grid_mode
   grid_mode=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(str(d.get('grid_mode', False)).lower())" 2>/dev/null || echo "false")
+
+  # Resolve the engines for the panes this restore will actually recreate —
+  # their real numbers from the snapshot, not 1..N, since `done` can leave gaps —
+  # before the first of them exists. `check_deps` at the top of this function
+  # could only ever have checked pane 1.
+  local snapshot_ns
+  snapshot_ns=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(' '.join(str(c.get('n','')) for c in d.get('ceos',[]) if str(c.get('n','')).isdigit()))" 2>/dev/null)
+  if [ -n "$snapshot_ns" ]; then
+    engines_resolve $snapshot_ns
+    check_engine_deps
+    engines_prepare
+    engines_persist $snapshot_ns
+  fi
 
   local session_created=0
   local -a restored_ns
@@ -3742,14 +3965,33 @@ done
 # Validate at parse time, not at launch time. An unknown engine must be refused
 # before tmux builds a session, and must never fall back to the default —
 # `--engine codek` starting a Claude war room is the failure this rejects.
+#
+# The pane prefix is validated as a WHOLE number, not merely as starting with a
+# digit. `[0-9]*:*` accepted `2x:codex`: it passed here, then matched no pane in
+# engine_candidate_for_pane, was dropped in silence, and the founder got a Claude
+# pane where they had asked for Codex — the same indistinguishable-success
+# failure the engine check itself exists to refuse. `0:codex` goes the same way
+# and is refused for the same reason: panes are numbered from 1.
 [ -n "$WARROOM_ENGINE_DEFAULT" ] && engine_require_known "$WARROOM_ENGINE_DEFAULT" "--engine"
 for _tok in $WARROOM_ENGINE_OVERRIDES; do
   case "$_tok" in
-    [0-9]*:*) engine_require_known "${_tok#*:}" "--engine $_tok" ;;
+    *:*) : ;;
     *) echo "✗ malformed --engine override '$_tok'. Expected <pane-number>:<engine>." >&2; exit 1 ;;
   esac
+  _pane="${_tok%%:*}"
+  case "$_pane" in
+    ''|*[!0-9]*)
+      echo "✗ malformed --engine override '$_tok': '$_pane' is not a pane number." >&2
+      echo "  Expected <pane-number>:<engine>, e.g. 2:codex." >&2
+      exit 1 ;;
+  esac
+  if [ "$_pane" -lt 1 ]; then
+    echo "✗ malformed --engine override '$_tok': panes are numbered from 1." >&2
+    exit 1
+  fi
+  engine_require_known "${_tok#*:}" "--engine $_tok"
 done
-unset _tok
+unset _tok _pane
 
 CMD="${ARGS[0]:-}"
 
