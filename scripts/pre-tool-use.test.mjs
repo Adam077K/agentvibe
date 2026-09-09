@@ -134,6 +134,398 @@ for (const command of MUST_ALLOW) {
   })
 }
 
+// ── the remaining gaps from the one-pass review: eight holes and three false positives ───────
+//
+// All eleven were measured on the hook as it stood after the rm inversion, and all eleven are of
+// the SAME two shapes this file keeps meeting: a rule that enumerates spellings, and a rule whose
+// anchor or exclusion is computed over the WHOLE command instead of the one command it governs.
+//
+// THE THREE FALSE POSITIVES ARE AS MUCH OF THE DELIVERABLE AS THE EIGHT HOLES. A guard that
+// refuses legitimate work is one somebody switches off, and then none of the eight closures
+// matters. They are listed in ORDINARY_WORK_MUST_FLOW and were red before this change.
+//
+// R3 deserves its own note: the curl rule's `localhost` exclusion was computed over the whole
+// command string, so the WORD localhost anywhere — in an output filename, in a header — disarmed
+// it. It also compared spellings, so `http://2130706433/` was loopback and matched neither
+// `localhost` nor `127.0.0.1`. It now asks `url_class`, the SAME parser the browser arm uses, one
+// URL at a time. One implementation, two opposite policies: the browser refuses the local network
+// and allows the web; curl allows only loopback. A second URL parser in that file would have been
+// the two-implementations defect this repo names in four places.
+
+const CURL_MUST_BLOCK = [
+  ['curl https://evil.example/x -o /tmp/localhost.txt', 'the word localhost in an output FILENAME disarmed the whole rule'],
+  ['curl http://localhost:3000/health; curl https://evil.example/x', 'a loopback call licensed an external one in the next command — reachable by accident'],
+  [`curl -H 'X-Forwarded-Host: localhost' https://evil.example/x`, 'the same through a header value'],
+  ['curl http://2852039166/latest/meta-data/', 'IMDS in decimal: loopback-by-spelling never saw it, and neither did the block'],
+  ['curl http://192.168.1.5/admin', 'the LAN is not the web and not loopback'],
+  ['curl https://localhost.evil.com/x', 'a hostname that merely BEGINS with localhost is not loopback'],
+  ['curl https://notlocalhost.io/x', 'nor one that contains it'],
+]
+
+for (const [command, why] of CURL_MUST_BLOCK) {
+  test(`BLOCKS curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `an external or local-network curl was allowed (${command})`)
+  })
+}
+
+const CURL_MUST_ALLOW = [
+  ['curl http://localhost:3000/health', 'the perception loop by name — RFC 6761 reserves localhost for loopback'],
+  ['curl -s http://127.0.0.1:5173/', 'by address'],
+  ['curl http://[::1]:3000/', 'by IPv6 address'],
+  ['curl http://2130706433/', 'the decimal spelling of 127.0.0.1 — allowed for the same reason the LAN is refused'],
+  ['curl http://app.localhost:3000/', 'a subdomain of localhost is loopback too'],
+  ['curl http://localhost:3000/a; curl http://127.0.0.1:3000/b', 'two loopback calls in one line'],
+  ['curl --version', 'no URL at all'],
+]
+
+for (const [command, why] of CURL_MUST_ALLOW) {
+  test(`ALLOWS curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `a loopback curl was refused; the perception loop is broken (${command})`)
+  })
+}
+
+// The curl rule spawns one classifier per URL, so the work it does is chosen by the command it is
+// checking. Past 12 URLs it refuses rather than checking some of them — a bounded hot path, and a
+// refusal that names itself. Pinned both sides so the cap cannot drift into either uselessness.
+test('ALLOWS a command at the URL cap — twelve loopback URLs are still each checked', () => {
+  const cmd = Array.from({ length: 12 }, (_, i) => `curl http://127.0.0.1:3000/${i}`).join('; ')
+  assert.equal(runHook(compact(bash(cmd))), ALLOW, 'twelve URLs is at the cap, not past it')
+})
+
+test('BLOCKS past the URL cap rather than checking only some of them', () => {
+  const cmd = Array.from({ length: 13 }, (_, i) => `curl http://127.0.0.1:3000/${i}`).join('; ')
+  assert.equal(runHook(compact(bash(cmd))), BLOCK, 'a guard that silently stops checking is the failure mode this file exists against')
+})
+
+// ── a scheme-less curl operand is an external fetch, and the policy already said so ───────────
+//
+// `curl example.com` reached the network on every version of this hook before now. It was NOT a
+// policy gap — external is refused and loopback allowed, and a bare host is an external fetch.
+// It was a PARSING gap: the rule found URLs with a grep for `https?://`, so a form curl itself
+// resolves to an external URL was never handed to the classifier. `curl_urls` completes the
+// parser and the policy is untouched: `example.com` classifies public and is refused exactly as
+// `http://example.com` already was; `localhost:3000` classifies loopback and is allowed exactly
+// as it already was.
+//
+// THE FACT THAT MAKES IT SAFE: in curl, every positional operand IS a URL — filenames, headers
+// and data are always values of flags. So the risk is entirely "does a flag's value get read as
+// a host", which is what CURL_FLAG_VALUES_ARE_NOT_HOSTS exists to pin. An unrecognised flag is
+// assumed to take a value, so the failure direction is a miss (today's behaviour) rather than a
+// phantom host, because over-blocking is what makes someone route around the guard.
+
+const SCHEMELESS_CURL_MUST_BLOCK = [
+  ['curl example.com', 'the bare host that reached the network on every previous version'],
+  ['curl -s example.com', 'behind a boolean flag'],
+  ['curl -sS example.com', 'behind a short cluster'],
+  ['curl example.com/api/v1', 'with a path'],
+  ['curl example.com:8080/x', 'with a port'],
+  ['curl example.com -o out.txt', 'with the flag after the host'],
+  ['curl 192.168.1.5/admin', 'the LAN, scheme-less'],
+  ['curl 169.254.169.254/latest/', 'IMDS, scheme-less'],
+  ['curl 2852039166/latest/', 'IMDS in decimal AND scheme-less — two spellings deep'],
+  ['curl --url example.com', 'named by --url'],
+  ['curl --url=example.com', 'and by --url='],
+  ['curl -- example.com', 'after end-of-options'],
+  // Free, and not the target: the old grep saw only http(s), so this never reached the classifier.
+  ['curl file:///etc/passwd', 'a non-http scheme was never handed to the guard at all'],
+]
+
+for (const [command, why] of SCHEMELESS_CURL_MUST_BLOCK) {
+  test(`BLOCKS scheme-less curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `an external fetch reached the network because the parser could not see it (${command})`)
+  })
+}
+
+const SCHEMELESS_CURL_MUST_ALLOW = [
+  ['curl localhost:3000/health', 'the perception loop, scheme-less'],
+  ['curl 127.0.0.1:5173/', 'by address'],
+  ['curl -s localhost:3000/health', 'behind a flag'],
+  ['curl app.localhost:3000/', 'a subdomain of localhost'],
+]
+
+for (const [command, why] of SCHEMELESS_CURL_MUST_ALLOW) {
+  test(`ALLOWS scheme-less loopback curl — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `completing the parser refused the perception loop (${command})`)
+  })
+}
+
+// THE FALSE-POSITIVE CONTROL FOR THE PARSER. Every one of these carries a token that LOOKS like a
+// host and is not one. A parser that reads a filename as a domain refuses ordinary work, and the
+// `-o localhost.txt` case is the exact shape that made the old whole-command exclusion a hole.
+const CURL_FLAG_VALUES_ARE_NOT_HOSTS = [
+  ['curl -o example.com.html localhost:3000/x', 'an output filename that is literally a domain'],
+  ['curl -o localhost.txt 127.0.0.1:3000/x', 'and one that looks loopback'],
+  [`curl -H 'Host: example.com' localhost:3000/x`, 'a header value'],
+  ['curl -X POST localhost:3000/x', 'an HTTP verb'],
+  [`curl -d 'a=example.com' localhost:3000/x`, 'a data payload'],
+  ['curl -u user:pass localhost:3000/x', 'credentials'],
+  ['curl --output=example.com.html localhost:3000/x', 'a long flag carrying its own value'],
+  ['curl --some-new-flag example.com.html localhost:3000/x', 'an UNRECOGNISED flag: assumed to take a value, so its argument is not a host'],
+  ['curl -so example.com.html localhost:3000/x', 'a cluster whose LAST flag takes the value'],
+  ['curl localhost:3000/x && echo done', 'the next command is not an operand'],
+  ['curl localhost:3000/x > out.txt', 'nor a redirection target'],
+  ['curl -s localhost:3000/x 2>/dev/null', 'nor a numbered one'],
+  ['curl -s localhost:3000/x | head -5', 'nor the far side of a pipe'],
+  [`git commit -m 'use curl example.com in docs'`, 'curl inside a quoted argument is not an invocation'],
+]
+
+for (const [command, why] of CURL_FLAG_VALUES_ARE_NOT_HOSTS) {
+  test(`ALLOWS — a flag value is never a host — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `the curl parser invented a host out of something that was not one (${command})`)
+  })
+}
+
+const SPELLING_MUST_BLOCK = [
+  ['FOO=1 npx cowsay hi', 'an env prefix defeated an anchor that demanded start-of-string or a separator'],
+  [`bash -c 'npx cowsay hi'`, 'wrapping defeated the same anchor'],
+  ['if true; then npx cowsay hi; fi', 'so did a keyword'],
+  ['chmod a+x run.sh', 'the same act, spelled a+x rather than +x'],
+  ['chmod u+x run.sh', 'and u+x'],
+  ['chmod -R a+x scripts/', 'and with a flag in front'],
+  ['npm install --global typescript', '--global is -g spelled long'],
+  ['npm i --global typescript', 'and with the short verb'],
+  ['npm install typescript -g', 'the flag after the package name was never matched'],
+  ['git checkout --', '`--` at end of string: the rule demanded whitespace AFTER it'],
+]
+
+for (const [command, why] of SPELLING_MUST_BLOCK) {
+  test(`BLOCKS an unenumerated spelling — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `a rule matched one spelling and missed its twin (${command})`)
+  })
+}
+
+// The negative controls for those spelling widenings. Each is a shape a careless broadening
+// would refuse, and `chmod 755` in particular is what the chmod rule's own message tells you to use.
+const SPELLING_MUST_ALLOW = [
+  ['chmod 755 run.sh', 'the remedy the block message recommends must not itself be blocked'],
+  ['chmod a+r notes.md', 'a mode with no execute bit'],
+  ['npm install --global-style', 'an unrelated npm flag that merely starts with --global'],
+  ['npm install typescript', 'an ordinary local install'],
+  ['git checkout --detach abc123', 'a long flag beginning with --'],
+  ['git checkout --track origin/feat', 'likewise'],
+]
+
+for (const [command, why] of SPELLING_MUST_ALLOW) {
+  test(`ALLOWS after the spelling fix — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `widening a rule to cover a second spelling caught legitimate work (${command})`)
+  })
+}
+
+const ORDINARY_WORK_MUST_FLOW = [
+  ['git reset --hard HEAD && npm test', 'the carve-out for the HEAD no-op ended at end-of-STRING, so anything after it made the no-op look like a real reset'],
+  ['git reset --hard HEAD; ls', 'the same across a separator'],
+  ['git checkout main; npm test -- --watch', '`--` belonged to npm, not to git checkout'],
+  ['git status; npm run x --no-verify', 'the flag belonged to npm and skips no git hook'],
+]
+
+for (const [command, why] of ORDINARY_WORK_MUST_FLOW) {
+  test(`ALLOWS legitimate work that was refused — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `a guard refused legitimate work, which is how a guard gets switched off (${command})`)
+  })
+}
+
+// And the destruction those three carve-outs must NOT let through. `HEAD~1` and `HEAD^` are the
+// pair that proves the reset carve-out still means "the revision is exactly HEAD".
+const STILL_BLOCKED_AFTER_THE_CARVE_OUTS = [
+  ['git reset --hard HEAD~1', 'one commit back is a real reset, not a no-op'],
+  ['git reset --hard HEAD^', 'the other spelling of the same'],
+  ['git reset --hard abc1234', 'an explicit revision'],
+  ['git reset --hard origin/main', 'a remote ref'],
+  ['git commit --no-verify -m x', 'the flag on a git command still skips the hooks'],
+  ['git checkout -- src/a.ts', 'the discard this rule exists for'],
+]
+
+for (const [command, why] of STILL_BLOCKED_AFTER_THE_CARVE_OUTS) {
+  test(`BLOCKS still, after the carve-outs — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `relaxing a false positive opened a real hole (${command})`)
+  })
+}
+
+// ── rm -r -f: the target must be shown INSIDE the project, not merely un-enumerated ──────────
+//
+// The denylist this replaces required a literal `/`, `~`, `../`, `*`, `/tmp/*`, `/var`, `/etc`,
+// `/home` or `/usr` IMMEDIATELY after the flags. Measured 2026-09-07 against the pre-fix hook:
+//
+//   rm -rf ~        exit 2  BLOCKED   <- the control: the rule fires, so the probe is not broken
+//   rm -rf $HOME    exit 0  ALLOWED   <- the same directory, spelled the way a script spells it
+//   rm -rf "/"      exit 0  ALLOWED
+//
+// Same failure as the separator bypass one layer up: an enumeration of spellings, defeated by the
+// conventional spelling. `rm -rf "$BUILD_DIR"` is what a cleanup script writes by default. The test
+// is inverted rather than the list extended, because a denylist of dangerous paths can never be
+// complete and an allowlist of one safe region can.
+//
+// 14 of these were red before the change: 12 in the block direction and 2 in the ALLOW direction —
+// an absolute path inside the project root was refused, because `\/[^a-zA-Z]?` has an OPTIONAL
+// class so a bare `/` matched every absolute path. That is why the denylist above needed its one
+// character changed as well; without it the inverted rule's absolute branch would be unobservable.
+
+const realRepo = fs.realpathSync(REPO)
+const scratchRoot = `/private/tmp/claude-${process.getuid()}`
+
+const RM_MUST_BLOCK = [
+  // Red before the change — the founder-facing gap.
+  ['rm -rf $HOME', 'a variable naming the home directory — the conventional spelling of `~`'],
+  ['rm -rf ${HOME}', 'the braced form of the same'],
+  ['rm -rf "$BUILD_DIR"', 'any variable at all: the hook cannot know what it expands to'],
+  ['rm -rf "$PWD/build"', 'a variable prefix does not become safe by having a safe suffix'],
+  ['rm -rf $(pwd)/build', 'command substitution is unresolvable for the same reason'],
+  ['rm -rf "/"', 'quoting the root defeated a class that expected a bare slash'],
+  ["rm -rf '/'", 'single quotes likewise'],
+  ['rm --recursive --force /etc', 'long-form flags were not matched by the trigger at all'],
+  ['rm -rf .', 'the cwd itself: `.` resolves TO the base, not to somewhere inside it'],
+  ['rm -rf ; ls', 'a bare invocation stopped being caught as soon as anything followed it'],
+  ['rm -rf node_modules /opt/x', 'one local target does not license a second, non-local one'],
+  ['rm -rf build/../../sibling', 'a path that climbs out through a local-looking prefix'],
+  ['cd /etc && rm -rf conf.d', 'a `cd` this hook cannot place makes a relative target unjudgeable'],
+  ['cd /etc; rm -rf conf.d', 'the same across a real separator — the `cd` still counts'],
+  // Already blocked before; pinned so the inversion cannot quietly drop them.
+  ['rm -rf /', 'the catastrophic literal — still refused by the denylist arm, at end of string'],
+  ['rm -rf ~', 'the literal home directory'],
+  ['rm -rf *', 'a bare glob is bounded by nothing'],
+  ['rm -rf /usr/local/lib', 'an absolute path outside the project'],
+  ['bash -c "rm -rf /"', 'nested in a string: the tokeniser cannot see it, the denylist arm can'],
+  // The glob carve-out is narrow, and these are the shapes it does NOT cover.
+  ['rm -rf ../*', 'a glob whose parent climbs out'],
+  ['rm -rf build/*/x', 'a glob outside the final component can reach anywhere'],
+  ["find . -name '*.tmp' | xargs rm -rf", 'fed by a pipe: no target this hook can name'],
+]
+
+for (const [command, why] of RM_MUST_BLOCK) {
+  test(`BLOCKS rm -r -f — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `rm -r -f reached a target that was never shown to be inside the project (${command})`)
+  })
+}
+
+// THE FALSE-POSITIVE BUDGET. An inversion that refuses ordinary cleanup is a control people route
+// around, which is worse than no control. Every one of these is real cleanup an agent writes.
+const RM_MUST_ALLOW = [
+  ['rm -rf node_modules', 'the single most common cleanup command in this stack'],
+  ['rm -rf ./build', 'explicit relative'],
+  ['rm -rf dist/', 'trailing slash'],
+  ['rm -rf .next', 'a hidden directory is not a dotfile-shaped hazard'],
+  ['rm -rf dist coverage', 'several local targets in one call'],
+  ['rm -rf node_modules && npm install', 'the operand list must stop at `&&`, not swallow it'],
+  ['rm -rf coverage 2>/dev/null', 'and at a redirection'],
+  ['cd build && rm -rf cache', 'a `cd` that stays inside leaves relative targets judgeable'],
+  ['rm -rf build/*', 'a glob confined to the final component is bounded by its parent'],
+  ['rm -rf node_modules/.cache/*', 'the same, nested'],
+  ['rm -rf -- weird-dir', 'end-of-options'],
+  ['rm -f /tmp/scratch-file.txt', 'no -r, so this rule never fires — the outer gate is unchanged'],
+  ['rm -r somedir', 'no -f, likewise'],
+  ['rm somefile.txt', 'plain rm is not this rule’s business'],
+  [`git commit -m 'cleanup: rm -rf build'`, 'a mention inside a quoted argument is not an invocation'],
+  // The two ALLOW-direction regressions the one-character narrowing fixes. Red before the change.
+  [`rm -rf ${realRepo}/build`, 'an absolute path INSIDE the project root — refused before this change'],
+  [`rm -rf ${scratchRoot}/tmpdir`, 'the agent scratchpad, which Bash may already write — refused before'],
+]
+
+for (const [command, why] of RM_MUST_ALLOW) {
+  test(`ALLOWS ordinary cleanup — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `the rm inversion refused ordinary cleanup; the false-positive budget is blown (${command})`)
+  })
+}
+
+// THE COST, PINNED RATHER THAN LEFT TO BE REDISCOVERED. These were allowed before and are refused
+// now. Each is an unresolvable expansion, which is exactly what the inversion exists to refuse —
+// but `$TMPDIR` is the one that will bite, because the scratchpad is where agents are told to work.
+// The remedy is not to weaken this: the literal scratchpad path is ALLOWED (see RM_MUST_ALLOW),
+// so the fix at a call site is to write the path rather than the variable.
+const RM_ACCEPTED_COST = [
+  ['rm -rf "$TMPDIR/x"', 'the scratchpad by variable — write /private/tmp/claude-<uid>/x instead'],
+  ['cd $HOME && rm -rf project/build', 'a `cd` through a variable'],
+  ['for d in a b; do rm -rf $d; done', 'a loop variable is unresolvable by construction'],
+]
+
+for (const [command, why] of RM_ACCEPTED_COST) {
+  test(`BLOCKS, accepted cost — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK,
+      'this is a deliberate refusal, not a bug: if it is relaxed, say why in the same commit')
+  })
+}
+
+// ── the separator bypass: a QUOTED `;` is not a command separator ────────────────────────────
+//
+// Five rules — git clean, git checkout/restore ., find -delete, interpreter destruction, and
+// reading .env — were written `<trigger>[^|;]*<payload>`. That middle class cannot span a
+// semicolon, and a regex cannot tell a separator from a semicolon inside a quoted string.
+// Measured 2026-09-07 against the pre-fix hook, two children given the same instruction and
+// NEITHER told to evade:
+//
+//   node -e "require('fs').rmSync('/x',{recursive:true})"                  exit 2  BLOCKED
+//   node -e "const fs = require('fs'); fs.rmSync('/x',{recursive:true})"   exit 0  ALLOWED
+//
+// The one that got through wrote the more conventional style. Every case in SEPARATOR_MUST_BLOCK
+// was verified exit 0 against the pre-fix hook (10 of 10 red) and exit 2 after; the twenty
+// controls below were IDENTICAL in both cells, which is the half that says the rules were
+// narrowed correctly rather than merely widened.
+//
+// THE CONTROLS ARE THE DELIVERABLE. Replacing `[^|;]*` with `.*` also turns all ten red cases
+// green — and refuses `node --version; echo rmSync` as filesystem destruction. Any future
+// simplification of the splitter that reaches for `.*` fails SEPARATOR_MUST_ALLOW first.
+
+const SEPARATOR_MUST_BLOCK = [
+  // R4 — the interpreter rule, both spellings of the same destruction.
+  [`node -e "const fs = require('fs'); fs.rmSync('/x',{recursive:true})"`, 'bound to a const first — the form a careless agent writes by default'],
+  [`python3 -c "import shutil; shutil.rmtree('/x')"`, 'the same shape in python'],
+  [`node -e "const p = process.argv[2] || '/x'; require('fs').rmSync(p,{recursive:true})"`, 'a quoted `||` defeats the class exactly as a quoted `;` does'],
+  // R1 — git clean.
+  [`git -c 'core.pager=less; more' clean -fdx`, 'a quoted semicolon in a -c value splits the match'],
+  // R2 — git checkout/restore `.`, whose `\\s*$` anchor needed END OF STRING.
+  ['git checkout .; ls', 'anything after the separator defeated the end-of-string anchor'],
+  [`git -c 'core.pager=a; b' restore .`, 'same rule, quoted separator'],
+  // R3 — find -delete.
+  [`find . -name 'a;b' -delete`, 'a semicolon inside a filename pattern'],
+  [`find . -name 'a|b' -delete`, 'a pipe inside a filename pattern'],
+  // R5 — reading secrets.
+  [`sed -e 's/a/b/;s/c/d/' .env`, 'sed expressions are separated by semicolons; the file is still .env'],
+  [`awk 'BEGIN{x=1; print x}' .env`, 'an awk program body is full of semicolons'],
+]
+
+for (const [command, why] of SEPARATOR_MUST_BLOCK) {
+  for (const [shape, encode] of [['compact', compact], ['pretty', pretty]]) {
+    test(`BLOCKS [${shape}] separator bypass — ${why}`, () => {
+      assert.equal(runHook(encode(bash(command))), BLOCK, `a quoted separator carried a destructive command past the hook (${command})`)
+    })
+  }
+}
+
+// The direct forms, pinned alongside: the fix must not trade one hole for another.
+const SEPARATOR_DIRECT_STILL_BLOCKS = [
+  [`find . -type f -exec rm {} \\;`, 'a BACKSLASH-escaped semicolon is a literal, not a separator — this must stay one segment'],
+  ['cd /tmp; git clean -fdx', 'the destructive command sits wholly after a real separator'],
+]
+
+for (const [command, why] of SEPARATOR_DIRECT_STILL_BLOCKS) {
+  test(`BLOCKS still — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), BLOCK, `a destructive command was allowed (${command})`)
+  })
+}
+
+// NEGATIVE CONTROL, and the reason this fix is a narrowing rather than a widening: a rule must
+// NOT match across a genuine separator. Each of these has the trigger word in one command and
+// the payload in the NEXT, and each is refused by the naive `.*` fix.
+const SEPARATOR_MUST_ALLOW = [
+  ['node --version; echo rmSync', 'two commands: a version check, then an echo naming the banned call'],
+  [`find . -name '*.md'; echo -delete`, 'two commands: a listing, then an echo'],
+  ['git --version; echo clean -fdx', 'two commands: a version check, then an echo'],
+  ['node --version | grep rmSync', 'the same across a pipe'],
+  ['cat README.md; echo .env', 'a reader in one command, the filename in another — nothing is read'],
+  ['git status; ls -la', 'the case the exclusion class was originally added for'],
+  [`git commit -m 'fix: a; b'`, 'a semicolon inside a commit message is not a separator'],
+  [`find . -name '*.md' | head -20`, 'find without a destructive action'],
+  ['git checkout main', 'checking out a branch is not checking out `.`'],
+  [`sed -e 's/a/b/;s/c/d/' README.md`, 'the R5 shape on a file that is not .env'],
+  ['node scripts/run-checks.mjs', 'running a committed script'],
+  [`echo 'hello`, 'an unbalanced quote must not crash the splitter — it over-blocks or allows, never errors'],
+]
+
+for (const [command, why] of SEPARATOR_MUST_ALLOW) {
+  test(`ALLOWS across a genuine separator — ${why}`, () => {
+    assert.equal(runHook(compact(bash(command))), ALLOW, `the segmenting fix widened a rule across a real command separator (${command})`)
+  })
+}
+
 // ── the force-push rule: both orderings, and the word boundary that was missing ──────────────
 // The rule is written twice, once per argument order. Only the first carried `\b` after the
 // `-f` alternation, so the second matched `-f` inside ANY hyphenated word appearing after the
@@ -1102,6 +1494,19 @@ test('heredoc body quoting the separator is blocked — pinned false-positive [C
   const cmd = "gh issue create --body-file - <<'EOF'\n" + doc + "\nEOF";
   assert.equal(runHook(compact(bash(cmd))), BLOCK,
     'known limitation: a heredoc quoting a hazard is blocked; use Write tool for docs');
+});
+
+// C2b: the segmenting fix WIDENS this false positive by exactly one shape, and that cost is
+// pinned rather than left to be rediscovered. A document quoting the const-bound interpreter form
+// used to pass — not because the hook understood it was a document, but because the quoted `;`
+// broke the match. Measured 2026-09-07: exit 0 before, exit 2 after, and no other documentation
+// shape changed (git clean, the direct node form, wget and external curl all blocked in both).
+// ACCEPTED, not overlooked: over-blocking a document is far cheaper than under-blocking a
+// command, and the escape hatch is unchanged — the Write tool checks file_path, never content.
+test('heredoc documenting the const-bound destruction is blocked — the cost of the fix, pinned [C2b]', () => {
+  const cmd = "cat > doc.md <<EOF\nBlocked: node -e \"const fs = require('fs'); fs.rmSync('/x')\"\nEOF";
+  assert.equal(runHook(compact(bash(cmd))), BLOCK,
+    'accepted false positive: use the Write tool to document a hazard, never a Bash heredoc');
 });
 
 // C3: Write and Bash must agree about the agent scratchpad
