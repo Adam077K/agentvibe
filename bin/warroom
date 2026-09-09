@@ -134,13 +134,207 @@ else
   echo "Warning: no entry preamble at $CEO_ENTRY_FILE or $CEO_SEED_FILE — using minimal fallback" >&2
 fi
 
+# ─────────────────────────────────────────────────────────────
+#  ENGINES — which program is the CEO in a given pane
+# ─────────────────────────────────────────────────────────────
+#
+# A pane runs `claude` or `codex`. The default is `claude` and changing nothing
+# changes nothing — that is asserted by scripts/warroom-engine.test.mjs, not
+# just intended here.
+#
+# The engine is DATA, resolved per pane, because the founder's ask is not "swap
+# Claude for Codex" but "run a Codex CEO in addition to a Claude one". Two panes
+# of one session may differ, so nothing may be decided once at startup and
+# cached in a global.
+#
+# Every fact about Codex encoded below was measured against codex-cli 0.153.4 on
+# 2026-09-09 and is written up, with commands and exit codes, in
+# docs/03-system-design/final-v2/research/codex-in-the-pane.md. Two differences
+# from Claude drive the whole design:
+#
+#   1. RESUME IS A SUBCOMMAND, NOT A FLAG. `claude --resume <id>` against
+#      `codex resume <id>`. So a launch line cannot be built by appending to the
+#      binary name; each engine has to spell its own.
+#
+#   2. THE PREAMBLE ARRIVES AT A DIFFERENT TIME. Claude is launched bare and
+#      then pasted into (inject_ceo_prompt). Codex takes its standing
+#      instructions ON THE COMMAND LINE, via `-c developer_instructions=`, which
+#      was measured to be additive: it adds the prompt item kind
+#      `generic.developer_instructions` and displaces nothing.
+#
+#      Codex is NOT pasted into, and that is a deliberate limit rather than an
+#      oversight. Whether its TUI accepts a multi-line `send-keys -l` block
+#      without treating the first newline as submit COULD NOT BE MEASURED — an
+#      unauthenticated Codex renders a login chooser, not a composer, and the
+#      real ~/.codex is in this environment's sandbox denyRead set. Building the
+#      preamble path on the mechanism that WAS proved costs nothing and removes
+#      the dependency on the one that was not. See §5 of the research file.
+
+WARROOM_ENGINES="claude codex"
+WARROOM_ENGINE_FALLBACK="claude"
+
+# Set by the router from `--engine`. Deliberately resolved lazily through the
+# functions below rather than computed once here: the router parses flags at the
+# BOTTOM of this file, long after this line runs.
+WARROOM_ENGINE_DEFAULT=""
+WARROOM_ENGINE_OVERRIDES=""
+
+engine_is_known() {
+  case " $WARROOM_ENGINES " in *" $1 "*) return 0 ;; *) return 1 ;; esac
+}
+
+# Refuse an unknown engine; never fall back to the default. A typo that silently
+# launched Claude would be indistinguishable from a working Codex pane until
+# someone read the output of a whole session.
+engine_require_known() {
+  local eng="$1" whence="$2"
+  if [ -z "$eng" ] || ! engine_is_known "$eng"; then
+    echo "✗ unknown engine '$eng' (from $whence)." >&2
+    echo "  Valid engines: $WARROOM_ENGINES" >&2
+    exit 1
+  fi
+}
+
+# The engine for pane N. First hit wins:
+#   1. --engine N:<name>     per-pane override
+#   2. --engine <name>       this invocation's default
+#   3. engine: in .warroom.yml
+#   4. claude
+engine_for_pane() {
+  local n="$1" tok eng=""
+  for tok in $WARROOM_ENGINE_OVERRIDES; do
+    case "$tok" in "${n}:"*) eng="${tok#*:}" ;; esac
+  done
+  if [ -n "$eng" ]; then
+    engine_require_known "$eng" "--engine ${n}:${eng}"
+    printf '%s' "$eng"; return 0
+  fi
+  if [ -n "$WARROOM_ENGINE_DEFAULT" ]; then
+    engine_require_known "$WARROOM_ENGINE_DEFAULT" "--engine"
+    printf '%s' "$WARROOM_ENGINE_DEFAULT"; return 0
+  fi
+  eng="$(_cfg engine)"
+  if [ -n "$eng" ]; then
+    engine_require_known "$eng" "engine: in $WARROOM_CONFIG"
+    printf '%s' "$eng"; return 0
+  fi
+  printf '%s' "$WARROOM_ENGINE_FALLBACK"
+}
+
+# The executable that must be on PATH for an engine.
+engine_binary() {
+  case "$1" in
+    claude) printf 'claude' ;;
+    codex)  printf 'codex' ;;
+  esac
+}
+
+engine_install_hint() {
+  case "$1" in
+    claude) printf 'Install Claude Code first.' ;;
+    codex)  printf 'Install the Codex CLI first: npm i -g @openai/codex' ;;
+  esac
+}
+
+# Every engine this invocation will actually launch, deduplicated. check_deps
+# verifies exactly these and no others — a founder who never asks for Codex is
+# never told to install it.
+engines_in_use() {
+  local count="${1:-1}" i eng seen=" "
+  for i in $(seq 1 "$count"); do
+    eng="$(engine_for_pane "$i")" || exit 1
+    case "$seen" in *" $eng "*) ;; *) seen="$seen$eng "; printf '%s\n' "$eng" ;; esac
+  done
+}
+
+# ── The CEO preamble, rendered per engine from ONE source ────
+#
+# $CEO_PREAMBLE is the single copy of the CEO's identity — .claude/entry/ceo.md,
+# resolved above. It is never restated per engine. What differs between engines
+# is a thin ADAPTER: the affordances each one actually has. Two copies of one
+# instruction disagree silently, and this repo has been bitten by that often
+# enough to say so in CLAUDE.md, so the shared body is substituted in rather
+# than written twice — and warroom-engine.test.mjs fails if either rendering
+# stops containing it.
+
+# The Codex adapter. A DELTA, not a second preamble: it names the four Claude
+# affordances the shared body mentions that Codex does not have, and restates
+# the one constraint that must survive translation.
+CEO_CODEX_ADAPTER='ENGINE NOTE — you are Codex, not Claude Code. The instructions below are the standing CEO brief for this project; follow them, with these four substitutions:
+- There is no `Agent` tool and no `.claude/agents/` dispatch. Where the brief says to dispatch an engine, READ that engine'"'"'s file under .claude/agents/ as your operating contract and do that work yourself in this pane.
+- You ARE the CEO for this pane. Do NOT spawn a CEO sub-agent, and do not delegate the CEO role to a sub-agent under any name.
+- There are no /color or /name slash commands. Skip them; they set Claude Code session identity and have no Codex equivalent.
+- `@"name (agent)"` mentions do not exist. Refer to engines by their file path.
+Everything else below applies to you unchanged.'
+
+# Render the preamble for an engine, to stdout.
+render_ceo_preamble() {
+  case "$1" in
+    claude) printf '@"ceo (agent)" %s' "$CEO_PREAMBLE" ;;
+    codex)  printf '%s\n\n%s' "$CEO_CODEX_ADAPTER" "$CEO_PREAMBLE" ;;
+  esac
+}
+
+# Codex takes its preamble as a command-line value, so it has to reach the shell
+# as a path rather than as prose. Writing it to a file and reading it back with
+# "$(cat …)" means the preamble is NEVER exposed to shell or TOML quoting rules
+# — measured to survive the real 2,931-byte entry file verbatim, backticks,
+# double quotes and em-dashes included.
+ceo_preamble_file() {
+  local eng="$1" dir="$PROJECT_STATE_DIR/entry"
+  mkdir -p "$dir" 2>/dev/null
+  local f="$dir/ceo.${eng}.md"
+  render_ceo_preamble "$eng" > "$f"
+  printf '%s' "$f"
+}
+
+# The exact shell line a pane types to start its engine.
+#   engine_launch_cmd <engine> [resume_session_id] [with_preamble 0|1]
+engine_launch_cmd() {
+  local eng="$1" resume="$2" with_preamble="${3:-0}"
+  case "$eng" in
+    claude)
+      # Claude is launched bare; inject_ceo_prompt pastes afterwards. Unchanged.
+      if [ -n "$resume" ]; then printf 'claude --resume %s' "$resume"
+      else printf 'claude'; fi
+      ;;
+    codex)
+      # Resume is a SUBCOMMAND. On resume the thread already carries its
+      # instructions, so the preamble is not re-sent.
+      if [ -n "$resume" ]; then printf 'codex resume %s' "$resume"
+      elif [ "$with_preamble" -eq 1 ]; then
+        printf 'codex -c developer_instructions="$(cat %s)"' "$(ceo_preamble_file codex)"
+      else printf 'codex'; fi
+      ;;
+  esac
+}
+
 # Inject CEO agent reference + preamble into a tmux pane as ONE paste.
 # Single send-keys call so the whole prompt arrives as one pasted block —
 # prevents system-reminders from splitting between agent-ref and preamble.
 # Uses -l (literal) so tmux doesn't interpret parens/quotes as key names.
+#
+# Engine-aware: this is the CLAUDE delivery path. A Codex pane already received
+# the same preamble on its command line at launch (engine_launch_cmd), so
+# pasting here would deliver it twice. Returning early is the whole difference.
 inject_ceo_prompt() {
   local target="$1"
-  tmux send-keys -t "$target" -l "@\"ceo (agent)\" ${CEO_PREAMBLE}"
+  local eng="${2:-$(engine_for_pane "$(pane_number_of "$target")")}"
+  [ "$eng" = "claude" ] || return 0
+  tmux send-keys -t "$target" -l "$(render_ceo_preamble claude)"
+}
+
+# Best-effort pane number from a tmux target like "SESSION:CEO-3.1" or
+# "SESSION:GRID.3". Used only to resolve an engine when a caller did not pass
+# one; falls back to 1, which resolves to the session default.
+pane_number_of() {
+  local t="$1" n=""
+  case "$t" in
+    *:CEO-*) n="${t#*:CEO-}"; n="${n%%.*}" ;;
+    *:GRID.*) n="${t#*:GRID.}"; n="${n%%.*}" ;;
+  esac
+  case "$n" in ''|*[!0-9]*) n=1 ;; esac
+  printf '%s' "$n"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -151,9 +345,19 @@ check_deps() {
   if ! command -v tmux &>/dev/null; then
     echo "✗ tmux not found. Run: brew install tmux"; exit 1
   fi
-  if ! command -v claude &>/dev/null; then
-    echo "✗ claude not found. Install Claude Code first."; exit 1
-  fi
+  # Check the engines that will ACTUALLY launch, and name the missing one. This
+  # was a hardcoded `command -v claude`, which is the wrong question the moment
+  # a pane runs Codex: a Codex-only war room was refused for the absence of a
+  # program it was never going to start, and a missing `codex` was not caught at
+  # all — it surfaced as a dead pane after tmux had already built the session.
+  local _eng _bin
+  while IFS= read -r _eng; do
+    [ -n "$_eng" ] || continue
+    _bin="$(engine_binary "$_eng")"
+    if ! command -v "$_bin" &>/dev/null; then
+      echo "✗ $_bin not found. $(engine_install_hint "$_eng")"; exit 1
+    fi
+  done < <(engines_in_use "${1:-1}")
   if ! command -v python3 &>/dev/null; then
     echo "✗ python3 not found. Required for cost tracking and event logging."; exit 1
   fi
@@ -226,8 +430,18 @@ wait_for_shell_prompt() {
   done
 }
 
-send_launch_claude() {
-  # Usage: send_launch_claude <target> [resume_session_id]
+send_launch_engine() {
+  # Usage: send_launch_engine <target> [resume_session_id] [engine]
+  #
+  # Renamed from send_launch_claude, which named one engine in a function that
+  # now starts either. `send_launch_claude` remains below as a thin alias so
+  # that all six historical call sites, and any project shim that learned the
+  # old name, keep working.
+  #
+  # This function deliberately contains NO engine binary name. It asks
+  # engine_launch_cmd for the line to type, so adding an engine is a row in that
+  # case statement rather than a branch here — and warroom-engine.test.mjs fails
+  # if a literal `claude` or `codex` reappears in this body.
   #
   # NO --dangerously-skip-permissions. Removed 2026-08-16, founder decision.
   #
@@ -251,17 +465,22 @@ send_launch_claude() {
   # now a genuine signal about what agents reach for.
   local target=$1
   local resume=$2
+  local eng="${3:-$(engine_for_pane "$(pane_number_of "$target")")}"
+  # A Codex pane carries its preamble on the launch line, so it must know here
+  # whether this is a bare session. Claude ignores the flag — it is pasted into
+  # afterwards by inject_ceo_prompt, exactly as before.
+  local with_preamble=1
+  [ "${BARE_MODE:-0}" -eq 1 ] && with_preamble=0
   wait_for_shell_prompt "$target"
-  if [ -n "$resume" ]; then
-    tmux send-keys -t "$target" "claude --resume $resume" Enter
-  else
-    tmux send-keys -t "$target" "claude" Enter
-  fi
+  tmux send-keys -t "$target" "$(engine_launch_cmd "$eng" "$resume" "$with_preamble")" Enter
 }
+
+# Retained name. Six call sites and any project shim still use it.
+send_launch_claude() { send_launch_engine "$@"; }
 
 launch_claude_in_window() {
   local n=$1
-  send_launch_claude "$SESSION:CEO-$n"
+  send_launch_engine "$SESSION:CEO-$n" "" "$(engine_for_pane "$n")"
 }
 
 # Feature A2 — Smart Claude ready detection (window-based)
@@ -645,7 +864,10 @@ cmd_start() {
     echo "✗ CEO count must be 1–8. Got: $count"; exit 1
   fi
 
-  check_deps
+  # Pass the pane count so every engine this run will launch is checked, not
+  # only pane 1's. A mixed session that asks for Codex in pane 3 must fail
+  # before tmux builds anything.
+  check_deps "$count"
 
   if tmux has-session -t "$SESSION" 2>/dev/null; then
     if [ "$grid_mode" -eq 1 ]; then
@@ -1367,6 +1589,41 @@ cmd_grid_start() {
 }
 
 # Feature B1 — Grid view from running session
+# Print how each pane would be launched, and start nothing.
+#
+# This exists because the alternative was untestable. Engine resolution decides
+# what program runs a CEO, and every other path to it goes through tmux — so
+# without this the only way to check the resolution was to start a war room and
+# look, which is why `assert.equal(SOME_CONST, 'claude')` is the test a repo
+# ends up writing. That assertion is vacuous; this command makes the real thing
+# observable.
+#
+# It MUST stay a thin reporter over engine_for_pane / engine_launch_cmd. The
+# moment it computes an answer of its own it becomes a second implementation
+# that agrees with the first only until someone edits one of them.
+cmd_engine() {
+  local count="${1:-3}" i eng
+  if ! [[ "$count" =~ ^[0-9]+$ ]]; then
+    echo "Usage: ${SESSION} engine [N]   — show the engine and launch line for panes 1..N"; exit 1
+  fi
+  echo ""
+  echo -e "  ${BOLD}Engines${RESET}  (default: $WARROOM_ENGINE_FALLBACK · known: $WARROOM_ENGINES)"
+  echo ""
+  for i in $(seq 1 "$count"); do
+    eng="$(engine_for_pane "$i")" || exit 1
+    printf '  CEO-%-3s %-8s %s\n' "$i" "$eng" "$(engine_launch_cmd "$eng" "" "$([ "${BARE_MODE:-0}" -eq 1 ] && echo 0 || echo 1)")"
+  done
+  echo ""
+  printf '  resume form: '
+  for i in $(seq 1 "$count"); do
+    eng="$(engine_for_pane "$i")"
+    printf '%s ' "$(engine_launch_cmd "$eng" "SESSION_ID" 0)"
+    break
+  done
+  echo ""
+  echo ""
+}
+
 cmd_grid_view() {
   if ! tmux has-session -t "$SESSION" 2>/dev/null; then
     echo "✗ No war room running."; exit 1
@@ -3313,11 +3570,12 @@ Rules:
 #  ROUTER
 # ─────────────────────────────────────────────────────────────
 
-# Parse --grid and --brief flags
+# Parse --grid, --brief and --engine flags
 GRID_MODE=0
 BARE_MODE=0
 BRIEF_FILE=""
 BRIEF_NEXT=0
+ENGINE_NEXT=0
 ARGS=()
 for arg in "$@"; do
   if [ "$arg" = "--grid" ]; then
@@ -3326,13 +3584,35 @@ for arg in "$@"; do
     BARE_MODE=1
   elif [ "$arg" = "--brief" ]; then
     BRIEF_NEXT=1
+  elif [ "$arg" = "--engine" ]; then
+    ENGINE_NEXT=1
   elif [ "${BRIEF_NEXT:-0}" -eq 1 ]; then
     BRIEF_FILE="$arg"
     BRIEF_NEXT=0
+  elif [ "${ENGINE_NEXT:-0}" -eq 1 ]; then
+    # `--engine codex`   → default for every pane this run
+    # `--engine 2:codex` → pane 2 only. Repeatable, and mixes with a default.
+    case "$arg" in
+      *:*) WARROOM_ENGINE_OVERRIDES="$WARROOM_ENGINE_OVERRIDES $arg" ;;
+      *)   WARROOM_ENGINE_DEFAULT="$arg" ;;
+    esac
+    ENGINE_NEXT=0
   else
     ARGS+=("$arg")
   fi
 done
+
+# Validate at parse time, not at launch time. An unknown engine must be refused
+# before tmux builds a session, and must never fall back to the default —
+# `--engine codek` starting a Claude war room is the failure this rejects.
+[ -n "$WARROOM_ENGINE_DEFAULT" ] && engine_require_known "$WARROOM_ENGINE_DEFAULT" "--engine"
+for _tok in $WARROOM_ENGINE_OVERRIDES; do
+  case "$_tok" in
+    [0-9]*:*) engine_require_known "${_tok#*:}" "--engine $_tok" ;;
+    *) echo "✗ malformed --engine override '$_tok'. Expected <pane-number>:<engine>." >&2; exit 1 ;;
+  esac
+done
+unset _tok
 
 CMD="${ARGS[0]:-}"
 
@@ -3343,6 +3623,7 @@ case "$CMD" in
   ls)             cmd_ls ;;
   task)           cmd_task "${ARGS[1]}" "${ARGS[2]}" ;;
   grid)           cmd_grid_view ;;
+  engine)         cmd_engine "${ARGS[1]:-3}" ;;
   restore)        cmd_restore "${ARGS[1]:-}" ;;
   clear-sessions)   cmd_clear_sessions ;;
   prune-branches)   cmd_prune_branches ;;
@@ -3384,6 +3665,9 @@ case "$CMD" in
     echo "    ${SESSION} [N] --grid        Start in grid mode (N panes in one window)"
     echo "    ${SESSION} [N] --bare        Start N blank Claude sessions (no CEO agent/preamble)"
     echo "    ${SESSION} [N] --brief file  Start with briefing file (## CEO-N sections)"
+    echo "    ${SESSION} [N] --engine E   Run every CEO on engine E (claude|codex; default claude)"
+    echo "    ${SESSION} [N] --engine N:E Run CEO-N on engine E — repeatable, mixes with the above"
+    echo "    ${SESSION} engine [N]       Show the engine + launch line for each pane; starts nothing"
     echo "    ${SESSION} add               Add CEO mid-run"
     echo "    ${SESSION} done <N>          Handoff and close CEO-N"
     echo "    ${SESSION} kill              Destroy war room + clean worktrees + save snapshot"
