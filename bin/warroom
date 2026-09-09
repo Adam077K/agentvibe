@@ -570,21 +570,30 @@ inject_ceo_prompt() {
 }
 
 # The pane number in a tmux target like "SESSION:CEO-3.1" or "SESSION:GRID.3".
-# Used to resolve an engine when a caller did not pass one; falls back to 1,
-# which resolves to pane 1's engine — NOT to a hardcoded engine, which is the
-# distinction scripts/warroom-engine.test.mjs pins.
+# Used to resolve an engine when a caller did not pass one.
 #
-# The review recommended making this fallback loud. It is deliberately left
-# silent: every target this program actually builds is `…:CEO-N.x` or
-# `…:GRID.N`, both parseable, and the suite pins the fallback's value. Changing
-# it belongs with the test that asserts it, in one change, not here.
+# It REFUSES a target it cannot read rather than answering 1. Pane 1's engine is
+# a plausible answer and a wrong one, and a pane on an engine nobody asked for is
+# indistinguishable from a working pane until someone reads a whole session —
+# the same failure the engine check itself exists to refuse, one layer down.
+#
+# Nothing this program builds reaches the refusal: every target is `…:CEO-N.x` or
+# `…:GRID.N`. What reaches it is a target built from data — cmd_restore takes the
+# pane number out of a snapshot file — and a corrupt snapshot entry is exactly
+# the case where guessing pane 1 is worst.
 pane_number_of() {
   local t="$1" n=""
   case "$t" in
     *:CEO-*) n="${t#*:CEO-}"; n="${n%%.*}" ;;
     *:GRID.*) n="${t#*:GRID.}"; n="${n%%.*}" ;;
   esac
-  case "$n" in ''|*[!0-9]*) n=1 ;; esac
+  case "$n" in
+    ''|*[!0-9]*)
+      echo "✗ cannot read a pane number from the tmux target '$t'." >&2
+      echo "  Refusing rather than guessing pane 1 — guessing puts a pane on an engine nobody asked for." >&2
+      return 1
+      ;;
+  esac
   printf '%s' "$n"
 }
 
@@ -2143,6 +2152,54 @@ except:
     chosen_snapshot="${snap_files[$(( user_pick - 1 ))]}"
   fi
 
+  # ── Validate the whole snapshot BEFORE anything is built or destroyed ──────
+  #
+  # Same shape as engines_resolve: every pane this command will create is checked
+  # once, up front, and a single bad entry refuses the WHOLE restore. Nothing is
+  # half-built, so there is no partial tmux session to clean up — and no war room
+  # that is running and silently missing a CEO, which is the same
+  # indistinguishable-from-working failure the engine refusal exists to prevent,
+  # one level up.
+  #
+  # THIS SITS ABOVE THE kill-session BELOW, and that placement is the load-bearing
+  # part. Validating after it would destroy the founder's RUNNING war room and
+  # then refuse to build the replacement, which is worse than either failure on
+  # its own: the corrupt snapshot would cost them the session they still had.
+  #
+  # `^[0-9]+$` and not str.isdigit(): isdigit() accepts '٣' and other Unicode
+  # digits that a bash `[0-9]` glob rejects, and two predicates for one question
+  # disagree exactly once, in the case nobody tested.
+  local snapshot_ns snapshot_bad
+  snapshot_ns=$(python3 -c "
+import json, re
+d = json.load(open('${chosen_snapshot}'))
+print(' '.join(str(c.get('n','')) for c in d.get('ceos',[]) if re.fullmatch(r'[0-9]+', str(c.get('n','')))))
+" 2>/dev/null)
+  snapshot_bad=$(python3 -c "
+import json, re
+d = json.load(open('${chosen_snapshot}'))
+for i, c in enumerate(d.get('ceos',[])):
+    n = str(c.get('n',''))
+    if not re.fullmatch(r'[0-9]+', n):
+        print('entry #%d names CEO %r — not a pane number' % (i, n))
+" 2>/dev/null)
+
+  if [ -n "$snapshot_bad" ]; then
+    echo "✗ this snapshot names CEOs that cannot be placed:" >&2
+    printf '%s\n' "$snapshot_bad" | sed 's/^/    /' >&2
+    echo "    in $chosen_snapshot" >&2
+    echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+    echo "  Pick another snapshot, or fix the entry above and run '${SESSION} restore' again." >&2
+    exit 1
+  fi
+
+  # Engines are resolved and their binaries checked here too — before the kill —
+  # so a restore that would fail for a missing binary also costs nothing.
+  if [ -n "$snapshot_ns" ]; then
+    engines_resolve $snapshot_ns
+    check_engine_deps
+  fi
+
   echo ""
   echo -e "  ${BOLD}${C_PEACH}Restoring ${SESSION_UPPER} session...${RESET}"
   echo ""
@@ -2175,15 +2232,11 @@ except:
   local grid_mode
   grid_mode=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(str(d.get('grid_mode', False)).lower())" 2>/dev/null || echo "false")
 
-  # Resolve the engines for the panes this restore will actually recreate —
-  # their real numbers from the snapshot, not 1..N, since `done` can leave gaps —
-  # before the first of them exists. `check_deps` at the top of this function
-  # could only ever have checked pane 1.
-  local snapshot_ns
-  snapshot_ns=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(' '.join(str(c.get('n','')) for c in d.get('ceos',[]) if str(c.get('n','')).isdigit()))" 2>/dev/null)
+  # The engines were resolved and their binaries checked before the kill above,
+  # against the snapshot's REAL pane numbers rather than 1..N, since `done` can
+  # leave gaps. What is left to do here is the part that must happen after the
+  # old session is gone and before the first new pane exists.
   if [ -n "$snapshot_ns" ]; then
-    engines_resolve $snapshot_ns
-    check_engine_deps
     engines_prepare
     engines_persist $snapshot_ns
   fi
@@ -2201,6 +2254,17 @@ except:
     task=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('task',''))" 2>/dev/null)
     start_ts=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('start_ts',0))" 2>/dev/null)
     session_id=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('session_id',''))" 2>/dev/null)
+
+    # Guard: a CEO number that is not a number. A snapshot is a RECOVERY input,
+    # not operator error, so one bad entry does not refuse the good ones — it is
+    # skipped, named, and the restore exits non-zero at the end so it can never
+    # be read as clean. That is the opposite trade from a fresh start, where a
+    # bad engine aborts before anything exists.
+    #
+    # What must not happen in either place is the original defect: an unreadable
+    # pane number resolving to pane 1's engine. A missing pane is visible; a pane
+    # on the wrong engine is not, until someone reads a whole session.
+    case "$n" in ''|*[!0-9]*) continue ;; esac
 
     # Guard: skip if branch is empty or not a ceo-* branch
     if [ -z "$branch" ] || [[ "$branch" != ceo-* ]]; then
@@ -2344,6 +2408,7 @@ except:
   else
     tmux select-window -t "$SESSION:CEO-${restored_ns[0]}"
   fi
+
   tmux attach -t "$SESSION"
 }
 
