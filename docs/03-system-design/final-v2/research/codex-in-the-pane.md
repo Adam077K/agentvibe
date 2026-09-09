@@ -24,6 +24,7 @@ actually printed it, and where a capability is claimed, a sentinel proves it end
 | Is `PROFILES.codex`'s argv real? | **Yes, and it emits the declared events.** `verified_against_binary` still stays `false` | §6 |
 | Does `codex exec`'s no-exit-on-auth-failure break the resolver? | **No — and an earlier draft of this file said yes.** The resolver already kills at 120s and returns `unresolved` | §6.1 |
 | Does Ghostty need anything the templates lack? | **No. Nothing to build.** | §7 |
+| Is engine tool scoping enforced in a Codex pane? | **No — it is prose, not a control**, and the structural fix is not well-defined here | §9 |
 
 ---
 
@@ -509,3 +510,35 @@ neither can be closed by any amount of further work by an agent here.**
   `judges.js` already names as the profile's most likely failure.
 - Until then `verified_against_binary: false` is the accurate value, and §6.2 explains why
   flipping it on an accepted argv would be the wrong reading of the flag.
+
+
+## 9 · The one boundary that is prose, not a control — engine tool scoping under Codex
+
+**This is not a gap that a credential or a served turn can close. It is a property of running Codex
+in this system, and the founder should read it before treating a Codex pane as equivalent to a
+Claude one.**
+
+A Claude Code sub-agent that declares no `Write` and no `Edit` *structurally cannot* write —
+`reviewer` and `reviewer-readonly` carry no write tools precisely because CLAUDE.md holds that an
+agent that can edit what it reviews will review what it can edit. **A Codex pane has no equivalent.**
+Codex runs as one process with whatever the founder's Codex install can do; there is no per-role
+tool scoping inside it. The launcher's adapter says so in the words the model sees
+(`bin/warroom`, the Codex preamble): *"ENGINE TOOL SCOPING IS NOT ENFORCED IN THIS PANE … in this
+pane that boundary is prose, not a control"*, and it instructs a Codex CEO to STOP and report that a
+task needs a Claude Code pane if it would require acting as a read-only engine. **That instruction is
+a request to a model, not a boundary anything enforces.**
+
+**Why the preferred structural fix does not exist for this design.** The QA gate's preferred
+remedy was to *refuse* `--engine codex` for panes whose role maps to a tool-scoped engine. But
+`--engine` selects a *pane's* engine, and in the war room **every pane is the CEO** — there is no
+role→pane mapping to refuse on. A CEO is not a tool-scoped role; it dispatches them. So there is no
+well-defined set of panes to forbid Codex on, which is why the control here is prose rather than a
+refusal. That is a limitation of the war-room model meeting Codex, not a shortcut taken in this
+change.
+
+**What this means in practice, stated for the founder's decision, not hedged:** a Codex CEO pane is
+**trusted, not sandboxed**. Its file-write and shell reach is whatever the founder's Codex login
+grants, and the harness's per-engine tool boundaries do not apply to it. Run a Codex pane where you
+would trust the operator with the machine; do not run one expecting the read-only/tool-scoped
+guarantees a Claude pane's engine roles give you. If those guarantees are needed, the pane must be
+Claude.
