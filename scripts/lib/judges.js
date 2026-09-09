@@ -128,10 +128,44 @@ const BASE_ENV_ALLOW = [
 ];
 
 const PROFILES = {
-  // `codex exec - --json`: subcommand not flag, trailing `-` mandatory (without it codex
-  // APPENDS stdin to the argv prompt rather than ignoring it), and `-p` is `--profile`,
-  // not prompt. Emits JSON Lines: thread.started · turn.started · item.* · turn.completed
+  // `codex exec - --json`: subcommand not flag, and `-p` is `--profile`, not prompt.
+  // Emits JSON Lines: thread.started · turn.started · item.* · turn.completed
   // · turn.failed · error.
+  //
+  // MEASURED 2026-09-09 against codex-cli 0.153.4, which IS installed on this machine —
+  // the block above still says "`codex` is not installed here", and that premise is now
+  // false. Full transcript with commands and exit codes:
+  // docs/03-system-design/final-v2/research/codex-in-the-pane.md §6.
+  //
+  // What the measurement confirmed: `exec` is a real subcommand, `--json` is real ("Print
+  // events to stdout as JSONL"), `-` is real, and the binary emits `thread.started` then
+  // `turn.started` as JSONL on stdout — the exact names below. `-p` is `--profile`,
+  // verbatim, exactly as this comment already said.
+  //
+  // ONE CORRECTION: the trailing `-` is NOT mandatory. The binary's own help says the
+  // prompt is read from stdin "If not provided as an argument (or if `-` is used)", so `-`
+  // is sufficient and explicit rather than required. Harmless either way; kept because
+  // explicit is better here, and corrected because a false "mandatory" invites someone to
+  // build a rule on it.
+  //
+  // `verified_against_binary` STAYS false, and the distinction is the whole point. The
+  // caveat this flag drives says "this PARSE is believed, not confirmed" — and the parse
+  // is of a COMPLETED turn, which was never observed: every probe stopped at 401
+  // Unauthorized, because they ran against an empty CODEX_HOME so that they could not
+  // spend the founder's credit. The most-likely-failure note above — whether the answer
+  // arrives in `turn.completed.last_agent_message` or in `item.*` — is exactly what a
+  // served turn would settle and what a 401 cannot. Flipping this flag on the strength of
+  // an accepted argv would be "the checks ran and are green" standing in for "the tier was
+  // satisfied", which CLAUDE.md names as a recurring error here.
+  //
+  // AN OPERATIONAL HAZARD FOR ANY CALLER, found by running it: `codex exec` DOES NOT EXIT
+  // ON AN AUTH FAILURE. After its numbered retries it loops indefinitely on
+  // `{"type":"error","message":"Reconnecting... waiting for network …"}` and had to be
+  // killed. A dispatch that waits on this child HANGS rather than returning `unresolved`,
+  // so the timeout has to be the caller's — Rule 10 is not satisfied by a resolver that
+  // never returns at all. Note also the transport is a websocket
+  // (`wss://api.openai.com/v1/responses`), not plain HTTPS, which matters wherever egress
+  // policy is written for HTTPS only.
   codex: {
     bin: 'codex',
     argv: ['exec', '-', '--json'],
