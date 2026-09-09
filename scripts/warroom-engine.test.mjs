@@ -1130,6 +1130,15 @@ test('a corrupt snapshot entry refuses the WHOLE restore, building nothing and d
   // And nothing else moved either: no window, no setenv, no layout.
   assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused restore must change nothing in tmux');
 
+  // Nor on disk. cmd_restore recreates missing worktrees as it goes, so
+  // "builds nothing" has to mean the filesystem too — a refused restore that
+  // still left three checkouts behind would be building something.
+  assert.equal(
+    fs.existsSync(path.join(p.dir, '.worktrees')),
+    false,
+    'a refused restore must not recreate worktrees either'
+  );
+
   // It named what it could not place, on STDERR. Asserted as properties rather
   // than as a sentence: this message's wording has already changed twice during
   // review, and a test that pins prose makes the next improvement to it look
@@ -1137,6 +1146,48 @@ test('a corrupt snapshot entry refuses the WHOLE restore, building nothing and d
   assert.match(r.err, /'x'/, 'the refusal must name the identifier it could not place');
   assert.match(r.err, /refus/i, 'and must say that it is refusing');
   assert.match(r.err, /restore/i, 'and what it is refusing');
+});
+
+// ── The choice outlives the process that parsed it ───────────
+
+test('a per-pane engine chosen at start is still pane 2\'s engine in the NEXT invocation', (t) => {
+  // `--engine 2:codex` used to exist only in the process that parsed it, so
+  // every later command — `proj engine`, `proj grid`, `proj restore` — silently
+  // put pane 2 back on the default. The founder had no way to see it except by
+  // reading the pane. That is the same indistinguishable-from-working failure
+  // the rest of this file is about, spread across invocations instead of panes.
+  //
+  // Two runs, and the SECOND one passes no --engine at all. That is the whole
+  // test: a run that says nothing about engines must still find the choice the
+  // first run recorded.
+  // MUTATION: delete the `engines_persist $(seq 1 "$count")` call from cmd_start
+  // → the second invocation answers claude for pane 2. Red.
+  // MUTATION: delete the `engine_persisted_for_pane` rung from
+  // engine_candidate_for_pane → the file is written and never read. Red.
+  const p = launchableProject(t);
+  const sh = shim(t);
+
+  const started = launch(p, ['3', '--engine', '2:codex'], sh);
+  assert.equal(started.code, 0, started.out);
+  assert.match(launchLines(started.calls).get('proj:CEO-2'), /^codex\b/, 'the first run must actually place it');
+
+  // A separate process, no flags, same project.
+  const later = warroom(p, ['engine', '3']);
+  assert.equal(later.code, 0, later.err);
+  assert.deepEqual(
+    panes(later).map((x) => `${x.n}:${x.engine}`),
+    ['1:claude', '2:codex', '3:claude'],
+    'the second invocation must find pane 2 on codex without being told again'
+  );
+
+  // And it is a RECORD of this session, not a new default: a run that says
+  // something different still wins, or the persistence would have become an
+  // unremovable config setting.
+  assert.deepEqual(
+    panes(warroom(p, ['engine', '3', '--engine', '2:claude'])).map((x) => `${x.n}:${x.engine}`),
+    ['1:claude', '2:claude', '3:claude'],
+    'an explicit override must still beat the persisted map'
+  );
 });
 
 test('a snapshot with no corrupt entry restores clean and exits zero', (t) => {
