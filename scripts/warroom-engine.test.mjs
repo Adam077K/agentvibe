@@ -46,8 +46,27 @@ const SRC = fs.readFileSync(WARROOM, 'utf8');
  * under this project's state_dir, so a test run cannot overwrite what a live
  * war room is using.
  */
-function project(t, { configExtra = '', preamble = 'SENTINEL_BODY_ALPHA the shared CEO identity.' } = {}) {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'warroom-engine-'));
+/**
+ * Locates the preamble path inside a rendered codex launch line, and pins the two
+ * properties that path has to have. Group 1 is the path.
+ *
+ * Both are load-bearing and both were bugs:
+ *   - the path is QUOTED — unquoted, a state_dir containing a space made `cat a b`
+ *     read two files and silently hand codex the tail of one, dropping the whole brief;
+ *   - it is read through `${WARROOM_CEO_PREAMBLE:-…}` — the launcher also exports the
+ *     path out of band with `tmux setenv`, and the literal is the fallback for a pane
+ *     whose shell forked before that export and would otherwise read the variable empty.
+ *
+ * Kept as one constant because two tests match it and a locator duplicated is a locator
+ * that gets half-updated.
+ */
+const CODEX_PREAMBLE_IN_LINE = /\$\(cat "\$\{WARROOM_CEO_PREAMBLE:-(.*ceo\.codex\.md)\}"\)/;
+
+function project(
+  t,
+  { configExtra = '', preamble = 'SENTINEL_BODY_ALPHA the shared CEO identity.', homePrefix = 'warroom-engine-' } = {}
+) {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), homePrefix));
   const dir = path.join(home, 'proj');
   fs.mkdirSync(path.join(dir, '.claude', 'entry'), { recursive: true });
   fs.mkdirSync(path.join(dir, '.claude', 'agents'), { recursive: true });
@@ -276,7 +295,7 @@ test('mixed-engine panes resolve independently in one session', (t) => {
   );
   // And the launch lines differ in kind, not just in name.
   assert.equal(got[0].cmd, 'claude');
-  assert.match(got[1].cmd, /^codex -c developer_instructions="\$\(cat .*ceo\.codex\.md\)"$/);
+  assert.match(got[1].cmd, CODEX_PREAMBLE_IN_LINE);
 });
 
 test('a per-pane override beats a run default, which beats config, which beats claude', (t) => {
@@ -311,7 +330,7 @@ test('the codex launch line passes the preamble by PATH, never as inline prose',
   assert.equal(r.code, 0, r.err);
   const [pane] = panes(r);
 
-  const m = pane.cmd.match(/\$\(cat (.*ceo\.codex\.md)\)/);
+  const m = pane.cmd.match(CODEX_PREAMBLE_IN_LINE);
   assert.ok(m, `launch line should read the preamble from a file: ${pane.cmd}`);
   assert.doesNotMatch(pane.cmd, /PROSE_MUST_NOT_APPEAR_ON_THE_COMMAND_LINE/);
 
@@ -319,6 +338,72 @@ test('the codex launch line passes the preamble by PATH, never as inline prose',
   const rendered = fs.readFileSync(m[1], 'utf8');
   assert.match(rendered, /PROSE_MUST_NOT_APPEAR_ON_THE_COMMAND_LINE/);
   assert.match(rendered, /ENGINE NOTE — you are Codex/);
+});
+
+test('a state_dir containing a space still delivers the WHOLE preamble', (t) => {
+  // The defect that changed this launch line's shape, asserted as the property rather
+  // than as the syntax that currently fixes it. Unquoted, the path expanded to two words
+  // and `cat a b` read two files: codex was handed the tail of one and the CEO brief was
+  // silently gone. Nothing errored — which is why a shape assertion alone would not have
+  // caught it and a delivery assertion does.
+  //
+  // MUTATION: drop the inner quotes in engine_launch_cmd's codex arm, i.e. emit
+  // `$(cat ${WARROOM_CEO_PREAMBLE:-%s})` → the locator no longer matches and this goes
+  // red on the first assertion. Confirmed.
+  const p = project(t, {
+    homePrefix: 'warroom engine spaced ',
+    preamble: 'SPACED_PATH_SENTINEL the whole brief must survive.',
+  });
+  assert.ok(/\s/.test(p.home), `fixture must actually contain a space: ${p.home}`);
+
+  const r = warroom(p, ['engine', '1', '--engine', 'codex']);
+  assert.equal(r.code, 0, r.err);
+  const cmd = panes(r)[0].cmd;
+
+  // DELIVERY FIRST, and deliberately NOT via the locator — the locator is a shape check,
+  // and a shape check standing in front of a delivery check means the delivery check never
+  // runs on the failure it exists for. The value expression is expanded by a real bash, the
+  // same expansion the pane performs, and compared against the file on disk.
+  // WARROOM_CEO_PREAMBLE is stripped so the `:-` fallback is the branch under test.
+  const rendered = path.join(p.home, '.proj', 'entry', 'ceo.codex.md');
+  assert.ok(/\s/.test(rendered), 'the path under test must contain a space');
+  const valueExpr = cmd.slice(cmd.indexOf('developer_instructions=') + 'developer_instructions='.length);
+  const env = { ...process.env };
+  delete env.WARROOM_CEO_PREAMBLE;
+  let delivered;
+  try {
+    delivered = execFileSync('bash', ['-c', `printf '%s' ${valueExpr}`], { encoding: 'utf8', env, stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (e) {
+    delivered = `<the shell failed: ${e.stderr ?? e.message}>`;
+  }
+  assert.equal(
+    delivered,
+    fs.readFileSync(rendered, 'utf8'),
+    'the shell handed codex something other than the whole file — this is the space bug'
+  );
+  assert.match(delivered, /^ENGINE NOTE — you are Codex/, 'the head of the brief was lost');
+  assert.match(delivered, /SPACED_PATH_SENTINEL the whole brief must survive\./, 'the body was lost');
+
+  // Only now the shape, so a future reader knows which mechanism delivered it.
+  const m = cmd.match(CODEX_PREAMBLE_IN_LINE);
+  assert.ok(m, `path with a space must stay one quoted word: ${cmd}`);
+  assert.equal(m[1], rendered);
+});
+
+test('the codex line consults the out-of-band path, and keeps the literal as its fallback', (t) => {
+  // Two mechanisms, and the test has to see both or it cannot tell them apart. The
+  // launcher exports the path with `tmux setenv -g WARROOM_CEO_PREAMBLE` in
+  // engine_prepare, BEFORE any pane exists; the literal stays as the `:-` default because
+  // a pane whose shell forked before that export reads the variable EMPTY, and a Codex
+  // pane that comes up with no brief and no error is the failure this repo refuses.
+  //
+  // MUTATION: emit only the variable, `$(cat "$WARROOM_CEO_PREAMBLE")` → the fallback
+  // assertion goes red. Emit only the literal → the variable assertion goes red.
+  const p = project(t);
+  const [pane] = panes(warroom(p, ['engine', '1', '--engine', 'codex']));
+  assert.match(pane.cmd, /\$\{WARROOM_CEO_PREAMBLE:-/, 'the out-of-band path is not consulted');
+  const m = pane.cmd.match(CODEX_PREAMBLE_IN_LINE);
+  assert.ok(m && fs.existsSync(m[1]), 'the fallback literal must be a real path a pane could read');
 });
 
 test('bare mode gives codex no preamble, and still launches it', (t) => {
