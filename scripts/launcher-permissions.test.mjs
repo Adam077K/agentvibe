@@ -77,7 +77,15 @@ test('the launcher still launches claude, with and without --resume', () => {
   // And the seam still actually types it into the pane. Without this, both printfs could
   // survive with nothing calling them — the same "deleted the launch entirely" failure this
   // test was written to catch, one level deeper.
-  assert.match(src, /tmux send-keys -t "\$target" "\$\(engine_launch_cmd .*\)" Enter/,
+  //
+  // Two assertions, not one, because the seam stopped being a single line on 2026-09-09: it
+  // now captures engine_launch_cmd's output and REFUSES an empty launch line rather than
+  // typing it, which is the whole of the dead-pane fix. The property is unchanged — the line
+  // is produced by engine_launch_cmd and it reaches the pane — so both halves are pinned. A
+  // single regex over the old one-liner would have been satisfied by deleting the refusal.
+  assert.match(src, /cmdline="\$\(engine_launch_cmd .*\)"/,
+    'the launch command is no longer built from engine_launch_cmd');
+  assert.match(src, /tmux send-keys -t "\$target" "\$cmdline" Enter/,
     'the launch command is built but never sent to the pane');
 });
 
