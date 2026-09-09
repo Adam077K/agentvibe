@@ -158,14 +158,28 @@ const PROFILES = {
   // an accepted argv would be "the checks ran and are green" standing in for "the tier was
   // satisfied", which CLAUDE.md names as a recurring error here.
   //
-  // AN OPERATIONAL HAZARD FOR ANY CALLER, found by running it: `codex exec` DOES NOT EXIT
-  // ON AN AUTH FAILURE. After its numbered retries it loops indefinitely on
-  // `{"type":"error","message":"Reconnecting... waiting for network …"}` and had to be
-  // killed. A dispatch that waits on this child HANGS rather than returning `unresolved`,
-  // so the timeout has to be the caller's — Rule 10 is not satisfied by a resolver that
-  // never returns at all. Note also the transport is a websocket
-  // (`wss://api.openai.com/v1/responses`), not plain HTTPS, which matters wherever egress
-  // policy is written for HTTPS only.
+  // `codex exec` DOES NOT EXIT ON AN AUTH FAILURE. After its numbered retries it loops
+  // indefinitely on `{"type":"error","message":"Reconnecting... waiting for network …"}`.
+  // Measured by running it: the probe had to be killed by hand.
+  //
+  // THIS IS NOT A RULE 10 HOLE, AND AN EARLIER DRAFT OF THIS COMMENT SAID IT WAS. The
+  // claim was that "a dispatch that waits on this child HANGS rather than returning
+  // `unresolved`, so the timeout has to be the caller's". The caller ALREADY has one:
+  // `runExternalJudge` in scripts/lib/resolvers.js spawns with `timeout: JUDGE_TIMEOUT_MS`
+  // (120000) and `killSignal: 'SIGKILL'`, and maps `ETIMEDOUT` to `unresolved` with the
+  // reason "killed, so nothing it may have been about to say counts". What actually hung
+  // was a bare foreground shell invocation in a research probe — MY invocation, with no
+  // timeout — and generalising from it to the resolver was reasoning from an action having
+  // failed rather than from the dispatch path's own signature. That is the exact error the
+  // research file this comment cites sets as its own governing rule.
+  //
+  // What IS true and is worth knowing: an unauthenticated codex burns the FULL 120s budget
+  // and then surfaces as a timeout, not as "unauthorized". So a credential problem costs
+  // two minutes per claim and is reported under the wrong name. A diagnosis cost, not a
+  // correctness hole.
+  //
+  // Note also the transport is a websocket (`wss://api.openai.com/v1/responses`), not plain
+  // HTTPS, which matters wherever egress policy is written for HTTPS only.
   codex: {
     bin: 'codex',
     argv: ['exec', '-', '--json'],

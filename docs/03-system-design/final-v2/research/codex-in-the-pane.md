@@ -21,7 +21,8 @@ actually printed it, and where a capability is claimed, a sentinel proves it end
 | Is an instructions file honoured? | **Yes — `AGENTS.md`**, and `AGENTS.override.md` outranks it | §3 |
 | Can a preamble be injected per-invocation? | **Yes — `-c developer_instructions=…`**, additive | §4 |
 | Does the TUI take a pasted block like `send-keys -l`? | **UNDETERMINED — needs the founder's credential** | §5 |
-| Is `PROFILES.codex`'s argv real? | **Yes, and it emits the declared events** — one real finding attached | §6 |
+| Is `PROFILES.codex`'s argv real? | **Yes, and it emits the declared events.** `verified_against_binary` still stays `false` | §6 |
+| Does `codex exec`'s no-exit-on-auth-failure break the resolver? | **No — and an earlier draft of this file said yes.** The resolver already kills at 120s and returns `unresolved` | §6.1 |
 | Does Ghostty need anything the templates lack? | **No. Nothing to build.** | §7 |
 
 ---
@@ -377,19 +378,45 @@ own help says otherwise — the prompt is read from stdin "if not provided as an
 is used)**". The `-` is *sufficient and explicit*, not mandatory. Harmless in practice, and worth
 correcting rather than propagating.
 
-**A real finding about the live resolver, reported not fixed.** The unauthenticated run **never
-terminated.** After exhausting the numbered retries it entered an unbounded loop:
+**`codex exec` does not exit on an auth failure.** The unauthenticated run **never terminated.**
+After exhausting the numbered retries it entered an unbounded loop:
 
 ```
 {"type":"error","message":"Reconnecting... waiting for network (Connection failed: error sending request)"}
    … repeating indefinitely; the process had to be killed
 ```
 
-`codex exec` does not exit on an auth failure. It retries forever. A resolver that shells out to
-this and waits will **hang rather than return `unresolved`** — which is precisely the failure mode
-Rule 10 exists to forbid ("a resolver never passes what it could not check"; hanging is not passing,
-but it is not reporting either). Any dispatch of `claim-judge-external` needs its own timeout; it
-cannot rely on the child to give up.
+> **Superseded 2026-09-09, within the same session, and the correction is the point.** This
+> paragraph continued: *"A resolver that shells out to this and waits will **hang rather than return
+> `unresolved`** — which is precisely the failure mode Rule 10 exists to forbid… Any dispatch of
+> `claim-judge-external` needs its own timeout; it cannot rely on the child to give up."*
+>
+> **That was wrong, and it was wrong in the way this file's own governing rule forbids: it
+> attributed a control's absence to an action having failed, instead of reading the control.** What
+> hung was a bare foreground shell invocation — the probe above, mine, with no timeout. The resolver
+> was never measured. Reading it settles it:
+>
+> ```
+> $ grep -n "timeout\|killSignal" scripts/lib/resolvers.js
+> 35:  const JUDGE_TIMEOUT_MS = 120000;
+> 507:  const r = spawnSync(binPath, argv, {
+> 510:    timeout: timeoutMs,
+> 511:    killSignal: 'SIGKILL',
+> 533:  return R('unresolved', `the judge did not finish within ${timeoutMs}ms — killed, so
+>       nothing it may have been about to say counts`, …)
+> ```
+>
+> `runExternalJudge` already spawns with a 120,000 ms timeout and `SIGKILL`, and maps `ETIMEDOUT`
+> to `unresolved` with a reason that says outright that nothing the child might have been about to
+> say counts. **Rule 10 is satisfied on that path, and no fix is needed.** The recommendation to add
+> a timeout would have had someone add a second one beside the first — two implementations of one
+> control, which is the defect this repository names in four places.
+
+**What survives the correction, stated at its true size.** An unauthenticated `codex exec` burns the
+**entire 120-second budget** and then surfaces as a *timeout* rather than as *unauthorized*. So a
+credential misconfiguration costs two minutes per claim and is reported under the wrong name. That
+is a diagnosis cost, not a correctness hole, and it is worth knowing before someone debugs a
+"slow judge" that is actually a missing key.
 
 Note also that the transport is a **websocket** (`wss://api.openai.com/v1/responses`), not a plain
 HTTPS request. That matters for any environment whose egress policy is written for HTTPS only.
@@ -453,11 +480,32 @@ does not change that, and does not invent support that does not exist.
 
 ## 8 · What a founder would have to authorise to close the gaps
 
-Two things are unmeasurable from inside this session, and both are cheap:
+Two things are unmeasurable from inside this session. **Both are blocked on the founder, and
+neither can be closed by any amount of further work by an agent here.**
 
-1. **Does the Codex TUI accept a multi-line `send-keys -l` block?** (§5) Needs a logged-in Codex.
-   Costs nothing to answer — paste without pressing Enter and read the pane — but needs the
-   `~/.codex` denyRead lifted, or the founder to run it and report the pane.
-2. **Do `PROFILES.codex`'s `completion()` and `text()` parsers handle a real completed turn?** (§6)
-   Needs one served turn, and that costs money. Until then `verified_against_binary: false` is the
-   accurate value.
+**1 · Does the Codex TUI accept a multi-line `send-keys -l` block?** (§5)
+
+- **Blocked on: the founder authenticating Codex.** An unauthenticated Codex renders a login
+  chooser, not a composer, so there is nothing to paste into — that is measured, in §5. The real
+  `~/.codex` is in this environment's sandbox `denyRead` set and was deliberately not escalated.
+- **What would settle it, exactly.** With a logged-in Codex, in a tmux pane:
+  `tmux send-keys -t <pane> -l "$(warroom engine render codex)"` — **and do not press Enter.**
+  Then `tmux capture-pane -t <pane> -p`. If the whole block sits in the composer as one
+  multi-line draft, pasting works. If the pane shows only the first line, or the draft was
+  submitted, the first embedded newline was read as Enter and pasting is not a usable channel.
+- **Cost: zero.** No turn is submitted, because Enter is never pressed. It needs a credential,
+  not a budget.
+- **Nothing depends on the answer today.** The launcher delivers the Codex preamble via
+  `-c developer_instructions`, which is proved (§4). A "yes" here would *add* a second channel;
+  it would not correct anything.
+
+**2 · Do `PROFILES.codex`'s `completion()` and `text()` parsers handle a real completed turn?** (§6)
+
+- **Blocked on: one served turn, which costs the founder's money.** Every probe here stopped at
+  401 by construction.
+- **What would settle it.** One authenticated `codex exec - --json` against a trivial prompt,
+  with the JSONL captured, then checking whether the final answer arrives in
+  `turn.completed.last_agent_message` or in an `item.*` event — the specific ambiguity
+  `judges.js` already names as the profile's most likely failure.
+- Until then `verified_against_binary: false` is the accurate value, and §6.2 explains why
+  flipping it on an accepted argv would be the wrong reading of the flag.
