@@ -3825,7 +3825,17 @@ cmd_cost() {
         ceo_nums+=("$(echo "$wname" | sed 's/CEO-//')")
       done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
     elif [ -f "$SESSION_SNAPSHOT" ]; then
-      mapfile -t ceo_nums < <(python3 -c "
+      # The second `mapfile`, same bash 4 builtin under the same `#!/bin/bash`
+      # shebang that is 3.2.57 on macOS. Measured on both: this shape reads 0
+      # entries on 3.2.57 and 2 on 5.3.9. Here `ceo_nums` IS initialised to `()`,
+      # so the count is a real 0 and the guard below fires — `cost` reports "No
+      # active CEOs found" against a perfectly good snapshot rather than reading
+      # it. Louder than the cmd_grid_view instance, which resolved to 1 and lost
+      # CEOs in silence, but the same defect and the same one-line cure.
+      local _cn
+      while IFS= read -r _cn; do
+        [ -n "$_cn" ] && ceo_nums+=("$_cn")
+      done < <(python3 -c "
 import json
 d = json.load(open('$SESSION_SNAPSHOT'))
 for c in d.get('ceos', []):
