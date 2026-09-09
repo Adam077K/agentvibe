@@ -1,7 +1,7 @@
 # The vision, the fields, and the sectors
 
 *Written 2026-09-07, rewritten 2026-09-09 after three sealed lanes attacked it. Part one is the
-ambition. Part two is the field map — 48 domains in plain questions, in nobody's vocabulary but the ordinary
+ambition. Part two is the field map — 53 domains in plain questions, in nobody's vocabulary but the ordinary
 one. Re-derive rather than trust those figures: `grep -c '^### [0-9]' <this file>` counts the fields
 plus part three's three subsections, and
 `awk '/^## Part two/,/^## Part three/' <this file> | grep -o '?' | wc -l` counts the questions. Part three is the sectors: where such a thing may operate, and what it touches whether it
@@ -97,7 +97,7 @@ while every number looks good.
 
 **How to read this.** Each numbered field is a domain the system has to take a position on. Under it are
 plain questions. **Fields 1–32 are company-shaped and would be asked of any organisation. Fields 33–48
-are the machinery of a system built out of models and agents** — instructions, skills, connections, tool
+are the machinery of a system built out of models and agents, and 49–53 are the ones an old checklist of the founder's surfaced that neither reached** — instructions, skills, connections, tool
 use, workflows, stages, delegation, judging behaviour, testing, seeing inside a run, guardrails,
 grounding, what passes between steps, where a person sits, self-modification, and reproducibility. Those
 sixteen have their own fields rather than living inside an abstraction, because **a subject with no field
@@ -150,7 +150,7 @@ must never be done by the same worker that did something else? · Who is allowed
 How does a role change over time? · When should a role be removed, and who notices that it should? · How
 much should a new worker be trusted, and how does that change? · What does a worker have to do to be
 given more freedom? · What takes freedom away again? · What can each worker actually reach, and who
-decided? · How does a worker know what the others are doing? · What happens when two workers disagree? ·
+decided? · How does a worker know what the others are doing? · How do you know a worker is alive and working rather than stuck or looping? · What happens when two workers disagree? ·
 Who arbitrates, and on what basis? · How does a worker know a task is beyond it? · What must a worker
 never hand to someone else? · How does a new worker learn how things are done here?
 
@@ -321,7 +321,7 @@ response to an event? · What happens to scheduled work that was missed? · Shou
 only the most recent? · How does the company know whether it is capable of doing the work right now? ·
 What should it refuse to start rather than start badly? · How is unattended work different from
 attended work? · What is safe to do while nobody is watching, and what is not? · How does the owner find
-out what happened while they were away? · What happens to work that spans a gap in availability?
+out what happened while they were away? · What should the system do when there is nothing that needs doing? · What happens to work that spans a gap in availability?
 
 ### 20 · Money, cost and value
 
@@ -366,7 +366,7 @@ itself so often that nothing stabilises? · What would falsify the whole approac
 
 What makes two efforts genuinely separate? · What should be shared between them, and what must not be? ·
 How is attention divided when both want it? · How does one effort's failure stay contained? · When is a
-new effort worth starting? · When should one be stopped, and who decides? · How is each judged, given
+new effort worth starting? · What does it take to pause one and wake it months later, and what rots while it sleeps? · When should one be stopped, and who decides? · How is each judged, given
 they may be at different stages? · What does the owner see across all of them at once? · How does
 something learned in one get used in another without contaminating it?
 
@@ -569,7 +569,7 @@ When should the system look something up rather than rely on what it knows? · H
 look at out of everything available? · How does it know the thing it found is current? · What happens
 when sources disagree? · How does an answer show where it came from? · What stops a plausible-sounding
 answer with no source behind it? · How is a large body of material made searchable without losing what
-matters? · What is the cost of looking, and when is it not worth it? · How does looked-up material get
+matters? · What is the cost of looking, and when is it not worth it? · How is a large body of material kept searchable as it grows, and who notices when search stops working? · How does looked-up material get
 kept apart from instruction?
 
 ### 45 · The shape of what passes between steps
@@ -606,6 +606,60 @@ it fine? · What has to be recorded to explain a past result? · If something we
 can it be reproduced? · What changed underneath — models, instructions, connections, data — and is that
 knowable? · How much does pinning everything down cost, and what does it cost not to? · What is the
 minimum that must be captured for an answer to be defensible later?
+
+### 49 · Using one source of judgement against another
+
+Is a second opinion worth anything if it comes from the same place as the first? · What makes two
+opinions genuinely independent rather than the same reasoning twice? · When is it worth having one
+worker check another's work, and when does that just double the cost? · Should the checker know what the
+producer concluded, or judge blind? · What happens when they disagree — who breaks the tie, and on what
+basis? · Is agreement between two similar sources evidence, or only correlation? · What is the cheapest
+way to get a genuinely different perspective? · When is disagreement a sign that something is hard
+rather than that someone is wrong? · How do you keep a checker from drifting into agreeing by default? ·
+What kinds of work benefit from a second look and what kinds do not?
+
+### 50 · Questioning what is already settled
+
+How does anything settled ever get re-opened? · What triggers a re-examination — time, a bad outcome,
+someone noticing? · Who is allowed to ask why something exists, and does anyone have to answer? · How do
+you tell a decision that is still right from one nobody has revisited? · What stops the system
+calcifying around choices made when it knew less? · What stops the opposite — churning, so nothing ever
+settles? · How does a newcomer's naive question get taken seriously rather than explained away? · Who
+argues the other side when everyone already agrees? · How would the company notice that its whole
+approach had been overtaken by something better? · What is deliberately not up for re-examination, and
+who decided that?
+
+### 51 · When there is more than one person
+
+What changes when a second person is involved — a partner, a contractor, someone hired? · Who decides
+what, and is that written down anywhere? · How does someone else get enough context to be useful without
+reading everything? · What can a second person do that the owner cannot, and the reverse? · How is work
+handed between two people, as opposed to between workers? · What happens to accountability when it is
+shared? · How does the system know which human it is talking to, and should it treat them differently? ·
+What would have to be true for someone to take over entirely? · How does a person leave, and what goes
+with them? · If this stays a company of one, is that a choice or a limitation?
+
+### 52 · Building this, and moving to it
+
+What gets built first, and what decides that? · How do you avoid building the whole thing before finding
+out whether any of it works? · What is the smallest version that would prove or disprove the idea? · How
+do you move from working the current way to working this way, without a gap where nothing works? · What
+runs in parallel during the transition, and for how long? · How do you compare the new way against the
+old fairly, rather than against a memory of the old? · What is the baseline, and was it measured before
+anything changed? · How do you keep adding without accumulating — does each new part replace something,
+or merely sit alongside it? · What would tell you to stop building and start using? · What is the honest
+sequence, given that some things cannot be built until others exist?
+
+### 53 · What a business needs in order to actually exist
+
+What does it take for an effort to be a real thing that can transact — an entity, an account, a way to
+take money, an address, a name nobody else owns? · Who or what can legally enter into an agreement? ·
+What is needed before a single stranger can pay? · What obligations begin the moment money changes
+hands? · What has to be filed, when, and by whom? · How separate is each effort legally and financially,
+and what does mixing them cost? · What happens to all of that when something is wound down — what must be
+closed, informed, kept, or destroyed? · Which of these can be set up in an afternoon and which take
+weeks, and does the plan account for that? · What can be deferred until there is revenue, and what
+genuinely cannot?
 
 ## Part three · The sectors
 
