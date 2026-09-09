@@ -1808,7 +1808,7 @@ except:
   fi
 
   echo ""
-  echo -e "  ${BOLD}${C_PEACH}Restoring Agentvibe session...${RESET}"
+  echo -e "  ${BOLD}${C_PEACH}Restoring ${SESSION_UPPER} session...${RESET}"
   echo ""
 
   local saved_at project_dir
@@ -3669,7 +3669,7 @@ case "$CMD" in
     ;;
   help|-h|--help)
     echo ""
-    echo -e "  ${BOLD}${SESSION}${RESET} — Agentvibe CEO War Room"
+    echo -e "  ${BOLD}${SESSION}${RESET} — ${SESSION_UPPER} CEO War Room"
     echo ""
     echo "  Usage:"
     echo "    ${SESSION} [N]               Start war room with N CEOs (default 3)"

@@ -357,3 +357,32 @@ test('send_launch_engine names no engine binary, and the old name still resolves
   const sites = (SRC.match(/^\s*send_launch_claude "/gm) || []).length;
   assert.ok(sites >= 6, `expected the 6 historical call sites to survive, found ${sites}`);
 });
+
+// ── FLEET: THE LAUNCHER MUST NOT NAME ONE PROJECT ───────────────────────────
+//
+// `bin/warroom` is "one program, many projects". Two literals survived the
+// extraction from agentvibe's standalone copy — the restore banner and the
+// help title both said "Agentvibe" — and on a single-project machine that is
+// invisible. Measured 2026-09-09 against ~/bin/ghostb: its own launcher printed
+// "ghostb — Ghostb CEO War Room" and bin/warroom printed
+// "ghostb — Agentvibe CEO War Room". Thirteen of fourteen fleet projects would
+// have been renamed by their own launcher.
+//
+// This asserts the PROPERTY (no project name is baked in), not the two lines
+// that happened to break it — a fix for a specific literal that lets the next
+// one through is the vacuity this repo keeps finding in its own controls.
+test('the launcher hardcodes no project name — it is one program for many projects', () => {
+  const src = fs.readFileSync(WARROOM, 'utf8');
+  // Every session that has ever had a standalone launcher in ~/bin. A new
+  // literal for any of them is the same defect wearing a different name.
+  const names = ['Agentvibe', 'AGENTVIBE', 'Beamix', 'BEAMIX', 'Ghostb', 'GHOSTB',
+                 'Beeond', 'BEEOND', 'Aiclub', 'Etsyc', 'Evalove', 'Finfun'];
+  const offenders = [];
+  for (const [i, line] of src.split('\n').entries()) {
+    if (line.trimStart().startsWith('#')) continue;      // comments may name projects
+    for (const n of names) if (line.includes(n)) offenders.push(`${i + 1}: ${line.trim()}`);
+  }
+  assert.deepEqual(offenders, [],
+    `bin/warroom names a project in executable code:\n${offenders.join('\n')}\n` +
+    'Use ${SESSION} or ${SESSION_UPPER}, which resolve from the per-project config.');
+});
