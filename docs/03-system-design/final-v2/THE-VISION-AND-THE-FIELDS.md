@@ -1,8 +1,10 @@
 # The vision, the fields, and the sectors
 
 *Written 2026-09-07, rewritten 2026-09-09 after three sealed lanes attacked it. Part one is the
-ambition. Part two is the field map — 32 domains, 354 plain questions, in nobody's vocabulary but the
-ordinary one. Part three is the sectors: where such a thing may operate, and what it touches whether it
+ambition. Part two is the field map — 48 domains in plain questions, in nobody's vocabulary but the ordinary
+one. Re-derive rather than trust those figures: `grep -c '^### [0-9]' <this file>` counts the fields
+plus part three's three subsections, and
+`awk '/^## Part two/,/^## Part three/' <this file> | grep -o '?' | wc -l` counts the questions. Part three is the sectors: where such a thing may operate, and what it touches whether it
 means to or not.*
 
 *Two earlier versions were rejected for being written inside the frame of a design already chosen. This
@@ -94,7 +96,14 @@ while every number looks good.
 ## Part two · The field map
 
 **How to read this.** Each numbered field is a domain the system has to take a position on. Under it are
-plain questions — the things anyone building a company that mostly runs itself would eventually have to
+plain questions. **Fields 1–32 are company-shaped and would be asked of any organisation. Fields 33–48
+are the machinery of a system built out of models and agents** — instructions, skills, connections, tool
+use, workflows, stages, delegation, judging behaviour, testing, seeing inside a run, guardrails,
+grounding, what passes between steps, where a person sits, self-modification, and reproducibility. Those
+sixteen have their own fields rather than living inside an abstraction, because **a subject with no field
+of its own gets thought about only when it breaks.**
+
+Under each field are plain questions — the things anyone building a company that mostly runs itself would eventually have to
 answer, whether or not they had ever seen this plan.
 
 **These questions are deliberately written without our vocabulary and without our answers.** A question
@@ -430,6 +439,173 @@ after? · Is there a case where the expected result does not appear, to prove th
 observation count as a result? · How is a change told apart from noise? · When the baseline is moving,
 what is safe to claim? · Is a number written down, or the way to work it out again? · Who checks the
 thing that does the checking? · What has never been measured because nobody thought to?
+
+---
+
+### The machinery itself
+
+*Fields 1–32 are company-shaped: they would be asked of any organisation, staffed by people or not.
+The ones below are specific to a system built out of models and agents. **They are here because a
+subject with no field of its own gets thought about only when it breaks.** Several are currently
+buried inside an abstraction above — instructions inside "how a worker thinks", connections inside
+"reaching things" — and buried is not the same as covered.*
+
+### 33 · Instructions — the words that steer behaviour
+
+What is actually written down to make a worker behave the way it should? · Who writes it, and who is
+allowed to change it? · How long should an instruction be before it stops being read properly? · What
+belongs in a standing instruction versus in the request itself? · How do you tell an instruction that is
+working from one everybody ignores? · What happens when two instructions conflict, and which wins? · How
+is an instruction tested before it is relied on? · How would you know an instruction had quietly stopped
+being followed? · What happens to instructions as the models underneath them change? · How much of
+behaviour should come from written instruction versus from what the model already knows? · When is the
+right fix a better instruction, and when is it a different mechanism entirely? · How is an instruction
+versioned, and can you tell which version produced a given result? · What must never be put in an
+instruction because instructions can be read by whoever the work touches?
+
+### 34 · Skills — packaged know-how the system can pick up
+
+What is the unit of reusable know-how here, and what is inside one? · When is something worth writing
+down as reusable rather than doing once? · How does a worker find the right one at the moment it needs
+it, without reading everything? · What does it cost to look, and does that cost grow as the collection
+grows? · At what size does having more start making selection worse? · How do you tell an unused one
+from an unnecessary one? · What happens when two of them overlap or contradict? · Who is allowed to
+write one, and who reviews it? · How is one kept current when the thing it describes changes? · How
+would you know one is being loaded and then not actually followed? · Should they carry examples, and
+what does a stale example do? · Where do they come from — written here, borrowed, or bought — and what
+comes with borrowed ones?
+
+### 35 · Connections to outside systems
+
+What does it take to let the system use a service it did not build? · Who decides which outside services
+are connected at all? · What does connecting one actually expose — read, write, spend, or act as you? ·
+How do you know what a connected service can really do, versus what it says it does? · What happens when
+one changes underneath you without telling you? · What happens when one is down, slow, or returns
+something unexpected? · How is a connection's access narrowed to only what one piece of work needs? ·
+Can a connected service influence the system's behaviour through what it returns? · How is a connection
+removed, and how do you know nothing still depends on it? · What is the audit trail of what a connection
+was used for? · How many connections is too many to reason about? · What should never be connected?
+
+### 36 · Using a tool — the act itself
+
+How does a worker decide which tool to reach for? · How does it know a tool did what it asked, versus
+appearing to? · What does it do with an unexpected result — retry, adapt, or stop? · How many attempts
+before a tool is treated as unavailable? · What happens when several tools could do the job? · How is a
+tool that is dangerous in one context and routine in another handled? · Should a worker be able to use a
+tool it has never used before, without asking? · How is tool output kept from being confused with
+instruction? · What does the system do when a tool's answer contradicts something it already believed? ·
+How much of a tool's output should be kept, and for how long? · How is the cost of a tool call known
+before it is made?
+
+### 37 · Workflows — when the path is fixed and when it is chosen
+
+Which work should follow a fixed sequence, and which should be figured out as it goes? · Who decides
+which of those a given piece of work is? · What is gained by scripting a path, and what is lost? · How
+does a fixed path handle the case it did not anticipate? · How does a decided path avoid wandering? ·
+Where are the points a person must approve before it continues? · What happens if a step fails halfway —
+does the whole thing unwind, and can it? · Can a run be picked up from the middle after an interruption? ·
+How do you avoid two runs of the same thing doing the work twice? · How long may a single run take before
+something is wrong? · How is a long-running process observed while it is still going? · When a path is
+changed, what happens to work already in flight under the old one?
+
+### 38 · Stages — the shape of work over its life
+
+What stages does a piece of work pass through, and who says it has moved? · What must be true to leave
+each one? · Which stages can be skipped and which never? · Where does work most often get stuck, and is
+that visible? · What happens to work that sits in one stage too long? · Should different kinds of work
+have different stages? · How much ceremony is worth it for small work? · What does the stage tell you
+that the status does not? · Who is allowed to move something backwards?
+
+### 39 · Delegation — the shape of one worker using another
+
+When should a worker do something itself rather than hand it on? · How deep should that go before nobody
+can follow it? · How does a worker describe a task well enough that another can start? · How much
+context travels with a delegated task, and how much is too much? · What comes back, and in what form? ·
+How is a delegated result checked before being used? · What happens when a delegated worker fails or
+never returns? · Who is accountable for delegated work — the one who did it or the one who asked? · How
+do you stop delegation being used to avoid a hard judgement? · What should never be delegated onwards?
+
+### 40 · Knowing whether the behaviour is any good
+
+How do you tell whether the system is behaving well, as opposed to producing output? · What does good
+look like for work that has no single right answer? · Who or what does the judging, and what judges the
+judge? · How do you compare this month against last month fairly? · What is the fixed set of cases that
+never changes, so that change can be seen? · How do you notice a gradual decline as opposed to a sudden
+break? · How much of judgement can be automated before it stops measuring what you care about? · What is
+measured on real work versus on rehearsals? · How do you avoid improving the score without improving the
+thing? · What would tell you the measurement itself has stopped working?
+
+### 41 · Testing and change — knowing a change did not break something
+
+How do you know a change to how the system works made things better? · What is checked before a change
+takes effect? · How do you test something whose output is different every time? · What does a
+regression look like here, and how quickly is it noticed? · How is a change rolled out — everywhere at
+once, or gradually? · How is it undone? · What changes cannot be undone? · How is the system's own
+configuration versioned, and can you reproduce a past result? · Who is allowed to change the way the
+system works, and does that differ from who can change what it works on? · What is the record of what
+changed, when, and why?
+
+### 42 · Seeing inside a run
+
+While something is running, what can be seen? · After it finishes, what can be reconstructed? · How much
+detail is kept, for how long, and at what cost? · How do you follow one piece of work through many
+workers and steps? · How do you find the moment something went wrong in a long run? · What is recorded
+about every decision — the choice, the reasoning, both, neither? · Is what is recorded enough to explain
+a result to someone who was not there? · What is deliberately not recorded, and why? · How is all this
+kept useful rather than becoming an unreadable pile?
+
+### 43 · Guardrails — the checks that sit around behaviour
+
+What checks run before an action, and what runs after? · What is checked deterministically versus by
+judgement? · What happens when a check is unsure? · Does a check fail open or closed, and was that
+chosen? · How much do the checks cost in time and money? · How would you know a check has stopped
+checking while still passing? · Who can add a check, and who can remove one? · What is checked on the way
+in — the request — versus on the way out? · Are the same checks applied to work the system does for
+itself as to work it does for a customer?
+
+### 44 · Grounding — where an answer's facts come from
+
+When should the system look something up rather than rely on what it knows? · How does it decide what to
+look at out of everything available? · How does it know the thing it found is current? · What happens
+when sources disagree? · How does an answer show where it came from? · What stops a plausible-sounding
+answer with no source behind it? · How is a large body of material made searchable without losing what
+matters? · What is the cost of looking, and when is it not worth it? · How does looked-up material get
+kept apart from instruction?
+
+### 45 · The shape of what passes between steps
+
+What form does a result take when it moves from one step to the next? · How strict should that form be? ·
+What happens when something does not fit it? · How much freedom does a worker have in what it returns? ·
+How do you keep a chain of steps from degrading a little at each one? · How is meaning preserved when
+something is summarised for the next step? · What must survive every handover no matter what — the
+warnings, the numbers, the things that could not be determined? · How is a partial or uncertain result
+expressed rather than smoothed over?
+
+### 46 · Where a person sits inside the work
+
+Which steps require a person, and is that because of risk or because of taste? · How does a person get
+enough context to decide quickly? · What happens while waiting for them? · What happens if they do not
+respond? · Is there a difference between approving and merely not objecting? · How is a person's
+decision recorded so it can be applied consistently next time? · How do you avoid asking a person things
+they have already effectively answered? · How do you stop a person becoming a rubber stamp? · What
+should never wait for a person, because waiting is worse than deciding?
+
+### 47 · The system changing itself
+
+What parts of itself may the system propose changes to? · What may it change without asking? · How is a
+proposed change evaluated before it is accepted? · How do you tell an improvement from a change? · What
+stops it drifting somewhere nobody chose, one small change at a time? · How is a change to the rules
+distinguished from a change to the work? · If it can rewrite its own instructions, what stops it
+rewriting the ones that constrain it? · How often should it be allowed to change, and does constant
+change prevent anything settling? · What is the record of what it changed about itself and why?
+
+### 48 · Reproducibility
+
+Can the same request twice give the same answer, and should it? · When does variation matter and when is
+it fine? · What has to be recorded to explain a past result? · If something went wrong three weeks ago,
+can it be reproduced? · What changed underneath — models, instructions, connections, data — and is that
+knowable? · How much does pinning everything down cost, and what does it cost not to? · What is the
+minimum that must be captured for an answer to be defensible later?
 
 ## Part three · The sectors
 
