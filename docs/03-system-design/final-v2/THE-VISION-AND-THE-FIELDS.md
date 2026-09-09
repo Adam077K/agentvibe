@@ -1,53 +1,93 @@
-# The vision, and every field it has to have an answer for
+# The vision, the fields, and the sectors
 
-*Written 2026-09-07. Part one is the thing itself, described as what it would be to have it — not as
-anything already designed or built. Part two is the field map: every domain such a thing must take a
-position on, written as plain questions anyone would ask, in nobody's vocabulary but the ordinary one.*
+*Written 2026-09-07, rewritten 2026-09-09 after three sealed lanes attacked it. Part one is the
+ambition. Part two is the field map — 32 domains, 354 plain questions, in nobody's vocabulary but the
+ordinary one. Part three is the sectors: where such a thing may operate, and what it touches whether it
+means to or not.*
+
+*Two earlier versions were rejected for being written inside the frame of a design already chosen. This
+one was produced differently: three lanes reasoned about the ambition without reading the plan, one of
+them tasked with attacking it and given the means to check things in the world. Their files are in
+`vision/`. **Where they disagreed, this text says so rather than picking a winner.***
 
 ---
 
 ## Part one · The vision
 
-**One person owns a company and does not operate it.** That is the whole of it. Not a person with
-better tools, not a person who works faster — a person who has an organisation. They bring the things
-that are actually theirs: what to go after, what good looks like, what they would never put their name
-to, and the handful of calls that turn on their own money and appetite. Everything between an intention
-and a finished thing that a real stranger paid for belongs to the system.
+**One person is responsible for work they did not watch.** That is the ambition, stated as precisely as
+it can be. Not a company that runs itself — that phrasing describes an absence and hides the difficulty.
+The difficulty is that responsibility does not delegate. Someone still has to be answerable for what was
+built, said, sold and promised in their name, and the whole question is what would have to be true for a
+single person to accept that honestly, at a scale no single person could personally inspect.
 
-**It should be able to run a business end to end, and more than one at a time.** Decide what to build,
-build it, put it in front of people who have never heard of it, find out what they think, sell to them,
-support them afterwards, keep the books, stay on the right side of the rules, and notice when the whole
-thing should change direction. Several of these at once, at different stages, without the owner holding
-them all in their head.
+**What is really being bought is not effort and not speed. It is that one person's judgement stops
+being capped by the size of the organisation needed to carry it.** Every layer of a real organisation
+loses a little of what was meant — not through incompetence, but because intent is re-described at each
+handover until the thing that gets built is a cousin of the thing that was wanted. **The ambition is not
+the removal of people. It is the removal of that loss.** What one person actually decides, and what
+finally reaches a customer, should be the same thing.
 
-**It should keep going when the owner is not there.** Asleep, travelling, or simply thinking about
-something else. Work should continue overnight, questions should queue rather than block, and what
-happened should be waiting in a form that takes minutes rather than hours to absorb. Being away for a
-week should cost momentum, not control.
+**The thing that has to be built is the account, not the work.** Producing — code, copy, analysis,
+outreach — is being commoditised quickly by people with far more resources, and anything built on top of
+that is rented. **What nobody sells, and what no vendor will build, is a truthful account of work you
+did not watch.** Not a log of what happened: an account whose value lives in its negative space — what
+was skipped, what is stale, what was assumed, what it could not determine, and what it chose not to tell
+you and why. No vendor will build that, because such an account has to be adversarial toward whoever
+produced the work, and they are the producer. **That is the durable position, and it is the only part of
+this worth years of a life.**
 
-**It should behave like an organisation rather than a machine.** Real roles with real boundaries.
-Workers who hand things to each other properly, who argue when they disagree, who say when something is
-beyond them instead of guessing, who know what they are bad at. It should be possible to add a role,
-change one, or retire one that is not earning its place — and for the whole thing to still be
-coherent afterwards.
+**The honest form of "one person does what a company used to" is not output. It is the cost of being
+wrong.** A company with staff must be roughly right, because being wrong costs salaries and months. A
+person with this can be wrong most of the time on purpose — if starting is cheap and, more importantly,
+if **killing is cheap and fast.** The measure of success is therefore not how much was produced. It is
+how many real attempts reached real strangers, and how quickly the failures were buried. **Most ideas die
+today not because they were bad but because the cost of finding out was too high, which filters on
+accounting rather than on merit.** Removing that filter is the whole prize.
 
-**It should get better on its own.** Notice where it wasted effort or attention. Learn from what it
-did, not only from what it was told. Propose changes to the way it works and put them to the owner
-rather than drifting. Earn more freedom by being right repeatedly, and lose it by being wrong. The
-version running in a year should be better than the one running today because it made itself so, not
-because someone rebuilt it.
+**Permission has to follow consequence, never track record.** This is the correction that cost the
+earlier drafts the most. It is tempting to say the system earns freedom by being right repeatedly — but a
+track record only estimates a frequency, and the acts that can ruin you are not drawn from the bag it was
+graded on. **Freedom would then be widest exactly when nobody had looked recently.** So what may be done
+unsupervised is decided by what the act can cost: money leaving, words reaching strangers, anything
+irreversible, anything touching another person's data. **A good record should change how much you check.
+It must never change what you are exposed to.**
 
-**It has to be trustworthy enough that not checking is safe.** That is the hard part and the whole
-point. The owner has to be able to leave something running and not lie awake about it — which means the
-system knows what it cannot do, stops rather than guesses, tells the truth about what happened
-including the parts that went badly, and never quietly makes something look finished that is not. A
-system that is usually right and occasionally invents something is worse than no system, because it
-cannot be left alone.
+**It has to keep the owner competent, not merely informed — and that means sometimes handing back work it
+could have done.** Judgement is not stored; it is trained, and it decays without contact. Someone who has
+not read a customer's own words in eight months is applying a year-old picture and feels exactly as
+confident as before. The loop keeps running, every part of it looks healthy, and the input has quietly
+gone stale. **There is no signal for this from inside, because the owner is the instrument and the
+instrument is what drifted.** So the design has to spend the owner's time deliberately, on work it could
+have handled, and it needs a mechanism rather than good intentions.
 
-**And the ambition underneath all of it: that one person can build and run what used to need a company
-of people.** Not answers arriving faster. A different scale of what a single person can own, decide,
-and be responsible for — with their judgement still at the centre of it, and everything else lifted off
-them.
+**Attention is the only genuinely fixed input, and success consumes it fastest.** Reading can be
+compressed; deciding cannot. So when the owner's capacity is reached, the system must **decline work**
+rather than ask for more of them. The alternative is that success ends in rubber-stamping — which is
+indistinguishable, from the outside and in the record, from real approval.
+
+**What this costs should be said plainly, because a vision with no cost is a advertisement.**
+Accountability concentrates rather than evaporates: an organisation is partly a device for spreading
+blame, and with the people removed, one name carries all of it — including for outputs nobody ever read.
+Escalation concentrates unpleasantness too: the system keeps every decision that has a clean answer and
+hands up the residue, so the owner receives the worst-tasting slice of their own job, daily, forever, and
+stripped of the context that used to make such calls easy. And the owner becomes a person who specifies
+and judges rather than one who builds — **which is a different life, and worth wanting on purpose rather
+than arriving at by accident.**
+
+**A short list cannot be delegated, and the value of everything above depends on drawing it tightly.**
+Wanting something. Being answerable, which requires something that can actually lose. Standing behind a
+promise, because that is the other party's call and can never be settled unilaterally. Relationships
+where being a person is the point. Taste, as a fixed standard rather than a drifting one. Deciding what
+is worth *wanting*, as opposed to what is worth doing. And one that is engineering rather than a fact
+about persons — **the system's own truthfulness, which is why it is the binding constraint on all the
+rest.**
+
+**How this would be known to have failed.** If the time spent checking grows with the work produced, it
+has failed however good the work is, because the owner has become a reviewer working the same hours. If
+in five years there is an excellent machine and nothing it made was worth more than it cost to make it,
+it has failed — and that is the likeliest failure, because **the work gets more interesting the further
+it gets from a customer.** And if the owner can no longer explain their own business, it has failed even
+while every number looks good.
 
 ---
 
@@ -390,3 +430,103 @@ after? · Is there a case where the expected result does not appear, to prove th
 observation count as a result? · How is a change told apart from noise? · When the baseline is moving,
 what is safe to claim? · Is a number written down, or the way to work it out again? · Who checks the
 thing that does the checking? · What has never been measured because nobody thought to?
+
+## Part three · The sectors
+
+**A field asks whether the machine works. A sector asks where it is allowed to operate, and what it
+touches whether it means to or not.** All three lanes split the word the same way without conferring —
+one axis for *where*, one for *what it affects* — and two of the three independently said the first list
+must function as a **gate rather than a menu**. That is how it is written here.
+
+### 3.1 · Operating sectors — where such a company could work, and what stops it
+
+**The gate on each is not difficulty. It is who else has authority over what counts as done.**
+
+`OPEN` capability and trust are the only limits · `LICENCE` a licensed human must sign, and no amount of
+capability opens it · `PRESENCE` a body has to be somewhere · `CONSENT` the counterparty must be willing
+to deal with a business run this way · `IRREVERSIBLE` failure cannot be undone by refunding the money ·
+`REFUSE` the honest default until something changes
+
+**Software and information** — developer tools `OPEN` · consumer apps `OPEN` · business software `OPEN` ·
+data products and analysis `OPEN` · APIs and infrastructure `OPEN` · games and interactive `OPEN` ·
+research and synthesis `OPEN` · education and courseware `OPEN` · publishing, writing, media `OPEN`
+
+**Services** — consulting and advisory `CONSENT` · design services `CONSENT` · marketing and content
+services `OPEN` · recruiting `CONSENT` · bookkeeping `LICENCE` at the filing boundary · translation and
+localisation `OPEN` · customer support as a service `CONSENT`
+
+**Commerce** — digital goods `OPEN` · print-on-demand and dropship `PRESENCE` at fulfilment ·
+marketplaces `CONSENT` · subscription boxes `PRESENCE` · wholesale `PRESENCE` · physical retail
+`PRESENCE`
+
+**Regulated** — anything financial: lending, advice, brokerage, payments `LICENCE` · insurance `LICENCE` ·
+health and anything clinical `LICENCE` `IRREVERSIBLE` · legal services `LICENCE` · pharmaceutical, food,
+safety-critical `LICENCE` `IRREVERSIBLE` · children's products and services `IRREVERSIBLE` `REFUSE` ·
+employment and anything touching someone's livelihood `LICENCE` `IRREVERSIBLE`
+
+**Physical and heavy** — manufacturing `PRESENCE` · logistics `PRESENCE` · construction and trades
+`PRESENCE` `LICENCE` · hospitality `PRESENCE` · agriculture `PRESENCE` · energy and utilities `LICENCE`
+`IRREVERSIBLE`
+
+**Where the shape matters more than any row.** The top block is gated only by whether the system can be
+trusted — which is the thing being built, so those sectors open as it improves. The regulated block is
+gated by someone else's licence, which capability **never** opens; the only route is a licensed human in
+the loop, and that is a business model decision rather than an engineering one. The physical block is
+gated by matter, and no amount of intelligence moves a box. **A strategy that ignores which gate it is
+facing will spend years on the wrong one.**
+
+### 3.2 · Sectors of consequence — what the ambition touches whether it intends to
+
+**These do not appear in a field map, because a field map describes a machine and these describe what
+happens around it.**
+
+**The owner** — their competence over time · their attention as a finite and shrinking resource · what
+their days become · whether they still enjoy it · isolation from colleagues who no longer exist · their
+identity as a builder versus a judge · the residue of unpleasant decisions · burnout without the usual
+warning signs · what happens to them if it stops working
+
+**Standing and liability** — who is liable for what the machine says · disclosure obligations · what
+"reasonable diligence" means when nobody watched · whether insurance responds at all · contract
+capacity · consumer protection · cross-border exposure · the fact that a court has already held the
+deployer responsible for the machine's words
+
+**Trust over time** — how a customer feels on learning how the work was done · what disclosure costs and
+what concealment costs more · the first public mistake · reputation that cannot be rebuilt at this scale ·
+whether "small and personal" survives contact with the truth
+
+**Continuity** — what happens if the owner is ill for a month · succession · what a buyer would actually
+be buying · whether the thing is portable off any one vendor · vendor churn as a standing tax · what is
+owned versus rented, and what happens when the rented part is retired
+
+**Scale and its own failures** — coordination cost rising faster than output · quality drifting with no
+outside anchor · optimising a proxy nobody chose · decisions nobody can later reconstruct · sprawl the
+owner has stopped tracking · the successful version's failure mode, which looks like success for a while
+
+**Security and adversaries** — the system acting on text an attacker wrote · credentials in an
+unattended process · an adversary who learns how it decides · impersonation in the company's name ·
+what one compromised run can reach
+
+**Outward effects** — competition when many people have this · what happens to prices when the supply of
+"a company" rises · displacement of the exact work this replaces · verification as a public good this
+solves privately while worsening publicly · what a market looks like when most participants are run this
+way
+
+### 3.3 · Stage — the axis nobody usually lists
+
+**A many-cheap-attempts strategy makes the unglamorous stages into core capabilities**, and a design that
+only imagines building will be missing half of what it needs.
+
+Deciding what to try · validating before building · building · first contact with strangers · early
+customers · steady operation · growth · maintenance and the long tail · **winding down** · the postmortem
+that makes the next attempt cheaper
+
+**Winding down deserves its own line.** If being wrong most of the time is the plan, then killing things
+well — refunding, informing, closing accounts, keeping the record, extracting the lesson — is not an
+afterthought. **It is the capability that makes the strategy affordable**, and it is the one nobody
+builds until they need it badly.
+
+---
+
+*The full enumerations, each with its own reasoning and the disagreements between them, are in
+`vision/A-ambition.md`, `vision/B-sceptic.md` and `vision/C-consequences.md`. Where those three
+disagree, they have not been reconciled here on purpose — the disagreement is the useful part.*
