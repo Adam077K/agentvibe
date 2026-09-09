@@ -171,6 +171,7 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |
+| `scripts/warroom-engine.test.mjs` | — |
 | `scripts/warroom-install.test.mjs` | — |
 | `scripts/warroom-template-guard.test.mjs` | — |
 
