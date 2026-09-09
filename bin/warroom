@@ -60,8 +60,51 @@ _cfg() {
   printf '%s' "$val"
 }
 
-SESSION="$(_cfg session)"
-PROJECT_DIR="$(_cfg project_dir)"
+# .warroom.yml is INPUT, not trusted data. It is git-tracked, so it arrives the
+# way a pull request arrives, and several of its values reach a live pane's shell
+# for a SECOND parse: the Codex launch line is read back with `cat`, and the HQ
+# and status lines are built by concatenating ${SESSION} and $PROJECT_DIR into
+# strings tmux hands to a shell. Quoting each of those sites is necessary and NOT
+# sufficient — one metacharacter ends the quoted argument and everything after it
+# is a new command — so the charset is refused HERE, once, at parse time, before
+# any path derived from a value is built.
+#
+#   name — a tmux session name: letters, digits, dot, underscore, hyphen.
+#   path — a filesystem path: the above plus space, slash, tilde, plus.
+#          Space is ALLOWED on purpose; a founder may have one in $HOME, and the
+#          launch line quotes the path. What is refused is $ ` ; | & < > ( ) " '
+#          and everything else that means something to a shell.
+_cfg_checked() {
+  local key="$1" kind="$2" val
+  val="$(_cfg "$key")"
+  [ -z "$val" ] && return 0
+  case "$kind" in
+    name)
+      case "$val" in *[!A-Za-z0-9._-]*)
+        echo "✗ warroom: '$key' in $WARROOM_CONFIG may hold only letters, digits, '.', '_' and '-'." >&2
+        echo "  Got: $val" >&2
+        echo "  This value is spliced into commands a pane's shell runs, so it is refused, not quoted." >&2
+        exit 1 ;;
+      esac ;;
+    path)
+      case "$val" in *[!A-Za-z0-9._/~+\ -]*)
+        echo "✗ warroom: '$key' in $WARROOM_CONFIG holds a character that is not allowed in a path here." >&2
+        echo "  Got: $val" >&2
+        echo "  Allowed: letters, digits, space, and . _ - / ~ +" >&2
+        echo "  This value is spliced into commands a pane's shell runs, so it is refused, not quoted." >&2
+        exit 1 ;;
+      esac ;;
+  esac
+  printf '%s' "$val"
+}
+
+# `|| exit 1` on every one of these, and it is load-bearing: _cfg_checked runs in
+# a command substitution, so its own `exit` ends the SUBSHELL. A plain assignment
+# reports the substitution's status, so the refusal is testable here — which
+# `local var="$(…)"` would have thrown away. That is the same defect this file
+# fixed on the engine path; it does not get to come back in through the config.
+SESSION="$(_cfg_checked session name)" || exit 1
+PROJECT_DIR="$(_cfg_checked project_dir path)" || exit 1
 
 if [ -z "$SESSION" ] || [ -z "$PROJECT_DIR" ]; then
   echo "✗ warroom: $WARROOM_CONFIG must define both 'session' and 'project_dir'." >&2
@@ -74,9 +117,9 @@ if [ ! -d "$PROJECT_DIR" ]; then
 fi
 
 # Optional, each with the derivation the standalone launchers hardcoded.
-SESSION_UPPER="$(_cfg display_name)"
+SESSION_UPPER="$(_cfg_checked display_name path)" || exit 1
 [ -z "$SESSION_UPPER" ] && SESSION_UPPER="$(printf '%s' "$SESSION" | tr '[:lower:]' '[:upper:]')"
-PROJECT_STATE_DIR="$(_cfg state_dir)"
+PROJECT_STATE_DIR="$(_cfg_checked state_dir path)" || exit 1
 [ -z "$PROJECT_STATE_DIR" ] && PROJECT_STATE_DIR="$HOME/.$SESSION"
 
 CEO_AGENT="$PROJECT_DIR/.claude/agents/ceo.md"
@@ -119,7 +162,7 @@ CEO_ANSI_COLORS=("$C_MAUVE" "$C_GREEN" "$C_BLUE" "$C_YELLOW" "$C_RED" "$C_TEAL")
 #                                         already used — kept so those projects
 #                                         work unchanged before Phase 9)
 #   3. a minimal built-in, with a warning
-CEO_ENTRY_FILE="$(_cfg entry_ceo)"
+CEO_ENTRY_FILE="$(_cfg_checked entry_ceo path)" || exit 1
 [ -z "$CEO_ENTRY_FILE" ] && CEO_ENTRY_FILE=".claude/entry/ceo.md"
 case "$CEO_ENTRY_FILE" in /*) : ;; *) CEO_ENTRY_FILE="$PROJECT_DIR/$CEO_ENTRY_FILE" ;; esac
 
@@ -267,11 +310,45 @@ CEO_CODEX_ADAPTER='ENGINE NOTE — you are Codex, not Claude Code. The instructi
 - `@"name (agent)"` mentions do not exist. Refer to engines by their file path.
 Everything else below applies to you unchanged.'
 
-# Render the preamble for an engine, to stdout.
+# The engines this project scopes by capability rather than by instruction —
+# every agent file whose `tools:` line declares neither Write nor Edit. DERIVED
+# from the project's own files, never listed here: a hand-written list is right
+# until the next engine is added, and the pane cannot tell a stale list from a
+# complete one.
+engine_toolscoped_names() {
+  local d="$PROJECT_DIR/.claude/agents" f tools out=""
+  [ -d "$d" ] || return 0
+  for f in "$d"/*.md; do
+    [ -f "$f" ] || continue
+    tools="$(grep -m1 '^tools:' "$f" 2>/dev/null)"
+    [ -n "$tools" ] || continue
+    case "$tools" in *Write*|*Edit*) continue ;; esac
+    out="$out $(basename "$f" .md)"
+  done
+  printf '%s' "${out# }"
+}
+
+# Render the preamble for an engine, to stdout. The `*)` arm refuses rather than
+# printing nothing: an empty preamble reaches a pane looking exactly like a
+# working one, which is the failure mode this whole section exists to remove.
 render_ceo_preamble() {
+  local scoped
   case "$1" in
     claude) printf '@"ceo (agent)" %s' "$CEO_PREAMBLE" ;;
-    codex)  printf '%s\n\n%s' "$CEO_CODEX_ADAPTER" "$CEO_PREAMBLE" ;;
+    codex)
+      scoped="$(engine_toolscoped_names)"
+      if [ -n "$scoped" ]; then
+        printf '%s\nIn THIS project the tool-scoped engines are: %s. Their restriction does not exist in this pane, so their work does not happen in this pane.\n\n%s' \
+          "$CEO_CODEX_ADAPTER" "$scoped" "$CEO_PREAMBLE"
+      else
+        printf '%s\n\n%s' "$CEO_CODEX_ADAPTER" "$CEO_PREAMBLE"
+      fi
+      ;;
+    *)
+      echo "✗ no preamble rendering for engine '$1'." >&2
+      echo "  Refusing rather than rendering nothing — a pane cannot tell an empty brief from a working one." >&2
+      return 1
+      ;;
   esac
 }
 
@@ -284,8 +361,45 @@ ceo_preamble_file() {
   local eng="$1" dir="$PROJECT_STATE_DIR/entry"
   mkdir -p "$dir" 2>/dev/null
   local f="$dir/ceo.${eng}.md"
-  render_ceo_preamble "$eng" > "$f"
+  render_ceo_preamble "$eng" > "$f" || return 1
   printf '%s' "$f"
+}
+
+# Hand the preamble path to the panes OUT OF BAND. tmux takes it as an argv
+# element and no shell ever parses it, so a value from a git-tracked
+# .warroom.yml is not concatenated into a line a live pane re-parses.
+#
+# MEASURED 2026-09-09, tmux 3.6a on a private socket: a pane whose shell forked
+# BEFORE the setenv reads the variable EMPTY; a pane created AFTER it reads the
+# path. So this must run before any pane exists — which is why every launching
+# command calls it right after engines_resolve — and why the launch line keeps
+# the resolved path as its `:-` fallback. A Codex pane that came up with no CEO
+# brief and no error is precisely the silent failure this file refuses.
+engine_prepare() {
+  case "$1" in
+    claude) : ;;
+    codex)
+      local f
+      f="$(ceo_preamble_file codex)" || return 1
+      command -v tmux >/dev/null 2>&1 || return 0
+      tmux setenv -g WARROOM_CEO_PREAMBLE "$f" 2>/dev/null
+      tmux has-session -t "$SESSION" 2>/dev/null && \
+        tmux setenv -t "$SESSION" WARROOM_CEO_PREAMBLE "$f" 2>/dev/null
+      ;;
+    *) return 1 ;;
+  esac
+  return 0
+}
+
+# Prepare every engine this invocation will launch. Call after engines_resolve
+# and before the first pane is created.
+engines_prepare() {
+  local eng
+  while IFS= read -r eng; do
+    [ -n "$eng" ] || continue
+    engine_prepare "$eng" || true
+  done < <(engines_in_use)
+  return 0
 }
 
 # The exact shell line a pane types to start its engine.
@@ -303,8 +417,20 @@ engine_launch_cmd() {
       # instructions, so the preamble is not re-sent.
       if [ -n "$resume" ]; then printf 'codex resume %s' "$resume"
       elif [ "$with_preamble" -eq 1 ]; then
-        printf 'codex -c developer_instructions="$(cat %s)"' "$(ceo_preamble_file codex)"
+        # $WARROOM_CEO_PREAMBLE is the out-of-band path (engine_prepare); the
+        # literal is the same path, present so a pane created before the export
+        # still gets its brief. The literal is QUOTED — an unquoted path with a
+        # space silently dropped the WHOLE preamble, because `cat a b` reads two
+        # files and codex was handed the tail of one — and it can hold no shell
+        # metacharacter, because _cfg_checked refuses one at parse time. Quoting
+        # alone would not be enough: one metacharacter ends the quoted argument
+        # and everything after it is a new command in a live pane.
+        printf 'codex -c developer_instructions="$(cat "${WARROOM_CEO_PREAMBLE:-%s}")"' "$(ceo_preamble_file codex)"
       else printf 'codex'; fi
+      ;;
+    *)
+      echo "✗ no launch line for engine '$eng'." >&2
+      return 1
       ;;
   esac
 }
