@@ -2255,15 +2255,16 @@ for i, c in enumerate(d.get('ceos',[])):
     start_ts=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('start_ts',0))" 2>/dev/null)
     session_id=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('session_id',''))" 2>/dev/null)
 
-    # Guard: a CEO number that is not a number. A snapshot is a RECOVERY input,
-    # not operator error, so one bad entry does not refuse the good ones — it is
-    # skipped, named, and the restore exits non-zero at the end so it can never
-    # be read as clean. That is the opposite trade from a fresh start, where a
-    # bad engine aborts before anything exists.
+    # BACKSTOP, and it cannot fire on a validated snapshot: the up-front check
+    # above has already exited on any unreadable CEO number, so nothing reaching
+    # this loop can match. It is kept, not deleted, because what it prevents is
+    # the original defect — an unreadable pane number resolving to pane 1's
+    # engine — and that must stay impossible even if the up-front check is ever
+    # moved, bypassed, or reached by a caller that does not run it.
     #
-    # What must not happen in either place is the original defect: an unreadable
-    # pane number resolving to pane 1's engine. A missing pane is visible; a pane
-    # on the wrong engine is not, until someone reads a whole session.
+    # This is NOT a skip-and-continue design. One bad entry refuses the WHOLE
+    # restore, up front, before anything is built or destroyed. If this line ever
+    # starts firing, that is a bug report about the up-front check, not a feature.
     case "$n" in ''|*[!0-9]*) continue ;; esac
 
     # Guard: skip if branch is empty or not a ceo-* branch
