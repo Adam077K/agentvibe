@@ -1008,9 +1008,39 @@ engine_launch_cmd() {
       else printf 'claude'; fi
       ;;
     codex)
+      # THE UPDATE CHOOSER IS A BLOCKING SCREEN, AND IT IS NOT A COMPOSER.
+      # Measured 2026-09-10 against codex-cli 0.153.4, via `tmux capture-pane`
+      # on a pane launched with the exact line this function emits: codex drew
+      #
+      #     ✨ Update available! 0.153.4 -> 0.154.0
+      #   › 1. Update now (runs `npm install -g @openai/codex`)
+      #     2. Skip                     3. Skip until next version
+      #
+      # and waited. So a Codex pane did not come up on a prompt at all, and the
+      # cursor DEFAULTS TO OPTION 1 — a founder pressing Enter into what they
+      # take for a composer runs a global npm install instead. A war room is
+      # eight panes deep; that is eight of them.
+      #
+      # `check_for_update_on_startup` is a real config key of the shipped
+      # binary, not a guess — `strings` finds it in the vendored codex, and
+      # relaunching the identical probe with this flag advanced past the
+      # chooser to the next screen. It is a fixed literal with no interpolation
+      # in it, so it adds no shell-injection surface to a line a live pane
+      # parses, and it goes BEFORE the subcommand where a global option belongs
+      # (`codex -c … resume --help` parses; verified exit 0).
+      #
+      # It is on ALL THREE forms because the chooser is drawn before any of
+      # them reaches a composer: the nag does not care whether this pane is
+      # resuming, bare, or carrying a preamble.
+      #
+      # WHAT THIS DELIBERATELY DOES NOT DO: it does not answer the separate
+      # "Do you trust the contents of this directory?" prompt. That one is a
+      # security decision reserved for the founder, and suppressing it is out
+      # of scope here.
+      local nonag='-c check_for_update_on_startup=false'
       # Resume is a SUBCOMMAND. On resume the thread already carries its
       # instructions, so the preamble is not re-sent.
-      if [ -n "$resume" ]; then printf 'codex resume %s' "$resume"
+      if [ -n "$resume" ]; then printf 'codex %s resume %s' "$nonag" "$resume"
       elif [ "$with_preamble" -eq 1 ]; then
         # The preamble path is a LITERAL and nothing else — no environment
         # variable is consulted, see engine_prepare for the race that removed
@@ -1032,8 +1062,8 @@ engine_launch_cmd() {
           echo "  engines_prepare must run, and succeed, before a Codex pane is launched." >&2
           return 1
         fi
-        printf 'codex -c developer_instructions="$(cat "%s")"' "$f"
-      else printf 'codex'; fi
+        printf 'codex %s -c developer_instructions="$(cat "%s")"' "$nonag" "$f"
+      else printf 'codex %s' "$nonag"; fi
       ;;
     *)
       echo "✗ no launch line for engine '$eng'." >&2

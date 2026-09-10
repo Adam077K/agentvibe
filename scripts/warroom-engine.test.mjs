@@ -83,6 +83,22 @@ const CODEX_PREAMBLE_IN_LINE = /\$\(cat "([^"$]*ceo\.codex\.md)"\)/;
  */
 const CODEX_ACK = 'codex_unsandboxed_ack: true\n';
 
+/**
+ * The flag that keeps a Codex pane off the blocking update chooser, and the
+ * bare command it decorates.
+ *
+ * Measured 2026-09-10 against codex-cli 0.153.4: launched with the line the
+ * launcher emitted, a pane rendered `✨ Update available! … › 1. Update now
+ * (runs npm install -g @openai/codex)` and waited there — no composer, and the
+ * cursor on the install. `-c check_for_update_on_startup=false` advanced past
+ * it. It is on every codex form, so the exact-equality assertions in this file
+ * spell the whole line through here rather than each writing the flag out: a
+ * literal duplicated across a dozen assertions is one that gets half-updated,
+ * and half-updated here means an assertion that stops constraining anything.
+ */
+const CODEX_NO_UPDATE_NAG = '-c check_for_update_on_startup=false';
+const CODEX_BARE = `codex ${CODEX_NO_UPDATE_NAG}`;
+
 function project(
   t,
   {
@@ -178,7 +194,7 @@ test('the resume form for the default engine is a FLAG, and for codex a SUBCOMMA
   assert.match(claude.out, /resume form: claude --resume SESSION_ID/);
 
   const codex = warroom(p, ['engine', '1', '--engine', 'codex']);
-  assert.match(codex.out, /resume form: codex resume SESSION_ID/);
+  assert.match(codex.out, new RegExp(`resume form: ${CODEX_BARE} resume SESSION_ID`));
   assert.doesNotMatch(codex.out, /codex --resume/, 'codex resume is a subcommand, not a flag');
 });
 
@@ -473,6 +489,133 @@ test('two war rooms on one tmux server: a codex pane gets ITS project\'s brief, 
   assert.doesNotMatch(delivered, /PROJECT_B_BRIEF/, "B's brief reached A's pane — this is the setenv race");
 });
 
+// ── A codex pane comes up on a COMPOSER, not on the update chooser ───────
+//
+// Measured 2026-09-10, codex-cli 0.153.4, `tmux capture-pane` on a pane
+// launched with the exact line this launcher emits:
+//
+//     ✨ Update available! 0.153.4 -> 0.154.0
+//   › 1. Update now (runs `npm install -g @openai/codex`)
+//     2. Skip     3. Skip until next version
+//     Press enter to continue
+//
+// So the pane was not on a composer, and the cursor sat on OPTION 1: the
+// founder's first Enter — the keystroke a war room is FOR — ran a global npm
+// install. `-c check_for_update_on_startup=false` advanced the identical probe
+// past that screen.
+//
+// The assertion is on ARGV as the codex process receives it, not on the string
+// the launcher printed. Between the two sits a pane's shell, and the flag is
+// worth nothing if the quoting around the preamble expression eats it — which
+// is the failure mode a string-level check would call green.
+
+/**
+ * Replace an engine stub in `sh` with one that records the argv it was called
+ * with, in the same US/RS framing the fake tmux uses. Returns a reader.
+ *
+ * Only usable with `executePaneLines: true`: with the pane's shell inert
+ * nothing ever execs the engine and every read comes back empty, which is a
+ * vacuous pass. The reader asserts the stub ran at all for that reason.
+ */
+function recordingEngine(sh, name) {
+  const log = path.join(sh.dir, `${name}-argv.log`);
+  fs.writeFileSync(
+    path.join(sh.dir, name),
+    ['#!/bin/sh', `{ for a in "$@"; do printf '%s\\037' "$a"; done; printf '\\036'; } >> '${log}'`, 'exit 0', ''].join(
+      '\n'
+    )
+  );
+  fs.chmodSync(path.join(sh.dir, name), 0o755);
+  return () => {
+    assert.ok(fs.existsSync(log), `the ${name} stub never ran — the pane line was not executed`);
+    return fs
+      .readFileSync(log, 'utf8')
+      .split(RS)
+      .filter((r) => r !== '')
+      .map((r) => r.split(US).slice(0, -1));
+  };
+}
+
+/** The `-c k=v` pairs in an argv, as `k=v` strings. */
+function configOverrides(argv) {
+  return argv.filter((a, i) => argv[i - 1] === '-c');
+}
+
+test('every codex form suppresses the update chooser, measured on the argv codex receives', (t) => {
+  // MUTATION: drop `%s ` / "$nonag" from the FRESH arm of engine_launch_cmd's
+  // codex case → red on the fresh assertions, green on the resume ones.
+  // Confirmed both ways; the resume arm was mutated separately, see below.
+  const p = launchableProject(t);
+  const sh = shim(t, { executePaneLines: true });
+  const codexArgv = recordingEngine(sh, 'codex');
+
+  const r = launch(p, ['2', '--engine', '2:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+
+  const [argv, ...extra] = codexArgv();
+  assert.deepEqual(extra, [], 'exactly one codex pane was launched, so exactly one argv');
+
+  const overrides = configOverrides(argv);
+  assert.ok(
+    overrides.includes('check_for_update_on_startup=false'),
+    `the fresh codex pane must suppress the update chooser: ${JSON.stringify(argv)}`
+  );
+  // And the flag did not arrive at the cost of the preamble: both overrides
+  // survive the pane's shell, each as ONE argv item. A `-c` whose value split
+  // on a space is how the earlier state_dir bug delivered half a brief.
+  assert.equal(overrides.length, 2, `expected exactly two -c overrides: ${JSON.stringify(argv)}`);
+  const brief = overrides.find((o) => o.startsWith('developer_instructions='));
+  assert.ok(brief, `the preamble override must still be there: ${JSON.stringify(argv)}`);
+  assert.match(brief, /SENTINEL_BODY_ALPHA/, 'and must still carry the rendered brief, not a path or an empty string');
+});
+
+test('the codex RESUME form suppresses the chooser too, and the flag precedes the subcommand', (t) => {
+  // The resume arm is a separate printf in engine_launch_cmd and fails
+  // separately: the fix landed on the fresh arm first and a resumed pane still
+  // sat on the chooser.
+  // MUTATION: drop `%s ` / "$nonag" from the RESUME arm → red here, green on
+  // the fresh test above. Confirmed.
+  //
+  // Position is asserted because it is the half that a string search would
+  // miss: `-c` is a GLOBAL option and belongs before the subcommand. Verified
+  // against the shipped binary — `codex -c check_for_update_on_startup=false
+  // resume --help` exits 0 — and a flag parked after the session id would be
+  // read as codex resume's optional PROMPT argument, which is silent.
+  const p = restorableProject(t, [{ n: 1, branch: 'ceo-1', session_id: 'thread_019abc.DEF-xyz' }]);
+  const sh = shim(t, { executePaneLines: true });
+  const codexArgv = recordingEngine(sh, 'codex');
+
+  const r = launch(p, ['restore', 'latest', '--engine', '1:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+
+  const [argv, ...extra] = codexArgv();
+  assert.deepEqual(extra, [], 'one resumed codex pane, one argv');
+  assert.deepEqual(
+    argv,
+    ['-c', 'check_for_update_on_startup=false', 'resume', 'thread_019abc.DEF-xyz'],
+    'the resume line is exactly this, in this order'
+  );
+});
+
+test('the flag is a fixed literal, so it adds no interpolation to a line a live pane parses', (t) => {
+  // The launcher has survived six security-gate rounds on exactly one class:
+  // a value reaching a pane's shell uninterpolated. A new flag is a new place
+  // for that to happen, so this pins that the flag as PRINTED expands nothing
+  // — asserted on the string before any shell has touched it, which is where
+  // an expansion would still be visible.
+  // MUTATION: build the flag from a config value, e.g.
+  // `-c check_for_update_on_startup=$(_cfg codex_update_check)` → red.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['1', '--engine', 'codex'], sh);
+  assert.equal(r.code, 0, r.out);
+
+  const line = launchLines(r.calls).get('proj:CEO-1');
+  assert.ok(line.startsWith(`${CODEX_BARE} `), `the flag must be on the line as a literal: ${line}`);
+  const flagPart = line.slice(0, CODEX_BARE.length);
+  assert.doesNotMatch(flagPart, /[$`\\]/, `the flag must expand nothing: ${flagPart}`);
+});
+
 // ── engine_prepare fails OUT LOUD, and the run stops ─────────────────────
 
 test('a codex preamble that cannot be written refuses the launch before tmux builds anything', (t) => {
@@ -527,7 +670,7 @@ test('bare mode gives codex no preamble, and still launches it', (t) => {
   const p = project(t);
   const r = warroom(p, ['engine', '1', '--engine', 'codex', '--bare']);
   assert.equal(r.code, 0, r.err);
-  assert.equal(panes(r)[0].cmd, 'codex', 'bare codex launches with no injected instructions');
+  assert.equal(panes(r)[0].cmd, CODEX_BARE, 'bare codex launches with no injected instructions');
 });
 
 // ── The seam stayed a seam ───────────────────────────────────
@@ -1197,7 +1340,7 @@ test('--bare on the real launch path: no preamble on the codex line, no paste fo
 
   const bareLines = launchLines(bare.calls);
   assert.equal(bareLines.get('proj:CEO-1'), 'claude', 'claude launches bare either way');
-  assert.equal(bareLines.get('proj:CEO-2'), 'codex', 'bare codex carries NO developer_instructions');
+  assert.equal(bareLines.get('proj:CEO-2'), CODEX_BARE, 'bare codex carries NO developer_instructions');
   assert.deepEqual([...pastes(bare.calls).keys()], [], '--bare pastes into nothing');
 
   // The control: the same two panes without --bare. Two runs differing in one
@@ -1209,7 +1352,7 @@ test('--bare on the real launch path: no preamble on the codex line, no paste fo
   assert.equal(dressed.code, 0, dressed.out);
   assert.notEqual(
     launchLines(dressed.calls).get('proj:CEO-2'),
-    'codex',
+    CODEX_BARE,
     'without --bare the same pane IS given a preamble — otherwise the assertion above says nothing'
   );
   assert.deepEqual([...pastes(dressed.calls).keys()], ['proj:CEO-1.1']);
@@ -1479,7 +1622,7 @@ test('a well-formed session_id is resumed, on both engines', (t) => {
   assert.equal(r.code, 0, r.out);
   const lines = launchLines(r.calls);
   assert.equal(lines.get('proj:CEO-1.1'), 'claude --resume 0d3a9e2c-4b1f-4a6e-9c1d-2f7e8a9b0c1d');
-  assert.equal(lines.get('proj:CEO-2.1'), 'codex resume thread_019abc.DEF-xyz');
+  assert.equal(lines.get('proj:CEO-2.1'), `${CODEX_BARE} resume thread_019abc.DEF-xyz`);
 });
 
 // ── .warroom.yml is INPUT, and the charset rule is the control ───────────
