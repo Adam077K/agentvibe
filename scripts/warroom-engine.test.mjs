@@ -1955,3 +1955,105 @@ test('a snapshot with no corrupt entry restores clean and exits zero', (t) => {
   assert.equal(lines.get('proj:CEO-1.1'), 'claude');
   assert.match(lines.get('proj:CEO-3.1'), /^codex\b/);
 });
+
+// ── A mixed war room comes back mixed ────────────────────────
+//
+// `kill` saves the snapshot and then forgets the engine map, so by the time
+// `restore` runs the map is gone. The snapshot did not carry the engine, so
+// every CEO came back on the default — a Codex CEO silently became a Claude
+// one across a kill+restore, with nothing printed. The snapshot is now the
+// record, and a snapshot that predates the field says so per pane.
+
+/** A war room started for real, then killed for real, leaving only its snapshot. */
+function killedWarRoom(t, startArgs, windows) {
+  const p = launchableProject(t);
+  const started = launch(p, startArgs, shim(t));
+  assert.equal(started.code, 0, `the war room must start: ${started.out}`);
+  const killed = launch(p, ['kill'], shim(t, { sessionExists: true, windows }));
+  assert.equal(killed.code, 0, `the war room must kill cleanly: ${killed.out}`);
+  assert.match(killed.out, /Snapshot saved/, 'kill must have saved a snapshot for restore to read');
+  assert.equal(fs.existsSync(path.join(p.home, '.proj', 'engines')), false, 'kill must forget the engine map');
+  return p;
+}
+
+test('a per-pane engine survives kill + restore, read back from the snapshot', (t) => {
+  // Three real invocations of the launcher — start, kill, restore — and the
+  // third passes no --engine at all. The engine map is gone after kill (the
+  // helper asserts it), so the snapshot is the only place the answer can
+  // come from.
+  // MUTATION: drop `,\"engine\":\"$engine\"` from _snapshot_one_ceo's JSON
+  // line → CEO-2 comes back `claude`. Red.
+  // MUTATION: drop the WARROOM_SNAPSHOT_ENGINES rung from
+  // engine_candidate_for_pane → the field is written and never read. Red.
+  const p = killedWarRoom(t, ['2', '--engine', '2:codex'], ['CEO-1', 'CEO-2']);
+  const snap = JSON.parse(fs.readFileSync(path.join(p.home, '.proj', 'last.json'), 'utf8'));
+  assert.deepEqual(
+    snap.ceos.map((c) => `${c.n}:${c.engine}`),
+    ['1:claude', '2:codex'],
+    'the snapshot must record each pane\'s engine'
+  );
+
+  const r = launch(p, ['restore', 'latest'], shim(t));
+  assert.equal(r.code, 0, r.out);
+  const lines = launchLines(r.calls);
+  assert.equal(lines.get('proj:CEO-1.1'), 'claude');
+  assert.match(lines.get('proj:CEO-2.1'), /^codex\b/, 'CEO-2 must come back on codex without being told again');
+  assert.doesNotMatch(r.err, /does not record its engine/, 'a snapshot that records engines must not warn about them');
+});
+
+test('a snapshot that predates the engine field warns per pane, naming the engine each comes up on', (t) => {
+  // restorableProject writes no `engine` unless asked, which is exactly what
+  // an older launcher's snapshot looks like. The restore must still work, and
+  // must SAY what it decided rather than decide it quietly.
+  // MUTATION: delete the warning loop after engines_prepare in cmd_restore →
+  // the restore is identical and silent. Red on the warning assertions.
+  const p = restorableProject(t, [
+    { n: 1, branch: 'ceo-1' },
+    { n: 2, branch: 'ceo-2' },
+  ]);
+  const r = launch(p, ['restore', 'latest'], shim(t));
+  assert.equal(r.code, 0, r.out);
+  for (const n of [1, 2]) {
+    const line = r.err.split('\n').find((l) => l.includes(`CEO-${n}:`) && /does not record its engine/.test(l));
+    assert.ok(line, `CEO-${n} must be warned about: ${r.err}`);
+    assert.match(line, /comes up on claude/, 'and the warning must name the engine it will get');
+    assert.match(line, /built-in default|engine: in/, 'and where that answer came from');
+  }
+});
+
+test('a snapshot naming an engine this program does not know is refused before the kill', (t) => {
+  // Same shape as the corrupt pane number: the file is provably not one this
+  // program wrote, so the whole restore is refused and the founder's running
+  // session is left alone.
+  // MUTATION: drop `engine_require_known` from engines_resolve → 'nope'
+  // matches no case arm, engine_launch_cmd refuses at the seam, and by then
+  // the session is gone. Red on destroys-nothing.
+  const p = restorableProject(t, [{ n: 1, branch: 'ceo-1', engine: 'nope' }]);
+  const r = launch(p, ['restore', 'latest'], shim(t, { sessionExists: true }));
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  assert.match(r.err, /unknown engine 'nope'/);
+  assert.match(r.err, /recorded for CEO-1/, 'and say the value came from the snapshot');
+  assert.deepEqual(r.calls.filter((c) => c[0] === 'kill-session'), [], 'the running session must survive');
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and nothing may be built');
+});
+
+test('an all-codex snapshot restores on a machine with no claude at all', (t) => {
+  // The premature dependency check. cmd_restore ran a bare `check_deps` at its
+  // top, before it had read the snapshot; that resolved pane 1 to the default,
+  // demanded `claude`, and refused a war room that would never start it.
+  // `claude` is genuinely absent from the shim here, and the config says
+  // nothing about engines, so the snapshot's own record is the only reason
+  // this can succeed.
+  // MUTATION: `check_base_deps` → `check_deps` at the top of cmd_restore →
+  // "claude not found", exit 1. Red.
+  const p = restorableProject(t, [
+    { n: 1, branch: 'ceo-1', engine: 'codex' },
+    { n: 2, branch: 'ceo-2', engine: 'codex' },
+  ]);
+  const r = launch(p, ['restore', 'latest'], shim(t, { engines: ['codex'] }));
+  assert.equal(r.code, 0, `an all-codex restore must not demand claude: ${r.out}`);
+  assert.doesNotMatch(r.out, /claude not found/);
+  const lines = launchLines(r.calls);
+  assert.match(lines.get('proj:CEO-1.1'), /^codex\b/);
+  assert.match(lines.get('proj:CEO-2.1'), /^codex\b/);
+});

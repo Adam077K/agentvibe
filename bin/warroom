@@ -345,6 +345,14 @@ WARROOM_ENGINE_FALLBACK="claude"
 WARROOM_ENGINE_DEFAULT=""
 WARROOM_ENGINE_OVERRIDES=""
 
+# Set by cmd_restore, and by nothing else: the `n:engine` pairs a snapshot
+# recorded, so a mixed-engine war room comes back mixed. `kill` saves the
+# snapshot and THEN forgets the engine map, so by the time `restore` runs the
+# map is gone and the snapshot is the only record of which pane ran what.
+# Before this, every CEO silently came back on the default.
+WARROOM_SNAPSHOT_ENGINES=""
+WARROOM_SNAPSHOT_SOURCE=""
+
 # The resolved engine for pane N, populated ONCE per invocation by
 # engines_resolve, running in the MAIN shell.
 #
@@ -424,9 +432,10 @@ ENGINES_STATE_FILE="$PROJECT_STATE_DIR/engines"
 # First hit wins:
 #   1. --engine N:<name>          per-pane override for this invocation
 #   2. --engine <name>            this invocation's default
-#   3. $ENGINES_STATE_FILE        what this running war room was started with
-#   4. engine: in .warroom.yml    the project's standing choice
-#   5. claude
+#   3. the snapshot being restored (cmd_restore only — see WARROOM_SNAPSHOT_ENGINES)
+#   4. $ENGINES_STATE_FILE        what this running war room was started with
+#   5. engine: in .warroom.yml    the project's standing choice
+#   6. claude
 engine_candidate_for_pane() {
   local n="$1" tok eng=""
   for tok in $WARROOM_ENGINE_OVERRIDES; do
@@ -434,6 +443,10 @@ engine_candidate_for_pane() {
   done
   [ -n "$eng" ] && { printf '%s\t--engine %s' "$eng" "${n}:${eng}"; return 0; }
   [ -n "$WARROOM_ENGINE_DEFAULT" ] && { printf '%s\t--engine' "$WARROOM_ENGINE_DEFAULT"; return 0; }
+  for tok in $WARROOM_SNAPSHOT_ENGINES; do
+    case "$tok" in "${n}:"*) eng="${tok#*:}" ;; esac
+  done
+  [ -n "$eng" ] && { printf '%s\tthe engine recorded for CEO-%s in %s' "$eng" "$n" "$WARROOM_SNAPSHOT_SOURCE"; return 0; }
   eng="$(engine_persisted_for_pane "$n")"
   [ -n "$eng" ] && { printf '%s\t%s' "$eng" "$ENGINES_STATE_FILE, where this war room recorded its engines"; return 0; }
   eng="$(_cfg engine)"
@@ -856,13 +869,14 @@ check_engine_deps() {
   done < <(engines_in_use)
 }
 
-check_deps() {
+# The checks that do not depend on which engine a pane runs. Split out so that
+# cmd_restore can run them BEFORE it has read the snapshot — it needs python3
+# to read it at all — and the engine check AFTER, against the engines the
+# snapshot actually names. A bare `check_deps` at the top of restore resolved
+# pane 1 to the default, demanded `claude`, and refused a perfectly restorable
+# all-Codex war room on a machine that had only codex.
+check_base_deps() {
   require_tmux
-  # The caller resolves the panes it is about to create, before this runs. The
-  # optional count is a fallback for a caller that has only a count; it still
-  # resolves in the main shell, so its refusal still exits the program.
-  [ "$WARROOM_ENGINES_RESOLVED" -eq 1 ] || engines_resolve $(seq 1 "${1:-1}")
-  check_engine_deps
   if ! command -v python3 &>/dev/null; then
     echo "✗ python3 not found. Required for cost tracking and event logging."; exit 1
   fi
@@ -874,6 +888,16 @@ check_deps() {
   fi
   mkdir -p "$PROJECT_STATE_DIR"
   mkdir -p "$TMUX_SCRIPTS_DIR"
+}
+
+check_deps() {
+  require_tmux
+  # The caller resolves the panes it is about to create, before this runs. The
+  # optional count is a fallback for a caller that has only a count; it still
+  # resolves in the main shell, so its refusal still exits the program.
+  [ "$WARROOM_ENGINES_RESOLVED" -eq 1 ] || engines_resolve $(seq 1 "${1:-1}")
+  check_engine_deps
+  check_base_deps
 }
 
 next_ceo_number() {
@@ -1295,9 +1319,21 @@ for f in sorted(glob.glob(os.path.expanduser('~/.claude/sessions/*.json')), key=
       session_id=""
     fi
 
+    # The engine this pane was started on, from the map the launching invocation
+    # wrote. Read HERE because cmd_kill calls engines_forget a few lines after
+    # this snapshot is saved, and after that nothing remembers. Empty when the
+    # map has no entry — a war room started by an older launcher — and
+    # cmd_restore warns on empty rather than guessing in silence.
+    local engine=""
+    engine="$(engine_persisted_for_pane "$n")"
+    if [ -n "$engine" ] && ! engine_is_known "$engine"; then
+      echo "  ⚠ CEO-$n: ignoring an unknown engine ($engine) in $ENGINES_STATE_FILE — not recording it." >&2
+      engine=""
+    fi
+
     [ "$first" -eq 0 ] && ceos_json+=","
     first=0
-    ceos_json+="{\"n\":$n,\"branch\":\"$branch\",\"wt_path\":\"$wt_path\",\"task\":\"$task\",\"start_ts\":${start_ts:-0},\"session_id\":\"$session_id\"}"
+    ceos_json+="{\"n\":$n,\"branch\":\"$branch\",\"wt_path\":\"$wt_path\",\"task\":\"$task\",\"start_ts\":${start_ts:-0},\"session_id\":\"$session_id\",\"engine\":\"$engine\"}"
   }
 
   if $grid_mode; then
@@ -2337,7 +2373,11 @@ cmd_grid_view() {
 #   1-10           — restore Nth entry from picker directly
 cmd_restore() {
   local restore_arg="${1:-}"
-  check_deps
+  # Base checks only. The engine check runs further down, AFTER the snapshot
+  # has been read and its real engines resolved — a bare check_deps here
+  # resolved pane 1 to the default and demanded `claude` for an all-Codex
+  # snapshot on a machine that only had codex.
+  check_base_deps
 
   # Determine which snapshot file to use
   local chosen_snapshot=""
@@ -2505,6 +2545,9 @@ for i, c in enumerate(d.get('ceos',[])):
     sid = str(c.get('session_id','') or '')
     if not re.fullmatch(r'[A-Za-z0-9._-]*', sid):
         print('entry #%d carries session_id %r — not a session id' % (i, sid))
+    eng = str(c.get('engine','') or '')
+    if not re.fullmatch(r'[A-Za-z0-9_-]*', eng):
+        print('entry #%d carries engine %r — not an engine name' % (i, eng))
 " 2>/dev/null)
 
   if [ -n "$snapshot_bad" ]; then
@@ -2516,6 +2559,22 @@ for i, c in enumerate(d.get('ceos',[])):
     exit 1
   fi
 
+  # The engines the snapshot recorded, as `n:engine` pairs, handed to the
+  # resolver as its rung below `--engine`. Shape is already checked above, so
+  # the pairs tokenise; an engine this program does not KNOW is refused by
+  # engines_resolve, naming the snapshot, like any other unknown engine.
+  #
+  # An entry with no engine recorded — a snapshot written by a launcher that
+  # predates the field — is WARNED about per pane below, with the engine it
+  # will come up on and where that answer came from. It is not guessed at in
+  # silence: that is precisely how a mixed war room used to come back uniform.
+  WARROOM_SNAPSHOT_ENGINES=$(python3 -c "
+import json
+d = json.load(open('${chosen_snapshot}'))
+print(' '.join('%s:%s' % (c.get('n'), c.get('engine')) for c in d.get('ceos',[]) if c.get('engine')))
+" 2>/dev/null)
+  WARROOM_SNAPSHOT_SOURCE="$chosen_snapshot"
+
   # Engines are resolved, their binaries checked and their preambles written
   # here too — before the kill — so a restore that would fail for a missing
   # binary or an unwritable state_dir also costs nothing.
@@ -2523,6 +2582,12 @@ for i, c in enumerate(d.get('ceos',[])):
     engines_resolve $snapshot_ns
     check_engine_deps
     engines_prepare || exit 1
+    local _n _pair
+    for _n in $snapshot_ns; do
+      case " $WARROOM_SNAPSHOT_ENGINES " in *" ${_n}:"*) continue ;; esac
+      _pair="$(engine_candidate_for_pane "$_n")"
+      echo "  ⚠ CEO-$_n: this snapshot does not record its engine; it comes up on ${_pair%%$'\t'*} (${_pair#*$'\t'})." >&2
+    done
   fi
 
   echo ""
