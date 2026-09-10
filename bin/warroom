@@ -89,8 +89,11 @@ _cfg() {
 #           printed is the resolved absolute path, so no caller re-derives it.
 #
 #           This is lexical. The physical half — a symlink inside the project
-#           that points out of it — is checked by _require_inside where the file
-#           is actually READ, because that is the only time it can be resolved.
+#           that points out of it — is checked by _require_inside, against the
+#           same base, once the path exists to be resolved: where a file is
+#           READ, and before the first directory is WRITTEN. Both halves, or
+#           the rule is a wish: the lexical check alone passed a git-tracked
+#           `.claude/state -> ~/.ssh` and let every write follow it.
 _cfg_checked() {
   local key="$1" kind="$2" val
   val="$(_cfg "$key")"
@@ -165,30 +168,75 @@ _path_under() {
   printf '%s' "$resolved"
 }
 
-# The physical half of the confinement, applied where a file is READ. A path that
-# is lexically inside the project can still be a symlink — git tracks those, so
-# a hostile checkout can carry `.claude/entry -> /home/me/.ssh` — and only the
-# filesystem can say where it really points. Follows the link chain of the file
-# and of its directory (`cd -P`), then requires the result to start with the
-# base's own physical path.
+# The physical half of the confinement. A path that is lexically inside the
+# project can still be a symlink — git tracks those, so a hostile checkout can
+# carry `.claude/entry -> /home/me/.ssh` or `.claude/state -> /home/me/.ssh` —
+# and only the filesystem can say where it really points.
 #
-#   _require_inside <key> <path> <base>   → exits 1 with a message if outside
-_require_inside() {
-  local key="$1" p="$2" base="$3" hops=0 t d phys pbase
-  while [ -L "$p" ] && [ "$hops" -lt 16 ]; do
-    t="$(readlink "$p")" || break
-    case "$t" in /*) p="$t" ;; *) p="$(dirname "$p")/$t" ;; esac
-    hops=$((hops + 1))
+# ONE resolver for every kind of path this program confines, because the first
+# version of this check resolved files only, and the write side was left with
+# the lexical rule alone: `state_dir` was confined by _path_under, a git-tracked
+# symlink at that path passed it, and every `mkdir -p` and every `>>` under it
+# then landed wherever the link said. Reads and writes are the same class —
+# a config or a checkout choosing a path this program was going to trust — so
+# they are resolved by the same function and refused by the same rule.
+#
+# _phys_path <path> → the physical path, or fails. Handles all three shapes:
+#   an existing directory     — `cd -P` resolves every link on the way;
+#   an existing file          — the file's own link chain, then its directory;
+#   a path that does not exist yet (a state_dir on first run) — the deepest
+#     ancestor that DOES exist is resolved and the rest appended verbatim. A
+#     `..` cannot be among the rest: _path_under has already refused it. A
+#     symlink met on the way up is dangling or points at a file; neither is a
+#     directory this program can write into, so it is refused outright rather
+#     than resolved past.
+_phys_path() {
+  local p="$1" rest="" hops=0 t d
+  while [ ! -e "$p" ]; do
+    [ -L "$p" ] && return 1
+    [ -n "$p" ] && [ "$p" != "/" ] || return 1
+    rest="$(basename "$p")${rest:+/$rest}"
+    p="$(dirname "$p")"
   done
-  d="$(cd -P "$(dirname "$p")" 2>/dev/null && pwd -P)" || d=""
-  pbase="$(cd -P "$base" 2>/dev/null && pwd -P)" || pbase=""
-  phys="$d/$(basename "$p")"
-  case "$phys" in "$pbase"/?*) [ -n "$pbase" ] && [ -n "$d" ] && return 0 ;; esac
-  echo "✗ warroom: '$key' resolves to a file outside $base and is refused." >&2
-  echo "  Configured: $2" >&2
+  if [ -d "$p" ]; then
+    p="$(cd -P "$p" 2>/dev/null && pwd -P)" || return 1
+  else
+    while [ -L "$p" ] && [ "$hops" -lt 16 ]; do
+      t="$(readlink "$p")" || return 1
+      case "$t" in /*) p="$t" ;; *) p="$(dirname "$p")/$t" ;; esac
+      hops=$((hops + 1))
+    done
+    [ -L "$p" ] && return 1
+    d="$(cd -P "$(dirname "$p")" 2>/dev/null && pwd -P)" || return 1
+    p="${d%/}/$(basename "$p")"
+  fi
+  printf '%s' "${p%/}${rest:+/$rest}"
+}
+
+# _inside_phys <path> <base> → 0 when <path> resolves physically under <base>.
+# A predicate, for the sites that skip rather than stop.
+_inside_phys() {
+  local phys pbase
+  phys="$(_phys_path "$1")" || return 1
+  pbase="$(cd -P "$2" 2>/dev/null && pwd -P)" || return 1
+  [ -n "$pbase" ] || return 1
+  case "$phys" in "$pbase"/?*) return 0 ;; esac
+  return 1
+}
+
+# _require_inside <key> <path> <base> [why]  → exits 1 with a message if outside.
+# `why` is the one line that says what this program was about to do with the
+# path; the default is the read side, which is where the check began.
+_require_inside() {
+  local key="$1" p="$2" base="$3" phys
+  local why="${4:-The CEO preamble is read from this file and shipped to a model provider.}"
+  _inside_phys "$p" "$base" && return 0
+  phys="$(_phys_path "$p" 2>/dev/null)" || phys=""
+  echo "✗ warroom: '$key' resolves outside $base and is refused." >&2
+  echo "  Configured: $p" >&2
   echo "  Resolves to: ${phys:-<unresolvable>}" >&2
-  echo "  The CEO preamble is read from this file and shipped to a model provider, so" >&2
-  echo "  a git-tracked config or symlink does not get to point it at an arbitrary file." >&2
+  echo "  $why" >&2
+  echo "  A git-tracked config or symlink does not get to choose where that is." >&2
   exit 1
 }
 
@@ -230,14 +278,55 @@ fi
 SESSION_UPPER="$(_cfg_checked display_name path)" || exit 1
 [ -z "$SESSION_UPPER" ] && SESSION_UPPER="$(printf '%s' "$SESSION" | tr '[:lower:]' '[:upper:]')"
 # state_dir is where this program does `mkdir -p` and WRITES — snapshots, the
-# engine map, the rendered Codex preamble, the event log. Confined to the
-# founder's home or the project, so a config cannot point those writes anywhere
-# else. A relative value lands under the project.
+# engine map, the rendered Codex preamble, the event log, history, the message
+# inboxes. Confined to the founder's home or the project, lexically AND
+# physically, so a config cannot point those writes anywhere else. A relative
+# value lands under the project.
 PROJECT_STATE_DIR="$(_cfg_checked state_dir under "$PROJECT_DIR" "$HOME")" || exit 1
 [ -z "$PROJECT_STATE_DIR" ] && PROJECT_STATE_DIR="$HOME/.$SESSION"
 
+# The physical half, against the base the LEXICAL half chose. That pairing is
+# the point: `.claude/state -> ~/.ssh` is lexically under the project and
+# physically under $HOME, and $HOME is an allowed base — so a check against
+# "either base" would pass it, and a git-tracked symlink would have chosen a
+# directory under the founder's home for every write this program makes.
+# Nothing under the project may resolve out of the project; nothing under
+# $HOME may resolve out of $HOME.
+case "$PROJECT_STATE_DIR" in
+  "${PROJECT_DIR%/}"/*) _STATE_BASE="$PROJECT_DIR" ;;
+  *)                    _STATE_BASE="$HOME" ;;
+esac
+_require_inside state_dir "$PROJECT_STATE_DIR" "$_STATE_BASE" \
+  "This program creates directories and writes files here: snapshots, the engine map, the rendered Codex preamble, the event log."
+
+# And nothing INSIDE it may be a symlink. The base check bounds the directory;
+# it says nothing about `state/entry/ceo.codex.md -> ~/.ssh/id_rsa` one level
+# down, which `render_ceo_preamble > "$f"` would follow and overwrite. Every
+# write under state_dir is a `mkdir -p`, a `>` or a `>>`, and this program
+# never creates a symlink there, so one is never legitimate and the sweep is
+# free: one `find`, once, before the first write. This is what makes "a config
+# cannot point those writes anywhere else" true of the writes and not only of
+# the directory.
+if [ -d "$PROJECT_STATE_DIR" ]; then
+  _state_link="$(find "$PROJECT_STATE_DIR" -type l 2>/dev/null | head -1)"
+  if [ -n "$_state_link" ]; then
+    echo "✗ warroom: state_dir holds a symlink and is refused: $_state_link" >&2
+    echo "  This program only ever writes regular files and directories under $PROJECT_STATE_DIR," >&2
+    echo "  so a symlink there is not something it made — and a write would follow it wherever it points." >&2
+    echo "  Remove the link, or point state_dir in $WARROOM_CONFIG somewhere that has none." >&2
+    exit 1
+  fi
+  unset _state_link
+fi
+
 CEO_AGENT="$PROJECT_DIR/.claude/agents/ceo.md"
 WORKTREES_DIR="$PROJECT_DIR/.worktrees"
+# Derived from project_dir rather than chosen by a key, and confined the same
+# way: `git worktree add`, `.registry`, `.task` and `.session` are all written
+# under it, and a checkout that carries `.worktrees -> ~/somewhere` would have
+# chosen where every CEO's tree is created.
+_require_inside worktrees "$WORKTREES_DIR" "$PROJECT_DIR" \
+  "Every CEO worktree, and its .task, .session and .registry records, is created here."
 SESSION_SNAPSHOT="$PROJECT_STATE_DIR/last.json"
 SNAPSHOTS_DIR="$PROJECT_STATE_DIR/snapshots"
 TMUX_SCRIPTS_DIR="$HOME/.tmux/scripts"
@@ -294,6 +383,12 @@ if [ -f "$CEO_ENTRY_FILE" ]; then
   _require_inside entry_ceo "$CEO_ENTRY_FILE" "$PROJECT_DIR"
   CEO_PREAMBLE="$(cat "$CEO_ENTRY_FILE")"
 elif [ -f "$CEO_SEED_FILE" ]; then
+  # The fallback is read and shipped exactly like the configured file, so it
+  # gets exactly the same check. It had none: the entry_ceo fix confined the
+  # key and left the convention two lines below it, and a git-tracked
+  # `_seeds/ceo.md -> ~/.ssh/id_rsa` in a project with no entry file was cat'd
+  # here and became the CEO's opening prompt.
+  _require_inside ".claude/agents/_seeds/ceo.md" "$CEO_SEED_FILE" "$PROJECT_DIR"
   CEO_PREAMBLE="$(cat "$CEO_SEED_FILE")"
 else
   CEO_PREAMBLE='You are the CEO and Orchestrator. Read .claude/agents/ceo.md for full instructions. Do NOT spawn a CEO subagent — you ARE the CEO.'
@@ -606,8 +701,21 @@ Everything else below applies to you unchanged.'
 engine_toolscoped_names() {
   local d="$PROJECT_DIR/.claude/agents" f tools out=""
   [ -d "$d" ] || return 0
+  # Read-and-emit, so confined like every other read that leaves the process:
+  # what leaves is each file's NAME, into the Codex preamble, and a symlinked
+  # `.claude/agents -> ~/notes` would have listed the founder's file names to a
+  # model provider. A file that resolves out of the project is not one of this
+  # project's engines; it is skipped, and the founder is told which.
+  if ! _inside_phys "$d" "$PROJECT_DIR"; then
+    echo "  ⚠ $d resolves outside the project; no engine is read from it." >&2
+    return 0
+  fi
   for f in "$d"/*.md; do
     [ -f "$f" ] || continue
+    if ! _inside_phys "$f" "$PROJECT_DIR"; then
+      echo "  ⚠ $(basename "$f") resolves outside the project and is not read as an engine." >&2
+      continue
+    fi
     tools="$(grep -m1 '^tools:' "$f" 2>/dev/null)"
     [ -n "$tools" ] || continue
     case "$tools" in *Write*|*Edit*) continue ;; esac
@@ -2585,6 +2693,35 @@ for i, c in enumerate(d.get('ceos',[])):
     exit 1
   fi
 
+  # wt_path is where this restore runs `git worktree add` and points a pane's
+  # cwd, and it comes off the same disk as the pane number. save_session_snapshot
+  # only ever records "$WORKTREES_DIR/ceo-N-TS", so one anywhere else was not
+  # written by this program: refused whole, up front, by the corruption rule —
+  # a checkout with state_dir inside the project carries a snapshot as easily
+  # as it carries a config, and this is the write it would have chosen. Judged
+  # by the rule the config keys are judged by, path charset then _path_under,
+  # so there is one answer to "is this under that". Empty is the routine skip
+  # further down, as it always was.
+  local _wt _wt_bad=""
+  while IFS= read -r _wt; do
+    [ -n "$_wt" ] || continue
+    case "$_wt" in *[!A-Za-z0-9._/~+\ -]*) _wt_bad="$_wt"; break ;; esac
+    _path_under "$_wt" "$WORKTREES_DIR" >/dev/null || { _wt_bad="$_wt"; break; }
+  done < <(python3 -c "
+import json
+d = json.load(open('${chosen_snapshot}'))
+for c in d.get('ceos',[]):
+    print(str(c.get('wt_path','') or '').replace('\n',' '))
+" 2>/dev/null)
+  if [ -n "$_wt_bad" ]; then
+    echo "✗ this snapshot names a worktree outside $WORKTREES_DIR:" >&2
+    echo "    $_wt_bad" >&2
+    echo "    in $chosen_snapshot" >&2
+    echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+    echo "  This program only ever records worktrees it created there, so the file is not one it wrote." >&2
+    exit 1
+  fi
+
   # The engines the snapshot recorded, as `n:engine` pairs, handed to the
   # resolver as its rung below `--engine`. Shape is already checked above, so
   # the pairs tokenise; an engine this program does not KNOW is refused by
@@ -3826,6 +3963,15 @@ cmd_merge() {
     local full_path="$PROJECT_DIR/$conflict_file"
 
     echo -n "  Resolving $conflict_file... "
+
+    # Guard: the file is `cat`'d into a model's prompt below, so it is confined
+    # like every other read that leaves the process. A conflicted path can be a
+    # git-tracked symlink, and `cat` follows it.
+    if ! _inside_phys "$full_path" "$PROJECT_DIR"; then
+      echo -e "${C_RED}✗${RESET} (resolves outside the project — resolve manually)"
+      ((failed++))
+      continue
+    fi
 
     # Guard: skip files that are too large to safely resolve via AI
     local line_count

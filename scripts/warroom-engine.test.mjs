@@ -95,18 +95,22 @@ function project(
   return { home, dir, config, entry };
 }
 
-/** Run bin/warroom against a throwaway project. Never exits the test runner. */
+/**
+ * Run bin/warroom against a throwaway project. Never exits the test runner.
+ *
+ * stderr is kept on exit 0 as well as on failure: the launcher warns the
+ * founder out of band — a skipped agent file, an engine a snapshot did not
+ * record — and a run that succeeded while warning is exactly the run whose
+ * stderr a test needs to read. The first shape of this helper threw stderr
+ * away on success, and an assertion on a warning matched '' every time.
+ */
 function warroom(p, args, { path: PATH_ = process.env.PATH } = {}) {
-  try {
-    const out = execFileSync(BASH, [WARROOM, '--config', p.config, ...args], {
-      encoding: 'utf8',
-      env: { ...process.env, HOME: p.home, PATH: PATH_ },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    return { code: 0, out, err: '' };
-  } catch (e) {
-    return { code: e.status ?? 1, out: e.stdout ?? '', err: e.stderr ?? '' };
-  }
+  const r = spawnSync(BASH, [WARROOM, '--config', p.config, ...args], {
+    encoding: 'utf8',
+    env: { ...process.env, HOME: p.home, PATH: PATH_ },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return { code: r.status ?? 1, out: r.stdout ?? '', err: r.stderr ?? '' };
 }
 
 /** The engine and launch line the launcher resolved for each pane. */
@@ -840,17 +844,24 @@ function launchableProject(t, opts = {}) {
  * skipped for the wrong reason, and the test would pass having proved nothing
  * about the pane-number guard it is aimed at.
  *
- * `entries` is `[{ n, branch, session_id?, engine? }]`, and every field is
- * deliberately free-form: a snapshot is DATA read back off disk, not argv,
- * which is the whole reason cmd_restore has to guard it.
+ * `entries` is `[{ n, branch, session_id?, engine?, wt_path? }]`, and every
+ * field is deliberately free-form: a snapshot is DATA read back off disk, not
+ * argv, which is the whole reason cmd_restore has to guard it. `wt_path`
+ * defaults to where the launcher itself would have recorded it; a test about
+ * a snapshot that names somewhere else passes its own.
+ *
+ * `gridMode` writes the snapshot a grid-layout war room saves, which
+ * cmd_restore rebuilds through a different branch — one GRID window, one pane
+ * per CEO, targets `GRID.N` — and that branch had no test until it took a
+ * parameter here.
  */
-function restorableProject(t, entries) {
+function restorableProject(t, entries, { gridMode = false } = {}) {
   const p = launchableProject(t);
   for (const b of new Set(entries.map((e) => e.branch))) gitIn(p, 'branch', b, 'main');
-  const ceos = entries.map(({ n, branch, session_id = '', engine }) => ({
+  const ceos = entries.map(({ n, branch, session_id = '', engine, wt_path }) => ({
     n,
     branch,
-    wt_path: path.join(p.dir, '.worktrees', branch),
+    wt_path: (typeof wt_path === 'function' ? wt_path(p) : wt_path) ?? path.join(p.dir, '.worktrees', branch),
     task: '',
     start_ts: 0,
     session_id,
@@ -860,7 +871,7 @@ function restorableProject(t, entries) {
   fs.mkdirSync(snaps, { recursive: true });
   fs.writeFileSync(
     path.join(snaps, '2026-01-01-000000.json'),
-    JSON.stringify({ saved_at: 1767225600, project_dir: p.dir, grid_mode: false, ceos }, null, 2)
+    JSON.stringify({ saved_at: 1767225600, project_dir: p.dir, grid_mode: gridMode, ceos }, null, 2)
   );
   return p;
 }
@@ -1492,11 +1503,18 @@ test('a shell metacharacter in a config value is refused at parse time, whatever
   // load-bearing on state_dir, display_name and entry_ceo, and inert on the
   // two the comment above it calls out by example. Not a hole in this test —
   // there is no behaviour there to assert.
+  //
+  // display_name is in the loop because the comment above calls its `|| exit 1`
+  // load-bearing and, until this row, nothing tested the key at all: a
+  // metacharacter in it reaches the HQ and status lines the same way
+  // `session` does. MUTATION: `SESSION_UPPER="$(_cfg_checked display_name
+  // path)"` → `SESSION_UPPER="$(_cfg display_name)"` → this row exits 0. Red.
   const p = configuredProject(t, {});
   for (const [key, kind] of [
     ['session', 'name'],
     ['state_dir', 'path'],
     ['entry_ceo', 'path'],
+    ['display_name', 'path'],
   ]) {
     for (const [label, payload] of SHELL_PAYLOADS) {
       const canary = path.join(p.home, `CANARY-${key}-${label.replace(/\W+/g, '-')}`);
@@ -1528,12 +1546,15 @@ test('an ordinary config passes, including the characters the rule deliberately 
   // MUTATION: drop the space from the `path` character class, i.e.
   // `*[!A-Za-z0-9._/~+-]*` → this refuses and goes red, while every refusal
   // assertion above still passes.
+  // display_name carries the same allowed set, space included, and is the
+  // other half of its row in the refusal loop above: a launcher that refused
+  // every display_name would pass that row too.
   const p = configuredProject(t, {});
   const dir = path.join(p.home, 'a dir+with-allowed.chars');
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(
     p.config,
-    `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${dir}\n`
+    `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${dir}\ndisplay_name: Proj Display+1.0_x\n`
   );
 
   const r = warroom(p, ['engine', '2']);
@@ -1645,8 +1666,9 @@ test('entry_ceo cannot point outside the project: the file is never read into a 
   // entry_ceo path` plus the old `case … /*) : ;;` passthrough, ALONE → still
   // GREEN: the physical check resolves `..`, `~` and an absolute path outside
   // the project just as it resolves a symlink, and refuses them all. The
-  // lexical rule is load-bearing on state_dir, which has no physical check
-  // (see below), and is belt-and-braces here.
+  // lexical rule is what CHOOSES the base the physical check on state_dir is
+  // made against (see the class tests at the end of this file), and is
+  // belt-and-braces here.
   // MUTATION: both of the above together → every row prints the secret and
   // exits 0. Red on all five, on the content assertion first.
   for (const [label, value, symlink] of HOSTILE_ENTRY_CEO) {
@@ -2195,4 +2217,342 @@ test('an all-codex snapshot restores on a machine with no claude at all', (t) =>
   const lines = launchLines(r.calls);
   assert.match(lines.get('proj:CEO-1.1'), /^codex\b/);
   assert.match(lines.get('proj:CEO-2.1'), /^codex\b/);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  THE WHOLE CLASS, NOT THE NAMED MEMBER
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The entry_ceo fix above closed the one read a review had named, and the
+// state_dir fix closed the one write. A later review found that each was one
+// member of a class with more members: every other file this program reads and
+// ships (the seed fallback, the agent files whose names go into the Codex
+// preamble) and every path it writes under (a symlinked state_dir passes the
+// lexical rule; so does a symlink inside it; so does a symlinked .worktrees; so
+// does a snapshot's wt_path, which was never judged at all). Each test below is
+// one member, and each was watched going red under the mutation it names.
+
+// ── Class A: the seed fallback is a read like any other ──────────────────
+
+/**
+ * A project with NO entry file, so the launcher falls through to the seed
+ * convention `.claude/agents/_seeds/ceo.md` — which here is a symlink to a
+ * secret outside the project.
+ */
+function projectWithSeedSecret(t, { launchable = false } = {}) {
+  const p = launchable ? launchableProject(t) : project(t);
+  fs.rmSync(p.entry);
+  fs.writeFileSync(path.join(p.home, 'SECRET'), SECRET);
+  const seeds = path.join(p.dir, '.claude', 'agents', '_seeds');
+  fs.mkdirSync(seeds, { recursive: true });
+  fs.symlinkSync(path.join(p.home, 'SECRET'), path.join(seeds, 'ceo.md'));
+  return p;
+}
+
+test('the seed fallback cannot point outside the project either: a symlinked _seeds/ceo.md is never read into a preamble', (t) => {
+  // The entry_ceo fix confined the configured key and left the fallback two
+  // lines below it with no check at all — same `cat`, same sink, no guard.
+  // MUTATION: delete the `_require_inside ".claude/agents/_seeds/ceo.md" …`
+  // line → both renderings print the secret and exit 0. Red on the content
+  // assertion first, for both engines.
+  const p = projectWithSeedSecret(t);
+  for (const eng of ['claude', 'codex']) {
+    const r = warroom(p, ['engine', 'render', eng]);
+    assert.doesNotMatch(r.out, /SECRET_SENTINEL_9f1c/, `${eng}: the secret must not be rendered`);
+    assert.notEqual(r.code, 0, `${eng}: and the launcher must refuse`);
+    assert.ok(r.err.includes('_seeds/ceo.md'), `the refusal must name the file: ${r.err}`);
+  }
+});
+
+test('a symlinked seed on the real launch path reaches no pane, no preamble file and no tmux argv', (t) => {
+  // Same three sinks as the entry_ceo launch test: the paste for a Claude pane,
+  // the codex preamble file, and every argument tmux was ever given.
+  // MUTATION: as above → the paste for CEO-1 and the preamble file for CEO-2
+  // both carry the secret. Red.
+  const p = projectWithSeedSecret(t, { launchable: true });
+  const sh = shim(t);
+  const r = launch(p, ['2', '--engine', '2:codex'], sh);
+
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  const everyArg = r.calls.flat().join('\n');
+  assert.doesNotMatch(everyArg, /SECRET_SENTINEL_9f1c/, 'the secret must reach no tmux argument');
+  const rendered = path.join(p.home, '.proj', 'entry', 'ceo.codex.md');
+  if (fs.existsSync(rendered)) {
+    assert.doesNotMatch(fs.readFileSync(rendered, 'utf8'), /SECRET_SENTINEL_9f1c/, 'nor the codex preamble file');
+  }
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused seed must build nothing');
+  assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'and create no worktree');
+});
+
+test('a real seed file inside the project is still the fallback when there is no entry file', (t) => {
+  // The control: 8 of 12 fleet launchers used this convention, and a check
+  // that refused every seed would put them all on the minimal built-in with
+  // one warning nobody reads.
+  // MUTATION: none needed; this is the negative half of the pair.
+  const p = project(t);
+  fs.rmSync(p.entry);
+  const seeds = path.join(p.dir, '.claude', 'agents', '_seeds');
+  fs.mkdirSync(seeds, { recursive: true });
+  fs.writeFileSync(path.join(seeds, 'ceo.md'), 'SEED_BODY_OK from the seed convention');
+  for (const eng of ['claude', 'codex']) {
+    const r = warroom(p, ['engine', 'render', eng]);
+    assert.equal(r.code, 0, r.err);
+    assert.match(r.out, /SEED_BODY_OK/, `${eng}: the seed must be the preamble`);
+  }
+});
+
+// ── Class A: the agent files whose NAMES go into the codex preamble ─────
+
+test('the codex preamble lists the tool-scoped engines, derived from the agent files and only those inside the project', (t) => {
+  // engine_toolscoped_names had no test: the list is derived from
+  // `.claude/agents/*.md`, and the rule — every file whose `tools:` line names
+  // neither Write nor Edit — was asserted by a comment.
+  // MUTATION: delete `*Write*|*Edit*) continue ;;` → writer-beta and
+  // editor-gamma are listed. Red.
+  // MUTATION: delete `[ -n "$tools" ] || continue` → notools-delta is listed. Red.
+  // MUTATION: delete the per-file `_inside_phys` skip → outside-epsilon is
+  // listed and nothing is said. Red on both assertions about it.
+  const p = project(t);
+  const agents = path.join(p.dir, '.claude', 'agents');
+  const write = (name, body) => fs.writeFileSync(path.join(agents, `${name}.md`), body);
+  write('scoped-alpha', '---\nname: scoped-alpha\ntools: [Read, Grep, Glob]\n---\n# read-only\n');
+  write('scoped-zeta', '---\ntools: [Read]\n---\n');
+  write('writer-beta', '---\ntools: [Read, Write]\n---\n');
+  write('editor-gamma', '---\ntools: [Edit, Read]\n---\n');
+  write('notools-delta', '---\nname: notools-delta\n---\n');
+  fs.writeFileSync(path.join(p.home, 'outside-epsilon.md'), '---\ntools: [Read]\n---\n');
+  fs.symlinkSync(path.join(p.home, 'outside-epsilon.md'), path.join(agents, 'outside-epsilon.md'));
+
+  const r = warroom(p, ['engine', 'render', 'codex']);
+  assert.equal(r.code, 0, r.err);
+  assert.match(r.out, /the tool-scoped engines are: scoped-alpha scoped-zeta\./, `the list must be exactly the read-only engines: ${r.out}`);
+  for (const name of ['writer-beta', 'editor-gamma', 'notools-delta', 'outside-epsilon']) {
+    assert.doesNotMatch(r.out, new RegExp(name), `${name} must not be listed`);
+  }
+  assert.match(r.err, /outside-epsilon\.md resolves outside the project/, 'and the founder is told which file was skipped');
+  assert.match(r.out, /SENTINEL_BODY_ALPHA/, 'the shared body still follows the adapter');
+
+  // The sentence is the codex adapter's. Claude is scoped structurally and
+  // gets the body alone.
+  const c = warroom(p, ['engine', 'render', 'claude']);
+  assert.equal(c.code, 0, c.err);
+  assert.doesNotMatch(c.out, /tool-scoped engines are/);
+
+  // A project with nothing scoped renders no sentence, not an empty list.
+  const q = project(t);
+  const e = warroom(q, ['engine', 'render', 'codex']);
+  assert.equal(e.code, 0, e.err);
+  assert.doesNotMatch(e.out, /tool-scoped engines are/);
+  assert.match(e.out, /SENTINEL_BODY_ALPHA/);
+});
+
+test('a symlinked .claude/agents directory is not read: the founder\'s file names reach no preamble', (t) => {
+  // What leaves through this read is each file's NAME. `.claude/agents ->
+  // ~/notes` would have listed the founder's note titles — every one with a
+  // `tools:` line lacking Write and Edit — to a model provider.
+  // MUTATION: delete the directory-level `_inside_phys` check → the name is
+  // listed. Red.
+  const p = project(t);
+  const agents = path.join(p.dir, '.claude', 'agents');
+  const outside = path.join(p.home, 'notes');
+  fs.mkdirSync(outside);
+  fs.writeFileSync(path.join(outside, 'ceo.md'), '# ceo\n');
+  fs.writeFileSync(path.join(outside, 'founders-private-title.md'), '---\ntools: [Read]\n---\n');
+  fs.rmSync(agents, { recursive: true, force: true });
+  fs.symlinkSync(outside, agents);
+
+  const r = warroom(p, ['engine', 'render', 'codex']);
+  assert.equal(r.code, 0, r.err);
+  assert.doesNotMatch(r.out, /founders-private-title/, 'a name from outside the project must not be rendered');
+  assert.doesNotMatch(r.out, /tool-scoped engines are/);
+  assert.match(r.err, /resolves outside the project; no engine is read from it/);
+});
+
+// ── Class B: the directories this program WRITES under ───────────────────
+
+test('a symlinked state_dir inside the project is refused physically: nothing is written where it points', (t) => {
+  // `.claude/state` is lexically under the project and _path_under passes it.
+  // The link sends it under $HOME — which the lexical rule ALSO accepts as a
+  // base — so the physical check has to be against the base the lexical half
+  // chose, or a git-tracked link picks any directory under the founder's home
+  // for every write this program makes.
+  // MUTATION: delete the `_require_inside state_dir …` call → row 1 creates
+  // `entry/` in the target and row 2 writes `engines` there; both exit 0. Red.
+  // MUTATION: `_STATE_BASE="$HOME"` unconditionally (check against "either
+  // base") → the target is under $HOME, passes, red the same way.
+  const rows = [
+    ['the inspection path writes the codex preamble', ['engine', '1', '--engine', 'codex'], true],
+    ['the launch path writes the engine map', ['1'], true],
+    // A DANGLING link is refused rather than resolved past: `mkdir -p` would
+    // have created the target through it.
+    ['a dangling link', ['1'], false],
+  ];
+  for (const [label, args, targetExists] of rows) {
+    const p = launchableProject(t);
+    const target = path.join(p.home, 'elsewhere');
+    if (targetExists) fs.mkdirSync(target);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n`);
+    fs.symlinkSync(target, path.join(p.dir, '.claude', 'state'));
+    const sh = shim(t);
+    const r = launch(p, args, sh);
+    assert.notEqual(r.code, 0, `${label}: must refuse: ${r.out}`);
+    assert.ok(r.err.includes("'state_dir'"), `${label}: the refusal must name the key: ${r.err}`);
+    if (targetExists) {
+      assert.deepEqual(fs.readdirSync(target), [], `${label}: nothing may be written where the link points`);
+    } else {
+      assert.equal(fs.existsSync(target), false, `${label}: the link's target must not be created`);
+    }
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${label}: a refused config must build nothing`);
+    assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, `${label}: and create no worktree`);
+  }
+});
+
+test('a symlink INSIDE state_dir is refused before any write: the file it points at is never touched', (t) => {
+  // The base check bounds the directory and says nothing about a link one
+  // level down. `entry/ceo.codex.md -> ~/VICTIM` is followed by
+  // `render_ceo_preamble > "$f"`, and `engines -> ~/VICTIM` by `: >`. Both
+  // OVERWRITE. The content assertion comes first because it is the effect.
+  // MUTATION: delete the `find "$PROJECT_STATE_DIR" -type l` sweep → row 1
+  // overwrites VICTIM with the codex preamble and row 2 truncates it to the
+  // engine map; both exit 0. Red on the content assertion.
+  for (const [label, link, args] of [
+    ['the rendered preamble', path.join('entry', 'ceo.codex.md'), ['engine', '1', '--engine', 'codex']],
+    ['the engine map', 'engines', ['1']],
+  ]) {
+    const p = launchableProject(t);
+    const victim = path.join(p.home, 'VICTIM');
+    fs.writeFileSync(victim, 'VICTIM_BODY_intact');
+    const state = path.join(p.dir, '.claude', 'state');
+    fs.mkdirSync(path.dirname(path.join(state, link)), { recursive: true });
+    fs.symlinkSync(victim, path.join(state, link));
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n`);
+    const sh = shim(t);
+    const r = launch(p, args, sh);
+    assert.equal(fs.readFileSync(victim, 'utf8'), 'VICTIM_BODY_intact', `${label}: the link's target must be untouched`);
+    assert.notEqual(r.code, 0, `${label}: and the launcher must refuse: ${r.out}`);
+    assert.match(r.err, /state_dir holds a symlink/, `${label}: ${r.err}`);
+    assert.ok(r.err.includes(path.join(state, link)), `${label}: the refusal must name the link: ${r.err}`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${label}: a refused config must build nothing`);
+  }
+});
+
+test('a symlinked .worktrees is refused: no CEO tree is created where it points', (t) => {
+  // Derived from project_dir, not chosen by a key, and the same class: a
+  // checkout carrying `.worktrees -> ~/somewhere` chose where every
+  // `git worktree add` lands, and .registry, .task and .session with it.
+  // MUTATION: delete the `_require_inside worktrees …` call → `ceo-1-<ts>` is
+  // created under the target and the run exits 0. Red.
+  const p = launchableProject(t);
+  const target = path.join(p.home, 'trees-elsewhere');
+  fs.mkdirSync(target);
+  fs.symlinkSync(target, path.join(p.dir, '.worktrees'));
+  const r = launch(p, ['1'], shim(t));
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  assert.ok(r.err.includes("'worktrees'"), `the refusal must say what was refused: ${r.err}`);
+  assert.deepEqual(fs.readdirSync(target), [], 'nothing may be created where the link points');
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and tmux must build nothing');
+});
+
+test('a snapshot naming a worktree outside .worktrees refuses the whole restore, before the kill', (t) => {
+  // wt_path was the one snapshot field never judged: it went straight to
+  // `git worktree add "$wt_path"` and to a pane's `-c`. This program only
+  // ever records `$WORKTREES_DIR/ceo-N-TS`, so anything else is corruption
+  // and takes the corruption arm — refuse everything, destroy nothing.
+  // MUTATION: delete the wt_path loop in cmd_restore → row 1 runs
+  // `git worktree add $HOME/escape-wt ceo-1`, which succeeds, and the session
+  // is killed and rebuilt. Red on the kill, on the directory, and on the exit.
+  const rows = [
+    ['an absolute path outside', (p) => path.join(p.home, 'escape-wt')],
+    ['a `..` walking out of .worktrees', (p) => path.join(p.dir, '.worktrees', '..', 'escape-wt')],
+    ['a shell metacharacter', (p) => `${path.join(p.dir, '.worktrees', 'ceo-1')}$(touch ${path.join(p.home, 'escape-wt')})`],
+  ];
+  for (const [label, wtPath] of rows) {
+    const p = restorableProject(t, [{ n: 1, branch: 'ceo-1', wt_path: wtPath }]);
+    const r = launch(p, ['restore', 'latest'], shim(t, { sessionExists: true }));
+    assert.notEqual(r.code, 0, `${label}: must refuse: ${r.out}`);
+    assert.match(r.err, /names a worktree outside/, `${label}: ${r.err}`);
+    assert.equal(fs.existsSync(path.join(p.home, 'escape-wt')), false, `${label}: nothing may be created outside`);
+    assert.deepEqual(r.calls.filter((c) => c[0] === 'kill-session'), [], `${label}: the running session must survive`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${label}: and nothing may be built`);
+  }
+});
+
+// ── The branches the earlier coverage did not reach ──────────────────────
+
+test('a grid-mode snapshot restores into ONE GRID window, one pane per CEO, each on its own engine', (t) => {
+  // cmd_restore has two layouts and restorableProject hardcoded the other.
+  // MUTATION: `print(str(d.get('grid_mode', False)).lower())` → `print('false')`
+  // → CEO-N windows and CEO-N.1 targets. Red on the target keys.
+  // MUTATION: in the grid branch, `send_launch_claude "$pane_target"` →
+  // `send_launch_claude "$pane_target" "" claude` → GRID.2 comes up claude.
+  // Red — pane_number_of on the GRID target is what finds CEO-2's engine.
+  const p = restorableProject(
+    t,
+    [
+      { n: 1, branch: 'ceo-1' },
+      { n: 2, branch: 'ceo-2', engine: 'codex' },
+    ],
+    { gridMode: true }
+  );
+  const r = launch(p, ['restore', 'latest'], shim(t));
+  assert.equal(r.code, 0, r.out);
+  const created = r.calls.find((c) => c[0] === 'new-session');
+  assert.ok(created, 'a session must be created');
+  assert.equal(created[created.indexOf('-n') + 1], 'GRID', 'and its one window is GRID');
+  assert.equal(r.calls.filter((c) => c[0] === 'split-window').length, 1, 'the second CEO is a pane, not a window');
+  // HQ is still its own window in grid mode; what must not exist is a CEO-N one.
+  assert.deepEqual(
+    r.calls.filter((c) => c[0] === 'new-window' && /^CEO-/.test(c[c.indexOf('-n') + 1] ?? '')),
+    [],
+    'no CEO-N window in grid mode'
+  );
+  const lines = launchLines(r.calls);
+  assert.deepEqual([...lines.keys()].sort(), ['proj:GRID.1', 'proj:GRID.2']);
+  assert.equal(lines.get('proj:GRID.1'), 'claude');
+  assert.match(lines.get('proj:GRID.2'), /^codex\b/, 'CEO-2 must come back on the engine the snapshot recorded');
+  assert.match(r.out, /CEO-2 \(GRID\.2\)/, 'and the restore must say which pane holds it');
+});
+
+test('add checks the binary of the pane it is about to create, before tmux builds anything', (t) => {
+  // The ordering fix in cmd_add — resolve the NEW pane, then check_deps — was
+  // covered only by the inspection path. Here `codex` is genuinely absent and
+  // the session is live.
+  // MUTATION: swap `engines_resolve "$n"` and `check_deps` in cmd_add →
+  // check_deps resolves pane 1 (claude, present) and passes; the window is
+  // built and `codex …` typed into it; exit 0. Red on the exit code and on
+  // the mutating calls.
+  const p = liveMap(t, [{ n: 1, engine: 'claude' }]);
+  const sh = shim(t, { sessionExists: true, windows: ['CEO-1'], engines: ['claude'] });
+  const r = launch(p, ['add', '--engine', '2:codex'], sh);
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  assert.match(r.out, /codex not found/, 'and name the binary the new pane needs');
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused add must build nothing');
+  assert.deepEqual(readMap(p), ['1\tclaude'], 'and must not record a pane that was never made');
+});
+
+test('save_session_snapshot drops an unreadable session id and an unknown engine at WRITE time, and says so', (t) => {
+  // cmd_restore's read-time refusal rests on "this program never records one
+  // outside the charset". That premise lives in _snapshot_one_ceo and had no
+  // test: a `.session` file or an engine map this program did not write is
+  // judged there, dropped, and warned about — the drop is what keeps a bad
+  // snapshot corruption rather than routine.
+  // MUTATION: delete `session_id=""` in the `! session_id_ok` arm → last.json
+  // carries the payload. Red.
+  // MUTATION: delete `engine=""` in the `! engine_is_known` arm → last.json
+  // carries `nope`, and the next restore refuses a snapshot this program
+  // wrote. Red.
+  const p = launchableProject(t);
+  const started = launch(p, ['1'], shim(t));
+  assert.equal(started.code, 0, started.out);
+  fs.writeFileSync(path.join(p.dir, '.worktrees', 'ceo-1.session'), 'abc; touch PAYLOAD\n');
+  fs.writeFileSync(path.join(p.home, '.proj', 'engines'), '1\tnope\n');
+
+  const killed = launch(p, ['kill'], shim(t, { sessionExists: true, windows: ['CEO-1'] }));
+  assert.equal(killed.code, 0, killed.out);
+  const snap = JSON.parse(fs.readFileSync(path.join(p.home, '.proj', 'last.json'), 'utf8'));
+  assert.equal(snap.ceos.length, 1, JSON.stringify(snap));
+  assert.equal(snap.ceos[0].session_id, '', 'the unreadable id must be dropped, not recorded');
+  assert.equal(snap.ceos[0].engine, '', 'the unknown engine must be dropped, not recorded');
+  assert.match(killed.err, /CEO-1: ignoring an unreadable session id/);
+  assert.match(killed.err, /CEO-1: ignoring an unknown engine \(nope\)/);
 });
