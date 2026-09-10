@@ -505,6 +505,34 @@ engine_require_known() {
   fi
 }
 
+# Refuse Codex until the PROJECT has acknowledged what a Codex pane is. A Codex
+# pane is one unscoped process with whatever the founder's Codex login can do,
+# and the per-engine tool boundaries this harness relies on — a reviewer whose
+# `tools:` line carries no Write and no Edit — are prose there, not a control.
+# engine_launch_warning says so on stderr as the pane launches; that is a
+# notice after the choice, and a notice is not a gate. This is the gate: the
+# acknowledgment is a key in .warroom.yml, read through the same flat reader as
+# every other config value, and ONLY the exact value `true` acknowledges —
+# `yes`, `1`, `True` and `"false"` all refuse, because a truthy-looking parse
+# would let a founder who typed something into the key past a gate they never
+# read. Called where an engine is resolved, in the MAIN shell, so it exits the
+# program before check_deps and before tmux builds anything — the same
+# discipline as engine_require_known, for the same reason.
+# docs/03-system-design/final-v2/research/codex-in-the-pane.md §9.
+engine_require_acknowledged() {
+  local eng="$1" whence="$2"
+  [ "$eng" = "codex" ] || return 0
+  [ "$(_cfg codex_unsandboxed_ack)" = "true" ] && return 0
+  echo "✗ refusing codex (from $whence): this project has not acknowledged that a Codex pane is NOT sandboxed." >&2
+  echo "  A Codex pane is one process that can write and run whatever your Codex login allows, and" >&2
+  echo "  per-engine tool scoping is NOT enforced in it: a read-only reviewer (no Write/Edit in tools:)" >&2
+  echo "  is prose there, not a control. Nothing was launched." >&2
+  echo "  To acknowledge this and enable Codex for this project, add to $WARROOM_CONFIG:" >&2
+  echo "      codex_unsandboxed_ack: true" >&2
+  echo "  Only the exact value true acknowledges. Details: research/codex-in-the-pane.md §9" >&2
+  exit 1
+}
+
 # Where this session's resolved map lives. `--engine 2:codex` used to exist only
 # in the process that parsed it, so `${SESSION} grid` and `${SESSION} restore` —
 # separate invocations of this program — silently put pane 2 back on the default
@@ -570,6 +598,7 @@ engines_resolve() {
     # This exit is at the top level of the calling command, so it exits the
     # PROGRAM. That is the whole point of resolving here rather than at the seam.
     engine_require_known "$eng" "$whence"
+    engine_require_acknowledged "$eng" "$whence"
     WARROOM_PANE_ENGINES[$n]="$eng"
   done
   WARROOM_ENGINES_RESOLVED=1
@@ -593,6 +622,7 @@ engine_for_pane() {
   pair="$(engine_candidate_for_pane "$n")"
   eng="${pair%%$'\t'*}"
   engine_require_known "$eng" "${pair#*$'\t'}"
+  engine_require_acknowledged "$eng" "${pair#*$'\t'}"
   printf '%s' "$eng"
 }
 
