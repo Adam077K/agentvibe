@@ -632,49 +632,80 @@ render_ceo_preamble() {
 # "$(cat …)" means the preamble is NEVER exposed to shell or TOML quoting rules
 # — measured to survive the real 2,931-byte entry file verbatim, backticks,
 # double quotes and em-dashes included.
-ceo_preamble_file() {
-  local eng="$1" dir="$PROJECT_STATE_DIR/entry"
-  mkdir -p "$dir" 2>/dev/null
-  local f="$dir/ceo.${eng}.md"
-  render_ceo_preamble "$eng" > "$f" || return 1
-  printf '%s' "$f"
+#
+# Two functions, PATH and WRITE, because the path is needed by a pure lookup
+# (engine_launch_cmd, called from substitutions) and the write is a step that
+# can fail and must say so (engine_prepare, called at a command's top level).
+ceo_preamble_path() {
+  printf '%s/entry/ceo.%s.md' "$PROJECT_STATE_DIR" "$1"
 }
 
-# Hand the preamble path to the panes OUT OF BAND. tmux takes it as an argv
-# element and no shell ever parses it, so a value from a git-tracked
-# .warroom.yml is not concatenated into a line a live pane re-parses.
+ceo_preamble_write() {
+  local eng="$1" f dir
+  f="$(ceo_preamble_path "$eng")"
+  dir="$(dirname "$f")"
+  if ! mkdir -p "$dir" 2>/dev/null; then
+    echo "✗ cannot create $dir to hold the $eng CEO preamble." >&2
+    return 1
+  fi
+  if ! render_ceo_preamble "$eng" > "$f"; then
+    echo "✗ cannot write the $eng CEO preamble to $f." >&2
+    rm -f "$f" 2>/dev/null
+    return 1
+  fi
+  [ -s "$f" ] || { echo "✗ the $eng CEO preamble rendered EMPTY at $f." >&2; return 1; }
+  return 0
+}
+
+# Everything an engine needs on disk before its first pane forks. For Codex that
+# is the rendered preamble file; the launch line names it by its literal,
+# per-project path and by nothing else.
 #
-# MEASURED 2026-09-09, tmux 3.6a on a private socket: a pane whose shell forked
-# BEFORE the setenv reads the variable EMPTY; a pane created AFTER it reads the
-# path. So this must run before any pane exists — which is why every launching
-# command calls it right after engines_resolve — and why the launch line keeps
-# the resolved path as its `:-` fallback. A Codex pane that came up with no CEO
-# brief and no error is precisely the silent failure this file refuses.
+# THE PATH USED TO TRAVEL OUT OF BAND TOO, and that mechanism is deliberately
+# gone. `tmux setenv -g WARROOM_CEO_PREAMBLE` is SERVER-GLOBAL: two war rooms on
+# one tmux server, each preparing its own Codex panes, last writer wins, and a
+# pane in project A read project B's brief with nothing printed. The
+# session-scoped setenv could not replace it, because it only takes effect on a
+# session that already exists and a `start` creates the session and its first
+# pane in one `new-session`. And the launch line's `${WARROOM_CEO_PREAMBLE:-…}`
+# fallback was the same race seen from the pane: ANY inherited value — a
+# founder's shell, an older launcher's leftover global — outranked the literal.
+# The literal is computed by this invocation for this project, quoted, and
+# cannot hold a metacharacter (_cfg_checked) or point outside $HOME or the
+# project (`under`). Nothing shared, nothing to race.
+#
+# A failure here is LOUD and the caller STOPS. The alternative — measured before
+# this was written — is a pane whose launch line cats a file that was never
+# written: Codex comes up with no CEO brief and no error, which is the silent
+# failure this whole section exists to refuse.
 engine_prepare() {
   case "$1" in
     claude) : ;;
     codex)
-      local f
-      f="$(ceo_preamble_file codex)" || return 1
-      command -v tmux >/dev/null 2>&1 || return 0
-      tmux setenv -g WARROOM_CEO_PREAMBLE "$f" 2>/dev/null
-      tmux has-session -t "$SESSION" 2>/dev/null && \
-        tmux setenv -t "$SESSION" WARROOM_CEO_PREAMBLE "$f" 2>/dev/null
-      ;;
-    *) return 1 ;;
+      ceo_preamble_write codex || {
+        echo "  A Codex pane launched now would read a missing brief and come up with no error. Not launching." >&2
+        return 1
+      } ;;
+    *)
+      echo "✗ engine_prepare: no preparation is known for engine '$1'." >&2
+      echo "  Refusing rather than launching a pane whose engine this program does not know." >&2
+      return 1 ;;
   esac
   return 0
 }
 
 # Prepare every engine this invocation will launch. Call after engines_resolve
-# and before the first pane is created.
+# and before the first pane is created — and check the result: every caller
+# does `engines_prepare || exit 1`, so a preamble that could not be written
+# stops the run before tmux builds anything. It used to `|| true` each engine
+# and `return 0`, which turned every failure below into a dead pane.
 engines_prepare() {
-  local eng
+  local eng failed=0
   while IFS= read -r eng; do
     [ -n "$eng" ] || continue
-    engine_prepare "$eng" || true
+    engine_prepare "$eng" || failed=1
   done < <(engines_in_use)
-  return 0
+  return "$failed"
 }
 
 # A session id is what `claude --resume` and `codex resume` are handed — spliced
@@ -711,15 +742,27 @@ engine_launch_cmd() {
       # instructions, so the preamble is not re-sent.
       if [ -n "$resume" ]; then printf 'codex resume %s' "$resume"
       elif [ "$with_preamble" -eq 1 ]; then
-        # $WARROOM_CEO_PREAMBLE is the out-of-band path (engine_prepare); the
-        # literal is the same path, present so a pane created before the export
-        # still gets its brief. The literal is QUOTED — an unquoted path with a
-        # space silently dropped the WHOLE preamble, because `cat a b` reads two
-        # files and codex was handed the tail of one — and it can hold no shell
-        # metacharacter, because _cfg_checked refuses one at parse time. Quoting
-        # alone would not be enough: one metacharacter ends the quoted argument
-        # and everything after it is a new command in a live pane.
-        printf 'codex -c developer_instructions="$(cat "${WARROOM_CEO_PREAMBLE:-%s}")"' "$(ceo_preamble_file codex)"
+        # The preamble path is a LITERAL and nothing else — no environment
+        # variable is consulted, see engine_prepare for the race that removed
+        # it. The literal is QUOTED — an unquoted path with a space silently
+        # dropped the WHOLE preamble, because `cat a b` reads two files and
+        # codex was handed the tail of one — and it can hold no shell
+        # metacharacter, because _cfg_checked refuses one at parse time.
+        # Quoting alone would not be enough: one metacharacter ends the quoted
+        # argument and everything after it is a new command in a live pane.
+        #
+        # The file must already exist: engine_prepare wrote it, at the calling
+        # command's top level, where a failure could stop the run. This is the
+        # backstop for a caller that skipped that step, and it refuses rather
+        # than typing a `cat` of a missing file into a pane.
+        local f
+        f="$(ceo_preamble_path codex)"
+        if [ ! -s "$f" ]; then
+          echo "✗ the Codex CEO preamble has not been rendered at $f." >&2
+          echo "  engines_prepare must run, and succeed, before a Codex pane is launched." >&2
+          return 1
+        fi
+        printf 'codex -c developer_instructions="$(cat "%s")"' "$f"
       else printf 'codex'; fi
       ;;
     *)
@@ -1376,7 +1419,7 @@ cmd_start() {
   # let the run continue with an empty engine.
   engines_resolve $(seq 1 "$count")
   check_deps
-  engines_prepare
+  engines_prepare || exit 1
 
   if tmux has-session -t "$SESSION" 2>/dev/null; then
     if [ "$grid_mode" -eq 1 ]; then
@@ -1573,7 +1616,7 @@ cmd_add() {
   # died inside it.
   engines_resolve "$n"
   check_deps
-  engines_prepare
+  engines_prepare || exit 1
   engines_persist_pane "$n"
 
   echo "  + Spawning CEO-$n..."
@@ -2031,7 +2074,7 @@ cmd_grid_start() {
   # without codex built the whole tmux grid and then failed inside a pane.
   engines_resolve $(seq 1 "$count")
   check_deps
-  engines_prepare
+  engines_prepare || exit 1
 
   echo "  Starting grid mode with $count panes..."
 
@@ -2164,6 +2207,7 @@ cmd_engine() {
   # Resolve here, at this command's top level, so a bad engine refuses the way
   # it refuses on the launch path — same call, same shell, same exit.
   engines_resolve $(seq 1 "$count")
+  engines_prepare || exit 1
   echo ""
   echo -e "  ${BOLD}Engines${RESET}  (default: $WARROOM_ENGINE_FALLBACK · known: $WARROOM_ENGINES)"
   echo ""
@@ -2234,7 +2278,7 @@ cmd_grid_view() {
   done
   engines_resolve $grid_ns
   check_engine_deps
-  engines_prepare
+  engines_prepare || exit 1
 
   # Get wt_paths for all CEOs
   local -a ceo_wt_paths
@@ -2472,11 +2516,13 @@ for i, c in enumerate(d.get('ceos',[])):
     exit 1
   fi
 
-  # Engines are resolved and their binaries checked here too — before the kill —
-  # so a restore that would fail for a missing binary also costs nothing.
+  # Engines are resolved, their binaries checked and their preambles written
+  # here too — before the kill — so a restore that would fail for a missing
+  # binary or an unwritable state_dir also costs nothing.
   if [ -n "$snapshot_ns" ]; then
     engines_resolve $snapshot_ns
     check_engine_deps
+    engines_prepare || exit 1
   fi
 
   echo ""
@@ -2511,12 +2557,11 @@ for i, c in enumerate(d.get('ceos',[])):
   local grid_mode
   grid_mode=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(str(d.get('grid_mode', False)).lower())" 2>/dev/null || echo "false")
 
-  # The engines were resolved and their binaries checked before the kill above,
-  # against the snapshot's REAL pane numbers rather than 1..N, since `done` can
-  # leave gaps. What is left to do here is the part that must happen after the
-  # old session is gone and before the first new pane exists.
+  # The engines were resolved, their binaries checked and their preambles
+  # written before the kill above, against the snapshot's REAL pane numbers
+  # rather than 1..N, since `done` can leave gaps. What is left is the record
+  # of what this war room runs on, written once the decision is final.
   if [ -n "$snapshot_ns" ]; then
-    engines_prepare
     engines_persist $snapshot_ns
   fi
 

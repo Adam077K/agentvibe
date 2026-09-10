@@ -63,14 +63,16 @@ const BASH = fs.existsSync('/bin/bash') ? '/bin/bash' : 'bash';
  * Both are load-bearing and both were bugs:
  *   - the path is QUOTED — unquoted, a state_dir containing a space made `cat a b`
  *     read two files and silently hand codex the tail of one, dropping the whole brief;
- *   - it is read through `${WARROOM_CEO_PREAMBLE:-…}` — the launcher also exports the
- *     path out of band with `tmux setenv`, and the literal is the fallback for a pane
- *     whose shell forked before that export and would otherwise read the variable empty.
+ *   - it is a LITERAL and consults no environment variable. It used to be read through
+ *     `${WARROOM_CEO_PREAMBLE:-…}`, with the launcher exporting the path server-wide via
+ *     `tmux setenv -g`; two war rooms on one tmux server then handed a Codex pane the
+ *     OTHER project's brief, and any inherited value outranked the literal. See the
+ *     test on concurrent war rooms below.
  *
- * Kept as one constant because two tests match it and a locator duplicated is a locator
- * that gets half-updated.
+ * Kept as one constant because several tests match it and a locator duplicated is a
+ * locator that gets half-updated.
  */
-const CODEX_PREAMBLE_IN_LINE = /\$\(cat "\$\{WARROOM_CEO_PREAMBLE:-(.*ceo\.codex\.md)\}"\)/;
+const CODEX_PREAMBLE_IN_LINE = /\$\(cat "([^"$]*ceo\.codex\.md)"\)/;
 
 function project(
   t,
@@ -358,8 +360,7 @@ test('a state_dir containing a space still delivers the WHOLE preamble', (t) => 
   // caught it and a delivery assertion does.
   //
   // MUTATION: drop the inner quotes in engine_launch_cmd's codex arm, i.e. emit
-  // `$(cat ${WARROOM_CEO_PREAMBLE:-%s})` → the locator no longer matches and this goes
-  // red on the first assertion. Confirmed.
+  // `$(cat %s)` → the delivery assertion goes red first, then the locator. Confirmed.
   const p = project(t, {
     homePrefix: 'warroom engine spaced ',
     preamble: 'SPACED_PATH_SENTINEL the whole brief must survive.',
@@ -374,7 +375,6 @@ test('a state_dir containing a space still delivers the WHOLE preamble', (t) => 
   // and a shape check standing in front of a delivery check means the delivery check never
   // runs on the failure it exists for. The value expression is expanded by a real bash, the
   // same expansion the pane performs, and compared against the file on disk.
-  // WARROOM_CEO_PREAMBLE is stripped so the `:-` fallback is the branch under test.
   const rendered = path.join(p.home, '.proj', 'entry', 'ceo.codex.md');
   assert.ok(/\s/.test(rendered), 'the path under test must contain a space');
   const valueExpr = cmd.slice(cmd.indexOf('developer_instructions=') + 'developer_instructions='.length);
@@ -400,20 +400,104 @@ test('a state_dir containing a space still delivers the WHOLE preamble', (t) => 
   assert.equal(m[1], rendered);
 });
 
-test('the codex line consults the out-of-band path, and keeps the literal as its fallback', (t) => {
-  // Two mechanisms, and the test has to see both or it cannot tell them apart. The
-  // launcher exports the path with `tmux setenv -g WARROOM_CEO_PREAMBLE` in
-  // engine_prepare, BEFORE any pane exists; the literal stays as the `:-` default because
-  // a pane whose shell forked before that export reads the variable EMPTY, and a Codex
-  // pane that comes up with no brief and no error is the failure this repo refuses.
+test('the codex line names the preamble path literally and consults NO environment variable', (t) => {
+  // ONE mechanism, on purpose. The line used to read the path through
+  // `${WARROOM_CEO_PREAMBLE:-<literal>}`, and engine_prepare exported it with
+  // `tmux setenv -g` — server-global, so with two war rooms on one tmux server
+  // the last one to prepare won and a Codex pane in project A read project
+  // B's brief. The `:-` fallback was the same race from the pane's side: any
+  // inherited value outranked the literal. The literal is per-invocation and
+  // per-project, so there is nothing to share and nothing to race.
   //
-  // MUTATION: emit only the variable, `$(cat "$WARROOM_CEO_PREAMBLE")` → the fallback
-  // assertion goes red. Emit only the literal → the variable assertion goes red.
-  const p = project(t);
-  const [pane] = panes(warroom(p, ['engine', '1', '--engine', 'codex']));
-  assert.match(pane.cmd, /\$\{WARROOM_CEO_PREAMBLE:-/, 'the out-of-band path is not consulted');
-  const m = pane.cmd.match(CODEX_PREAMBLE_IN_LINE);
-  assert.ok(m && fs.existsSync(m[1]), 'the fallback literal must be a real path a pane could read');
+  // MUTATION: restore `${WARROOM_CEO_PREAMBLE:-%s}` in engine_launch_cmd's
+  // codex arm → red on the first assertion. Restore the `tmux setenv -g` in
+  // engine_prepare → red on the last one.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['1', '--engine', 'codex'], sh);
+  assert.equal(r.code, 0, r.out);
+  const line = launchLines(r.calls).get('proj:CEO-1');
+  assert.doesNotMatch(line, /\$[A-Za-z_{]/, `the launch line must expand no variable: ${line}`);
+  const m = line.match(CODEX_PREAMBLE_IN_LINE);
+  assert.ok(m && fs.existsSync(m[1]), `the literal must be a real path a pane could read: ${line}`);
+  assert.deepEqual(
+    r.calls.filter((c) => /^set-?env/.test(c[0])),
+    [],
+    'nothing may be exported into the tmux server — that is the shared state two war rooms race on'
+  );
+});
+
+test('two war rooms on one tmux server: a codex pane gets ITS project\'s brief, whatever the server holds', (t) => {
+  // Models the race directly. Project B has already prepared: the tmux
+  // server's environment carries WARROOM_CEO_PREAMBLE pointing at B's brief,
+  // and every pane A forks inherits it. A's launch line is then expanded by a
+  // real bash under exactly that environment, and what it delivers must be
+  // A's brief.
+  //
+  // MUTATION: restore `${WARROOM_CEO_PREAMBLE:-%s}` in engine_launch_cmd →
+  // B's brief is delivered to A's pane, with nothing printed. Red.
+  const other = project(t, { preamble: 'PROJECT_B_BRIEF must never reach project A' });
+  const otherBrief = path.join(other.home, 'b-ceo.codex.md');
+  fs.writeFileSync(otherBrief, 'PROJECT_B_BRIEF must never reach project A');
+
+  const p = launchableProject(t, { preamble: 'PROJECT_A_BRIEF is the one this pane must read.' });
+  const sh = shim(t);
+  const r = launch(p, ['1', '--engine', 'codex'], sh, { env: { WARROOM_CEO_PREAMBLE: otherBrief } });
+  assert.equal(r.code, 0, r.out);
+  const line = launchLines(r.calls).get('proj:CEO-1');
+  const valueExpr = line.slice(line.indexOf('developer_instructions=') + 'developer_instructions='.length);
+  const delivered = execFileSync(BASH, ['-c', `printf '%s' ${valueExpr}`], {
+    encoding: 'utf8',
+    env: { ...process.env, WARROOM_CEO_PREAMBLE: otherBrief },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.match(delivered, /PROJECT_A_BRIEF is the one this pane must read\./, 'A must get its own brief');
+  assert.doesNotMatch(delivered, /PROJECT_B_BRIEF/, "B's brief reached A's pane — this is the setenv race");
+});
+
+// ── engine_prepare fails OUT LOUD, and the run stops ─────────────────────
+
+test('a codex preamble that cannot be written refuses the launch before tmux builds anything', (t) => {
+  // engine_prepare used to `return 1` with no message on the codex write path
+  // and on the unknown-engine arm, and engines_prepare swallowed it with
+  // `|| true`. The pane then typed `codex -c developer_instructions="$(cat
+  // <missing>)"`: Codex came up with no CEO brief and no error, which is the
+  // one failure this file says it refuses.
+  //
+  // The write is made to fail by putting a regular FILE where the `entry`
+  // directory must go, so `mkdir -p` fails whoever runs it.
+  //
+  // MUTATION: `engines_prepare || exit 1` → `engines_prepare || true` in
+  // cmd_start, AND drop the `[ ! -s "$f" ]` backstop in engine_launch_cmd →
+  // the session is built and the cat-of-a-missing-file line is typed. Red on
+  // builds-nothing and on the typed-line assertion.
+  // MUTATION: only the `|| true` in cmd_start → the backstop refuses pane 2's
+  // line, but by then the worktrees and the session exist and pane 1's
+  // `claude` has been typed. Red on the typed-line assertion first, then
+  // builds-nothing. Measured; a backstop at the seam is not a refusal up front.
+  // MUTATION: `engine_prepare … || failed=1` → `|| true` in engines_prepare →
+  // same as the previous one.
+  const p = launchableProject(t);
+  const stateDir = path.join(p.home, '.proj');
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(path.join(stateDir, 'entry'), 'not a directory');
+  const sh = shim(t);
+  const r = launch(p, ['2', '--engine', '2:codex'], sh);
+
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  assert.match(r.err, /✗/, 'the refusal must be a diagnostic, not a silent exit');
+  assert.match(r.err, /preamble/i, 'and say what could not be written');
+  assert.deepEqual(r.calls.filter((c) => c[0] === 'send-keys'), [], 'no line may be typed into any pane');
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a run that cannot brief its panes must build nothing');
+  assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'and create no worktree');
+
+  // The control: the same broken state_dir with no Codex pane launches fine —
+  // Claude has no preamble file, so the refusal above is about the write and
+  // not about the fixture.
+  const sh2 = shim(t);
+  const ok = launch(p, ['2'], sh2);
+  assert.equal(ok.code, 0, `an all-claude run must not be refused for a codex-only failure: ${ok.out}`);
+  assert.equal(launchLines(ok.calls).get('proj:CEO-2'), 'claude');
 });
 
 test('bare mode gives codex no preamble, and still launches it', (t) => {
@@ -1056,8 +1140,10 @@ test('a target pane_number_of cannot read stops the launch instead of guessing a
     'and nothing may be typed into any pane'
   );
 
-  // The control: the same call, the same shim, a target it CAN read.
-  const ok = warroomEval(p, 'send_launch_engine "proj:CEO-1"', {
+  // The control: the same call, the same shim, a target it CAN read. Prepared
+  // first, as every launching command does — a Codex line refuses to name a
+  // preamble file that was never written.
+  const ok = warroomEval(p, 'engines_resolve 1 && engines_prepare && send_launch_engine "proj:CEO-1"', {
     args: ['--engine', '1:codex'],
     path: sh.path,
   });
@@ -1464,8 +1550,8 @@ test('the charset rule is what stops the injection: the payload never runs', (t)
   //
   // The canary is real here and MEASURED, not assumed. With _cfg_checked's body
   // replaced by `_cfg "$1"`, and the fake tmux executing what it was told to
-  // type: `state_dir` fires through the codex launch line's
-  // `${WARROOM_CEO_PREAMBLE:-<path>}`, and `session` fires through the HQ line,
+  // type: `state_dir` fires through the codex launch line's quoted `$(cat
+  // "<path>")`, and `session` fires through the HQ line,
   // which splices ${SESSION} into a string a pane's shell parses. Both were
   // watched firing before this test was written.
   //
