@@ -1894,6 +1894,38 @@ test('the grid subcommand does not report failure when it succeeded from inside 
   );
 });
 
+// ── A Codex pane is TRUSTED, not sandboxed, and the founder is told so at launch ──
+
+test('launching a codex pane warns the FOUNDER, out of band, that tool scoping is unenforced there', (t) => {
+  // The Codex preamble says this to the model, and a sentence addressed to a
+  // model is a request rather than a boundary. This is the other half: the
+  // program tells the person who chose the engine, on stderr, at the moment
+  // the pane launches — and never types it into the pane.
+  // MUTATION: delete the echoes in engine_launch_warning's codex arm → red on
+  // the first assertion. Print them without `>&2` → red on the stderr one.
+  // Type them into the pane instead → red on the out-of-band one.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['3', '--engine', '2:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+
+  const warned = r.err.split('\n').filter((l) => /tool scoping is NOT enforced/.test(l));
+  assert.equal(warned.length, 1, `exactly the one codex pane must be warned about: ${r.err}`);
+  assert.match(warned[0], /CEO-2/, 'and the warning must name the pane');
+  assert.match(r.err, /trusted, not sandboxed/, 'and say what the founder should conclude');
+  assert.doesNotMatch(
+    r.calls.flat().join('\n'),
+    /tool scoping is NOT enforced/,
+    'the warning is for the founder — it must reach no pane and no tmux argument'
+  );
+
+  // The control: an all-Claude war room is warned about nothing.
+  const p2 = launchableProject(t);
+  const quiet = launch(p2, ['2'], shim(t));
+  assert.equal(quiet.code, 0, quiet.out);
+  assert.doesNotMatch(quiet.err, /tool scoping/, 'no codex pane, no warning');
+});
+
 // ── The choice outlives the process that parsed it ───────────
 
 test('a per-pane engine chosen at start is still pane 2\'s engine in the NEXT invocation', (t) => {

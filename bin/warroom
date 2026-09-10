@@ -1016,8 +1016,34 @@ send_launch_engine() {
     echo "  An empty line typed into a live pane is the dead pane this refusal exists to prevent." >&2
     exit 1
   fi
+  engine_launch_warning "$eng" "$target"
   wait_for_shell_prompt "$target"
   tmux send-keys -t "$target" "$cmdline" Enter
+}
+
+# What the FOUNDER is told when a pane of this engine launches — on the
+# launcher's stderr, out of band, never typed into the pane and never seen by
+# the model. A row per engine, like engine_launch_cmd.
+#
+# Codex: engine tool scoping is not enforced there. A Claude Code sub-agent
+# whose `tools:` line declares no Write and no Edit structurally cannot write;
+# Codex is one process with whatever the founder's install can do. The Codex
+# preamble already says this to the MODEL, and a sentence addressed to a model
+# is a request, not a boundary — so the person who chose the engine is told
+# too, at the moment it matters, by the program rather than by a document.
+# docs/03-system-design/final-v2/research/codex-in-the-pane.md §9 is the
+# full write-up and the reason a structural refusal is not well-defined here.
+engine_launch_warning() {
+  local eng="$1" target="$2"
+  case "$eng" in
+    codex)
+      echo "  ⚠ $target runs on Codex: engine tool scoping is NOT enforced in this pane." >&2
+      echo "    A read-only agent file (no Write/Edit in tools:) is prose there, not a control." >&2
+      echo "    Treat this pane as trusted, not sandboxed. Details: research/codex-in-the-pane.md §9" >&2
+      ;;
+    *) : ;;
+  esac
+  return 0
 }
 
 # Retained name. Six call sites and any project shim still use it.
