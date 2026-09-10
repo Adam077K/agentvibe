@@ -1352,6 +1352,159 @@ test('the charset rule is what stops the injection: the payload never runs', (t)
   }
 });
 
+// ── The charset bounds the SHELL; confinement bounds the TARGET ───────────
+//
+// `~/.ssh/id_rsa` is made entirely of characters the path charset allows, and
+// entry_ceo is `cat`'d into the CEO preamble, which is pasted into a Claude
+// pane and put on a Codex command line — both shipped to a model provider. So
+// a git-tracked .warroom.yml could read any file the founder can. The charset
+// rule was the complete defence against a metacharacter and no defence at all
+// against this, and the two are asserted separately so neither can stand in
+// for the other.
+//
+// THE SINK IS EXERCISED, not assumed. `engine render` prints exactly what a
+// pane is pasted; the launch path writes the same rendering to the Codex
+// preamble file and types a line that reads it. The assertion is that the
+// secret's CONTENT reaches none of them — a non-zero exit alone would also be
+// satisfied by a launcher that read the file and then fell over.
+
+const SECRET = 'SECRET_SENTINEL_9f1c the contents of a file outside the project';
+
+/** A project whose HOME holds a secret file the config is about to point at. */
+function projectWithSecret(t, entryCeo, { symlink = null } = {}) {
+  const p = project(t);
+  fs.writeFileSync(path.join(p.home, 'SECRET'), SECRET);
+  if (symlink) fs.symlinkSync(symlink.target(p), path.join(p.dir, '.claude', 'entry', symlink.name));
+  fs.appendFileSync(p.config, `entry_ceo: ${entryCeo(p)}\n`);
+  return p;
+}
+
+const HOSTILE_ENTRY_CEO = [
+  ['a `..` component', (p) => '../SECRET'],
+  ['an absolute path outside the project', (p) => path.join(p.home, 'SECRET')],
+  ['a `~` path', () => '~/SECRET'],
+  [
+    'a symlinked FILE inside the project pointing out of it',
+    () => '.claude/entry/link.md',
+    { name: 'link.md', target: (p) => path.join(p.home, 'SECRET') },
+  ],
+  [
+    'a symlinked DIRECTORY inside the project pointing out of it',
+    () => '.claude/entry/dirlink/SECRET',
+    { name: 'dirlink', target: (p) => p.home },
+  ],
+];
+
+test('entry_ceo cannot point outside the project: the file is never read into a preamble', (t) => {
+  // Two layers guard this key and they OVERLAP on purpose, so the mutations
+  // are recorded as measured rather than as hoped:
+  // MUTATION: delete the `_require_inside entry_ceo …` line → the two symlink
+  // rows print the secret while the lexical three stay refused. Red.
+  // MUTATION: `_cfg_checked entry_ceo under "$PROJECT_DIR"` → `_cfg_checked
+  // entry_ceo path` plus the old `case … /*) : ;;` passthrough, ALONE → still
+  // GREEN: the physical check resolves `..`, `~` and an absolute path outside
+  // the project just as it resolves a symlink, and refuses them all. The
+  // lexical rule is load-bearing on state_dir, which has no physical check
+  // (see below), and is belt-and-braces here.
+  // MUTATION: both of the above together → every row prints the secret and
+  // exits 0. Red on all five, on the content assertion first.
+  for (const [label, value, symlink] of HOSTILE_ENTRY_CEO) {
+    const p = projectWithSecret(t, value, { symlink });
+    for (const eng of ['claude', 'codex']) {
+      const r = warroom(p, ['engine', 'render', eng]);
+      assert.doesNotMatch(r.out, /SECRET_SENTINEL_9f1c/, `${label} (${eng}): the secret must not be rendered`);
+      assert.notEqual(r.code, 0, `${label} (${eng}): and the launcher must refuse`);
+      assert.ok(r.err.includes("'entry_ceo'"), `${label}: the refusal must name the key: ${r.err}`);
+    }
+  }
+});
+
+test('a hostile entry_ceo on the real launch path reaches no pane, no preamble file and no tmux argv', (t) => {
+  // The other two sinks. A Claude pane is pasted the preamble with
+  // `send-keys -l`; a Codex pane gets it written to $state_dir/entry/ceo.codex.md
+  // and a launch line that cats it. Both are recorded by the fake tmux, so the
+  // secret is searched for in EVERY argument tmux was ever given, and in the
+  // file the codex line would have read.
+  // MUTATION: as above → the paste for CEO-1 and the preamble file for CEO-2
+  // both carry the secret. Red.
+  const p = launchableProject(t);
+  fs.writeFileSync(path.join(p.home, 'SECRET'), SECRET);
+  fs.appendFileSync(p.config, 'entry_ceo: ../SECRET\n');
+  const sh = shim(t);
+  const r = launch(p, ['2', '--engine', '2:codex'], sh);
+
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  const everyArg = r.calls.flat().join('\n');
+  assert.doesNotMatch(everyArg, /SECRET_SENTINEL_9f1c/, 'the secret must reach no tmux argument');
+  const rendered = path.join(p.home, '.proj', 'entry', 'ceo.codex.md');
+  if (fs.existsSync(rendered)) {
+    assert.doesNotMatch(fs.readFileSync(rendered, 'utf8'), /SECRET_SENTINEL_9f1c/, 'nor the codex preamble file');
+  }
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused config must build nothing');
+  assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'and create no worktree');
+});
+
+test('entry_ceo inside the project still works, relative or absolute', (t) => {
+  // The control. Every refusal above is equally satisfied by a launcher that
+  // refuses every entry_ceo it is given — including the default, which would
+  // put every fleet project on the minimal built-in preamble with one warning
+  // nobody reads.
+  // MUTATION: none needed; this is the negative half of the pair.
+  for (const value of [(p) => '.claude/entry/ceo.md', (p) => './.claude/entry/ceo.md', (p) => p.entry]) {
+    const p = project(t, { preamble: 'INSIDE_THE_PROJECT_OK' });
+    fs.appendFileSync(p.config, `entry_ceo: ${value(p)}\n`);
+    const r = warroom(p, ['engine', 'render', 'claude']);
+    assert.equal(r.code, 0, r.err);
+    assert.match(r.out, /INSIDE_THE_PROJECT_OK/);
+  }
+});
+
+test('state_dir cannot be redirected outside $HOME or the project: nothing is created there', (t) => {
+  // state_dir is where the launcher does `mkdir -p` and writes snapshots, the
+  // engine map, the rendered preamble and the event log. The same charset gap
+  // let a config point all of that anywhere the founder can write.
+  //
+  // The escape target is under os.tmpdir(), which is OUTSIDE this fixture's
+  // HOME (a subdirectory of it) and outside the project. Its non-existence
+  // after the run is the assertion: a launcher that accepted the value would
+  // have created it in check_deps before doing anything else.
+  // MUTATION: `_cfg_checked state_dir under …` → `_cfg_checked state_dir path`
+  // → the directory is created, three worktrees follow, and the run exits 0.
+  // Red on all three.
+  const escapes = [
+    (p) => path.join(os.tmpdir(), `wr-escape-${process.pid}-${Date.now()}`),
+    (p) => path.join(p.home, '..', `wr-escape-dotdot-${process.pid}`),
+  ];
+  for (const escape of escapes) {
+    const p = launchableProject(t);
+    const target = escape(p);
+    t.after(() => fs.rmSync(path.resolve(target), { recursive: true, force: true }));
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${target}\n`);
+    const sh = shim(t);
+    const r = launch(p, ['1'], sh);
+    assert.notEqual(r.code, 0, `${target}: must be refused: ${r.out}`);
+    assert.ok(r.err.includes("'state_dir'"), `the refusal must name the key: ${r.err}`);
+    assert.equal(fs.existsSync(path.resolve(target)), false, `${target}: must not be created`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused config must build nothing');
+    assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'and create no worktree');
+  }
+});
+
+test('state_dir under $HOME, under the project, or relative to it is accepted', (t) => {
+  // The control for the refusal above, on all three accepted shapes.
+  // MUTATION: none needed.
+  for (const value of [(p) => path.join(p.home, '.elsewhere'), (p) => path.join(p.dir, '.wr'), () => '.wr']) {
+    const p = project(t);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${value(p)}\n`);
+    const r = warroom(p, ['engine', '1', '--engine', 'codex']);
+    assert.equal(r.code, 0, r.err);
+    const m = panes(r)[0].cmd.match(CODEX_PREAMBLE_IN_LINE);
+    assert.ok(m, `the launch line must name a preamble path: ${panes(r)[0].cmd}`);
+    const expected = path.join(value(p).startsWith('/') ? value(p) : path.join(p.dir, value(p)), 'entry', 'ceo.codex.md');
+    assert.equal(m[1], expected, 'and it must be the resolved state_dir, not the raw value');
+  }
+});
+
 // ── `grid` the SUBCOMMAND, which is not `--grid` the flag ────────────────
 //
 // The suite drove `--grid` (cmd_grid_start) and drove `grid` (cmd_grid_view)

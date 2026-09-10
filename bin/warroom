@@ -69,11 +69,28 @@ _cfg() {
 # is a new command — so the charset is refused HERE, once, at parse time, before
 # any path derived from a value is built.
 #
-#   name — a tmux session name: letters, digits, dot, underscore, hyphen.
-#   path — a filesystem path: the above plus space, slash, tilde, plus.
-#          Space is ALLOWED on purpose; a founder may have one in $HOME, and the
-#          launch line quotes the path. What is refused is $ ` ; | & < > ( ) " '
-#          and everything else that means something to a shell.
+# THE CHARSET BOUNDS THE SHELL, NOT THE TARGET. `~/.ssh/id_rsa` and
+# `../../.aws/credentials` are made entirely of allowed characters, and the first
+# thing this program does with `entry_ceo` is `cat` it into the CEO preamble,
+# which is then pasted into a pane and shipped to a model provider. A path value
+# therefore has a second rule, and it is the one that actually bounds what a
+# hostile config can reach: it must resolve UNDER a base directory this program
+# names, never chosen by the file.
+#
+#   name  — a tmux session name: letters, digits, dot, underscore, hyphen.
+#   path  — a filesystem path: the above plus space, slash, tilde, plus.
+#           Space is ALLOWED on purpose; a founder may have one in $HOME, and the
+#           launch line quotes the path. What is refused is $ ` ; | & < > ( ) " '
+#           and everything else that means something to a shell.
+#   under — a `path` that must also lie inside one of the bases given after the
+#           kind. A relative value resolves under the FIRST base. An absolute
+#           value must start with one of them. A `..` component is refused
+#           anywhere, so the lexical check cannot be walked back out of. What is
+#           printed is the resolved absolute path, so no caller re-derives it.
+#
+#           This is lexical. The physical half — a symlink inside the project
+#           that points out of it — is checked by _require_inside where the file
+#           is actually READ, because that is the only time it can be resolved.
 _cfg_checked() {
   local key="$1" kind="$2" val
   val="$(_cfg "$key")"
@@ -86,7 +103,7 @@ _cfg_checked() {
         echo "  This value is spliced into commands a pane's shell runs, so it is refused, not quoted." >&2
         exit 1 ;;
       esac ;;
-    path)
+    path|under)
       case "$val" in *[!A-Za-z0-9._/~+\ -]*)
         echo "✗ warroom: '$key' in $WARROOM_CONFIG holds a character that is not allowed in a path here." >&2
         echo "  Got: $val" >&2
@@ -95,7 +112,84 @@ _cfg_checked() {
         exit 1 ;;
       esac ;;
   esac
+  if [ "$kind" = "under" ]; then
+    local resolved
+    shift 2
+    resolved="$(_path_under "$val" "$@")" || {
+      echo "✗ warroom: '$key' in $WARROOM_CONFIG must resolve inside one of: $*" >&2
+      echo "  Got: $val" >&2
+      echo "  A '..' component, a '~' or an absolute path outside those directories is refused —" >&2
+      echo "  this value names a file this program reads or a directory it writes, and a" >&2
+      echo "  git-tracked config does not get to choose where that is." >&2
+      exit 1
+    }
+    val="$resolved"
+  fi
   printf '%s' "$val"
+}
+
+# Resolve VALUE under one of the BASES, lexically, or fail. Prints the absolute
+# path on success. Kept separate from _cfg_checked so the rule can be read — and
+# tested — as one function with one answer.
+#
+#   _path_under ".claude/entry/ceo.md" /proj          → /proj/.claude/entry/ceo.md
+#   _path_under "/proj/.claude/entry/ceo.md" /proj    → the same
+#   _path_under "../secrets" /proj                    → fails
+#   _path_under "/home/me/.ssh/id_rsa" /proj          → fails
+#   _path_under "/home/me/.proj" /proj /home/me       → /home/me/.proj
+#
+# `~` never reaches here unexpanded: _cfg has already turned a leading one into
+# $HOME, so it arrives absolute and is judged like any other absolute path. A `~`
+# anywhere else is a literal directory name and is harmless.
+_path_under() {
+  local val="$1" base rel="" resolved=""
+  shift
+  case "/$val/" in */../*)
+    return 1 ;;
+  esac
+  case "$val" in
+    /*)
+      for base in "$@"; do
+        base="${base%/}"
+        case "$val" in "$base"/?*) resolved="$val"; break ;; esac
+      done
+      [ -n "$resolved" ] || return 1
+      ;;
+    *)
+      base="${1%/}"
+      rel="${val#./}"
+      [ -n "$rel" ] && [ "$rel" != "." ] || return 1
+      resolved="$base/$rel"
+      ;;
+  esac
+  printf '%s' "$resolved"
+}
+
+# The physical half of the confinement, applied where a file is READ. A path that
+# is lexically inside the project can still be a symlink — git tracks those, so
+# a hostile checkout can carry `.claude/entry -> /home/me/.ssh` — and only the
+# filesystem can say where it really points. Follows the link chain of the file
+# and of its directory (`cd -P`), then requires the result to start with the
+# base's own physical path.
+#
+#   _require_inside <key> <path> <base>   → exits 1 with a message if outside
+_require_inside() {
+  local key="$1" p="$2" base="$3" hops=0 t d phys pbase
+  while [ -L "$p" ] && [ "$hops" -lt 16 ]; do
+    t="$(readlink "$p")" || break
+    case "$t" in /*) p="$t" ;; *) p="$(dirname "$p")/$t" ;; esac
+    hops=$((hops + 1))
+  done
+  d="$(cd -P "$(dirname "$p")" 2>/dev/null && pwd -P)" || d=""
+  pbase="$(cd -P "$base" 2>/dev/null && pwd -P)" || pbase=""
+  phys="$d/$(basename "$p")"
+  case "$phys" in "$pbase"/?*) [ -n "$pbase" ] && [ -n "$d" ] && return 0 ;; esac
+  echo "✗ warroom: '$key' resolves to a file outside $base and is refused." >&2
+  echo "  Configured: $2" >&2
+  echo "  Resolves to: ${phys:-<unresolvable>}" >&2
+  echo "  The CEO preamble is read from this file and shipped to a model provider, so" >&2
+  echo "  a git-tracked config or symlink does not get to point it at an arbitrary file." >&2
+  exit 1
 }
 
 # `|| exit 1` on every one of these, because _cfg_checked runs in a command
@@ -135,7 +229,11 @@ fi
 # Optional, each with the derivation the standalone launchers hardcoded.
 SESSION_UPPER="$(_cfg_checked display_name path)" || exit 1
 [ -z "$SESSION_UPPER" ] && SESSION_UPPER="$(printf '%s' "$SESSION" | tr '[:lower:]' '[:upper:]')"
-PROJECT_STATE_DIR="$(_cfg_checked state_dir path)" || exit 1
+# state_dir is where this program does `mkdir -p` and WRITES — snapshots, the
+# engine map, the rendered Codex preamble, the event log. Confined to the
+# founder's home or the project, so a config cannot point those writes anywhere
+# else. A relative value lands under the project.
+PROJECT_STATE_DIR="$(_cfg_checked state_dir under "$PROJECT_DIR" "$HOME")" || exit 1
 [ -z "$PROJECT_STATE_DIR" ] && PROJECT_STATE_DIR="$HOME/.$SESSION"
 
 CEO_AGENT="$PROJECT_DIR/.claude/agents/ceo.md"
@@ -178,13 +276,22 @@ CEO_ANSI_COLORS=("$C_MAUVE" "$C_GREEN" "$C_BLUE" "$C_YELLOW" "$C_RED" "$C_TEAL")
 #                                         already used — kept so those projects
 #                                         work unchanged before Phase 9)
 #   3. a minimal built-in, with a warning
-CEO_ENTRY_FILE="$(_cfg_checked entry_ceo path)" || exit 1
-[ -z "$CEO_ENTRY_FILE" ] && CEO_ENTRY_FILE=".claude/entry/ceo.md"
-case "$CEO_ENTRY_FILE" in /*) : ;; *) CEO_ENTRY_FILE="$PROJECT_DIR/$CEO_ENTRY_FILE" ;; esac
+#
+# entry_ceo is a file this program READS and then ships to a model provider, so
+# it is confined to the project: `_cfg_checked … under` refuses an absolute path
+# outside it, a `~`, and any `..` component, and hands back the resolved absolute
+# path. Before the charset rule grew this second half, `entry_ceo: ~/.ssh/id_rsa`
+# in a git-tracked .warroom.yml was made of allowed characters, was `cat`'d here,
+# and became the CEO's opening prompt.
+CEO_ENTRY_FILE="$(_cfg_checked entry_ceo under "$PROJECT_DIR")" || exit 1
+[ -z "$CEO_ENTRY_FILE" ] && CEO_ENTRY_FILE="$PROJECT_DIR/.claude/entry/ceo.md"
 
 CEO_SEED_FILE="$PROJECT_DIR/.claude/agents/_seeds/ceo.md"
 
 if [ -f "$CEO_ENTRY_FILE" ]; then
+  # The lexical check above cannot see a symlink; this one can, and it runs
+  # against the file that is about to be read.
+  _require_inside entry_ceo "$CEO_ENTRY_FILE" "$PROJECT_DIR"
   CEO_PREAMBLE="$(cat "$CEO_ENTRY_FILE")"
 elif [ -f "$CEO_SEED_FILE" ]; then
   CEO_PREAMBLE="$(cat "$CEO_SEED_FILE")"
