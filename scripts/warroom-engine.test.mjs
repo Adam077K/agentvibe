@@ -1926,6 +1926,113 @@ test('launching a codex pane warns the FOUNDER, out of band, that tool scoping i
   assert.doesNotMatch(quiet.err, /tool scoping/, 'no codex pane, no warning');
 });
 
+// ── The engine map across add, kill and done ─────────────────
+//
+// Each of these mutates $PROJECT_STATE_DIR/engines, the file that carries a
+// pane's engine from one invocation to the next. None was tested: reverting
+// any of the four lines below would have kept the suite green while a later
+// `grid` or `restore` put a pane on the wrong engine.
+
+/** A launchable project whose engine map says a war room is live with `ceos`. */
+function liveMap(t, ceos) {
+  const p = launchableProject(t);
+  const stateDir = path.join(p.home, '.proj');
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(path.join(stateDir, 'engines'), ceos.map((c) => `${c.n}\t${c.engine}`).join('\n') + '\n');
+  return p;
+}
+
+const readMap = (p) => {
+  const f = path.join(p.home, '.proj', 'engines');
+  if (!fs.existsSync(f)) return null;
+  return fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).sort();
+};
+
+test('add records the new pane\'s engine and leaves the others alone', (t) => {
+  // MUTATION: delete `engines_persist_pane "$n"` from cmd_add → the map
+  // still reads 1 and 2 only. Red.
+  // MUTATION: `engines_persist_pane "$n"` → `engines_persist "$n"` — the
+  // whole-rewrite helper — → the map reads 3 alone. Red on the same line,
+  // which is why all three entries are asserted and not just the new one.
+  const p = liveMap(t, [{ n: 1, engine: 'claude' }, { n: 2, engine: 'codex' }]);
+  const sh = shim(t, { sessionExists: true, windows: ['CEO-1', 'CEO-2'] });
+  const r = launch(p, ['add', '--engine', '3:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+  assert.match(launchLines(r.calls).get('proj:CEO-3') ?? '', /^codex\b/, 'the new pane must launch on codex');
+  assert.deepEqual(readMap(p), ['1\tclaude', '2\tcodex', '3\tcodex']);
+});
+
+test('kill forgets the engine map — with a session running, and with none', (t) => {
+  // Two branches of cmd_kill, one forget each. The no-session branch is the
+  // one that clears a map left behind by `tmux kill-session`, a crash or a
+  // reboot; without it, that map outranks `engine:` in .warroom.yml on the
+  // next start.
+  // MUTATION: delete the `engines_forget` after remove_worktrees → the live
+  // case keeps its map. Red on the first assertion.
+  // MUTATION: delete the `engines_forget` in the no-session branch → the
+  // second case keeps its map. Red on the second.
+  const live = liveMap(t, [{ n: 1, engine: 'codex' }]);
+  const r1 = launch(live, ['kill'], shim(t, { sessionExists: true, windows: ['CEO-1'] }));
+  assert.equal(r1.code, 0, r1.out);
+  assert.equal(readMap(live), null, 'a killed war room must leave no engine map');
+
+  const stale = liveMap(t, [{ n: 1, engine: 'codex' }]);
+  const r2 = launch(stale, ['kill'], shim(t));
+  assert.equal(r2.code, 0, r2.out);
+  assert.match(r2.out, /No war room running/);
+  assert.equal(readMap(stale), null, 'a kill with no session must still clear a stale map');
+});
+
+test('done forgets ONLY the closed pane\'s engine', (t) => {
+  // `add` reuses the lowest free number, so a leftover entry would hand a
+  // brand-new CEO the closed one's engine.
+  // MUTATION: delete `engines_forget_pane "$n"` from cmd_done → the map
+  // still reads 2. Red.
+  // MUTATION: `engines_forget_pane "$n"` → `engines_forget` → the map is
+  // gone entirely and CEO-1 loses its engine. Red on the same line.
+  const p = liveMap(t, [{ n: 1, engine: 'claude' }, { n: 2, engine: 'codex' }]);
+  const r = launch(p, ['done', '2'], shim(t, { sessionExists: true, windows: ['CEO-1', 'CEO-2'] }));
+  assert.equal(r.code, 0, r.out);
+  assert.deepEqual(readMap(p), ['1\tclaude']);
+});
+
+// ── cost, read from the snapshot, under the shebang's bash ───────────────
+
+test('cost with no live session reads the CEOs out of the snapshot', (t) => {
+  // The branch that held the second `mapfile`. Under /bin/bash 3.2.57 that
+  // builtin does not exist, the array stayed empty, and `cost` reported "No
+  // active CEOs found" against a perfectly good snapshot. The harness runs
+  // the launcher under /bin/bash (see BASH above), so on the founder's machine
+  // this is the interpreter that counts.
+  // MUTATION: replace the `while read` loop over the snapshot with
+  // `mapfile -t ceo_nums < <(python3 …)` → under 3.2.57 "No active CEOs
+  // found". Red there; green on a bash-5 CI runner, where the builtin
+  // exists — which is why BASH is pinned rather than assumed.
+  const p = launchableProject(t);
+  const stateDir = path.join(p.home, '.proj');
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(stateDir, 'last.json'),
+    JSON.stringify({
+      version: 1,
+      saved_at: 1767225600,
+      project_dir: p.dir,
+      grid_mode: false,
+      ceos: [
+        { n: 1, branch: 'ceo-1-1', wt_path: '', task: '', start_ts: 1, session_id: '' },
+        { n: 2, branch: 'ceo-2-2', wt_path: '', task: '', start_ts: 2, session_id: '' },
+      ],
+    })
+  );
+  const r = launch(p, ['cost'], shim(t));
+  assert.equal(r.code, 0, r.out);
+  assert.doesNotMatch(r.out, /No active CEOs found/, 'the snapshot names two CEOs and they must be read');
+  const plain = r.out.replace(/\[[0-9;]*m/g, '');
+  assert.match(plain, /CEO-1\s+\(no session ID\)/);
+  assert.match(plain, /CEO-2\s+\(no session ID\)/);
+  assert.match(plain, /Total session cost/);
+});
+
 // ── The choice outlives the process that parsed it ───────────
 
 test('a per-pane engine chosen at start is still pane 2\'s engine in the NEXT invocation', (t) => {
