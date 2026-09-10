@@ -104,3 +104,48 @@ first would move it from its own working launcher onto an *older* shared one —
 **Reversibility, stated plainly:** every standalone launcher is preserved under
 `~/.warroom/backups/`, and `~/bin/*.bak.*` copies already on disk are untouched. A project that
 goes wrong is restored by one `rollback`.
+
+---
+
+## What actually happened — executed 2026-09-10
+
+The migration above was run. **Ten projects are shims on the engine-layer launcher**: `agentvibe`
+plus the nine clean ones. Every one resolves Codex; measured with `<session> --engine codex engine`,
+which starts nothing.
+
+Three things diverged from the plan above, and each is worth reading before the next fleet change.
+
+**Step 1 was not met, and the launcher was installed anyway.** The engine layer is NOT on `main` —
+it is on an unmerged branch that has never passed the binding gate. The founder chose
+verify-and-move-fast over merge-first. So every migrated project now runs a launcher built from
+ungated code. That is a deliberate, reversible position, not an oversight:
+`rollback --session <name>` restores any project, and the standalone launchers are preserved twice
+over (installer backups under `~/.warroom/backups/`, plus 16 pre-existing `~/bin/*.bak.*`).
+
+**Step 4 was inverted: the configs did NOT go into the projects.** A shim resolves its config by
+ABSOLUTE path, and that makes config location load-bearing in a way this document did not
+anticipate. Installing `agentvibe` with `--config .warroom.yml` from inside a git worktree pinned
+the shim to `…/.worktrees/<slug>/.warroom.yml` — a path that vanishes with the worktree, silently
+breaking the launcher later. `agentvibe` now points at the main checkout; the other nine point at
+generated configs under `~/.warroom/configs/`, because the sandbox refuses writes into sibling
+project directories. A config in a git worktree is a bug, not a style choice.
+
+**`ml2` remains unmigrated** for the reason recorded above (no `.claude/entry/ceo.md` and no
+`_seeds/ceo.md`; its preamble is inlined in its launcher). `adamos` stays excluded, `acme` is still
+dead — `~/VibeCoding/Acme` does not exist.
+
+### The acknowledgment moved out of git, and it is now machine-scoped
+
+`codex_unsandboxed_ack: true` in a project's `.warroom.yml` **no longer acknowledges anything**. The
+gate reads `WARROOM_CODEX_ACK=true` or `~/.warroom/codex_ack`. This closed the round-6 P1 (a pull
+request could flip the control that gates an unsandboxed pane) and it is also what made a
+ten-project rollout possible from one file instead of ten commits into ten repositories. The
+branch-dependence was not theoretical: the key existed on this branch and not on `main`, so
+`git checkout` changed the security posture of the machine.
+
+### Per-project identity is real, and this is the check worth repeating
+
+The Codex preamble is rendered per project from that project's own `.claude/agents/`, not copied.
+agentvibe's brief names `reviewer-readonly reviewer sourcer` as its tool-scoped engines; ghostb's
+names `adversary-engineer qa-lead`. 47 lines differ between them. If a future change makes those
+briefs identical, per-project identity has silently regressed.
