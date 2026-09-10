@@ -368,6 +368,26 @@ engine_is_known() {
   case " $WARROOM_ENGINES " in *" $1 "*) return 0 ;; *) return 1 ;; esac
 }
 
+# A pane number: digits only, no leading zero, so 1 or more. It is used as a
+# bash ARRAY SUBSCRIPT, and a subscript is an arithmetic context: `08` is a
+# fatal "value too great for base" that aborts the whole program, `010` is
+# octal 8 and silently puts an engine on the wrong pane, and `$(…)` is
+# evaluated. `^[0-9]+$` accepted the first two. Every pane number that arrives
+# as DATA — a tmux window name, a snapshot entry, an --engine token, the
+# registry — goes through this before it goes anywhere else.
+pane_number_ok() {
+  case "$1" in ''|*[!0-9]*|0*) return 1 ;; *) return 0 ;; esac
+}
+
+# The refusal, in one place: names the value and where it came from.
+pane_number_require() {
+  local n="$1" whence="$2"
+  pane_number_ok "$n" && return 0
+  echo "✗ '$n' is not a pane number (from $whence)." >&2
+  echo "  Panes are numbered from 1 with no leading zero. Refusing rather than evaluating it." >&2
+  exit 1
+}
+
 # Refuse an unknown engine; never fall back to the default. A typo that silently
 # launched Claude would be indistinguishable from a working Codex pane until
 # someone read the output of a whole session.
@@ -431,6 +451,9 @@ engines_resolve() {
   # is populated" and check_deps' fallback would then decline to populate it.
   [ "$#" -gt 0 ] || return 0
   for n in "$@"; do
+    # The subscript below is an arithmetic context. Nothing reaches it that
+    # has not been read as a pane number first.
+    pane_number_require "$n" "the panes named to engines_resolve"
     pair="$(engine_candidate_for_pane "$n")"
     eng="${pair%%$'\t'*}"
     whence="${pair#*$'\t'}"
@@ -450,6 +473,10 @@ engines_resolve() {
 # send_launch_engine's empty-line check.
 engine_for_pane() {
   local n="$1" pair eng
+  if ! pane_number_ok "$n"; then
+    echo "✗ '$n' is not a pane number; no engine can be looked up for it." >&2
+    return 1
+  fi
   if [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ]; then
     printf '%s' "${WARROOM_PANE_ENGINES[$n]}"; return 0
   fi
@@ -476,6 +503,7 @@ engines_persist() {
   mkdir -p "$PROJECT_STATE_DIR" 2>/dev/null
   : > "$ENGINES_STATE_FILE" 2>/dev/null || return 0
   for n in "$@"; do
+    pane_number_ok "$n" || continue
     [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ] && \
       printf '%s\t%s\n' "$n" "${WARROOM_PANE_ENGINES[$n]}" >> "$ENGINES_STATE_FILE"
   done
@@ -496,6 +524,7 @@ engines_forget_pane() {
 # session whose other panes are already running and must not be re-declared.
 engines_persist_pane() {
   local n="$1"
+  pane_number_ok "$n" || return 0
   [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ] || return 0
   mkdir -p "$PROJECT_STATE_DIR" 2>/dev/null
   engines_forget_pane "$n"
@@ -739,13 +768,11 @@ pane_number_of() {
     *:CEO-*) n="${t#*:CEO-}"; n="${n%%.*}" ;;
     *:GRID.*) n="${t#*:GRID.}"; n="${n%%.*}" ;;
   esac
-  case "$n" in
-    ''|*[!0-9]*)
+  if ! pane_number_ok "$n"; then
       echo "✗ cannot read a pane number from the tmux target '$t'." >&2
       echo "  Refusing rather than guessing pane 1 — guessing puts a pane on an engine nobody asked for." >&2
       return 1
-      ;;
-  esac
+  fi
   printf '%s' "$n"
 }
 
@@ -1238,10 +1265,16 @@ for f in sorted(glob.glob(os.path.expanduser('~/.claude/sessions/*.json')), key=
       _snapshot_one_ceo "$i"
     done
   else
-    # Normal mode: iterate over CEO-N windows
+    # Normal mode: iterate over CEO-N windows. The number is written UNQUOTED
+    # into the JSON below, so a renamed window (`CEO-x`) would corrupt the
+    # snapshot; it is skipped, and said so, rather than recorded.
     while IFS= read -r window_name; do
       local n
-      n=$(echo "$window_name" | sed 's/CEO-//')
+      n="${window_name#CEO-}"
+      if ! pane_number_ok "$n"; then
+        echo "  ⚠ skipping window '$window_name': not a CEO number" >&2
+        continue
+      fi
       _snapshot_one_ceo "$n"
     done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
   fi
@@ -1572,6 +1605,7 @@ cmd_add() {
 cmd_done() {
   local n=$1
   [ -z "$n" ] && echo "Usage: ${SESSION} done <N>" && exit 1
+  pane_number_require "$n" "the argument to done"
   ! tmux has-session -t "$SESSION" 2>/dev/null && echo "✗ No war room running." && exit 1
   ! tmux list-windows -t "$SESSION" -F "#{window_name}" | grep -q "^CEO-$n$" && echo "✗ CEO-$n not found." && exit 1
 
@@ -1748,7 +1782,8 @@ cmd_kill() {
   local dirty_ceos=()
   while IFS= read -r window_name; do
     local n
-    n=$(echo "$window_name" | sed 's/CEO-//')
+    n="${window_name#CEO-}"
+    pane_number_ok "$n" || continue
     # Derive worktree path from registry (reliable), not pane_current_path
     # (Claude spawns subagents that cd into different dirs, making pane_current_path unreliable)
     local wt_path=""
@@ -2187,8 +2222,14 @@ cmd_grid_view() {
   # numbers: after one `${SESSION} done`, the windows are CEO-1 and CEO-3 and the
   # count is 2, so `seq` resolved a pane 2 that does not exist and never resolved
   # CEO-3 at all.
+  #
+  # A window name is DATA: tmux lets anyone rename a window, and `CEO-08` or
+  # `CEO-$(…)` sorts into this list like any other. The number is read as a
+  # pane number HERE, before it is a subscript in engines_resolve, because a
+  # subscript is an arithmetic context and evaluates what it is given.
   local grid_ns=""
   for _wname in "${ceo_windows[@]}"; do
+    pane_number_require "${_wname#CEO-}" "the tmux window '$_wname'"
     grid_ns="$grid_ns ${_wname#CEO-}"
   done
   engines_resolve $grid_ns
@@ -2395,14 +2436,16 @@ except:
   # this program produce it? Routine, so skip. Otherwise it is corruption, so
   # refuse.
   #
-  # `^[0-9]+$` and not str.isdigit(): isdigit() accepts '٣' and other Unicode
+  # `[1-9][0-9]*` and not str.isdigit(): isdigit() accepts '٣' and other Unicode
   # digits that a bash `[0-9]` glob rejects, and two predicates for one question
-  # disagree exactly once, in the case nobody tested.
+  # disagree exactly once, in the case nobody tested. And not `[0-9]+`: that
+  # accepted `08`, which is a fatal arithmetic error where the number is finally
+  # used, and `010`, which is octal 8 there. This is pane_number_ok, in Python.
   local snapshot_ns snapshot_bad
   snapshot_ns=$(python3 -c "
 import json, re
 d = json.load(open('${chosen_snapshot}'))
-print(' '.join(str(c.get('n','')) for c in d.get('ceos',[]) if re.fullmatch(r'[0-9]+', str(c.get('n','')))))
+print(' '.join(str(c.get('n','')) for c in d.get('ceos',[]) if re.fullmatch(r'[1-9][0-9]*', str(c.get('n','')))))
 " 2>/dev/null)
   # session_id is judged here for the same reason and by the same rule as the
   # pane number: it is spliced into `claude --resume <id>` and typed into a
@@ -2413,7 +2456,7 @@ import json, re
 d = json.load(open('${chosen_snapshot}'))
 for i, c in enumerate(d.get('ceos',[])):
     n = str(c.get('n',''))
-    if not re.fullmatch(r'[0-9]+', n):
+    if not re.fullmatch(r'[1-9][0-9]*', n):
         print('entry #%d names CEO %r — not a pane number' % (i, n))
     sid = str(c.get('session_id','') or '')
     if not re.fullmatch(r'[A-Za-z0-9._-]*', sid):
@@ -2501,7 +2544,7 @@ for i, c in enumerate(d.get('ceos',[])):
     # This is NOT a skip-and-continue design. One bad entry refuses the WHOLE
     # restore, up front, before anything is built or destroyed. If this line ever
     # starts firing, that is a bug report about the up-front check, not a feature.
-    case "$n" in ''|*[!0-9]*) continue ;; esac
+    pane_number_ok "$n" || continue
     # Same backstop, same reasoning, for the value that reaches a pane's shell.
     # REFUSES rather than continues, because by this line the old session is
     # gone and a pane may already exist: skipping would leave a half-restored
@@ -3991,14 +4034,17 @@ cmd_cost() {
       # active CEOs found" against a perfectly good snapshot rather than reading
       # it. Louder than the cmd_grid_view instance, which resolved to 1 and lost
       # CEOs in silence, but the same defect and the same one-line cure.
+      # Only pane numbers leave the snapshot: `n` becomes a filename under
+      # $WORKTREES_DIR and a grep pattern over the registry below.
       local _cn
       while IFS= read -r _cn; do
         [ -n "$_cn" ] && ceo_nums+=("$_cn")
       done < <(python3 -c "
-import json
+import json, re
 d = json.load(open('$SESSION_SNAPSHOT'))
 for c in d.get('ceos', []):
-    print(c['n'])
+    n = str(c.get('n', ''))
+    if re.fullmatch(r'[1-9][0-9]*', n): print(n)
 " 2>/dev/null)
     fi
 
@@ -4318,8 +4364,12 @@ for _tok in $WARROOM_ENGINE_OVERRIDES; do
       echo "  Expected <pane-number>:<engine>, e.g. 2:codex." >&2
       exit 1 ;;
   esac
-  if [ "$_pane" -lt 1 ]; then
-    echo "✗ malformed --engine override '$_tok': panes are numbered from 1." >&2
+  # `0` is refused because panes are numbered from 1. A leading zero is refused
+  # with it: `08:codex` is not a pane number where this token is finally used —
+  # a bash subscript, where `08` aborts the program and `010` is octal 8 — and
+  # `[ 08 -lt 1 ]` is false, so this check alone let both through.
+  if ! pane_number_ok "$_pane"; then
+    echo "✗ malformed --engine override '$_tok': panes are numbered from 1, with no leading zero." >&2
     exit 1
   fi
   engine_require_known "${_tok#*:}" "--engine $_tok"

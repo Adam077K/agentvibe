@@ -1015,7 +1015,9 @@ test('pane_number_of reads the targets the launcher builds, and REFUSES one it c
   // `…:CEO-N.x` or `…:GRID.N`. What reaches them is a target built from DATA:
   // cmd_restore takes the pane number out of a snapshot file, so a corrupt
   // snapshot is the live case, and it is exactly where guessing is worst.
-  for (const target of ['proj:HQ', 'proj:CEO-.1', 'proj:CEO-x.1']) {
+  // `CEO-08` is the row that `^[0-9]+$` let through: the number is a bash
+  // subscript downstream, where `08` is a fatal arithmetic error.
+  for (const target of ['proj:HQ', 'proj:CEO-.1', 'proj:CEO-x.1', 'proj:CEO-08.1', 'proj:GRID.010']) {
     const r = of(target);
     assert.notEqual(r.code, 0, `${target} must be refused, not guessed at`);
     assert.equal(r.out, '', `${target} must print no pane number at all`);
@@ -1211,6 +1213,96 @@ test('a corrupt snapshot entry refuses the WHOLE restore, building nothing and d
   assert.match(r.err, /'x'/, 'the refusal must name the identifier it could not place');
   assert.match(r.err, /refus/i, 'and must say that it is refusing');
   assert.match(r.err, /restore/i, 'and what it is refusing');
+});
+
+// ── A pane number is a bash SUBSCRIPT, and a subscript is an arithmetic context ──
+//
+// `WARROOM_PANE_ENGINES[$n]` evaluates `$n`. Under /bin/bash 3.2.57 a `$(…)`
+// there is a fatal syntax error and `08` is a fatal "value too great for
+// base" — both abort the program mid-command; `010` is octal 8 and quietly
+// puts an engine on pane 8. `^[0-9]+$` accepted the last two. The pane
+// numbers that arrive as DATA — a tmux window name, a snapshot entry, an
+// --engine token — are read through one predicate before they are anything
+// else, and these tests feed each door the shapes that predicate exists for.
+
+test('the grid subcommand refuses a window whose name is not a CEO number, before any subscript sees it', (t) => {
+  // MUTATION: delete the `pane_number_require "${_wname#CEO-}" …` line in
+  // cmd_grid_view → the value travels unquoted in `$grid_ns` to
+  // engines_resolve, whose own gate refuses it — but by then it has been
+  // word-split, and the refusal names `'$(touch'` rather than the window.
+  // Red on the naming assertion. Measured, and recorded because it is a
+  // different failure from the one first written here (a bash abort): the
+  // second gate is what makes the first one's absence a wrong MESSAGE rather
+  // than an evaluated subscript.
+  for (const [label, name] of [
+    ['command substitution', (c) => `CEO-$(touch ${c})`],
+    ['a leading zero', () => 'CEO-08'],
+  ]) {
+    const p = runningSession(t, [{ n: 1, engine: 'claude' }], { engine: 'claude' });
+    const canary = path.join(p.home, `FIRED-grid-${label.replace(/\W+/g, '-')}`);
+    const hostile = name(canary);
+    const sh = shim(t, { sessionExists: true, windows: ['CEO-1', hostile] });
+    const r = launch(p, ['grid'], sh);
+
+    assert.equal(fs.existsSync(canary), false, `${label}: nothing may be evaluated`);
+    assert.notEqual(r.code, 0, `${label}: must refuse: ${r.out}`);
+    assert.ok(r.err.includes(`'${hostile}'`), `${label}: the refusal must name the window: ${r.err}`);
+    assert.match(r.err, /not a pane number/, `${label}: and say why`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${label}: a refused grid must build nothing`);
+  }
+});
+
+test('--engine N:E refuses a leading zero, at parse time, whatever the command', (t) => {
+  // `[ "$_pane" -lt 1 ]` is false for `08` and `010`, so the old check passed
+  // them to a loop where `08:codex` matched no pane and was dropped in silence
+  // — the founder asked for Codex on pane 8 and got Claude, with nothing
+  // printed. Same failure class as `2x:codex`, which the router already
+  // refuses.
+  // MUTATION: `if ! pane_number_ok "$_pane"` → `if [ "$_pane" -lt 1 ]` → both
+  // rows exit 0 and print three claude panes. Red.
+  const p = project(t);
+  for (const tok of ['08:codex', '010:codex']) {
+    const r = warroom(p, ['engine', '3', '--engine', tok]);
+    assert.equal(r.code, 1, `${tok}: must be refused: ${r.out}`);
+    assert.match(r.err, /leading zero/, `${tok}: and say why: ${r.err}`);
+    assert.equal(panes(r).length, 0, `${tok}: must not resolve any pane after refusing`);
+  }
+});
+
+test('--engine 0:codex is refused with the message that panes are numbered from 1', (t) => {
+  // MUTATION: `if ! pane_number_ok "$_pane"` → `if false` → `0:codex` is
+  // accepted, matches no pane, and three claude panes print with exit 0. Red.
+  const p = project(t);
+  const r = warroom(p, ['engine', '3', '--engine', '0:codex']);
+  assert.equal(r.code, 1, `must be refused: ${r.out}`);
+  assert.match(r.err, /panes are numbered from 1/);
+  assert.equal(panes(r).length, 0, 'must not resolve any pane after refusing');
+});
+
+test('a snapshot pane number with a leading zero refuses the whole restore, and names the entry', (t) => {
+  // The python gate is pane_number_ok in another language, and two predicates
+  // for one question disagree exactly once. This is the row they used to
+  // disagree on: `re.fullmatch(r'[0-9]+', '08')` matched, bash then aborted.
+  // MUTATION: `[1-9][0-9]*` → `[0-9]+` in both python calls of cmd_restore →
+  // `08` reaches engines_resolve, whose own gate refuses it with "from the
+  // panes named to engines_resolve": still non-zero, still nothing built,
+  // still before the kill — but the founder is told about an internal call
+  // and not which snapshot entry to fix. Red on the `entry #` assertion, and
+  // on that one only, which is why it is asserted.
+  for (const bad of ['08', '010']) {
+    const p = restorableProject(t, [
+      { n: 1, branch: 'ceo-1' },
+      { n: bad, branch: `ceo-${bad}` },
+    ]);
+    const sh = shim(t, { sessionExists: true });
+    const r = launch(p, ['restore', 'latest'], sh);
+    assert.notEqual(r.code, 0, `${bad}: must refuse: ${r.out}`);
+    assert.ok(r.err.includes(`'${bad}'`), `${bad}: the refusal must name the value: ${r.err}`);
+    assert.match(r.err, /entry #1/, `${bad}: and point at the snapshot entry, not at an internal call: ${r.err}`);
+    assert.match(r.err, /not a pane number/);
+    assert.deepEqual(r.calls.filter((c) => c[0] === 'kill-session'), [], 'the running session must survive');
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and nothing may be built');
+  }
 });
 
 // ── A snapshot's session_id reaches a pane's shell, so it is judged first ──
