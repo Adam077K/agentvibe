@@ -41,6 +41,16 @@ const WARROOM = path.join(REPO, 'bin', 'warroom');
 const SRC = fs.readFileSync(WARROOM, 'utf8');
 
 /**
+ * The interpreter bin/warroom's shebang names. On macOS that is 3.2.57 — the
+ * founder's shell — and `bash` on PATH is very often Homebrew's 5.x, so a
+ * harness that spawned `bash` was testing an interpreter the launcher never
+ * runs under: `mapfile` and every other bash-4 builtin passed here and failed
+ * on the machine. Pinned to the shebang's path wherever it exists; a Linux CI
+ * runner has /bin/bash too, and there it is simply the bash there is.
+ */
+const BASH = fs.existsSync('/bin/bash') ? '/bin/bash' : 'bash';
+
+/**
  * A throwaway project: its own HOME, its own state_dir, its own entry preamble.
  * The real ~/.agentvibe is never touched — the rendered Codex preamble lands
  * under this project's state_dir, so a test run cannot overwrite what a live
@@ -86,7 +96,7 @@ function project(
 /** Run bin/warroom against a throwaway project. Never exits the test runner. */
 function warroom(p, args, { path: PATH_ = process.env.PATH } = {}) {
   try {
-    const out = execFileSync('bash', [WARROOM, '--config', p.config, ...args], {
+    const out = execFileSync(BASH, [WARROOM, '--config', p.config, ...args], {
       encoding: 'utf8',
       env: { ...process.env, HOME: p.home, PATH: PATH_ },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -372,7 +382,7 @@ test('a state_dir containing a space still delivers the WHOLE preamble', (t) => 
   delete env.WARROOM_CEO_PREAMBLE;
   let delivered;
   try {
-    delivered = execFileSync('bash', ['-c', `printf '%s' ${valueExpr}`], { encoding: 'utf8', env, stdio: ['ignore', 'pipe', 'pipe'] });
+    delivered = execFileSync(BASH, ['-c', `printf '%s' ${valueExpr}`], { encoding: 'utf8', env, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (e) {
     delivered = `<the shell failed: ${e.stderr ?? e.message}>`;
   }
@@ -817,7 +827,7 @@ function launch(p, args, sh, { env = {} } = {}) {
   // whoever ran the suite — a founder running `npm test` inside their own war
   // room has it set, a CI runner does not — and bin/warroom branches on it.
   // Inheriting it would make these tests pass or fail by where they were run.
-  const r = spawnSync('bash', [WARROOM, '--config', p.config, ...args], {
+  const r = spawnSync(BASH, [WARROOM, '--config', p.config, ...args], {
     env: { ...process.env, HOME: p.home, PATH: sh.path, TMPDIR: p.home, TMUX: '', ...env },
     stdio: ['ignore', outFd, errFd],
     timeout: 90_000,
@@ -959,7 +969,7 @@ const sq = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
 function warroomEval(p, script, { args = [], path: PATH_ = process.env.PATH } = {}) {
   const src =
     `. ${sq(WARROOM)} --config ${sq(p.config)} ${args.map(sq).join(' ')} help >/dev/null 2>&1\n` + script;
-  const r = spawnSync('bash', ['-c', src], {
+  const r = spawnSync(BASH, ['-c', src], {
     encoding: 'utf8',
     env: { ...process.env, HOME: p.home, PATH: PATH_, TMPDIR: p.home },
     timeout: 30_000,
