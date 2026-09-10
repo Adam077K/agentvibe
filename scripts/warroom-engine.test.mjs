@@ -756,20 +756,21 @@ function launchableProject(t, opts = {}) {
  * skipped for the wrong reason, and the test would pass having proved nothing
  * about the pane-number guard it is aimed at.
  *
- * `entries` is `[{ n, branch }]`, and `n` is deliberately free-form: a snapshot
- * is DATA read back off disk, not argv, which is the whole reason cmd_restore
- * has to guard it.
+ * `entries` is `[{ n, branch, session_id?, engine? }]`, and every field is
+ * deliberately free-form: a snapshot is DATA read back off disk, not argv,
+ * which is the whole reason cmd_restore has to guard it.
  */
 function restorableProject(t, entries) {
   const p = launchableProject(t);
   for (const b of new Set(entries.map((e) => e.branch))) gitIn(p, 'branch', b, 'main');
-  const ceos = entries.map(({ n, branch }) => ({
+  const ceos = entries.map(({ n, branch, session_id = '', engine }) => ({
     n,
     branch,
     wt_path: path.join(p.dir, '.worktrees', branch),
     task: '',
     start_ts: 0,
-    session_id: '',
+    session_id,
+    ...(engine === undefined ? {} : { engine }),
   }));
   const snaps = path.join(p.home, '.proj', 'snapshots');
   fs.mkdirSync(snaps, { recursive: true });
@@ -1210,6 +1211,68 @@ test('a corrupt snapshot entry refuses the WHOLE restore, building nothing and d
   assert.match(r.err, /'x'/, 'the refusal must name the identifier it could not place');
   assert.match(r.err, /refus/i, 'and must say that it is refusing');
   assert.match(r.err, /restore/i, 'and what it is refusing');
+});
+
+// ── A snapshot's session_id reaches a pane's shell, so it is judged first ──
+//
+// cmd_restore splices session_id into `claude --resume <id>` / `codex resume
+// <id>` and types the result into a live pane. The pane number had a gate; the
+// id, read off the same file three lines later, had none. The fake tmux here
+// EVALS what it is told to type, so the assertion is on the effect and not on
+// the exit code: a launcher that refused AFTER typing would exit non-zero
+// having already run the payload.
+
+const HOSTILE_SESSION_IDS = [
+  ['a semicolon', (c) => `abc; touch ${c}`],
+  ['command substitution', (c) => `$(touch ${c})`],
+  ['backticks', (c) => `\`touch ${c}\``],
+];
+
+for (const [label, make] of HOSTILE_SESSION_IDS) {
+  test(`a snapshot session_id carrying ${label} is refused before anything is built, destroyed or typed`, (t) => {
+    // MUTATION: delete the `sid` lines from the up-front python check AND the
+    // in-loop `session_id_ok` backstop AND the one in engine_launch_cmd → the
+    // restore proceeds, `claude --resume abc; touch …` is typed, the fake tmux
+    // evals it, and the canary appears. Red on the effect assertion first.
+    // MUTATION: delete only the up-front python lines → the in-loop backstop
+    // fires instead, but by then the running session has been killed: red on
+    // the destroys-nothing assertion and on nothing else. That is the reason
+    // the check is up front and not merely present.
+    const p = restorableProject(t, [{ n: 1, branch: 'ceo-1' }]);
+    const canary = path.join(p.home, `FIRED-${label.replace(/\W+/g, '-')}`);
+    const snap = path.join(p.home, '.proj', 'snapshots', '2026-01-01-000000.json');
+    const d = JSON.parse(fs.readFileSync(snap, 'utf8'));
+    d.ceos[0].session_id = make(canary);
+    fs.writeFileSync(snap, JSON.stringify(d));
+
+    const sh = shim(t, { sessionExists: true, executePaneLines: true });
+    const r = launch(p, ['restore', 'latest'], sh);
+
+    assert.equal(fs.existsSync(canary), false, `${label}: the payload must never reach a shell`);
+    assert.notEqual(r.code, 0, `${label}: and the restore must refuse: ${r.out}`);
+    assert.deepEqual(r.calls.filter((c) => c[0] === 'send-keys'), [], 'nothing may be typed into any pane');
+    assert.deepEqual(r.calls.filter((c) => c[0] === 'kill-session'), [], 'the running session must survive');
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused restore must change nothing in tmux');
+    assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'and recreate no worktree');
+    assert.match(r.err, /session_id/, 'the refusal must say which field it could not use');
+    assert.match(r.err, /refus/i);
+  });
+}
+
+test('a well-formed session_id is resumed, on both engines', (t) => {
+  // The control: the id charset that Claude and Codex actually produce
+  // (UUIDs, and Codex thread ids with the same alphabet) must still resume.
+  // MUTATION: none needed; this is the negative half of the pair.
+  const p = restorableProject(t, [
+    { n: 1, branch: 'ceo-1', session_id: '0d3a9e2c-4b1f-4a6e-9c1d-2f7e8a9b0c1d' },
+    { n: 2, branch: 'ceo-2', session_id: 'thread_019abc.DEF-xyz' },
+  ]);
+  const sh = shim(t);
+  const r = launch(p, ['restore', 'latest', '--engine', '2:codex'], sh);
+  assert.equal(r.code, 0, r.out);
+  const lines = launchLines(r.calls);
+  assert.equal(lines.get('proj:CEO-1.1'), 'claude --resume 0d3a9e2c-4b1f-4a6e-9c1d-2f7e8a9b0c1d');
+  assert.equal(lines.get('proj:CEO-2.1'), 'codex resume thread_019abc.DEF-xyz');
 });
 
 // ── .warroom.yml is INPUT, and the charset rule is the control ───────────
