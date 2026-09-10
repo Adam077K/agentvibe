@@ -1568,7 +1568,11 @@ test('an ordinary config passes, including the characters the rule deliberately 
   // other half of its row in the refusal loop above: a launcher that refused
   // every display_name would pass that row too.
   const p = configuredProject(t, {});
-  const dir = path.join(p.home, 'a dir+with-allowed.chars');
+  // Under $HOME/.warroom, which is an allowed base, AND made of the characters
+  // the rule deliberately allows — space, +, ., -, _. The base narrowing (see
+  // the two state_dir tests below) is orthogonal to the charset this asserts,
+  // so the dir has to satisfy both or it stops testing the charset at all.
+  const dir = path.join(p.home, '.warroom', 'a dir+with-allowed.chars');
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(
     p.config,
@@ -1772,10 +1776,19 @@ test('state_dir cannot be redirected outside $HOME or the project: nothing is cr
   }
 });
 
-test('state_dir under $HOME, under the project, or relative to it is accepted', (t) => {
-  // The control for the refusal above, on all three accepted shapes.
+test('state_dir under the session dir, $HOME/.warroom, the project, or relative to it is accepted', (t) => {
+  // The control for the refusal below, on every accepted shape. The session is
+  // `proj`, so the session default is $HOME/.proj; $HOME/.warroom/<name> is the
+  // shared base; and both a project subdir and a relative value land under the
+  // project. What is NOT here — a bare $HOME subdir like $HOME/.elsewhere — is
+  // the case the refusal below owns, and used to be accepted here.
   // MUTATION: none needed.
-  for (const value of [(p) => path.join(p.home, '.elsewhere'), (p) => path.join(p.dir, '.wr'), () => '.wr']) {
+  for (const value of [
+    (p) => path.join(p.home, '.proj'),
+    (p) => path.join(p.home, '.warroom', 'proj-state'),
+    (p) => path.join(p.dir, '.wr'),
+    () => '.wr',
+  ]) {
     const p = project(t);
     fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${value(p)}\n${CODEX_ACK}`);
     const r = warroom(p, ['engine', '1', '--engine', 'codex']);
@@ -1785,6 +1798,45 @@ test('state_dir under $HOME, under the project, or relative to it is accepted', 
     const expected = path.join(value(p).startsWith('/') ? value(p) : path.join(p.dir, value(p)), 'entry', 'ceo.codex.md');
     assert.equal(m[1], expected, 'and it must be the resolved state_dir, not the raw value');
   }
+});
+
+test('state_dir cannot be a bare $HOME subdir like ~/.ssh: narrowed to the session dir and $HOME/.warroom', (t) => {
+  // FINDING 1. The confinement used to pass ALL of $HOME as a valid base, so a
+  // git-tracked .warroom.yml could set `state_dir: ~/.ssh` (or ~/.aws, or
+  // ~/.config/gh) and every `mkdir -p` and every `>` this program does would
+  // land there. The base is now a single named directory under home — the
+  // session dir and $HOME/.warroom — not the home itself.
+  //
+  // The escape targets are shaped like the real credential directories and sit
+  // directly under this fixture's HOME, which is exactly what the old rule
+  // accepted and the new one refuses. Their non-existence after the run is the
+  // assertion: a launcher on the old base would have created state_dir in
+  // check_deps before doing anything else.
+  //
+  // MUTATION: restore the old base — replace the state_dir resolution with
+  // `_STATE_BASE="$HOME"` / `_cfg_checked state_dir under "$PROJECT_DIR" "$HOME"`
+  // → each target is created and three worktrees follow, exit 0. Red on every
+  // row: the refusal, the non-creation, and the empty-tmux assertion.
+  for (const sub of ['.ssh', '.aws', path.join('.config', 'gh')]) {
+    const p = launchableProject(t);
+    const target = path.join(p.home, sub, 'wr-state');
+    t.after(() => fs.rmSync(path.join(p.home, sub.split(path.sep)[0]), { recursive: true, force: true }));
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${target}\n`);
+    const sh = shim(t);
+    const r = launch(p, ['1'], sh);
+    assert.notEqual(r.code, 0, `${sub}: a bare $HOME subdir must be refused: ${r.out}`);
+    assert.ok(r.err.includes("'state_dir'"), `${sub}: the refusal must name the key: ${r.err}`);
+    assert.equal(fs.existsSync(target), false, `${sub}: nothing may be created where it points`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${sub}: a refused config must build nothing`);
+    assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, `${sub}: and create no worktree`);
+  }
+
+  // The control on the other side, so the refusal above is not satisfied by a
+  // launcher that refuses every state_dir: $HOME/.warroom/<name> is accepted.
+  const ok = launchableProject(t);
+  fs.writeFileSync(ok.config, `session: proj\nproject_dir: ${ok.dir}\nstate_dir: ${path.join(ok.home, '.warroom', 'proj-state')}\n${CODEX_ACK}`);
+  const okr = warroom(ok, ['engine', '1']);
+  assert.equal(okr.code, 0, `$HOME/.warroom/<name> must be accepted: ${okr.err}`);
 });
 
 // ── `grid` the SUBCOMMAND, which is not `--grid` the flag ────────────────
@@ -2168,6 +2220,33 @@ test('cost with no live session reads the CEOs out of the snapshot', (t) => {
   assert.match(plain, /Total session cost/);
 });
 
+test('cost from a LIVE session validates each window name as a pane number, skipping and naming what is not', (t) => {
+  // FINDING 3. With a running session, cmd_cost read window names from tmux,
+  // stripped `CEO-`, and fed the raw remainder into `cat ceo-<n>.session`,
+  // `grep "^ceo-<n>:"` and _compute_ceo_cost — no validation, while its snapshot
+  // sibling had checked pane_number_ok since the snapshot was first treated as
+  // data. A window name is data: any process on the tmux socket can rename a
+  // window. Both branches use the one predicate now.
+  //
+  // CEO-2 is a real pane number; `CEO-abc` is not. The fix skips `abc`, names it
+  // on stderr, and never turns it into a `CEO-abc` cost row.
+  // MUTATION: drop the `pane_number_ok "$_cn"` gate in the tmux branch (feed the
+  // raw value like the pre-fix code) → `abc` reaches _compute_ceo_cost and prints
+  // `CEO-abc  (no session ID)` on stdout. Red on both stdout assertions.
+  const p = launchableProject(t);
+  const sh = shim(t, { sessionExists: true, windows: ['CEO-2', 'CEO-abc'] });
+  const r = launch(p, ['cost'], sh);
+  assert.equal(r.code, 0, r.out + r.err);
+  const plain = r.out.replace(/\[[0-9;]*m/g, '');
+  assert.match(plain, /CEO-2\s+\(no session ID\)/, 'the valid pane is still costed');
+  assert.doesNotMatch(
+    plain,
+    /CEO-abc\s+\(no session ID\)/,
+    'the non-numeric window must not become a CEO cost row'
+  );
+  assert.match(r.err, /skipping window 'CEO-abc'/, 'and it must be named on stderr, not dropped in silence');
+});
+
 // ── The choice outlives the process that parsed it ───────────
 
 test('a per-pane engine chosen at start is still pane 2\'s engine in the NEXT invocation', (t) => {
@@ -2228,6 +2307,55 @@ test('a snapshot with no corrupt entry restores clean and exits zero', (t) => {
   assert.deepEqual([...lines.keys()].sort(), ['proj:CEO-1.1', 'proj:CEO-3.1']);
   assert.equal(lines.get('proj:CEO-1.1'), 'claude');
   assert.match(lines.get('proj:CEO-3.1'), /^codex\b/);
+});
+
+test('a hostile snapshot FILENAME is data, not python: the injection in the name never runs', (t) => {
+  // FINDING 2. cmd_restore read the chosen snapshot through
+  // `python3 -c "...open('${chosen_snapshot}')..."`, splicing the PATH straight
+  // into single-quoted Python source. A file under the snapshots directory whose
+  // NAME closes that quote runs whatever follows — and a checkout with a
+  // state_dir inside the project carries snapshot files as easily as it carries
+  // a config, so the name is attacker-controlled. Every `python3 -c` that touched
+  // a shell value was converted to pass it via argv (`open(sys.argv[1])`), which
+  // is the whole class; this pins the restore sink that motivated it.
+  //
+  // The snapshot is the ONLY one present and is selected with `restore latest`,
+  // so the hostile name is what reaches the interpreter. Its name closes the
+  // open('') and calls os.system to drop a canary.
+  // MUTATION: put any restore site back to `open('${chosen_snapshot}')` (start
+  // with snapshot_ns) → the canary is created and the run proceeds. Red on the
+  // canary assertion.
+  const p = launchableProject(t);
+  const canary = path.join(p.home, `PWNED-${process.pid}`);
+  const snaps = path.join(p.home, '.proj', 'snapshots');
+  fs.mkdirSync(snaps, { recursive: true });
+  gitIn(p, 'branch', 'ceo-1', 'main');
+  // A real, valid snapshot BODY — one CEO — under the hostile NAME, so the
+  // defence has to be the name being treated as a path, not the body being
+  // unreadable: the argv-passed launcher opens this file and restores it.
+  const body = JSON.stringify({
+    saved_at: 1767225600, project_dir: p.dir, grid_mode: false,
+    ceos: [{ n: 1, branch: 'ceo-1', wt_path: path.join(p.dir, '.worktrees', 'ceo-1'), task: '', start_ts: 0, session_id: '' }],
+  });
+  // The name closes the string and the open()/json.load() parens, then creates
+  // the canary via os.environ (so the NAME carries no '/', which would make it a
+  // nonexistent subdir on disk), then `#.json` comments the tail and keeps the
+  // file matching the `*.json` glob restore selects on. When spliced into
+  // `json.load(open('DIR/x'));import os;...`, the leading `open('DIR/x')` must
+  // SUCCEED or the injected code never runs and the test would pass on the
+  // vulnerable code by accident — so a real `x` holding `{}` is seeded in DIR
+  // (no `.json`, so it is never itself a snapshot candidate) for that open to
+  // resolve to.
+  fs.writeFileSync(path.join(snaps, 'x'), '{}');
+  const hostile = `x'));import os;open(os.environ['CANARY'],'w')#.json`;
+  fs.writeFileSync(path.join(snaps, hostile), body);
+  const sh = shim(t, { sessionExists: false });
+  const r = launch(p, ['restore', 'latest'], sh, { env: { CANARY: canary } });
+  // The one assertion that matters: the name did not execute.
+  assert.equal(fs.existsSync(canary), false, `the snapshot name must not run as code: ${r.out}`);
+  // And with the name treated as a literal path, python reads the file it names
+  // and the restore proceeds normally — a valid one-CEO snapshot restores.
+  assert.equal(r.code, 0, `a hostile NAME with a valid BODY still restores: ${r.out}${r.err}`);
 });
 
 // ── A mixed war room comes back mixed ────────────────────────

@@ -94,6 +94,16 @@ _cfg() {
 #           READ, and before the first directory is WRITTEN. Both halves, or
 #           the rule is a wish: the lexical check alone passed a git-tracked
 #           `.claude/state -> ~/.ssh` and let every write follow it.
+# The path charset, as ONE predicate. It judges every `path`/`under` config
+# value here and the wt_path a snapshot names in cmd_restore, which used to
+# carry its own copy of the glob: two copies of one rule disagree the first
+# time either is edited, and the case nobody re-tested is where. Defined here
+# rather than beside pane_number_ok because _cfg_checked runs at top level
+# before that section of the file has been read.
+path_charset_ok() {
+  case "$1" in *[!A-Za-z0-9._/~+\ -]*) return 1 ;; *) return 0 ;; esac
+}
+
 _cfg_checked() {
   local key="$1" kind="$2" val
   val="$(_cfg "$key")"
@@ -107,13 +117,13 @@ _cfg_checked() {
         exit 1 ;;
       esac ;;
     path|under)
-      case "$val" in *[!A-Za-z0-9._/~+\ -]*)
+      if ! path_charset_ok "$val"; then
         echo "✗ warroom: '$key' in $WARROOM_CONFIG holds a character that is not allowed in a path here." >&2
         echo "  Got: $val" >&2
         echo "  Allowed: letters, digits, space, and . _ - / ~ +" >&2
         echo "  This value is spliced into commands a pane's shell runs, so it is refused, not quoted." >&2
-        exit 1 ;;
-      esac ;;
+        exit 1
+      fi ;;
   esac
   if [ "$kind" = "under" ]; then
     local resolved
@@ -279,47 +289,112 @@ SESSION_UPPER="$(_cfg_checked display_name path)" || exit 1
 [ -z "$SESSION_UPPER" ] && SESSION_UPPER="$(printf '%s' "$SESSION" | tr '[:lower:]' '[:upper:]')"
 # state_dir is where this program does `mkdir -p` and WRITES — snapshots, the
 # engine map, the rendered Codex preamble, the event log, history, the message
-# inboxes. Confined to the founder's home or the project, lexically AND
-# physically, so a config cannot point those writes anywhere else. A relative
-# value lands under the project.
-PROJECT_STATE_DIR="$(_cfg_checked state_dir under "$PROJECT_DIR" "$HOME")" || exit 1
-[ -z "$PROJECT_STATE_DIR" ] && PROJECT_STATE_DIR="$HOME/.$SESSION"
+# inboxes. Confined, lexically AND physically, to exactly three places:
+#
+#   under the project                  a relative value lands here
+#   $HOME/.<session> — the default —   or a path under it
+#   a path under $HOME/.warroom
+#
+# NOT all of $HOME. That was the base until 2026-09-10, and a base that wide is
+# not a confinement: `state_dir: ~/.ssh` is under $HOME, so a git-tracked
+# .warroom.yml chose ~/.ssh, ~/.aws or ~/.config/gh and every `mkdir -p` and
+# every `>` followed it there. This is the narrowing entry_ceo went through —
+# "anywhere" to "the project only" — applied to the write side: a named
+# directory under the founder's home, never the home itself.
+#
+# state_dir_kind IS the rule, as one function, so it can be asked twice: of the
+# configured path, and of where that path PHYSICALLY resolves. <project> and
+# <home> are parameters because the second question is asked against physical
+# roots — a $HOME under /var is /private/var once resolved — and a rule that
+# hardcoded $HOME would refuse every founder whose home is reached through a
+# symlink.
+#   state_dir_kind <abs path> <project_dir> <home> → project | session | warroom, or fails
+state_dir_kind() {
+  local p="$1" proj="${2%/}" home="${3%/}"
+  case "$p" in
+    "$proj"/?*)                              printf 'project' ;;
+    "$home/.$SESSION"|"$home/.$SESSION"/?*)  printf 'session' ;;
+    "$home/.warroom"/?*)                     printf 'warroom' ;;
+    *) return 1 ;;
+  esac
+}
 
-# The physical half, against the base the LEXICAL half chose. That pairing is
-# the point: `.claude/state -> ~/.ssh` is lexically under the project and
-# physically under $HOME, and $HOME is an allowed base — so a check against
-# "either base" would pass it, and a git-tracked symlink would have chosen a
-# directory under the founder's home for every write this program makes.
-# Nothing under the project may resolve out of the project; nothing under
-# $HOME may resolve out of $HOME.
-case "$PROJECT_STATE_DIR" in
-  "${PROJECT_DIR%/}"/*) _STATE_BASE="$PROJECT_DIR" ;;
-  *)                    _STATE_BASE="$HOME" ;;
+_state_val="$(_cfg_checked state_dir path)" || exit 1
+case "$_state_val" in
+  '')                PROJECT_STATE_DIR="$HOME/.$SESSION" ;;
+  # The default, written out. _path_under judges "under a base", never "is the
+  # base", so the one value that IS a base is matched here by name.
+  "$HOME/.$SESSION") PROJECT_STATE_DIR="$_state_val" ;;
+  # Everything else goes through the one resolver: a `..` component is refused
+  # anywhere, a relative value resolves under the project, an absolute one must
+  # start with one of the three bases.
+  *)
+    PROJECT_STATE_DIR="$(_path_under "$_state_val" "$PROJECT_DIR" "$HOME/.$SESSION" "$HOME/.warroom")" || {
+      echo "✗ warroom: 'state_dir' in $WARROOM_CONFIG must be one of:" >&2
+      echo "    a path under $PROJECT_DIR (a relative value lands here)" >&2
+      echo "    $HOME/.$SESSION, or a path under it" >&2
+      echo "    a path under $HOME/.warroom" >&2
+      echo "  Got: $_state_val" >&2
+      echo "  This program creates directories and writes files here, and a git-tracked config does" >&2
+      echo "  not get to choose ~/.ssh, ~/.aws or anywhere else under your home for that." >&2
+      exit 1
+    } ;;
 esac
-_require_inside state_dir "$PROJECT_STATE_DIR" "$_STATE_BASE" \
-  "This program creates directories and writes files here: snapshots, the engine map, the rendered Codex preamble, the event log."
+unset _state_val
+_STATE_KIND="$(state_dir_kind "$PROJECT_STATE_DIR" "$PROJECT_DIR" "$HOME")" || exit 1
+
+# The physical half, against the KIND the lexical half chose. That pairing is
+# the point: `.claude/state -> ~/.proj` is lexically under the project and
+# physically the session directory — both allowed places — so a check that
+# asked only "does the physical path land somewhere allowed" would pass it, and
+# a git-tracked symlink would have moved every write this program makes out of
+# the project. Nothing under the project may resolve out of the project;
+# nothing under $HOME/.<session> or $HOME/.warroom may resolve out of that one
+# directory. _phys_path resolves a directory that does not exist yet through
+# its deepest existing ancestor, which is what lets a first run create
+# $HOME/.warroom/<name> or $HOME/.<session>.
+_state_phys="$(_phys_path "$PROJECT_STATE_DIR" 2>/dev/null)" || _state_phys=""
+_proj_phys="$(cd -P "$PROJECT_DIR" 2>/dev/null && pwd -P)"
+_home_phys="$(cd -P "$HOME" 2>/dev/null && pwd -P)"
+if [ -z "$_state_phys" ] || [ -z "$_proj_phys" ] || [ -z "$_home_phys" ] \
+   || [ "$(state_dir_kind "$_state_phys" "$_proj_phys" "$_home_phys" 2>/dev/null)" != "$_STATE_KIND" ]; then
+  echo "✗ warroom: 'state_dir' resolves outside the $_STATE_KIND directory it was configured under and is refused." >&2
+  echo "  Configured: $PROJECT_STATE_DIR" >&2
+  echo "  Resolves to: ${_state_phys:-<unresolvable>}" >&2
+  echo "  This program creates directories and writes files here: snapshots, the engine map, the rendered Codex preamble, the event log." >&2
+  echo "  A git-tracked config or symlink does not get to choose where that is." >&2
+  exit 1
+fi
+unset _state_phys _proj_phys _home_phys
 
 # And nothing INSIDE it may be a symlink. The base check bounds the directory;
 # it says nothing about `state/entry/ceo.codex.md -> ~/.ssh/id_rsa` one level
 # down, which `render_ceo_preamble > "$f"` would follow and overwrite. Every
 # write under state_dir is a `mkdir -p`, a `>` or a `>>`, and this program
-# never creates a symlink there, so one is never legitimate and the sweep is
-# free: one `find`, once, before the first write. This is what makes "a config
-# cannot point those writes anywhere else" true of the writes and not only of
-# the directory. `-mindepth 1` keeps it to the INSIDE: the directory itself is
-# the check above's to judge, and two guards over one case are proven by
-# neither.
-if [ -d "$PROJECT_STATE_DIR" ]; then
+# never creates a symlink there, so one is never legitimate. This is what makes
+# "a config cannot point those writes anywhere else" true of the writes and not
+# only of the directory. `-mindepth 1` keeps it to the INSIDE: the directory
+# itself is the check above's to judge, and two guards over one case are
+# proven by neither.
+#
+# It is NOT free, and it is not run on every invocation. The sweep is a
+# recursive `find` over the whole state directory, and history/ under it is
+# unbounded — one record per `done`, never pruned — so a war room that has run
+# for months pays for a full walk on `cost` and `ls`, which never write. It
+# runs at dispatch, for the commands that WRITE under state_dir, before the
+# first write any of them makes; the readers are named in an allowlist beside
+# the router, so a command left off that list sweeps rather than skips.
+state_dir_require_no_symlinks() {
+  [ -d "$PROJECT_STATE_DIR" ] || return 0
+  local _state_link
   _state_link="$(find "$PROJECT_STATE_DIR" -mindepth 1 -type l 2>/dev/null | head -1)"
-  if [ -n "$_state_link" ]; then
-    echo "✗ warroom: state_dir holds a symlink and is refused: $_state_link" >&2
-    echo "  This program only ever writes regular files and directories under $PROJECT_STATE_DIR," >&2
-    echo "  so a symlink there is not something it made — and a write would follow it wherever it points." >&2
-    echo "  Remove the link, or point state_dir in $WARROOM_CONFIG somewhere that has none." >&2
-    exit 1
-  fi
-  unset _state_link
-fi
+  [ -n "$_state_link" ] || return 0
+  echo "✗ warroom: state_dir holds a symlink and is refused: $_state_link" >&2
+  echo "  This program only ever writes regular files and directories under $PROJECT_STATE_DIR," >&2
+  echo "  so a symlink there is not something it made — and a write would follow it wherever it points." >&2
+  echo "  Remove the link, or point state_dir in $WARROOM_CONFIG somewhere that has none." >&2
+  exit 1
+}
 
 CEO_AGENT="$PROJECT_DIR/.claude/agents/ceo.md"
 WORKTREES_DIR="$PROJECT_DIR/.worktrees"
@@ -527,6 +602,9 @@ engine_require_acknowledged() {
   echo "  A Codex pane is one process that can write and run whatever your Codex login allows, and" >&2
   echo "  per-engine tool scoping is NOT enforced in it: a read-only reviewer (no Write/Edit in tools:)" >&2
   echo "  is prose there, not a control. Nothing was launched." >&2
+  echo "  Codex also reads AGENTS.md as TRUSTED instructions — the project's, which is git-tracked and" >&2
+  echo "  arrives the way a pull request arrives, and \$CODEX_HOME/AGENTS.md. Acknowledging accepts that" >&2
+  echo "  channel too: whoever can write AGENTS.md can instruct every Codex pane in this project." >&2
   echo "  To acknowledge this and enable Codex for this project, add to $WARROOM_CONFIG:" >&2
   echo "      codex_unsandboxed_ack: true" >&2
   echo "  Only the exact value true acknowledges. Details: research/codex-in-the-pane.md §9" >&2
@@ -1179,6 +1257,7 @@ engine_launch_warning() {
     codex)
       echo "  ⚠ $target runs on Codex: engine tool scoping is NOT enforced in this pane." >&2
       echo "    A read-only agent file (no Write/Edit in tools:) is prose there, not a control." >&2
+      echo "    It also reads AGENTS.md (git-tracked) and \$CODEX_HOME/AGENTS.md as trusted instructions." >&2
       echo "    Treat this pane as trusted, not sandboxed. Details: research/codex-in-the-pane.md §9" >&2
       ;;
     *) : ;;
@@ -1253,10 +1332,10 @@ capture_session_id() {
     for f in "$HOME/.claude/sessions/"*.json; do
       [ -f "$f" ] || continue
       local cwd
-      cwd=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('cwd',''))" 2>/dev/null)
+      cwd=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('cwd',''))" "$f" 2>/dev/null)
       if [ "$cwd" = "$wt_path" ]; then
         local sid
-        sid=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('sessionId',''))" 2>/dev/null)
+        sid=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('sessionId',''))" "$f" 2>/dev/null)
         if [ -n "$sid" ]; then
           echo "$sid" > "$session_file"
           return 0
@@ -1306,7 +1385,7 @@ migrate_sessions() {
   [ -f "$claude_json" ] && python3 -c "
 import json, os, sys
 try:
-    with open('$claude_json') as f: d = json.load(f)
+    with open(sys.argv[1]) as f: d = json.load(f)
     p = d.get('githubRepoPaths', {})
     changed = False
     for k in list(p):
@@ -1315,9 +1394,9 @@ try:
         if not p[k]: del p[k]; changed = True
         elif len(p[k]) != before: changed = True
     if changed:
-        with open('$claude_json', 'w') as f: json.dump(d, f, indent=2)
+        with open(sys.argv[1], 'w') as f: json.dump(d, f, indent=2)
 except: pass
-" 2>/dev/null
+" "$claude_json" 2>/dev/null
 }
 
 # Copy Claude session files back from main project dir to worktree project dir.
@@ -1452,15 +1531,15 @@ save_session_snapshot() {
     # Fallback 1: look up session ID from ~/.claude/sessions/*.json by matching CWD
     if [ -z "$session_id" ] && [ -n "$wt_path" ]; then
       session_id=$(python3 -c "
-import json, os, glob
-wt = '$wt_path'
+import json, os, glob, sys
+wt = sys.argv[1]
 for f in sorted(glob.glob(os.path.expanduser('~/.claude/sessions/*.json')), key=os.path.getmtime, reverse=True):
     try:
         d = json.load(open(f))
         if d.get('cwd') == wt:
             print(d.get('sessionId', '')); break
     except: pass
-" 2>/dev/null)
+" "$wt_path" 2>/dev/null)
     fi
 
     # Fallback 2: find the latest JSONL in the worktree project dir
@@ -1545,14 +1624,14 @@ EOF
   mkdir -p "$SNAPSHOTS_DIR"
   local session_fingerprint
   session_fingerprint=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('$SESSION_SNAPSHOT'))
+    d = json.load(open(sys.argv[1]))
     ts_list = sorted(str(c.get('start_ts',0)) for c in d.get('ceos',[]))
     print('-'.join(ts_list))
 except:
-    print('$ts')
-" 2>/dev/null)
+    print(sys.argv[2])
+" "$SESSION_SNAPSHOT" "$ts" 2>/dev/null)
   [ -z "$session_fingerprint" ] && session_fingerprint="$ts"
 
   # Find existing snapshot with same fingerprint, or create new
@@ -1561,14 +1640,14 @@ except:
     [ -f "$candidate" ] || continue
     local cand_fp
     cand_fp=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('$candidate'))
+    d = json.load(open(sys.argv[1]))
     ts_list = sorted(str(c.get('start_ts',0)) for c in d.get('ceos',[]))
     print('-'.join(ts_list))
 except:
     print('')
-" 2>/dev/null)
+" "$candidate" 2>/dev/null)
     if [ "$cand_fp" = "$session_fingerprint" ]; then
       snap_file="$candidate"
       break
@@ -2586,9 +2665,9 @@ cmd_restore() {
     for sf in "${snap_files[@]}"; do
       local dt ceo_count mode tasks
       dt=$(python3 -c "
-import json, datetime
+import json, datetime, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
 except:
     d = {}
 ts = d.get('saved_at', 0)
@@ -2596,27 +2675,27 @@ if ts:
     print(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M'))
 else:
     print('unknown')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
       ceo_count=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
     print(len(d.get('ceos', [])))
 except:
     print('?')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
       mode=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
     print('grid' if d.get('grid_mode') else 'normal')
 except:
     print('?')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
       tasks=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
     labels = [c.get('task','') for c in d.get('ceos',[]) if c.get('task','')]
     if labels:
         joined = ', '.join(labels)
@@ -2625,7 +2704,7 @@ try:
         print('(no labels)')
 except:
     print('')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
 
       if [ "$i" -eq 1 ]; then
         printf "  ${C_PEACH}${BOLD}%-4s${RESET} ${C_TEXT}%-20s${RESET} ${C_GREEN}%-6s${RESET} ${C_SUBTEXT}%-8s${RESET} ${C_OVERLAY}%s${RESET}\n" \
@@ -2693,17 +2772,17 @@ except:
   # used, and `010`, which is octal 8 there. This is pane_number_ok, in Python.
   local snapshot_ns snapshot_bad
   snapshot_ns=$(python3 -c "
-import json, re
-d = json.load(open('${chosen_snapshot}'))
+import json, re, sys
+d = json.load(open(sys.argv[1]))
 print(' '.join(str(c.get('n','')) for c in d.get('ceos',[]) if re.fullmatch(r'[1-9][0-9]*', str(c.get('n','')))))
-" 2>/dev/null)
+" "$chosen_snapshot" 2>/dev/null)
   # session_id is judged here for the same reason and by the same rule as the
   # pane number: it is spliced into `claude --resume <id>` and typed into a
   # live pane, save_session_snapshot never records one outside this charset, so
   # one that is outside it means the file was not written by this program.
   snapshot_bad=$(python3 -c "
-import json, re
-d = json.load(open('${chosen_snapshot}'))
+import json, re, sys
+d = json.load(open(sys.argv[1]))
 for i, c in enumerate(d.get('ceos',[])):
     n = str(c.get('n',''))
     if not re.fullmatch(r'[1-9][0-9]*', n):
@@ -2714,7 +2793,7 @@ for i, c in enumerate(d.get('ceos',[])):
     eng = str(c.get('engine','') or '')
     if not re.fullmatch(r'[A-Za-z0-9_-]*', eng):
         print('entry #%d carries engine %r — not an engine name' % (i, eng))
-" 2>/dev/null)
+" "$chosen_snapshot" 2>/dev/null)
 
   if [ -n "$snapshot_bad" ]; then
     echo "✗ this snapshot holds values that cannot be used:" >&2
@@ -2737,14 +2816,14 @@ for i, c in enumerate(d.get('ceos',[])):
   local _wt _wt_bad=""
   while IFS= read -r _wt; do
     [ -n "$_wt" ] || continue
-    case "$_wt" in *[!A-Za-z0-9._/~+\ -]*) _wt_bad="$_wt"; break ;; esac
+    path_charset_ok "$_wt" || { _wt_bad="$_wt"; break; }
     _path_under "$_wt" "$WORKTREES_DIR" >/dev/null || { _wt_bad="$_wt"; break; }
   done < <(python3 -c "
-import json
-d = json.load(open('${chosen_snapshot}'))
+import json, sys
+d = json.load(open(sys.argv[1]))
 for c in d.get('ceos',[]):
     print(str(c.get('wt_path','') or '').replace('\n',' '))
-" 2>/dev/null)
+" "$chosen_snapshot" 2>/dev/null)
   if [ -n "$_wt_bad" ]; then
     echo "✗ this snapshot names a worktree outside $WORKTREES_DIR:" >&2
     echo "    $_wt_bad" >&2
@@ -2764,10 +2843,10 @@ for c in d.get('ceos',[]):
   # will come up on and where that answer came from. It is not guessed at in
   # silence: that is precisely how a mixed war room used to come back uniform.
   WARROOM_SNAPSHOT_ENGINES=$(python3 -c "
-import json
-d = json.load(open('${chosen_snapshot}'))
+import json, sys
+d = json.load(open(sys.argv[1]))
 print(' '.join('%s:%s' % (c.get('n'), c.get('engine')) for c in d.get('ceos',[]) if c.get('engine')))
-" 2>/dev/null)
+" "$chosen_snapshot" 2>/dev/null)
   WARROOM_SNAPSHOT_SOURCE="$chosen_snapshot"
 
   # Engines are resolved, their binaries checked and their preambles written
@@ -2790,8 +2869,8 @@ print(' '.join('%s:%s' % (c.get('n'), c.get('engine')) for c in d.get('ceos',[])
   echo ""
 
   local saved_at project_dir
-  saved_at=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d.get('saved_at',0))" 2>/dev/null)
-  project_dir=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d.get('project_dir',''))" 2>/dev/null)
+  saved_at=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('saved_at',0))" "$chosen_snapshot" 2>/dev/null)
+  project_dir=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('project_dir',''))" "$chosen_snapshot" 2>/dev/null)
 
   if [ -n "$saved_at" ] && [[ "$saved_at" =~ ^[0-9]+$ ]]; then
     local saved_human
@@ -2811,11 +2890,11 @@ print(' '.join('%s:%s' % (c.get('n'), c.get('engine')) for c in d.get('ceos',[])
 
   # Parse and restore each CEO
   local ceo_count
-  ceo_count=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(len(d.get('ceos',[])))" 2>/dev/null || echo 0)
+  ceo_count=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(len(d.get('ceos',[])))" "$chosen_snapshot" 2>/dev/null || echo 0)
 
   # Read grid_mode flag — default false for backward compat with old snapshots
   local grid_mode
-  grid_mode=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(str(d.get('grid_mode', False)).lower())" 2>/dev/null || echo "false")
+  grid_mode=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(str(d.get('grid_mode', False)).lower())" "$chosen_snapshot" 2>/dev/null || echo "false")
 
   # The engines were resolved, their binaries checked and their preambles
   # written before the kill above, against the snapshot's REAL pane numbers
@@ -2832,12 +2911,12 @@ print(' '.join('%s:%s' % (c.get('n'), c.get('engine')) for c in d.get('ceos',[])
 
   for idx in $([ "$ceo_count" -ge 1 ] && seq 0 $(( ceo_count - 1 ))); do
     local n branch wt_path task start_ts session_id
-    n=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx]['n'])" 2>/dev/null)
-    branch=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('branch',''))" 2>/dev/null)
-    wt_path=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('wt_path',''))" 2>/dev/null)
-    task=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('task',''))" 2>/dev/null)
-    start_ts=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('start_ts',0))" 2>/dev/null)
-    session_id=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('session_id',''))" 2>/dev/null)
+    n=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])]['n'])" "$chosen_snapshot" "$idx" 2>/dev/null)
+    branch=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('branch',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    wt_path=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('wt_path',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    task=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('task',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    start_ts=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('start_ts',0))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    session_id=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('session_id',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
 
     # BACKSTOP, and it cannot fire on a validated snapshot: the up-front check
     # above has already exited on any unreadable CEO number, so nothing reaching
@@ -3274,10 +3353,10 @@ cmd_inbox() {
         "$badge_label" "$time_str" "$msg"
     done < <(python3 -c "
 import sys
-lines = open('$inbox_file').readlines()
+lines = open(sys.argv[1]).readlines()
 for l in reversed(lines[-20:]):
     print(l.rstrip())
-" 2>/dev/null)
+" "$inbox_file" 2>/dev/null)
   }
 
   if [ -n "$target_n" ]; then
@@ -4331,14 +4410,28 @@ cmd_cost() {
     echo "$output" | grep -v "^  __TOTAL__"
     local ceo_total
     ceo_total=$(echo "$output" | grep "^  __TOTAL__" | sed 's/.*__TOTAL__//')
-    [ -n "$ceo_total" ] && grand_total=$(python3 -c "print($grand_total + ${ceo_total:-0})" 2>/dev/null || echo "$grand_total")
+    [ -n "$ceo_total" ] && grand_total=$(python3 -c "import sys; print(float(sys.argv[1]) + float(sys.argv[2]))" "$grand_total" "${ceo_total:-0}" 2>/dev/null || echo "$grand_total")
   else
     # All active CEOs (from tmux if running, else from snapshot)
     local ceo_nums=()
 
+    local _cn
     if tmux has-session -t "$SESSION" 2>/dev/null; then
+      # A window name is DATA — any process holding the tmux socket can rename
+      # a window — and what leaves this loop becomes a filename under
+      # $WORKTREES_DIR (`ceo-N.session` is cat'd and its contents printed) and
+      # a grep pattern over the registry. The snapshot branch below has read
+      # its pane numbers through pane_number_ok since the snapshot was first
+      # treated as data; this branch fed the raw name straight through. Same
+      # predicate now, and a window that fails it is named on stderr rather
+      # than dropped in silence.
       while IFS= read -r wname; do
-        ceo_nums+=("$(echo "$wname" | sed 's/CEO-//')")
+        _cn="${wname#CEO-}"
+        if pane_number_ok "$_cn"; then
+          ceo_nums+=("$_cn")
+        else
+          echo "  ⚠ skipping window '$wname': not a CEO pane number." >&2
+        fi
       done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
     elif [ -f "$SESSION_SNAPSHOT" ]; then
       # The second `mapfile`, same bash 4 builtin under the same `#!/bin/bash`
@@ -4350,16 +4443,15 @@ cmd_cost() {
       # CEOs in silence, but the same defect and the same one-line cure.
       # Only pane numbers leave the snapshot: `n` becomes a filename under
       # $WORKTREES_DIR and a grep pattern over the registry below.
-      local _cn
       while IFS= read -r _cn; do
         [ -n "$_cn" ] && ceo_nums+=("$_cn")
       done < <(python3 -c "
-import json, re
-d = json.load(open('$SESSION_SNAPSHOT'))
+import json, re, sys
+d = json.load(open(sys.argv[1]))
 for c in d.get('ceos', []):
     n = str(c.get('n', ''))
     if re.fullmatch(r'[1-9][0-9]*', n): print(n)
-" 2>/dev/null)
+" "$SESSION_SNAPSHOT" 2>/dev/null)
     fi
 
     if [ "${#ceo_nums[@]}" -eq 0 ]; then
@@ -4387,7 +4479,7 @@ for c in d.get('ceos', []):
       echo "$output" | grep -v "^  __TOTAL__"
       local ceo_total
       ceo_total=$(echo "$output" | grep "^  __TOTAL__" | sed 's/.*__TOTAL__//')
-      [ -n "$ceo_total" ] && grand_total=$(python3 -c "print($grand_total + ${ceo_total:-0})" 2>/dev/null || echo "$grand_total")
+      [ -n "$ceo_total" ] && grand_total=$(python3 -c "import sys; print(float(sys.argv[1]) + float(sys.argv[2]))" "$grand_total" "${ceo_total:-0}" 2>/dev/null || echo "$grand_total")
       echo ""
     done
   fi
@@ -4395,7 +4487,7 @@ for c in d.get('ceos', []):
   if [ "$show_total" -eq 1 ] || [ -z "$target_n" ]; then
     echo -e "  ${C_OVERLAY}─────────────────────────────────────────────────────────────${RESET}"
     local grand_fmt
-    grand_fmt=$(python3 -c "print(f'\${${grand_total}:.2f}')" 2>/dev/null || echo "\$0.00")
+    grand_fmt=$(python3 -c "import sys; print('\$%.2f' % float(sys.argv[1]))" "$grand_total" 2>/dev/null || echo "\$0.00")
     echo -e "  ${BOLD}${C_PEACH}Total session cost:${RESET}  ${BOLD}${C_TEXT}${grand_fmt}${RESET}"
     echo ""
   fi
@@ -4691,6 +4783,17 @@ done
 unset _tok _pane
 
 CMD="${ARGS[0]:-}"
+
+# The symlink sweep over state_dir (state_dir_require_no_symlinks) runs for
+# every command that WRITES there, before it does. Declared the other way
+# round — an allowlist of the commands that only READ state_dir — so that a
+# new command is swept unless someone says it need not be. `events` reads
+# unless it is `events clear`, which deletes.
+case "$CMD" in
+  ls|inbox|diff|files|history|log|cost|prune-branches|migrate-sessions|task|brief|help|-h|--help) : ;;
+  events) if [ "${ARGS[1]:-}" = "clear" ]; then state_dir_require_no_symlinks; fi ;;
+  *)      state_dir_require_no_symlinks ;;
+esac
 
 case "$CMD" in
   add)            cmd_add ;;

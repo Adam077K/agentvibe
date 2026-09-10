@@ -82,9 +82,11 @@ const verdict = (args) => run('node', [VERDICT, ...args]);
 
 /**
  * The environment every launcher spawn gets: HOME is the fixture's root, which is the directory
- * the config sits in. The launcher confines `state_dir` to $HOME or the project, and this fixture
- * keeps its state at `root/state` — a sibling of the project, deliberately outside the repository
- * — so without this the launcher refuses the config before any test's subject is reached.
+ * the config sits in. The launcher confines `state_dir` to a named base — $HOME/.warroom or
+ * $HOME/.<session>, or under the project — never a bare $HOME subdir (that narrowing closed a
+ * hole where a git-tracked config could point writes at ~/.ssh). This fixture keeps its state at
+ * `root/.warroom/state`, an allowed base outside the repository, so the launcher accepts the
+ * config before any test's subject is reached.
  */
 const warroomEnv = (cfg, env) => ({ ...(env ?? process.env), HOME: path.dirname(cfg) });
 
@@ -223,7 +225,7 @@ exit 1
 /** Did the branch actually reach the upstream? Asked of the upstream, never of the push output. */
 const onUpstream = (up) => run('git', ['rev-parse', '--verify', BRANCH], up).code === 0;
 const eventsOf = (root) => {
-  const f = path.join(root, 'state', 'events.jsonl');
+  const f = path.join(root, '.warroom', 'state', 'events.jsonl');
   return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
 };
 
@@ -260,7 +262,7 @@ function fixture({ workFile = 'scripts/thing.mjs', workBody = 'export const x = 
   git(proj, ['switch', '-q', 'main']);
 
   const cfg = path.join(root, 'warroom.yml');
-  fs.writeFileSync(cfg, `session: fixture\nproject_dir: ${proj}\nstate_dir: ${path.join(root, 'state')}\n`);
+  fs.writeFileSync(cfg, `session: fixture\nproject_dir: ${proj}\nstate_dir: ${path.join(root, '.warroom', 'state')}\n`);
   return { root, up, proj, cfg };
 }
 
@@ -417,7 +419,7 @@ test('the merge logs the classifier tier and the strategy in separate fields', (
   recordAndCommit(proj);
   assert.equal(mergeLocal(cfg).code, 0);
 
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   const done = events.trim().split('\n').map((l) => JSON.parse(l)).filter((e) => e.event === 'merge_complete');
   assert.equal(done.length, 1);
   assert.match(done[0].details, /tier=(lite|full|irreversible)/, 'tier= must hold a classifier tier');
@@ -428,7 +430,7 @@ test('the merge logs the classifier tier and the strategy in separate fields', (
 test('a refusal is recorded as an event, so a blocked merge is visible afterwards', () => {
   const { proj, cfg, root } = fixture();
   assert.notEqual(merge(cfg).code, 0);
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   assert.match(events, /"event":"merge_refused"/);
   assert.match(events, /reason=no-matching-verdict/);
 });
@@ -497,7 +499,7 @@ test('the conflict refusal is logged as a refusal, never as a merge_complete', (
 
   assert.notEqual(mergeLocal(cfg).code, 0);
 
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   assert.match(events, /"event":"merge_refused"/, 'the refusal is invisible in the audit trail');
   assert.match(events, /reason=conflict-outside-verdict/, 'the refusal does not name why it refused');
   assert.doesNotMatch(events, /"event":"merge_complete"/, 'a merge that did not happen was logged as complete');
@@ -562,7 +564,7 @@ test('a checker shipped by the project being merged is NOT used', () => {
   assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'main moved on a rubber-stamped verdict');
   assert.ok(branchExists(proj), 'the branch was deleted by a merge that did not happen');
 
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   assert.match(events, /reason=no-checker/, 'the refusal is invisible in the audit trail');
   assert.doesNotMatch(events, /tier=rubber-stamp/, 'a tier no classifier can produce reached events.jsonl');
 });

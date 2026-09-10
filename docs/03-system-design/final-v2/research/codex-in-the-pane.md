@@ -554,3 +554,16 @@ and `True` refuse — and the out-of-band stderr warning still fires on every ac
 Pinned by `scripts/warroom-engine.test.mjs` under THE CODEX ACKNOWLEDGMENT GATE, each test naming
 the mutation that turns it red. This does not make a Codex pane sandboxed; it makes choosing one a
 recorded decision rather than a flag.
+
+**What the acknowledgment also accepts, named so it is not accepted by accident: `AGENTS.md` is a
+trusted-instruction channel (added 2026-09-10).** §3 measured that Codex reads `AGENTS.md` from the
+working directory upward and `$CODEX_HOME/AGENTS.md` globally, and treats both as instructions on a par
+with the developer prompt. The project file is git-tracked, so it arrives the way a pull request
+arrives: whoever can land a commit that touches `AGENTS.md` can instruct every Codex pane launched in
+that checkout, and nothing in `bin/warroom` reads, hashes or refuses that file. This is the same class
+of surface as the unenforced tool scoping above — a boundary a Claude pane has structurally (its
+instructions come only from the harness) and a Codex pane has only as prose — and the launcher names
+it in the same two places: the refusal that asks for `codex_unsandboxed_ack: true`, and the stderr
+warning on every acknowledged launch (`engine_launch_warning`). It is a notice, not a control:
+review `AGENTS.md` in the diff of any PR that touches it, and treat `$CODEX_HOME/AGENTS.md` as part
+of the founder's machine state, like the Codex login itself.
