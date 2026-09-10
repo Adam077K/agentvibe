@@ -306,9 +306,11 @@ _require_inside state_dir "$PROJECT_STATE_DIR" "$_STATE_BASE" \
 # never creates a symlink there, so one is never legitimate and the sweep is
 # free: one `find`, once, before the first write. This is what makes "a config
 # cannot point those writes anywhere else" true of the writes and not only of
-# the directory.
+# the directory. `-mindepth 1` keeps it to the INSIDE: the directory itself is
+# the check above's to judge, and two guards over one case are proven by
+# neither.
 if [ -d "$PROJECT_STATE_DIR" ]; then
-  _state_link="$(find "$PROJECT_STATE_DIR" -type l 2>/dev/null | head -1)"
+  _state_link="$(find "$PROJECT_STATE_DIR" -mindepth 1 -type l 2>/dev/null | head -1)"
   if [ -n "$_state_link" ]; then
     echo "✗ warroom: state_dir holds a symlink and is refused: $_state_link" >&2
     echo "  This program only ever writes regular files and directories under $PROJECT_STATE_DIR," >&2
