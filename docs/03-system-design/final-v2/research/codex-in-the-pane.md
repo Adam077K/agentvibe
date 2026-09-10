@@ -542,3 +542,15 @@ grants, and the harness's per-engine tool boundaries do not apply to it. Run a C
 would trust the operator with the machine; do not run one expecting the read-only/tool-scoped
 guarantees a Claude pane's engine roles give you. If those guarantees are needed, the pane must be
 Claude.
+
+**Launching Codex now REQUIRES an explicit acknowledgment of the above (added 2026-09-10).** A pane
+cannot resolve to `codex` — by `--engine codex`, `--engine N:codex`, or `engine: codex` in
+`.warroom.yml` — until the project's `.warroom.yml` carries `codex_unsandboxed_ack: true`. Without it,
+`bin/warroom` refuses at engine resolution (`engine_require_acknowledged`, called from
+`engines_resolve` in the main shell), before `check_deps` and before any tmux call, on `start`,
+`add`, `--grid`, `restore` and the `engine` inspection command alike; the refusal names the risk in
+this section and the exact line that opts in. Only the exact value `true` acknowledges — `yes`, `1`
+and `True` refuse — and the out-of-band stderr warning still fires on every acknowledged launch.
+Pinned by `scripts/warroom-engine.test.mjs` under THE CODEX ACKNOWLEDGMENT GATE, each test naming
+the mutation that turns it red. This does not make a Codex pane sandboxed; it makes choosing one a
+recorded decision rather than a flag.
