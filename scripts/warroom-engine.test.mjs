@@ -74,9 +74,23 @@ const BASH = fs.existsSync('/bin/bash') ? '/bin/bash' : 'bash';
  */
 const CODEX_PREAMBLE_IN_LINE = /\$\(cat "([^"$]*ceo\.codex\.md)"\)/;
 
+/**
+ * The one line that lets a pane launch on Codex. Every fixture below carries it
+ * unless a test says `ack: false`, because launching Codex REQUIRES it and most
+ * of this suite is about what an acknowledged Codex pane then does. The gate
+ * itself — refuse without it, refuse anything but the exact value `true` — is
+ * tested under THE CODEX ACKNOWLEDGMENT GATE, on fixtures that leave it out.
+ */
+const CODEX_ACK = 'codex_unsandboxed_ack: true\n';
+
 function project(
   t,
-  { configExtra = '', preamble = 'SENTINEL_BODY_ALPHA the shared CEO identity.', homePrefix = 'warroom-engine-' } = {}
+  {
+    configExtra = '',
+    preamble = 'SENTINEL_BODY_ALPHA the shared CEO identity.',
+    homePrefix = 'warroom-engine-',
+    ack = true,
+  } = {}
 ) {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), homePrefix));
   const dir = path.join(home, 'proj');
@@ -89,7 +103,7 @@ function project(
   const config = path.join(dir, '.warroom.yml');
   fs.writeFileSync(
     config,
-    `session: proj\nproject_dir: ${dir}\nstate_dir: ${path.join(home, '.proj')}\n${configExtra}`
+    `session: proj\nproject_dir: ${dir}\nstate_dir: ${path.join(home, '.proj')}\n${ack ? CODEX_ACK : ''}${configExtra}`
   );
   t.after(() => fs.rmSync(home, { recursive: true, force: true }));
   return { home, dir, config, entry };
@@ -890,11 +904,15 @@ function configuredProject(t, overrides) {
     session: 'proj',
     project_dir: p.dir,
     state_dir: path.join(p.home, '.proj'),
+    codex_unsandboxed_ack: 'true',
     ...overrides,
   };
   fs.writeFileSync(
     p.config,
     Object.entries(cfg)
+      // An override of `undefined` REMOVES a default rather than writing the
+      // word: that is how a test leaves the Codex acknowledgment out.
+      .filter(([, v]) => v !== undefined)
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n') + '\n'
   );
@@ -1597,6 +1615,7 @@ test('the charset rule is what stops the injection: the payload never runs', (t)
         session: 'proj',
         project_dir: p.dir,
         state_dir: path.join(p.home, '.proj'),
+        codex_unsandboxed_ack: 'true',
         [key]: `${base}$(touch ${canary})`,
       })
         .map(([k, v]) => `${k}: ${v}`)
@@ -1758,7 +1777,7 @@ test('state_dir under $HOME, under the project, or relative to it is accepted', 
   // MUTATION: none needed.
   for (const value of [(p) => path.join(p.home, '.elsewhere'), (p) => path.join(p.dir, '.wr'), () => '.wr']) {
     const p = project(t);
-    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${value(p)}\n`);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${value(p)}\n${CODEX_ACK}`);
     const r = warroom(p, ['engine', '1', '--engine', 'codex']);
     assert.equal(r.code, 0, r.err);
     const m = panes(r)[0].cmd.match(CODEX_PREAMBLE_IN_LINE);
@@ -1946,6 +1965,100 @@ test('launching a codex pane warns the FOUNDER, out of band, that tool scoping i
   const quiet = launch(p2, ['2'], shim(t));
   assert.equal(quiet.code, 0, quiet.out);
   assert.doesNotMatch(quiet.err, /tool scoping/, 'no codex pane, no warning');
+});
+
+// ── THE CODEX ACKNOWLEDGMENT GATE ────────────────────────────────────────
+//
+// The warning above is a notice AFTER the choice. This is the gate BEFORE it:
+// a pane cannot launch on codex until .warroom.yml carries
+// `codex_unsandboxed_ack: true`, and only that exact value counts. The refusal
+// sits in engine_require_acknowledged, called from engines_resolve — the same
+// main-shell resolution every launching command runs before check_deps and
+// before tmux — so start, add, grid, restore and `engine` all refuse alike.
+
+/** What every refusal must say: the risk, the fact that scoping is unenforced, and the key. */
+function assertAckRefusal(r, label) {
+  assert.notEqual(r.code, 0, `${label}: must refuse: ${r.out}`);
+  assert.match(r.err, /NOT sandboxed/, `${label}: the refusal must name the risk plainly: ${r.err}`);
+  assert.match(r.err, /tool scoping is NOT enforced/, `${label}: and that per-engine scoping does not hold`);
+  assert.match(r.err, /codex_unsandboxed_ack: true/, `${label}: and tell the founder the exact line that opts in`);
+  assert.match(r.err, /\.warroom\.yml/, `${label}: and where it goes`);
+}
+
+test('an unacknowledged codex pane is REFUSED on the real launch path, and nothing is built', (t) => {
+  // MUTATION: delete the `engine_require_acknowledged` call in engines_resolve
+  // → the run exits 0, pane 2 is typed `codex …`, a worktree is created. Red
+  // on the exit code, the tmux assertion and the worktree assertion.
+  for (const [label, opts, args] of [
+    ['--engine 2:codex', {}, ['2', '--engine', '2:codex']],
+    ['--engine codex as the run default', {}, ['1', '--engine', 'codex']],
+    ['engine: codex in .warroom.yml', { configExtra: 'engine: codex\n' }, ['1']],
+  ]) {
+    const p = launchableProject(t, { ack: false, ...opts });
+    const sh = shim(t);
+    const r = launch(p, args, sh);
+    assertAckRefusal(r, label);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${label}: a refused launch must build nothing`);
+    assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, `${label}: and create no worktree`);
+    assert.doesNotMatch(r.err, /runs on Codex/, `${label}: the launch-time warning is for a pane that launched`);
+  }
+});
+
+test('the inspection command refuses an unacknowledged codex pane the same way, so it cannot imply a launch', (t) => {
+  // `warroom engine` resolves through the same engines_resolve, so the refusal
+  // is the same call in the same shell. Without this, inspection would print
+  // a launch line for a pane that `start` would then refuse.
+  // MUTATION: same deletion as above → exit 0 and a `CEO-1 codex …` row. Red.
+  const p = project(t, { ack: false });
+  const r = warroom(p, ['engine', '1', '--engine', 'codex']);
+  assertAckRefusal(r, 'engine 1 --engine codex');
+  assert.deepEqual(panes(r), [], 'no launch line may be shown for a pane that would refuse');
+
+  const fromConfig = warroom(project(t, { ack: false, configExtra: 'engine: codex\n' }), ['engine', '2']);
+  assertAckRefusal(fromConfig, 'engine: codex in config');
+});
+
+test('only the exact value `true` acknowledges — yes, 1, True and false all refuse', (t) => {
+  // A flat reader that took anything non-empty as consent would let a founder
+  // who typed SOMETHING into the key past a gate they never read.
+  // MUTATION: `[ "$(_cfg codex_unsandboxed_ack)" = "true" ]` → `[ -n "$(_cfg
+  // codex_unsandboxed_ack)" ]` → every row but the empty one launches. Red.
+  for (const value of ['yes', '1', 'True', 'TRUE', 'false', 'on', '']) {
+    const p = launchableProject(t, { ack: false, configExtra: `codex_unsandboxed_ack: ${value}\n` });
+    const sh = shim(t);
+    const r = launch(p, ['1', '--engine', 'codex'], sh);
+    assertAckRefusal(r, `codex_unsandboxed_ack: ${JSON.stringify(value)}`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${JSON.stringify(value)}: must build nothing`);
+  }
+});
+
+test('with the acknowledgment, codex launches — and the out-of-band warning still fires', (t) => {
+  // Belt and suspenders: the gate does not retire the notice. The control on
+  // the other side is every codex launch test in this file, all of which run
+  // on acknowledged fixtures.
+  // MUTATION: `= "true"` → `= "yes"` → this refuses. Red.
+  const p = launchableProject(t);
+  const sh = shim(t);
+  const r = launch(p, ['2', '--engine', '2:codex'], sh);
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(launchLines(r.calls).get('proj:CEO-2') ?? '', /^codex\b/, 'pane 2 launches on codex');
+  assert.match(r.err, /tool scoping is NOT enforced/, 'the acknowledged launch is still warned about');
+  assert.doesNotMatch(r.err, /codex_unsandboxed_ack/, 'and the refusal text does not appear on a launch that was allowed');
+});
+
+test('the acknowledgment key is about codex only: an all-claude war room needs none', (t) => {
+  // MUTATION: drop the `[ "$eng" = "codex" ] || return 0` guard → this
+  // refuses. Red.
+  const p = launchableProject(t, { ack: false });
+  const sh = shim(t);
+  const r = launch(p, ['2'], sh);
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.equal(launchLines(r.calls).get('proj:CEO-1'), 'claude');
+  assert.doesNotMatch(r.err, /codex_unsandboxed_ack/);
+
+  const inspect = warroom(project(t, { ack: false, configExtra: 'engine: claude\n' }), ['engine', '2']);
+  assert.equal(inspect.code, 0, inspect.err);
+  assert.deepEqual(panes(inspect).map((x) => x.engine), ['claude', 'claude']);
 });
 
 // ── The engine map across add, kill and done ─────────────────
@@ -2391,7 +2504,7 @@ test('a symlinked state_dir inside the project is refused physically: nothing is
     const p = launchableProject(t);
     const target = path.join(p.home, 'elsewhere');
     if (targetExists) fs.mkdirSync(target);
-    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n`);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n${CODEX_ACK}`);
     fs.symlinkSync(target, path.join(p.dir, '.claude', 'state'));
     const sh = shim(t);
     const r = launch(p, args, sh);
@@ -2425,7 +2538,7 @@ test('a symlink INSIDE state_dir is refused before any write: the file it points
     const state = path.join(p.dir, '.claude', 'state');
     fs.mkdirSync(path.dirname(path.join(state, link)), { recursive: true });
     fs.symlinkSync(victim, path.join(state, link));
-    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n`);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n${CODEX_ACK}`);
     const sh = shim(t);
     const r = launch(p, args, sh);
     assert.equal(fs.readFileSync(victim, 'utf8'), 'VICTIM_BODY_intact', `${label}: the link's target must be untouched`);
