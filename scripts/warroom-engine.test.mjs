@@ -75,13 +75,29 @@ const BASH = fs.existsSync('/bin/bash') ? '/bin/bash' : 'bash';
 const CODEX_PREAMBLE_IN_LINE = /\$\(cat "([^"$]*ceo\.codex\.md)"\)/;
 
 /**
- * The one line that lets a pane launch on Codex. Every fixture below carries it
- * unless a test says `ack: false`, because launching Codex REQUIRES it and most
- * of this suite is about what an acknowledged Codex pane then does. The gate
- * itself — refuse without it, refuse anything but the exact value `true` — is
- * tested under THE CODEX ACKNOWLEDGMENT GATE, on fixtures that leave it out.
+ * What lets a pane launch on Codex, and WHERE it lives. Every fixture below
+ * carries it unless a test says `ack: false`, because launching Codex REQUIRES
+ * it and most of this suite is about what an acknowledged Codex pane then does.
+ * The gate itself — refuse without it, refuse anything but the exact value
+ * `true`, refuse the retired config key — is tested under THE CODEX
+ * ACKNOWLEDGMENT GATE, on fixtures that leave it out.
+ *
+ * It is a file under the fixture's OWN $HOME, not a line in .warroom.yml. That
+ * is the change of 2026-09-10 and it is the reason these fixtures can be
+ * trusted at all: an ack in the git-tracked config is flippable by a pull
+ * request and changes when you change branch. `project()` writes it under the
+ * throwaway home that `warroom()` and `launch()` both pass as HOME, so no test
+ * in this suite ever reads or writes the founder's real ~/.warroom/codex_ack.
  */
-const CODEX_ACK = 'codex_unsandboxed_ack: true\n';
+const CODEX_ACK_REL = path.join('.warroom', 'codex_ack');
+
+/** Write an out-of-band ack of `value` into a fixture home. */
+function writeAck(home, value = 'true\n') {
+  const f = path.join(home, CODEX_ACK_REL);
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, value);
+  return f;
+}
 
 /**
  * The flag that keeps a Codex pane off the blocking update chooser, and the
@@ -119,8 +135,9 @@ function project(
   const config = path.join(dir, '.warroom.yml');
   fs.writeFileSync(
     config,
-    `session: proj\nproject_dir: ${dir}\nstate_dir: ${path.join(home, '.proj')}\n${ack ? CODEX_ACK : ''}${configExtra}`
+    `session: proj\nproject_dir: ${dir}\nstate_dir: ${path.join(home, '.proj')}\n${configExtra}`
   );
+  if (ack) writeAck(home);
   t.after(() => fs.rmSync(home, { recursive: true, force: true }));
   return { home, dir, config, entry };
 }
@@ -134,10 +151,15 @@ function project(
  * stderr a test needs to read. The first shape of this helper threw stderr
  * away on success, and an assertion on a warning matched '' every time.
  */
-function warroom(p, args, { path: PATH_ = process.env.PATH } = {}) {
+function warroom(p, args, { path: PATH_ = process.env.PATH, env = {} } = {}) {
   const r = spawnSync(BASH, [WARROOM, '--config', p.config, ...args], {
     encoding: 'utf8',
-    env: { ...process.env, HOME: p.home, PATH: PATH_ },
+    // HOME is the fixture's throwaway home in EVERY run, which is what keeps
+    // the out-of-band Codex ack ($HOME/.warroom/codex_ack) inside the fixture.
+    // WARROOM_CODEX_ACK is pinned OFF unless a caller asks for it: it leaks in
+    // from a founder who acknowledged in their own shell and ran `npm test`
+    // there, and inheriting it would make the gate tests pass by where they ran.
+    env: { ...process.env, HOME: p.home, PATH: PATH_, WARROOM_CODEX_ACK: '', ...env },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   return { code: r.status ?? 1, out: r.stdout ?? '', err: r.stderr ?? '' };
@@ -1040,6 +1062,10 @@ function restorableProject(t, entries, { gridMode = false } = {}) {
  * project()'s `configExtra` cannot do this: `_cfg` takes the FIRST matching
  * line, so an appended `session:` never wins and the test would silently be
  * exercising the safe value.
+ *
+ * The Codex acknowledgment is NOT among the keys here and cannot be: it is a
+ * file under the fixture's home, which launchableProject already wrote, and
+ * rewriting the config does not disturb it.
  */
 function configuredProject(t, overrides) {
   const p = launchableProject(t);
@@ -1047,14 +1073,13 @@ function configuredProject(t, overrides) {
     session: 'proj',
     project_dir: p.dir,
     state_dir: path.join(p.home, '.proj'),
-    codex_unsandboxed_ack: 'true',
     ...overrides,
   };
   fs.writeFileSync(
     p.config,
     Object.entries(cfg)
       // An override of `undefined` REMOVES a default rather than writing the
-      // word: that is how a test leaves the Codex acknowledgment out.
+      // word `undefined` into the config.
       .filter(([, v]) => v !== undefined)
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n') + '\n'
@@ -1085,7 +1110,19 @@ function launch(p, args, sh, { env = {} } = {}) {
   // room has it set, a CI runner does not — and bin/warroom branches on it.
   // Inheriting it would make these tests pass or fail by where they were run.
   const r = spawnSync(BASH, [WARROOM, '--config', p.config, ...args], {
-    env: { ...process.env, HOME: p.home, PATH: sh.path, TMPDIR: p.home, TMUX: '', ...env },
+    // WARROOM_CODEX_ACK is pinned OFF for the same reason TMUX is: it leaks in
+    // from a founder who acknowledged in the shell they ran the suite from, and
+    // the whole acknowledgment gate below would then pass by accident there and
+    // fail on a runner. A test that wants it passes it in `env`.
+    env: {
+      ...process.env,
+      HOME: p.home,
+      PATH: sh.path,
+      TMPDIR: p.home,
+      TMUX: '',
+      WARROOM_CODEX_ACK: '',
+      ...env,
+    },
     stdio: ['ignore', outFd, errFd],
     timeout: 90_000,
   });
@@ -1762,7 +1799,6 @@ test('the charset rule is what stops the injection: the payload never runs', (t)
         session: 'proj',
         project_dir: p.dir,
         state_dir: path.join(p.home, '.proj'),
-        codex_unsandboxed_ack: 'true',
         [key]: `${base}$(touch ${canary})`,
       })
         .map(([k, v]) => `${k}: ${v}`)
@@ -1933,7 +1969,7 @@ test('state_dir under the session dir, $HOME/.warroom, the project, or relative 
     () => '.wr',
   ]) {
     const p = project(t);
-    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${value(p)}\n${CODEX_ACK}`);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: ${value(p)}\n`);
     const r = warroom(p, ['engine', '1', '--engine', 'codex']);
     assert.equal(r.code, 0, r.err);
     const m = panes(r)[0].cmd.match(CODEX_PREAMBLE_IN_LINE);
@@ -1977,7 +2013,7 @@ test('state_dir cannot be a bare $HOME subdir like ~/.ssh: narrowed to the sessi
   // The control on the other side, so the refusal above is not satisfied by a
   // launcher that refuses every state_dir: $HOME/.warroom/<name> is accepted.
   const ok = launchableProject(t);
-  fs.writeFileSync(ok.config, `session: proj\nproject_dir: ${ok.dir}\nstate_dir: ${path.join(ok.home, '.warroom', 'proj-state')}\n${CODEX_ACK}`);
+  fs.writeFileSync(ok.config, `session: proj\nproject_dir: ${ok.dir}\nstate_dir: ${path.join(ok.home, '.warroom', 'proj-state')}\n`);
   const okr = warroom(ok, ['engine', '1']);
   assert.equal(okr.code, 0, `$HOME/.warroom/<name> must be accepted: ${okr.err}`);
 });
@@ -2165,19 +2201,35 @@ test('launching a codex pane warns the FOUNDER, out of band, that tool scoping i
 // ── THE CODEX ACKNOWLEDGMENT GATE ────────────────────────────────────────
 //
 // The warning above is a notice AFTER the choice. This is the gate BEFORE it:
-// a pane cannot launch on codex until .warroom.yml carries
-// `codex_unsandboxed_ack: true`, and only that exact value counts. The refusal
-// sits in engine_require_acknowledged, called from engines_resolve — the same
+// a pane cannot launch on codex until THIS MACHINE has acknowledged, and only
+// the exact value `true` counts. The refusal sits in
+// engine_require_acknowledged, called from engines_resolve — the same
 // main-shell resolution every launching command runs before check_deps and
 // before tmux — so start, add, grid, restore and `engine` all refuse alike.
+//
+// THE ACKNOWLEDGMENT IS OUT OF BAND, and the tests below are shaped by why.
+// Until 2026-09-10 it was `codex_unsandboxed_ack: true` in the project's
+// git-tracked .warroom.yml, which the binding QA gate flagged P1: a pull
+// request can flip the control that gates an unsandboxed pane. The same day it
+// failed operationally from the other side — the key existed on one branch and
+// not on `main` (`grep -c codex_unsandboxed_ack …/.warroom.yml` → 0 there), so
+// `git checkout` silently changed the machine's security posture.
+//
+// Two sources now, both outside the repository: $WARROOM_CODEX_ACK=true, and
+// $HOME/.warroom/codex_ack whose first line trims to `true`. The config key is
+// NOT a third source, and `a config key still refuses` below is the regression
+// test for that — it must go red the moment anyone re-adds it.
 
-/** What every refusal must say: the risk, the fact that scoping is unenforced, and the key. */
+/** What every refusal must say: the risk, that scoping is unenforced, and BOTH remedies. */
 function assertAckRefusal(r, label) {
   assert.notEqual(r.code, 0, `${label}: must refuse: ${r.out}`);
   assert.match(r.err, /NOT sandboxed/, `${label}: the refusal must name the risk plainly: ${r.err}`);
   assert.match(r.err, /tool scoping is NOT enforced/, `${label}: and that per-engine scoping does not hold`);
-  assert.match(r.err, /codex_unsandboxed_ack: true/, `${label}: and tell the founder the exact line that opts in`);
-  assert.match(r.err, /\.warroom\.yml/, `${label}: and where it goes`);
+  // The remedy has to be actionable, and there are two of them. A refusal that
+  // says only "not acknowledged" sends the founder to the source to find out
+  // how — which is how the config key got used for this in the first place.
+  assert.match(r.err, /WARROOM_CODEX_ACK=true/, `${label}: name the environment form: ${r.err}`);
+  assert.match(r.err, /\.warroom\/codex_ack/, `${label}: and the file form: ${r.err}`);
 }
 
 test('an unacknowledged codex pane is REFUSED on the real launch path, and nothing is built', (t) => {
@@ -2213,12 +2265,133 @@ test('the inspection command refuses an unacknowledged codex pane the same way, 
   assertAckRefusal(fromConfig, 'engine: codex in config');
 });
 
-test('only the exact value `true` acknowledges — yes, 1, True and false all refuse', (t) => {
-  // A flat reader that took anything non-empty as consent would let a founder
-  // who typed SOMETHING into the key past a gate they never read.
-  // MUTATION: `[ "$(_cfg codex_unsandboxed_ack)" = "true" ]` → `[ -n "$(_cfg
-  // codex_unsandboxed_ack)" ]` → every row but the empty one launches. Red.
-  for (const value of ['yes', '1', 'True', 'TRUE', 'false', 'on', '']) {
+// ── The two accepted sources ─────────────────────────────────────────────
+
+test('WARROOM_CODEX_ACK=true in the environment launches codex, with no file on disk', (t) => {
+  // MUTATION: delete `[ "${WARROOM_CODEX_ACK-}" = "true" ] && return 0` → this
+  // refuses. Red on the exit code and the launch line.
+  const p = launchableProject(t, { ack: false });
+  assert.equal(
+    fs.existsSync(path.join(p.home, CODEX_ACK_REL)),
+    false,
+    'the fixture must carry no ack file, or this would pass on the other source'
+  );
+  const sh = shim(t);
+  const r = launch(p, ['2', '--engine', '2:codex'], sh, { env: { WARROOM_CODEX_ACK: 'true' } });
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(launchLines(r.calls).get('proj:CEO-2') ?? '', /^codex\b/, 'pane 2 launches on codex');
+
+  // …and only the exact value. `1`, `yes` and `TRUE` are what a founder types
+  // when they mean yes and have not read what they are agreeing to.
+  for (const value of ['1', 'yes', 'TRUE', 'True', 'false', 'true ', ' true', 'truex']) {
+    const q = launchableProject(t, { ack: false });
+    const r2 = launch(q, ['1', '--engine', 'codex'], shim(t), { env: { WARROOM_CODEX_ACK: value } });
+    assertAckRefusal(r2, `WARROOM_CODEX_ACK=${JSON.stringify(value)}`);
+  }
+});
+
+test('~/.warroom/codex_ack containing `true` launches codex, with nothing in the environment', (t) => {
+  // This is the standing form — one machine, once — and it is what every other
+  // codex test in this file rides on, since project() writes it.
+  // MUTATION: delete the `codex_ack_file_says_true && return 0` line → this
+  // refuses, and so does most of the codex half of this suite. Red.
+  const p = launchableProject(t, { ack: false });
+  writeAck(p.home, 'true\n');
+  const sh = shim(t);
+  const r = launch(p, ['2', '--engine', '2:codex'], sh);
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(launchLines(r.calls).get('proj:CEO-2') ?? '', /^codex\b/, 'pane 2 launches on codex');
+
+  // Trailing whitespace and a missing final newline are what `echo`, an editor
+  // and `printf` respectively leave behind. All three mean yes.
+  for (const body of ['true', 'true\n', 'true  \n', '  true\n', 'true\r\n', '\ttrue\t\n']) {
+    const q = launchableProject(t, { ack: false });
+    writeAck(q.home, body);
+    const r2 = launch(q, ['1', '--engine', 'codex'], shim(t));
+    assert.equal(r2.code, 0, `${JSON.stringify(body)} must acknowledge: ${r2.out}${r2.err}`);
+  }
+});
+
+test('a junk ack file refuses, and never crashes the launcher', (t) => {
+  // The file is normally ABSENT, so every one of these is a shape the gate
+  // meets in the wild.
+  // MUTATION: `[ "$val" = "true" ]` → `[ -e "$WARROOM_CODEX_ACK_FILE" ]` →
+  // every row here acknowledges. Red.
+  // MUTATION: trim with `tr -d '[:space:]'` instead of the two anchored seds →
+  // `t r u e` acknowledges. Red on that row (measured: 1 failing test).
+  //
+  // MUTATION THAT DOES *NOT* GO RED, recorded because a reader will reach for
+  // it: `[ -f … ]` → `[ -e … ]`, which lets the directory row reach `sed`.
+  // Green on macOS — measured 2026-09-10 with BSD sed, where `sed -n 1p` on a
+  // directory prints nothing and exits 0, so the value is empty either way. It
+  // is NOT green everywhere (GNU sed reports a read error), and the `-f` test
+  // is kept for that plus the clean-stderr assertion below — but on this
+  // platform it is redundancy, not the control. The control every row here
+  // actually proves is the exact-value compare, mutated above.
+  const cases = [
+    ['empty', ''],
+    ['a newline only', '\n'],
+    ['whitespace only', '   \n'],
+    ['false', 'false\n'],
+    ['TRUE', 'TRUE\n'],
+    ['True', 'True\n'],
+    ['yes', 'yes\n'],
+    ['1', '1\n'],
+    ['true on line 2', '\ntrue\n'],
+    ['a comment then true', '# yes\ntrue\n'],
+    ['inner spaces', 't r u e\n'],
+    ['true with a suffix', 'truex\n'],
+    ['a sentence', 'I acknowledge this is true\n'],
+  ];
+  for (const [label, body] of cases) {
+    const p = launchableProject(t, { ack: false });
+    writeAck(p.home, body);
+    const r = launch(p, ['1', '--engine', 'codex'], shim(t));
+    assertAckRefusal(r, `ack file ${label}`);
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${label}: must build nothing`);
+  }
+
+  // A DIRECTORY at the ack path: refuse, and print no interpreter error.
+  const p = launchableProject(t, { ack: false });
+  fs.mkdirSync(path.join(p.home, CODEX_ACK_REL), { recursive: true });
+  const r = launch(p, ['1', '--engine', 'codex'], shim(t));
+  assertAckRefusal(r, 'a directory at the ack path');
+  assert.doesNotMatch(r.err, /sed:|Is a directory/, 'the launcher must not leak an interpreter error');
+});
+
+test('the ack value is COMPARED, never evaluated: a command substitution in the file is inert', (t) => {
+  // This file has survived six security-gate rounds on exactly this class, and
+  // the ack file is a NEW read of attacker-shaped bytes. The canary is the
+  // assertion; the refusal is secondary.
+  // MUTATION: `[ "$val" = "true" ]` → `eval "[ $val = true ]"` → the canary
+  // appears. Red on the first assertion.
+  const p = launchableProject(t, { ack: false });
+  const canary = path.join(p.home, 'ACK-FILE-FIRED');
+  writeAck(p.home, `true$(touch ${canary})\n`);
+  const r = launch(p, ['1', '--engine', 'codex'], shim(t));
+  assert.equal(fs.existsSync(canary), false, 'the ack file must never reach a shell');
+  assertAckRefusal(r, 'a command substitution in the ack file');
+
+  // Same for the environment form, which is the easier one to get wrong.
+  const q = launchableProject(t, { ack: false });
+  const canary2 = path.join(q.home, 'ACK-ENV-FIRED');
+  const r2 = launch(q, ['1', '--engine', 'codex'], shim(t), {
+    env: { WARROOM_CODEX_ACK: `true$(touch ${canary2})` },
+  });
+  assert.equal(fs.existsSync(canary2), false, 'WARROOM_CODEX_ACK must never reach a shell');
+  assertAckRefusal(r2, 'a command substitution in WARROOM_CODEX_ACK');
+});
+
+// ── The retired source ───────────────────────────────────────────────────
+
+test('the config key is NOT a source: codex_unsandboxed_ack: true in .warroom.yml still REFUSES', (t) => {
+  // THIS IS THE REGRESSION TEST FOR THE P1. The finding was that a pull request
+  // can flip a git-tracked ack, so the fix is worth exactly as much as this
+  // assertion: if someone re-adds the config source — as an "alternative", as a
+  // migration convenience, as a fallback — the P1 is reopened and this goes red.
+  // MUTATION: restore `[ "$(_cfg codex_unsandboxed_ack)" = "true" ] && return 0`
+  // → the first row launches. Red on the exit code and the tmux assertion.
+  for (const value of ['true', 'yes', '1', 'True', 'TRUE', 'false', 'on', '']) {
     const p = launchableProject(t, { ack: false, configExtra: `codex_unsandboxed_ack: ${value}\n` });
     const sh = shim(t);
     const r = launch(p, ['1', '--engine', 'codex'], sh);
@@ -2227,21 +2400,39 @@ test('only the exact value `true` acknowledges — yes, 1, True and false all re
   }
 });
 
+test('a stale codex_unsandboxed_ack is called out on stderr, so a config cannot quietly mislead', (t) => {
+  // A founder who reads their own .warroom.yml, sees `codex_unsandboxed_ack:
+  // true` and concludes they are acknowledged is exactly who this line is for.
+  // It fires whether or not the real acknowledgment is present, because being
+  // acked for the wrong reason is the worse of the two.
+  // MUTATION: delete the `if [ -n "$(_cfg codex_unsandboxed_ack)" ]` block →
+  // both halves go red.
+  const refused = launchableProject(t, { ack: false, configExtra: 'codex_unsandboxed_ack: true\n' });
+  const r = launch(refused, ['1', '--engine', 'codex'], shim(t));
+  assert.match(r.err, /ignoring codex_unsandboxed_ack/, `the stale key must be named: ${r.err}`);
+  assert.match(r.err, /WARROOM_CODEX_ACK=true/, 'and the notice must point at the mechanism that works');
+
+  const acked = launchableProject(t, { configExtra: 'codex_unsandboxed_ack: true\n' });
+  const r2 = launch(acked, ['2', '--engine', '2:codex'], shim(t));
+  assert.equal(r2.code, 0, r2.out + r2.err);
+  assert.match(r2.err, /ignoring codex_unsandboxed_ack/, 'a stale key is called out on an ALLOWED launch too');
+});
+
 test('with the acknowledgment, codex launches — and the out-of-band warning still fires', (t) => {
   // Belt and suspenders: the gate does not retire the notice. The control on
   // the other side is every codex launch test in this file, all of which run
   // on acknowledged fixtures.
-  // MUTATION: `= "true"` → `= "yes"` → this refuses. Red.
+  // MUTATION: `[ "$val" = "true" ]` → `[ "$val" = "yes" ]` → this refuses. Red.
   const p = launchableProject(t);
   const sh = shim(t);
   const r = launch(p, ['2', '--engine', '2:codex'], sh);
   assert.equal(r.code, 0, r.out + r.err);
   assert.match(launchLines(r.calls).get('proj:CEO-2') ?? '', /^codex\b/, 'pane 2 launches on codex');
   assert.match(r.err, /tool scoping is NOT enforced/, 'the acknowledged launch is still warned about');
-  assert.doesNotMatch(r.err, /codex_unsandboxed_ack/, 'and the refusal text does not appear on a launch that was allowed');
+  assert.doesNotMatch(r.err, /WARROOM_CODEX_ACK=true/, 'and the refusal text does not appear on a launch that was allowed');
 });
 
-test('the acknowledgment key is about codex only: an all-claude war room needs none', (t) => {
+test('the acknowledgment is about codex only: an all-claude war room needs none', (t) => {
   // MUTATION: drop the `[ "$eng" = "codex" ] || return 0` guard → this
   // refuses. Red.
   const p = launchableProject(t, { ack: false });
@@ -2249,7 +2440,7 @@ test('the acknowledgment key is about codex only: an all-claude war room needs n
   const r = launch(p, ['2'], sh);
   assert.equal(r.code, 0, r.out + r.err);
   assert.equal(launchLines(r.calls).get('proj:CEO-1'), 'claude');
-  assert.doesNotMatch(r.err, /codex_unsandboxed_ack/);
+  assert.doesNotMatch(r.err, /WARROOM_CODEX_ACK/);
 
   const inspect = warroom(project(t, { ack: false, configExtra: 'engine: claude\n' }), ['engine', '2']);
   assert.equal(inspect.code, 0, inspect.err);
@@ -2784,7 +2975,7 @@ test('a symlinked state_dir inside the project is refused physically: nothing is
     const p = launchableProject(t);
     const target = path.join(p.home, 'elsewhere');
     if (targetExists) fs.mkdirSync(target);
-    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n${CODEX_ACK}`);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n`);
     fs.symlinkSync(target, path.join(p.dir, '.claude', 'state'));
     const sh = shim(t);
     const r = launch(p, args, sh);
@@ -2818,7 +3009,7 @@ test('a symlink INSIDE state_dir is refused before any write: the file it points
     const state = path.join(p.dir, '.claude', 'state');
     fs.mkdirSync(path.dirname(path.join(state, link)), { recursive: true });
     fs.symlinkSync(victim, path.join(state, link));
-    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n${CODEX_ACK}`);
+    fs.writeFileSync(p.config, `session: proj\nproject_dir: ${p.dir}\nstate_dir: .claude/state\n`);
     const sh = shim(t);
     const r = launch(p, args, sh);
     assert.equal(fs.readFileSync(victim, 'utf8'), 'VICTIM_BODY_intact', `${label}: the link's target must be untouched`);

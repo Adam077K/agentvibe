@@ -580,34 +580,87 @@ engine_require_known() {
   fi
 }
 
-# Refuse Codex until the PROJECT has acknowledged what a Codex pane is. A Codex
+# Where the standing acknowledgment lives when it is not in the environment.
+# An UNCONDITIONAL assignment, so an inherited WARROOM_CODEX_ACK_FILE cannot
+# point the gate at a file the operator never wrote: the two sources below are
+# the whole surface, and adding a third by accident is how a gate stops being
+# one.
+WARROOM_CODEX_ACK_FILE="$HOME/.warroom/codex_ack"
+
+# Is the ack file's first line exactly `true`?
+#
+# DEFENSIVE BY CONSTRUCTION, because this path is normally absent: `-f` is
+# false for a missing path AND for a directory, so neither reaches the read;
+# `sed -n 1p` on an empty file prints nothing; the trim takes leading and
+# trailing whitespace and a trailing CR off that one line and nothing else, so
+# `t r u e` stays `t r u e` and refuses. Only line 1 is consulted — a file whose
+# second line says `true` is not an acknowledgment.
+#
+# Be honest about which of those is the CONTROL: it is the final comparison. The
+# `-f` test is redundancy — measured 2026-09-10, BSD sed reads a directory as
+# empty and exits 0, so removing `-f` changes no verdict on macOS (GNU sed does
+# report a read error, which is the platform the test is kept for).
+codex_ack_file_says_true() {
+  local val
+  [ -f "$WARROOM_CODEX_ACK_FILE" ] && [ -r "$WARROOM_CODEX_ACK_FILE" ] || return 1
+  val="$(sed -n '1p' "$WARROOM_CODEX_ACK_FILE" 2>/dev/null |
+         tr -d '\r' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+  [ "$val" = "true" ]
+}
+
+# Refuse Codex until THIS MACHINE has acknowledged what a Codex pane is. A Codex
 # pane is one unscoped process with whatever the founder's Codex login can do,
 # and the per-engine tool boundaries this harness relies on — a reviewer whose
 # `tools:` line carries no Write and no Edit — are prose there, not a control.
 # engine_launch_warning says so on stderr as the pane launches; that is a
-# notice after the choice, and a notice is not a gate. This is the gate: the
-# acknowledgment is a key in .warroom.yml, read through the same flat reader as
-# every other config value, and ONLY the exact value `true` acknowledges —
-# `yes`, `1`, `True` and `"false"` all refuse, because a truthy-looking parse
-# would let a founder who typed something into the key past a gate they never
-# read. Called where an engine is resolved, in the MAIN shell, so it exits the
-# program before check_deps and before tmux builds anything — the same
-# discipline as engine_require_known, for the same reason.
+# notice after the choice, and a notice is not a gate. This is the gate.
+#
+# THE ACKNOWLEDGMENT IS OUT OF BAND, and that is the security property. It used
+# to be `codex_unsandboxed_ack: true` in the project's git-tracked .warroom.yml,
+# which fails in both directions and both were observed on 2026-09-10:
+#
+#   - A PULL REQUEST CAN FLIP IT. The control that gates an unsandboxed pane was
+#     editable by the very channel it exists to bound — and the refusal below
+#     warns, in its own text, that a git-tracked AGENTS.md "arrives the way a
+#     pull request arrives". The gate had the defect it was written to describe.
+#   - IT IS BRANCH-DEPENDENT. The key existed on one branch and not on `main`,
+#     so `git checkout` silently changed the security posture of the machine.
+#
+# So: an environment variable, or a file under $HOME. Neither is in the
+# repository, neither moves with a branch, and neither is writable by a
+# contributor who can only open a pull request. ONLY the exact value `true`
+# acknowledges in either source — `yes`, `1`, `True` and `"false"` all refuse,
+# because a truthy-looking parse would let a founder who typed something past a
+# gate they never read. The value is COMPARED and never evaluated.
+#
+# Called where an engine is resolved, in the MAIN shell, so it exits the program
+# before check_deps and before tmux builds anything — the same discipline as
+# engine_require_known, for the same reason.
 # docs/03-system-design/final-v2/research/codex-in-the-pane.md §9.
 engine_require_acknowledged() {
   local eng="$1" whence="$2"
   [ "$eng" = "codex" ] || return 0
-  [ "$(_cfg codex_unsandboxed_ack)" = "true" ] && return 0
-  echo "✗ refusing codex (from $whence): this project has not acknowledged that a Codex pane is NOT sandboxed." >&2
+  # A config still carrying the retired key must not read as consent — and must
+  # not be silent about it either, or a founder reads their own .warroom.yml and
+  # concludes they are acked when nothing acked them.
+  if [ -n "$(_cfg codex_unsandboxed_ack)" ]; then
+    echo "⚠ ignoring codex_unsandboxed_ack in $WARROOM_CONFIG — the acknowledgment is out of band now (WARROOM_CODEX_ACK=true, or $WARROOM_CODEX_ACK_FILE); delete the key." >&2
+  fi
+  [ "${WARROOM_CODEX_ACK-}" = "true" ] && return 0
+  codex_ack_file_says_true && return 0
+  echo "✗ refusing codex (from $whence): this machine has not acknowledged that a Codex pane is NOT sandboxed." >&2
   echo "  A Codex pane is one process that can write and run whatever your Codex login allows, and" >&2
   echo "  per-engine tool scoping is NOT enforced in it: a read-only reviewer (no Write/Edit in tools:)" >&2
   echo "  is prose there, not a control. Nothing was launched." >&2
   echo "  Codex also reads AGENTS.md as TRUSTED instructions — the project's, which is git-tracked and" >&2
   echo "  arrives the way a pull request arrives, and \$CODEX_HOME/AGENTS.md. Acknowledging accepts that" >&2
   echo "  channel too: whoever can write AGENTS.md can instruct every Codex pane in this project." >&2
-  echo "  To acknowledge this and enable Codex for this project, add to $WARROOM_CONFIG:" >&2
-  echo "      codex_unsandboxed_ack: true" >&2
-  echo "  Only the exact value true acknowledges. Details: research/codex-in-the-pane.md §9" >&2
+  echo "  To acknowledge, do EITHER of these. Both live OUTSIDE the repository on purpose: a pull" >&2
+  echo "  request cannot grant this, and switching branches cannot take it away." >&2
+  echo "      export WARROOM_CODEX_ACK=true                                  # this shell only" >&2
+  echo "      mkdir -p \"$HOME/.warroom\" && echo true > \"$WARROOM_CODEX_ACK_FILE\"   # this machine, standing" >&2
+  echo "  Only the exact value true acknowledges; codex_unsandboxed_ack in .warroom.yml no longer does." >&2
+  echo "  Details: research/codex-in-the-pane.md §9" >&2
   exit 1
 }
 

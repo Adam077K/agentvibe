@@ -545,15 +545,50 @@ Claude.
 
 **Launching Codex now REQUIRES an explicit acknowledgment of the above (added 2026-09-10).** A pane
 cannot resolve to `codex` — by `--engine codex`, `--engine N:codex`, or `engine: codex` in
-`.warroom.yml` — until the project's `.warroom.yml` carries `codex_unsandboxed_ack: true`. Without it,
-`bin/warroom` refuses at engine resolution (`engine_require_acknowledged`, called from
-`engines_resolve` in the main shell), before `check_deps` and before any tmux call, on `start`,
-`add`, `--grid`, `restore` and the `engine` inspection command alike; the refusal names the risk in
-this section and the exact line that opts in. Only the exact value `true` acknowledges — `yes`, `1`
-and `True` refuse — and the out-of-band stderr warning still fires on every acknowledged launch.
+`.warroom.yml` — until **the machine** has acknowledged. Two sources, and only these two:
+
+```
+export WARROOM_CODEX_ACK=true                              # this shell only
+mkdir -p ~/.warroom && echo true > ~/.warroom/codex_ack     # this machine, standing
+```
+
+Without one of them, `bin/warroom` refuses at engine resolution (`engine_require_acknowledged`,
+called from `engines_resolve` in the main shell), before `check_deps` and before any tmux call, on
+`start`, `add`, `--grid`, `restore` and the `engine` inspection command alike; the refusal names the
+risk in this section and both remedies. Only the exact value `true` acknowledges in either source —
+`yes`, `1`, `True` and a file whose first line is anything else all refuse — the value is compared
+and never evaluated, and the out-of-band stderr warning still fires on every acknowledged launch.
 Pinned by `scripts/warroom-engine.test.mjs` under THE CODEX ACKNOWLEDGMENT GATE, each test naming
 the mutation that turns it red. This does not make a Codex pane sandboxed; it makes choosing one a
 recorded decision rather than a flag.
+
+> **Superseded 2026-09-10, the same day it was written.** This paragraph said the acknowledgment was
+> `codex_unsandboxed_ack: true` in the project's git-tracked `.warroom.yml`. **It was moved out of the
+> repository, and the reason is worth more than the mechanism**, because the original was wrong in
+> two independent ways and only one of them was predicted:
+>
+> 1. **A pull request can flip it.** The binding QA gate raised this as P1: the control that gates an
+>    unsandboxed Codex pane was itself editable by the channel it exists to bound. Read that against
+>    the paragraph immediately below, which warns that a git-tracked `AGENTS.md` "arrives the way a
+>    pull request arrives" — the gate had, in its own implementation, the exact defect it was written
+>    to describe. Two sentences apart, and nobody saw it until a reviewer read them together.
+> 2. **It is branch-dependent, which was measured, not argued.** The key was added on one branch and
+>    was absent from `main`: `grep -c codex_unsandboxed_ack .warroom.yml` on the `main` checkout
+>    returned **0** on 2026-09-10 while the same command on the feature branch returned 1. A `git
+>    checkout` therefore silently changed the machine's security posture — and the failure mode of
+>    an ack that *appears* is worse than one that disappears, because a pane launches.
+>
+> A third failure the same day pointed the same way: the installed `agentvibe` shim resolves its
+> config by ABSOLUTE path, so installing from a git worktree pinned it to a `.warroom.yml` under
+> `.worktrees/…` that vanishes with the worktree. Anything a security decision rests on that lives in
+> a working tree inherits the working tree's lifetime.
+>
+> **The config key is NOT accepted as a fallback**, deliberately: an "alternative source" kept for
+> compatibility would leave the P1 open, so `scripts/warroom-engine.test.mjs` carries a named
+> regression test — *the config key is NOT a source* — that goes red the moment anyone re-adds it.
+> A config still carrying the key gets a one-line stderr notice that it is ignored, naming the
+> out-of-band mechanism, because a founder who reads their own `.warroom.yml` and concludes they are
+> acknowledged is precisely who the silent version would have harmed.
 
 **What the acknowledgment also accepts, named so it is not accepted by accident: `AGENTS.md` is a
 trusted-instruction channel (added 2026-09-10).** §3 measured that Codex reads `AGENTS.md` from the
@@ -563,7 +598,7 @@ arrives: whoever can land a commit that touches `AGENTS.md` can instruct every C
 that checkout, and nothing in `bin/warroom` reads, hashes or refuses that file. This is the same class
 of surface as the unenforced tool scoping above — a boundary a Claude pane has structurally (its
 instructions come only from the harness) and a Codex pane has only as prose — and the launcher names
-it in the same two places: the refusal that asks for `codex_unsandboxed_ack: true`, and the stderr
+it in the same two places: the refusal that asks for the out-of-band acknowledgment, and the stderr
 warning on every acknowledged launch (`engine_launch_warning`). It is a notice, not a control:
 review `AGENTS.md` in the diff of any PR that touches it, and treat `$CODEX_HOME/AGENTS.md` as part
 of the founder's machine state, like the Codex login itself.
