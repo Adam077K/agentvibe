@@ -2553,6 +2553,11 @@ test('the codex preamble lists the tool-scoped engines, derived from the agent f
   // MUTATION: delete `[ -n "$tools" ] || continue` → notools-delta is listed. Red.
   // MUTATION: delete the per-file `_inside_phys` skip → outside-epsilon is
   // listed and nothing is said. Red on both assertions about it.
+  // MUTATION: put the single-line `grep -m1 '^tools:'` back in place of the
+  // awk → block-writer-theta's `tools:` line is bare, carries no Write, and
+  // the writer is listed as tool-scoped. Red on `must not be listed`. That is
+  // the direction the list must never be wrong in: a Codex pane reads it as
+  // permission to act as the engine.
   const p = project(t);
   const agents = path.join(p.dir, '.claude', 'agents');
   const write = (name, body) => fs.writeFileSync(path.join(agents, `${name}.md`), body);
@@ -2561,13 +2566,17 @@ test('the codex preamble lists the tool-scoped engines, derived from the agent f
   write('writer-beta', '---\ntools: [Read, Write]\n---\n');
   write('editor-gamma', '---\ntools: [Edit, Read]\n---\n');
   write('notools-delta', '---\nname: notools-delta\n---\n');
+  // YAML block style: `tools:` alone on its line, the items under it. A
+  // read-only one is listed like its flow-style twin; a writer is not.
+  write('block-eta', '---\nname: block-eta\ntools:\n  - Read\n  - Grep\nmodel: claude-opus-5\n---\n');
+  write('block-writer-theta', '---\ntools:\n  - Read\n  - Write\n---\n');
   fs.writeFileSync(path.join(p.home, 'outside-epsilon.md'), '---\ntools: [Read]\n---\n');
   fs.symlinkSync(path.join(p.home, 'outside-epsilon.md'), path.join(agents, 'outside-epsilon.md'));
 
   const r = warroom(p, ['engine', 'render', 'codex']);
   assert.equal(r.code, 0, r.err);
-  assert.match(r.out, /the tool-scoped engines are: scoped-alpha scoped-zeta\./, `the list must be exactly the read-only engines: ${r.out}`);
-  for (const name of ['writer-beta', 'editor-gamma', 'notools-delta', 'outside-epsilon']) {
+  assert.match(r.out, /the tool-scoped engines are: block-eta scoped-alpha scoped-zeta\./, `the list must be exactly the read-only engines: ${r.out}`);
+  for (const name of ['writer-beta', 'editor-gamma', 'notools-delta', 'outside-epsilon', 'block-writer-theta']) {
     assert.doesNotMatch(r.out, new RegExp(name), `${name} must not be listed`);
   }
   assert.match(r.err, /outside-epsilon\.md resolves outside the project/, 'and the founder is told which file was skipped');
@@ -2758,10 +2767,11 @@ test('add checks the binary of the pane it is about to create, before tmux build
   // The ordering fix in cmd_add — resolve the NEW pane, then check_deps — was
   // covered only by the inspection path. Here `codex` is genuinely absent and
   // the session is live.
-  // MUTATION: swap `engines_resolve "$n"` and `check_deps` in cmd_add →
-  // check_deps resolves pane 1 (claude, present) and passes; the window is
-  // built and `codex …` typed into it; exit 0. Red on the exit code and on
-  // the mutating calls.
+  // MUTATION: in engines_setup, move `engines_resolve "$@"` below the deps
+  // check → check_deps' fallback resolves pane 1 (claude, present) and
+  // passes; the window is built and `codex …` typed into it; exit 0. Red on
+  // the exit code and on the mutating calls. (The sequence lived in cmd_add
+  // itself once; the swap was of those two lines.)
   const p = liveMap(t, [{ n: 1, engine: 'claude' }]);
   const sh = shim(t, { sessionExists: true, windows: ['CEO-1'], engines: ['claude'] });
   const r = launch(p, ['add', '--engine', '2:codex'], sh);
@@ -2796,4 +2806,296 @@ test('save_session_snapshot drops an unreadable session id and an unknown engine
   assert.equal(snap.ceos[0].engine, '', 'the unknown engine must be dropped, not recorded');
   assert.match(killed.err, /CEO-1: ignoring an unreadable session id/);
   assert.match(killed.err, /CEO-1: ignoring an unknown engine \(nope\)/);
+});
+
+// ── _phys_path: the symlink-depth bound ──────────────────────
+//
+// Every path this program confines — entry_ceo, the seed, state_dir, the
+// worktrees dir, each agent file — is resolved by _phys_path, and the file
+// branch of it walks a link chain by hand with a 16-hop bound. The bound had
+// no test: it could have been 1, or 1000, or absent, and nothing here moved.
+
+/**
+ * A chain of `hops` file symlinks under `dir` ending at `dir/real`; returns
+ * the entry link. The links are RELATIVE (`l2 -> l1`) on purpose: an absolute
+ * target under os.tmpdir() — `/var/…` on macOS, itself a link to
+ * `/private/var` — costs the kernel two hops per link, so sixteen absolute
+ * links reach SYMLOOP_MAX (32) and `[ -e ]` refuses the chain before the
+ * hand-walk ever sees it. Relative links cost one hop each, which keeps every
+ * row below the kernel's own limit and makes _phys_path's bound the only thing
+ * deciding it. Measured: the absolute form failed the 16-hop row here.
+ */
+function symlinkChain(dir, hops) {
+  fs.mkdirSync(dir);
+  const real = path.join(dir, 'real');
+  fs.writeFileSync(real, 'the file at the end of the chain');
+  let prev = 'real';
+  for (let i = 1; i <= hops; i++) {
+    fs.symlinkSync(prev, path.join(dir, `l${i}`));
+    prev = `l${i}`;
+  }
+  return { entry: path.join(dir, prev), physReal: fs.realpathSync(real) };
+}
+
+/** `_phys_path <target>` through the real definition: [rc, printed path]. */
+function physPath(p, target) {
+  const r = warroomEval(p, `out="$(_phys_path ${sq(target)})"; rc=$?; printf '%s\n%s' "$rc" "$out"`);
+  assert.equal(r.code, 0, `the shell must finish — a hang here is the loop that never terminated: ${r.err}`);
+  const [rc, out = ''] = r.out.split('\n');
+  return [rc, out];
+}
+
+test('_phys_path follows a file symlink chain of 16 hops and refuses one of 17', (t) => {
+  // 16 is the bound in the source (`[ "$hops" -lt 16 ]`): sixteen links
+  // resolve to the file, the seventeenth is still a link when the loop stops
+  // and is refused. Both sides of the line are asserted so an off-by-one in
+  // either direction is red. The 17-hop chain is one the KERNEL still
+  // resolves (SYMLOOP_MAX is 32 on macOS, 40 on Linux), so `[ -e ]` passes
+  // it and the hand-walk is the only thing that stops it.
+  // MUTATION: `-lt 16` → `-lt 15` → the 16-hop row is refused. Red.
+  // MUTATION: `-lt 16` → `-lt 17`, or delete the `&& [ "$hops" -lt 16 ]`
+  // clause → the 17-hop row resolves to the file. Red.
+  const p = project(t);
+  for (const [hops, resolves] of [
+    [1, true],
+    [15, true],
+    [16, true],
+    [17, false],
+  ]) {
+    const { entry, physReal } = symlinkChain(path.join(p.home, `chain-${hops}`), hops);
+    // Load-bearing: if the kernel refused the chain, `[ ! -e ]` would take the
+    // walk-up branch and refuse it there, and the 17-hop row would be green
+    // with the hand-walk's bound deleted.
+    assert.ok(fs.existsSync(entry), `${hops} hops: the kernel itself must still resolve this chain`);
+    const [rc, out] = physPath(p, entry);
+    if (resolves) {
+      assert.equal(rc, '0', `${hops} hops must resolve`);
+      assert.equal(out, physReal, `${hops} hops must resolve to the real file`);
+    } else {
+      assert.equal(rc, '1', `${hops} hops must be refused`);
+      assert.equal(out, '', `${hops} hops: a refusal prints no path — a partial one would be trusted`);
+    }
+  }
+});
+
+test('_phys_path meets a symlink cycle, terminates, and refuses it — with no path printed', (t) => {
+  // a → b → a. The kernel reports ELOOP for it, so `[ -e ]` fails and the
+  // walk-up loop meets a link that "does not exist": that is the `[ -L "$p" ]
+  // && return 1` line, which refuses rather than resolving PAST the link by
+  // treating it as a not-yet-created tail under its parent. Both entry points
+  // are tried — the link itself, and a state_dir-shaped path beneath it —
+  // because the second is the shape a first-run `mkdir -p` would have walked.
+  //
+  // The hand-walk's own bound is what the 17-hop test above pins; a cycle
+  // never reaches that loop, because stat refuses it first. Named here so
+  // nobody reads this test as covering the bound.
+  //
+  // MUTATION: delete `[ -L "$p" ] && return 1` from the walk-up loop → `a` is
+  // appended as a tail under its parent and `<home>/a` is printed, rc 0 — a
+  // path this program would then `mkdir -p` and write through. Red on both
+  // rows, on rc and on the printed path.
+  // MUTATION: `return 1` → `return 0` on that line → red on rc.
+  const p = project(t);
+  const a = path.join(p.home, 'a');
+  const b = path.join(p.home, 'b');
+  fs.symlinkSync(b, a);
+  fs.symlinkSync(a, b);
+  assert.equal(fs.existsSync(a), false, 'a cycle is ELOOP to the kernel: the fixture is a real cycle');
+  for (const [label, target] of [
+    ['the cycle itself', a],
+    ['a path not yet created under it', path.join(a, 'state')],
+  ]) {
+    const [rc, out] = physPath(p, target);
+    assert.equal(rc, '1', `${label} must be refused`);
+    assert.equal(out, '', `${label}: nothing may be printed — a resolved-past path would be written through`);
+  }
+});
+
+// ── The state_dir symlink sweep: who is swept and who is not ───────────
+//
+// The sweep runs at dispatch for every command not on the router's allowlist
+// of readers. The allowlist had no test: a writer added to it stopped being
+// swept, a reader dropped from it started paying for a `find` over months of
+// history, and nothing here moved either way.
+
+/** A project whose state_dir holds one symlink, pointing at a file that must survive. */
+function projectWithLinkInState(t) {
+  const p = launchableProject(t);
+  const state = path.join(p.home, '.proj');
+  const victim = path.join(p.home, 'VICTIM');
+  fs.mkdirSync(state, { recursive: true });
+  fs.writeFileSync(victim, 'VICTIM_BODY_intact');
+  fs.symlinkSync(victim, path.join(state, 'events.jsonl'));
+  return { ...p, victim, link: path.join(state, 'events.jsonl') };
+}
+
+test('the read-only commands skip the state_dir symlink sweep, and every other command runs it', (t) => {
+  // Readers: the ones the brief names, run against a state_dir holding a link.
+  // Each exits 0 and says nothing about symlinks — the sweep did not run. With
+  // no session live they take their "nothing running" branch, which is the
+  // cheapest proof that dispatch reached the command at all.
+  // MUTATION: drop `ls` (or any of these) from the allowlist → that row is
+  // refused with `state_dir holds a symlink`. Red on the exit code.
+  // MUTATION: add `send` (or `add`, `done`, `kill`) to the allowlist → that
+  // writer row exits without the refusal. Red on its stderr assertion.
+  // MUTATION: delete the `events)` arm → bare `events` falls to `*)`, is
+  // swept, and is refused. Red on the events reader row.
+  // MUTATION: `events) : ;;` (never sweep events) → `events clear` runs, and
+  // `rm -f` follows the link's NAME rather than its target so the victim
+  // survives anyway — which is why the writer rows assert the REFUSAL, not
+  // only the victim. Red on `events clear`'s stderr assertion.
+  const sh = shim(t);
+  const readers = [
+    ['ls', ['ls']],
+    ['history', ['history']],
+    ['inbox', ['inbox']],
+    ['files', ['files']],
+    ['log', ['log']],
+    ['events', ['events']],
+  ];
+  for (const [label, args] of readers) {
+    const p = projectWithLinkInState(t);
+    const r = warroom(p, args, { path: sh.path });
+    assert.equal(r.code, 0, `${label} reads only and must not be swept: ${r.out}${r.err}`);
+    assert.doesNotMatch(r.err, /state_dir holds a symlink/, `${label}: the sweep must not have run`);
+    assert.equal(fs.readFileSync(p.victim, 'utf8'), 'VICTIM_BODY_intact', `${label} must not touch the link's target`);
+  }
+  const writers = [
+    ['events clear', ['events', 'clear']],
+    ['a start', ['1']],
+    ['add', ['add']],
+    ['done', ['done', '1']],
+    ['kill', ['kill']],
+    ['send', ['send', '1', 'hello']],
+  ];
+  for (const [label, args] of writers) {
+    const p = projectWithLinkInState(t);
+    const r = warroom(p, args, { path: sh.path });
+    assert.notEqual(r.code, 0, `${label} writes under state_dir and must be swept: ${r.out}`);
+    assert.match(r.err, /state_dir holds a symlink/, `${label}: the sweep must be what refused it: ${r.err}`);
+    assert.ok(r.err.includes(p.link), `${label}: the refusal names the link: ${r.err}`);
+    assert.equal(fs.readFileSync(p.victim, 'utf8'), 'VICTIM_BODY_intact', `${label} must not touch the link's target`);
+  }
+});
+
+// ── An --engine override that names no resolved pane ─────────────────
+//
+// `3 --engine 5:codex` parsed clean — 5 is a pane number, codex is known — and
+// then matched nothing for panes 1..3. The override was dropped in silence and
+// the founder got three Claude panes where they had asked for a Codex one.
+// engine_require_known refuses a bad VALUE for exactly this reason; this is
+// the same rule for a bad TARGET.
+
+test('an --engine override naming a pane this command never resolves is refused loudly, on every path', (t) => {
+  // MUTATION: delete the `engine_overrides_require_resolved "$@"` call from
+  // engines_resolve → every row exits 0 with the override dropped: the start
+  // builds three claude panes, add builds CEO-2 on claude, restore rebuilds
+  // both panes, the inspection lists three claude panes. Red on every row.
+  // MUTATION: `exit 1` → `return 1` in engine_overrides_require_resolved →
+  // engines_resolve ignores the status and the run continues. Red the same way.
+  // MUTATION: `[ "$hit" -eq 1 ] && continue` → `[ "$hit" -eq 0 ] && continue`
+  // → the in-range control row is refused and the out-of-range ones pass. Red.
+  const refused = (r, label, pane, resolved) => {
+    assert.notEqual(r.code, 0, `${label}: must refuse: ${r.out ?? ''}${r.err}`);
+    assert.match(r.err, new RegExp(`--engine ${pane}:codex names CEO-${pane}`), `${label}: names the override: ${r.err}`);
+    assert.match(r.err, new RegExp(`resolves only: ${resolved}\\.`), `${label}: names what it did resolve: ${r.err}`);
+  };
+
+  // A start of three panes, override on the fifth.
+  {
+    const p = launchableProject(t);
+    const sh = shim(t);
+    const r = launch(p, ['3', '--engine', '5:codex'], sh);
+    refused(r, 'start', 5, 'CEO-1 CEO-2 CEO-3');
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused start builds nothing');
+    assert.equal(fs.existsSync(path.join(p.dir, '.worktrees')), false, 'and creates no worktree');
+    assert.equal(readMap(p), null, 'and records no engine map');
+  }
+
+  // An add whose next slot is 2, override on 4.
+  {
+    const p = liveMap(t, [{ n: 1, engine: 'claude' }]);
+    const sh = shim(t, { sessionExists: true, windows: ['CEO-1'] });
+    const r = launch(p, ['add', '--engine', '4:codex'], sh);
+    refused(r, 'add', 4, 'CEO-2');
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'a refused add builds nothing');
+    assert.deepEqual(readMap(p), ['1\tclaude'], 'and the map is untouched');
+  }
+
+  // A restore of panes 1 and 3, override on 2, with a session LIVE — so a
+  // check placed below the kill would show up as a kill-session here.
+  {
+    const p = restorableProject(t, [
+      { n: 1, branch: 'ceo-1' },
+      { n: 3, branch: 'ceo-3' },
+    ]);
+    const sh = shim(t, { sessionExists: true });
+    const r = launch(p, ['restore', 'latest', '--engine', '2:codex'], sh);
+    refused(r, 'restore', 2, 'CEO-1 CEO-3');
+    assert.deepEqual(
+      r.calls.filter((c) => c[0] === 'kill-session'),
+      [],
+      'a refused restore destroys nothing: the live session is kept'
+    );
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and builds nothing');
+  }
+
+  // The inspection command resolves the same way and refuses the same way,
+  // so it cannot show three claude panes for a run that would have refused.
+  {
+    const p = project(t);
+    const r = warroom(p, ['engine', '3', '--engine', '5:codex']);
+    refused(r, 'engine', 5, 'CEO-1 CEO-2 CEO-3');
+    assert.equal(panes(r).length, 0, 'no pane table is printed for a refused override');
+  }
+
+  // Control: the same override on a pane the command DOES resolve is honoured.
+  {
+    const p = project(t);
+    const r = warroom(p, ['engine', '3', '--engine', '3:codex']);
+    assert.equal(r.code, 0, r.err);
+    assert.deepEqual(
+      panes(r).map((x) => `${x.n}:${x.engine}`),
+      ['1:claude', '2:claude', '3:codex']
+    );
+  }
+});
+
+// ── Two flag-parse holes ──────────────────────────────────────
+
+test('a trailing --engine with no value is refused, not swallowed', (t) => {
+  // `--engine` as the last word set ENGINE_NEXT and nothing consumed it; the
+  // run went on with whatever the config said — the silent default every
+  // other --engine failure is refused for.
+  // MUTATION: delete the `if [ "$ENGINE_NEXT" -eq 1 ]` block after the parse
+  // loop → `engine 3 --engine` lists three claude panes, exit 0, and the
+  // launch row builds three panes. Red on both.
+  const p = project(t);
+  const r = warroom(p, ['engine', '3', '--engine']);
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  assert.match(r.err, /--engine needs a value/, r.err);
+  assert.equal(panes(r).length, 0, 'and lists no pane');
+
+  const lp = launchableProject(t);
+  const sh = shim(t);
+  const lr = launch(lp, ['3', '--engine'], sh);
+  assert.notEqual(lr.code, 0, `the launch path must refuse: ${lr.out}`);
+  assert.match(lr.err, /--engine needs a value/);
+  assert.deepEqual(mutatingTmuxCalls(lr.calls), [], 'a refused parse builds nothing');
+});
+
+test('engine render with no engine name is refused, and renders nothing', (t) => {
+  // The error branch of `engine render` was untested: a change that defaulted
+  // the missing name would have printed a whole preamble for a question that
+  // was never asked.
+  // MUTATION: `render_ceo_preamble "$2"` → `render_ceo_preamble "${2:-claude}"`
+  // and drop the empty-name guard → the claude preamble prints, exit 0. Red
+  // on the exit code and on stdout being empty.
+  const p = project(t);
+  const r = warroom(p, ['engine', 'render']);
+  assert.notEqual(r.code, 0, `must refuse: ${r.out}`);
+  assert.match(r.err, /engine render needs an engine name/, r.err);
+  assert.match(r.err, /claude codex/, 'and says which names it would take');
+  assert.equal(r.out, '', 'nothing is rendered to stdout');
+  assert.doesNotMatch(r.err, /SENTINEL_BODY_ALPHA/, 'and no preamble body leaks to stderr either');
 });

@@ -679,7 +679,38 @@ engines_resolve() {
     engine_require_acknowledged "$eng" "$whence"
     WARROOM_PANE_ENGINES[$n]="$eng"
   done
+  engine_overrides_require_resolved "$@"
   WARROOM_ENGINES_RESOLVED=1
+}
+
+# Every `--engine N:E` must have named a pane this command actually resolved.
+# `3 --engine 5:codex` parsed clean — 5 is a pane number and codex is known —
+# and then matched nothing in engine_candidate_for_pane for panes 1..3, so the
+# override was dropped in silence and the founder got three Claude panes where
+# they had asked for a Codex one. That is the indistinguishable-from-working
+# failure engine_require_known exists to refuse, one rung down: the value was
+# valid, the TARGET was not. Same for `add --engine 4:codex` when the next slot
+# is 2, and `restore --engine 2:codex` when the snapshot holds no pane 2.
+#
+# Called from engines_resolve with the panes it was given, so it runs wherever
+# resolution runs — the launch path and the inspection path alike — and its
+# exit is the program's. The named panes are DATA already read as pane numbers
+# by pane_number_require above; the override's N was read the same way by the
+# router.
+engine_overrides_require_resolved() {
+  local tok n hit named=""
+  for n in "$@"; do named="$named CEO-$n"; done
+  for tok in $WARROOM_ENGINE_OVERRIDES; do
+    hit=0
+    for n in "$@"; do
+      [ "$n" = "${tok%%:*}" ] && { hit=1; break; }
+    done
+    [ "$hit" -eq 1 ] && continue
+    echo "✗ --engine $tok names CEO-${tok%%:*}, but this command resolves only:${named}." >&2
+    echo "  The override would have been dropped and CEO-${tok%%:*} never started on ${tok#*:}." >&2
+    echo "  Name a pane this command creates, or drop the override." >&2
+    exit 1
+  done
 }
 
 # The engine for pane N. A lookup once engines_resolve has run — which is the
@@ -826,7 +857,15 @@ engine_toolscoped_names() {
       echo "  ⚠ $(basename "$f") resolves outside the project and is not read as an engine." >&2
       continue
     fi
-    tools="$(grep -m1 '^tools:' "$f" 2>/dev/null)"
+    # The first `tools:` line PLUS the block items under it, when the list is
+    # written YAML block-style (`tools:` then `  - Read`, `  - Write`). A
+    # single-line grep saw a bare `tools:` there, found no Write in it, and
+    # listed a writer as tool-scoped — the one direction this list must never
+    # be wrong in, since a Codex pane reads it as permission to act as that
+    # engine. Flow style (`tools: [Read, Write]`) is one line and prints as
+    # before; the item lines end at the first line that is not one.
+    tools="$(awk '!seen && /^tools:/ { seen = 1; print; next }
+                  seen { if ($0 ~ /^[ \t]+-[ \t]/) print; else exit }' "$f" 2>/dev/null)"
     [ -n "$tools" ] || continue
     case "$tools" in *Write*|*Edit*) continue ;; esac
     out="$out $(basename "$f" .md)"
@@ -1109,13 +1148,45 @@ check_base_deps() {
 }
 
 check_deps() {
-  require_tmux
   # The caller resolves the panes it is about to create, before this runs. The
   # optional count is a fallback for a caller that has only a count; it still
   # resolves in the main shell, so its refusal still exits the program.
   [ "$WARROOM_ENGINES_RESOLVED" -eq 1 ] || engines_resolve $(seq 1 "${1:-1}")
   check_engine_deps
+  # require_tmux is check_base_deps' first line; it was also called here,
+  # directly, so a missing tmux was asked for twice and refused once.
   check_base_deps
+}
+
+# The one resolve → check → prepare sequence every command that launches a pane
+# runs before tmux builds anything. It was copied into five commands, and the
+# ordering fix in cmd_add — resolve the NEW pane, then check its binary — was a
+# fix to one copy that the other four had to be re-read for.
+#
+#   engines_setup <deps> <pane>...
+#     deps = all     — check_deps: the engine binaries AND the base checks
+#                      (tmux, python3, the CEO agent file, .git, the state dirs)
+#     deps = engine  — check_engine_deps only, for a caller that has already
+#                      run check_base_deps (cmd_restore needs python3 BEFORE it
+#                      can read the snapshot that names the engines) or is
+#                      inside a live session that passed them at start
+#                      (cmd_grid_view)
+#
+# The panes are the ones this command will actually create — `seq 1 $count` for
+# a start, the next slot for an add, the live window numbers for a grid, the
+# snapshot's numbers for a restore — never a count standing in for a set.
+# check_engine_deps reads the resolved map and engines_prepare writes a
+# preamble per engine in it, so a pane resolved here that is not then created
+# is a wasted check, and one created but not resolved here is a dead pane.
+engines_setup() {
+  local deps="$1"; shift
+  engines_resolve "$@"
+  case "$deps" in
+    all)    check_deps ;;
+    engine) check_engine_deps ;;
+    *) echo "✗ engines_setup: deps must be all or engine, not '$deps'." >&2; exit 1 ;;
+  esac
+  engines_prepare || exit 1
 }
 
 next_ceo_number() {
@@ -1698,9 +1769,7 @@ cmd_start() {
   # builds anything. A refusal at this point exits the program; the same refusal
   # inside the substitution that used to feed check_deps exited a child shell and
   # let the run continue with an empty engine.
-  engines_resolve $(seq 1 "$count")
-  check_deps
-  engines_prepare || exit 1
+  engines_setup all $(seq 1 "$count")
 
   if tmux has-session -t "$SESSION" 2>/dev/null; then
     if [ "$grid_mode" -eq 1 ]; then
@@ -1895,9 +1964,7 @@ cmd_add() {
   # bare `check_deps` checked pane 1 — the one pane `add` never creates — so
   # `--engine 5:codex` on a machine without codex built the window first and
   # died inside it.
-  engines_resolve "$n"
-  check_deps
-  engines_prepare || exit 1
+  engines_setup all "$n"
   engines_persist_pane "$n"
 
   echo "  + Spawning CEO-$n..."
@@ -2353,9 +2420,7 @@ cmd_grid_start() {
   # Was `check_deps 2>/dev/null || true`, which discarded exactly the error this
   # rewrite exists to surface: a grid asking for `--engine 3:codex` on a machine
   # without codex built the whole tmux grid and then failed inside a pane.
-  engines_resolve $(seq 1 "$count")
-  check_deps
-  engines_prepare || exit 1
+  engines_setup all $(seq 1 "$count")
 
   echo "  Starting grid mode with $count panes..."
 
@@ -2477,7 +2542,12 @@ cmd_engine() {
   # .claude/entry/ceo.md and BOTH outputs move. If one of them ever stops
   # moving, someone has written the CEO's identity down twice.
   if [ "$count" = "render" ]; then
-    engine_require_known "${2:-}" "engine render"
+    if [ -z "${2:-}" ]; then
+      echo "✗ engine render needs an engine name." >&2
+      echo "  Usage: ${SESSION} engine render <engine>   — one of: $WARROOM_ENGINES" >&2
+      exit 1
+    fi
+    engine_require_known "$2" "engine render"
     render_ceo_preamble "$2"
     echo ""
     return 0
@@ -2497,12 +2567,13 @@ cmd_engine() {
     printf '  CEO-%-3s %-8s %s\n' "$i" "$eng" "$(engine_launch_cmd "$eng" "" "$(with_preamble)")"
   done
   echo ""
+  # Pane 1's, as the example. It was a loop over 1..N that broke after the
+  # first pane, which reads as "every pane" and prints one.
   printf '  resume form: '
-  for i in $(seq 1 "$count"); do
-    eng="$(engine_for_pane "$i")"
+  if [ "$count" -ge 1 ]; then
+    eng="$(engine_for_pane 1)"
     printf '%s ' "$(engine_launch_cmd "$eng" "SESSION_ID" 0)"
-    break
-  done
+  fi
   echo ""
   echo ""
 }
@@ -2557,9 +2628,7 @@ cmd_grid_view() {
     pane_number_require "${_wname#CEO-}" "the tmux window '$_wname'"
     grid_ns="$grid_ns ${_wname#CEO-}"
   done
-  engines_resolve $grid_ns
-  check_engine_deps
-  engines_prepare || exit 1
+  engines_setup engine $grid_ns
 
   # Get wt_paths for all CEOs
   local -a ceo_wt_paths
@@ -2853,9 +2922,7 @@ print(' '.join('%s:%s' % (c.get('n'), c.get('engine')) for c in d.get('ceos',[])
   # here too — before the kill — so a restore that would fail for a missing
   # binary or an unwritable state_dir also costs nothing.
   if [ -n "$snapshot_ns" ]; then
-    engines_resolve $snapshot_ns
-    check_engine_deps
-    engines_prepare || exit 1
+    engines_setup engine $snapshot_ns
     local _n _pair
     for _n in $snapshot_ns; do
       case " $WARROOM_SNAPSHOT_ENGINES " in *" ${_n}:"*) continue ;; esac
@@ -4746,6 +4813,14 @@ for arg in "$@"; do
     ARGS+=("$arg")
   fi
 done
+# `--engine` as the LAST word set the flag and nothing consumed it: the run went
+# on with whatever the config said, which is the silent default this flag's
+# every other failure is refused for.
+if [ "$ENGINE_NEXT" -eq 1 ]; then
+  echo "✗ --engine needs a value: <engine> or <pane-number>:<engine>." >&2
+  echo "  Valid engines: $WARROOM_ENGINES" >&2
+  exit 1
+fi
 
 # Validate at parse time, not at launch time. An unknown engine must be refused
 # before tmux builds a session, and must never fall back to the default —
