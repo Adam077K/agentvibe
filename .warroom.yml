@@ -12,3 +12,11 @@ project_dir: ~/VibeCoding/Agentvibe
 #   state_dir     defaults to ~/.<session>               (snapshots, events.jsonl)
 #   entry_ceo     defaults to .claude/entry/ceo.md,
 #                 falling back to .claude/agents/_seeds/ceo.md
+
+# Codex engine — explicit acknowledgment that a Codex pane is NOT sandboxed.
+# A Codex pane is one unscoped process: the per-engine tool scoping that makes a
+# `reviewer` structurally unable to Write does not hold inside it. The boundary
+# there is prose and a warning, not a control.
+# Required before `--engine codex` will launch anything.
+# See docs/03-system-design/final-v2/research/codex-in-the-pane.md §9.
+codex_unsandboxed_ack: true
