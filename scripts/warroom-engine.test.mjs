@@ -1788,6 +1788,140 @@ for (const [label, raw, names, notNames] of [
   });
 }
 
+// ── THE THIRD ARM IS UNREACHABLE, AND THE UNREACHABILITY IS THE PROPERTY ────
+//
+// cmd_restore's zero-CEO refusal has three message arms. Two are reached by
+// the tests above. The third — entries present, none resolved — is a BACKSTOP
+// that nothing can currently reach, because every way an entry fails to
+// resolve also prints a BAD line and the refusal above wins.
+//
+// That was recorded as a manual measurement ("remove the BAD refusal and watch
+// it fire"), which is a true sentence with a decay date: a measurement of a
+// tree that will change, written in a file nothing re-executes. This is the
+// same object as `probe-workflow-reach.mjs` — an intentional ZERO, where the
+// zero IS the guarantee — so it gets the same treatment. What is pinned below
+// is not the arm. It is the invariant that makes the arm unreachable:
+//
+//     NO input produces (CEOS > 0) AND (NS empty) AND (no BAD line).
+//
+// The payoff is what prose cannot give: add a resolution path that drops an
+// entry WITHOUT emitting BAD and this test goes red, saying the backstop just
+// became live and now needs a test of its own. Nothing re-runs a comment.
+//
+// The reader is inline in cmd_restore rather than a function, so it cannot be
+// reached with `warroomEval` the way cmd_grid_start is. It is lifted out by
+// its assignment instead — and the lift is only faithful if bash's own
+// double-quote expansion was a no-op over that text, which is asserted below
+// and is worth asserting for a second reason: the day someone interpolates a
+// shell value into this program is the day it stops being argv-only, and that
+// is the class this file has survived six security rounds on.
+function snapshotReaderProgram() {
+  const src = fs.readFileSync(WARROOM, 'utf8');
+  const OPEN = '_snap_out=$(python3 -c "\n';
+  const CLOSE = '\n" "$chosen_snapshot"';
+  const i = src.indexOf(OPEN);
+  assert.notEqual(i, -1, 'the snapshot reader moved: no `_snap_out=$(python3 -c "` in bin/warroom');
+  const j = src.indexOf(CLOSE, i);
+  assert.notEqual(j, -1, 'the snapshot reader moved: its closing `" "$chosen_snapshot"` is gone');
+  const prog = src.slice(i + OPEN.length, j);
+
+  // No `$`, no backtick, no `\` before a `$` or a quote: bash expanded nothing,
+  // so the bytes python gets here are the bytes it gets in production.
+  assert.doesNotMatch(prog, /[$`]/, 'the reader interpolates a shell value — this lift is no longer faithful, and the program is no longer argv-only');
+  return prog;
+}
+
+/** Run the lifted reader over one snapshot and sort its tagged lines. */
+function readSnapshot(t, value) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'warroom-reader-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const prog = path.join(dir, 'reader.py');
+  const snap = path.join(dir, 'snap.json');
+  fs.writeFileSync(prog, snapshotReaderProgram());
+  fs.writeFileSync(snap, typeof value === 'string' ? value : JSON.stringify(value));
+  const r = spawnSync('python3', [prog, snap], { encoding: 'utf8', timeout: 30_000 });
+  const out = { code: r.status, ceos: null, ns: null, bad: [], err: [] };
+  for (const line of (r.stdout ?? '').split('\n')) {
+    if (line.startsWith('CEOS ')) out.ceos = line.slice(5);
+    else if (line.startsWith('NS ')) out.ns = line.slice(3).split(' ').filter(Boolean);
+    else if (line.startsWith('BAD ')) out.bad.push(line.slice(4));
+    else if (line.startsWith('ERR ')) out.err.push(line.slice(4));
+  }
+  return out;
+}
+
+test('no snapshot yields entries-present-none-resolved without a BAD line — the third arm stays unreachable', (t) => {
+  // MUTATION: in the reader, change the per-entry `else: print('BAD …')` to a
+  // bare `pass` → every unusable `n` is dropped in SILENCE, the combination
+  // becomes reachable, and this test goes red naming the shape that reached
+  // it. That is exactly the day the third arm goes live, which is what this
+  // test exists to announce.
+  // MUTATION: delete the positive control below → the invariant passes
+  // VACUOUSLY over a corpus where nothing was ever dropped, which is the
+  // failure this repo swept for in #117. The control is not decoration.
+  const shapes = [
+    ['a usable pane number', '1'],
+    ['two digits', '42'],
+    ['a non-number', 'x'],
+    ['a leading zero', '08'],
+    ['plain zero', '0'],
+    ['the empty string', ''],
+    ['a negative', '-1'],
+    ['a decimal', '1.5'],
+    ['an arabic-indic digit', '٣'],
+    ['a space-separated pair', '1 2'],
+    ['a command substitution', '$(touch pwned)'],
+    ['a newline smuggling a tag', '1\nNS 9'],
+    ['a json null', null],
+    ['a json int', 1],
+    ['a json float', 1.0],
+    ['a json bool', true],
+    ['a json list', []],
+    ['a json object', {}],
+  ];
+
+  let sawDropWithBad = 0;
+  let sawResolved = 0;
+
+  for (const [label, n] of shapes) {
+    // One entry, and the same entry twice: a second copy is how a dropped
+    // entry could hide behind a resolved one, and vice versa.
+    for (const [arity, ceos] of [
+      ['alone', [{ n, branch: 'b', wt_path: '' }]],
+      ['beside a good one', [{ n, branch: 'b', wt_path: '' }, { n: '7', branch: 'b', wt_path: '' }]],
+      ['twice', [{ n, branch: 'b', wt_path: '' }, { n, branch: 'b', wt_path: '' }]],
+    ]) {
+      const where = `${label}, ${arity}`;
+      const r = readSnapshot(t, { saved_at: 1767225600, ceos });
+      if (r.code !== 0) continue; // refused by the reader outright; not this arm's business
+
+      const count = Number(r.ceos);
+      assert.ok(Number.isInteger(count), `${where}: the reader must report a count, got ${r.ceos}`);
+
+      // THE INVARIANT.
+      assert.ok(
+        !(count > 0 && r.ns.length === 0 && r.bad.length === 0),
+        `${where}: reached the third arm — ${count} entries, none resolved, and NOT ONE BAD line. ` +
+          `cmd_restore's backstop is now live and needs a test of its own.`
+      );
+
+      if (count > 0 && r.ns.length === 0 && r.bad.length > 0) sawDropWithBad++;
+      if (r.ns.length > 0) sawResolved++;
+    }
+  }
+
+  // POSITIVE CONTROLS, read before the verdict is believed. The invariant is a
+  // negative and a negative over a corpus that exercises nothing is vacuously
+  // true — so the corpus must be shown to produce BOTH halves of the state the
+  // invariant is about: entries that resolve, and entries that are all dropped
+  // (with the BAD line that is the only reason the arm stays shut).
+  assert.ok(sawResolved > 0, 'the corpus never resolved a single pane number — it is testing nothing');
+  assert.ok(
+    sawDropWithBad > 0,
+    'the corpus never produced an all-dropped snapshot, so the invariant held vacuously'
+  );
+});
+
 // ── A pane number is a bash SUBSCRIPT, and a subscript is an arithmetic context ──
 //
 // `WARROOM_PANE_ENGINES[$n]` evaluates `$n`. Under /bin/bash 3.2.57 a `$(…)`

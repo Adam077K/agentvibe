@@ -3119,15 +3119,23 @@ print('NS %s' % ' '.join(ns))
       echo "  It was saved from a war room with no CEOs open." >&2
       echo "  Pick a snapshot that has some, or start fresh with '${SESSION} start'." >&2
     else
-      # UNREACHABLE TODAY, ON PURPOSE. Getting here means the reader saw
-      # entries and none of them resolved, and every way an entry can fail to
-      # resolve currently also prints a BAD line that refuses above. This arm
-      # exists so that the guard's promise — nothing is killed unless there is
-      # something to build — survives a future drop reason that is silent,
-      # instead of the guard falling through to a message that says "empty"
-      # about a file holding five entries. Verified by mutation rather than
-      # asserted: remove the `$snapshot_bad` refusal above and a snapshot whose
-      # every `n` is unusable lands here, refusing with no kill-session.
+      # UNREACHABLE TODAY, ON PURPOSE — AND THE UNREACHABILITY IS PINNED BY A
+      # TEST, not by this comment. Getting here means the reader saw entries
+      # and none of them resolved, and every way an entry can fail to resolve
+      # currently also prints a BAD line that refuses above. This arm exists so
+      # that the guard's promise — nothing is killed unless there is something
+      # to build — survives a future drop reason that is SILENT, instead of the
+      # guard falling through to a message that says "empty" about a file
+      # holding five entries.
+      #
+      # The property that keeps it shut is an invariant of the reader, and it
+      # is what `the third arm stays unreachable` in scripts/warroom-engine.test.mjs
+      # asserts over a corpus of entry shapes: no input yields CEOS > 0 with an
+      # empty NS and not one BAD line. Make a drop silent and that test goes
+      # red naming the shape that reached here — which is the announcement that
+      # this arm just went live and needs a test of its own. Same object as
+      # scripts/probe-workflow-reach.mjs: the zero is the guarantee, so do not
+      # delete it to tidy up.
       echo "✗ this snapshot records $snapshot_ceos CEOs and none of them can be restored:" >&2
       echo "    in $chosen_snapshot" >&2
       echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
