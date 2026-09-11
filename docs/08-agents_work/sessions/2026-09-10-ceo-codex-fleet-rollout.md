@@ -38,12 +38,17 @@ confirmed each killed exactly the test and assertion claimed. A third agent, `wr
 zero-CEO defect against HEAD without being told the answer. That is real review and it is not the tier's
 2-of-3 multi-family panel, so the field says NOT_RUN rather than borrowing a word it did not earn.
 
-Oracle: `npm run check` 48/48 exit 0 on a clean tree at pinned sha `683328b`. `check:warroom` **122 pass ·
-0 fail**, re-measured at HEAD after this file first claimed `121→124`. That figure was invented in
-synthesis and caught by the builder who had measured it: baseline 118, plus three restore tests, plus one
-broadcast test, is 122, and there is no route from 118 to 124 with four tests. It is the same defect as the
-`29 of 30` → `29 of 29` incident CLAUDE.md records — the worker measured correctly and the orchestrator's
-summary lost it. Derive this number, never quote it: `npm run check:warroom`.
+Oracle: `npm run check` — 48 of 48, exit 0, on a clean tree at a pinned sha.
+
+**The warroom tally is deliberately not written here. Derive it: `npm run check:warroom`.** This line has
+now been wrong three times in one day, which is the argument. It first claimed `121→124`, a figure invented
+in synthesis and caught by the builder who had actually measured it — baseline 118 plus three restore tests
+plus one broadcast test is 122, and there is no route from 118 to 124 with four tests. Corrected to 122,
+which was true for about an hour until the unreachability invariant added one. A later reviewer then
+reported 109 against the same tree, correctly: `check:warroom` runs more than one file, and
+`warroom-engine.test.mjs` alone is the smaller number. Two right answers to two different questions, and a
+frozen figure in prose cannot tell you which question it answered. Same defect as the `29 of 30` →
+`29 of 29` incident CLAUDE.md records, three more times over.
 
 Known and unfixed, recorded rather than buried: `bin/warroom:3298` still prints `✗ No CEOs could be
 restored` after the kill — reachable only on the documented missing-branch arm, so not a third instance,
