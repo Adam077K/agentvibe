@@ -3744,8 +3744,15 @@ test('engine render with no engine name is refused, and renders nothing', (t) =>
  */
 const stdoutOnly = (r) => r.out.slice(0, r.out.length - r.err.length);
 
-/** A live session holding one ordinary CEO and one window nobody can place. */
-function sessionWithARenamedWindow(t) {
+/**
+ * A live session holding one ordinary CEO and one window nobody can place.
+ *
+ * `windows` is a parameter and not a constant because ORDER is the whole
+ * content of one of the tests below: with the unplaceable window first, a
+ * per-iteration check and an up-front sweep are indistinguishable, because
+ * neither has reached a good window yet when it refuses.
+ */
+function sessionWithARenamedWindow(t, { windows = ['CEO-08', 'CEO-1'] } = {}) {
   const p = runningSession(t, [{ n: 1, engine: 'claude' }], { engine: 'claude' });
   // `CEO-08` rather than `CEO-x`: it is the value `^[0-9]+$` accepted and
   // pane_number_ok does not, it is a fatal "value too great for base" in every
@@ -3753,7 +3760,7 @@ function sessionWithARenamedWindow(t) {
   // — so a guard that was loosened back to `[0-9]+` fails these too.
   // It is FIRST in the list so that a launcher without the guard meets it
   // before it has printed anything about the CEO that is fine.
-  const sh = shim(t, { sessionExists: true, windows: ['CEO-08', 'CEO-1'] });
+  const sh = shim(t, { sessionExists: true, windows });
   return { p, sh };
 }
 
@@ -3785,9 +3792,10 @@ test('broadcast refuses a window it cannot place, before it types into any pane'
   // and the run reports success. Red on the tmux assertion and on the
   // no-inbox-file one.
   // MUTATION: keep the sweep but move it INSIDE the send loop → CEO-08 is
-  // first, so nothing is typed and this test still passes; reorder the fixture
-  // to ['CEO-1', 'CEO-08'] to see that mutation, which is why the up-front
-  // sweep is the fix rather than a per-iteration check.
+  // FIRST in this fixture, so nothing is typed and this test still passes. It
+  // cannot see that mutation and is not asked to; the test below is ordered
+  // the other way and exists for exactly that, which is why the up-front sweep
+  // is the fix rather than a per-iteration check.
   const { p, sh } = sessionWithARenamedWindow(t);
   const r = launch(p, ['broadcast', 'ship it'], sh);
 
@@ -3805,6 +3813,53 @@ test('broadcast refuses a window it cannot place, before it types into any pane'
     [],
     'and must have recorded no message either'
   );
+});
+
+test('broadcast refuses up front: a GOOD window before the bad one still receives nothing', (t) => {
+  // THE HEADLINE PROPERTY OF THE TEST ABOVE, WHICH THAT TEST DOES NOT CONSTRAIN.
+  // It is named "before it types into any pane" and up-front-ness is what the
+  // production comment claims about cmd_broadcast, but its fixture puts
+  // `CEO-08` FIRST — so the refusal precedes every send whether the check is
+  // an up-front sweep or a per-iteration one, and the assertion passes either
+  // way. Measured 2026-09-11 by rewriting the sweep as a per-iteration
+  // `pane_number_require` inside the send loop: `npm run check:warroom` stayed
+  // at 118 of 118, exit 0. An untested headline property.
+  //
+  // Order is the entire difference. With a good window first, the two forms
+  // separate: the sweep validates every window before typing into any, so
+  // nothing is sent; the per-iteration form sends to CEO-1 and only then
+  // refuses at CEO-08, leaving a PARTIAL broadcast — some CEOs told, some not,
+  // and a non-zero exit that does not say which. That is mutate-then-refuse,
+  // the same class as the zero-CEO restore bug closed in this commit's
+  // neighbour, in the same file whose comment declares the class dead.
+  //
+  // MUTATION: move `pane_number_require` from the up-front loop into the send
+  // loop → RED here on the send-keys assertion and on the inbox one, while the
+  // test above stays GREEN. That contrast is the finding; a mutation that
+  // reddens both would not have needed this test.
+  const { p, sh } = sessionWithARenamedWindow(t, { windows: ['CEO-1', 'CEO-08'] });
+  const r = launch(p, ['broadcast', 'ship it'], sh);
+
+  assert.notEqual(r.code, 0, `a broadcast with an unplaceable destination must refuse: ${r.out}`);
+
+  // ZERO sends, not "no send to the bad one". A broadcast is the one command
+  // where a partial success is worst: the founder reads a failure and cannot
+  // tell which CEOs already have the message.
+  assert.deepEqual(
+    r.calls.filter((c) => c[0] === 'send-keys'),
+    [],
+    'the CEO that comes BEFORE the unplaceable window must not have been typed into'
+  );
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and nothing else in tmux may move either');
+
+  const msgDir = path.join(p.home, '.proj', 'messages');
+  assert.deepEqual(
+    fs.existsSync(msgDir) ? fs.readdirSync(msgDir) : [],
+    [],
+    'and no inbox may have been written for the CEO it reached first'
+  );
+
+  assert.match(r.err, /'08' is not a pane number/, 'and it must still name the value it refused');
 });
 
 test('inbox skips a window it cannot place, and shows the CEO it can', (t) => {
