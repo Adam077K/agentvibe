@@ -309,7 +309,14 @@ const results = await parallel(
       {
         label: `lane:${lane.label}`,
         phase: 'Explore',
-        agentType: lane.slug === 'autopsy' ? 'builder' : 'sourcer',
+        // A LITERAL, and `builder` for every lane including the sealed ones. This read
+        // `lane.slug === 'autopsy' ? 'builder' : 'sourcer'` on the run of 2026-09-11 and cost the
+        // round most of its artifacts: `sourcer` carries [Read, Glob, Grep, WebSearch, WebFetch]
+        // and NO Write, by design, so seven sealed lanes researched for real and could not author
+        // the file they were asked for. Their findings survived only because the JSON return was
+        // salvageable from the workflow journal. A research lane that must write a file needs a
+        // write-capable engine; sealing is enforced by the prompt, not by removing the tool.
+        agentType: 'builder',
         schema: SCHEMA,
       },
     ).then((r) => ({ lane: lane.slug, ...r })).catch((e) => ({ lane: lane.slug, error: String(e) })),
