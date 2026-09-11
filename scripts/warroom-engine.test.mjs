@@ -1705,6 +1705,89 @@ test('a snapshot whose top level is a list refuses the restore, naming the shape
   assert.doesNotMatch(r.err, /Traceback/, 'and must not answer a founder with a Python traceback');
 });
 
+// ── A snapshot that is VALID and yields ZERO CEOs ──────────────────────────
+//
+// The last member of the destroy-then-refuse class, and the one that survived
+// the fix for the rest of it. Every refusal above is driven by a POSITIVE
+// signal — a non-zero reader status, a BAD line, a bad wt_path — and a
+// snapshot holding `{}` produces none of them. It is readable JSON, its top
+// level is an object, its `ceos` is a list (an absent one defaults to `[]`),
+// and no entry is malformed because there are no entries. `snapshot_ns` came
+// back empty, which is ALSO what a clean one-CEO snapshot looks like before
+// the NS line is read, so nothing refused: control walked down to the
+// kill-session, destroyed the founder's running war room, rebuilt nothing,
+// and printed `✗ No CEOs could be restored.` afterwards.
+//
+// Measured on 2026-09-11 before the fix: one kill-session recorded, exit 1,
+// stderr empty. The MESSAGE was right and it came one step too late — which
+// is the same shape as the unreadable-JSON bug and why the fix goes in the
+// refusal cluster above the kill rather than at the point of the complaint.
+//
+// The three inputs are separated because the founder's next move differs.
+// `{}` and a snapshot with no `ceos` key are files this program never wrote,
+// so the answer is "this is not a snapshot, pick another"; `{"ceos": []}` is
+// a file it WOULD write, from a war room that had no CEOs, so the answer is
+// "there is nothing in here to restore". Telling them apart from the message
+// alone is the point — a founder should not have to open the file.
+//
+// `names` and `notNames` are a PAIR on purpose. A single positive match does
+// not prove the message distinguishes anything — "records no CEOs" is true of
+// all three inputs, so three tests asserting it would pass over a launcher
+// that had merged the arms back into one sentence. Each row therefore also
+// names the other arm's wording and requires its ABSENCE.
+for (const [label, raw, names, notNames] of [
+  ['an empty object', '{}\n', /no 'ceos' field/, /empty/i],
+  ['no ceos key at all', JSON.stringify({ saved_at: 1767225600 }), /no 'ceos' field/, /empty/i],
+  ['an empty ceos list', JSON.stringify({ saved_at: 1767225600, ceos: [] }), /is empty/i, /no 'ceos' field/],
+]) {
+  test(`a snapshot with ${label} refuses BEFORE the kill, and the war room survives`, (t) => {
+    // MUTATION: delete the `if [ -z "$snapshot_ns" ]` refusal block from
+    // cmd_restore → all three go red on the KILL-SESSION assertion, which is
+    // the load-bearing one: the launcher still exits 1 and still prints a
+    // complaint, so a test asserting only on status or on stderr stays GREEN
+    // over the bug. Measured 2026-09-11.
+    // MUTATION: move that block BELOW the kill-session → red on kill-session
+    // alone, as for every other member of this class.
+    // MUTATION: collapse its three message arms into one → red on the
+    // doesNotMatch assertion for whichever arm's wording survived, which is
+    // what that assertion exists for.
+    // MUTATION: drop the `print('CEOS …')` line from the reader → the tag never
+    // arrives, `$snapshot_ceos` is empty, and the guard still REFUSES (it is
+    // keyed on `$snapshot_ns`, not on the tag) but falls into the third arm and
+    // describes all three inputs as "records  CEOs". Green on kill-session, red
+    // on the naming assertions — which is the split the two conditions exist
+    // for, and the reason the guard is not keyed on the count.
+    const p = restorableProject(t, [{ n: 1, branch: 'ceo-1' }]);
+    writeRawSnapshot(p, raw);
+    const sh = shim(t, { sessionExists: true });
+    const r = launch(p, ['restore', 'latest'], sh);
+
+    assert.notEqual(r.code, 0, `${label}: a snapshot with no CEOs must refuse: ${r.out}`);
+
+    // THE LOAD-BEARING ASSERTION. Asserted on the recorded tmux calls and not
+    // on stdout: the buggy launcher printed a correct refusal too, one line
+    // after it had already killed the session the founder still had.
+    assert.deepEqual(
+      r.calls.filter((c) => c[0] === 'kill-session'),
+      [],
+      `${label}: a snapshot with nothing to restore must not destroy the running war room`
+    );
+    assert.deepEqual(mutatingTmuxCalls(r.calls), [], `${label}: and nothing else in tmux may move`);
+    assert.equal(
+      fs.existsSync(path.join(p.dir, '.worktrees')),
+      false,
+      `${label}: nor may it build anything on disk`
+    );
+
+    // It said WHICH of the two mistakes this is, and which file to look at.
+    assert.match(r.err, names, `${label}: the refusal must name the specific condition`);
+    assert.doesNotMatch(r.err, notNames, `${label}: and must not describe it as the other mistake`);
+    assert.match(r.err, /refus/i, `${label}: and must say that it is refusing`);
+    assert.match(r.err, /2026-01-01-000000\.json/, `${label}: and name the file it read`);
+    assert.doesNotMatch(r.err, /Traceback/, `${label}: in a sentence, not a Python traceback`);
+  });
+}
+
 // ── A pane number is a bash SUBSCRIPT, and a subscript is an arithmetic context ──
 //
 // `WARROOM_PANE_ENGINES[$n]` evaluates `$n`. Under /bin/bash 3.2.57 a `$(…)`

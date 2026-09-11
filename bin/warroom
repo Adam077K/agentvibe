@@ -2985,6 +2985,7 @@ ceos = d.get('ceos', [])
 if not isinstance(ceos, list):
     print('ERR its ceos field is a %s, not a list' % type(ceos).__name__)
     raise SystemExit(2)
+print('CEOS %s' % ('missing' if 'ceos' not in d else len(ceos)))
 ns = []
 for i, c in enumerate(ceos):
     if not isinstance(c, dict):
@@ -3001,7 +3002,7 @@ for i, c in enumerate(ceos):
     eng = str(c.get('engine', '') or '')
     if not re.fullmatch(r'[A-Za-z0-9_-]*', eng):
         print('BAD entry #%d carries engine %r — not an engine name' % (i, eng))
-    elif eng:
+    elif eng and n in ns:
         print('ENG %s:%s' % (n, eng))
     print('WT %s' % str(c.get('wt_path', '') or '').replace('\n', ' '))
 print('NS %s' % ' '.join(ns))
@@ -3031,13 +3032,14 @@ print('NS %s' % ' '.join(ns))
   # by the rule the config keys are judged by, path charset then _path_under,
   # so there is one answer to "is this under that". Empty is the routine skip
   # further down, as it always was.
-  local snapshot_ns="" snapshot_bad="" _wt="" _wt_bad="" _line
+  local snapshot_ns="" snapshot_bad="" snapshot_ceos="" _wt="" _wt_bad="" _line
   WARROOM_SNAPSHOT_ENGINES=""
   while IFS= read -r _line; do
     case "$_line" in
       "NS "*) snapshot_ns="${_line#NS }" ;;
       "BAD "*) snapshot_bad="${snapshot_bad}${_line#BAD }
 " ;;
+      "CEOS "*) snapshot_ceos="${_line#CEOS }" ;;
       "ENG "*) WARROOM_SNAPSHOT_ENGINES="${WARROOM_SNAPSHOT_ENGINES}${_line#ENG } " ;;
       "WT "*)
         _wt="${_line#WT }"
@@ -3065,6 +3067,73 @@ print('NS %s' % ' '.join(ns))
     echo "    in $chosen_snapshot" >&2
     echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
     echo "  This program only ever records worktrees it created there, so the file is not one it wrote." >&2
+    exit 1
+  fi
+
+  # A snapshot that is VALID and leaves NOTHING TO BUILD is the last member of
+  # the destroy-then-refuse class, and the one that survived the fix for the
+  # rest of it. Every refusal above needs a POSITIVE signal — a non-zero reader
+  # status, a BAD line, a wt_path somewhere else — and `{}` produces none of
+  # them: it is readable JSON, its top level is an object, `d.get('ceos', [])`
+  # is a list, and no entry is malformed because there are no entries. So
+  # `snapshot_ns` came back empty, which is also what it holds one line before
+  # a perfectly good snapshot fills it, nothing refused, and control reached
+  # the kill-session below. The founder lost the running war room and was then
+  # told "✗ No CEOs could be restored." — the right message, one step too late.
+  # Measured 2026-09-11 on `{}`: one kill-session, exit 1, stderr empty.
+  #
+  # THE CONDITION IS THE RESOLVED SET, `$snapshot_ns`, and the COUNT only
+  # chooses the wording. Those are two different questions and they have
+  # different right answers, so neither one alone is the check:
+  #
+  #   WHAT MAKES THE KILL UNSAFE is that there is nothing to build afterwards.
+  #   That is a property of the RESOLVED set, not of the input, so the guard
+  #   tests the resolved set — then a future entry that gets dropped for a
+  #   reason nobody has thought of yet is still caught here, without anyone
+  #   remembering to extend this condition. A guard keyed on the input count
+  #   would have let exactly that through.
+  #
+  #   WHAT THE FOUNDER NEEDS TOLD is which mistake they made, and the resolved
+  #   set cannot say: it is equally empty for a file with no CEOs and for a
+  #   file with five unusable ones. So the message is chosen by the count the
+  #   reader actually saw, on its CEOS line.
+  #
+  # These are not the same input. Measured 2026-09-11: a `ceos` list whose
+  # every entry has an unusable `n` reports `CEOS 2` with an EMPTY `NS` —
+  # resolved zero, input two. It does not reach here today, because each of
+  # those entries also prints a BAD line and the refusal above wins, which is
+  # right: "entry #0 names CEO 'x'" tells the founder more than any sentence
+  # here could. The third arm below is the BACKSTOP for that shape, and it is
+  # deliberately unreachable rather than dead — see the note on it.
+  if [ -z "$snapshot_ns" ]; then
+    if [ "$snapshot_ceos" = "missing" ]; then
+      echo "✗ this snapshot has no 'ceos' field, so it records nothing to restore:" >&2
+      echo "    in $chosen_snapshot" >&2
+      echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+      echo "  Every snapshot this program writes carries that field, so the file is not one it wrote." >&2
+      echo "  Pick another snapshot and run '${SESSION} restore' again." >&2
+    elif [ "$snapshot_ceos" = "0" ]; then
+      echo "✗ this snapshot's list of CEOs is empty, so it records nothing to restore:" >&2
+      echo "    in $chosen_snapshot" >&2
+      echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+      echo "  It was saved from a war room with no CEOs open." >&2
+      echo "  Pick a snapshot that has some, or start fresh with '${SESSION} start'." >&2
+    else
+      # UNREACHABLE TODAY, ON PURPOSE. Getting here means the reader saw
+      # entries and none of them resolved, and every way an entry can fail to
+      # resolve currently also prints a BAD line that refuses above. This arm
+      # exists so that the guard's promise — nothing is killed unless there is
+      # something to build — survives a future drop reason that is silent,
+      # instead of the guard falling through to a message that says "empty"
+      # about a file holding five entries. Verified by mutation rather than
+      # asserted: remove the `$snapshot_bad` refusal above and a snapshot whose
+      # every `n` is unusable lands here, refusing with no kill-session.
+      echo "✗ this snapshot records $snapshot_ceos CEOs and none of them can be restored:" >&2
+      echo "    in $chosen_snapshot" >&2
+      echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+      echo "  Every entry in it was dropped, so rebuilding would produce an empty war room." >&2
+      echo "  Pick another snapshot and run '${SESSION} restore' again." >&2
+    fi
     exit 1
   fi
 
