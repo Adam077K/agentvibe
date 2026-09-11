@@ -2347,7 +2347,31 @@ cmd_ls() {
 
   while IFS= read -r window_name; do
     local n
-    n=$(echo "$window_name" | sed 's/CEO-//')
+    n="${window_name#CEO-}"
+    # A tmux window name is DATA: `tmux rename-window` is available to anyone
+    # with the socket, and `CEO-08` or `CEO-x` sorts into this list like any
+    # other. From here the value reaches get_ansi_color, whose body is
+    # `${CEO_ANSI_COLORS[$(( ($1 - 1) % 6 ))]}` — an arithmetic context — and a
+    # `grep "^ceo-${n}:"` over the registry, where it is a REGEX, and
+    # `ceo-${n}.task` and `ceo-${n}.session`, where it is a PATH.
+    #
+    # Measured on /bin/bash 3.2.57 rather than assumed: `$(…)` inside a
+    # variable used in `$(( ))` is NOT executed there — it is a syntax error —
+    # so this site is not the injection that the array-SUBSCRIPT sites are.
+    # What it is is a fatal arithmetic abort (`CEO-08` → "value too great for
+    # base") and a regex and a path built out of a stranger's string.
+    #
+    # SKIPS rather than refuses, unlike cmd_grid_view two functions up, and the
+    # difference is what the command is FOR: `ls` exists to show the founder
+    # what is running, and a listing that aborts on one renamed window tells
+    # them nothing about the eight that are fine. It is not a SILENT skip —
+    # printing two CEOs where there are three is the
+    # indistinguishable-from-working failure this program keeps refusing — so
+    # the window is named on stderr and left out of the count.
+    if ! pane_number_ok "$n"; then
+      echo "  ⚠ window '$window_name' is not a CEO pane number — not listed." >&2
+      continue
+    fi
     local ansi_color
     ansi_color=$(get_ansi_color "$n")
 
@@ -2922,30 +2946,109 @@ except:
   # disagree exactly once, in the case nobody tested. And not `[0-9]+`: that
   # accepted `08`, which is a fatal arithmetic error where the number is finally
   # used, and `010`, which is octal 8 there. This is pane_number_ok, in Python.
-  local snapshot_ns snapshot_bad
-  snapshot_ns=$(python3 -c "
+  # ONE PARSE, ONE ANSWER — and the reason is a bug that was reproduced by hand.
+  #
+  # These three questions — which pane numbers the snapshot names, which of its
+  # values cannot be used, and where it says the worktrees are — used to be
+  # three separate `$(python3 -c … 2>/dev/null)` substitutions. Every one of
+  # them answered an UNPARSEABLE file with the empty string, and the empty
+  # string is also what a perfectly clean snapshot produces: `json.load` raised,
+  # stderr went to /dev/null, `snapshot_bad` came back empty, `[ -n … ]` was
+  # false, and control walked straight down to the kill-session below. A
+  # snapshot holding `not valid json at all {{{` therefore DESTROYED the running
+  # war room and only then failed — the destroy-then-refuse ordering the comment
+  # above says has been fixed. The ORDER was right; the SIGNAL was missing,
+  # which is the worse of the two, because the code reads correct.
+  #
+  # So the reader below cannot answer with silence. It wraps json.load in
+  # try/except, refuses a top level that is not an object and a `ceos` that is
+  # not a list of objects, and exits 2 with a diagnostic on each of those. Its
+  # answers come back on TAGGED lines — NS, BAD, ENG, WT — so "I looked and
+  # found nothing wrong" and "I could not look" are different observations
+  # rather than the same empty string. Any non-zero status routes into the
+  # refusal below, including a python3 that is missing, killed, or that died
+  # after printing half an answer: stderr is CAPTURED here rather than
+  # discarded, so whatever it managed to say is what the founder is shown.
+  local _snap_out _snap_rc
+  _snap_out=$(python3 -c "
 import json, re, sys
-d = json.load(open(sys.argv[1]))
-print(' '.join(str(c.get('n','')) for c in d.get('ceos',[]) if re.fullmatch(r'[1-9][0-9]*', str(c.get('n','')))))
-" "$chosen_snapshot" 2>/dev/null)
-  # session_id is judged here for the same reason and by the same rule as the
-  # pane number: it is spliced into `claude --resume <id>` and typed into a
-  # live pane, save_session_snapshot never records one outside this charset, so
-  # one that is outside it means the file was not written by this program.
-  snapshot_bad=$(python3 -c "
-import json, re, sys
-d = json.load(open(sys.argv[1]))
-for i, c in enumerate(d.get('ceos',[])):
-    n = str(c.get('n',''))
-    if not re.fullmatch(r'[1-9][0-9]*', n):
-        print('entry #%d names CEO %r — not a pane number' % (i, n))
-    sid = str(c.get('session_id','') or '')
+try:
+    with open(sys.argv[1]) as f:
+        d = json.load(f)
+except Exception as e:
+    print('ERR this file is not readable JSON: %s' % (e,))
+    raise SystemExit(2)
+if not isinstance(d, dict):
+    print('ERR its top level is a %s, not an object' % type(d).__name__)
+    raise SystemExit(2)
+ceos = d.get('ceos', [])
+if not isinstance(ceos, list):
+    print('ERR its ceos field is a %s, not a list' % type(ceos).__name__)
+    raise SystemExit(2)
+ns = []
+for i, c in enumerate(ceos):
+    if not isinstance(c, dict):
+        print('ERR entry #%d is a %s, not an object' % (i, type(c).__name__))
+        raise SystemExit(2)
+    n = str(c.get('n', ''))
+    if re.fullmatch(r'[1-9][0-9]*', n):
+        ns.append(n)
+    else:
+        print('BAD entry #%d names CEO %r — not a pane number' % (i, n))
+    sid = str(c.get('session_id', '') or '')
     if not re.fullmatch(r'[A-Za-z0-9._-]*', sid):
-        print('entry #%d carries session_id %r — not a session id' % (i, sid))
-    eng = str(c.get('engine','') or '')
+        print('BAD entry #%d carries session_id %r — not a session id' % (i, sid))
+    eng = str(c.get('engine', '') or '')
     if not re.fullmatch(r'[A-Za-z0-9_-]*', eng):
-        print('entry #%d carries engine %r — not an engine name' % (i, eng))
-" "$chosen_snapshot" 2>/dev/null)
+        print('BAD entry #%d carries engine %r — not an engine name' % (i, eng))
+    elif eng:
+        print('ENG %s:%s' % (n, eng))
+    print('WT %s' % str(c.get('wt_path', '') or '').replace('\n', ' '))
+print('NS %s' % ' '.join(ns))
+" "$chosen_snapshot" 2>&1)
+  _snap_rc=$?
+
+  if [ "$_snap_rc" -ne 0 ]; then
+    echo "✗ this snapshot cannot be read:" >&2
+    printf '%s\n' "$_snap_out" | sed 's/^/    /' >&2
+    echo "    in $chosen_snapshot" >&2
+    echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+    echo "  Pick another snapshot, or fix the file above and run '${SESSION} restore' again." >&2
+    exit 1
+  fi
+
+  # Sorting the tagged lines. The loop is fed by `<<<` and not by a pipe: in
+  # bash 3.2 the right-hand side of a pipe is a subshell, so every variable set
+  # in here would be discarded at the `done` and the whole check would read
+  # clean for the same reason the old code did.
+  #
+  # wt_path is where this restore runs `git worktree add` and points a pane's
+  # cwd, and it comes off the same disk as the pane number. save_session_snapshot
+  # only ever records "$WORKTREES_DIR/ceo-N-TS", so one anywhere else was not
+  # written by this program: refused whole, up front, by the corruption rule —
+  # a checkout with state_dir inside the project carries a snapshot as easily
+  # as it carries a config, and this is the write it would have chosen. Judged
+  # by the rule the config keys are judged by, path charset then _path_under,
+  # so there is one answer to "is this under that". Empty is the routine skip
+  # further down, as it always was.
+  local snapshot_ns="" snapshot_bad="" _wt="" _wt_bad="" _line
+  WARROOM_SNAPSHOT_ENGINES=""
+  while IFS= read -r _line; do
+    case "$_line" in
+      "NS "*) snapshot_ns="${_line#NS }" ;;
+      "BAD "*) snapshot_bad="${snapshot_bad}${_line#BAD }
+" ;;
+      "ENG "*) WARROOM_SNAPSHOT_ENGINES="${WARROOM_SNAPSHOT_ENGINES}${_line#ENG } " ;;
+      "WT "*)
+        _wt="${_line#WT }"
+        [ -n "$_wt" ] || continue
+        [ -n "$_wt_bad" ] && continue
+        path_charset_ok "$_wt" || { _wt_bad="$_wt"; continue; }
+        _path_under "$_wt" "$WORKTREES_DIR" >/dev/null || { _wt_bad="$_wt"; continue; }
+        ;;
+    esac
+  done <<< "$_snap_out"
+  snapshot_bad="${snapshot_bad%$'\n'}"
 
   if [ -n "$snapshot_bad" ]; then
     echo "✗ this snapshot holds values that cannot be used:" >&2
@@ -2956,26 +3059,6 @@ for i, c in enumerate(d.get('ceos',[])):
     exit 1
   fi
 
-  # wt_path is where this restore runs `git worktree add` and points a pane's
-  # cwd, and it comes off the same disk as the pane number. save_session_snapshot
-  # only ever records "$WORKTREES_DIR/ceo-N-TS", so one anywhere else was not
-  # written by this program: refused whole, up front, by the corruption rule —
-  # a checkout with state_dir inside the project carries a snapshot as easily
-  # as it carries a config, and this is the write it would have chosen. Judged
-  # by the rule the config keys are judged by, path charset then _path_under,
-  # so there is one answer to "is this under that". Empty is the routine skip
-  # further down, as it always was.
-  local _wt _wt_bad=""
-  while IFS= read -r _wt; do
-    [ -n "$_wt" ] || continue
-    path_charset_ok "$_wt" || { _wt_bad="$_wt"; break; }
-    _path_under "$_wt" "$WORKTREES_DIR" >/dev/null || { _wt_bad="$_wt"; break; }
-  done < <(python3 -c "
-import json, sys
-d = json.load(open(sys.argv[1]))
-for c in d.get('ceos',[]):
-    print(str(c.get('wt_path','') or '').replace('\n',' '))
-" "$chosen_snapshot" 2>/dev/null)
   if [ -n "$_wt_bad" ]; then
     echo "✗ this snapshot names a worktree outside $WORKTREES_DIR:" >&2
     echo "    $_wt_bad" >&2
@@ -2985,20 +3068,19 @@ for c in d.get('ceos',[]):
     exit 1
   fi
 
-  # The engines the snapshot recorded, as `n:engine` pairs, handed to the
-  # resolver as its rung below `--engine`. Shape is already checked above, so
-  # the pairs tokenise; an engine this program does not KNOW is refused by
-  # engines_resolve, naming the snapshot, like any other unknown engine.
+  # The engines the snapshot recorded arrived above as `n:engine` pairs on the
+  # ENG lines, and they are the resolver's rung below `--engine`. Shape is
+  # already checked, so the pairs tokenise; an engine this program does not
+  # KNOW is refused by engines_resolve, naming the snapshot, like any other
+  # unknown engine.
   #
   # An entry with no engine recorded — a snapshot written by a launcher that
   # predates the field — is WARNED about per pane below, with the engine it
   # will come up on and where that answer came from. It is not guessed at in
   # silence: that is precisely how a mixed war room used to come back uniform.
-  WARROOM_SNAPSHOT_ENGINES=$(python3 -c "
-import json, sys
-d = json.load(open(sys.argv[1]))
-print(' '.join('%s:%s' % (c.get('n'), c.get('engine')) for c in d.get('ceos',[]) if c.get('engine')))
-" "$chosen_snapshot" 2>/dev/null)
+  # Reading it in the same parse as everything else is why a file that cannot
+  # be read can no longer come back as "this war room recorded no engines",
+  # which is indistinguishable from a war room that really recorded none.
   WARROOM_SNAPSHOT_SOURCE="$chosen_snapshot"
 
   # Engines are resolved, their binaries checked and their preambles written
@@ -3426,16 +3508,40 @@ cmd_broadcast() {
 
   local sent=0
   # Try normal mode first (CEO-* windows)
+  #
+  # The window list is collected and checked IN FULL before the first
+  # send-keys. This is the one of these four sites that REFUSES, and the reason
+  # is what the number becomes: the `ceo-N.jsonl` this appends to — a path —
+  # and `int(sys.argv[2])` inside the python below — an argv. A window named
+  # `CEO-x` types the message into the pane and then loses the record of having
+  # sent it, because int('x') raises after tmux has already been told; `sent`
+  # counts it anyway, so the founder is told the message went somewhere no
+  # inbox will ever show it.
+  #
+  # Checking inside the send loop would be worse than not checking: the first
+  # two panes would have the message typed into them and the third would abort,
+  # a broadcast that half happened and never printed its own summary. So the
+  # sweep is up front, the same shape as cmd_grid_view's window sweep and
+  # cmd_restore's snapshot check — nothing is typed anywhere until every
+  # destination is a pane number.
+  local -a bcast_windows=()
   while IFS= read -r wname; do
-    local ceo_n
-    ceo_n=$(echo "$wname" | sed 's/CEO-//')
-    tmux send-keys -t "$SESSION:${wname}.1" -l "$full_msg"
-    tmux send-keys -t "$SESSION:${wname}.1" Enter
+    bcast_windows+=("$wname")
+  done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
+  local _bw
+  for _bw in "${bcast_windows[@]}"; do
+    pane_number_require "${_bw#CEO-}" "the tmux window '$_bw'"
+  done
+
+  for _bw in "${bcast_windows[@]}"; do
+    local ceo_n="${_bw#CEO-}"
+    tmux send-keys -t "$SESSION:${_bw}.1" -l "$full_msg"
+    tmux send-keys -t "$SESSION:${_bw}.1" Enter
     local inbox_file="$PROJECT_STATE_DIR/messages/ceo-${ceo_n}.jsonl"
     python3 -c "import json,sys; print(json.dumps({'ts':int(sys.argv[1]),'from':'user','to':int(sys.argv[2]),'type':sys.argv[3],'msg':sys.argv[4],'read':False}))" \
       "$ts" "$ceo_n" "$msg_type" "$msg" >> "$inbox_file"
     ((sent++))
-  done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
+  done
 
   # Try grid mode if no CEO windows found
   if [ "$sent" -eq 0 ] && tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep -q "^GRID$"; then
@@ -3522,7 +3628,28 @@ for l in reversed(lines[-20:]):
       done < <(
         # Normal mode
         tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-" | while IFS= read -r wname; do
-          local nn; nn=$(echo "$wname" | sed 's/CEO-//')
+          local nn; nn="${wname#CEO-}"
+          # The number becomes `$inbox_dir/ceo-${n}.jsonl` in _print_inbox,
+          # which is a path, and a heading printed to the founder.
+          #
+          # SKIPS, and here that is not a choice between skip and refuse: this
+          # loop is the right-hand side of a PIPE, so it runs in a subshell and
+          # an `exit` in it would end the subshell, not the program. The outer
+          # `while read` would carry on against a truncated list — a partial
+          # inbox listing that looks complete, which is the failure mode a
+          # refusal is supposed to prevent. The warning goes to STDERR because
+          # the stdout of this loop IS the data stream the outer loop parses.
+          #
+          # NO APOSTROPHE MAY APPEAR IN A COMMENT INSIDE THIS PROCESS
+          # SUBSTITUTION. Measured on /bin/bash 3.2.57: one possessive
+          # apostrophe in the paragraph above made the parser scan past the
+          # closing paren hunting for a matching quote, and the whole command
+          # died with a bad-substitution error naming no closing paren. The
+          # parser reads quote characters inside comments in a <(...) block.
+          if ! pane_number_ok "$nn"; then
+            echo "  ⚠ window '$wname' is not a CEO pane number — no inbox shown for it." >&2
+            continue
+          fi
           echo "$nn $wname ${wname}.1"
         done
         # Grid mode
@@ -4313,7 +4440,22 @@ cmd_files() {
 
   while IFS= read -r window_name; do
     local n
-    n=$(echo "$window_name" | sed 's/CEO-//')
+    n="${window_name#CEO-}"
+    # Same data, same three uses as cmd_ls: a `grep "^ceo-${n}:"` REGEX, a
+    # `$WORKTREES_DIR/ceo-${n}-${ts}` PATH, and an arithmetic context — except
+    # that here the arithmetic is `${CEO_ANSI_COLORS[$(( (n - 1) % 6 ))]}` in
+    # the current shell rather than inside a `$(…)`, and a fatal arithmetic
+    # error there kills the WHOLE program rather than one subshell. Measured on
+    # /bin/bash 3.2.57: `ceo_files[$n]="x"` with a non-numeric n exits the
+    # shell immediately, mid-report.
+    #
+    # SKIPS with a warning, for cmd_ls's reason: this is a report, and a report
+    # that aborts on a renamed window hides every real file overlap — which is
+    # the only thing anyone runs it to see.
+    if ! pane_number_ok "$n"; then
+      echo "  ⚠ window '$window_name' is not a CEO pane number — its files are not shown." >&2
+      continue
+    fi
 
     # Get worktree path from registry
     local wt_path=""

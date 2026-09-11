@@ -1212,6 +1212,96 @@ test('a binary missing for pane 3 refuses the run before tmux is touched', (t) =
   );
 });
 
+test('a grid whose pane 3 needs a missing binary refuses before tmux is touched', (t) => {
+  // THE ANTI-REVERT TEST FOR cmd_grid_start, and it had none. Every `--grid`
+  // run in this suite used the default shim, where both binaries are
+  // installed, and asserted exit 0 — so restoring the line this replaced,
+  //
+  //   check_deps 2>/dev/null || true
+  //
+  // kept the whole file green. That line discarded exactly the error the
+  // rewrite exists to surface: a grid asking for `--engine 3:codex` on a
+  // machine with no codex built all three worktrees and the whole tmux grid,
+  // and then failed inside a pane, where a founder finds it by reading the
+  // pane.
+  //
+  // Mirrors the normal-mode test above rather than inventing a shape, because
+  // the two paths are the same promise made twice: `--grid` and no flag reach
+  // check_deps through different callers, and a fix applied to one of them is
+  // the reason this test exists.
+  //
+  // WHICH LINE THIS TEST ACTUALLY CONSTRAINS, measured rather than assumed,
+  // because the obvious answer is wrong. `--grid` does NOT enter
+  // cmd_grid_start from the router: it goes through cmd_start, which resolves
+  // and checks every pane itself before dispatching. So this test is killed by
+  // mutating CMD_START:
+  // MUTATION: `engines_setup all $(seq 1 "$count")` → `check_deps 2>/dev/null
+  // || true` in cmd_start → red here, and red on the normal-mode sibling
+  // above, which is the pair behaving as one guard because it is one.
+  // MEASURED GREEN, and recorded because it is the mutation this test looks
+  // like it kills and does not: the same revert applied to CMD_GRID_START
+  // leaves this test passing, since cmd_start has already refused upstream.
+  // cmd_grid_start has its own check and its own test, directly below.
+  const p = launchableProject(t);
+  const sh = shim(t, { engines: ['claude'] }); // codex is genuinely not installed
+  const r = launch(p, ['3', '--grid', '--engine', '3:codex'], sh);
+
+  assert.notEqual(r.code, 0, `a grid with an uninstallable engine must refuse: ${r.out}`);
+  // On STDOUT, like every other check_deps refusal in this program — asserted
+  // where the message actually is rather than where it ought to be. Moving it
+  // to stderr is a change to the launcher's output contract and belongs in its
+  // own diff; `r.out` here is stdout+stderr, so this assertion survives that
+  // move and does not pin the wrong stream.
+  assert.match(r.out, /codex not found/, 'and name the binary pane 3 would have needed');
+  assert.doesNotMatch(r.out, /claude not found/, 'claude is present — naming it would be the pane-1 bug');
+
+  // NOTHING BUILT. A grid that refuses after laying out the panes is the
+  // failure being fixed, not a tidier version of it.
+  assert.deepEqual(launchLines(r.calls), new Map(), 'no pane may be launched');
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and no window, pane or layout may be created');
+  assert.equal(
+    fs.existsSync(path.join(p.dir, '.worktrees')),
+    false,
+    'nor may a single worktree be checked out'
+  );
+});
+
+test('cmd_grid_start checks the engine binaries itself, and names the one it wants', (t) => {
+  // The test for bin/warroom's own line, which the run above cannot reach.
+  // cmd_grid_start is only ever called by cmd_start, and cmd_start resolves
+  // first — so the grid function could lose its check entirely and every
+  // `--grid` test in this file would stay green. That is the shape of a
+  // second implementation of one guard: right now the two agree, and the day
+  // a caller reaches cmd_grid_start without going through cmd_start, only
+  // this test says which of them is load-bearing.
+  //
+  // Called directly, like pane_number_of above and for the same reason: this
+  // is an input the router cannot produce.
+  //
+  // MUTATION: `engines_setup all $(seq 1 "$count")` → `check_deps 2>/dev/null
+  // || true` in cmd_grid_start, verbatim what stood there before. The run
+  // still exits 1 — but for an unrelated reason and in SILENCE: check_deps
+  // falls back to resolving pane 1 alone, the `3:codex` override then names a
+  // pane nobody resolved, and that refusal goes to stderr, which the
+  // `2>/dev/null` throws away. Measured: exit 1, empty output, no tmux calls.
+  // So the exit status and the tmux assertions pass under the mutation and
+  // the MESSAGE is what kills it — which is the whole complaint against the
+  // old line. A founder does not debug an exit 1 with no text.
+  const p = launchableProject(t);
+  const sh = shim(t, { engines: ['claude'] }); // codex is genuinely not installed
+  const r = warroomEval(p, 'cmd_grid_start 3', { args: ['--engine', '3:codex'], path: sh.path });
+
+  assert.notEqual(r.code, 0, `the grid must refuse: ${r.out}`);
+  assert.match(r.out, /codex not found/, 'and say WHICH binary, or the refusal is undebuggable');
+  assert.doesNotMatch(r.out, /claude not found/, 'claude is present');
+  assert.deepEqual(tmuxCalls(sh), [], 'and it must refuse before it has asked tmux anything at all');
+  assert.equal(
+    fs.existsSync(path.join(p.dir, '.worktrees')),
+    false,
+    'nor may it have checked a worktree out first'
+  );
+});
+
 test('the same run is allowed once the missing binary is present', (t) => {
   // The control for the test above. Without it, "refused" could be an artefact
   // of the fixture — a 3-pane mixed run that never launches for some unrelated
@@ -1508,6 +1598,111 @@ test('a corrupt snapshot entry refuses the WHOLE restore, building nothing and d
   assert.match(r.err, /'x'/, 'the refusal must name the identifier it could not place');
   assert.match(r.err, /refus/i, 'and must say that it is refusing');
   assert.match(r.err, /restore/i, 'and what it is refusing');
+});
+
+/**
+ * Overwrite the snapshot `restorableProject` wrote with RAW bytes.
+ *
+ * Every other restore fixture in this file goes through JSON.stringify, so the
+ * file on disk is always valid JSON with the shape cmd_restore expects. That
+ * is precisely the input class that cannot exercise the reader's failure path:
+ * a snapshot is a file on disk in a directory a founder can edit, restore from
+ * a backup, or truncate by running out of space, and none of those produce
+ * valid JSON. The fixture has to be able to write something that is not.
+ */
+function writeRawSnapshot(p, raw) {
+  const f = path.join(p.home, '.proj', 'snapshots', '2026-01-01-000000.json');
+  fs.writeFileSync(f, raw);
+  return f;
+}
+
+test('a snapshot that is not JSON at all refuses the restore, and the war room survives', (t) => {
+  // THE DESTROY-THEN-REFUSE BUG, reproduced by hand on 2026-09-11 and closed
+  // here. The three snapshot reads were bare `$(python3 -c … 2>/dev/null)`.
+  // On an unparseable file json.load raised, the traceback went to /dev/null,
+  // and every one of them evaluated to the EMPTY STRING — which is also what a
+  // clean snapshot produces. `[ -n "$snapshot_bad" ]` was therefore false, the
+  // refusal never fired, and control reached the kill-session: the founder's
+  // running war room was destroyed and the restore failed afterwards, which is
+  // strictly worse than either failure alone. The validation was in the right
+  // PLACE the whole time; it had no way to say "I could not look".
+  //
+  // `sessionExists: true` is what makes this a test rather than a tautology.
+  // With no session running, cmd_restore skips its kill unconditionally and a
+  // launcher with the bug records no kill either.
+  //
+  // MUTATION: `if [ "$_snap_rc" -ne 0 ]` → `if [ "$_snap_rc" -eq 99 ]` in
+  // cmd_restore — the exact behaviour of the old code, which had no status to
+  // consult at all. Red on the exit status AND on destroys-nothing: a
+  // kill-session is recorded and the restore then dies further down.
+  // MUTATION: delete the `try`/`except` around json.load in the reader → the
+  // exception propagates, the status is still non-zero so the restore is still
+  // refused, and the founder is handed a Python traceback where a sentence
+  // should be. Red on the no-traceback assertion, and on nothing else — which
+  // is why that assertion is here rather than assumed.
+  // NOT COVERED BY A MUTATION, deliberately: `2>&1` on the reader exists for
+  // the case where python3 itself never runs its program — a missing
+  // interpreter, a SyntaxError in the `-c` text — and swapping it for
+  // `2>/dev/null` was MEASURED GREEN here, because the diagnostics this
+  // fixture triggers are printed on stdout by the reader's own handlers. It is
+  // recorded as reasoning, not claimed as a tested property.
+  const p = restorableProject(t, [{ n: 1, branch: 'ceo-1' }]);
+  writeRawSnapshot(p, 'not valid json at all {{{\n');
+  const sh = shim(t, { sessionExists: true });
+  const r = launch(p, ['restore', 'latest'], sh);
+
+  assert.notEqual(r.code, 0, `an unreadable snapshot must refuse the restore: ${r.out}`);
+
+  // DESTROYS NOTHING. Asserted on the recorded tmux calls rather than on
+  // stdout: the launcher printed "Refusing…" in the buggy version too, one
+  // line after it had already killed the session.
+  assert.deepEqual(
+    r.calls.filter((c) => c[0] === 'kill-session'),
+    [],
+    'a snapshot that cannot be read must not cost the founder the session they still had'
+  );
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and nothing else in tmux may move either');
+  assert.equal(
+    fs.existsSync(path.join(p.dir, '.worktrees')),
+    false,
+    'nor may it build anything on disk'
+  );
+
+  assert.match(r.err, /refus/i, 'it must say that it is refusing');
+  assert.match(r.err, /JSON/i, 'and name the reason it could not read the file');
+  assert.doesNotMatch(r.err, /Traceback/, 'in a sentence, not as a Python traceback');
+});
+
+test('a snapshot whose top level is a list refuses the restore, naming the shape', (t) => {
+  // The second half of the same hole, and the half that survives a try/except
+  // alone: this file IS valid JSON. `d.get('ceos')` on a list raises
+  // AttributeError, which the old `2>/dev/null` swallowed into the same empty
+  // string — so a snapshot shaped like nothing this program writes read as a
+  // snapshot with zero CEOs and nothing wrong. A reader that only guards
+  // json.load would still pass it through.
+  //
+  // MUTATION: delete the `isinstance(d, dict)` refusal from the reader → the
+  // AttributeError propagates, the status is still non-zero so the restore is
+  // still refused, but the founder is shown a Python traceback instead of
+  // which part of their file is the wrong shape. Red on the stderr match and
+  // only on that one, which is why the message is asserted here and the
+  // destroys-nothing pair is asserted above.
+  // MUTATION: `if [ "$_snap_rc" -ne 0 ]` → `if [ "$_snap_rc" -eq 99 ]` → red on
+  // the status and on destroys-nothing, as in the test above.
+  const p = restorableProject(t, [{ n: 1, branch: 'ceo-1' }]);
+  writeRawSnapshot(p, JSON.stringify([{ n: 1, branch: 'ceo-1' }]));
+  const sh = shim(t, { sessionExists: true });
+  const r = launch(p, ['restore', 'latest'], sh);
+
+  assert.notEqual(r.code, 0, `a wrongly-shaped snapshot must refuse the restore: ${r.out}`);
+  assert.deepEqual(
+    r.calls.filter((c) => c[0] === 'kill-session'),
+    [],
+    'a snapshot of the wrong shape must not kill the running session either'
+  );
+  assert.deepEqual(mutatingTmuxCalls(r.calls), [], 'and nothing else in tmux may move');
+  assert.match(r.err, /top level/i, 'it must name the shape it refused');
+  assert.doesNotMatch(r.err, /Traceback/, 'and must not answer a founder with a Python traceback');
 });
 
 // ── A pane number is a bash SUBSCRIPT, and a subscript is an arithmetic context ──
@@ -3432,4 +3627,138 @@ test('engine render with no engine name is refused, and renders nothing', (t) =>
   assert.match(r.err, /claude codex/, 'and says which names it would take');
   assert.equal(r.out, '', 'nothing is rendered to stdout');
   assert.doesNotMatch(r.err, /SENTINEL_BODY_ALPHA/, 'and no preamble body leaks to stderr either');
+});
+
+// ── A renamed tmux window reaches four more commands ─────────
+//
+// `pane_number_ok` was applied to the launch path, to `done`, to the grid and
+// to the snapshot, and FOUR commands were left reading the same tmux
+// `list-windows` output through a bare `sed 's/CEO-//'`: ls, broadcast, inbox
+// and files. A window name is data — `tmux rename-window` is available to
+// anyone holding the socket, and a pane whose engine crashed can be renamed by
+// what it printed — and from those four sites the value becomes an arithmetic
+// context, a grep REGEX, a filesystem PATH and an argv to python3.
+//
+// Measured on /bin/bash 3.2.57 before choosing the guards, because the obvious
+// story is wrong here: `$(…)` held in a variable and used inside `$(( ))` is
+// NOT executed, it is a syntax error. What these sites actually suffer is a
+// FATAL arithmetic abort mid-command (`ceo_files[$n]="x"` exits the shell
+// outright, measured) and a regex and a path built from a stranger's string.
+//
+// Three of the four SKIP the window and say so; broadcast REFUSES. The split
+// is by what the command is for, and each site carries its reasoning. What is
+// asserted below is the property that makes a skip acceptable at all: the
+// window is NAMED on stderr. A silent skip would print two CEOs where there
+// are three, which is the failure this program spends most of its length
+// refusing to commit.
+
+/**
+ * Just the STDOUT of a run. `launch` returns `out` as stdout+stderr, which is
+ * right for "did it say this anywhere" and wrong for every assertion below:
+ * the whole point of a skip-and-say-so is that the skip is on stderr and the
+ * listing on stdout, and an assertion against the concatenation cannot tell
+ * them apart — it reads the warning and calls the window listed.
+ */
+const stdoutOnly = (r) => r.out.slice(0, r.out.length - r.err.length);
+
+/** A live session holding one ordinary CEO and one window nobody can place. */
+function sessionWithARenamedWindow(t) {
+  const p = runningSession(t, [{ n: 1, engine: 'claude' }], { engine: 'claude' });
+  // `CEO-08` rather than `CEO-x`: it is the value `^[0-9]+$` accepted and
+  // pane_number_ok does not, it is a fatal "value too great for base" in every
+  // arithmetic context downstream, and it is octal 8 in the ones that survive
+  // — so a guard that was loosened back to `[0-9]+` fails these too.
+  // It is FIRST in the list so that a launcher without the guard meets it
+  // before it has printed anything about the CEO that is fine.
+  const sh = shim(t, { sessionExists: true, windows: ['CEO-08', 'CEO-1'] });
+  return { p, sh };
+}
+
+test('ls leaves out a window that is not a CEO pane number, and says which', (t) => {
+  // MUTATION: delete the `pane_number_ok`/continue guard at the top of cmd_ls's
+  // window loop → `CEO-08` is listed as a CEO, with a broken colour and a
+  // registry lookup done through it as a regex, and the footer counts 2 CEOs
+  // where 1 is running. Red on the stdout assertions and on the stderr one.
+  const { p, sh } = sessionWithARenamedWindow(t);
+  const r = launch(p, ['ls'], sh);
+
+  assert.equal(r.code, 0, `a listing must survive one renamed window: ${r.out}`);
+  assert.doesNotMatch(stdoutOnly(r), /CEO-08/, 'the window it cannot place must not be listed as a CEO');
+  assert.match(stdoutOnly(r), /CEO-1\b/, 'and the CEO that is fine must still be');
+  assert.match(r.err, /CEO-08/, 'the skip must name the window');
+  assert.match(r.err, /not a CEO pane number/, 'and say why it was left out');
+});
+
+test('broadcast refuses a window it cannot place, before it types into any pane', (t) => {
+  // The one that refuses. The number is a PATH (`ceo-N.jsonl`) and an ARGV
+  // (`int(sys.argv[2])`), and the argv is read AFTER tmux has been told: a
+  // window named `CEO-x` gets the message typed into it and then loses the
+  // record of it, while `sent` counts it, so the summary claims a delivery no
+  // inbox will ever show.
+  //
+  // MUTATION: delete the up-front `pane_number_require` sweep and read the
+  // name inside the send loop as before → `CEO-08` is typed into, an inbox
+  // file `ceo-08.jsonl` is written (int('08') is 8, so it is even plausible),
+  // and the run reports success. Red on the tmux assertion and on the
+  // no-inbox-file one.
+  // MUTATION: keep the sweep but move it INSIDE the send loop → CEO-08 is
+  // first, so nothing is typed and this test still passes; reorder the fixture
+  // to ['CEO-1', 'CEO-08'] to see that mutation, which is why the up-front
+  // sweep is the fix rather than a per-iteration check.
+  const { p, sh } = sessionWithARenamedWindow(t);
+  const r = launch(p, ['broadcast', 'ship it'], sh);
+
+  assert.notEqual(r.code, 0, `a broadcast with an unplaceable destination must refuse: ${r.out}`);
+  assert.deepEqual(
+    mutatingTmuxCalls(r.calls),
+    [],
+    'a refused broadcast must not have typed into any pane, including the ones it could place'
+  );
+  assert.match(r.err, /'08' is not a pane number/, 'and must name the value it refused');
+
+  const msgDir = path.join(p.home, '.proj', 'messages');
+  assert.deepEqual(
+    fs.existsSync(msgDir) ? fs.readdirSync(msgDir) : [],
+    [],
+    'and must have recorded no message either'
+  );
+});
+
+test('inbox skips a window it cannot place, and shows the CEO it can', (t) => {
+  // The number becomes `$inbox_dir/ceo-${n}.jsonl` — a path — and a heading.
+  // This site cannot refuse even if refusing were right: the loop is the
+  // right-hand side of a pipe, so it is a subshell and an `exit` there ends
+  // the subshell while the outer loop carries on against a truncated list.
+  // That is the reasoning the guard carries, and this test pins the outcome.
+  //
+  // MUTATION: delete the guard → `_print_inbox 08` runs, prints the heading
+  // `INBOX — CEO-08` and `(no messages)`, and the founder is shown an inbox
+  // for a CEO that does not exist. Red on the stdout assertion.
+  const { p, sh } = sessionWithARenamedWindow(t);
+  const r = launch(p, ['inbox'], sh);
+
+  assert.doesNotMatch(stdoutOnly(r), /CEO-08/, 'no inbox may be shown for a window that is not a CEO');
+  assert.match(stdoutOnly(r), /INBOX/, 'and the CEO that is fine must still get one');
+  assert.match(r.err, /CEO-08/, 'the skip must name the window it left out');
+});
+
+test('files skips a window it cannot place, and says which', (t) => {
+  // The weakest of the four assertions, and the comment says so rather than
+  // dressing it up: cmd_files is ALREADY broken on /bin/bash 3.2.57 by its
+  // `declare -A` (measured: `declare: -A: invalid option`, after which
+  // `file_owners[$file]="1"` is a fatal arithmetic error that exits the
+  // shell). Fixing that is out of scope here, so this test asserts only what
+  // holds on both sides of it — the window is named and skipped BEFORE any of
+  // that is reached — and deliberately asserts nothing about the exit status
+  // or about the report body.
+  //
+  // MUTATION: delete the guard → `CEO-08` falls through to the registry lookup
+  // with no warning printed at all, and on a session where the registry does
+  // resolve it the run dies at `${CEO_ANSI_COLORS[$(( (n - 1) % 6 ))]}`
+  // mid-report. Red on the stderr assertion.
+  const { p, sh } = sessionWithARenamedWindow(t);
+  const r = launch(p, ['files'], sh);
+
+  assert.match(r.err, /CEO-08/, 'the skip must name the window');
+  assert.match(r.err, /its files are not shown/, 'and say what was left out');
 });
