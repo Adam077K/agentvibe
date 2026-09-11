@@ -171,19 +171,20 @@ it, so a hook that changes posture changes this map with it.
 | `scripts/session-start.test.mjs` | the SessionStart hook. |
 | `scripts/skill-clamp.test.mjs` | a skill that subtracts must not be attached silently. |
 | `scripts/usage.test.mjs` | the spend measurement and the ceiling that acts on it. |
+| `scripts/warroom-engine.test.mjs` | — |
 | `scripts/warroom-install.test.mjs` | — |
 | `scripts/warroom-template-guard.test.mjs` | — |
 
 ## What the system asserts
 
-52 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
+69 project claims in `.claude/ledger/index.json`, plus any `scope: global` claims in
 `~/.warroom/ledger/global.yml` — machine state a fresh clone does not have, which the ledger reports
 rather than skipping silently.
 
 | Kind | Count |
 |---|---|
 | behavior | 18 |
-| external-fact | 9 |
+| external-fact | 26 |
 | internal-fact | 18 |
 | runtime-capability | 7 |
 

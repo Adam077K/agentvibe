@@ -60,8 +60,219 @@ _cfg() {
   printf '%s' "$val"
 }
 
-SESSION="$(_cfg session)"
-PROJECT_DIR="$(_cfg project_dir)"
+# .warroom.yml is INPUT, not trusted data. It is git-tracked, so it arrives the
+# way a pull request arrives, and several of its values reach a live pane's shell
+# for a SECOND parse: the Codex launch line is read back with `cat`, and the HQ
+# and status lines are built by concatenating ${SESSION} and $PROJECT_DIR into
+# strings tmux hands to a shell. Quoting each of those sites is necessary and NOT
+# sufficient — one metacharacter ends the quoted argument and everything after it
+# is a new command — so the charset is refused HERE, once, at parse time, before
+# any path derived from a value is built.
+#
+# THE CHARSET BOUNDS THE SHELL, NOT THE TARGET. `~/.ssh/id_rsa` and
+# `../../.aws/credentials` are made entirely of allowed characters, and the first
+# thing this program does with `entry_ceo` is `cat` it into the CEO preamble,
+# which is then pasted into a pane and shipped to a model provider. A path value
+# therefore has a second rule, and it is the one that actually bounds what a
+# hostile config can reach: it must resolve UNDER a base directory this program
+# names, never chosen by the file.
+#
+#   name  — a tmux session name: letters, digits, dot, underscore, hyphen.
+#   path  — a filesystem path: the above plus space, slash, tilde, plus.
+#           Space is ALLOWED on purpose; a founder may have one in $HOME, and the
+#           launch line quotes the path. What is refused is $ ` ; | & < > ( ) " '
+#           and everything else that means something to a shell.
+#   under — a `path` that must also lie inside one of the bases given after the
+#           kind. A relative value resolves under the FIRST base. An absolute
+#           value must start with one of them. A `..` component is refused
+#           anywhere, so the lexical check cannot be walked back out of. What is
+#           printed is the resolved absolute path, so no caller re-derives it.
+#
+#           This is lexical. The physical half — a symlink inside the project
+#           that points out of it — is checked by _require_inside, against the
+#           same base, once the path exists to be resolved: where a file is
+#           READ, and before the first directory is WRITTEN. Both halves, or
+#           the rule is a wish: the lexical check alone passed a git-tracked
+#           `.claude/state -> ~/.ssh` and let every write follow it.
+# The path charset, as ONE predicate. It judges every `path`/`under` config
+# value here and the wt_path a snapshot names in cmd_restore, which used to
+# carry its own copy of the glob: two copies of one rule disagree the first
+# time either is edited, and the case nobody re-tested is where. Defined here
+# rather than beside pane_number_ok because _cfg_checked runs at top level
+# before that section of the file has been read.
+path_charset_ok() {
+  case "$1" in *[!A-Za-z0-9._/~+\ -]*) return 1 ;; *) return 0 ;; esac
+}
+
+_cfg_checked() {
+  local key="$1" kind="$2" val
+  val="$(_cfg "$key")"
+  [ -z "$val" ] && return 0
+  case "$kind" in
+    name)
+      case "$val" in *[!A-Za-z0-9._-]*)
+        echo "✗ warroom: '$key' in $WARROOM_CONFIG may hold only letters, digits, '.', '_' and '-'." >&2
+        echo "  Got: $val" >&2
+        echo "  This value is spliced into commands a pane's shell runs, so it is refused, not quoted." >&2
+        exit 1 ;;
+      esac ;;
+    path|under)
+      if ! path_charset_ok "$val"; then
+        echo "✗ warroom: '$key' in $WARROOM_CONFIG holds a character that is not allowed in a path here." >&2
+        echo "  Got: $val" >&2
+        echo "  Allowed: letters, digits, space, and . _ - / ~ +" >&2
+        echo "  This value is spliced into commands a pane's shell runs, so it is refused, not quoted." >&2
+        exit 1
+      fi ;;
+  esac
+  if [ "$kind" = "under" ]; then
+    local resolved
+    shift 2
+    resolved="$(_path_under "$val" "$@")" || {
+      echo "✗ warroom: '$key' in $WARROOM_CONFIG must resolve inside one of: $*" >&2
+      echo "  Got: $val" >&2
+      echo "  A '..' component, a '~' or an absolute path outside those directories is refused —" >&2
+      echo "  this value names a file this program reads or a directory it writes, and a" >&2
+      echo "  git-tracked config does not get to choose where that is." >&2
+      exit 1
+    }
+    val="$resolved"
+  fi
+  printf '%s' "$val"
+}
+
+# Resolve VALUE under one of the BASES, lexically, or fail. Prints the absolute
+# path on success. Kept separate from _cfg_checked so the rule can be read — and
+# tested — as one function with one answer.
+#
+#   _path_under ".claude/entry/ceo.md" /proj          → /proj/.claude/entry/ceo.md
+#   _path_under "/proj/.claude/entry/ceo.md" /proj    → the same
+#   _path_under "../secrets" /proj                    → fails
+#   _path_under "/home/me/.ssh/id_rsa" /proj          → fails
+#   _path_under "/home/me/.proj" /proj /home/me       → /home/me/.proj
+#
+# `~` never reaches here unexpanded: _cfg has already turned a leading one into
+# $HOME, so it arrives absolute and is judged like any other absolute path. A `~`
+# anywhere else is a literal directory name and is harmless.
+_path_under() {
+  local val="$1" base rel="" resolved=""
+  shift
+  case "/$val/" in */../*)
+    return 1 ;;
+  esac
+  case "$val" in
+    /*)
+      for base in "$@"; do
+        base="${base%/}"
+        case "$val" in "$base"/?*) resolved="$val"; break ;; esac
+      done
+      [ -n "$resolved" ] || return 1
+      ;;
+    *)
+      base="${1%/}"
+      rel="${val#./}"
+      [ -n "$rel" ] && [ "$rel" != "." ] || return 1
+      resolved="$base/$rel"
+      ;;
+  esac
+  printf '%s' "$resolved"
+}
+
+# The physical half of the confinement. A path that is lexically inside the
+# project can still be a symlink — git tracks those, so a hostile checkout can
+# carry `.claude/entry -> /home/me/.ssh` or `.claude/state -> /home/me/.ssh` —
+# and only the filesystem can say where it really points.
+#
+# ONE resolver for every kind of path this program confines, because the first
+# version of this check resolved files only, and the write side was left with
+# the lexical rule alone: `state_dir` was confined by _path_under, a git-tracked
+# symlink at that path passed it, and every `mkdir -p` and every `>>` under it
+# then landed wherever the link said. Reads and writes are the same class —
+# a config or a checkout choosing a path this program was going to trust — so
+# they are resolved by the same function and refused by the same rule.
+#
+# _phys_path <path> → the physical path, or fails. Handles all three shapes:
+#   an existing directory     — `cd -P` resolves every link on the way;
+#   an existing file          — the file's own link chain, then its directory;
+#   a path that does not exist yet (a state_dir on first run) — the deepest
+#     ancestor that DOES exist is resolved and the rest appended verbatim. A
+#     `..` cannot be among the rest: _path_under has already refused it. A
+#     symlink met on the way up is dangling or points at a file; neither is a
+#     directory this program can write into, so it is refused outright rather
+#     than resolved past.
+_phys_path() {
+  local p="$1" rest="" hops=0 t d
+  while [ ! -e "$p" ]; do
+    [ -L "$p" ] && return 1
+    [ -n "$p" ] && [ "$p" != "/" ] || return 1
+    rest="$(basename "$p")${rest:+/$rest}"
+    p="$(dirname "$p")"
+  done
+  if [ -d "$p" ]; then
+    p="$(cd -P "$p" 2>/dev/null && pwd -P)" || return 1
+  else
+    while [ -L "$p" ] && [ "$hops" -lt 16 ]; do
+      t="$(readlink "$p")" || return 1
+      case "$t" in /*) p="$t" ;; *) p="$(dirname "$p")/$t" ;; esac
+      hops=$((hops + 1))
+    done
+    [ -L "$p" ] && return 1
+    d="$(cd -P "$(dirname "$p")" 2>/dev/null && pwd -P)" || return 1
+    p="${d%/}/$(basename "$p")"
+  fi
+  printf '%s' "${p%/}${rest:+/$rest}"
+}
+
+# _inside_phys <path> <base> → 0 when <path> resolves physically under <base>.
+# A predicate, for the sites that skip rather than stop.
+_inside_phys() {
+  local phys pbase
+  phys="$(_phys_path "$1")" || return 1
+  pbase="$(cd -P "$2" 2>/dev/null && pwd -P)" || return 1
+  [ -n "$pbase" ] || return 1
+  case "$phys" in "$pbase"/?*) return 0 ;; esac
+  return 1
+}
+
+# _require_inside <key> <path> <base> [why]  → exits 1 with a message if outside.
+# `why` is the one line that says what this program was about to do with the
+# path; the default is the read side, which is where the check began.
+_require_inside() {
+  local key="$1" p="$2" base="$3" phys
+  local why="${4:-The CEO preamble is read from this file and shipped to a model provider.}"
+  _inside_phys "$p" "$base" && return 0
+  phys="$(_phys_path "$p" 2>/dev/null)" || phys=""
+  echo "✗ warroom: '$key' resolves outside $base and is refused." >&2
+  echo "  Configured: $p" >&2
+  echo "  Resolves to: ${phys:-<unresolvable>}" >&2
+  echo "  $why" >&2
+  echo "  A git-tracked config or symlink does not get to choose where that is." >&2
+  exit 1
+}
+
+# `|| exit 1` on every one of these, because _cfg_checked runs in a command
+# substitution and its own `exit` ends the SUBSHELL. A plain assignment reports
+# the substitution's status, so the refusal is testable here — which
+# `local var="$(…)"` would have thrown away. Same defect this file fixed on the
+# engine path; it does not get to come back in through the config.
+#
+# BUT IT IS NOT LOAD-BEARING ON ALL FIVE, AND THE DIFFERENCE IS WORTH KNOWING
+# BEFORE YOU TIDY IT. Measured by deleting the guard one key at a time:
+#
+#   state_dir · display_name · entry_ceo  → LOAD-BEARING. Delete it and the run
+#     exits 0 with the value silently defaulted. state_dir is the sharp one: it
+#     falls back to "$HOME/.$SESSION" and the refusal it just printed does
+#     nothing.
+#   session · project_dir                 → INERT. The `[ -z "$SESSION" ] ||
+#     [ -z "$PROJECT_DIR" ]` block below exits 1 on its own, and the message has
+#     already reached stderr from inside the substitution.
+#
+# They are kept uniform deliberately: five identical lines cannot be got wrong,
+# and the next key added is covered whichever kind it turns out to be. Do not
+# test this on `session`, find it does nothing, and conclude it is decorative —
+# that reasoning is correct about the line you tested and wrong about the file.
+SESSION="$(_cfg_checked session name)" || exit 1
+PROJECT_DIR="$(_cfg_checked project_dir path)" || exit 1
 
 if [ -z "$SESSION" ] || [ -z "$PROJECT_DIR" ]; then
   echo "✗ warroom: $WARROOM_CONFIG must define both 'session' and 'project_dir'." >&2
@@ -74,13 +285,125 @@ if [ ! -d "$PROJECT_DIR" ]; then
 fi
 
 # Optional, each with the derivation the standalone launchers hardcoded.
-SESSION_UPPER="$(_cfg display_name)"
+SESSION_UPPER="$(_cfg_checked display_name path)" || exit 1
 [ -z "$SESSION_UPPER" ] && SESSION_UPPER="$(printf '%s' "$SESSION" | tr '[:lower:]' '[:upper:]')"
-PROJECT_STATE_DIR="$(_cfg state_dir)"
-[ -z "$PROJECT_STATE_DIR" ] && PROJECT_STATE_DIR="$HOME/.$SESSION"
+# state_dir is where this program does `mkdir -p` and WRITES — snapshots, the
+# engine map, the rendered Codex preamble, the event log, history, the message
+# inboxes. Confined, lexically AND physically, to exactly three places:
+#
+#   under the project                  a relative value lands here
+#   $HOME/.<session> — the default —   or a path under it
+#   a path under $HOME/.warroom
+#
+# NOT all of $HOME. That was the base until 2026-09-10, and a base that wide is
+# not a confinement: `state_dir: ~/.ssh` is under $HOME, so a git-tracked
+# .warroom.yml chose ~/.ssh, ~/.aws or ~/.config/gh and every `mkdir -p` and
+# every `>` followed it there. This is the narrowing entry_ceo went through —
+# "anywhere" to "the project only" — applied to the write side: a named
+# directory under the founder's home, never the home itself.
+#
+# state_dir_kind IS the rule, as one function, so it can be asked twice: of the
+# configured path, and of where that path PHYSICALLY resolves. <project> and
+# <home> are parameters because the second question is asked against physical
+# roots — a $HOME under /var is /private/var once resolved — and a rule that
+# hardcoded $HOME would refuse every founder whose home is reached through a
+# symlink.
+#   state_dir_kind <abs path> <project_dir> <home> → project | session | warroom, or fails
+state_dir_kind() {
+  local p="$1" proj="${2%/}" home="${3%/}"
+  case "$p" in
+    "$proj"/?*)                              printf 'project' ;;
+    "$home/.$SESSION"|"$home/.$SESSION"/?*)  printf 'session' ;;
+    "$home/.warroom"/?*)                     printf 'warroom' ;;
+    *) return 1 ;;
+  esac
+}
+
+_state_val="$(_cfg_checked state_dir path)" || exit 1
+case "$_state_val" in
+  '')                PROJECT_STATE_DIR="$HOME/.$SESSION" ;;
+  # The default, written out. _path_under judges "under a base", never "is the
+  # base", so the one value that IS a base is matched here by name.
+  "$HOME/.$SESSION") PROJECT_STATE_DIR="$_state_val" ;;
+  # Everything else goes through the one resolver: a `..` component is refused
+  # anywhere, a relative value resolves under the project, an absolute one must
+  # start with one of the three bases.
+  *)
+    PROJECT_STATE_DIR="$(_path_under "$_state_val" "$PROJECT_DIR" "$HOME/.$SESSION" "$HOME/.warroom")" || {
+      echo "✗ warroom: 'state_dir' in $WARROOM_CONFIG must be one of:" >&2
+      echo "    a path under $PROJECT_DIR (a relative value lands here)" >&2
+      echo "    $HOME/.$SESSION, or a path under it" >&2
+      echo "    a path under $HOME/.warroom" >&2
+      echo "  Got: $_state_val" >&2
+      echo "  This program creates directories and writes files here, and a git-tracked config does" >&2
+      echo "  not get to choose ~/.ssh, ~/.aws or anywhere else under your home for that." >&2
+      exit 1
+    } ;;
+esac
+unset _state_val
+_STATE_KIND="$(state_dir_kind "$PROJECT_STATE_DIR" "$PROJECT_DIR" "$HOME")" || exit 1
+
+# The physical half, against the KIND the lexical half chose. That pairing is
+# the point: `.claude/state -> ~/.proj` is lexically under the project and
+# physically the session directory — both allowed places — so a check that
+# asked only "does the physical path land somewhere allowed" would pass it, and
+# a git-tracked symlink would have moved every write this program makes out of
+# the project. Nothing under the project may resolve out of the project;
+# nothing under $HOME/.<session> or $HOME/.warroom may resolve out of that one
+# directory. _phys_path resolves a directory that does not exist yet through
+# its deepest existing ancestor, which is what lets a first run create
+# $HOME/.warroom/<name> or $HOME/.<session>.
+_state_phys="$(_phys_path "$PROJECT_STATE_DIR" 2>/dev/null)" || _state_phys=""
+_proj_phys="$(cd -P "$PROJECT_DIR" 2>/dev/null && pwd -P)"
+_home_phys="$(cd -P "$HOME" 2>/dev/null && pwd -P)"
+if [ -z "$_state_phys" ] || [ -z "$_proj_phys" ] || [ -z "$_home_phys" ] \
+   || [ "$(state_dir_kind "$_state_phys" "$_proj_phys" "$_home_phys" 2>/dev/null)" != "$_STATE_KIND" ]; then
+  echo "✗ warroom: 'state_dir' resolves outside the $_STATE_KIND directory it was configured under and is refused." >&2
+  echo "  Configured: $PROJECT_STATE_DIR" >&2
+  echo "  Resolves to: ${_state_phys:-<unresolvable>}" >&2
+  echo "  This program creates directories and writes files here: snapshots, the engine map, the rendered Codex preamble, the event log." >&2
+  echo "  A git-tracked config or symlink does not get to choose where that is." >&2
+  exit 1
+fi
+unset _state_phys _proj_phys _home_phys
+
+# And nothing INSIDE it may be a symlink. The base check bounds the directory;
+# it says nothing about `state/entry/ceo.codex.md -> ~/.ssh/id_rsa` one level
+# down, which `render_ceo_preamble > "$f"` would follow and overwrite. Every
+# write under state_dir is a `mkdir -p`, a `>` or a `>>`, and this program
+# never creates a symlink there, so one is never legitimate. This is what makes
+# "a config cannot point those writes anywhere else" true of the writes and not
+# only of the directory. `-mindepth 1` keeps it to the INSIDE: the directory
+# itself is the check above's to judge, and two guards over one case are
+# proven by neither.
+#
+# It is NOT free, and it is not run on every invocation. The sweep is a
+# recursive `find` over the whole state directory, and history/ under it is
+# unbounded — one record per `done`, never pruned — so a war room that has run
+# for months pays for a full walk on `cost` and `ls`, which never write. It
+# runs at dispatch, for the commands that WRITE under state_dir, before the
+# first write any of them makes; the readers are named in an allowlist beside
+# the router, so a command left off that list sweeps rather than skips.
+state_dir_require_no_symlinks() {
+  [ -d "$PROJECT_STATE_DIR" ] || return 0
+  local _state_link
+  _state_link="$(find "$PROJECT_STATE_DIR" -mindepth 1 -type l 2>/dev/null | head -1)"
+  [ -n "$_state_link" ] || return 0
+  echo "✗ warroom: state_dir holds a symlink and is refused: $_state_link" >&2
+  echo "  This program only ever writes regular files and directories under $PROJECT_STATE_DIR," >&2
+  echo "  so a symlink there is not something it made — and a write would follow it wherever it points." >&2
+  echo "  Remove the link, or point state_dir in $WARROOM_CONFIG somewhere that has none." >&2
+  exit 1
+}
 
 CEO_AGENT="$PROJECT_DIR/.claude/agents/ceo.md"
 WORKTREES_DIR="$PROJECT_DIR/.worktrees"
+# Derived from project_dir rather than chosen by a key, and confined the same
+# way: `git worktree add`, `.registry`, `.task` and `.session` are all written
+# under it, and a checkout that carries `.worktrees -> ~/somewhere` would have
+# chosen where every CEO's tree is created.
+_require_inside worktrees "$WORKTREES_DIR" "$PROJECT_DIR" \
+  "Every CEO worktree, and its .task, .session and .registry records, is created here."
 SESSION_SNAPSHOT="$PROJECT_STATE_DIR/last.json"
 SNAPSHOTS_DIR="$PROJECT_STATE_DIR/snapshots"
 TMUX_SCRIPTS_DIR="$HOME/.tmux/scripts"
@@ -119,41 +442,781 @@ CEO_ANSI_COLORS=("$C_MAUVE" "$C_GREEN" "$C_BLUE" "$C_YELLOW" "$C_RED" "$C_TEAL")
 #                                         already used — kept so those projects
 #                                         work unchanged before Phase 9)
 #   3. a minimal built-in, with a warning
-CEO_ENTRY_FILE="$(_cfg entry_ceo)"
-[ -z "$CEO_ENTRY_FILE" ] && CEO_ENTRY_FILE=".claude/entry/ceo.md"
-case "$CEO_ENTRY_FILE" in /*) : ;; *) CEO_ENTRY_FILE="$PROJECT_DIR/$CEO_ENTRY_FILE" ;; esac
+#
+# entry_ceo is a file this program READS and then ships to a model provider, so
+# it is confined to the project: `_cfg_checked … under` refuses an absolute path
+# outside it, a `~`, and any `..` component, and hands back the resolved absolute
+# path. Before the charset rule grew this second half, `entry_ceo: ~/.ssh/id_rsa`
+# in a git-tracked .warroom.yml was made of allowed characters, was `cat`'d here,
+# and became the CEO's opening prompt.
+CEO_ENTRY_FILE="$(_cfg_checked entry_ceo under "$PROJECT_DIR")" || exit 1
+[ -z "$CEO_ENTRY_FILE" ] && CEO_ENTRY_FILE="$PROJECT_DIR/.claude/entry/ceo.md"
 
 CEO_SEED_FILE="$PROJECT_DIR/.claude/agents/_seeds/ceo.md"
 
 if [ -f "$CEO_ENTRY_FILE" ]; then
+  # The lexical check above cannot see a symlink; this one can, and it runs
+  # against the file that is about to be read.
+  _require_inside entry_ceo "$CEO_ENTRY_FILE" "$PROJECT_DIR"
   CEO_PREAMBLE="$(cat "$CEO_ENTRY_FILE")"
 elif [ -f "$CEO_SEED_FILE" ]; then
+  # The fallback is read and shipped exactly like the configured file, so it
+  # gets exactly the same check. It had none: the entry_ceo fix confined the
+  # key and left the convention two lines below it, and a git-tracked
+  # `_seeds/ceo.md -> ~/.ssh/id_rsa` in a project with no entry file was cat'd
+  # here and became the CEO's opening prompt.
+  _require_inside ".claude/agents/_seeds/ceo.md" "$CEO_SEED_FILE" "$PROJECT_DIR"
   CEO_PREAMBLE="$(cat "$CEO_SEED_FILE")"
 else
   CEO_PREAMBLE='You are the CEO and Orchestrator. Read .claude/agents/ceo.md for full instructions. Do NOT spawn a CEO subagent — you ARE the CEO.'
   echo "Warning: no entry preamble at $CEO_ENTRY_FILE or $CEO_SEED_FILE — using minimal fallback" >&2
 fi
 
+# ─────────────────────────────────────────────────────────────
+#  ENGINES — which program is the CEO in a given pane
+# ─────────────────────────────────────────────────────────────
+#
+# A pane runs `claude` or `codex`. The default is `claude` and changing nothing
+# changes nothing — that is asserted by scripts/warroom-engine.test.mjs, not
+# just intended here.
+#
+# The engine is DATA, resolved per pane, because the founder's ask is not "swap
+# Claude for Codex" but "run a Codex CEO in addition to a Claude one". Two panes
+# of one session may differ, so nothing may be decided once at startup and
+# cached in a global.
+#
+# Every fact about Codex encoded below was measured against codex-cli 0.153.4 on
+# 2026-09-09 and is written up, with commands and exit codes, in
+# docs/03-system-design/final-v2/research/codex-in-the-pane.md. Two differences
+# from Claude drive the whole design:
+#
+#   1. RESUME IS A SUBCOMMAND, NOT A FLAG. `claude --resume <id>` against
+#      `codex resume <id>`. So a launch line cannot be built by appending to the
+#      binary name; each engine has to spell its own.
+#
+#   2. THE PREAMBLE ARRIVES AT A DIFFERENT TIME. Claude is launched bare and
+#      then pasted into (inject_ceo_prompt). Codex takes its standing
+#      instructions ON THE COMMAND LINE, via `-c developer_instructions=`, which
+#      was measured to be additive: it adds the prompt item kind
+#      `generic.developer_instructions` and displaces nothing.
+#
+#      Codex is NOT pasted into, and that is a deliberate limit rather than an
+#      oversight. Whether its TUI accepts a multi-line `send-keys -l` block
+#      without treating the first newline as submit COULD NOT BE MEASURED — an
+#      unauthenticated Codex renders a login chooser, not a composer, and the
+#      real ~/.codex is in this environment's sandbox denyRead set. Building the
+#      preamble path on the mechanism that WAS proved costs nothing and removes
+#      the dependency on the one that was not. See §5 of the research file.
+
+WARROOM_ENGINES="claude codex"
+WARROOM_ENGINE_FALLBACK="claude"
+
+# Set by the router from `--engine`. Deliberately resolved lazily through the
+# functions below rather than computed once here: the router parses flags at the
+# BOTTOM of this file, long after this line runs.
+WARROOM_ENGINE_DEFAULT=""
+WARROOM_ENGINE_OVERRIDES=""
+
+# Set by cmd_restore, and by nothing else: the `n:engine` pairs a snapshot
+# recorded, so a mixed-engine war room comes back mixed. `kill` saves the
+# snapshot and THEN forgets the engine map, so by the time `restore` runs the
+# map is gone and the snapshot is the only record of which pane ran what.
+# Before this, every CEO silently came back on the default.
+WARROOM_SNAPSHOT_ENGINES=""
+WARROOM_SNAPSHOT_SOURCE=""
+
+# The resolved engine for pane N, populated ONCE per invocation by
+# engines_resolve, running in the MAIN shell.
+#
+# THIS ARRAY EXISTS BECAUSE `exit` CANNOT LEAVE A SUBSHELL, and the refusal below
+# is this feature's central safety guarantee. It was unreachable on the real
+# launch path: `local eng="$(engine_for_pane …)"` and `done < <(engines_in_use …)`
+# both run the resolver in a child shell, where `exit 1` ends the child and
+# nothing else. A bad `engine:` printed its error, did NOT stop the run, resolved
+# to the EMPTY STRING, matched no `case` arm, and typed an empty line into a live
+# pane — the dead-pane failure the comments here claim to eliminate, produced by
+# the code that claims it.
+#
+# The cure is shape, not sprinkled `|| exit 1`: resolve and validate every pane
+# ONCE, at the top level of the command that will launch it, before check_deps
+# and before tmux builds anything. Then no refusal ever has to cross a subshell
+# boundary. Everything downstream is a lookup in this array.
+WARROOM_PANE_ENGINES=()
+WARROOM_ENGINES_RESOLVED=0
+
+engine_is_known() {
+  case " $WARROOM_ENGINES " in *" $1 "*) return 0 ;; *) return 1 ;; esac
+}
+
+# A pane number: digits only, no leading zero, so 1 or more. It is used as a
+# bash ARRAY SUBSCRIPT, and a subscript is an arithmetic context: `08` is a
+# fatal "value too great for base" that aborts the whole program, `010` is
+# octal 8 and silently puts an engine on the wrong pane, and `$(…)` is
+# evaluated. `^[0-9]+$` accepted the first two. Every pane number that arrives
+# as DATA — a tmux window name, a snapshot entry, an --engine token, the
+# registry — goes through this before it goes anywhere else.
+pane_number_ok() {
+  case "$1" in ''|*[!0-9]*|0*) return 1 ;; *) return 0 ;; esac
+}
+
+# The refusal, in one place: names the value and where it came from.
+pane_number_require() {
+  local n="$1" whence="$2"
+  pane_number_ok "$n" && return 0
+  echo "✗ '$n' is not a pane number (from $whence)." >&2
+  echo "  Panes are numbered from 1 with no leading zero. Refusing rather than evaluating it." >&2
+  exit 1
+}
+
+# Refuse an unknown engine; never fall back to the default. A typo that silently
+# launched Claude would be indistinguishable from a working Codex pane until
+# someone read the output of a whole session.
+engine_require_known() {
+  local eng="$1" whence="$2"
+  if [ -z "$eng" ] || ! engine_is_known "$eng"; then
+    echo "✗ unknown engine '$eng' (from $whence)." >&2
+    echo "  Valid engines: $WARROOM_ENGINES" >&2
+    exit 1
+  fi
+}
+
+# Where the standing acknowledgment lives when it is not in the environment.
+# An UNCONDITIONAL assignment, so an inherited WARROOM_CODEX_ACK_FILE cannot
+# point the gate at a file the operator never wrote: the two sources below are
+# the whole surface, and adding a third by accident is how a gate stops being
+# one.
+WARROOM_CODEX_ACK_FILE="$HOME/.warroom/codex_ack"
+
+# Is the ack file's first line exactly `true`?
+#
+# DEFENSIVE BY CONSTRUCTION, because this path is normally absent: `-f` is
+# false for a missing path AND for a directory, so neither reaches the read;
+# `sed -n 1p` on an empty file prints nothing; the trim takes leading and
+# trailing whitespace and a trailing CR off that one line and nothing else, so
+# `t r u e` stays `t r u e` and refuses. Only line 1 is consulted — a file whose
+# second line says `true` is not an acknowledgment.
+#
+# Be honest about which of those is the CONTROL: it is the final comparison. The
+# `-f` test is redundancy — measured 2026-09-10, BSD sed reads a directory as
+# empty and exits 0, so removing `-f` changes no verdict on macOS (GNU sed does
+# report a read error, which is the platform the test is kept for).
+codex_ack_file_says_true() {
+  local val
+  [ -f "$WARROOM_CODEX_ACK_FILE" ] && [ -r "$WARROOM_CODEX_ACK_FILE" ] || return 1
+  val="$(sed -n '1p' "$WARROOM_CODEX_ACK_FILE" 2>/dev/null |
+         tr -d '\r' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+  [ "$val" = "true" ]
+}
+
+# Refuse Codex until THIS MACHINE has acknowledged what a Codex pane is. A Codex
+# pane is one unscoped process with whatever the founder's Codex login can do,
+# and the per-engine tool boundaries this harness relies on — a reviewer whose
+# `tools:` line carries no Write and no Edit — are prose there, not a control.
+# engine_launch_warning says so on stderr as the pane launches; that is a
+# notice after the choice, and a notice is not a gate. This is the gate.
+#
+# THE ACKNOWLEDGMENT IS OUT OF BAND, and that is the security property. It used
+# to be `codex_unsandboxed_ack: true` in the project's git-tracked .warroom.yml,
+# which fails in both directions and both were observed on 2026-09-10:
+#
+#   - A PULL REQUEST CAN FLIP IT. The control that gates an unsandboxed pane was
+#     editable by the very channel it exists to bound — and the refusal below
+#     warns, in its own text, that a git-tracked AGENTS.md "arrives the way a
+#     pull request arrives". The gate had the defect it was written to describe.
+#   - IT IS BRANCH-DEPENDENT. The key existed on one branch and not on `main`,
+#     so `git checkout` silently changed the security posture of the machine.
+#
+# So: an environment variable, or a file under $HOME. Neither is in the
+# repository, neither moves with a branch, and neither is writable by a
+# contributor who can only open a pull request. ONLY the exact value `true`
+# acknowledges in either source — `yes`, `1`, `True` and `"false"` all refuse,
+# because a truthy-looking parse would let a founder who typed something past a
+# gate they never read. The value is COMPARED and never evaluated.
+#
+# Called where an engine is resolved, in the MAIN shell, so it exits the program
+# before check_deps and before tmux builds anything — the same discipline as
+# engine_require_known, for the same reason.
+# docs/03-system-design/final-v2/research/codex-in-the-pane.md §9.
+engine_require_acknowledged() {
+  local eng="$1" whence="$2"
+  [ "$eng" = "codex" ] || return 0
+  # A config still carrying the retired key must not read as consent — and must
+  # not be silent about it either, or a founder reads their own .warroom.yml and
+  # concludes they are acked when nothing acked them.
+  if [ -n "$(_cfg codex_unsandboxed_ack)" ]; then
+    echo "⚠ ignoring codex_unsandboxed_ack in $WARROOM_CONFIG — the acknowledgment is out of band now (WARROOM_CODEX_ACK=true, or $WARROOM_CODEX_ACK_FILE); delete the key." >&2
+  fi
+  [ "${WARROOM_CODEX_ACK-}" = "true" ] && return 0
+  codex_ack_file_says_true && return 0
+  echo "✗ refusing codex (from $whence): this machine has not acknowledged that a Codex pane is NOT sandboxed." >&2
+  echo "  A Codex pane is one process that can write and run whatever your Codex login allows, and" >&2
+  echo "  per-engine tool scoping is NOT enforced in it: a read-only reviewer (no Write/Edit in tools:)" >&2
+  echo "  is prose there, not a control. Nothing was launched." >&2
+  echo "  Codex also reads AGENTS.md as TRUSTED instructions — the project's, which is git-tracked and" >&2
+  echo "  arrives the way a pull request arrives, and \$CODEX_HOME/AGENTS.md. Acknowledging accepts that" >&2
+  echo "  channel too: whoever can write AGENTS.md can instruct every Codex pane in this project." >&2
+  echo "  To acknowledge, do EITHER of these. Both live OUTSIDE the repository on purpose: a pull" >&2
+  echo "  request cannot grant this, and switching branches cannot take it away." >&2
+  echo "      export WARROOM_CODEX_ACK=true                                  # this shell only" >&2
+  echo "      mkdir -p \"$HOME/.warroom\" && echo true > \"$WARROOM_CODEX_ACK_FILE\"   # this machine, standing" >&2
+  echo "  Only the exact value true acknowledges; codex_unsandboxed_ack in .warroom.yml no longer does." >&2
+  echo "  Details: research/codex-in-the-pane.md §9" >&2
+  exit 1
+}
+
+# Where this session's resolved map lives. `--engine 2:codex` used to exist only
+# in the process that parsed it, so `${SESSION} grid` and `${SESSION} restore` —
+# separate invocations of this program — silently put pane 2 back on the default
+# and the founder had no way to see it but to read the pane.
+#
+# THREE things keep a stale map from outliving its session, and it took all three
+# because `${SESSION} kill` is only one of the ways a war room ends. `kill` calls
+# engines_forget; a fresh `${SESSION} start` with no live tmux session clears it
+# before resolving; and any start rewrites it wholesale rather than merging.
+# Without the middle one, a `tmux kill-session`, a crash or a reboot left a map
+# that OUTRANKS `engine:` in .warroom.yml — so an edited config said claude, the
+# panes came up codex, and nothing was printed either way.
+ENGINES_STATE_FILE="$PROJECT_STATE_DIR/engines"
+
+# The engine pane N would get, and WHERE it came from, as one tab-separated pair
+# so the precedence is implemented exactly once.
+#
+# PURE: it never validates and never exits, which is what makes it safe to call
+# from a command substitution. Validation belongs to engines_resolve, which runs
+# where an exit is worth something.
+#
+# First hit wins:
+#   1. --engine N:<name>          per-pane override for this invocation
+#   2. --engine <name>            this invocation's default
+#   3. the snapshot being restored (cmd_restore only — see WARROOM_SNAPSHOT_ENGINES)
+#   4. $ENGINES_STATE_FILE        what this running war room was started with
+#   5. engine: in .warroom.yml    the project's standing choice
+#   6. claude
+engine_candidate_for_pane() {
+  local n="$1" tok eng=""
+  for tok in $WARROOM_ENGINE_OVERRIDES; do
+    case "$tok" in "${n}:"*) eng="${tok#*:}" ;; esac
+  done
+  [ -n "$eng" ] && { printf '%s\t--engine %s' "$eng" "${n}:${eng}"; return 0; }
+  [ -n "$WARROOM_ENGINE_DEFAULT" ] && { printf '%s\t--engine' "$WARROOM_ENGINE_DEFAULT"; return 0; }
+  for tok in $WARROOM_SNAPSHOT_ENGINES; do
+    case "$tok" in "${n}:"*) eng="${tok#*:}" ;; esac
+  done
+  [ -n "$eng" ] && { printf '%s\tthe engine recorded for CEO-%s in %s' "$eng" "$n" "$WARROOM_SNAPSHOT_SOURCE"; return 0; }
+  eng="$(engine_persisted_for_pane "$n")"
+  [ -n "$eng" ] && { printf '%s\t%s' "$eng" "$ENGINES_STATE_FILE, where this war room recorded its engines"; return 0; }
+  eng="$(_cfg engine)"
+  [ -n "$eng" ] && { printf '%s\tengine: in %s' "$eng" "$WARROOM_CONFIG"; return 0; }
+  printf '%s\tthe built-in default' "$WARROOM_ENGINE_FALLBACK"
+}
+
+# Resolve and validate the engines for the panes named, in the MAIN shell.
+# Every command that launches a pane calls this before check_deps and before any
+# tmux work, so an unknown engine stops the run instead of reaching a pane.
+engines_resolve() {
+  local n pair eng whence
+  # Nothing named, nothing resolved. Without this, a zero-argument call set the
+  # flag over an EMPTY map, so WARROOM_ENGINES_RESOLVED stopped meaning "the map
+  # is populated" and check_deps' fallback would then decline to populate it.
+  [ "$#" -gt 0 ] || return 0
+  for n in "$@"; do
+    # The subscript below is an arithmetic context. Nothing reaches it that
+    # has not been read as a pane number first.
+    pane_number_require "$n" "the panes named to engines_resolve"
+    pair="$(engine_candidate_for_pane "$n")"
+    eng="${pair%%$'\t'*}"
+    whence="${pair#*$'\t'}"
+    # This exit is at the top level of the calling command, so it exits the
+    # PROGRAM. That is the whole point of resolving here rather than at the seam.
+    engine_require_known "$eng" "$whence"
+    engine_require_acknowledged "$eng" "$whence"
+    WARROOM_PANE_ENGINES[$n]="$eng"
+  done
+  engine_overrides_require_resolved "$@"
+  WARROOM_ENGINES_RESOLVED=1
+}
+
+# Every `--engine N:E` must have named a pane this command actually resolved.
+# `3 --engine 5:codex` parsed clean — 5 is a pane number and codex is known —
+# and then matched nothing in engine_candidate_for_pane for panes 1..3, so the
+# override was dropped in silence and the founder got three Claude panes where
+# they had asked for a Codex one. That is the indistinguishable-from-working
+# failure engine_require_known exists to refuse, one rung down: the value was
+# valid, the TARGET was not. Same for `add --engine 4:codex` when the next slot
+# is 2, and `restore --engine 2:codex` when the snapshot holds no pane 2.
+#
+# Called from engines_resolve with the panes it was given, so it runs wherever
+# resolution runs — the launch path and the inspection path alike — and its
+# exit is the program's. The named panes are DATA already read as pane numbers
+# by pane_number_require above; the override's N was read the same way by the
+# router.
+engine_overrides_require_resolved() {
+  local tok n hit named=""
+  for n in "$@"; do named="$named CEO-$n"; done
+  for tok in $WARROOM_ENGINE_OVERRIDES; do
+    hit=0
+    for n in "$@"; do
+      [ "$n" = "${tok%%:*}" ] && { hit=1; break; }
+    done
+    [ "$hit" -eq 1 ] && continue
+    echo "✗ --engine $tok names CEO-${tok%%:*}, but this command resolves only:${named}." >&2
+    echo "  The override would have been dropped and CEO-${tok%%:*} never started on ${tok#*:}." >&2
+    echo "  Name a pane this command creates, or drop the override." >&2
+    exit 1
+  done
+}
+
+# The engine for pane N. A lookup once engines_resolve has run — which is the
+# case on every launch path. The fallback resolution is a BACKSTOP for callers
+# that only inspect; it still refuses an unknown value, and when it is called
+# from a substitution the refusal cannot exit the program, so the empty result
+# is caught by the `*)` arms in engine_launch_cmd / render_ceo_preamble and by
+# send_launch_engine's empty-line check.
+engine_for_pane() {
+  local n="$1" pair eng
+  if ! pane_number_ok "$n"; then
+    echo "✗ '$n' is not a pane number; no engine can be looked up for it." >&2
+    return 1
+  fi
+  if [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ]; then
+    printf '%s' "${WARROOM_PANE_ENGINES[$n]}"; return 0
+  fi
+  pair="$(engine_candidate_for_pane "$n")"
+  eng="${pair%%$'\t'*}"
+  engine_require_known "$eng" "${pair#*$'\t'}"
+  engine_require_acknowledged "$eng" "${pair#*$'\t'}"
+  printf '%s' "$eng"
+}
+
+# The engine recorded for pane N by the invocation that started this war room.
+engine_persisted_for_pane() {
+  local n="$1" _n _eng
+  [ -f "$ENGINES_STATE_FILE" ] || return 0
+  while IFS=$'\t' read -r _n _eng; do
+    if [ "$_n" = "$n" ] && [ -n "$_eng" ]; then printf '%s' "$_eng"; return 0; fi
+  done < "$ENGINES_STATE_FILE"
+  return 0
+}
+
+# Rewrite the map for the panes named. A whole rewrite, never an append, so a
+# restart cannot inherit half of an older session's choices.
+engines_persist() {
+  local n
+  mkdir -p "$PROJECT_STATE_DIR" 2>/dev/null
+  : > "$ENGINES_STATE_FILE" 2>/dev/null || return 0
+  for n in "$@"; do
+    pane_number_ok "$n" || continue
+    [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ] && \
+      printf '%s\t%s\n' "$n" "${WARROOM_PANE_ENGINES[$n]}" >> "$ENGINES_STATE_FILE"
+  done
+  return 0
+}
+
+engines_forget_pane() {
+  local n="$1" tmp
+  [ -f "$ENGINES_STATE_FILE" ] || return 0
+  tmp="$ENGINES_STATE_FILE.$$"
+  awk -F'\t' -v n="$n" '$1 != n' "$ENGINES_STATE_FILE" > "$tmp" 2>/dev/null \
+    && mv "$tmp" "$ENGINES_STATE_FILE" 2>/dev/null
+  rm -f "$tmp" 2>/dev/null
+  return 0
+}
+
+# Add or replace ONE pane's entry — for `add`, which creates a single pane into a
+# session whose other panes are already running and must not be re-declared.
+engines_persist_pane() {
+  local n="$1"
+  pane_number_ok "$n" || return 0
+  [ -n "${WARROOM_PANE_ENGINES[$n]:-}" ] || return 0
+  mkdir -p "$PROJECT_STATE_DIR" 2>/dev/null
+  engines_forget_pane "$n"
+  printf '%s\t%s\n' "$n" "${WARROOM_PANE_ENGINES[$n]}" >> "$ENGINES_STATE_FILE" 2>/dev/null
+  return 0
+}
+
+engines_forget() { rm -f "$ENGINES_STATE_FILE" 2>/dev/null; return 0; }
+
+# The executable that must be on PATH for an engine.
+engine_binary() {
+  case "$1" in
+    claude) printf 'claude' ;;
+    codex)  printf 'codex' ;;
+    *) echo "✗ internal: no binary is known for engine '$1'." >&2; return 1 ;;
+  esac
+}
+
+engine_install_hint() {
+  case "$1" in
+    claude) printf 'Install Claude Code first.' ;;
+    codex)  printf 'Install the Codex CLI first: npm i -g @openai/codex' ;;
+    *) printf 'No install hint is known for this engine.' ;;
+  esac
+}
+
+# Every engine this invocation will actually launch, deduplicated, read from the
+# resolved map. check_deps verifies exactly these and no others — a founder who
+# never asks for Codex is never told to install it.
+#
+# It reads the array rather than resolving, so the process substitution that
+# feeds check_deps carries nothing whose exit status would be swallowed.
+engines_in_use() {
+  local n eng seen=" "
+  for n in "${!WARROOM_PANE_ENGINES[@]}"; do
+    eng="${WARROOM_PANE_ENGINES[$n]}"
+    case "$seen" in *" $eng "*) ;; *) seen="$seen$eng "; printf '%s\n' "$eng" ;; esac
+  done
+}
+
+# ── The CEO preamble, rendered per engine from ONE source ────
+#
+# $CEO_PREAMBLE is the single copy of the CEO's identity — .claude/entry/ceo.md,
+# resolved above. It is never restated per engine. What differs between engines
+# is a thin ADAPTER: the affordances each one actually has. Two copies of one
+# instruction disagree silently, and this repo has been bitten by that often
+# enough to say so in CLAUDE.md, so the shared body is substituted in rather
+# than written twice — and warroom-engine.test.mjs fails if either rendering
+# stops containing it.
+
+# The Codex adapter. A DELTA, not a second preamble: it names the four Claude
+# affordances the shared body mentions that Codex does not have, and restates
+# the one constraint that must survive translation.
+CEO_CODEX_ADAPTER='ENGINE NOTE — you are Codex, not Claude Code. The instructions below are the standing CEO brief for this project; follow them, with these four substitutions:
+- There is no `Agent` tool and no `.claude/agents/` dispatch — and ENGINE TOOL SCOPING IS NOT ENFORCED IN THIS PANE. A Claude Code sub-agent that declares no `Write` and no `Edit` structurally cannot write; you can, whatever file you have read. So where the brief says to dispatch an engine, you may READ that engine'"'"'s file under .claude/agents/ as your operating contract and do that work yourself ONLY IF its `tools:` line declares `Write` or `Edit`. If it does not, STOP and report that the task needs a Claude Code pane — do not read a read-only engine'"'"'s file and act as it. An agent that can edit what it reviews will review what it can edit, and in this pane that boundary is prose, not a control.
+- You ARE the CEO for this pane. Do NOT spawn a CEO sub-agent, and do not delegate the CEO role to a sub-agent under any name.
+- There are no /color or /name slash commands. Skip them; they set Claude Code session identity and have no Codex equivalent.
+- `@"name (agent)"` mentions do not exist. Refer to engines by their file path.
+Everything else below applies to you unchanged.'
+
+# The engines this project scopes by capability rather than by instruction —
+# every agent file whose `tools:` line declares neither Write nor Edit. DERIVED
+# from the project's own files, never listed here: a hand-written list is right
+# until the next engine is added, and the pane cannot tell a stale list from a
+# complete one.
+engine_toolscoped_names() {
+  local d="$PROJECT_DIR/.claude/agents" f tools out=""
+  [ -d "$d" ] || return 0
+  # Read-and-emit, so confined like every other read that leaves the process:
+  # what leaves is each file's NAME, into the Codex preamble, and a symlinked
+  # `.claude/agents -> ~/notes` would have listed the founder's file names to a
+  # model provider. A file that resolves out of the project is not one of this
+  # project's engines; it is skipped, and the founder is told which.
+  if ! _inside_phys "$d" "$PROJECT_DIR"; then
+    echo "  ⚠ $d resolves outside the project; no engine is read from it." >&2
+    return 0
+  fi
+  for f in "$d"/*.md; do
+    [ -f "$f" ] || continue
+    if ! _inside_phys "$f" "$PROJECT_DIR"; then
+      echo "  ⚠ $(basename "$f") resolves outside the project and is not read as an engine." >&2
+      continue
+    fi
+    # The first `tools:` line PLUS the block items under it, when the list is
+    # written YAML block-style (`tools:` then `  - Read`, `  - Write`). A
+    # single-line grep saw a bare `tools:` there, found no Write in it, and
+    # listed a writer as tool-scoped — the one direction this list must never
+    # be wrong in, since a Codex pane reads it as permission to act as that
+    # engine. Flow style (`tools: [Read, Write]`) is one line and prints as
+    # before; the item lines end at the first line that is not one.
+    tools="$(awk '!seen && /^tools:/ { seen = 1; print; next }
+                  seen { if ($0 ~ /^[ \t]+-[ \t]/) print; else exit }' "$f" 2>/dev/null)"
+    [ -n "$tools" ] || continue
+    case "$tools" in *Write*|*Edit*) continue ;; esac
+    out="$out $(basename "$f" .md)"
+  done
+  printf '%s' "${out# }"
+}
+
+# Render the preamble for an engine, to stdout. The `*)` arm refuses rather than
+# printing nothing: an empty preamble reaches a pane looking exactly like a
+# working one, which is the failure mode this whole section exists to remove.
+render_ceo_preamble() {
+  local scoped
+  case "$1" in
+    claude) printf '@"ceo (agent)" %s' "$CEO_PREAMBLE" ;;
+    codex)
+      scoped="$(engine_toolscoped_names)"
+      if [ -n "$scoped" ]; then
+        printf '%s\nIn THIS project the tool-scoped engines are: %s. Their restriction does not exist in this pane, so their work does not happen in this pane.\n\n%s' \
+          "$CEO_CODEX_ADAPTER" "$scoped" "$CEO_PREAMBLE"
+      else
+        printf '%s\n\n%s' "$CEO_CODEX_ADAPTER" "$CEO_PREAMBLE"
+      fi
+      ;;
+    *)
+      echo "✗ no preamble rendering for engine '$1'." >&2
+      echo "  Refusing rather than rendering nothing — a pane cannot tell an empty brief from a working one." >&2
+      return 1
+      ;;
+  esac
+}
+
+# Codex takes its preamble as a command-line value, so it has to reach the shell
+# as a path rather than as prose. Writing it to a file and reading it back with
+# "$(cat …)" means the preamble is NEVER exposed to shell or TOML quoting rules
+# — measured to survive the real 2,931-byte entry file verbatim, backticks,
+# double quotes and em-dashes included.
+#
+# Two functions, PATH and WRITE, because the path is needed by a pure lookup
+# (engine_launch_cmd, called from substitutions) and the write is a step that
+# can fail and must say so (engine_prepare, called at a command's top level).
+ceo_preamble_path() {
+  printf '%s/entry/ceo.%s.md' "$PROJECT_STATE_DIR" "$1"
+}
+
+ceo_preamble_write() {
+  local eng="$1" f dir
+  f="$(ceo_preamble_path "$eng")"
+  dir="$(dirname "$f")"
+  if ! mkdir -p "$dir" 2>/dev/null; then
+    echo "✗ cannot create $dir to hold the $eng CEO preamble." >&2
+    return 1
+  fi
+  if ! render_ceo_preamble "$eng" > "$f"; then
+    echo "✗ cannot write the $eng CEO preamble to $f." >&2
+    rm -f "$f" 2>/dev/null
+    return 1
+  fi
+  [ -s "$f" ] || { echo "✗ the $eng CEO preamble rendered EMPTY at $f." >&2; return 1; }
+  return 0
+}
+
+# Everything an engine needs on disk before its first pane forks. For Codex that
+# is the rendered preamble file; the launch line names it by its literal,
+# per-project path and by nothing else.
+#
+# THE PATH USED TO TRAVEL OUT OF BAND TOO, and that mechanism is deliberately
+# gone. `tmux setenv -g WARROOM_CEO_PREAMBLE` is SERVER-GLOBAL: two war rooms on
+# one tmux server, each preparing its own Codex panes, last writer wins, and a
+# pane in project A read project B's brief with nothing printed. The
+# session-scoped setenv could not replace it, because it only takes effect on a
+# session that already exists and a `start` creates the session and its first
+# pane in one `new-session`. And the launch line's `${WARROOM_CEO_PREAMBLE:-…}`
+# fallback was the same race seen from the pane: ANY inherited value — a
+# founder's shell, an older launcher's leftover global — outranked the literal.
+# The literal is computed by this invocation for this project, quoted, and
+# cannot hold a metacharacter (_cfg_checked) or point outside $HOME or the
+# project (`under`). Nothing shared, nothing to race.
+#
+# A failure here is LOUD and the caller STOPS. The alternative — measured before
+# this was written — is a pane whose launch line cats a file that was never
+# written: Codex comes up with no CEO brief and no error, which is the silent
+# failure this whole section exists to refuse.
+engine_prepare() {
+  case "$1" in
+    claude) : ;;
+    codex)
+      ceo_preamble_write codex || {
+        echo "  A Codex pane launched now would read a missing brief and come up with no error. Not launching." >&2
+        return 1
+      } ;;
+    *)
+      echo "✗ engine_prepare: no preparation is known for engine '$1'." >&2
+      echo "  Refusing rather than launching a pane whose engine this program does not know." >&2
+      return 1 ;;
+  esac
+  return 0
+}
+
+# Prepare every engine this invocation will launch. Call after engines_resolve
+# and before the first pane is created — and check the result: every caller
+# does `engines_prepare || exit 1`, so a preamble that could not be written
+# stops the run before tmux builds anything. It used to `|| true` each engine
+# and `return 0`, which turned every failure below into a dead pane.
+engines_prepare() {
+  local eng failed=0
+  while IFS= read -r eng; do
+    [ -n "$eng" ] || continue
+    engine_prepare "$eng" || failed=1
+  done < <(engines_in_use)
+  return "$failed"
+}
+
+# A session id is what `claude --resume` and `codex resume` are handed — spliced
+# into a line that a LIVE PANE'S SHELL parses. It comes off disk: a snapshot, a
+# `.session` file, a basename under ~/.claude/projects. Nothing this program
+# produces has anything but this charset in it (Claude's are UUIDs), so anything
+# else is corruption and is refused, never quoted: one metacharacter ends the
+# quoted argument and everything after it is a new command in the pane. Empty is
+# "no session" and is a caller's decision, not this predicate's.
+session_id_ok() {
+  case "$1" in ''|*[!A-Za-z0-9._-]*) return 1 ;; *) return 0 ;; esac
+}
+
+# The exact shell line a pane types to start its engine.
+#   engine_launch_cmd <engine> [resume_session_id] [with_preamble 0|1]
+engine_launch_cmd() {
+  local eng="$1" resume="$2" with_preamble="${3:-0}"
+  # The last gate before the line exists. cmd_restore refuses a bad id up front,
+  # before anything is built or destroyed; this is the backstop for any caller
+  # that did not, and it fails closed the same way an unknown engine does.
+  if [ -n "$resume" ] && ! session_id_ok "$resume"; then
+    echo "✗ refusing to build a resume line: '$resume' is not a session id." >&2
+    echo "  A session id is letters, digits, '.', '_' and '-'. This value would be typed into a live pane." >&2
+    return 1
+  fi
+  case "$eng" in
+    claude)
+      # Claude is launched bare; inject_ceo_prompt pastes afterwards. Unchanged.
+      if [ -n "$resume" ]; then printf 'claude --resume %s' "$resume"
+      else printf 'claude'; fi
+      ;;
+    codex)
+      # THE UPDATE CHOOSER IS A BLOCKING SCREEN, AND IT IS NOT A COMPOSER.
+      # Measured 2026-09-10 against codex-cli 0.153.4, via `tmux capture-pane`
+      # on a pane launched with the exact line this function emits: codex drew
+      #
+      #     ✨ Update available! 0.153.4 -> 0.154.0
+      #   › 1. Update now (runs `npm install -g @openai/codex`)
+      #     2. Skip                     3. Skip until next version
+      #
+      # and waited. So a Codex pane did not come up on a prompt at all, and the
+      # cursor DEFAULTS TO OPTION 1 — a founder pressing Enter into what they
+      # take for a composer runs a global npm install instead. A war room is
+      # eight panes deep; that is eight of them.
+      #
+      # `check_for_update_on_startup` is a real config key of the shipped
+      # binary, not a guess — `strings` finds it in the vendored codex, and
+      # relaunching the identical probe with this flag advanced past the
+      # chooser to the next screen. It is a fixed literal with no interpolation
+      # in it, so it adds no shell-injection surface to a line a live pane
+      # parses, and it goes BEFORE the subcommand where a global option belongs
+      # (`codex -c … resume --help` parses; verified exit 0).
+      #
+      # It is on ALL THREE forms because the chooser is drawn before any of
+      # them reaches a composer: the nag does not care whether this pane is
+      # resuming, bare, or carrying a preamble.
+      #
+      # WHAT THIS DELIBERATELY DOES NOT DO: it does not answer the separate
+      # "Do you trust the contents of this directory?" prompt. That one is a
+      # security decision reserved for the founder, and suppressing it is out
+      # of scope here.
+      local nonag='-c check_for_update_on_startup=false'
+      # Resume is a SUBCOMMAND. On resume the thread already carries its
+      # instructions, so the preamble is not re-sent.
+      if [ -n "$resume" ]; then printf 'codex %s resume %s' "$nonag" "$resume"
+      elif [ "$with_preamble" -eq 1 ]; then
+        # The preamble path is a LITERAL and nothing else — no environment
+        # variable is consulted, see engine_prepare for the race that removed
+        # it. The literal is QUOTED — an unquoted path with a space silently
+        # dropped the WHOLE preamble, because `cat a b` reads two files and
+        # codex was handed the tail of one — and it can hold no shell
+        # metacharacter, because _cfg_checked refuses one at parse time.
+        # Quoting alone would not be enough: one metacharacter ends the quoted
+        # argument and everything after it is a new command in a live pane.
+        #
+        # The file must already exist: engine_prepare wrote it, at the calling
+        # command's top level, where a failure could stop the run. This is the
+        # backstop for a caller that skipped that step, and it refuses rather
+        # than typing a `cat` of a missing file into a pane.
+        local f
+        f="$(ceo_preamble_path codex)"
+        if [ ! -s "$f" ]; then
+          echo "✗ the Codex CEO preamble has not been rendered at $f." >&2
+          echo "  engines_prepare must run, and succeed, before a Codex pane is launched." >&2
+          return 1
+        fi
+        printf 'codex %s -c developer_instructions="$(cat "%s")"' "$nonag" "$f"
+      else printf 'codex %s' "$nonag"; fi
+      ;;
+    *)
+      echo "✗ no launch line for engine '$eng'." >&2
+      return 1
+      ;;
+  esac
+}
+
 # Inject CEO agent reference + preamble into a tmux pane as ONE paste.
 # Single send-keys call so the whole prompt arrives as one pasted block —
 # prevents system-reminders from splitting between agent-ref and preamble.
 # Uses -l (literal) so tmux doesn't interpret parens/quotes as key names.
+#
+# Engine-aware: this is the CLAUDE delivery path. A Codex pane already received
+# the same preamble on its command line at launch (engine_launch_cmd), so
+# pasting here would deliver it twice. Returning early is the whole difference.
 inject_ceo_prompt() {
-  local target="$1"
-  tmux send-keys -t "$target" -l "@\"ceo (agent)\" ${CEO_PREAMBLE}"
+  local target="$1" eng="$2" n
+  # Declared first and assigned second, deliberately: `local eng="$(…)"` makes
+  # the assignment the command whose status bash reports, so the substitution's
+  # own status — including a refusal — is discarded before anyone can test it.
+  if [ -z "$eng" ]; then
+    n="$(pane_number_of "$target")" || return 1
+    eng="$(engine_for_pane "$n")" || return 1
+  fi
+  [ "$eng" = "claude" ] || return 0
+  tmux send-keys -t "$target" -l "$(render_ceo_preamble claude)"
+}
+
+# The pane number in a tmux target like "SESSION:CEO-3.1" or "SESSION:GRID.3".
+# Used to resolve an engine when a caller did not pass one.
+#
+# It REFUSES a target it cannot read rather than answering 1. Pane 1's engine is
+# a plausible answer and a wrong one, and a pane on an engine nobody asked for is
+# indistinguishable from a working pane until someone reads a whole session —
+# the same failure the engine check itself exists to refuse, one layer down.
+#
+# Nothing this program builds reaches the refusal: every target is `…:CEO-N.x` or
+# `…:GRID.N`. What reaches it is a target built from data — cmd_restore takes the
+# pane number out of a snapshot file — and a corrupt snapshot entry is exactly
+# the case where guessing pane 1 is worst.
+pane_number_of() {
+  local t="$1" n=""
+  case "$t" in
+    *:CEO-*) n="${t#*:CEO-}"; n="${n%%.*}" ;;
+    *:GRID.*) n="${t#*:GRID.}"; n="${n%%.*}" ;;
+  esac
+  if ! pane_number_ok "$n"; then
+      echo "✗ cannot read a pane number from the tmux target '$t'." >&2
+      echo "  Refusing rather than guessing pane 1 — guessing puts a pane on an engine nobody asked for." >&2
+      return 1
+  fi
+  printf '%s' "$n"
+}
+
+# --bare means "no CEO agent/preamble". ONE function, because it was two: this
+# rule was computed in send_launch_engine and again in cmd_engine, and the copy
+# the tests exercised was the one that never launches anything. Two
+# implementations of one rule agree until someone edits one of them.
+with_preamble() {
+  if [ "${BARE_MODE:-0}" -eq 1 ]; then printf '0'; else printf '1'; fi
 }
 
 # ─────────────────────────────────────────────────────────────
 #  HELPERS
 # ─────────────────────────────────────────────────────────────
 
-check_deps() {
-  if ! command -v tmux &>/dev/null; then
-    echo "✗ tmux not found. Run: brew install tmux"; exit 1
-  fi
-  if ! command -v claude &>/dev/null; then
-    echo "✗ claude not found. Install Claude Code first."; exit 1
-  fi
+require_tmux() {
+  command -v tmux &>/dev/null && return 0
+  echo "✗ tmux not found. Run: brew install tmux"; exit 1
+}
+
+# Check the engines that will ACTUALLY launch, and name the missing one. This
+# was a hardcoded `command -v claude`, which is the wrong question the moment a
+# pane runs Codex: a Codex-only war room was refused for the absence of a program
+# it was never going to start, and a missing `codex` was not caught at all — it
+# surfaced as a dead pane after tmux had already built the session.
+#
+# The process substitution reads the ALREADY RESOLVED map. It used to resolve
+# inside the substitution, where engine_require_known's exit could reach nothing
+# but the child shell.
+check_engine_deps() {
+  local _eng _bin
+  while IFS= read -r _eng; do
+    [ -n "$_eng" ] || continue
+    _bin="$(engine_binary "$_eng")" || exit 1
+    if ! command -v "$_bin" &>/dev/null; then
+      echo "✗ $_bin not found. $(engine_install_hint "$_eng")"; exit 1
+    fi
+  done < <(engines_in_use)
+}
+
+# The checks that do not depend on which engine a pane runs. Split out so that
+# cmd_restore can run them BEFORE it has read the snapshot — it needs python3
+# to read it at all — and the engine check AFTER, against the engines the
+# snapshot actually names. A bare `check_deps` at the top of restore resolved
+# pane 1 to the default, demanded `claude`, and refused a perfectly restorable
+# all-Codex war room on a machine that had only codex.
+check_base_deps() {
+  require_tmux
   if ! command -v python3 &>/dev/null; then
     echo "✗ python3 not found. Required for cost tracking and event logging."; exit 1
   fi
@@ -165,6 +1228,48 @@ check_deps() {
   fi
   mkdir -p "$PROJECT_STATE_DIR"
   mkdir -p "$TMUX_SCRIPTS_DIR"
+}
+
+check_deps() {
+  # The caller resolves the panes it is about to create, before this runs. The
+  # optional count is a fallback for a caller that has only a count; it still
+  # resolves in the main shell, so its refusal still exits the program.
+  [ "$WARROOM_ENGINES_RESOLVED" -eq 1 ] || engines_resolve $(seq 1 "${1:-1}")
+  check_engine_deps
+  # require_tmux is check_base_deps' first line; it was also called here,
+  # directly, so a missing tmux was asked for twice and refused once.
+  check_base_deps
+}
+
+# The one resolve → check → prepare sequence every command that launches a pane
+# runs before tmux builds anything. It was copied into five commands, and the
+# ordering fix in cmd_add — resolve the NEW pane, then check its binary — was a
+# fix to one copy that the other four had to be re-read for.
+#
+#   engines_setup <deps> <pane>...
+#     deps = all     — check_deps: the engine binaries AND the base checks
+#                      (tmux, python3, the CEO agent file, .git, the state dirs)
+#     deps = engine  — check_engine_deps only, for a caller that has already
+#                      run check_base_deps (cmd_restore needs python3 BEFORE it
+#                      can read the snapshot that names the engines) or is
+#                      inside a live session that passed them at start
+#                      (cmd_grid_view)
+#
+# The panes are the ones this command will actually create — `seq 1 $count` for
+# a start, the next slot for an add, the live window numbers for a grid, the
+# snapshot's numbers for a restore — never a count standing in for a set.
+# check_engine_deps reads the resolved map and engines_prepare writes a
+# preamble per engine in it, so a pane resolved here that is not then created
+# is a wasted check, and one created but not resolved here is a dead pane.
+engines_setup() {
+  local deps="$1"; shift
+  engines_resolve "$@"
+  case "$deps" in
+    all)    check_deps ;;
+    engine) check_engine_deps ;;
+    *) echo "✗ engines_setup: deps must be all or engine, not '$deps'." >&2; exit 1 ;;
+  esac
+  engines_prepare || exit 1
 }
 
 next_ceo_number() {
@@ -226,8 +1331,18 @@ wait_for_shell_prompt() {
   done
 }
 
-send_launch_claude() {
-  # Usage: send_launch_claude <target> [resume_session_id]
+send_launch_engine() {
+  # Usage: send_launch_engine <target> [resume_session_id] [engine]
+  #
+  # Renamed from send_launch_claude, which named one engine in a function that
+  # now starts either. `send_launch_claude` remains below as a thin alias so
+  # that all six historical call sites, and any project shim that learned the
+  # old name, keep working.
+  #
+  # This function deliberately contains NO engine binary name. It asks
+  # engine_launch_cmd for the line to type, so adding an engine is a row in that
+  # case statement rather than a branch here — and warroom-engine.test.mjs fails
+  # if a literal `claude` or `codex` reappears in this body.
   #
   # NO --dangerously-skip-permissions. Removed 2026-08-16, founder decision.
   #
@@ -249,19 +1364,67 @@ send_launch_claude() {
   # bun/bunx/npm — 304 calls — plus printf, timeout and sleep. Those six entries were added to
   # settings.json in the same change, so ordinary work still flows and anything that prompts is
   # now a genuine signal about what agents reach for.
+  #
+  # DECLARE FIRST, ASSIGN SECOND. `local eng="$(…)"` makes `local` the command
+  # whose status bash reports, so a refusal inside the substitution was thrown
+  # away here — and the substitution is a subshell, so the refusal could not have
+  # exited the program even if the status had survived. Both halves are why the
+  # engines are resolved up front now and this is a lookup.
   local target=$1
   local resume=$2
-  wait_for_shell_prompt "$target"
-  if [ -n "$resume" ]; then
-    tmux send-keys -t "$target" "claude --resume $resume" Enter
-  else
-    tmux send-keys -t "$target" "claude" Enter
+  local eng=$3
+  local n cmdline
+  if [ -z "$eng" ]; then
+    n="$(pane_number_of "$target")" || exit 1
+    eng="$(engine_for_pane "$n")" || exit 1
   fi
+  # A pane whose engine carries its brief on the launch line must know here
+  # whether this is a bare session; the other is pasted into afterwards by
+  # inject_ceo_prompt, exactly as before. One rule, one function — see
+  # with_preamble.
+  cmdline="$(engine_launch_cmd "$eng" "$resume" "$(with_preamble)")"
+  if [ -z "$cmdline" ]; then
+    echo "✗ refusing to launch $target: no launch line for engine '$eng'." >&2
+    echo "  An empty line typed into a live pane is the dead pane this refusal exists to prevent." >&2
+    exit 1
+  fi
+  engine_launch_warning "$eng" "$target"
+  wait_for_shell_prompt "$target"
+  tmux send-keys -t "$target" "$cmdline" Enter
 }
+
+# What the FOUNDER is told when a pane of this engine launches — on the
+# launcher's stderr, out of band, never typed into the pane and never seen by
+# the model. A row per engine, like engine_launch_cmd.
+#
+# Codex: engine tool scoping is not enforced there. A Claude Code sub-agent
+# whose `tools:` line declares no Write and no Edit structurally cannot write;
+# Codex is one process with whatever the founder's install can do. The Codex
+# preamble already says this to the MODEL, and a sentence addressed to a model
+# is a request, not a boundary — so the person who chose the engine is told
+# too, at the moment it matters, by the program rather than by a document.
+# docs/03-system-design/final-v2/research/codex-in-the-pane.md §9 is the
+# full write-up and the reason a structural refusal is not well-defined here.
+engine_launch_warning() {
+  local eng="$1" target="$2"
+  case "$eng" in
+    codex)
+      echo "  ⚠ $target runs on Codex: engine tool scoping is NOT enforced in this pane." >&2
+      echo "    A read-only agent file (no Write/Edit in tools:) is prose there, not a control." >&2
+      echo "    It also reads AGENTS.md (git-tracked) and \$CODEX_HOME/AGENTS.md as trusted instructions." >&2
+      echo "    Treat this pane as trusted, not sandboxed. Details: research/codex-in-the-pane.md §9" >&2
+      ;;
+    *) : ;;
+  esac
+  return 0
+}
+
+# Retained name. Six call sites and any project shim still use it.
+send_launch_claude() { send_launch_engine "$@"; }
 
 launch_claude_in_window() {
   local n=$1
-  send_launch_claude "$SESSION:CEO-$n"
+  send_launch_engine "$SESSION:CEO-$n" "" "$(engine_for_pane "$n")"
 }
 
 # Feature A2 — Smart Claude ready detection (window-based)
@@ -323,10 +1486,10 @@ capture_session_id() {
     for f in "$HOME/.claude/sessions/"*.json; do
       [ -f "$f" ] || continue
       local cwd
-      cwd=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('cwd',''))" 2>/dev/null)
+      cwd=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('cwd',''))" "$f" 2>/dev/null)
       if [ "$cwd" = "$wt_path" ]; then
         local sid
-        sid=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('sessionId',''))" 2>/dev/null)
+        sid=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('sessionId',''))" "$f" 2>/dev/null)
         if [ -n "$sid" ]; then
           echo "$sid" > "$session_file"
           return 0
@@ -376,7 +1539,7 @@ migrate_sessions() {
   [ -f "$claude_json" ] && python3 -c "
 import json, os, sys
 try:
-    with open('$claude_json') as f: d = json.load(f)
+    with open(sys.argv[1]) as f: d = json.load(f)
     p = d.get('githubRepoPaths', {})
     changed = False
     for k in list(p):
@@ -385,9 +1548,9 @@ try:
         if not p[k]: del p[k]; changed = True
         elif len(p[k]) != before: changed = True
     if changed:
-        with open('$claude_json', 'w') as f: json.dump(d, f, indent=2)
+        with open(sys.argv[1], 'w') as f: json.dump(d, f, indent=2)
 except: pass
-" 2>/dev/null
+" "$claude_json" 2>/dev/null
 }
 
 # Copy Claude session files back from main project dir to worktree project dir.
@@ -522,15 +1685,15 @@ save_session_snapshot() {
     # Fallback 1: look up session ID from ~/.claude/sessions/*.json by matching CWD
     if [ -z "$session_id" ] && [ -n "$wt_path" ]; then
       session_id=$(python3 -c "
-import json, os, glob
-wt = '$wt_path'
+import json, os, glob, sys
+wt = sys.argv[1]
 for f in sorted(glob.glob(os.path.expanduser('~/.claude/sessions/*.json')), key=os.path.getmtime, reverse=True):
     try:
         d = json.load(open(f))
         if d.get('cwd') == wt:
             print(d.get('sessionId', '')); break
     except: pass
-" 2>/dev/null)
+" "$wt_path" 2>/dev/null)
     fi
 
     # Fallback 2: find the latest JSONL in the worktree project dir
@@ -545,9 +1708,31 @@ for f in sorted(glob.glob(os.path.expanduser('~/.claude/sessions/*.json')), key=
       fi
     fi
 
+    # Whatever the three sources above produced, only a well-formed id is
+    # recorded. This is what makes a bad id in a snapshot CORRUPTION rather
+    # than routine — cmd_restore refuses on that basis, and the basis has to be
+    # true. Dropped, not quoted: a snapshot that resumes nothing is recoverable;
+    # one that types into a pane is not.
+    if [ -n "$session_id" ] && ! session_id_ok "$session_id"; then
+      echo "  ⚠ CEO-$n: ignoring an unreadable session id ($session_id) — this CEO will restore fresh." >&2
+      session_id=""
+    fi
+
+    # The engine this pane was started on, from the map the launching invocation
+    # wrote. Read HERE because cmd_kill calls engines_forget a few lines after
+    # this snapshot is saved, and after that nothing remembers. Empty when the
+    # map has no entry — a war room started by an older launcher — and
+    # cmd_restore warns on empty rather than guessing in silence.
+    local engine=""
+    engine="$(engine_persisted_for_pane "$n")"
+    if [ -n "$engine" ] && ! engine_is_known "$engine"; then
+      echo "  ⚠ CEO-$n: ignoring an unknown engine ($engine) in $ENGINES_STATE_FILE — not recording it." >&2
+      engine=""
+    fi
+
     [ "$first" -eq 0 ] && ceos_json+=","
     first=0
-    ceos_json+="{\"n\":$n,\"branch\":\"$branch\",\"wt_path\":\"$wt_path\",\"task\":\"$task\",\"start_ts\":${start_ts:-0},\"session_id\":\"$session_id\"}"
+    ceos_json+="{\"n\":$n,\"branch\":\"$branch\",\"wt_path\":\"$wt_path\",\"task\":\"$task\",\"start_ts\":${start_ts:-0},\"session_id\":\"$session_id\",\"engine\":\"$engine\"}"
   }
 
   if $grid_mode; then
@@ -558,10 +1743,16 @@ for f in sorted(glob.glob(os.path.expanduser('~/.claude/sessions/*.json')), key=
       _snapshot_one_ceo "$i"
     done
   else
-    # Normal mode: iterate over CEO-N windows
+    # Normal mode: iterate over CEO-N windows. The number is written UNQUOTED
+    # into the JSON below, so a renamed window (`CEO-x`) would corrupt the
+    # snapshot; it is skipped, and said so, rather than recorded.
     while IFS= read -r window_name; do
       local n
-      n=$(echo "$window_name" | sed 's/CEO-//')
+      n="${window_name#CEO-}"
+      if ! pane_number_ok "$n"; then
+        echo "  ⚠ skipping window '$window_name': not a CEO number" >&2
+        continue
+      fi
       _snapshot_one_ceo "$n"
     done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
   fi
@@ -587,14 +1778,14 @@ EOF
   mkdir -p "$SNAPSHOTS_DIR"
   local session_fingerprint
   session_fingerprint=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('$SESSION_SNAPSHOT'))
+    d = json.load(open(sys.argv[1]))
     ts_list = sorted(str(c.get('start_ts',0)) for c in d.get('ceos',[]))
     print('-'.join(ts_list))
 except:
-    print('$ts')
-" 2>/dev/null)
+    print(sys.argv[2])
+" "$SESSION_SNAPSHOT" "$ts" 2>/dev/null)
   [ -z "$session_fingerprint" ] && session_fingerprint="$ts"
 
   # Find existing snapshot with same fingerprint, or create new
@@ -603,14 +1794,14 @@ except:
     [ -f "$candidate" ] || continue
     local cand_fp
     cand_fp=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('$candidate'))
+    d = json.load(open(sys.argv[1]))
     ts_list = sorted(str(c.get('start_ts',0)) for c in d.get('ceos',[]))
     print('-'.join(ts_list))
 except:
     print('')
-" 2>/dev/null)
+" "$candidate" 2>/dev/null)
     if [ "$cand_fp" = "$session_fingerprint" ]; then
       snap_file="$candidate"
       break
@@ -645,7 +1836,23 @@ cmd_start() {
     echo "✗ CEO count must be 1–8. Got: $count"; exit 1
   fi
 
-  check_deps
+  # A map that outlived its session must not outrank the config. engines_forget
+  # runs from `${SESSION} kill`, which is only ONE of the ways a war room ends —
+  # `tmux kill-session`, a crash and a reboot never reach it. Left behind, the
+  # map's precedence rung sits ABOVE `engine:` in .warroom.yml, so an edited
+  # config saying claude lost silently to a stale `2:codex`. Cleared here, before
+  # resolution, and only when no session of ours is live: a start while one IS
+  # live either attaches to it or kills it a few lines down, and in the attach
+  # case the map still belongs to the session the founder is rejoining.
+  if ! { command -v tmux >/dev/null 2>&1 && tmux has-session -t "$SESSION" 2>/dev/null; }; then
+    engines_forget
+  fi
+
+  # Resolve every pane's engine ONCE, here, before check_deps and before tmux
+  # builds anything. A refusal at this point exits the program; the same refusal
+  # inside the substitution that used to feed check_deps exited a child shell and
+  # let the run continue with an empty engine.
+  engines_setup all $(seq 1 "$count")
 
   if tmux has-session -t "$SESSION" 2>/dev/null; then
     if [ "$grid_mode" -eq 1 ]; then
@@ -697,6 +1904,12 @@ cmd_start() {
 
   # Prune stale worktree refs
   git -C "$PROJECT_DIR" worktree prune 2>/dev/null
+
+  # Record what this war room was started with. `--engine 2:codex` lived only in
+  # the process that parsed it, so the NEXT invocation — `grid`, `restore` —
+  # silently put pane 2 back on the default. Written here, after the decision to
+  # start is final, and removed by `kill`.
+  engines_persist $(seq 1 "$count")
 
   echo ""
   echo -e "  ${BOLD}╔══════════════════════════════════════╗${RESET}"
@@ -820,7 +2033,7 @@ cmd_start() {
 }
 
 cmd_add() {
-  check_deps
+  require_tmux
 
   if ! tmux has-session -t "$SESSION" 2>/dev/null; then
     echo "✗ No war room running. Start with: ${SESSION} [N]"; exit 1
@@ -829,6 +2042,13 @@ cmd_add() {
   local n
   n=$(next_ceo_number)
   [ "$n" -gt 8 ] && echo "✗ Maximum 8 CEOs." && exit 1
+
+  # The pane about to be created is the one whose engine has to be checked. A
+  # bare `check_deps` checked pane 1 — the one pane `add` never creates — so
+  # `--engine 5:codex` on a machine without codex built the window first and
+  # died inside it.
+  engines_setup all "$n"
+  engines_persist_pane "$n"
 
   echo "  + Spawning CEO-$n..."
   if spawn_ceo "$n"; then
@@ -859,6 +2079,7 @@ cmd_add() {
 cmd_done() {
   local n=$1
   [ -z "$n" ] && echo "Usage: ${SESSION} done <N>" && exit 1
+  pane_number_require "$n" "the argument to done"
   ! tmux has-session -t "$SESSION" 2>/dev/null && echo "✗ No war room running." && exit 1
   ! tmux list-windows -t "$SESSION" -F "#{window_name}" | grep -q "^CEO-$n$" && echo "✗ CEO-$n not found." && exit 1
 
@@ -1012,6 +2233,9 @@ print(json.dumps(d, indent=2))
     sed -i '' "/^ceo-${n}:/d" "$WORKTREES_DIR/.registry" 2>/dev/null
   fi
   rm -f "$WORKTREES_DIR/ceo-${n}.task" "$WORKTREES_DIR/ceo-${n}.session" 2>/dev/null
+  # This pane's engine goes with the pane. `add` reuses the lowest free number,
+  # so a leftover entry would hand a brand-new CEO the closed one's engine.
+  engines_forget_pane "$n"
 
   tmux kill-window -t "$SESSION:CEO-$n"
   echo "  ✓ CEO-$n closed"
@@ -1019,6 +2243,12 @@ print(json.dumps(d, indent=2))
 
 cmd_kill() {
   if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    # No session, so nothing to kill — but a map may be left over from a session
+    # someone ended with `tmux kill-session` instead. Clearing it here is the
+    # cheap half of "a stale map must not outlive its session"; the other half is
+    # that cmd_start and cmd_restore both REWRITE the map rather than merge into
+    # it, so a leftover cannot survive the next start either.
+    engines_forget
     echo "  No war room running."; exit 0
   fi
 
@@ -1026,7 +2256,8 @@ cmd_kill() {
   local dirty_ceos=()
   while IFS= read -r window_name; do
     local n
-    n=$(echo "$window_name" | sed 's/CEO-//')
+    n="${window_name#CEO-}"
+    pane_number_ok "$n" || continue
     # Derive worktree path from registry (reliable), not pane_current_path
     # (Claude spawns subagents that cd into different dirs, making pane_current_path unreliable)
     local wt_path=""
@@ -1081,6 +2312,10 @@ cmd_kill() {
   echo "  Cleaning up worktrees..."
   remove_worktrees
 
+  # The engine map belongs to the session, not to the project. Left behind, it
+  # would hand the next war room a choice nobody made in it.
+  engines_forget
+
   tmux kill-session -t "$SESSION"
 
   # Clear resurrect save to prevent tmux-continuum auto-restore
@@ -1112,7 +2347,31 @@ cmd_ls() {
 
   while IFS= read -r window_name; do
     local n
-    n=$(echo "$window_name" | sed 's/CEO-//')
+    n="${window_name#CEO-}"
+    # A tmux window name is DATA: `tmux rename-window` is available to anyone
+    # with the socket, and `CEO-08` or `CEO-x` sorts into this list like any
+    # other. From here the value reaches get_ansi_color, whose body is
+    # `${CEO_ANSI_COLORS[$(( ($1 - 1) % 6 ))]}` — an arithmetic context — and a
+    # `grep "^ceo-${n}:"` over the registry, where it is a REGEX, and
+    # `ceo-${n}.task` and `ceo-${n}.session`, where it is a PATH.
+    #
+    # Measured on /bin/bash 3.2.57 rather than assumed: `$(…)` inside a
+    # variable used in `$(( ))` is NOT executed there — it is a syntax error —
+    # so this site is not the injection that the array-SUBSCRIPT sites are.
+    # What it is is a fatal arithmetic abort (`CEO-08` → "value too great for
+    # base") and a regex and a path built out of a stranger's string.
+    #
+    # SKIPS rather than refuses, unlike cmd_grid_view two functions up, and the
+    # difference is what the command is FOR: `ls` exists to show the founder
+    # what is running, and a listing that aborts on one renamed window tells
+    # them nothing about the eight that are fine. It is not a SILENT skip —
+    # printing two CEOs where there are three is the
+    # indistinguishable-from-working failure this program keeps refusing — so
+    # the window is named on stderr and left out of the count.
+    if ! pane_number_ok "$n"; then
+      echo "  ⚠ window '$window_name' is not a CEO pane number — not listed." >&2
+      continue
+    fi
     local ansi_color
     ansi_color=$(get_ansi_color "$n")
 
@@ -1265,7 +2524,10 @@ cmd_grid_start() {
   local count=${1:-3}
   local bare_mode=${2:-0}
 
-  check_deps 2>/dev/null || true
+  # Was `check_deps 2>/dev/null || true`, which discarded exactly the error this
+  # rewrite exists to surface: a grid asking for `--engine 3:codex` on a machine
+  # without codex built the whole tmux grid and then failed inside a pane.
+  engines_setup all $(seq 1 "$count")
 
   echo "  Starting grid mode with $count panes..."
 
@@ -1367,6 +2629,62 @@ cmd_grid_start() {
 }
 
 # Feature B1 — Grid view from running session
+# Print how each pane would be launched, and start nothing.
+#
+# This exists because the alternative was untestable. Engine resolution decides
+# what program runs a CEO, and every other path to it goes through tmux — so
+# without this the only way to check the resolution was to start a war room and
+# look, which is why `assert.equal(SOME_CONST, 'claude')` is the test a repo
+# ends up writing. That assertion is vacuous; this command makes the real thing
+# observable.
+#
+# It MUST stay a thin reporter over engine_for_pane / engine_launch_cmd. The
+# moment it computes an answer of its own it becomes a second implementation
+# that agrees with the first only until someone edits one of them.
+cmd_engine() {
+  local count="${1:-3}" i eng
+  # `engine render <name>` prints exactly what a pane of that engine is told.
+  # Both renderings come from render_ceo_preamble and therefore from the one
+  # source file, which is the property worth being able to check: edit
+  # .claude/entry/ceo.md and BOTH outputs move. If one of them ever stops
+  # moving, someone has written the CEO's identity down twice.
+  if [ "$count" = "render" ]; then
+    if [ -z "${2:-}" ]; then
+      echo "✗ engine render needs an engine name." >&2
+      echo "  Usage: ${SESSION} engine render <engine>   — one of: $WARROOM_ENGINES" >&2
+      exit 1
+    fi
+    engine_require_known "$2" "engine render"
+    render_ceo_preamble "$2"
+    echo ""
+    return 0
+  fi
+  if ! [[ "$count" =~ ^[0-9]+$ ]]; then
+    echo "Usage: ${SESSION} engine [N]   — show the engine and launch line for panes 1..N"; exit 1
+  fi
+  # Resolve here, at this command's top level, so a bad engine refuses the way
+  # it refuses on the launch path — same call, same shell, same exit.
+  engines_resolve $(seq 1 "$count")
+  engines_prepare || exit 1
+  echo ""
+  echo -e "  ${BOLD}Engines${RESET}  (default: $WARROOM_ENGINE_FALLBACK · known: $WARROOM_ENGINES)"
+  echo ""
+  for i in $(seq 1 "$count"); do
+    eng="$(engine_for_pane "$i")" || exit 1
+    printf '  CEO-%-3s %-8s %s\n' "$i" "$eng" "$(engine_launch_cmd "$eng" "" "$(with_preamble)")"
+  done
+  echo ""
+  # Pane 1's, as the example. It was a loop over 1..N that broke after the
+  # first pane, which reads as "every pane" and prints one.
+  printf '  resume form: '
+  if [ "$count" -ge 1 ]; then
+    eng="$(engine_for_pane 1)"
+    printf '%s ' "$(engine_launch_cmd "$eng" "SESSION_ID" 0)"
+  fi
+  echo ""
+  echo ""
+}
+
 cmd_grid_view() {
   if ! tmux has-session -t "$SESSION" 2>/dev/null; then
     echo "✗ No war room running."; exit 1
@@ -1379,37 +2697,76 @@ cmd_grid_view() {
     return 0
   fi
 
-  # Build GRID window from existing CEO windows
-  local ceo_windows
-  mapfile -t ceo_windows < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-" | sort)
+  # Build GRID window from existing CEO windows.
+  #
+  # NOT `mapfile`: it is a bash 4 builtin and this script's shebang is
+  # `#!/bin/bash`, which on macOS is 3.2.57 — the founder's interpreter. There it
+  # is `mapfile: command not found`, and because `local ceo_windows` DECLARES the
+  # name without making it an array, `${#ceo_windows[@]}` is then **1**, not 0.
+  # So the `count -eq 0` guard below did not fire: `grid` built exactly one pane
+  # and silently dropped every other CEO. Measured on both interpreters — the
+  # loop below gives 2 for two windows and 0 for none on 3.2.57 and on 5.3.9.
+  local -a ceo_windows=()
+  local _wname
+  while IFS= read -r _wname; do
+    [ -n "$_wname" ] && ceo_windows+=("$_wname")
+  done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-" | sort)
   local count=${#ceo_windows[@]}
 
   if [ "$count" -eq 0 ]; then
     echo "✗ No CEO windows found."; exit 1
   fi
 
+  # `grid` is a SECOND invocation of this program, so it knows nothing about the
+  # `--engine` flags that started the session. It reads them back from the map
+  # this war room recorded, and resolves them here where a refusal still exits.
+  #
+  # Resolve the CEO NUMBERS, never `seq 1 $count`. A count is not a set of pane
+  # numbers: after one `${SESSION} done`, the windows are CEO-1 and CEO-3 and the
+  # count is 2, so `seq` resolved a pane 2 that does not exist and never resolved
+  # CEO-3 at all.
+  #
+  # A window name is DATA: tmux lets anyone rename a window, and `CEO-08` or
+  # `CEO-$(…)` sorts into this list like any other. The number is read as a
+  # pane number HERE, before it is a subscript in engines_resolve, because a
+  # subscript is an arithmetic context and evaluates what it is given.
+  local grid_ns=""
+  for _wname in "${ceo_windows[@]}"; do
+    pane_number_require "${_wname#CEO-}" "the tmux window '$_wname'"
+    grid_ns="$grid_ns ${_wname#CEO-}"
+  done
+  engines_setup engine $grid_ns
+
   # Get wt_paths for all CEOs
   local -a ceo_wt_paths
-  for wname in "${ceo_windows[@]}"; do
+  for _wname in "${ceo_windows[@]}"; do
     local n
-    n=$(echo "$wname" | sed 's/CEO-//')
+    n="${_wname#CEO-}"
     local wtp
-    wtp=$(tmux display-message -t "$SESSION:$wname" -p "#{pane_current_path}" 2>/dev/null)
+    wtp=$(tmux display-message -t "$SESSION:$_wname" -p "#{pane_current_path}" 2>/dev/null)
     ceo_wt_paths[$n]="$wtp"
   done
 
-  # Create GRID window
+  # Create GRID window.
+  #
+  # THE ENGINE IS PASSED EXPLICITLY, and that third argument is the whole fix.
+  # Left off, send_launch_engine infers the engine from the target — and a GRID
+  # target names a POSITION, not a CEO. Position equals CEO number only until the
+  # first `${SESSION} done N`: after that, CEO-3 sits in GRID.2, the launcher
+  # resolved pane 2's engine, and a Codex CEO came back as Claude with nothing
+  # printed. The number is already computed here for the worktree path; it was
+  # simply never handed to the launcher.
   local first_n
-  first_n=$(echo "${ceo_windows[0]}" | sed 's/CEO-//')
+  first_n="${ceo_windows[0]#CEO-}"
   tmux new-window -t "$SESSION" -n "GRID" -c "${ceo_wt_paths[$first_n]}"
-  send_launch_claude "$SESSION:GRID.1"
+  send_launch_claude "$SESSION:GRID.1" "" "$(engine_for_pane "$first_n")"
 
   if [ "$count" -ge 2 ]; then
     for i in $(seq 1 $(( count - 1 )) ); do
       local n
-      n=$(echo "${ceo_windows[$i]}" | sed 's/CEO-//')
+      n="${ceo_windows[$i]#CEO-}"
       tmux split-window -h -t "$SESSION:GRID" -c "${ceo_wt_paths[$n]}"
-      send_launch_claude "$SESSION:GRID.$(( i + 1 ))"
+      send_launch_claude "$SESSION:GRID.$(( i + 1 ))" "" "$(engine_for_pane "$n")"
     done
   fi
 
@@ -1420,7 +2777,14 @@ cmd_grid_view() {
   fi
 
   tmux select-window -t "$SESSION:GRID"
-  [ -z "$TMUX" ] && tmux attach -t "$SESSION"
+  # `[ … ] && …` as the LAST command makes the test's own result the function's
+  # exit status: run from inside tmux, $TMUX is set, the test is false, and a
+  # `grid` that built everything correctly returned 1. Pre-existing — identical
+  # on 60e522b — and invisible until a test asserted the exit code, because the
+  # founder runs this from inside tmux where it always failed, and from outside
+  # where `attach` masks it. An explicit return is the whole fix.
+  if [ -z "$TMUX" ]; then tmux attach -t "$SESSION"; fi
+  return 0
 }
 
 # Feature D1 — Restore last saved session
@@ -1430,7 +2794,11 @@ cmd_grid_view() {
 #   1-10           — restore Nth entry from picker directly
 cmd_restore() {
   local restore_arg="${1:-}"
-  check_deps
+  # Base checks only. The engine check runs further down, AFTER the snapshot
+  # has been read and its real engines resolved — a bare check_deps here
+  # resolved pane 1 to the default and demanded `claude` for an all-Codex
+  # snapshot on a machine that only had codex.
+  check_base_deps
 
   # Determine which snapshot file to use
   local chosen_snapshot=""
@@ -1473,9 +2841,9 @@ cmd_restore() {
     for sf in "${snap_files[@]}"; do
       local dt ceo_count mode tasks
       dt=$(python3 -c "
-import json, datetime
+import json, datetime, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
 except:
     d = {}
 ts = d.get('saved_at', 0)
@@ -1483,27 +2851,27 @@ if ts:
     print(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M'))
 else:
     print('unknown')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
       ceo_count=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
     print(len(d.get('ceos', [])))
 except:
     print('?')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
       mode=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
     print('grid' if d.get('grid_mode') else 'normal')
 except:
     print('?')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
       tasks=$(python3 -c "
-import json
+import json, sys
 try:
-    d = json.load(open('${sf}'))
+    d = json.load(open(sys.argv[1]))
     labels = [c.get('task','') for c in d.get('ceos',[]) if c.get('task','')]
     if labels:
         joined = ', '.join(labels)
@@ -1512,7 +2880,7 @@ try:
         print('(no labels)')
 except:
     print('')
-" 2>/dev/null)
+" "$sf" 2>/dev/null)
 
       if [ "$i" -eq 1 ]; then
         printf "  ${C_PEACH}${BOLD}%-4s${RESET} ${C_TEXT}%-20s${RESET} ${C_GREEN}%-6s${RESET} ${C_SUBTEXT}%-8s${RESET} ${C_OVERLAY}%s${RESET}\n" \
@@ -1539,13 +2907,279 @@ except:
     chosen_snapshot="${snap_files[$(( user_pick - 1 ))]}"
   fi
 
+  # ── Validate the whole snapshot BEFORE anything is built or destroyed ──────
+  #
+  # Same shape as engines_resolve: every pane this command will create is checked
+  # once, up front, and a single bad entry refuses the WHOLE restore. Nothing is
+  # half-built, so there is no partial tmux session to clean up — and no war room
+  # that is running and silently missing a CEO, which is the same
+  # indistinguishable-from-working failure the engine refusal exists to prevent,
+  # one level up.
+  #
+  # THIS SITS ABOVE THE kill-session BELOW, and that placement is the load-bearing
+  # part. Validating after it would destroy the founder's RUNNING war room and
+  # then refuse to build the replacement, which is worse than either failure on
+  # its own: the corrupt snapshot would cost them the session they still had.
+  #
+  # WHY THIS REFUSES WHILE THE BRANCH GUARD BELOW SKIPS. The two look
+  # inconsistent and are not: they are told apart by CAUSE, not by severity.
+  #
+  #   A MISSING BRANCH IS ROUTINE. `${SESSION} done N` closes a CEO and deletes
+  #   its branch, so a snapshot written before that names a branch which is
+  #   legitimately gone. The snapshot is intact and correct; the world moved.
+  #   Skipping that entry and restoring the rest is the right answer, and it is
+  #   what the guard below has always done.
+  #
+  #   A NON-NUMERIC PANE NUMBER IS CORRUPTION. Nothing this program does can
+  #   produce one — `n` is written from a loop counter. Its presence means the
+  #   file is not what it claims to be, and the rest of it cannot be trusted
+  #   either. Restoring "the rest" of a file that is provably malformed is
+  #   guessing, so the whole restore is refused and the founder is told which
+  #   entry to look at.
+  #
+  # The test for which arm a future case belongs in: can normal operation of
+  # this program produce it? Routine, so skip. Otherwise it is corruption, so
+  # refuse.
+  #
+  # `[1-9][0-9]*` and not str.isdigit(): isdigit() accepts '٣' and other Unicode
+  # digits that a bash `[0-9]` glob rejects, and two predicates for one question
+  # disagree exactly once, in the case nobody tested. And not `[0-9]+`: that
+  # accepted `08`, which is a fatal arithmetic error where the number is finally
+  # used, and `010`, which is octal 8 there. This is pane_number_ok, in Python.
+  # ONE PARSE, ONE ANSWER — and the reason is a bug that was reproduced by hand.
+  #
+  # These three questions — which pane numbers the snapshot names, which of its
+  # values cannot be used, and where it says the worktrees are — used to be
+  # three separate `$(python3 -c … 2>/dev/null)` substitutions. Every one of
+  # them answered an UNPARSEABLE file with the empty string, and the empty
+  # string is also what a perfectly clean snapshot produces: `json.load` raised,
+  # stderr went to /dev/null, `snapshot_bad` came back empty, `[ -n … ]` was
+  # false, and control walked straight down to the kill-session below. A
+  # snapshot holding `not valid json at all {{{` therefore DESTROYED the running
+  # war room and only then failed — the destroy-then-refuse ordering the comment
+  # above says has been fixed. The ORDER was right; the SIGNAL was missing,
+  # which is the worse of the two, because the code reads correct.
+  #
+  # So the reader below cannot answer with silence. It wraps json.load in
+  # try/except, refuses a top level that is not an object and a `ceos` that is
+  # not a list of objects, and exits 2 with a diagnostic on each of those. Its
+  # answers come back on TAGGED lines — NS, BAD, ENG, WT — so "I looked and
+  # found nothing wrong" and "I could not look" are different observations
+  # rather than the same empty string. Any non-zero status routes into the
+  # refusal below, including a python3 that is missing, killed, or that died
+  # after printing half an answer: stderr is CAPTURED here rather than
+  # discarded, so whatever it managed to say is what the founder is shown.
+  local _snap_out _snap_rc
+  _snap_out=$(python3 -c "
+import json, re, sys
+try:
+    with open(sys.argv[1]) as f:
+        d = json.load(f)
+except Exception as e:
+    print('ERR this file is not readable JSON: %s' % (e,))
+    raise SystemExit(2)
+if not isinstance(d, dict):
+    print('ERR its top level is a %s, not an object' % type(d).__name__)
+    raise SystemExit(2)
+ceos = d.get('ceos', [])
+if not isinstance(ceos, list):
+    print('ERR its ceos field is a %s, not a list' % type(ceos).__name__)
+    raise SystemExit(2)
+print('CEOS %s' % ('missing' if 'ceos' not in d else len(ceos)))
+ns = []
+for i, c in enumerate(ceos):
+    if not isinstance(c, dict):
+        print('ERR entry #%d is a %s, not an object' % (i, type(c).__name__))
+        raise SystemExit(2)
+    n = str(c.get('n', ''))
+    if re.fullmatch(r'[1-9][0-9]*', n):
+        ns.append(n)
+    else:
+        print('BAD entry #%d names CEO %r — not a pane number' % (i, n))
+    sid = str(c.get('session_id', '') or '')
+    if not re.fullmatch(r'[A-Za-z0-9._-]*', sid):
+        print('BAD entry #%d carries session_id %r — not a session id' % (i, sid))
+    eng = str(c.get('engine', '') or '')
+    if not re.fullmatch(r'[A-Za-z0-9_-]*', eng):
+        print('BAD entry #%d carries engine %r — not an engine name' % (i, eng))
+    elif eng and n in ns:
+        print('ENG %s:%s' % (n, eng))
+    print('WT %s' % str(c.get('wt_path', '') or '').replace('\n', ' '))
+print('NS %s' % ' '.join(ns))
+" "$chosen_snapshot" 2>&1)
+  _snap_rc=$?
+
+  if [ "$_snap_rc" -ne 0 ]; then
+    echo "✗ this snapshot cannot be read:" >&2
+    printf '%s\n' "$_snap_out" | sed 's/^/    /' >&2
+    echo "    in $chosen_snapshot" >&2
+    echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+    echo "  Pick another snapshot, or fix the file above and run '${SESSION} restore' again." >&2
+    exit 1
+  fi
+
+  # Sorting the tagged lines. The loop is fed by `<<<` and not by a pipe: in
+  # bash 3.2 the right-hand side of a pipe is a subshell, so every variable set
+  # in here would be discarded at the `done` and the whole check would read
+  # clean for the same reason the old code did.
+  #
+  # wt_path is where this restore runs `git worktree add` and points a pane's
+  # cwd, and it comes off the same disk as the pane number. save_session_snapshot
+  # only ever records "$WORKTREES_DIR/ceo-N-TS", so one anywhere else was not
+  # written by this program: refused whole, up front, by the corruption rule —
+  # a checkout with state_dir inside the project carries a snapshot as easily
+  # as it carries a config, and this is the write it would have chosen. Judged
+  # by the rule the config keys are judged by, path charset then _path_under,
+  # so there is one answer to "is this under that". Empty is the routine skip
+  # further down, as it always was.
+  local snapshot_ns="" snapshot_bad="" snapshot_ceos="" _wt="" _wt_bad="" _line
+  WARROOM_SNAPSHOT_ENGINES=""
+  while IFS= read -r _line; do
+    case "$_line" in
+      "NS "*) snapshot_ns="${_line#NS }" ;;
+      "BAD "*) snapshot_bad="${snapshot_bad}${_line#BAD }
+" ;;
+      "CEOS "*) snapshot_ceos="${_line#CEOS }" ;;
+      "ENG "*) WARROOM_SNAPSHOT_ENGINES="${WARROOM_SNAPSHOT_ENGINES}${_line#ENG } " ;;
+      "WT "*)
+        _wt="${_line#WT }"
+        [ -n "$_wt" ] || continue
+        [ -n "$_wt_bad" ] && continue
+        path_charset_ok "$_wt" || { _wt_bad="$_wt"; continue; }
+        _path_under "$_wt" "$WORKTREES_DIR" >/dev/null || { _wt_bad="$_wt"; continue; }
+        ;;
+    esac
+  done <<< "$_snap_out"
+  snapshot_bad="${snapshot_bad%$'\n'}"
+
+  if [ -n "$snapshot_bad" ]; then
+    echo "✗ this snapshot holds values that cannot be used:" >&2
+    printf '%s\n' "$snapshot_bad" | sed 's/^/    /' >&2
+    echo "    in $chosen_snapshot" >&2
+    echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+    echo "  Pick another snapshot, or fix the entry above and run '${SESSION} restore' again." >&2
+    exit 1
+  fi
+
+  if [ -n "$_wt_bad" ]; then
+    echo "✗ this snapshot names a worktree outside $WORKTREES_DIR:" >&2
+    echo "    $_wt_bad" >&2
+    echo "    in $chosen_snapshot" >&2
+    echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+    echo "  This program only ever records worktrees it created there, so the file is not one it wrote." >&2
+    exit 1
+  fi
+
+  # A snapshot that is VALID and leaves NOTHING TO BUILD is the last member of
+  # the destroy-then-refuse class, and the one that survived the fix for the
+  # rest of it. Every refusal above needs a POSITIVE signal — a non-zero reader
+  # status, a BAD line, a wt_path somewhere else — and `{}` produces none of
+  # them: it is readable JSON, its top level is an object, `d.get('ceos', [])`
+  # is a list, and no entry is malformed because there are no entries. So
+  # `snapshot_ns` came back empty, which is also what it holds one line before
+  # a perfectly good snapshot fills it, nothing refused, and control reached
+  # the kill-session below. The founder lost the running war room and was then
+  # told "✗ No CEOs could be restored." — the right message, one step too late.
+  # Measured 2026-09-11 on `{}`: one kill-session, exit 1, stderr empty.
+  #
+  # THE CONDITION IS THE RESOLVED SET, `$snapshot_ns`, and the COUNT only
+  # chooses the wording. Those are two different questions and they have
+  # different right answers, so neither one alone is the check:
+  #
+  #   WHAT MAKES THE KILL UNSAFE is that there is nothing to build afterwards.
+  #   That is a property of the RESOLVED set, not of the input, so the guard
+  #   tests the resolved set — then a future entry that gets dropped for a
+  #   reason nobody has thought of yet is still caught here, without anyone
+  #   remembering to extend this condition. A guard keyed on the input count
+  #   would have let exactly that through.
+  #
+  #   WHAT THE FOUNDER NEEDS TOLD is which mistake they made, and the resolved
+  #   set cannot say: it is equally empty for a file with no CEOs and for a
+  #   file with five unusable ones. So the message is chosen by the count the
+  #   reader actually saw, on its CEOS line.
+  #
+  # These are not the same input. Measured 2026-09-11: a `ceos` list whose
+  # every entry has an unusable `n` reports `CEOS 2` with an EMPTY `NS` —
+  # resolved zero, input two. It does not reach here today, because each of
+  # those entries also prints a BAD line and the refusal above wins, which is
+  # right: "entry #0 names CEO 'x'" tells the founder more than any sentence
+  # here could. The third arm below is the BACKSTOP for that shape, and it is
+  # deliberately unreachable rather than dead — see the note on it.
+  if [ -z "$snapshot_ns" ]; then
+    if [ "$snapshot_ceos" = "missing" ]; then
+      echo "✗ this snapshot has no 'ceos' field, so it records nothing to restore:" >&2
+      echo "    in $chosen_snapshot" >&2
+      echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+      echo "  Every snapshot this program writes carries that field, so the file is not one it wrote." >&2
+      echo "  Pick another snapshot and run '${SESSION} restore' again." >&2
+    elif [ "$snapshot_ceos" = "0" ]; then
+      echo "✗ this snapshot's list of CEOs is empty, so it records nothing to restore:" >&2
+      echo "    in $chosen_snapshot" >&2
+      echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+      echo "  It was saved from a war room with no CEOs open." >&2
+      echo "  Pick a snapshot that has some, or start fresh with '${SESSION} start'." >&2
+    else
+      # UNREACHABLE TODAY, ON PURPOSE — AND THE UNREACHABILITY IS PINNED BY A
+      # TEST, not by this comment. Getting here means the reader saw entries
+      # and none of them resolved, and every way an entry can fail to resolve
+      # currently also prints a BAD line that refuses above. This arm exists so
+      # that the guard's promise — nothing is killed unless there is something
+      # to build — survives a future drop reason that is SILENT, instead of the
+      # guard falling through to a message that says "empty" about a file
+      # holding five entries.
+      #
+      # The property that keeps it shut is an invariant of the reader, and it
+      # is what `the third arm stays unreachable` in scripts/warroom-engine.test.mjs
+      # asserts over a corpus of entry shapes: no input yields CEOS > 0 with an
+      # empty NS and not one BAD line. Make a drop silent and that test goes
+      # red naming the shape that reached here — which is the announcement that
+      # this arm just went live and needs a test of its own. Same object as
+      # scripts/probe-workflow-reach.mjs: the zero is the guarantee, so do not
+      # delete it to tidy up.
+      echo "✗ this snapshot records $snapshot_ceos CEOs and none of them can be restored:" >&2
+      echo "    in $chosen_snapshot" >&2
+      echo "  Refusing the whole restore. Nothing was built and no running session was touched." >&2
+      echo "  Every entry in it was dropped, so rebuilding would produce an empty war room." >&2
+      echo "  Pick another snapshot and run '${SESSION} restore' again." >&2
+    fi
+    exit 1
+  fi
+
+  # The engines the snapshot recorded arrived above as `n:engine` pairs on the
+  # ENG lines, and they are the resolver's rung below `--engine`. Shape is
+  # already checked, so the pairs tokenise; an engine this program does not
+  # KNOW is refused by engines_resolve, naming the snapshot, like any other
+  # unknown engine.
+  #
+  # An entry with no engine recorded — a snapshot written by a launcher that
+  # predates the field — is WARNED about per pane below, with the engine it
+  # will come up on and where that answer came from. It is not guessed at in
+  # silence: that is precisely how a mixed war room used to come back uniform.
+  # Reading it in the same parse as everything else is why a file that cannot
+  # be read can no longer come back as "this war room recorded no engines",
+  # which is indistinguishable from a war room that really recorded none.
+  WARROOM_SNAPSHOT_SOURCE="$chosen_snapshot"
+
+  # Engines are resolved, their binaries checked and their preambles written
+  # here too — before the kill — so a restore that would fail for a missing
+  # binary or an unwritable state_dir also costs nothing.
+  if [ -n "$snapshot_ns" ]; then
+    engines_setup engine $snapshot_ns
+    local _n _pair
+    for _n in $snapshot_ns; do
+      case " $WARROOM_SNAPSHOT_ENGINES " in *" ${_n}:"*) continue ;; esac
+      _pair="$(engine_candidate_for_pane "$_n")"
+      echo "  ⚠ CEO-$_n: this snapshot does not record its engine; it comes up on ${_pair%%$'\t'*} (${_pair#*$'\t'})." >&2
+    done
+  fi
+
   echo ""
-  echo -e "  ${BOLD}${C_PEACH}Restoring Agentvibe session...${RESET}"
+  echo -e "  ${BOLD}${C_PEACH}Restoring ${SESSION_UPPER} session...${RESET}"
   echo ""
 
   local saved_at project_dir
-  saved_at=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d.get('saved_at',0))" 2>/dev/null)
-  project_dir=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d.get('project_dir',''))" 2>/dev/null)
+  saved_at=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('saved_at',0))" "$chosen_snapshot" 2>/dev/null)
+  project_dir=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('project_dir',''))" "$chosen_snapshot" 2>/dev/null)
 
   if [ -n "$saved_at" ] && [[ "$saved_at" =~ ^[0-9]+$ ]]; then
     local saved_human
@@ -1565,11 +3199,19 @@ except:
 
   # Parse and restore each CEO
   local ceo_count
-  ceo_count=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(len(d.get('ceos',[])))" 2>/dev/null || echo 0)
+  ceo_count=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(len(d.get('ceos',[])))" "$chosen_snapshot" 2>/dev/null || echo 0)
 
   # Read grid_mode flag — default false for backward compat with old snapshots
   local grid_mode
-  grid_mode=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(str(d.get('grid_mode', False)).lower())" 2>/dev/null || echo "false")
+  grid_mode=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(str(d.get('grid_mode', False)).lower())" "$chosen_snapshot" 2>/dev/null || echo "false")
+
+  # The engines were resolved, their binaries checked and their preambles
+  # written before the kill above, against the snapshot's REAL pane numbers
+  # rather than 1..N, since `done` can leave gaps. What is left is the record
+  # of what this war room runs on, written once the decision is final.
+  if [ -n "$snapshot_ns" ]; then
+    engines_persist $snapshot_ns
+  fi
 
   local session_created=0
   local -a restored_ns
@@ -1578,14 +3220,40 @@ except:
 
   for idx in $([ "$ceo_count" -ge 1 ] && seq 0 $(( ceo_count - 1 ))); do
     local n branch wt_path task start_ts session_id
-    n=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx]['n'])" 2>/dev/null)
-    branch=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('branch',''))" 2>/dev/null)
-    wt_path=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('wt_path',''))" 2>/dev/null)
-    task=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('task',''))" 2>/dev/null)
-    start_ts=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('start_ts',0))" 2>/dev/null)
-    session_id=$(python3 -c "import json; d=json.load(open('${chosen_snapshot}')); print(d['ceos'][$idx].get('session_id',''))" 2>/dev/null)
+    n=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])]['n'])" "$chosen_snapshot" "$idx" 2>/dev/null)
+    branch=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('branch',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    wt_path=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('wt_path',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    task=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('task',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    start_ts=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('start_ts',0))" "$chosen_snapshot" "$idx" 2>/dev/null)
+    session_id=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['ceos'][int(sys.argv[2])].get('session_id',''))" "$chosen_snapshot" "$idx" 2>/dev/null)
 
-    # Guard: skip if branch is empty or not a ceo-* branch
+    # BACKSTOP, and it cannot fire on a validated snapshot: the up-front check
+    # above has already exited on any unreadable CEO number, so nothing reaching
+    # this loop can match. It is kept, not deleted, because what it prevents is
+    # the original defect — an unreadable pane number resolving to pane 1's
+    # engine — and that must stay impossible even if the up-front check is ever
+    # moved, bypassed, or reached by a caller that does not run it.
+    #
+    # This is NOT a skip-and-continue design. One bad entry refuses the WHOLE
+    # restore, up front, before anything is built or destroyed. If this line ever
+    # starts firing, that is a bug report about the up-front check, not a feature.
+    pane_number_ok "$n" || continue
+    # Same backstop, same reasoning, for the value that reaches a pane's shell.
+    # REFUSES rather than continues, because by this line the old session is
+    # gone and a pane may already exist: skipping would leave a half-restored
+    # war room, and typing would be the injection. Neither is acceptable, so
+    # the run stops here and says why. The up-front check makes this unreachable.
+    if [ -n "$session_id" ] && ! session_id_ok "$session_id"; then
+      echo "✗ CEO-$n: session_id '$session_id' is not a session id. Stopping the restore." >&2
+      exit 1
+    fi
+
+    # Guard: skip if branch is empty or not a ceo-* branch.
+    #
+    # This SKIPS where the pane-number check above REFUSES, deliberately: a
+    # branch that is gone is routine — `${SESSION} done N` deletes it — so the
+    # snapshot is still correct and only the world moved. Corruption refuses;
+    # routine drift skips. Full reasoning at the up-front validation block.
     if [ -z "$branch" ] || [[ "$branch" != ceo-* ]]; then
       echo "  ⚠ CEO-$n: invalid branch '$branch' in snapshot. Skipping."
       continue
@@ -1727,6 +3395,7 @@ except:
   else
     tmux select-window -t "$SESSION:CEO-${restored_ns[0]}"
   fi
+
   tmux attach -t "$SESSION"
 }
 
@@ -1916,16 +3585,40 @@ cmd_broadcast() {
 
   local sent=0
   # Try normal mode first (CEO-* windows)
+  #
+  # The window list is collected and checked IN FULL before the first
+  # send-keys. This is the one of these four sites that REFUSES, and the reason
+  # is what the number becomes: the `ceo-N.jsonl` this appends to — a path —
+  # and `int(sys.argv[2])` inside the python below — an argv. A window named
+  # `CEO-x` types the message into the pane and then loses the record of having
+  # sent it, because int('x') raises after tmux has already been told; `sent`
+  # counts it anyway, so the founder is told the message went somewhere no
+  # inbox will ever show it.
+  #
+  # Checking inside the send loop would be worse than not checking: the first
+  # two panes would have the message typed into them and the third would abort,
+  # a broadcast that half happened and never printed its own summary. So the
+  # sweep is up front, the same shape as cmd_grid_view's window sweep and
+  # cmd_restore's snapshot check — nothing is typed anywhere until every
+  # destination is a pane number.
+  local -a bcast_windows=()
   while IFS= read -r wname; do
-    local ceo_n
-    ceo_n=$(echo "$wname" | sed 's/CEO-//')
-    tmux send-keys -t "$SESSION:${wname}.1" -l "$full_msg"
-    tmux send-keys -t "$SESSION:${wname}.1" Enter
+    bcast_windows+=("$wname")
+  done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
+  local _bw
+  for _bw in "${bcast_windows[@]}"; do
+    pane_number_require "${_bw#CEO-}" "the tmux window '$_bw'"
+  done
+
+  for _bw in "${bcast_windows[@]}"; do
+    local ceo_n="${_bw#CEO-}"
+    tmux send-keys -t "$SESSION:${_bw}.1" -l "$full_msg"
+    tmux send-keys -t "$SESSION:${_bw}.1" Enter
     local inbox_file="$PROJECT_STATE_DIR/messages/ceo-${ceo_n}.jsonl"
     python3 -c "import json,sys; print(json.dumps({'ts':int(sys.argv[1]),'from':'user','to':int(sys.argv[2]),'type':sys.argv[3],'msg':sys.argv[4],'read':False}))" \
       "$ts" "$ceo_n" "$msg_type" "$msg" >> "$inbox_file"
     ((sent++))
-  done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
+  done
 
   # Try grid mode if no CEO windows found
   if [ "$sent" -eq 0 ] && tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep -q "^GRID$"; then
@@ -1993,10 +3686,10 @@ cmd_inbox() {
         "$badge_label" "$time_str" "$msg"
     done < <(python3 -c "
 import sys
-lines = open('$inbox_file').readlines()
+lines = open(sys.argv[1]).readlines()
 for l in reversed(lines[-20:]):
     print(l.rstrip())
-" 2>/dev/null)
+" "$inbox_file" 2>/dev/null)
   }
 
   if [ -n "$target_n" ]; then
@@ -2012,7 +3705,28 @@ for l in reversed(lines[-20:]):
       done < <(
         # Normal mode
         tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-" | while IFS= read -r wname; do
-          local nn; nn=$(echo "$wname" | sed 's/CEO-//')
+          local nn; nn="${wname#CEO-}"
+          # The number becomes `$inbox_dir/ceo-${n}.jsonl` in _print_inbox,
+          # which is a path, and a heading printed to the founder.
+          #
+          # SKIPS, and here that is not a choice between skip and refuse: this
+          # loop is the right-hand side of a PIPE, so it runs in a subshell and
+          # an `exit` in it would end the subshell, not the program. The outer
+          # `while read` would carry on against a truncated list — a partial
+          # inbox listing that looks complete, which is the failure mode a
+          # refusal is supposed to prevent. The warning goes to STDERR because
+          # the stdout of this loop IS the data stream the outer loop parses.
+          #
+          # NO APOSTROPHE MAY APPEAR IN A COMMENT INSIDE THIS PROCESS
+          # SUBSTITUTION. Measured on /bin/bash 3.2.57: one possessive
+          # apostrophe in the paragraph above made the parser scan past the
+          # closing paren hunting for a matching quote, and the whole command
+          # died with a bad-substitution error naming no closing paren. The
+          # parser reads quote characters inside comments in a <(...) block.
+          if ! pane_number_ok "$nn"; then
+            echo "  ⚠ window '$wname' is not a CEO pane number — no inbox shown for it." >&2
+            continue
+          fi
           echo "$nn $wname ${wname}.1"
         done
         # Grid mode
@@ -2715,6 +4429,15 @@ cmd_merge() {
 
     echo -n "  Resolving $conflict_file... "
 
+    # Guard: the file is `cat`'d into a model's prompt below, so it is confined
+    # like every other read that leaves the process. A conflicted path can be a
+    # git-tracked symlink, and `cat` follows it.
+    if ! _inside_phys "$full_path" "$PROJECT_DIR"; then
+      echo -e "${C_RED}✗${RESET} (resolves outside the project — resolve manually)"
+      ((failed++))
+      continue
+    fi
+
     # Guard: skip files that are too large to safely resolve via AI
     local line_count
     line_count=$(wc -l < "$full_path" 2>/dev/null || echo 0)
@@ -2794,7 +4517,22 @@ cmd_files() {
 
   while IFS= read -r window_name; do
     local n
-    n=$(echo "$window_name" | sed 's/CEO-//')
+    n="${window_name#CEO-}"
+    # Same data, same three uses as cmd_ls: a `grep "^ceo-${n}:"` REGEX, a
+    # `$WORKTREES_DIR/ceo-${n}-${ts}` PATH, and an arithmetic context — except
+    # that here the arithmetic is `${CEO_ANSI_COLORS[$(( (n - 1) % 6 ))]}` in
+    # the current shell rather than inside a `$(…)`, and a fatal arithmetic
+    # error there kills the WHOLE program rather than one subshell. Measured on
+    # /bin/bash 3.2.57: `ceo_files[$n]="x"` with a non-numeric n exits the
+    # shell immediately, mid-report.
+    #
+    # SKIPS with a warning, for cmd_ls's reason: this is a report, and a report
+    # that aborts on a renamed window hides every real file overlap — which is
+    # the only thing anyone runs it to see.
+    if ! pane_number_ok "$n"; then
+      echo "  ⚠ window '$window_name' is not a CEO pane number — its files are not shown." >&2
+      continue
+    fi
 
     # Get worktree path from registry
     local wt_path=""
@@ -2876,6 +4614,13 @@ _compute_ceo_cost() {
 
   if [ -z "$sid" ]; then
     printf "  ${C_OVERLAY}CEO-%s  (no session ID)${RESET}\n" "$n"
+    return
+  fi
+  # The id becomes a filename under ~/.claude/projects. Same rule as the resume
+  # line: a `.session` file this program did not write does not get to name a
+  # path.
+  if ! session_id_ok "$sid"; then
+    printf "  ${C_OVERLAY}CEO-%s  (session ID unreadable: %s)${RESET}\n" "$n" "$sid"
     return
   fi
 
@@ -3034,22 +4779,48 @@ cmd_cost() {
     echo "$output" | grep -v "^  __TOTAL__"
     local ceo_total
     ceo_total=$(echo "$output" | grep "^  __TOTAL__" | sed 's/.*__TOTAL__//')
-    [ -n "$ceo_total" ] && grand_total=$(python3 -c "print($grand_total + ${ceo_total:-0})" 2>/dev/null || echo "$grand_total")
+    [ -n "$ceo_total" ] && grand_total=$(python3 -c "import sys; print(float(sys.argv[1]) + float(sys.argv[2]))" "$grand_total" "${ceo_total:-0}" 2>/dev/null || echo "$grand_total")
   else
     # All active CEOs (from tmux if running, else from snapshot)
     local ceo_nums=()
 
+    local _cn
     if tmux has-session -t "$SESSION" 2>/dev/null; then
+      # A window name is DATA — any process holding the tmux socket can rename
+      # a window — and what leaves this loop becomes a filename under
+      # $WORKTREES_DIR (`ceo-N.session` is cat'd and its contents printed) and
+      # a grep pattern over the registry. The snapshot branch below has read
+      # its pane numbers through pane_number_ok since the snapshot was first
+      # treated as data; this branch fed the raw name straight through. Same
+      # predicate now, and a window that fails it is named on stderr rather
+      # than dropped in silence.
       while IFS= read -r wname; do
-        ceo_nums+=("$(echo "$wname" | sed 's/CEO-//')")
+        _cn="${wname#CEO-}"
+        if pane_number_ok "$_cn"; then
+          ceo_nums+=("$_cn")
+        else
+          echo "  ⚠ skipping window '$wname': not a CEO pane number." >&2
+        fi
       done < <(tmux list-windows -t "$SESSION" -F "#{window_name}" 2>/dev/null | grep "^CEO-")
     elif [ -f "$SESSION_SNAPSHOT" ]; then
-      mapfile -t ceo_nums < <(python3 -c "
-import json
-d = json.load(open('$SESSION_SNAPSHOT'))
+      # The second `mapfile`, same bash 4 builtin under the same `#!/bin/bash`
+      # shebang that is 3.2.57 on macOS. Measured on both: this shape reads 0
+      # entries on 3.2.57 and 2 on 5.3.9. Here `ceo_nums` IS initialised to `()`,
+      # so the count is a real 0 and the guard below fires — `cost` reports "No
+      # active CEOs found" against a perfectly good snapshot rather than reading
+      # it. Louder than the cmd_grid_view instance, which resolved to 1 and lost
+      # CEOs in silence, but the same defect and the same one-line cure.
+      # Only pane numbers leave the snapshot: `n` becomes a filename under
+      # $WORKTREES_DIR and a grep pattern over the registry below.
+      while IFS= read -r _cn; do
+        [ -n "$_cn" ] && ceo_nums+=("$_cn")
+      done < <(python3 -c "
+import json, re, sys
+d = json.load(open(sys.argv[1]))
 for c in d.get('ceos', []):
-    print(c['n'])
-" 2>/dev/null)
+    n = str(c.get('n', ''))
+    if re.fullmatch(r'[1-9][0-9]*', n): print(n)
+" "$SESSION_SNAPSHOT" 2>/dev/null)
     fi
 
     if [ "${#ceo_nums[@]}" -eq 0 ]; then
@@ -3077,7 +4848,7 @@ for c in d.get('ceos', []):
       echo "$output" | grep -v "^  __TOTAL__"
       local ceo_total
       ceo_total=$(echo "$output" | grep "^  __TOTAL__" | sed 's/.*__TOTAL__//')
-      [ -n "$ceo_total" ] && grand_total=$(python3 -c "print($grand_total + ${ceo_total:-0})" 2>/dev/null || echo "$grand_total")
+      [ -n "$ceo_total" ] && grand_total=$(python3 -c "import sys; print(float(sys.argv[1]) + float(sys.argv[2]))" "$grand_total" "${ceo_total:-0}" 2>/dev/null || echo "$grand_total")
       echo ""
     done
   fi
@@ -3085,7 +4856,7 @@ for c in d.get('ceos', []):
   if [ "$show_total" -eq 1 ] || [ -z "$target_n" ]; then
     echo -e "  ${C_OVERLAY}─────────────────────────────────────────────────────────────${RESET}"
     local grand_fmt
-    grand_fmt=$(python3 -c "print(f'\${${grand_total}:.2f}')" 2>/dev/null || echo "\$0.00")
+    grand_fmt=$(python3 -c "import sys; print('\$%.2f' % float(sys.argv[1]))" "$grand_total" 2>/dev/null || echo "\$0.00")
     echo -e "  ${BOLD}${C_PEACH}Total session cost:${RESET}  ${BOLD}${C_TEXT}${grand_fmt}${RESET}"
     echo ""
   fi
@@ -3313,11 +5084,12 @@ Rules:
 #  ROUTER
 # ─────────────────────────────────────────────────────────────
 
-# Parse --grid and --brief flags
+# Parse --grid, --brief and --engine flags
 GRID_MODE=0
 BARE_MODE=0
 BRIEF_FILE=""
 BRIEF_NEXT=0
+ENGINE_NEXT=0
 ARGS=()
 for arg in "$@"; do
   if [ "$arg" = "--grid" ]; then
@@ -3326,15 +5098,79 @@ for arg in "$@"; do
     BARE_MODE=1
   elif [ "$arg" = "--brief" ]; then
     BRIEF_NEXT=1
+  elif [ "$arg" = "--engine" ]; then
+    ENGINE_NEXT=1
   elif [ "${BRIEF_NEXT:-0}" -eq 1 ]; then
     BRIEF_FILE="$arg"
     BRIEF_NEXT=0
+  elif [ "${ENGINE_NEXT:-0}" -eq 1 ]; then
+    # `--engine codex`   → default for every pane this run
+    # `--engine 2:codex` → pane 2 only. Repeatable, and mixes with a default.
+    case "$arg" in
+      *:*) WARROOM_ENGINE_OVERRIDES="$WARROOM_ENGINE_OVERRIDES $arg" ;;
+      *)   WARROOM_ENGINE_DEFAULT="$arg" ;;
+    esac
+    ENGINE_NEXT=0
   else
     ARGS+=("$arg")
   fi
 done
+# `--engine` as the LAST word set the flag and nothing consumed it: the run went
+# on with whatever the config said, which is the silent default this flag's
+# every other failure is refused for.
+if [ "$ENGINE_NEXT" -eq 1 ]; then
+  echo "✗ --engine needs a value: <engine> or <pane-number>:<engine>." >&2
+  echo "  Valid engines: $WARROOM_ENGINES" >&2
+  exit 1
+fi
+
+# Validate at parse time, not at launch time. An unknown engine must be refused
+# before tmux builds a session, and must never fall back to the default —
+# `--engine codek` starting a Claude war room is the failure this rejects.
+#
+# The pane prefix is validated as a WHOLE number, not merely as starting with a
+# digit. `[0-9]*:*` accepted `2x:codex`: it passed here, then matched no pane in
+# engine_candidate_for_pane, was dropped in silence, and the founder got a Claude
+# pane where they had asked for Codex — the same indistinguishable-success
+# failure the engine check itself exists to refuse. `0:codex` goes the same way
+# and is refused for the same reason: panes are numbered from 1.
+[ -n "$WARROOM_ENGINE_DEFAULT" ] && engine_require_known "$WARROOM_ENGINE_DEFAULT" "--engine"
+for _tok in $WARROOM_ENGINE_OVERRIDES; do
+  case "$_tok" in
+    *:*) : ;;
+    *) echo "✗ malformed --engine override '$_tok'. Expected <pane-number>:<engine>." >&2; exit 1 ;;
+  esac
+  _pane="${_tok%%:*}"
+  case "$_pane" in
+    ''|*[!0-9]*)
+      echo "✗ malformed --engine override '$_tok': '$_pane' is not a pane number." >&2
+      echo "  Expected <pane-number>:<engine>, e.g. 2:codex." >&2
+      exit 1 ;;
+  esac
+  # `0` is refused because panes are numbered from 1. A leading zero is refused
+  # with it: `08:codex` is not a pane number where this token is finally used —
+  # a bash subscript, where `08` aborts the program and `010` is octal 8 — and
+  # `[ 08 -lt 1 ]` is false, so this check alone let both through.
+  if ! pane_number_ok "$_pane"; then
+    echo "✗ malformed --engine override '$_tok': panes are numbered from 1, with no leading zero." >&2
+    exit 1
+  fi
+  engine_require_known "${_tok#*:}" "--engine $_tok"
+done
+unset _tok _pane
 
 CMD="${ARGS[0]:-}"
+
+# The symlink sweep over state_dir (state_dir_require_no_symlinks) runs for
+# every command that WRITES there, before it does. Declared the other way
+# round — an allowlist of the commands that only READ state_dir — so that a
+# new command is swept unless someone says it need not be. `events` reads
+# unless it is `events clear`, which deletes.
+case "$CMD" in
+  ls|inbox|diff|files|history|log|cost|prune-branches|migrate-sessions|task|brief|help|-h|--help) : ;;
+  events) if [ "${ARGS[1]:-}" = "clear" ]; then state_dir_require_no_symlinks; fi ;;
+  *)      state_dir_require_no_symlinks ;;
+esac
 
 case "$CMD" in
   add)            cmd_add ;;
@@ -3343,6 +5179,7 @@ case "$CMD" in
   ls)             cmd_ls ;;
   task)           cmd_task "${ARGS[1]}" "${ARGS[2]}" ;;
   grid)           cmd_grid_view ;;
+  engine)         cmd_engine "${ARGS[1]:-3}" "${ARGS[2]:-}" ;;
   restore)        cmd_restore "${ARGS[1]:-}" ;;
   clear-sessions)   cmd_clear_sessions ;;
   prune-branches)   cmd_prune_branches ;;
@@ -3377,13 +5214,17 @@ case "$CMD" in
     ;;
   help|-h|--help)
     echo ""
-    echo -e "  ${BOLD}${SESSION}${RESET} — Agentvibe CEO War Room"
+    echo -e "  ${BOLD}${SESSION}${RESET} — ${SESSION_UPPER} CEO War Room"
     echo ""
     echo "  Usage:"
     echo "    ${SESSION} [N]               Start war room with N CEOs (default 3)"
     echo "    ${SESSION} [N] --grid        Start in grid mode (N panes in one window)"
     echo "    ${SESSION} [N] --bare        Start N blank Claude sessions (no CEO agent/preamble)"
     echo "    ${SESSION} [N] --brief file  Start with briefing file (## CEO-N sections)"
+    echo "    ${SESSION} [N] --engine E    Run every CEO on engine E (claude|codex; default claude)"
+    echo "    ${SESSION} [N] --engine N:E  Run CEO-N on engine E — repeatable, mixes with the above"
+    echo "    ${SESSION} engine [N]        Show the engine + launch line for each pane; starts nothing"
+    echo "    ${SESSION} engine render E   Print the CEO preamble exactly as engine E receives it"
     echo "    ${SESSION} add               Add CEO mid-run"
     echo "    ${SESSION} done <N>          Handoff and close CEO-N"
     echo "    ${SESSION} kill              Destroy war room + clean worktrees + save snapshot"
@@ -3397,11 +5238,12 @@ case "$CMD" in
     echo "    ${SESSION} inbox [N]                      Show message inbox for CEO-N (or all)"
     echo "    ${SESSION} diff <N>          Show CEO-N's changes vs main"
     echo "    ${SESSION} merge <N>         Push CEO-N's branch and open a PR against main"
-    echo "    ${SESSION} merge <N> --local Merge into LOCAL main instead — never reaches origin"
+    echo "    ${SESSION} merge <N> --local Merge into LOCAL main — never reaches origin"
     echo "    ${SESSION} files             Show file ownership per CEO + overlap warnings"
     echo "    ${SESSION} history [query]   Show past CEO work sessions (search by keyword)"
     echo "    ${SESSION} log               Show agent work history"
     echo "    ${SESSION} migrate-sessions  Move orphaned CEO sessions to main project"
+    echo "    ${SESSION} prune-branches    Delete merged ceo-* branches left behind by done/kill"
     echo "    ${SESSION} cost [N]          Show token cost for CEO-N (or all if omitted)"
     echo "    ${SESSION} cost --total      Show aggregate cost for full war room session"
     echo "    ${SESSION} events [type] [N]           Show last N events (filter by type)"

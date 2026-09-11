@@ -12,3 +12,15 @@ project_dir: ~/VibeCoding/Agentvibe
 #   state_dir     defaults to ~/.<session>               (snapshots, events.jsonl)
 #   entry_ceo     defaults to .claude/entry/ceo.md,
 #                 falling back to .claude/agents/_seeds/ceo.md
+
+# Codex engine — the acknowledgment that a Codex pane is NOT sandboxed is NOT a
+# key here, deliberately. It was `codex_unsandboxed_ack: true` on this line until
+# 2026-09-10; a git-tracked key means a pull request can flip the control that
+# gates an unsandboxed pane, and means `git checkout` changes the security
+# posture of the machine. Both were observed. It is out of band now:
+#
+#     export WARROOM_CODEX_ACK=true
+#     mkdir -p ~/.warroom && echo true > ~/.warroom/codex_ack
+#
+# `bin/warroom` ignores the old key and says so on stderr if it finds one.
+# See docs/03-system-design/final-v2/research/codex-in-the-pane.md §9.

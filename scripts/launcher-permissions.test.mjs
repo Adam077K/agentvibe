@@ -52,9 +52,41 @@ test('the launcher does not disarm the permission model', () => {
 test('the launcher still launches claude, with and without --resume', () => {
   // Guards the lazy version of the fix above: deleting the launch lines entirely would also
   // satisfy the assertion.
+  //
+  // The two literals this used to match — `tmux send-keys -t "$target" "claude" Enter` and its
+  // --resume twin — no longer exist, because the engine became a per-pane choice (2026-09-09) and
+  // the seam now types whatever engine_launch_cmd hands it. The GUARD is unchanged and this is
+  // not a relaxation: the same two forms are still asserted, one layer down, where they are now
+  // produced. What moved is where to look, not what must be true.
+  //
+  // Read this together with scripts/warroom-engine.test.mjs, which holds the BEHAVIOURAL half:
+  // it runs bin/warroom and asserts the resolved launch line for a default pane is exactly
+  // `claude` and its resume form exactly `claude --resume SESSION_ID`. A source match cannot
+  // tell you the string is ever reached; that file can, and does.
   const src = fs.readFileSync(LAUNCHER, 'utf8');
-  assert.match(src, /tmux send-keys -t "\$target" "claude --resume \$resume" Enter/);
-  assert.match(src, /tmux send-keys -t "\$target" "claude" Enter/);
+
+  // The claude arm of engine_launch_cmd still emits both forms.
+  assert.match(src, /printf 'claude --resume %s' "\$resume"/,
+    'the --resume launch form is gone from engine_launch_cmd');
+  // Anchored to `else … ; fi`, not to the bare string. A plain /printf 'claude'/ was tried
+  // first and was VACUOUS: engine_binary contains `claude) printf 'claude' ;;`, so deleting
+  // the launch form left the assertion passing on an unrelated line. Found by mutating it.
+  assert.match(src, /else printf 'claude'; fi/,
+    'the bare launch form is gone from engine_launch_cmd');
+
+  // And the seam still actually types it into the pane. Without this, both printfs could
+  // survive with nothing calling them — the same "deleted the launch entirely" failure this
+  // test was written to catch, one level deeper.
+  //
+  // Two assertions, not one, because the seam stopped being a single line on 2026-09-09: it
+  // now captures engine_launch_cmd's output and REFUSES an empty launch line rather than
+  // typing it, which is the whole of the dead-pane fix. The property is unchanged — the line
+  // is produced by engine_launch_cmd and it reaches the pane — so both halves are pinned. A
+  // single regex over the old one-liner would have been satisfied by deleting the refusal.
+  assert.match(src, /cmdline="\$\(engine_launch_cmd .*\)"/,
+    'the launch command is no longer built from engine_launch_cmd');
+  assert.match(src, /tmux send-keys -t "\$target" "\$cmdline" Enter/,
+    'the launch command is built but never sent to the pane');
 });
 
 test('the allow list covers what agents actually run', () => {

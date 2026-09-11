@@ -80,10 +80,20 @@ function run(cmd, args, cwd = REPO, env = undefined, input = undefined) {
 
 const verdict = (args) => run('node', [VERDICT, ...args]);
 
+/**
+ * The environment every launcher spawn gets: HOME is the fixture's root, which is the directory
+ * the config sits in. The launcher confines `state_dir` to a named base — $HOME/.warroom or
+ * $HOME/.<session>, or under the project — never a bare $HOME subdir (that narrowing closed a
+ * hole where a git-tracked config could point writes at ~/.ssh). This fixture keeps its state at
+ * `root/.warroom/state`, an allowed base outside the repository, so the launcher accepts the
+ * config before any test's subject is reached.
+ */
+const warroomEnv = (cfg, env) => ({ ...(env ?? process.env), HOME: path.dirname(cfg) });
+
 /** The default route: push and open a pull request. `env` supplies the stub gh (see stubGh). */
-const merge = (cfg, env) => run('bash', [WARROOM, '--config', cfg, 'merge', '1'], REPO, env);
+const merge = (cfg, env) => run('bash', [WARROOM, '--config', cfg, 'merge', '1'], REPO, warroomEnv(cfg, env));
 /** The opt-in route: merge into LOCAL main, which never reaches origin. */
-const mergeLocal = (cfg) => run('bash', [WARROOM, '--config', cfg, 'merge', '1', '--local'], REPO);
+const mergeLocal = (cfg) => run('bash', [WARROOM, '--config', cfg, 'merge', '1', '--local'], REPO, warroomEnv(cfg));
 
 const NODE_DIR = path.dirname(process.execPath);
 
@@ -215,7 +225,7 @@ exit 1
 /** Did the branch actually reach the upstream? Asked of the upstream, never of the push output. */
 const onUpstream = (up) => run('git', ['rev-parse', '--verify', BRANCH], up).code === 0;
 const eventsOf = (root) => {
-  const f = path.join(root, 'state', 'events.jsonl');
+  const f = path.join(root, '.warroom', 'state', 'events.jsonl');
   return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
 };
 
@@ -252,7 +262,7 @@ function fixture({ workFile = 'scripts/thing.mjs', workBody = 'export const x = 
   git(proj, ['switch', '-q', 'main']);
 
   const cfg = path.join(root, 'warroom.yml');
-  fs.writeFileSync(cfg, `session: fixture\nproject_dir: ${proj}\nstate_dir: ${path.join(root, 'state')}\n`);
+  fs.writeFileSync(cfg, `session: fixture\nproject_dir: ${proj}\nstate_dir: ${path.join(root, '.warroom', 'state')}\n`);
   return { root, up, proj, cfg };
 }
 
@@ -409,7 +419,7 @@ test('the merge logs the classifier tier and the strategy in separate fields', (
   recordAndCommit(proj);
   assert.equal(mergeLocal(cfg).code, 0);
 
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   const done = events.trim().split('\n').map((l) => JSON.parse(l)).filter((e) => e.event === 'merge_complete');
   assert.equal(done.length, 1);
   assert.match(done[0].details, /tier=(lite|full|irreversible)/, 'tier= must hold a classifier tier');
@@ -420,7 +430,7 @@ test('the merge logs the classifier tier and the strategy in separate fields', (
 test('a refusal is recorded as an event, so a blocked merge is visible afterwards', () => {
   const { proj, cfg, root } = fixture();
   assert.notEqual(merge(cfg).code, 0);
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   assert.match(events, /"event":"merge_refused"/);
   assert.match(events, /reason=no-matching-verdict/);
 });
@@ -489,7 +499,7 @@ test('the conflict refusal is logged as a refusal, never as a merge_complete', (
 
   assert.notEqual(mergeLocal(cfg).code, 0);
 
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   assert.match(events, /"event":"merge_refused"/, 'the refusal is invisible in the audit trail');
   assert.match(events, /reason=conflict-outside-verdict/, 'the refusal does not name why it refused');
   assert.doesNotMatch(events, /"event":"merge_complete"/, 'a merge that did not happen was logged as complete');
@@ -545,7 +555,7 @@ test('a checker shipped by the project being merged is NOT used', () => {
   git(proj, ['commit', '-qm', 'project ships its own verdict checker']);
 
   const before = git(proj, ['rev-parse', 'main']).trim();
-  const r = run('bash', [launcher, '--config', cfg, 'merge', '1']);
+  const r = run('bash', [launcher, '--config', cfg, 'merge', '1'], REPO, warroomEnv(cfg));
   const text = r.stdout + r.stderr;
 
   assert.notEqual(r.code, 0, 'the merged repository supplied its own judge, and the merge proceeded');
@@ -554,7 +564,7 @@ test('a checker shipped by the project being merged is NOT used', () => {
   assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'main moved on a rubber-stamped verdict');
   assert.ok(branchExists(proj), 'the branch was deleted by a merge that did not happen');
 
-  const events = fs.readFileSync(path.join(root, 'state', 'events.jsonl'), 'utf8');
+  const events = fs.readFileSync(path.join(root, '.warroom', 'state', 'events.jsonl'), 'utf8');
   assert.match(events, /reason=no-checker/, 'the refusal is invisible in the audit trail');
   assert.doesNotMatch(events, /tier=rubber-stamp/, 'a tier no classifier can produce reached events.jsonl');
 });
@@ -843,7 +853,7 @@ test('an unknown option to merge is refused, never silently ignored', () => {
   recordAndCommit(proj);
   const before = git(proj, ['rev-parse', 'main']).trim();
 
-  const r = run('bash', [WARROOM, '--config', cfg, 'merge', '1', '--loca']);
+  const r = run('bash', [WARROOM, '--config', cfg, 'merge', '1', '--loca'], REPO, warroomEnv(cfg));
   assert.notEqual(r.code, 0, "a misspelled '--local' was accepted");
   assert.match(r.stdout + r.stderr, /Unknown option for merge: '--loca'/);
   assert.equal(git(proj, ['rev-parse', 'main']).trim(), before, 'a typo merged something');
@@ -860,7 +870,7 @@ test('prune deletes the ceo-* branches it says it deleted, and counts them', () 
   const { proj, cfg } = fixture();
   git(proj, ['branch', 'ceo-2-1700000000', BRANCH]);
 
-  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'y\n');
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, warroomEnv(cfg), 'y\n');
   const text = r.stdout + r.stderr;
   assert.match(text, /✓ deleted ceo-1-1700000000/);
   assert.match(text, /✓ 2 branch\(es\) deleted\./, 'the tally does not name what it counted');
@@ -873,7 +883,7 @@ test('prune REPORTS a branch it could not delete, instead of claiming it did', (
   const { proj, cfg } = fixture();
   git(proj, ['switch', '-q', BRANCH]);
 
-  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'y\n');
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, warroomEnv(cfg), 'y\n');
   const text = r.stdout + r.stderr;
   assert.match(text, /✗ kept ceo-1-1700000000/, 'a branch that survived was not reported');
   assert.match(text, /cannot delete branch/, "git's own reason was swallowed");
@@ -884,7 +894,7 @@ test('prune REPORTS a branch it could not delete, instead of claiming it did', (
 
 test('prune answered with anything but y deletes nothing', () => {
   const { proj, cfg } = fixture();
-  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'n\n');
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, warroomEnv(cfg), 'n\n');
   assert.match(r.stdout + r.stderr, /Cancelled/);
   assert.ok(branchExists(proj), 'a declined prune deleted a branch');
 });
@@ -913,7 +923,7 @@ test('a regex-injecting CEO number is REFUSED, and main is never pushed', () => 
   const upstreamMainBefore = upstreamRev(up, 'main');
   assert.notEqual(git(proj, ['rev-parse', 'main']).trim(), upstreamMainBefore, 'the fixture did not diverge');
 
-  const r = run('bash', [WARROOM, '--config', cfg, 'merge', 'x$|main$|y'], REPO, gh.env);
+  const r = run('bash', [WARROOM, '--config', cfg, 'merge', 'x$|main$|y'], REPO, warroomEnv(cfg, gh.env));
   const text = r.stdout + r.stderr;
 
   assert.notEqual(r.code, 0, 'a regex-injecting CEO number was accepted');
@@ -926,7 +936,7 @@ test('a regex-injecting CEO number is REFUSED, and main is never pushed', () => 
 test('a non-numeric CEO number is refused before any branch is selected', () => {
   const { cfg, root } = fixture();
   const gh = stubGh(root);
-  const r = run('bash', [WARROOM, '--config', cfg, 'merge', 'main'], REPO, gh.env);
+  const r = run('bash', [WARROOM, '--config', cfg, 'merge', 'main'], REPO, warroomEnv(cfg, gh.env));
   assert.notEqual(r.code, 0);
   assert.match(r.stdout + r.stderr, /CEO number must be digits/);
   assert.equal(gh.ghArgs(), '');
@@ -1002,7 +1012,7 @@ test('prune on a detached HEAD does not count the pseudo-line as a kept branch',
   const { proj, cfg } = fixture();
   git(proj, ['checkout', '-q', '--detach', BRANCH]);
 
-  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, undefined, 'y\n');
+  const r = run('bash', [WARROOM, '--config', cfg, 'prune-branches'], REPO, warroomEnv(cfg), 'y\n');
   const text = r.stdout + r.stderr;
   assert.doesNotMatch(text, /HEAD detached/, 'the detached-HEAD pseudo-line was treated as a branch');
   assert.match(text, /✓ 1 branch\(es\) deleted\./, 'a clean prune did not report a clean prune');

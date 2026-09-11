@@ -7,7 +7,7 @@ by `bin/install-war-room.sh` (called from `bin/init-from-template.sh` or `~/bin/
 
 | Template | Installed location | Purpose |
 |---|---|---|
-| `bin/PROJECT_NAME.tmpl` | `~/bin/<project_name>` | Main launcher (2768 LOC bash). Subcommands: `[N]`, `add`, `done N`, `kill`, `ls`, `task N "label"`, `grid`, `restore`, `--bare`, `send`, `broadcast`, `diff N`, `merge N`, `inbox`, `files`, `history`, `log`, `cost`, `events`, `brief`. |
+| `bin/PROJECT_NAME.tmpl` | `~/bin/<project_name>` | Launcher for **generated projects** — an OLDER GENERATION than `bin/warroom`, not a copy of it (2768 LOC bash). Subcommands: `[N]`, `add`, `done N`, `kill`, `ls`, `task N "label"`, `grid`, `restore`, `--bare`, `send`, `broadcast`, `diff N`, `merge N`, `inbox`, `files`, `history`, `log`, `cost`, `events`, `brief`. **No `engine`, no `--engine`, no `.warroom.yml`** — see "Engine choice" below. |
 | `tmux/PROJECT_NAME-hq.tmpl` | `~/.tmux/scripts/<project_name>-hq.sh` | HQ dashboard render loop (Catppuccin-themed status pane) |
 | `tmux/PROJECT_NAME-status.tmpl` | `~/.tmux/scripts/<project_name>-status.sh` | Status bar right-side script (CEO count + time) |
 | `tmux/PROJECT_NAME-scratchpad.tmpl` | `~/.tmux/scripts/<project_name>-scratchpad.sh` | Per-CEO 9-line context panel at pane bottom |
@@ -67,6 +67,43 @@ this is unbudgeted build work rather than a small patch to either launcher. Refu
 that machinery, closes the same hole, and is what this template does now.
 `npm run check:warroom` (via `scripts/warroom-template-guard.test.mjs`) fails if the
 model-invocation route or the strategy-in-tier-field bug returns.
+
+## Engine choice (`claude` / `codex`) — in `bin/warroom` only, deliberately
+
+`bin/warroom` gained a per-pane engine on 2026-09-09: `--engine codex`, `--engine 2:codex`, and an
+`engine:` key in `.warroom.yml`, so a Claude CEO and a Codex CEO can run in one session. **This
+template did not get it, and a generated project therefore starts Claude in every pane** — which is
+what it did before, so this is a capability that has not arrived, not a regression.
+
+**This is a decision, not an omission.** Porting the ~180-line engine layer across would mean two
+implementations of one thing, and the specific way they would disagree is the worst available: the
+layer's whole job is to refuse an unknown engine rather than silently fall back to `claude`, and a
+second copy that drifted would silently fall back to `claude`. Three concrete blockers, each
+checkable in a second rather than taken on trust:
+
+- **There is nowhere for `engine:` to live.** `grep -c '_cfg\|\.warroom\.yml' war-room/bin/PROJECT_NAME.tmpl`
+  → **0**. This template predates config discovery entirely: `SESSION` and `PROJECT_DIR` are `sed`
+  substitutions baked in at install time (lines 19-20). One of the three configuration sources the
+  engine layer resolves through simply does not exist here, so the port is not a copy — it needs the
+  config generation first.
+- **It already holds a SECOND COPY of the CEO preamble.** `CEO_PREAMBLE` is inlined as a bash
+  literal at line 57; `bin/warroom` reads `.claude/entry/ceo.md`. `render_ceo_preamble` exists
+  precisely so the CEO's identity lives in ONE place and is rendered per engine. Porting it into a
+  launcher that inlines its own copy would produce a *third* copy and defeat the property it
+  implements.
+- **Nothing keeps those two copies equal.** They are byte-identical today — both 2,931 bytes,
+  verified 2026-09-09 — and that is discipline, not mechanism: no test compares them. Worth knowing
+  on its own, and it is why "just sync the preamble too" is not the small change it sounds like.
+
+**Same root cause, same tracked item as the merge gate above:** this needs the one shared launcher
+generation that P1 in
+[`docs/03-system-design/TARGET-ARCHITECTURE.md`](../docs/03-system-design/TARGET-ARCHITECTURE.md)
+(§11 Sequence) already carries. Until that lands, `bin/warroom` is where the engine layer lives, and
+this line is the notice a reader gets before they discover it from behaviour.
+
+Measurements behind the engine layer — what Codex's instructions file is, how it is injected, and
+what could not be measured — are in
+[`docs/03-system-design/final-v2/research/codex-in-the-pane.md`](../docs/03-system-design/final-v2/research/codex-in-the-pane.md).
 
 ## Provenance
 
