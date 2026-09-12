@@ -460,6 +460,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-1ff2a59e927c",
+    "url": "https://code.claude.com/docs/en/agent-sdk/custom-tools",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
     "id": "S-d69a094d34b1",
     "url": "https://code.claude.com/docs/en/agent-sdk/overview",
     "cited_by": [
@@ -470,14 +480,46 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-3b3cc92a63bf",
+    "url": "https://code.claude.com/docs/en/cli-reference",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md",
+      "research/reviews/2026-09-12-native-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
+    "id": "S-aa16149a654b",
+    "url": "https://code.claude.com/docs/en/env-vars",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
     "id": "S-d4f4e2941ed1",
     "url": "https://code.claude.com/docs/en/headless",
     "cited_by": [
-      "research/L10-economics.md"
+      "research/L10-economics.md",
+      "research/implementation/N01-native-execution.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-a636647132db",
+    "url": "https://code.claude.com/docs/en/headless#start-faster-with-bare-mode",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
   },
   {
     "id": "S-2d64f2bee337",
@@ -490,15 +532,56 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-9ea9a65b0bd6",
+    "url": "https://code.claude.com/docs/en/managed-mcp",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
+    "id": "S-1b594311cf08",
+    "url": "https://code.claude.com/docs/en/permission-modes#allow-only-pre-approved-tools-with-dontask-mode",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
     "id": "S-5f97cd27c480",
     "url": "https://code.claude.com/docs/en/sandboxing",
     "cited_by": [
       "research/L04-engineering.md",
-      "research/L07-security.md"
+      "research/L07-security.md",
+      "research/implementation/N01-native-execution.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-4539550ec183",
+    "url": "https://code.claude.com/docs/en/settings-reference#permissions-blockreadsoutsideworkingdirectories",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
+    "id": "S-4b2f3b9e3df5",
+    "url": "https://code.claude.com/docs/en/settings-reference#sandbox-failifunavailable",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
   },
   {
     "id": "S-ecea8146f24b",
@@ -1046,7 +1129,8 @@
     "id": "S-05d46e263670",
     "url": "https://learn.chatgpt.com/docs/agent-approvals-security",
     "cited_by": [
-      "research/L04-engineering.md"
+      "research/L04-engineering.md",
+      "research/implementation/N01-native-execution.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
@@ -1066,7 +1150,8 @@
     "id": "S-930b78c67d2f",
     "url": "https://learn.chatgpt.com/docs/auth",
     "cited_by": [
-      "research/L10-economics.md"
+      "research/L10-economics.md",
+      "research/implementation/N01-native-execution.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
@@ -1103,6 +1188,36 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-3d9c8f859457",
+    "url": "https://learn.chatgpt.com/docs/config-file/config-advanced",
+    "cited_by": [
+      "research/reviews/2026-09-12-native-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
+    "id": "S-a4f3739a08db",
+    "url": "https://learn.chatgpt.com/docs/config-file/config-advanced#shell-environment-policy",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
+    "id": "S-f1bfabe51f84",
+    "url": "https://learn.chatgpt.com/docs/config-file/config-reference",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
     "id": "S-3e7f9c6870d7",
     "url": "https://learn.chatgpt.com/docs/enterprise/access-tokens",
     "cited_by": [
@@ -1117,11 +1232,33 @@
     "url": "https://learn.chatgpt.com/docs/non-interactive-mode",
     "cited_by": [
       "research/L04-engineering.md",
-      "research/L10-economics.md"
+      "research/L10-economics.md",
+      "research/implementation/N01-native-execution.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-0a8a5fe1e7b9",
+    "url": "https://learn.chatgpt.com/docs/non-interactive-mode#authenticate-in-automation",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+  },
+  {
+    "id": "S-6174ff3fc477",
+    "url": "https://learn.chatgpt.com/docs/permissions",
+    "cited_by": [
+      "research/implementation/N01-native-execution.md",
+      "research/reviews/2026-09-12-native-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
   },
   {
     "id": "S-ac4d1ae97fe8",
@@ -1430,7 +1567,8 @@
     "id": "S-b2ab15dd01eb",
     "url": "https://support.claude.com/en/articles/12304248-manage-api-key-environment-variables-in-claude-code",
     "cited_by": [
-      "research/L10-economics.md"
+      "research/L10-economics.md",
+      "research/implementation/N01-native-execution.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
@@ -1450,7 +1588,8 @@
     "id": "S-73326e0f966d",
     "url": "https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan",
     "cited_by": [
-      "research/L10-economics.md"
+      "research/L10-economics.md",
+      "research/implementation/N01-native-execution.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",

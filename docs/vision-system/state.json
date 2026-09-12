@@ -35,7 +35,8 @@
     "All three independent attack reports archived unchanged in local commits; 21 findings and all33 attack cases mapped without claiming passing tests",
     "Integrated and fully read C2 alternative-depth, company responsibility and technical foundation addenda at 4182ead; no finding closed by author assertion",
     "Independent architecture/evidence and technical reassessments returned: all original foundational blockers conceptually closed; fresh company reassessment also permits synthesis. Four sharpened specification obligations remain; empirical and deployment claims unproved. Archival underway.",
-    "Read complete E1 selection and status amendment; adopt S1.0 after independent review reconciliation, with ten explicit design decisions and empirical uncertainties retained"
+    "Read complete E1 selection and status amendment; adopt S1.0 after independent review reconciliation, with ten explicit design decisions and empirical uncertainties retained",
+    "N01 native subscription execution feasibility sourced and archived; three selected native-control claim groups independently source-audited, no model invocation or isolation test"
   ],
   "active_work": [
     {
@@ -54,10 +55,6 @@
         "planning/specification/capabilities.json"
       ],
       "scope": "Complete capability lifecycle and human/operator contracts"
-    },
-    {
-      "agent": "attack_architecture_evidence",
-      "scope": "Read-only primary-source feasibility of native subscription execution under enforced context/tool boundaries"
     },
     {
       "agent": "orchestrator",
@@ -112,7 +109,8 @@
     "attack_coverage": "research/attack-coverage.json plus coverage/discovered.json; original independent attacks archived, repair reassessment pending",
     "review_findings": "registers/review-findings.json",
     "capability_requirements": "coverage/capability-requirements.json; 46 decomposed outcome requirements, not implemented capabilities",
-    "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks"
+    "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
+    "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
