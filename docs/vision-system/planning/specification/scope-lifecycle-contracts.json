@@ -1,8 +1,8 @@
 {
-  "schema_version": "SL-1.0",
+  "schema_version": 2,
   "base_commit": "091bf2f",
   "kind": "Supplemental vision, sector, lifecycle and discovered-case specification trace",
-  "status": "Authored; independent complete-plan review and implementation pending",
+  "status": "Authored; XSR-01 scoped admission amendment pending independent recheck and fullG; no runtime acceptance",
   "decision": "Applies existing S1 contracts; sector labels are replaced by actual activity admission, not legal clearance or a permanent worker roster.",
   "records": [
     {
@@ -306,7 +306,7 @@
       "id": "OPERATING-SECTOR-01",
       "concern": "developer tools",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual developer tools activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify supported operating systems, repository access and artifact distribution. Success requires install/build/update/uninstall on an actual supported environment with recoverable customer state; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual developer tools activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify supported operating systems, repository access and artifact distribution. Success requires install/build/update/uninstall on an actual supported environment with recoverable customer state; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -323,13 +323,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-01",
         "scenario": "Prevent this false acceptance: malicious repository or update loses customer code. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -339,7 +339,7 @@
       "id": "OPERATING-SECTOR-02",
       "concern": "consumer apps",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual consumer apps activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual audience, personal data, consent and recurring terms. Success requires usable accessible onboarding, service, export and cancellation with real support; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-MAIL-IN,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual consumer apps activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual audience, personal data, consent and recurring terms. Success requires usable accessible onboarding, service, export and cancellation with real support; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-MAIL-IN,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -356,13 +356,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-02",
         "scenario": "Prevent this false acceptance: an apparently successful signup leaves a person unable to cancel. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -372,7 +372,7 @@
       "id": "OPERATING-SECTOR-03",
       "concern": "business software",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual business software activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify organization administrator authority, tenant boundaries and sold service terms. Success requires entitled workflows, isolation, customer export and continuing service; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual business software activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify organization administrator authority, tenant boundaries and sold service terms. Success requires entitled workflows, isolation, customer export and continuing service; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -389,13 +389,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-03",
         "scenario": "Prevent this false acceptance: one tenant receives another organization’s records. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -405,7 +405,7 @@
       "id": "OPERATING-SECTOR-04",
       "concern": "data products and analysis",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual data products and analysis activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify dataset provenance, permitted uses, sensitive inferences and freshness. Success requires licensed reproducible scoped analysis with denominators and correction path; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-SEARCH,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual data products and analysis activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify dataset provenance, permitted uses, sensitive inferences and freshness. Success requires licensed reproducible scoped analysis with denominators and correction path; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-SEARCH,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -422,13 +422,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-04",
         "scenario": "Prevent this false acceptance: a biased sample is sold as comprehensive market truth. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -438,7 +438,7 @@
       "id": "OPERATING-SECTOR-05",
       "concern": "APIs and infrastructure",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual APIs and infrastructure activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify customer workload, dependency availability, secrets and continuity promise. Success requires contract-compatible live responses, measured capacity, migration and recovery; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual APIs and infrastructure activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify customer workload, dependency availability, secrets and continuity promise. Success requires contract-compatible live responses, measured capacity, migration and recovery; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -455,13 +455,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-05",
         "scenario": "Prevent this false acceptance: an accepted deploy acknowledges requests while losing customer data. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -471,7 +471,7 @@
       "id": "OPERATING-SECTOR-06",
       "concern": "games and interactive",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual games and interactive activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify audience age, purchases, licensed assets and interaction moderation. Success requires real playable artifact and purchase/support/refund behavior; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual games and interactive activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify audience age, purchases, licensed assets and interaction moderation. Success requires real playable artifact and purchase/support/refund behavior; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -488,13 +488,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-06",
         "scenario": "Prevent this false acceptance: in-app purchase succeeds without delivering an entitlement. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -504,7 +504,7 @@
       "id": "OPERATING-SECTOR-07",
       "concern": "research and synthesis",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual research and synthesis activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify question scope, source access, incentives and evidence limitations. Success requires source-backed supported answer with rival interpretations and truthful gaps; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-SEARCH,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual research and synthesis activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify question scope, source access, incentives and evidence limitations. Success requires source-backed supported answer with rival interpretations and truthful gaps; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-SEARCH,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -521,13 +521,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-07",
         "scenario": "Prevent this false acceptance: many repeated sources are miscounted as independent corroboration. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -537,7 +537,7 @@
       "id": "OPERATING-SECTOR-08",
       "concern": "education and courseware",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual education and courseware activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify learner needs, age/accessibility and claimed educational outcome. Success requires actual accessible instruction and assessed transfer under competent pedagogy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual education and courseware activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify learner needs, age/accessibility and claimed educational outcome. Success requires actual accessible instruction and assessed transfer under competent pedagogy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -554,13 +554,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-08",
         "scenario": "Prevent this false acceptance: completion clicks are mistaken for learning. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -570,7 +570,7 @@
       "id": "OPERATING-SECTOR-09",
       "concern": "publishing, writing and media",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual publishing, writing and media activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify rights, attribution, factual claims, editorial responsibility and audience. Success requires actual publishable medium, clearance and correction process; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual publishing, writing and media activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify rights, attribution, factual claims, editorial responsibility and audience. Success requires actual publishable medium, clearance and correction process; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -587,13 +587,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-09",
         "scenario": "Prevent this false acceptance: an image description is accepted as a finished licensed image. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -603,7 +603,7 @@
       "id": "OPERATING-SECTOR-10",
       "concern": "consulting and advisory",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual consulting and advisory activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify client problem, conflicts, competence and scope of any regulated advice. Success requires accepted professional work with supported limits and client deliverables; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual consulting and advisory activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify client problem, conflicts, competence and scope of any regulated advice. Success requires accepted professional work with supported limits and client deliverables; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -620,13 +620,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-10",
         "scenario": "Prevent this false acceptance: a polished packet substitutes for unavailable competent advice. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -636,7 +636,7 @@
       "id": "OPERATING-SECTOR-11",
       "concern": "design services",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual design services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify taste authority, medium, asset rights, accessibility and acceptance. Success requires rendered deliverables inspected in actual medium and usable by the client; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PUBLIC; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual design services activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify taste authority, medium, asset rights, accessibility and acceptance. Success requires rendered deliverables inspected in actual medium and usable by the client; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PUBLIC; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -653,13 +653,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-11",
         "scenario": "Prevent this false acceptance: an inaccessible interaction passes a static screenshot review. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -669,7 +669,7 @@
       "id": "OPERATING-SECTOR-12",
       "concern": "marketing and content services",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual marketing and content services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify audience/contact basis, claim support, consent and publication rights. Success requires actual supported content/placement plus coherent response measurement; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-MAIL-OUT,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual marketing and content services activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify audience/contact basis, claim support, consent and publication rights. Success requires actual supported content/placement plus coherent response measurement; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-MAIL-OUT,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -686,13 +686,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-12",
         "scenario": "Prevent this false acceptance: campaign automation contacts suppressed people. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -702,7 +702,7 @@
       "id": "OPERATING-SECTOR-13",
       "concern": "recruiting",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual recruiting activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify candidate privacy, declared criteria, conflicts and applicant burden. Success requires actual contestable selection and accepted engagement under legitimate authority; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual recruiting activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify candidate privacy, declared criteria, conflicts and applicant burden. Success requires actual contestable selection and accepted engagement under legitimate authority; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -719,13 +719,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-13",
         "scenario": "Prevent this false acceptance: an unreviewed inference about a candidate replaces job evidence. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -735,7 +735,7 @@
       "id": "OPERATING-SECTOR-14",
       "concern": "bookkeeping",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual bookkeeping activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual principal, accounts, periods and qualified treatment. Success requires supported reconciled entries and actual required close/filing evidence; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-BOOKS,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual bookkeeping activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual principal, accounts, periods and qualified treatment. Success requires supported reconciled entries and actual required close/filing evidence; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-BOOKS,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -752,13 +752,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-14",
         "scenario": "Prevent this false acceptance: a balanced fabricated adjustment hides missing transactions. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -768,7 +768,7 @@
       "id": "OPERATING-SECTOR-15",
       "concern": "translation and localization",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual translation and localization activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify source rights, intended meaning, audience and required competence. Success requires actual translated medium with critical numbers/terms and uncertainty preserved; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual translation and localization activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify source rights, intended meaning, audience and required competence. Success requires actual translated medium with critical numbers/terms and uncertainty preserved; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -785,13 +785,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-15",
         "scenario": "Prevent this false acceptance: translation adds a binding guarantee absent from the source. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -801,7 +801,7 @@
       "id": "OPERATING-SECTOR-16",
       "concern": "customer support services",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual customer support services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify sold terms, entitlement, data access and response/remedy authority. Success requires actual helpful response, repair/refund or legitimate reasoned disposition; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-MAIL-IN,IC-MAIL-OUT,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual customer support services activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify sold terms, entitlement, data access and response/remedy authority. Success requires actual helpful response, repair/refund or legitimate reasoned disposition; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-MAIL-IN,IC-MAIL-OUT,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -818,13 +818,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-16",
         "scenario": "Prevent this false acceptance: closing a ticket conceals an unresolved customer right. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -834,7 +834,7 @@
       "id": "OPERATING-SECTOR-17",
       "concern": "digital goods",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual digital goods activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify rights, entitlement, compatible format and refund terms. Success requires usable entitled asset and renewal/removal/export support; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-PAY,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual digital goods activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify rights, entitlement, compatible format and refund terms. Success requires usable entitled asset and renewal/removal/export support; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-PAY,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -851,13 +851,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-17",
         "scenario": "Prevent this false acceptance: payment delivers an unusable or unlicensed download. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -867,7 +867,7 @@
       "id": "OPERATING-SECTOR-18",
       "concern": "print-on-demand and dropship",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual print-on-demand and dropship activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual supplier, stock, product claims, shipping and remedy responsibility. Success requires verified quality/capacity, actual dispatch/receipt and customer remedy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual print-on-demand and dropship activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual supplier, stock, product claims, shipping and remedy responsibility. Success requires verified quality/capacity, actual dispatch/receipt and customer remedy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -884,13 +884,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-18",
         "scenario": "Prevent this false acceptance: supplier acknowledgement is mistaken for delivery. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -900,7 +900,7 @@
       "id": "OPERATING-SECTOR-19",
       "concern": "marketplaces",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual marketplaces activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify each party’s standing, platform duties, payment custody and dispute rules. Success requires actual matched transaction, service evidence and accessible redress; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-PAY,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual marketplaces activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify each party’s standing, platform duties, payment custody and dispute rules. Success requires actual matched transaction, service evidence and accessible redress; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-PAY,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -917,13 +917,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-19",
         "scenario": "Prevent this false acceptance: platform disclaimers erase a real continuing customer duty. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -933,7 +933,7 @@
       "id": "OPERATING-SECTOR-20",
       "concern": "subscription boxes",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual subscription boxes activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify stock, supplier reliability, renewal consent and fulfillment windows. Success requires each recurring physical delivery and cancellation/refund reconciliation; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PAY; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual subscription boxes activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify stock, supplier reliability, renewal consent and fulfillment windows. Success requires each recurring physical delivery and cancellation/refund reconciliation; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PAY; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -950,13 +950,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-20",
         "scenario": "Prevent this false acceptance: a billing reset renews an unsupported delivery promise. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -966,7 +966,7 @@
       "id": "OPERATING-SECTOR-21",
       "concern": "wholesale",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual wholesale activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify specifications, counterparties, inventory, credit and delivery terms. Success requires actual inspected goods, contract performance and reconciled settlement; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual wholesale activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify specifications, counterparties, inventory, credit and delivery terms. Success requires actual inspected goods, contract performance and reconciled settlement; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -983,13 +983,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-21",
         "scenario": "Prevent this false acceptance: a supplier invoice is accepted as conforming goods. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -999,7 +999,7 @@
       "id": "OPERATING-SECTOR-22",
       "concern": "physical retail",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual physical retail activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify premises, actual staff, inventory, access and customer protections. Success requires real staffed service, stock/cash reconciliation and returns; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual physical retail activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify premises, actual staff, inventory, access and customer protections. Success requires real staffed service, stock/cash reconciliation and returns; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1016,13 +1016,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-22",
         "scenario": "Prevent this false acceptance: software reports open while no capable staff are present. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1032,7 +1032,7 @@
       "id": "OPERATING-SECTOR-23",
       "concern": "finance: lending, advice, brokerage and payments",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual finance: lending, advice, brokerage and payments activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify precise activity, jurisdiction, regulated standing, conflicts and client exposure. Success requires actual eligible professional/native performance and required client/economic controls; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual finance: lending, advice, brokerage and payments activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify precise activity, jurisdiction, regulated standing, conflicts and client exposure. Success requires actual eligible professional/native performance and required client/economic controls; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1049,13 +1049,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-23",
         "scenario": "Prevent this false acceptance: a model or payment account is treated as licensed financial standing. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1065,7 +1065,7 @@
       "id": "OPERATING-SECTOR-24",
       "concern": "insurance",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual insurance activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify underwriting/intermediation activity, actual authority and coverage terms. Success requires competent actual policy/claim service and evidence of binding coverage; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual insurance activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify underwriting/intermediation activity, actual authority and coverage terms. Success requires competent actual policy/claim service and evidence of binding coverage; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1082,13 +1082,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-24",
         "scenario": "Prevent this false acceptance: a generated quote is reported as active coverage. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1098,7 +1098,7 @@
       "id": "OPERATING-SECTOR-25",
       "concern": "health and clinical",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual health and clinical activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual clinical activity, professional standing, consent, privacy and care continuity. Success requires competent actual assessment/care and appropriate outcome/record obligations; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual health and clinical activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual clinical activity, professional standing, consent, privacy and care continuity. Success requires competent actual assessment/care and appropriate outcome/record obligations; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1115,13 +1115,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-25",
         "scenario": "Prevent this false acceptance: an administrative assistant output is mistaken for clinical clearance. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1131,7 +1131,7 @@
       "id": "OPERATING-SECTOR-26",
       "concern": "legal services",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual legal services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify client/matter/jurisdiction facts, competent representation, conflicts and privilege. Success requires actual qualified advice/representation and required filings/performance; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual legal services activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify client/matter/jurisdiction facts, competent representation, conflicts and privilege. Success requires actual qualified advice/representation and required filings/performance; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1148,13 +1148,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-26",
         "scenario": "Prevent this false acceptance: a draft pleading is treated as submitted legal representation. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1164,7 +1164,7 @@
       "id": "OPERATING-SECTOR-27",
       "concern": "pharmaceutical, food and safety-critical",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual pharmaceutical, food and safety-critical activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify precise product/process, competent safety determination, traceability and recall. Success requires actual admitted production/inspection and supported batch/delivery controls; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual pharmaceutical, food and safety-critical activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify precise product/process, competent safety determination, traceability and recall. Success requires actual admitted production/inspection and supported batch/delivery controls; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1181,13 +1181,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-27",
         "scenario": "Prevent this false acceptance: a document marks an uninspected batch safe. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1197,7 +1197,7 @@
       "id": "OPERATING-SECTOR-28",
       "concern": "children products and services",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual children products and services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual age/activity, safeguarding, consent, privacy and trusted adults. Success requires age-appropriate accessible performance under required competent protection; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PUBLIC; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual children products and services activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual age/activity, safeguarding, consent, privacy and trusted adults. Success requires age-appropriate accessible performance under required competent protection; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PUBLIC; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1214,13 +1214,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-28",
         "scenario": "Prevent this false acceptance: an inferred adult age bypasses an applicable protection. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1230,7 +1230,7 @@
       "id": "OPERATING-SECTOR-29",
       "concern": "employment and livelihoods",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual employment and livelihoods activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual work relationship, rights, criteria, pay and contestation. Success requires lawful competent employment decisions and actual agreed work/payment; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual employment and livelihoods activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual work relationship, rights, criteria, pay and contestation. Success requires lawful competent employment decisions and actual agreed work/payment; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1247,13 +1247,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-29",
         "scenario": "Prevent this false acceptance: automation makes a livelihood decision from unsupported sensitive inference. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1263,7 +1263,7 @@
       "id": "OPERATING-SECTOR-30",
       "concern": "manufacturing",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual manufacturing activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual facility/performer, materials, process, inspection and consequence limits. Success requires verified production capacity and conforming inspected goods; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual manufacturing activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual facility/performer, materials, process, inspection and consequence limits. Success requires verified production capacity and conforming inspected goods; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1280,13 +1280,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-30",
         "scenario": "Prevent this false acceptance: a simulated production run is counted as real inventory. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1296,7 +1296,7 @@
       "id": "OPERATING-SECTOR-31",
       "concern": "logistics",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual logistics activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual carrier, custody, location, handling and service terms. Success requires traceable actual movement/receipt, exception handling and remedy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual logistics activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify actual carrier, custody, location, handling and service terms. Success requires traceable actual movement/receipt, exception handling and remedy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1313,13 +1313,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-31",
         "scenario": "Prevent this false acceptance: a tracking status is counted as beneficiary receipt despite contrary evidence. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1329,7 +1329,7 @@
       "id": "OPERATING-SECTOR-32",
       "concern": "construction and trades",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual construction and trades activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify site, competent personnel, permits/determinations and physical safety. Success requires actual inspected work and legitimate completion/continuing responsibility; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual construction and trades activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify site, competent personnel, permits/determinations and physical safety. Success requires actual inspected work and legitimate completion/continuing responsibility; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1346,13 +1346,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-32",
         "scenario": "Prevent this false acceptance: a schedule substitutes for missing competent onsite performance. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1362,7 +1362,7 @@
       "id": "OPERATING-SECTOR-33",
       "concern": "hospitality",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual hospitality activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify premises, bookings, accessibility, staffing and service obligations. Success requires actual available and delivered stay/service plus refund and incident response; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual hospitality activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify premises, bookings, accessibility, staffing and service obligations. Success requires actual available and delivered stay/service plus refund and incident response; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1379,13 +1379,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-33",
         "scenario": "Prevent this false acceptance: a booking is sold against unavailable real capacity. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1395,7 +1395,7 @@
       "id": "OPERATING-SECTOR-34",
       "concern": "agriculture",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual agriculture activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify land/activity, competent process, biological uncertainty and handling. Success requires actual growing/handling work and supported harvest/quality evidence; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual agriculture activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify land/activity, competent process, biological uncertainty and handling. Success requires actual growing/handling work and supported harvest/quality evidence; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1412,13 +1412,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-34",
         "scenario": "Prevent this false acceptance: a model forecast is promised as a guaranteed harvest. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1428,7 +1428,7 @@
       "id": "OPERATING-SECTOR-35",
       "concern": "energy and utilities",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Admit the actual energy and utilities activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify precise service, infrastructure standing, competent control and continuity. Success requires actual metered/admitted service and emergency/repair responsibility; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "answer": "Determine prerequisites for the actual energy and utilities activity and promise. FormationReadiness, ProfessionalDetermination, InteractionDetermination and DeliveryCapacity apply when the actual activity requires their respective facts; the sector label alone creates none of these requirements. Authorized research may proceed without an Offer or product-delivery capacity, with real capacity and authority for the research itself. Specify precise service, infrastructure standing, competent control and continuity. Success requires actual metered/admitted service and emergency/repair responsibility; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
       "component_ids": [
         "S1-C01",
         "S1-C03",
@@ -1445,13 +1445,13 @@
         "../reviews/G-acceptance-protocol.md"
       ],
       "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
-      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, any applicable professional determination, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
       "owner": "Orchestrator for integration; named component mandates during operation",
       "implementation_location": "system/packages/company/activity-admission.ts",
       "test": {
         "id": "SL-OPERATING-SECTOR-35",
         "scenario": "Prevent this false acceptance: software confirmation is treated as safe physical energization. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Conduct a properly authorized bounded research interview about this sector, with truthful purpose, eligible contact route, privacy handling and actual interviewer/response capacity, before any product or price exists. Do not impose a professional engagement solely from the sector label. Then require applicable commercial/professional prerequisites before the distinct service promise.",
         "status": "unexecuted"
       },
       "coverage_status": "Superseded by a better framing",
@@ -1690,7 +1690,7 @@
       "test": {
         "id": "SL-LIFECYCLE-STAGE-01",
         "scenario": "An attractive unsupported premise is investigated within a finite reservation, not silently declared demand.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Select a finite, authorized research question under actual purpose and available interview capacity before a product exists, conduct the inquiry and compare alternatives using recorded findings and unknowns.",
         "status": "unexecuted"
       },
       "coverage_status": "Requires further evidence",
@@ -1723,7 +1723,7 @@
       "test": {
         "id": "SL-LIFECYCLE-STAGE-02",
         "scenario": "A small biased pilot cannot support a broad demand claim, but useful preparation continues.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "ordinary_control": "Run an authorized interview and bounded real validation with only the relevant activity prerequisites; preserve weak or negative demand evidence while accepting the completed investigation rather than claiming commercial readiness.",
         "status": "unexecuted"
       },
       "coverage_status": "Requires further evidence",
@@ -1766,7 +1766,7 @@
       "id": "LIFECYCLE-STAGE-04",
       "concern": "first contact with strangers",
       "epistemic_type": "Design proposal applying selected S1 contracts",
-      "answer": "Verify institutional and performance readiness, actual contact basis, exact audience/content and current release authority before first outward exposure. Strangers can reach actual support and grievance custody. Procedures CAP-12/CAP-13/CAP-14/CAP-40 retain their specific contracts and actual acceptance.",
+      "answer": "Classify first contact by its actual purpose and promise. CAP-04 research recruitment/interviews require legitimate contact and provider eligibility, exact truthful research wording, authorized data handling, available interviewer/response custody and current consequence authority; they do not require an Offer, ProductSpec, price or product-delivery capacity. An ordinary inbound reply uses the request scope and actual response duties, with separate admission of any new promise. A bounded validation offer requires capacity and applicable standing for its exact limited pilot; a standing commercial offer uses CAP-12 launch readiness and CAP-13/CAP-14 sales/fulfillment capacity for the actual offer. Apply CAP-40 institutional/professional prerequisites only where the activity requires them. Sector or lifecycle labels cannot introduce universal engagement requirements. Unsupported commercial promises remain withheld while unrelated authorized discovery continues.",
       "component_ids": [
         "S1-C01",
         "S1-C02",
@@ -1788,8 +1788,8 @@
       "implementation_location": "system/packages/company/lifecycle.ts",
       "test": {
         "id": "SL-LIFECYCLE-STAGE-04",
-        "scenario": "The first cold message has unsupported claims or no response capacity; block that exposure while allowing its preparation.",
-        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "scenario": "Present two otherwise similar contacts: a bounded research interview with authorized recipient, truthful purpose, eligible provider route, privacy handling, actual interviewer and response custody but no product/price/offer; and a paid-service offer without actual delivery capacity. Two implementers must derive permission for the interview and withholding of the unsupported offer. Also test an inbound reply that silently inserts a new promise and a validation pilot whose claimed scope exceeds its verified capacity.",
+        "ordinary_control": "Actually conduct the permitted interview and preserve responses, omissions and applicable correction duties; preparing a packet is insufficient. Complete an authorized ordinary inbound reply and a bounded pilot with real capacity without inventing scale demand or a prior sale.",
         "status": "unexecuted"
       },
       "coverage_status": "Requires further evidence",
@@ -2428,5 +2428,32 @@
       "coverage_status": "Requires further evidence",
       "implementation_status": "planned-not-existing"
     }
-  ]
+  ],
+  "admission_interpretation": {
+    "kind": "Design clarification of existing03 activity-specific contracts; no new permission source",
+    "rule": "Derive prerequisites from the actual activity, disclosure, representation and promise. Sector and lifecycle labels never independently require formation, professional engagement, product launch readiness or product delivery capacity. Apply those records only where the actual activity and its current authoritative requirements make them relevant; an unknown material prerequisite blocks that dependent effect, not unrelated authorized discovery.",
+    "paths": [
+      {
+        "activity": "Research recruitment or interview",
+        "requires": "Actual contact basis and provider eligibility, truthful research purpose/wording, authorized recipient/data handling, bounded inquiry, capable available interviewer, response/correction custody, applicable activity-specific requirements and current consequence authority.",
+        "does_not_require_merely_for_research": "ProductSpec, Offer, PriceProposal, SalesAgreement, product launch acceptance or product-delivery capacity. No claim of product/service availability may be inserted into the research contact."
+      },
+      {
+        "activity": "Ordinary inbound reply",
+        "requires": "Actual request and recipient identity/scope, permitted truthful response, appropriate data handling and capable response performer; preserve existing customer or rights deadlines.",
+        "conditional_requirements": "A new offer, assurance, professional act or other consequential promise invokes its own current requirements; inbound origin alone does not authorize it."
+      },
+      {
+        "activity": "Bounded validation offer",
+        "requires": "Exact limited offer and provisional claims, applicable institutional/contact requirements, real capacity/materials/access for the promised pilot and its remedies/continuity, finite resources and current release authority.",
+        "does_not_require": "Unproved scale demand, prior sale or capacity for an unoffered full-scale service."
+      },
+      {
+        "activity": "Standing commercial offer",
+        "requires": "Applicable formation/standing and professional determinations, exact product/offer and complete launch acceptance bindings, verified actual capacity for the offered scope, response/remedy/continuity resources and current release authority.",
+        "limit": "Do not offer unavailable service merely by relabeling it research or validation."
+      }
+    ],
+    "independent_review": "XSR-01 correction proposed; reviewer closure pending"
+  }
 }

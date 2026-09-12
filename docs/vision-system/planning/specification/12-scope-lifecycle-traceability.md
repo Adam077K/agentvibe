@@ -1,12 +1,14 @@
 # Scope, lifecycle and discovered-case traceability
 
-SL-1.0 applies the selected S1 architecture to the 62 supplemental source concerns and 15 discovered failure cases. Status: authored for independent complete-plan review; every runtime, actual operating and business outcome remains unproved. The [machine catalog](scope-lifecycle-contracts.json) preserves each concern, substantive answer, component, contract, uncertainty, planned module and discriminating ordinary/adverse test. It is part of the complete plan, not an expansion into a separate system.
+SL-1.1 applies the selected S1 architecture to the 62 supplemental source concerns and 15 discovered failure cases. The XSR-01 amendment clarifies admission by actual activity; independent recheck remains pending. Status: authored for independent complete-plan review; every runtime, actual operating and business outcome remains unproved. The [machine catalog](scope-lifecycle-contracts.json) preserves each concern, substantive answer, component, contract, uncertainty, planned module and discriminating ordinary/adverse test. It is part of the complete plan, not an expansion into a separate system.
 
 ## Scope decision
 
 SL-D01: distinguish the system's complete coordination and performance contracts from the actual permission and capacity to conduct a particular business activity. Apply [03's company procedures](03-company-capabilities.md) and [07's actual fulfillment routes](07-integrations-capacity.md) across the source's full lifecycle. Preserve nonsoftware performance as actual accepted human, professional, supplier or service work. A document about a service cannot satisfy that service's acceptance predicate.
 
 The original sector map is an opportunity map, not verified law. Its broad OPEN/LICENCE distinction is superseded by actual activity, principal, location, audience, data, product and consequence determinations. The 35 individual sector rows specify the distinctive facts and real performance to check, and a concrete false-success test. They do not assign universal licensing rules, operate any business, or claim to implement every possible industry-specific machine. FormationReadiness, ProfessionalRequest/ProfessionalDetermination, actual InteractionDetermination, DeliveryCapacity, grants and exact domain judgments carry these facts. A new tool, actuator, clinical process or specialist provider requires an admitted extension before the associated promise. Preparation and legitimate unrelated service continue while that admission remains open.
+
+Those record names are conditional on the actual activity's requirements. Neither a sector label nor a lifecycle label independently requires formation, a professional engagement, an Offer, product launch acceptance or product-delivery capacity. Unknown material prerequisites constrain the dependent effect. Capacity for the actual research, contact, response or service must still exist. A research label cannot authorize an embedded commercial or professional promise.
 
 This decision preserves the ambition: the system must be able to create, direct, operate, improve, pause, transfer and close complex projects, including physical and professional work. It cannot create a license, actual human capacity or safe physical performance by naming an agent. Human service is an implemented responsibility, engagement, materials/access, performance, evidence, remedy and continuity route, with real acceptance and cost. It is not a placeholder that makes a missing capability count as delivered.
 
@@ -25,6 +27,17 @@ No founder is asked to supply a system architecture. Operating facts that belong
 All ten source lifecycle stages have explicit routes: decide, validate, build, first contact, early customers, steady operation, growth, maintenance, wind-down and transfer of learning. The rows reference all relevant CAP procedures, not a permanent department roster. Each test contains both an actual failure discriminator and an ordinary permitted path; a system that only blocks action cannot pass.
 
 The stage model permits bounded first-venture discovery with unknown demand. Pre-sale capacity is verified against actual people, materials, access, timing and continuity without inventing an earlier sale. Launch joins independently admitted exact child requirements. Later delivery and settlement require their own native/customer evidence. Steady operation and long-tail maintenance continue to owe work after development ends; closure waits for actual disposition and retains residual custody where needed.
+
+First contact has four distinct positive paths. These are interpretations of 03's existing company procedures, not new authority or automatic permission to contact anyone in this session.
+
+| Actual activity | Required readiness | What does not follow from the label |
+|---|---|---|
+| Research recruitment or interview | Legitimate contact basis and provider eligibility; truthful research purpose and wording; authorized data handling; bounded question; capable available interviewer; response and correction custody; applicable activity-specific requirements and current consequence authority | An Offer, ProductSpec, price, prior sale or product-delivery capacity is not required merely to research a problem |
+| Ordinary inbound reply | Actual request scope and recipient; authorized truthful response; appropriate privacy handling and response performer; surviving customer and rights deadlines | Receiving a message does not authorize a new offer, professional act or assurance |
+| Bounded validation offer | Exact limited promise and provisional claims; applicable standing; real pilot capacity, materials, access, remedies and continuity; bounded resources and release authority | Neither scale demand nor a prior sale is required; the pilot cannot silently promise the full service |
+| Standing commercial offer | Applicable formation and professional determinations; exact offer/product and complete launch acceptance; actual offered delivery capacity; response, remedy and continuity resources; release authority | Authorizing content does not establish its promised service capacity or provider eligibility |
+
+The SL-LIFECYCLE-STAGE-04 paired case admits and conducts an authorized interview before any product or price exists, then withholds an otherwise similar paid-service promise lacking capacity. Two implementers must derive the same result. Its other controls exercise an ordinary inbound reply, a new promise hidden in that reply and a capacity-bounded pilot. Sector controls also perform legitimate research without inventing a universal professional requirement. A prepared packet cannot satisfy the interview's actual performance.
 
 ## Discovered cross-field tests
 
