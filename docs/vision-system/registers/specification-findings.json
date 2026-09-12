@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "kind": "Orchestrator cross-contract inspection; not independent Phase G acceptance",
+  "subject": "Uncommitted Phase F kernel/authority and company/human drafts in their isolated author worktrees",
+  "findings": [
+    {
+      "id": "FI-01",
+      "issue": "Command acceptance and common types diverge between drafts: independently witnessed acceptance, UTC timestamps, Money exponent, Position/watermarks and identity/intent aliases need one canonical definition.",
+      "owner": "repair_company_foundations with attack_technical",
+      "status": "Reported to authors; final revision not yet verified",
+      "completion_evidence": null
+    },
+    {
+      "id": "FI-02",
+      "issue": "Capability dependency lists contain startup cycles; a fresh venture needs a valid first investigation/design path without invented prior customers, support or fulfillment evidence.",
+      "owner": "repair_company_foundations",
+      "status": "Reported; distinguish capability availability from conditional required records and prior completed runs",
+      "completion_evidence": null
+    },
+    {
+      "id": "FI-03",
+      "issue": "LaunchReadiness delivery/support fields still use model ExecutionCapacity where actual DeliveryCapacity is required.",
+      "owner": "repair_company_foundations",
+      "status": "Reported to author; final revision not yet verified",
+      "completion_evidence": null
+    },
+    {
+      "id": "FI-04",
+      "issue": "Required integer financial observations need a typed unknown/absent representation; prose alone cannot prevent unobserved costs becoming zero or prevent preparatory work from deadlocking.",
+      "owner": "repair_company_foundations",
+      "status": "Reported; spend authority must still require exact bounded quantities",
+      "completion_evidence": null
+    },
+    {
+      "id": "FI-05",
+      "issue": "Native CLI internal request counts can be opaque. Enforce finite observable job/wall/process/output/network bounds without inventing provider quota or making all native paths ineligible.",
+      "owner": "attack_technical",
+      "status": "Author agrees to revise; final contract and later admission tests unverified",
+      "completion_evidence": null
+    },
+    {
+      "id": "FI-06",
+      "issue": "Concrete protected deployment needs a priced bill of materials, maintenance labor and a simpler comparator under the same fault contract. Dedicated gateway host was not required by the stated trusted-host boundary.",
+      "owner": "attack_technical; remaining S03/S07 author",
+      "status": "Author proposes co-located R/G privilege boundaries and explicit alternatives; cost adequacy remains unestablished",
+      "completion_evidence": null
+    },
+    {
+      "id": "FI-07",
+      "issue": "Nine component interface rows do not alone supply every required responsibility, nonresponsibility, owner, state, lifecycle, trust, observability, evaluation, scaling, version and removal contract.",
+      "owner": "Remaining component/schema/build integration",
+      "status": "Explicit remaining full-plan obligation; author notified",
+      "completion_evidence": null
+    }
+  ],
+  "planning_accepted": false,
+  "runtime_tests_executed": false
+}
