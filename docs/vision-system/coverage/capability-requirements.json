@@ -1,0 +1,720 @@
+{
+  "schema_version": 1,
+  "kind": "Requirements decomposition; not a completed capability specification",
+  "source": "Founder directive sections 1.1, 8.4, 8.18\u20138.23 and THE-VISION-AND-THE-FIELDS.md",
+  "reason": "F25-Q01 combines many meaningful company jobs in one question; a count of answered questions alone cannot prove lifecycle substance. Cross-cutting machinery must not displace actual business fulfillment.",
+  "status": "Awaiting Phase F purpose/input/output/dependency/authority/consequence/evidence/evaluation/mode/failure/replacement contracts",
+  "capabilities": [
+    {
+      "id": "CAP-01",
+      "concern": "Intent and commitments",
+      "source_fields": [
+        1,
+        30
+      ],
+      "required_outcome": "Preserve endorsed purposes, constraints, promises, taste, corrections and rejected choices through delivery and changes of mind.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-02",
+      "concern": "Portfolio direction",
+      "source_fields": [
+        20,
+        24
+      ],
+      "required_outcome": "Admit, compare, fund and stop ventures while keeping actual principals, restricted resources, shared dependencies and differing stages visible.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-03",
+      "concern": "Opportunity discovery",
+      "source_fields": [
+        1,
+        7,
+        25
+      ],
+      "required_outcome": "Find and compare candidate problems with contrary evidence, uncertainty, feasible tests and explicit rejection reasons.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-04",
+      "concern": "Customer research",
+      "source_fields": [
+        10,
+        25,
+        26
+      ],
+      "required_outcome": "Plan authorized research, work with original customer material, distinguish observed needs from generated hypotheses and preserve sampling omissions.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-05",
+      "concern": "Market research",
+      "source_fields": [
+        7,
+        25,
+        29
+      ],
+      "required_outcome": "Establish dated market and competitor evidence, conflicting interpretations and changes requiring a strategy review.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-06",
+      "concern": "Company and product strategy",
+      "source_fields": [
+        1,
+        20,
+        24,
+        25
+      ],
+      "required_outcome": "Translate evidence and endorsed purpose into choices, opportunity costs and measurable propositions without inventing founder values.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-07",
+      "concern": "Product management",
+      "source_fields": [
+        2,
+        25
+      ],
+      "required_outcome": "Maintain customer outcomes, requirements, acceptance criteria, priorities and surviving promises across product changes.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-08",
+      "concern": "Experience and product design",
+      "source_fields": [
+        8,
+        25
+      ],
+      "required_outcome": "Produce and evaluate usable experiences with accessibility, taste, user evidence and explicit design trade-offs.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-09",
+      "concern": "Brand and identity",
+      "source_fields": [
+        1,
+        25,
+        29
+      ],
+      "required_outcome": "Develop coherent identity, audience understanding and substantiated public positioning within actual use rights and owner taste.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-10",
+      "concern": "Software and technical construction",
+      "source_fields": [
+        8,
+        17,
+        25,
+        41
+      ],
+      "required_outcome": "Produce, review, test, integrate, release and maintain working software and infrastructure through authorized environments and recoverable changes.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-11",
+      "concern": "Quality assurance",
+      "source_fields": [
+        14,
+        25,
+        40,
+        41
+      ],
+      "required_outcome": "Judge substantive outcomes, process and evidence with independent negative controls and actual defect disposition.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-12",
+      "concern": "Launch and release",
+      "source_fields": [
+        11,
+        25,
+        28,
+        29
+      ],
+      "required_outcome": "Coordinate readiness, authorized outward commitments, fulfillment, support, monitoring and correction or rollback of a launch.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-13",
+      "concern": "Content production",
+      "source_fields": [
+        11,
+        25,
+        29
+      ],
+      "required_outcome": "Create useful audience-specific material with accepted claims, rights, taste, revisions, distribution eligibility and outcome evaluation.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-14",
+      "concern": "Marketing and distribution",
+      "source_fields": [
+        11,
+        20,
+        25,
+        29
+      ],
+      "required_outcome": "Select and execute authorized channels and experiments while preserving recipient constraints and distinguishing interest from vanity metrics.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-15",
+      "concern": "Sales",
+      "source_fields": [
+        11,
+        20,
+        25,
+        53
+      ],
+      "required_outcome": "Move an opportunity through substantiated offers, actual agreement, payment and accepted delivery without unauthorized promises or fictional authority.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-16",
+      "concern": "Customer communication",
+      "source_fields": [
+        11,
+        12,
+        25,
+        29
+      ],
+      "required_outcome": "Respond through permitted relationships and purposes, preserve exact promises and corrections, and handle consequential ambiguity before sending.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-17",
+      "concern": "Support and customer success",
+      "source_fields": [
+        25,
+        30,
+        31
+      ],
+      "required_outcome": "Resolve actual customer needs, perform authorized remedies, verify fulfillment and discover recurring or underserved experiences.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-18",
+      "concern": "Pricing and commercial economics",
+      "source_fields": [
+        20,
+        25
+      ],
+      "required_outcome": "Compare willingness-to-pay evidence, obligations, contribution and alternatives; establish price proposals and authorized commercial terms.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-19",
+      "concern": "Finance and treasury",
+      "source_fields": [
+        20,
+        24,
+        25,
+        53
+      ],
+      "required_outcome": "Maintain money, cash commitments, reserves and cash-flow evidence; authorize scoped payments and reconcile unknown effects.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-20",
+      "concern": "Bookkeeping and financial close",
+      "source_fields": [
+        20,
+        25,
+        27,
+        53
+      ],
+      "required_outcome": "Reconcile native financial records and discrepancies with original evidence and competent determinations for applicable reporting.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-21",
+      "concern": "Legal and regulatory coordination",
+      "source_fields": [
+        16,
+        25,
+        27,
+        53
+      ],
+      "required_outcome": "Locate activity/entity/jurisdiction obligations, route actual professional determinations, preserve deadlines and authorized contractual standing.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-22",
+      "concern": "Privacy and data rights",
+      "source_fields": [
+        16,
+        26,
+        27
+      ],
+      "required_outcome": "Enforce purpose and access, support rights requests, correct or erase appropriate data, and reconcile late copies, vendors and restored stores.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-23",
+      "concern": "Security operations",
+      "source_fields": [
+        15,
+        16,
+        17,
+        28,
+        31
+      ],
+      "required_outcome": "Maintain actual access boundaries, detect incidents and delegated persistence, contain compromise and verify scoped recovery.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-24",
+      "concern": "Procurement and suppliers",
+      "source_fields": [
+        20,
+        25,
+        27,
+        53
+      ],
+      "required_outcome": "Compare buy/build options, verify supplier capability and dependencies, obtain authorized terms and replace suppliers without abandoning duties.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-25",
+      "concern": "Partnerships",
+      "source_fields": [
+        16,
+        20,
+        25,
+        30
+      ],
+      "required_outcome": "Assess shared value, negotiate within mandate, preserve commitments and dependencies, and evaluate or end the relationship responsibly.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-26",
+      "concern": "Hiring and external capacity",
+      "source_fields": [
+        16,
+        25,
+        26,
+        51
+      ],
+      "required_outcome": "Define actual capacity needs, fairly evaluate candidates/services, engage with authorized terms, onboard and account for applicant and contractor burden.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-27",
+      "concern": "Human collaboration",
+      "source_fields": [
+        12,
+        30,
+        46,
+        51
+      ],
+      "required_outcome": "Identify each person, share sufficient permitted context, assign accepted responsibility, resolve disagreements and handle departure.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-28",
+      "concern": "Analytics",
+      "source_fields": [
+        7,
+        20,
+        32,
+        40
+      ],
+      "required_outcome": "Produce measurements with original denominators, cohorts, exclusions, uncertainty, lineage and interpretable business consequences.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-29",
+      "concern": "Experimentation",
+      "source_fields": [
+        7,
+        20,
+        40,
+        48,
+        49
+      ],
+      "required_outcome": "Predeclare hypotheses, controls, resources and stopping rules; execute bounded tests and retain failures and inconclusive results.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-30",
+      "concern": "Operations and fulfillment",
+      "source_fields": [
+        2,
+        8,
+        25,
+        28,
+        30
+      ],
+      "required_outcome": "Perform the actual promised service or coordinate accepted human/physical delivery, verify outcomes and maintain continuity capacity.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-31",
+      "concern": "Incident response",
+      "source_fields": [
+        15,
+        28,
+        31
+      ],
+      "required_outcome": "Assess and contain actual incidents, protect continuing service, communicate within authority, repair effects and preserve lessons and residual consequences.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-32",
+      "concern": "Knowledge management",
+      "source_fields": [
+        6,
+        7,
+        13,
+        44
+      ],
+      "required_outcome": "Acquire, retrieve, challenge, correct and retire organizational knowledge with provenance, freshness, contradiction and scoped access.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-33",
+      "concern": "Governance",
+      "source_fields": [
+        1,
+        15,
+        16,
+        27,
+        30,
+        51
+      ],
+      "required_outcome": "Maintain accountable decision rights, consequence limits, disputes, independent review and control over protected rules.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-34",
+      "concern": "Organizational learning",
+      "source_fields": [
+        7,
+        23,
+        30,
+        40,
+        50
+      ],
+      "required_outcome": "Turn observed outcomes and omitted work into tested improvements while preserving failures, disagreement and the costs of change.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-35",
+      "concern": "Scaling",
+      "source_fields": [
+        20,
+        24,
+        25,
+        28,
+        51
+      ],
+      "required_outcome": "Expand actual useful delivery within demonstrated operational, human, financial and institutional capacity; detect proportional hidden labor.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-36",
+      "concern": "Pause",
+      "source_fields": [
+        24,
+        28,
+        30,
+        53
+      ],
+      "required_outcome": "Stop appropriate new work, preserve surviving duties and evidence, control renewals and define conditions and costs of resumption.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-37",
+      "concern": "Recovery and resumption",
+      "source_fields": [
+        6,
+        17,
+        28,
+        31,
+        48
+      ],
+      "required_outcome": "Resume across interruption, provider and process changes or restored state only after current restrictions, uncertain effects and context loss are reconciled.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-38",
+      "concern": "Pivot and changed direction",
+      "source_fields": [
+        1,
+        24,
+        30
+      ],
+      "required_outcome": "Apply a legitimate change of purpose while preserving existing promises, rejected choices, evidence and authorized transition or compensation.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-39",
+      "concern": "Closure and wind-down",
+      "source_fields": [
+        20,
+        24,
+        26,
+        27,
+        30,
+        53
+      ],
+      "required_outcome": "Dispose of or legitimately transfer surviving obligations, resources, access, data, suppliers and redress; software shutdown alone is not closure.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-40",
+      "concern": "Institutional formation and readiness",
+      "source_fields": [
+        16,
+        20,
+        27,
+        53
+      ],
+      "required_outcome": "Coordinate the actual entity, principal, accounts, rights, signatories and service prerequisites needed for the proposed activities.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-41",
+      "concern": "Succession and transfer",
+      "source_fields": [
+        16,
+        28,
+        30,
+        51,
+        53
+      ],
+      "required_outcome": "Obtain competent successor acceptance of actual authority, access, duties, unresolved effects and restrictions before transfer.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-42",
+      "concern": "External grievance and remedy",
+      "source_fields": [
+        11,
+        25,
+        26,
+        27,
+        29,
+        31
+      ],
+      "required_outcome": "Provide reachable noncustomer-inclusive challenge, reasons, deadlines, competent escalation and funded remedy through closure.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-43",
+      "concern": "Owner attention and competence",
+      "source_fields": [
+        21,
+        22,
+        46,
+        50,
+        51
+      ],
+      "required_outcome": "Use contestable authentic participation and adverse evidence to preserve domain understanding and intervention ability without global profiling or excessive review.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-44",
+      "concern": "Truthful account and reproducibility",
+      "source_fields": [
+        12,
+        13,
+        32,
+        42,
+        48,
+        49
+      ],
+      "required_outcome": "Account for attempts, failures, omissions, stale or unavailable evidence, rationale versus cause, disagreements and remaining consequences.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-45",
+      "concern": "Compute, subscription and infrastructure capacity",
+      "source_fields": [
+        17,
+        18,
+        19,
+        20,
+        28
+      ],
+      "required_outcome": "Observe separate money, provider allowance, compute and attention; queue, interrupt and resume without silently purchasing metered capacity.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-46",
+      "concern": "Controlled system improvement",
+      "source_fields": [
+        23,
+        33,
+        34,
+        35,
+        37,
+        40,
+        41,
+        47
+      ],
+      "required_outcome": "Propose, evaluate, authorize, roll out, monitor and reverse system changes while independently protecting governance, identity, evidence and the improvement gate.",
+      "contract_location": null,
+      "implementation_location": null,
+      "evaluation_evidence": null,
+      "completion_claim": false
+    }
+  ],
+  "invariants": [
+    "No capability is satisfied by a name, agent role, generated plan, blocked packet or dashboard alone",
+    "A legitimate coordination capability must support actual intake, execution or accepted delegation, outcome acceptance, failure, replacement and surviving duties",
+    "Actual professional standing, institutional authority, external funding and qualified continuity remain real operational dependencies",
+    "Success, denied authority, uncertainty, failure and closure paths all require conformance evidence"
+  ],
+  "required_capability_fields": [
+    "purpose",
+    "inputs",
+    "outputs",
+    "dependencies",
+    "authority",
+    "consequence class",
+    "evidence produced",
+    "evaluation method",
+    "implementation mode",
+    "failure behavior",
+    "removal or replacement criteria"
+  ]
+}
