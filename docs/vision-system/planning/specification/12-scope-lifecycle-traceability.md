@@ -1,6 +1,6 @@
 # Scope, lifecycle and discovered-case traceability
 
-SL-1.1 applies the selected S1 architecture to the 62 supplemental source concerns and 15 discovered failure cases. The XSR-01 amendment clarifies admission by actual activity; independent recheck remains pending. Status: authored for independent complete-plan review; every runtime, actual operating and business outcome remains unproved. The [machine catalog](scope-lifecycle-contracts.json) preserves each concern, substantive answer, component, contract, uncertainty, planned module and discriminating ordinary/adverse test. It is part of the complete plan, not an expansion into a separate system.
+SL-1.1 applies the selected S1 architecture to the 62 supplemental source concerns and 15 discovered failure cases. The XSR-01 amendment clarifies admission by actual activity and passed a [scoped independent recheck](../reviews/F-cross-scope-02.md); runtime and complete-plan acceptance remain pending. Status: authored for independent complete-plan review; every runtime, actual operating and business outcome remains unproved. The [machine catalog](scope-lifecycle-contracts.json) preserves each concern, substantive answer, component, contract, uncertainty, planned module and discriminating ordinary/adverse test. It is part of the complete plan, not an expansion into a separate system.
 
 ## Scope decision
 

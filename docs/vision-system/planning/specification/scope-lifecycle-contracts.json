@@ -2,7 +2,7 @@
   "schema_version": 2,
   "base_commit": "091bf2f",
   "kind": "Supplemental vision, sector, lifecycle and discovered-case specification trace",
-  "status": "Authored; XSR-01 scoped admission amendment pending independent recheck and fullG; no runtime acceptance",
+  "status": "Authored; XSR-01 admission amendment independently closed at specification level; fullG and runtime acceptance pending",
   "decision": "Applies existing S1 contracts; sector labels are replaced by actual activity admission, not legal clearance or a permanent worker roster.",
   "records": [
     {
@@ -2454,6 +2454,6 @@
         "limit": "Do not offer unavailable service merely by relabeling it research or validation."
       }
     ],
-    "independent_review": "XSR-01 correction proposed; reviewer closure pending"
+    "independent_review": "XSR-01 closed at specification level by ../reviews/F-cross-scope-02.md on subjectd199316; no executed runtime/two-implementer or fullG acceptance"
   }
 }

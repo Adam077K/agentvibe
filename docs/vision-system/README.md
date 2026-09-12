@@ -4,6 +4,7 @@ This package responds to the founder's **Autonomous Discovery, System Design, an
 
 **Status: S1.0 selected as the logical specification anchor; complete specification in progress. No complete-plan acceptance or implementation completion claimed.**
 
+- [Executive guide](planning/00-executive-guide.md) explains the intended system and how to navigate the complete package.
 - [Durable state](state.json) is the continuation entry point.
 - [Research lane register](research/lanes.json) records independent work and dependencies.
 - [Open questions and decision packets](registers/open-questions.json) distinguishes missing inputs from design choices.

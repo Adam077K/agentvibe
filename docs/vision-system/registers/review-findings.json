@@ -753,5 +753,52 @@
       "archive_commit": "b7902b2"
     },
     "implementation_evidence": null
+  },
+  {
+    "id": "XSR-01",
+    "source": "planning/reviews/F-cross-scope-01.md",
+    "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
+    "title": "First-contact scope overlay permits incompatible discovery prerequisites",
+    "severity": "medium",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "status": "Closed at specification level by independent recheck; two-implementer/runtime cases unexecuted",
+    "required_contract": "Bind prerequisites to actual contact/promise; distinguish research/inbound/pilot/standing offer, conditional professional determinations and actual interview control.",
+    "resolution": {
+      "commit": "d199316",
+      "scope": "Activity-specific12and35sector/first-contact clarification; no new permission or operating evidence"
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-cross-scope-02.md",
+      "subject": "d199316922cfd49934aa6094f9c03a3b74074659",
+      "source_archive_commit": "1c54e006dfee5b886530cfd87e18dbe7e29f6364",
+      "limit": "XSR01only; no other finding/fullG/runtime acceptance"
+    },
+    "implementation_evidence": null
+  },
+  {
+    "id": "XSR-02",
+    "source": "planning/reviews/F-cross-scope-01.md",
+    "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
+    "title": "Question verification references do not exercise distinctive exit/reopening claims",
+    "severity": "medium",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "status": "Open; bounded author repair pending",
+    "required_contract": "Semantic question→contract→verification reconciliation; precise vendor-exit and equivalent-reopening subcases plus other affected joins, not test-family labels alone.",
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "XSR-03",
+    "source": "planning/reviews/F-cross-scope-01.md",
+    "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
+    "title": "Fulfillment routes retain unresolved vendor choice after selection",
+    "severity": "low",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "status": "Open; bounded author repair pending",
+    "required_contract": "R-routes delegate to selected versioned IC contracts; preserve unimplemented and actual-account/endpoint/funding/engagement unknowns.",
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null
   }
 ]
