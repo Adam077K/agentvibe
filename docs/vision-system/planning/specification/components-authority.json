@@ -1,0 +1,2205 @@
+{
+  "schema_version": "CA-1.0",
+  "architecture": "S1.0",
+  "authoring_base": "c3519f53cfa03d29c6acb8a067464776d83f27d2",
+  "date": "2026-09-12",
+  "status": "intended specification; independent acceptance and all runtime/operating evidence pending",
+  "repairs_consumed": [
+    "ef676def08e4074cfa2d5db812039b3c5cbf2255",
+    "12e4f8c99cdc0bc3c6e9b325c9a61ab75667d9b4"
+  ],
+  "scope": {
+    "logical_components": 9,
+    "attributes_per_component": 19,
+    "attribute_entries": 171,
+    "S05_question_answers": 69,
+    "fields": [
+      15,
+      16,
+      26,
+      27,
+      28,
+      31,
+      43
+    ]
+  },
+  "attribute_names": [
+    "purpose",
+    "responsibility",
+    "nonresponsibility",
+    "owner",
+    "interfaces",
+    "inputs",
+    "outputs",
+    "state",
+    "lifecycle",
+    "dependencies",
+    "trust",
+    "permissions",
+    "failure",
+    "observability",
+    "evaluation",
+    "scaling",
+    "version",
+    "replacement",
+    "removal"
+  ],
+  "source_metadata_policy": {
+    "inherits": "../../research/substrate-claims.json#/policy",
+    "id": "SC-POLICY-1",
+    "effect": "Apply source/version/access/publication-or-unknown/interests/confidence/revalidation/invalidation rules to inherited substrate reliance. Historical source inspection is not current runtime composition, security, value or availability.",
+    "additional_reliance": "07/08 integration/price/implementation claims retain their own reported source dates and unknowns; this catalog explicitly requires the same maintenance fields before operational reliance without claiming they are already entries in the shared register.",
+    "next_latest_source_review": "2026-10-12 unless dependency lock, operating reliance, contradiction, security, maintenance, terms or consequence requires earlier",
+    "current_author": "builder/framer; cannot independently accept own component/contracts"
+  },
+  "components": [
+    {
+      "id": "S1-C01",
+      "name": "Direction and responsibility register",
+      "implementation_location": "system/packages/company/direction",
+      "attributes": {
+        "purpose": "Preserve the actual company's endorsed ends, boundaries and accountable custody across the complete venture and institutional lifecycle.",
+        "responsibility": "Record exact IntentVersion, principal/standing, mandates and accepted ResponsibilityAssignment; resolve legitimate decision domains and transfer only acknowledged scope. Keep potential and surviving obligations linked to the actual principal.",
+        "nonresponsibility": "Does not infer founder values, manufacture legal identity or competence, issue transport authority, select its own independent evaluator, or declare native payment/customer facts true.",
+        "owner": "An accepted ResponsibilityAssignment covering C01, held by the actual direction/ownership custodian under the Principal and Mandate; values/taste remain with their legitimate owner. Actual identities, shared-decision rule and alternate are admission inputs, not invented officers.",
+        "interfaces": "company.intent.propose/endorse, human.mandate.accept and company.record.propose on the common command endpoint; current records/queries to C02/C04/C07 and permission-filtered C09. Changes that alter authority scope invoke C04/C08 migration.",
+        "inputs": "Authenticated original statements/corrections, source identity/standing evidence, accepted assignments, AuthorityMatrix rules, contrary facts, scope and effective time, current expected revisions and dependencies.",
+        "outputs": "Exact IntentVersion/Mandate/assignment/DecisionRecord refs, scoped purpose and deciding rule, preserved disagreement and owned questions; no new Grant or factual guarantee merely from endorsement.",
+        "state": "Canonical intent/mandate/assignment and domain direction records plus their revisions and effective intervals; derived portfolio/ownership views carry witnessed Position and omissions. No independent component-level truth flag.",
+        "lifecycle": "Bootstrap only through the kernel's actual-principal/root-assignment rule; admit bounded direction work, maintain corrections and reviews, quiesce affected changes during disputes, transfer acknowledged duties, then retire only after surviving obligations and archival access are assigned.",
+        "dependencies": "Kernel identity/version/command serialization; C07 actual authority/competence and acceptance; C05 source validity; C06 scoped evidence; C08 durable history/recovery; domain Goal/Mission/Project/Workstream interfaces.",
+        "trust": "Authenticated endorsement is authoritative only for the issuer's actual domain. A correct signature or company namespace is not proof of legal standing, factual truth, professional capacity or agreement of other required parties.",
+        "permissions": "Command-scoped mutation of C01 records through the protected application; no raw database administration or R key. Readers see only current principal/purpose-permitted records; changing responsibility cannot broaden a worker's Grant.",
+        "failure": "Ambiguous/contested intent creates an owned decision without replacing original words; missing standing blocks dependent exposure while unrelated admitted research continues. Failed handoff retains old or genuinely accepted alternate custody.",
+        "observability": "Endorsement/interpretation differences, overdue direction reviews, missing assignments, disputed decision rules, owner response windows and duties without accepted successor; full history and source watermarks visible within access.",
+        "evaluation": "CA-C01: a legitimate changed intent updates future work; inferred enthusiasm fails endorsement; joint-party withdrawal blocks the exact decision; a transfer with missing competence/access cannot remove old custody. Useful one-goal work proceeds without a mandatory hierarchy.",
+        "scaling": "Use scoped typed queries and derived portfolio views within the one admitted registry order. More ventures/principals do not create issuers or merge money/liability; cross-scope changes serialize and require measured load before partitioning.",
+        "version": "Intent and meaning revisions preserve original/effective time. AuthorityMatrix/policy amendments are ProtectedChanges where relevant; canonical schema changes use explicit SemanticMappingVersion and compatible migrations, not aliases as new stored types.",
+        "replacement": "Export original statements, exact history/decisions, standing evidence, assignments, duties and omissions; successor accepts current scope, demonstrates access and interpretation, and fences the old mutation route before one new writer activates.",
+        "removal": "May retire an obsolete direction view/procedure, never the company's surviving responsibility account. Close or transfer ventures/duties under actual standing, revoke old actors and preserve authorized records; unresolved ownership blocks complete removal."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "03-company-capabilities.md#native-business-authority-and-meaning",
+        "04-human-operation.md#operator-jobs-and-authority"
+      ]
+    },
+    {
+      "id": "S1-C02",
+      "name": "Case admission and scheduler",
+      "implementation_location": "system/packages/work",
+      "attributes": {
+        "purpose": "Turn legitimate outcomes and duties into finite useful work while preserving actual capacity, deadlines and responsibility.",
+        "responsibility": "Admit Cases/WorkOrders, reserve causal resources through C04, maintain WorkflowRun/StepExecution cursor, assign temporary workers, leases, dependencies, schedules, progress and Continuation. Record missed service and no-progress without erasing the duty.",
+        "nonresponsibility": "Does not define founder ends, mint capacity/competence, accept its own produced outcome, discharge native effects, multiply budgets by delegation, or implement another durable release protocol.",
+        "owner": "Accepted scheduling/work ResponsibilityAssignment and mandate with a named actual sponsor/alternate for due work. Kernel automation executes this policy; an agent template is not the accountable owner.",
+        "interfaces": "case.propose/admit/transition, worker lifecycle commands, work.* and skill.* contracts; SQL inbox/outbox/timers and current C05/C06 predicates; receives C07 decisions and publishes scoped work/status to C09.",
+        "inputs": "Exact intent/outcome/acceptance refs, obligations/latest responsible times, dependency predicates, current source/authority, actual executor/reviewer/human slots, ResourceAccount/Reservation, admitted workflow/skill/runtime and prior continuation.",
+        "outputs": "Finite WorkOrder/Case/delegation/schedule refs, cursor transitions, reservations and stage exports; explicit Blocker/FailureRecord, missed-occurrence/duty account and current continuation. Work admission is not external release or customer acceptance.",
+        "state": "Canonical Case/WorkOrder/CausalEpisode and domain workflow/message/schedule state; lease generation/epoch and timer identity remain durable. Execution reported, acceptance_pending and accepted stay distinct; StepExecution cannot override OperationStatus.",
+        "lifecycle": "Propose → admit only current prerequisites → dispatch/lease/run → report/assess or park/recover → accepted/cancelled with remaining duties accounted. Occurrences choose individual reconciliation/coalesce/skip-expired/escalate; missed is never completed by a later timer.",
+        "dependencies": "C01 legitimate scope/custody; C04 reservations/current authority; C05 context/validity; C03 production; C06 exact accepted outcomes; C07 real performance/attention; C08 witnessed command/restore and finite cleanup capacity.",
+        "trust": "Workers' requested children/read lists/progress are proposals or testimony. Heartbeat shows liveness only; schedule time is not authority. SQL timer wakeups cannot alter statutory or customer deadlines.",
+        "permissions": "Only guarded scheduler/worker commands, no untrusted C03 database login. One lease per mutable scope, current expected revisions, finite root allowance and default bounded delegation; grants attenuate rather than copy parent credentials.",
+        "failure": "Pure transaction retry stays bounded; semantic retry needs changed method/input within allowance. Missing acknowledgment/heartbeat parks and reconciles; duplicate commands return stable status. Incompatible combined changes become owned integration work; cancellation preserves unknown effects.",
+        "observability": "WIP, exact lease age/epoch, last meaningful progress, backlog/deadline slack, deferred protected service, causal reserved/consumed totals, duplicate/missed schedule occurrences, source gaps and unfinished handoff scope.",
+        "evaluation": "CA-C02: useful scheduled invoice/service completes; lost/double occurrence cannot duplicate effect; parent/child retry share allowance; two textual-clean but meaning-conflicting changes fail integration; witness outage permits only bounded D1 staging/current admitted local computation.",
+        "scaling": "Initial one WorkOrder per executor and one native producer per profile; capacity is the minimum of actual compute/provider/review/human constraints. SQL SKIP LOCKED is queue claiming only. Increase concurrency after measured useful throughput/R-G pressure, never infer conflict absence from skipped rows.",
+        "version": "Runs pin exact workflow/skill/template/runtime and predicate versions. Migrate cursor/input/unknown-effect semantics explicitly; old and new schedules have stable occurrence mapping so version changes do not double-fire a due act.",
+        "replacement": "Park/fence dispatch, export Cases/orders/cursors/dependencies/leases/causal consumption/schedule occurrences/continuations; successor accepts and revalidates current authority, then activates a single dispatcher. No replay of external effects to reconstruct state.",
+        "removal": "Drain or assign every active/parked order, future due occurrence and unresolved dependency; revoke worker/session access and retire timers only with a recorded missed/closed/transferred disposition. Removing a queue cannot remove a customer's entitlement."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "05-work-agents-skills.md#1-boundary-identity-and-responsibilities",
+        "05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
+      ]
+    },
+    {
+      "id": "S1-C03",
+      "name": "Domain production interfaces",
+      "implementation_location": "system/packages/company",
+      "attributes": {
+        "purpose": "Produce actual useful company work and attributable artifacts across research, offers, delivery, support, finance, people and institutional operation.",
+        "responsibility": "Run admitted deterministic/native/human-capable procedures, use current authorized context, create staged artifacts and AttemptReports, expose failures/uncertainty and request exact external operations through C04. Follow CAP procedures and IC adapter contracts.",
+        "nonresponsibility": "Cannot endorse values, promote its own evidence to independent acceptance, issue grants/releases, assert professional standing, mutate protected registry/evaluator roots, or count a prepared packet as actual performance.",
+        "owner": "An accepted C03 component ResponsibilityAssignment owns procedure/runtime integration maintenance and accountable reporting. Each actual outcome sponsor remains in the WorkOrder/ResponsibilityAssignment; the admitted executor is accountable for its report, and any human/professional performer has a separately accepted mandate. No permanent department/persona is created.",
+        "interfaces": "worker.claim/checkpoint/report and artifact/context publication commands; integration.invoke for exact admitted adapters; C07 service handoff where actual human action is required; submits outputs to C06 and progress to C02.",
+        "inputs": "One admitted WorkOrder with exact predicate, capability/skill/template/profile, ContextManifest, bounded invocation capabilities/resources, accepted performer availability and all material unresolved duties/contradictions.",
+        "outputs": "Staged ArtifactVersion/AttemptReport, source observations, proposed OperationIntent and partials with omissions; native capture comes through protected C06/integration path. A useful artifact may exist even when the attempt's final message is missing.",
+        "state": "Ephemeral scratch plus local StageRef or canonical staged artifact/report state; no private authoritative task database. Native session IDs, process/cgroup/lease and output sequence are execution observations tied to the same causal episode.",
+        "lifecycle": "Eligible profile selected → current job admitted → isolated execute → captured report → independent assessment; interruption closes/fences execution and creates bounded continuation; provider/auth/lineage change requires new admission before resume.",
+        "dependencies": "C02 finite scope; C05 complete delivered context; C04 exact operation/gate; C06 protected capture/acceptance; C07 accepted actual human service; C08 descendant/unknown reconciliation; admitted provider/account and billing evidence.",
+        "trust": "Model text, tool output, repository content, attachments and claimed read sets are untrusted. N's subscription credential is a declared login root, separated from arbitrary code in X; provider output is neither a grant nor complete native truth.",
+        "permissions": "C03 has no protected DB, admin, signing or company/provider production credentials. N/X clean standalone job environments, mediated tools and all-channel G egress apply; model-visible data must be authorized for its destination, including stdout and retained sessions.",
+        "failure": "Capability mismatch, malformed result, no progress, quota/auth failure, partial execution and unknown effect remain separate. Salvage permitted artifacts as proposals, preserve cost/omissions and route real duties to available accepted service; never silently buy API/credit fallback.",
+        "observability": "Exact job/template/model/config/context/tool identities, causal usage and opaque subcalls, stdout/capture gaps, last meaningful result, native auth/billing age, stop observation and unfinished duties; telemetry is not independent proof of accepted output.",
+        "evaluation": "CA-C03: valid supplied-input native generation plus independent build/beneficiary acceptance; adversarial source tries to change payee; test stdout secret disclosure, forbidden startup context, quota interruption, fake completion and a physically unavailable performer. Safe refusal alone cannot pass production usefulness.",
+        "scaling": "Add isolated workers only within actual provider, host, evidence-review and human capacity. More agents do not increase authority or independent evidence. One N plus one X is the initial operational estimate; local development follows separate memory/disk ceilings.",
+        "version": "Pin runtime/template/skill/instruction/tool/profile and parser/context dependencies. Changed provider behavior or terms can invalidate eligibility without binary upgrade. Persistent resume is only an explicitly admitted profile with complete current ancestry.",
+        "replacement": "Close/fence old lease/session, export allowed Continuation/artifacts/capture gaps and causal use; independently qualify substitute profile/performer and revalidate context/authority. Reconstruct from portable records when opaque session ancestry is unavailable.",
+        "removal": "Destroy job resources and revoke job capabilities after capture/partial accounting; enumerate native sessions, deployed programs and other descendants. Remaining duties pass only through accepted responsibility transfer, while provider credentials/resources remain billable or effective until native removal is observed."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ]
+    },
+    {
+      "id": "S1-C04",
+      "name": "Consequence authority and release",
+      "implementation_location": "system/packages/authority",
+      "attributes": {
+        "purpose": "Make each consequential act depend on exact current authority, independent durability, bounded resources and truthful knowledge of its effects.",
+        "responsibility": "Authenticate action authority, attenuate grants, resolve trusted parameters, reserve business conflicts/resources/potential duties, serialize prepare/release/send claim, enforce disclosure/validity and protected change policy, and maintain truthful OperationStatus with C08.",
+        "nonresponsibility": "Does not invent business intent, factual/competence evidence or legal standing; witness signature is not factual acceptance. It cannot promise provider acceptance before expiry, instantaneous recall, exactly-once behavior from arbitrary providers or safety against its declared root administrators.",
+        "owner": "Actual accepted authority/security ResponsibilityAssignment with scoped Mandate, independent competent assessment for protected changes and accepted alternate. Sole issuance is a logical contract, not an agent named chief executive or a claim that one human owns every decision domain.",
+        "interfaces": "Common operation/grant/reservation/release/send-claim commands from 02; GET /v1/operations/{id}/status; R witness/proof lookup and G bounded transport. All callers use exact typed payloads, actor identity, revisions, current ContextManifest and causal reservations.",
+        "inputs": "OperationIntent exact bytes/account/principal, parameter provenance, live identity/grant/validity epochs, participants/conflict map, accepted subject/predicate evidence, resource/duty holds, trusted-time admission and exact independent completeness receipt.",
+        "outputs": "Guarded refusal, preparation/reservation, immutable Release/SendClaim business records and separate post-witness SendAuthorizationBundle/status proof. Status may expose unknown/partial effects; it is never a renewed permit or a receipt embedded in its own hash.",
+        "state": "Canonical Grant/ResourceAccount/Reservation/OperationIntent/ConflictClaim/Release/SendClaim and epochs; exact registered attempt/effect/stop dimensions. BusinessResult/GroupBody are immutable, external signatures and current status are joined values/projections.",
+        "lifecycle": "Prepare holds → independent complete envelope witness → ordered release → one-use witnessed send claim → bounded G transport → protected observation/reconciliation. Revoke/freeze stops new authority and contains finite issued exposure; rollback/migration never revives consumed or expired claims.",
+        "dependencies": "C01 actual mandates; C05 current disclosure/lineage; C06 exact current independent judgments; C02 causal/work scope; C07 actual standing/competence; C08 full durable witness/frontier/key availability; admitted G/clock/credential roots and provider effect semantics.",
+        "trust": "Pg administrator, R signer/admin, G clock/network root, IdP/CA custody and native account provider are declared roots with scoped exclusions. Separate process or account names alone prove no independence. Source text cannot choose trusted recipient/payee/account or evaluator.",
+        "permissions": "Only protected command service may change control records; grants intersect actions/resources/destinations/purpose/budget/expiry/delegation depth. Workers cannot edit SQL schema/replication, mint grant or alter G. Consequential human decisions require exact current challenge and real authority/competence.",
+        "failure": "Missing/contradictory/stale prerequisite denies dependent release, not all company computation. Lost ack looks up exact stable result/proof; ambiguous send keeps holds. G expiry bounds sk_buff admission at its named hook, while partial requests and later wire/provider effects remain reconcilable unknowns.",
+        "observability": "Unconfirmed group age, prepare/release/send-claim positions, current restriction epochs, credential/time attestation, gate window/bytes, retained unknown holds, conflict scope migrations, native effect/status and stop phases; never reduce these to a green success flag.",
+        "evaluation": "CA-C04: successful distinct-subject launch plus lost ack; wrong/stale JudgmentBinding fails; concurrent revocation/send claim, empty standby/local sync cancellation, delayed sender/pooled socket, scope alias migration and parameter injection retain required safety and useful valid progress.",
+        "scaling": "One admitted writer/order per registry generation and one unconfirmed authoritative group/company initially. Batch pure compatible work only with unchanged atomicity; measure R/G witness latency and contention before enlargement. Independent departmental issuers require the explicitly reviewed extension, not spontaneous sharding.",
+        "version": "ProtectedChange exact manifest governs policy/auth/gate/schema/meaning revisions. T-R1 freezes the union of old/new participant/business scopes, fences pending exposure and maps every unknown/potential duty before forward activation. No arbitrary mutation of proof formats or key membership.",
+        "replacement": "Fence old issuer and transport, obtain current independent frontier, account all released/unknown work and current restrictions, qualify replacement roots/profile, then issue a new generation under authorized recovery. Old snapshots/receipts/status cannot renew authority.",
+        "removal": "Stop new commitments, expire/revoke/fence grants and windows, reconcile native descendants/effects and assign actual remaining duties; preserve permitted evidence and key/deletion inventory. A running company cannot drop the consequence boundary while claiming the same contract."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "02-authority-recovery.md#6-independent-completeness-and-the-release-protocol--t-r2",
+        "03-company-capabilities.md#discovery-to-an-accepted-offer"
+      ]
+    },
+    {
+      "id": "S1-C05",
+      "name": "Context and validity",
+      "implementation_location": "system/packages/context",
+      "attributes": {
+        "purpose": "Provide relevant usable information whose source, purpose, recipient, temporal applicability and surviving restrictions remain explicit at use.",
+        "responsibility": "Load actual delivered context/ancestry, maintain knowledge/source/correction and validity dependencies, filter before retrieval, track transformations/loss, atomically publish derivatives against live epochs and apply continuing deletion/forgetting scopes.",
+        "nonresponsibility": "Does not decide founder values, factual truth by search rank, independent acceptance, legal retention duration or native deletion that it cannot observe. It cannot infer permission from public availability, a small field, a content hash or an old manifest.",
+        "owner": "Accepted knowledge/data ResponsibilityAssignment and actual maintenance custodian, with competent C07 retention/duty determination where needed and C06 assessment of knowledge/evaluation claims. Owner identity and protected-data authority remain setup evidence.",
+        "interfaces": "context.capture/publish plus knowledge.* and current record/query interfaces; returns permission-filtered manifests/handles to C03, current validity predicates to C04, dependency changes to C06/C08 and omission-preserving views to C09.",
+        "inputs": "WorkOrder/purpose/destination, exact source/original/claim/capture refs, permission/retention and live epochs, prior complete native ancestry, accepted critical preservation contract, storage classification and bounded retrieval/context capacity.",
+        "outputs": "ContextManifest with actual delivered sources/transformations/omissions, current-use eligibility, exact corrections and contradictions, encrypted canonical/derivative artifact refs, scoped invalidation/forgetting effects and owned unresolved KnowledgeQuestions.",
+        "state": "Canonical ContextManifest/ValidityEpoch and domain SourceRecord/KnowledgeEntry/KnowledgeQuestion/ContextTransformation/SummaryLoss/ForgetRequest; lexical indexes and scan results are rebuildable derived state with complete frontiers, never authorities.",
+        "lifecycle": "Receive source → classify/verify for scoped use → load current permitted context → publish atomically → maintain/review/correct → restrict/forget/archive/erase under actual duty. New ancestry or recipient requires a new current manifest, not a local validity toggle.",
+        "dependencies": "Kernel serial current-epoch/publication boundary and encrypted durable blobs; C01 endorsed purpose; C04 disclosure/access authority; C06 evidence closure/assessment; C07 retention/consent standing; C08 keys/copies/restore and external adapter capture.",
+        "trust": "Loader-observed input set replaces producer-selected citations. Unknown hidden native context disqualifies protected use. Text is protected by default and numeric/relationship metadata can be sensitive; primary sources have interests and applicability limits, not universal truth.",
+        "permissions": "Filter principal/purpose/recipient before metadata/search results; persist plaintext only on a field-specific admitted allowlist. Protected lexical scan/index is bounded in memory without plaintext cache/spill; validation occurs before encryption and persistent GroupBody/JSONB/WAL/logs cannot accidentally copy plaintext.",
+        "failure": "Incomplete closure/index/source coverage yields explicit restricted/incomplete use; late invalidated output cannot become active. Preserve originals and contrary evidence within access; unknown provider-held copies or retained plaintext linkage keep deletion incomplete instead of claiming crypto-erasure solved it.",
+        "observability": "Source access/publication/version/interest/confidence/review dates, unsupported/unsearched/inaccessible distinctions, source/closure frontiers, omitted required context, stale dependency backlog, retrieval/use error, copy/key holders, deletion residuals and maintenance/attention cost.",
+        "evaluation": "CA-C05: useful permitted lexical retrieval plus correction uptake; private snippet/title/count cannot leak; deletion races late summary and restore; short salary/health/linkage fixtures leave no unintended plaintext in GroupBody/WAL/index/log/backup; continued permitted search must succeed.",
+        "scaling": "Typed exact refs narrow scope before lexical search. Initial 20 metadata candidates/eight chunks per step and finite scan byte/time/memory; expose unexamined corpus rather than feed all history. Vector/graph products require measured advantage and reviewed permission/deletion mapping.",
+        "version": "Pin parser/language/chunk/ranking/transformation/source/meaning and storage-classification versions; changed or overdue source reliance invalidates dependent current claims even without software upgrade. SC-POLICY-1 metadata/recheck inheritance applies to relied-on substrate claims.",
+        "replacement": "Export authorized originals/ciphertext/keys, exact lineage/corrections/contradictions/retention/restriction epochs and omissions; rebuild a qualified index/loader at a verified complete frontier, fence old loaders and reauthorize live sessions before use.",
+        "removal": "Retire redundant indexes/summaries by dependency inventory; retain necessary source/duty evidence lawfully. Deletion closes/fences current holders, handles derived/export/backup/provider copies and records residuals until actual purge/expiry/key conditions hold; removal cannot erase accountability or resurrect an obsolete correction."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss",
+        "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting"
+      ]
+    },
+    {
+      "id": "S1-C06",
+      "name": "Evidence and acceptance",
+      "implementation_location": "system/packages/evidence",
+      "attributes": {
+        "purpose": "Produce a truthful bounded account and independent scoped assessment of outcomes, processes and required prerequisites, including useful success and failure.",
+        "responsibility": "Protect capture/selection from evaluated producers, maintain full transitive EvidenceBaseVersion, run competent independent evaluations and controls, record canonical EvidenceJudgment states, preserve disagreements/omissions and reconstruct company accounts without fabricated causation.",
+        "nonresponsibility": "Does not issue grants/releases, choose legitimate values, infer truth from signatures/model agreement, create professional competence or turn accepted uncertainty reports into accepted products. It cannot independently accept its own evaluator change.",
+        "owner": "Accepted evidence/acceptance ResponsibilityAssignment with actual competent assessor for each predicate, separate authority from the evaluated producer and declared shared roots/conflicts. An evaluator model or second account is not automatically independent.",
+        "interfaces": "Protected capture and evidence commands; evaluation.* and scoped Review/EvaluationPlan/Run; supplies exact current judgments/bindings to C01/C02/C04/C07 and reconstructed accounts to C09; source dependency invalidation joins C05/C08.",
+        "inputs": "Exact subject/version/predicate and independently admitted requirements manifest, protected raw observations, parser/measurement/selection/denominator/evaluator/label/acceptance dependencies, population and omissions, current source/access/authority, competent judging rule and finite budget.",
+        "outputs": "Attributable findings/limitations, canonical accepted/rejected/inconclusive/contested/stale/withdrawn judgments, current EvidenceBaseVersion and exact JudgmentBinding arrays, observed cost/outcomes and permission-filtered account reconstruction. Review completion is not acceptance of its subject.",
+        "state": "EvidenceJudgment proposed is unfinished; completed inconclusive does not establish the predicate; contested is canonical for disputed presentation. Evaluation plans/runs/reviews and captured evidence retain exact revisions; no standalone Evaluation pass or mutable aggregate success may bypass current child predicates.",
+        "lifecycle": "Freeze plan/requirements before outcomes → protected capture of all selected attempts → independent scoped assessment → current accepted use or rejection/uncertainty → stale/contested/withdrawn on changed dependencies → reasoned reassessment revision. Launch assembly is a complete requirement-ID join, not self-evidence.",
+        "dependencies": "C05 current full lineage/epochs; C08 durable protected captures/keys/frontiers; C04 authority and protected evaluator policy; C07 actual assessor competence/rights; C03 reports and native observations are inputs, not proof; C01 actual values determine legitimate criterion domains.",
+        "trust": "Independence covers capture, parser, schema, normalization, sample/test selection, labels, denominator, evaluator and acceptance rule, including shared roots/incentives. Primary docs/author reports provide scoped source evidence only; known hidden provider reasoning is not claimed observable.",
+        "permissions": "Capture/selection/expected answers/evaluator activation sit outside evaluated producer write authority. Reviewers receive only relevant permitted evidence; model output cannot mutate evidence history or sign its own gate. Current exact subject/predicate/expiry/authority guards apply at downstream release.",
+        "failure": "Missing original/attempt/coverage or inadequate power produces limited/inconclusive evidence; corruption invalidates dependent use before release. Preserve conflicting findings and obtain a discriminating test or legitimate decision; do not average incompatible meanings or silently drop adverse cases.",
+        "observability": "Selected/attempted/failed/refused/missing denominators, native capture gaps, shared roots, current predicate bindings, stale judgments, false acceptance/refusal controls, reviewer duration/cost, endpoint/stratum uncertainty and source/claim review age.",
+        "evaluation": "CA-C06: independently held known-defect and clean controls catch always-pass/always-reject judges; mutate a shared parser/denominator with producer bytes unchanged; accepted uncertainty report fails launch; distinct valid product/delivery/support judgments satisfy the complete manifest and allow useful launch.",
+        "scaling": "Bound evaluation populations and use the cheapest valid discriminating evidence; reserve reviewer/professional/owner time and protected controls. Diagnostic five-trial cases and IB matched trial defaults serve different claims; no universal sample count or model panel replaces task-specific power/dependence analysis.",
+        "version": "Freeze exact plan/subject/baseline/selection/evaluator/metric/label versions, bridge changed populations and preserve old results. Changing checks/requirements is a ProtectedChange; source maintenance can reopen evidence without package change. Revision cannot rewrite a prior conclusion.",
+        "replacement": "Independent successor qualifies on known defects, clean cases and account reconstruction; transfer source/denominator/dependency history and current judgments, invalidate unsupported carryover and keep one accountable acceptance rule per scope during cutover.",
+        "removal": "Retire an evaluator/check only through protected authority with coverage/replacement evidence and retained dissent. Preserve still-required captures/judgments and current deletion obligations; a missing required independent assessor blocks dependent acceptance, not unrelated valid work."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction",
+        "06-knowledge-evidence-evaluation.md#6-evaluation-contracts-at-every-level"
+      ]
+    },
+    {
+      "id": "S1-C07",
+      "name": "Human and external responsibility interface",
+      "implementation_location": "system/packages/company/human",
+      "attributes": {
+        "purpose": "Ensure real people can exercise legitimate judgment, obtain competent service and rights progress, and remain accountable within actual attention and standing limits.",
+        "responsibility": "Prepare exact DecisionPackets, obtain attributable current responses, arrange accepted competent human/professional/manual performance, preserve founder values/taste, participation/competence protocol, grievance/rights handling, continuity, handoff and departure with actual custody.",
+        "nonresponsibility": "Cannot manufacture lawful standing, diagnosis, professional expertise, founder consent, always-available substitutes or liability allocation; a record, warning or prepared professional packet is not fulfilled service or a new Grant.",
+        "owner": "Actual accepted human/service ResponsibilityAssignment for each deciding/performance/rights domain, with Principal/Mandate/AuthorityMatrix, scoped competence and accepted alternate. Real names/jurisdiction/engagement/funding remain admission data; no synthetic C-suite role supplies them.",
+        "interfaces": "human.decision.answer/evidence.challenge/intervention.request/participation.respond/mandate.accept/handoff.accept/departure.request and company work/intake commands; IC-HUMAN and independent Fastmail/public grievance route; exact C09 views and C04 authority validation.",
+        "inputs": "Exact decision/action/subject/predicate versions, alternatives/contrary evidence/uncertainty/latest time/no-answer rule, actual actor identity/standing/competence, consented ParticipationPlan, accepted performer availability/fees/access and surviving duties.",
+        "outputs": "HumanResponse/DecisionRecord, actual professional or manual performance evidence, accepted HandoffAcceptance/ResponsibilityAssignment, scoped incapacity and real alternate route, grievance disposition/remedy progress and consented participation coverage; no false approval from silence.",
+        "state": "DecisionPacket draft/ready/presented/answered/expired/superseded/conflicted; response recorded/invalidated and domain service/grievance/participation states. ActorBinding and OperatorProjection are derived views; continued duty ownership survives a failed handoff.",
+        "lifecycle": "Qualify standing/need → prepare inspectable packet or service handoff → deliberate acceptance/response/performance → independently assess exact outcome → maintain actual response/competence/availability → accepted succession or departure with duties/access settled.",
+        "dependencies": "C01 actual values and deciding rules; C04 current auth/grants/effects; C05 permitted originals; C06 competent independent assessment; C02 deadlines/attention scheduling; C08 independent continuity/current recovery; actual professional/custodian/provider arrangements.",
+        "trust": "Authenticated person controls only their legitimate domain. Lawful approval does not imply specialist competence; decline/nonresponse does not diagnose incapacity. Independent grievance recipient must be reachable without permission from the actor complained about and not solely through failed A login.",
+        "permissions": "Current actor/packet/subject validation on every response, WebAuthn where required, access only to needed original evidence, no offline approvals. Consent and retention constrain assessment data; secret personality/health/general-intelligence profiling and unrelated monitoring are excluded.",
+        "failure": "No answer follows the recorded bounded fallback, accepted substitute or wait; existing duties remain assigned. Missing professional/access/capacity blocks new dependent exposure and triggers actual continuity/renegotiation or accountable failure. Founder values authority remains while specific competence prerequisites restrict affected acts.",
+        "observability": "Packet age/changed terms, response windows, actual service/alternate acknowledgement, grievance/remedy deadlines, unmet competence predicates, attention minutes/interrupts, participation omissions and emotional burden with consent; request/stop/fence/cessation/settlement remain separate.",
+        "evaluation": "CA-C07: a legitimate routine decision succeeds within cap; stale phone/double response cannot approve changed terms; absent founder plus provider outage still obtains actual due service through accepted alternate; affected person reaches independent grievance route; competence misunderstanding changes only the relevant action path.",
+        "scaling": "Admit work at actual human/professional/attention capacity, batch equivalent decision needs without merging rights and reduce new commitments before overload. One-person staffing is allowed only within demonstrated capacity; hiring or agent fan-out does not create unaccepted substitute service.",
+        "version": "AuthorityMatrix/ParticipationPlan/interaction/retention/service contracts pin exact versions and legitimate amendment routes. Preserve original personal values/taste and reasons; practice cadence and competence thresholds require consented evidence, not inferred universal doses.",
+        "replacement": "Successor/alternate accepts exact scope, duties, access, competence, availability and fees; exercise actual route before dependent promises. Transfer acknowledgments differ from receipt, preserve old custodian for unresolved scope and revalidate current authority.",
+        "removal": "On departure stop assignments, transfer accepted duties, settle actual worker/professional obligations, revoke native access/descendants and give permitted export. Keep legitimate grievance/retention duties until actual disposition; removing a person's UI account does not end liability or erase owed service."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "04-human-operation.md#human-records-and-command-contract",
+        "07-integrations-capacity.md#4-communication-and-independent-continuity"
+      ]
+    },
+    {
+      "id": "S1-C08",
+      "name": "Recovery and continuity",
+      "implementation_location": "system/packages/authority/recovery",
+      "attributes": {
+        "purpose": "Recover complete authoritative consequences and current restrictions across declared loss/absence boundaries while preserving actual duties and useful continuation.",
+        "responsibility": "Independently witness complete groups/blobs/keys, persist receipt/frontier and membership, handle lost acknowledgments and fenced generations, reconcile unknown effects/native descendants, manage backup/restore/key/deletion inventory and accepted continuity with C07.",
+        "nonresponsibility": "Does not become a departmental grant issuer, infer missing records from old snapshots, turn a signature into truth, claim independent admin roots from local processes or guarantee instant external cancellation/physical erasure/provider availability.",
+        "owner": "Actual accepted R/recovery custodian and alternate, with independent account/admin/MFA/billing/recovery control relative to A as required by the fault model; actual identity/availability/fees and exercised access are admission evidence. G shares R host/admin/load root explicitly.",
+        "interfaces": "R complete-group witness and keyed receipt/status lookup, fresh signed RecoveryFrontier response, authorized generation/recovery and native reconciliation interfaces; C04 SendAuthorizationBundle joins existing proof; C07 accepted continuity and C09 status surface.",
+        "inputs": "Exact canonical GroupBody plus full blob/key manifests and predecessor/generation/sequence, current independent membership/frontier nonce, revocations/unknown holds/potential duties/leases/deletion/descendant indexes, protected native observations and accepted substitute standing.",
+        "outputs": "DurabilityReceipt and signed current frontier/recovery response values, authoritative recovered references and reconciliation evidence, continuing restrictions and accepted Continuation. Historical frontier snapshots are Observation artifacts; signed values are not invented Ref targets or future self-hashes.",
+        "state": "Hot standby plus separate writable witness PostgreSQL ledger, detached receipt/signature index, current membership/frontier, blob/key and access/deletion inventories. D0/D1 local material remains separately staged; complete proof never comes from A's own ahead-of-witness row.",
+        "lifecycle": "Admit independent roots/replica/keys → witness exact complete group before authority response → monitor frontier and copies → fence on loss/revoke → reconcile current independent frontier and unknowns → restore isolated generation → activate only with current membership/restrictions; retire old roots after obligations/copies accounted.",
+        "dependencies": "Pg durability/replication plus separate writable witness, actual R signing/encryption custody, C04 serial operation scope/gates, C05 current lineage/deletion, C06 protected native evidence, C07 real custodians/continuity, G admitted time/network and backup/provider account access.",
+        "trust": "A and R accounts/regions require actual distinct recovery roots; AWS common provider failure and admitted root compromise are bounded exclusions. Software Ed25519/AES key custody is explicit, not HSM-backed proof. Local tests cannot establish administrator or human absence independence.",
+        "permissions": "Only admitted witness reads replicated groups and writes its own receipt ledger; signer cannot invent missing content. Protected recovery actor changes membership/generation under exact current rules; ordinary workers cannot read keys, promote standby, delete audit/copies or reactivate old peers.",
+        "failure": "Lost ack recovers exact durable receipt without new authority; missing group/blob/key or stale frontier fails dependent activation. Witness outage still permits D1 save/export and surviving bounded local work. Unknown native effect retains hold and due work; restore never reintroduces deleted/revoked authority.",
+        "observability": "Replica replay/current snapshot, complete group/hash/frontier, receipt signing/lookup, key/blob gaps, backup/restore age, measured RPO/RTO, membership/boot/time changes, unknown effects, residual native access/deletion and actual custodian response/renewal readiness.",
+        "evaluation": "CA-C08: primary plus its backup destruction, witness local-commit/sign/ack crashes, stale restore/revocation, missing blob/key, R/G load and native descendant revocation; valid recovery completes with current restrictions and actual due-service continuity. Independent host/admin tests require real separate roots.",
+        "scaling": "Durable A/R placements plus ephemeral N/X jobs and a budgeted trusted restore worker; G and R share a load/fault root. One unconfirmed group/company initially; measure complete-envelope/blob throughput and restoration before sizing growth. Never relax remote proof or split issuers to hide saturation.",
+        "version": "Receipt/frontier/proof/group/key/membership formats and clocks are protected protocol versions. Signed receipt fields cannot contain future signatures/self-hashes. Restore/schema/meaning migration uses current restriction indexes, forward T-R1 scope accounting and explicit compatible versions.",
+        "replacement": "Obtain fresh independently witnessed recovery inventory, fence old generation/peers/keys, validate replacement replica/signer/clock/custodian, map all released/unknown scopes and activate new membership. Old signed snapshots cannot authorize takeover by themselves.",
+        "removal": "Terminate old generations only after current successor custody, proof/key/blob retention and native access/resource/subscription removal are observed. Record remaining provider/backup copies and legal duties; inability to erase or enumerate keeps residual status open."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "02-authority-recovery.md#11-outbox-membership-fencing-and-restore",
+        "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling"
+      ]
+    },
+    {
+      "id": "S1-C09",
+      "name": "Operator surfaces",
+      "implementation_location": "system/apps/operator",
+      "attributes": {
+        "purpose": "Let authorized people understand current company reality, inspect original evidence and exercise meaningful control without misleading completion or hidden burden.",
+        "responsibility": "Deliver account/decisions/ventures/work/evidence/capacity/people/requests/continuity/terminal views, permission-filtered source watermarks and accessible mobile/keyboard interactions; submit exact current commands and display five stop/effect phases separately.",
+        "nonresponsibility": "Does not own upstream truth, auth/standing, grant/release, evidence acceptance, current provider quota or customer duty discharge. It cannot make stale cached state authoritative, invent missing source completeness or diagnose a person's competence from nonparticipation.",
+        "owner": "Actual accepted operator-product ResponsibilityAssignment with legitimate user/taste owner for interaction criteria, plus independent accessibility/evidence assessment. Backend security and upstream component owners remain responsible for their enforcement; UI designer cannot waive them.",
+        "interfaces": "GET /v1/records/{id}?revision={n}, POST /v1/queries, authorized events, command/status/operation/health endpoints and D1 staging/export; all authoritative mutations return through POST /v1/commands and exact domain payloads, never browser-side authority.",
+        "inputs": "Current actor scope and actual Principal/Mandate/IdentityBinding, witnessed Position, source watermarks/omissions, exact decision/operation/work/evidence refs, current restrictions, allowed original content and user-selected participation preferences.",
+        "outputs": "Accessible permission-filtered projections, typed command requests and explicit conflict/pending/unknown/error states; Server-confirmed local staging returns StageRef; an offline browser draft has no StageRef or accepted-decision status until the staging service actually saves it. A rendered successful-looking surface never manufactures an authoritative completion flag.",
+        "state": "Derived OperatorProjection/ActorBinding and permitted local draft/view state only. ProjectionMetadata records committed_position/source_watermarks/generated_at/omissions; status can be stale/incomplete/unknown, and OperationStatus remains an observation/projection, not a send token.",
+        "lifecycle": "Authenticate/resolve scope → load admitted projection → inspect originals/terms → submit exact deliberate command → display stable business/proof/current-status response; disconnect marks last observed, stale revisions force refresh and new decision; logout/revoke removes current access and handles retained drafts.",
+        "dependencies": "C01…C08 exact read/command/status semantics, Keycloak current authentication, C05 pre-retrieval filtering and permitted evidence, C07 understandable deciding/service pathways, independent continuity channel and actual browser/accessibility support.",
+        "trust": "Browser/client state and caller-supplied actor fields are untrusted; backend enforces all mutations and filtered retrieval. A conversation, terminal skin, animation, cached summary or HTTP receipt is not proof of stopped work, released action or fulfilled service.",
+        "permissions": "Only current authorized projections and registered commands. No arbitrary SQL/filesystem path, offline approvals, cross-principal snippets/counts or swipe/default-approved material terms. Technical shell stays behind admitted N/X mediation, not unrestricted browser access to production.",
+        "failure": "Network loss preserves safe local drafts and shows unknown request outcome; same-command lookup reconciles. Missing feed never becomes zero activity; inaccessible originals show limited reconstruction. Independent public/grievance route remains discoverable, and complex phone decisions defer rather than omit terms.",
+        "observability": "Projection/source age and omissions, command/status errors, stale decision conflicts, accessibility task failures, actual decision/attention latency and source-check path. Exclude sensitive content from telemetry and retain uncertainty when native feeds lag.",
+        "evaluation": "CA-C09: valid keyboard/mobile decision and useful terminal continuation succeed; stale changed-amount packet, lost/double submission, actor switch, hidden missing source, inaccessible original and unknown stop do not mislead. Human task/accessibility tests supplement deterministic browser checks.",
+        "scaling": "Serve bounded filtered pages/events and cached derived views with current access; no model summary blocks first display of duties/stop controls. Initial latency targets L/N/D require reference workload measurement; load cannot authorize stale data or leak aggregate existence.",
+        "version": "Pin React/Hono/Vite/client schema and exact view/selection/meaning versions in release manifest. UI changes that alter consequential interpretation are ProtectedChanges with current contract/accessibility regression; wire compatibility alone is insufficient.",
+        "replacement": "New surface consumes the same canonical clients/commands and passes exact-term/accessibility/unknown-state tests; migrate permitted draft/view preferences with consent, retain portable terminal continuations and retire old session/client credentials without a second writer.",
+        "removal": "Remove obsolete screens, local caches/drafts and client sessions under retention policy; preserve usable replacement control/evidence/grievance access and open obligations. Deleting a dashboard is not deleting authoritative evidence or withdrawing another person's rights."
+      },
+      "contract_refs": [
+        "01-contract-kernel.md#2-logical-component-and-deployment-interfaces",
+        "08-improvement-implementation.md#3-repository-and-process-implementation-target",
+        "04-human-operation.md#surfaces-derived-from-operator-jobs",
+        "04-human-operation.md#complete-terminal-and-coding-interaction"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "F15-Q01",
+      "field": 15,
+      "question": "What is the worst thing that could plausibly happen here?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Plausible material failures include an unauthorized contract/payment/public promise, confidential disclosure, lost duties after primary destruction, poisoned acceptance, uncontained native access or abandonment of due human service. Assess severity by the actual principal/beneficiary and continuing exposure, not merely one tool call or model mistake.",
+      "contract": "02-authority-recovery.md#1-authority-and-fault-contract",
+      "evidence": [
+        "02-authority-recovery.md#1-authority-and-fault-contract",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual venture activities, amounts, data and physical/professional consequences are unconfigured.",
+      "implementation_location": "system/packages/authority/risk",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A small release creates an unbounded continuing commitment absent from its potential-duty account."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q02",
+      "field": 15,
+      "question": "Which of those are accidents, which are someone attacking, and which are the system misunderstanding?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Record accident, adversarial action, misunderstanding and unknown cause separately in FailureRecord and incident evidence. Shared manifestations may require identical containment, but causal claims need discriminating evidence; injected source instructions, stale parameters and ambiguous legitimate values are not collapsed into one generic model error.",
+      "contract": "05-work-agents-skills.md#6-concurrency-failure-retry-and-stop",
+      "evidence": [
+        "05-work-agents-skills.md#6-concurrency-failure-retry-and-stop",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "A captured error may not identify its actual cause.",
+      "implementation_location": "system/packages/work/failures",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A forged tool response is treated as an innocent transient fault and retried with broader access."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q03",
+      "field": 15,
+      "question": "How much damage can one bad action do before anything notices?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Bound one bad action by exact grant, account/destination/amount, reservations, business conflict identity, potential duties, one-use send claim and finite transport/causal budgets. Detection is not the only boundary; predeadline buffers and already deployed native descendants can still cause later effects and remain explicitly accounted.",
+      "contract": "02-authority-recovery.md#7-trusted-time-and-bounded-transport--t-r3",
+      "evidence": [
+        "02-authority-recovery.md#7-trusted-time-and-bounded-transport--t-r3",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "No numeric universal maximum damage follows without actual offer/account limits and native semantics.",
+      "implementation_location": "system/packages/authority/exposure",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A released program keeps spending or publishing after its deployment request's window without an admitted descendant bound."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q04",
+      "field": 15,
+      "question": "What is easy to undo and what is not?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Local drafts and unpublished reversible artifacts can be superseded within their scope. Disclosures, delivered promises, payments, customer reliance, physical acts and some data migrations need compensation/reconciliation or may be irreversible; classify them before release and never describe a git revert as undoing their consequence.",
+      "contract": "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift",
+      "evidence": [
+        "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual available remedies depend on the native service, agreement and competent determination.",
+      "implementation_location": "system/packages/improvement/rollback",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Rollback restores code but drops a remaining refund or disclosure obligation."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q05",
+      "field": 15,
+      "question": "Which actions need a person, always?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Personal ends/taste, required human consent, actual signatory/professional/physical performance and protected decisions with a human mandate remain with legitimate capable people. Routine bounded acts can use standing grants; no universal founder click is imposed, and lack of competence cannot be repaired by a more emphatic approval.",
+      "contract": "04-human-operation.md#operator-jobs-and-authority",
+      "evidence": [
+        "04-human-operation.md#operator-jobs-and-authority",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Applicable human-only duties and qualified deciding parties require actual standing/jurisdiction evidence.",
+      "implementation_location": "system/packages/company/human",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A model or unqualified owner approves a legally/professionally restricted act solely because it can authenticate."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q06",
+      "field": 15,
+      "question": "What protection still works when nobody is watching?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Intended unattended controls are deterministic schemas/current epochs, grant attenuation, resource holds, exact R witness, protected G deadline, producer separation and finite retries/leases. They require implemented and admitted roots; no protection is currently claimed from these prose contracts, and actual due-service continuity still needs accepted humans/providers.",
+      "contract": "02-authority-recovery.md#14-required-adversarial-and-useful-progress-tests",
+      "evidence": [
+        "02-authority-recovery.md#14-required-adversarial-and-useful-progress-tests",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Every runtime and operational boundary test remains unexecuted.",
+      "implementation_location": "system/tests/authority/unattended",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An absent observer lets a native child bypass the gated path or consume unlimited causal resources."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q07",
+      "field": 15,
+      "question": "How does the company stop something already in progress?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "A scoped intervention fences future releases, cancels undispatched work, stops the admitted worker and reconciles released/native effects separately. Revocation before release blocks it; already issued finite transport exposure may persist until its bound, and continuing deployments/tokens require their admitted native containment route.",
+      "contract": "02-authority-recovery.md#9-operationattempt-state-cancellation-retry-and-outcomes",
+      "evidence": [
+        "02-authority-recovery.md#9-operationattempt-state-cancellation-retry-and-outcomes",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Provider cancellation and descendant enumeration may be delayed or incomplete.",
+      "implementation_location": "system/packages/authority/intervention",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A stop acknowledgement is treated as immediate recall of a message already sent."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q08",
+      "field": 15,
+      "question": "How does it know the stop worked?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Display and verify five distinct facts: request received, future release denied, worker cessation observed, released effects reconciled and required remedy complete. Use same-command status and native/capture evidence; missing telemetry, a revoked token or a killed local process alone cannot prove settled consequences.",
+      "contract": "04-human-operation.md#complete-terminal-and-coding-interaction",
+      "evidence": [
+        "04-human-operation.md#complete-terminal-and-coding-interaction",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Remote computation and delayed provider effects can remain unknown.",
+      "implementation_location": "system/apps/operator/continuity",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "The UI shows stopped/settled when only the cancellation command was accepted."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q09",
+      "field": 15,
+      "question": "What happens if the protection itself fails — does everything stop, or does everything continue?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Choose failure behavior by scope: missing witness/time/identity/current prerequisite blocks dependent authority; existing admitted local computation and explicit D1 save/export can continue within surviving bounds. Due service uses actual accepted continuity or records failure; neither universal shutdown nor unrestricted fail-open operation is the contract.",
+      "contract": "02-authority-recovery.md#3-durability-classes-and-safe-work-during-outages",
+      "evidence": [
+        "02-authority-recovery.md#3-durability-classes-and-safe-work-during-outages",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual independent continuity can itself be unavailable.",
+      "implementation_location": "system/packages/authority/degradation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Witness outage either masquerades as total inactivity or permits new disclosure from a stale cached view."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q10",
+      "field": 15,
+      "question": "What has never been rehearsed?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "All specified runtime, all-channel native, Linux deadline, independent host/admin, provider effect, restore, human absence and full-company rehearsals remain future evidence. Source/help inspection and document validation are explicitly different; the construction graph assigns those exercises before operating reliance.",
+      "contract": "08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "evidence": [
+        "08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "No operational rehearsal was run for this catalog.",
+      "implementation_location": "system/tests/admission",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An author-reported design or local mock is presented as completed fault-domain rehearsal."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q11",
+      "field": 15,
+      "question": "How would anyone notice a protection that has quietly stopped protecting?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Monitor freshness/completeness of the protection's own input and exercise independently held defect and clean controls. A check must react to a known skipped gate, corrupted denominator or stale source, with missing telemetry invalidating dependent assurance; a green heartbeat or unchanged average score is insufficient.",
+      "contract": "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Detection coverage and latency require measured deployment tests.",
+      "implementation_location": "system/packages/evidence/checker-controls",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An always-pass checker retains acceptance after injected defects no longer change its output."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F15-Q12",
+      "field": 15,
+      "question": "What is protected by nothing but a written rule?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "At authoring time all intended mechanisms are specifications, not deployed protections. Even after implementation, founder values, actual professional competence, custodian independence, provider terms and human response depend on accepted people/procedures and external evidence; software cannot enforce those facts by naming a role or policy.",
+      "contract": "10-components-authority-traceability.md#2-enforcement-and-actual-standing",
+      "evidence": [
+        "10-components-authority-traceability.md#2-enforcement-and-actual-standing",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual assignments, competence, custody and observed boundaries remain unavailable.",
+      "implementation_location": "system/ops/admission",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A written review isolation rule is reported as hardened tool isolation, or a service packet as performed service."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F16-Q01",
+      "field": 16,
+      "question": "On what basis is permission granted — the person, the task, the risk, the reversibility?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Permission is the intersection of actual principal/mandate, authenticated actor, task/purpose, action/resource/destination/account, consequence, current evidence, expiry and finite reservations. Reversibility affects required conditions but never offsets missing standing, forbidden disclosure or professional competence through a scalar risk score.",
+      "contract": "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
+      "evidence": [
+        "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual authority domains and external accounts need accepted setup evidence.",
+      "implementation_location": "system/packages/authority/grants",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A low numerical risk score authorizes an act outside the actor's legitimate mandate."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q02",
+      "field": 16,
+      "question": "How does the company know who is asking?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Use Keycloak OIDC PKCE and current IdentityBinding for humans, WebAuthn exact-action challenge where required, and step-ca short-lived mTLS plus live epochs for workloads. The server derives actor identity; a payload role, restored session, company name or certificate alone does not establish legal standing or competence.",
+      "contract": "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
+      "evidence": [
+        "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "No actual IdP/CA/account identity or recovery process is admitted yet.",
+      "implementation_location": "system/packages/authority/identity",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A client changes principal_id or uses a revoked binding to approve a different account's action."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q03",
+      "field": 16,
+      "question": "What does a worker inherit from whoever started it, and what does it lose?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "A child receives exact WorkOrder inputs, narrower job capabilities, context purpose, deadline and reserved share of the same causal episode. It does not inherit parent login, undelegable values/professional authority, independent acceptance or unlimited budget; original sponsorship remains until acknowledged responsibility transfer.",
+      "contract": "05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs",
+      "evidence": [
+        "05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual provider scopes and worker isolation need empirical admission.",
+      "implementation_location": "system/packages/work/delegation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A child uses a fresh actor/session ID to renew exhausted authority or parent credentials."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q04",
+      "field": 16,
+      "question": "How is permission narrowed for a specific piece of work?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Grant attenuation intersects action/resource/account/destination/purpose/expiry/amount/delegation constraints and current context validity. Deterministic trusted-parameter resolution binds the exact consequential bytes to the admitted operation; a worker's suggested recipient/payee cannot substitute for the authoritative mapping.",
+      "contract": "02-authority-recovery.md#8-parameter-authority-disclosure-and-validity",
+      "evidence": [
+        "02-authority-recovery.md#8-parameter-authority-disclosure-and-validity",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Business identity/parameter semantics require domain-specific validators.",
+      "implementation_location": "system/packages/authority/attenuation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A narrow invoice task redirects payment to a payee supplied by untrusted tool output."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q05",
+      "field": 16,
+      "question": "Where are credentials kept, and who can reach them?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Provider production tokens stay in the protected connector, native subscription login only in N, arbitrary code in credential-free X, and witness/encryption keys in their declared R/recipient roots with scoped backup and rotation. Source, ordinary logs, shell startup, model context and project hooks never receive them.",
+      "contract": "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+      "evidence": [
+        "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Software key custody and actual administrator recovery are untested trusted roots.",
+      "implementation_location": "system/ops/secrets",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A permitted helper inherits a production token from environment/home or a backup lacks its authorized recovery key."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q06",
+      "field": 16,
+      "question": "Should a worker ever hold the owner's own credentials?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "An arbitrary worker must not hold the owner's general credentials. The useful subscription-native profile explicitly retains the owner's provider OAuth in the confined N client, with no production rights or arbitrary child code; X and MCP execution receive job capabilities, not that login. This limited trusted root is not hidden.",
+      "contract": "07-integrations-capacity.md#5-native-subscription-execution",
+      "evidence": [
+        "07-integrations-capacity.md#5-native-subscription-execution",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Exact startup/all-channel and credential-descendant containment remains an admission test.",
+      "implementation_location": "system/packages/runtime/native-auth",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "The subscription client exposes its credential to an arbitrary Bash/MCP process or customer."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q07",
+      "field": 16,
+      "question": "How is access revoked quickly?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Revoke live identity/grant/validity epochs in the serial authority order and block new prepares/releases; fence old leases/peers, close affected jobs and revoke provider credentials/descendants through native containment. Previously issued bounded transport and remote effects require observed expiry/reconciliation, not an impossible instant-recall assertion.",
+      "contract": "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
+      "evidence": [
+        "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Provider revocation latency and hidden descendants may remain unknown.",
+      "implementation_location": "system/packages/authority/revocation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A stale restored worker publishes or creates a new release after current revocation."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q08",
+      "field": 16,
+      "question": "What happens when a credential is unavailable — does work stop, or does it proceed without?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Missing credential/auth or uncertain billing parks dependent external/native work and records the named dependency. Already admitted local work can continue within its surviving context/lease/allowance; an independently admitted substitute or real manual performer may act only under its own current standing and budget.",
+      "contract": "07-integrations-capacity.md#6-capacity-money-and-scheduling",
+      "evidence": [
+        "07-integrations-capacity.md#6-capacity-money-and-scheduling",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Alternate account/provider/professional capacity may also be unavailable.",
+      "implementation_location": "system/packages/integrations/auth-health",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Auth failure silently switches to an API key, paid credit or another person's account."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q09",
+      "field": 16,
+      "question": "How does the company avoid one worker being able to grant itself more access?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Separate proposal/execution from authority, signing, schema/admin, evaluator selection and credential provisioning. Workers can request a scoped change but cannot mutate grants, profile roots, hidden tests, billing upgrades or native access policy; protected changes need independent competent acceptance and actual C04 authority.",
+      "contract": "08-improvement-implementation.md#1-protected-improvement-contract",
+      "evidence": [
+        "08-improvement-implementation.md#1-protected-improvement-contract",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual privilege separation is unimplemented and requires direct boundary tests.",
+      "implementation_location": "system/packages/authority/protected-registry",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A producer modifies its own evaluator or requests a broadly privileged token through an admitted tool."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F16-Q10",
+      "field": 16,
+      "question": "What outside rules constrain what may be done at all, and who is keeping track of them?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Track applicable external rules, service terms, agreements, source licenses and actual principal/mandate restrictions as sourced domain obligations with an accountable competent maintainer and recheck trigger. Current jurisdiction and eligibility are operating facts, not inferred from this machine or company namespace.",
+      "contract": "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+      "evidence": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Applicable law and actual qualified maintainer are not established by this plan.",
+      "implementation_location": "system/packages/company/standing",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A stale terms observation or fictitious signatory is treated as current authority."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C04",
+        "S1-C07"
+      ]
+    },
+    {
+      "id": "F26-Q01",
+      "field": 26,
+      "question": "What information does the company hold, and about whom?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Inventory company/person/customer/supplier/collaborator facts, decisions, communications, money, artifacts, observations, context and evidence together with subjects, provenance, purpose, permitted recipients and retention. Metadata, linkage, titles, numeric values and enums can be sensitive; record size or public availability does not make them harmless.",
+      "contract": "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual data classes and field-specific admissible plaintext projections need consolidation/admission.",
+      "implementation_location": "system/packages/context/data-inventory",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A salary enum or party linkage leaks through an unprotected index despite encrypted prose."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q02",
+      "field": 26,
+      "question": "Where did it come from and was it given willingly?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "SourceRecord distinguishes actual publisher/captured origin, collection route, observation/publication/received times, incentives, scope and verification. Record actual consent/other standing and permitted purpose where required; being received or accessible is not proof it was willingly provided for all company/model uses.",
+      "contract": "06-knowledge-evidence-evaluation.md#1-canonical-knowledge-and-distinct-memory",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#1-canonical-knowledge-and-distinct-memory",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Sender identity, consent scope and applicable basis can remain unknown.",
+      "implementation_location": "system/packages/context/sources",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A received support attachment becomes cross-purpose training/context without a valid permission basis."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q03",
+      "field": 26,
+      "question": "How long is it kept, and what causes it to be deleted?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Use versioned purpose/retention policy and actual duty determination, not a universal period. Forgetting distinguishes retrieval exclusion, supersession, archive, redaction and erasure; due obligations may require restricted retained evidence, with a competent recorded conflict resolution and visible residual scope.",
+      "contract": "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual jurisdiction/contract periods and authorized decision makers are unknown.",
+      "implementation_location": "system/packages/context/retention",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An optimization deletes required dispute evidence or keeps personal data forever merely because it has an owner."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q04",
+      "field": 26,
+      "question": "Is deletion real?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Deletion fences new loads/publications, follows all summaries/indexes/exports/live holders/provider descendants/backups and keys, and verifies current purge/expiry conditions. Surviving plaintext linkage or shared retained decryption keys keep the obligation incomplete; crypto-erasure cannot claim copies it cannot observe or eliminate.",
+      "contract": "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
+      "evidence": [
+        "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Physical/provider erasure and retained external copies require actual evidence.",
+      "implementation_location": "system/ops/deletion",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Restore or a late summary resurrects deleted personal context while the UI says erased."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q05",
+      "field": 26,
+      "question": "What leaves this machine, and to whom?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Treat native prompts/history/tool stdout, search queries, error logs, e-mail, public assets/forms, payment requests, professional packets and backups as destination-specific disclosures. C05 records delivered lineage; C04 gates permitted data/recipient/purpose and trusted parameters; command network denial alone does not cover native client traffic.",
+      "contract": "07-integrations-capacity.md#5-native-subscription-execution",
+      "evidence": [
+        "07-integrations-capacity.md#5-native-subscription-execution",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual all-channel endpoint inventory and retained native ancestry need testing.",
+      "implementation_location": "system/packages/authority/disclosure",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A credential or confidential query reaches a permitted model/search host through an unexamined channel."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q06",
+      "field": 26,
+      "question": "What can the company learn about the person who owns it, and is that consented to?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Retain authenticated endorsed preferences/taste and only relevant consented ParticipationPlan/encounter evidence. Exclude covert unrelated browsing, personality/health inference and general-intelligence ranking; domain-specific competence assessment is limited, contestable and cannot remove the owner's values authority.",
+      "contract": "04-human-operation.md#attention-and-practiced-competence",
+      "evidence": [
+        "04-human-operation.md#attention-and-practiced-competence",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual consent, minutes, retention and assessment usefulness remain future inputs/evidence.",
+      "implementation_location": "system/packages/company/participation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Declining an encounter is treated as incapacity or used to build an unrelated psychological profile."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q07",
+      "field": 26,
+      "question": "What is recorded about a customer that they would be surprised by?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "The data inventory and InteractionDetermination must expose unexpected collection/derived use, such as communications metadata, complaint history, evaluation samples or inferred preferences, with actual purpose/rights. Disable optional mail tracking by default and test recipient understanding rather than assuming a privacy paragraph prevents surprise.",
+      "contract": "07-integrations-capacity.md#4-communication-and-independent-continuity",
+      "evidence": [
+        "07-integrations-capacity.md#4-communication-and-independent-continuity",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual customer expectations, disclosures and applicable duties need evaluation.",
+      "implementation_location": "system/packages/company/interaction",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A customer discovers hidden cross-purpose profiling or tracking absent from the accepted interaction scope."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q08",
+      "field": 26,
+      "question": "What should never be stored at all?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Never persist raw reusable credentials in ordinary records/logs, unauthorized cross-purpose personal profiles, fabricated evidence or unsupported sensitive assertions as facts. Unclassified text and sensitive metadata use the protected path; plaintext copies in JSONB/WAL/indexes/crash dumps/swap need explicit accounting and can disqualify the runtime.",
+      "contract": "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Required field-level allowlist and real dump/swap behavior remain unverified.",
+      "implementation_location": "system/packages/context/storage-classification",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A short private value survives in SQL error logs after its encrypted blob is erased."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F26-Q09",
+      "field": 26,
+      "question": "Who can see what, and is that logged?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Authenticate and filter principal/purpose/recipient/current restrictions before retrieval, including titles/counts/snippets and account reconstruction. Log attributable scoped access and omissions without leaking content into telemetry; historical record possession or old permission refs do not authorize current use.",
+      "contract": "06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual query/index/trace boundary tests are pending.",
+      "implementation_location": "system/packages/context/access",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Client-side filtering exposes another principal's document title or an old grant retrieves erased data."
+      },
+      "owner_components": [
+        "S1-C05",
+        "S1-C07",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F27-Q01",
+      "field": 27,
+      "question": "What outside rules apply here, and who is tracking them?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "A competent actual custodian maintains the company's applicable-rule/duty register with primary source, jurisdiction/principal/activity scope, effective/review dates and uncertainty. New contrary rules or missed freshness restrict dependent acts; this plan does not determine the company's applicable law from geography or software choices.",
+      "contract": "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+      "evidence": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual legal entity, activities, jurisdictions and qualified maintenance are unconfigured.",
+      "implementation_location": "system/packages/company/rules",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A stale generic compliance checklist is treated as a complete rule determination for a new venture."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q02",
+      "field": 27,
+      "question": "What are the terms of the services being used, and do they permit this use?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Adapter admission archives exact provider terms/auth/billing scope for the actual account/use and revalidates on relevant change even without version upgrade. Subscription-native internal work is not a customer resale license; no metered fallback, credit reload or account eligibility is assumed from installed CLI availability.",
+      "contract": "07-integrations-capacity.md#1-integration-identity-and-admission",
+      "evidence": [
+        "07-integrations-capacity.md#1-integration-identity-and-admission",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual principal/account eligibility and current terms must be checked before reliance.",
+      "implementation_location": "system/packages/integrations/terms",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A native subscription or free service is deployed for a prohibited or unobserved account use."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q03",
+      "field": 27,
+      "question": "What obligations come with borrowed material?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Borrowed code, skills, examples, content and data retain provenance, exact license/attribution/redistribution conditions, scope and dependent artifacts. Missing reuse rights blocks the relevant reuse/publication while independent original work can continue; a package being readable or cited does not establish permission to redistribute it.",
+      "contract": "05-work-agents-skills.md#8-instructions-and-reusable-skills",
+      "evidence": [
+        "05-work-agents-skills.md#8-instructions-and-reusable-skills",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual material licenses and any competent rights determination remain source-specific.",
+      "implementation_location": "system/packages/work/skill-rights",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A borrowed helper/example is published without its required notice or outside its permitted use."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q04",
+      "field": 27,
+      "question": "Who may enter into an agreement on the company's behalf?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Only the actual principal's authorized signatory/agent under current standing and exact mandate may enter the relevant agreement. AuthorityMatrix resolves required parties and competence; C04 binds exact terms/action and records potential duties. Internal role title or model confidence cannot make a legal representative.",
+      "contract": "04-human-operation.md#operator-jobs-and-authority",
+      "evidence": [
+        "04-human-operation.md#operator-jobs-and-authority",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual signing authority, corporate rules and jurisdiction are not supplied.",
+      "implementation_location": "system/packages/company/agreements",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An authenticated employee or model binds a different principal beyond its accepted mandate."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q05",
+      "field": 27,
+      "question": "What must be disclosed, and to whom?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "InteractionDetermination and the actual duty register specify required recipients/content/timing for machine involvement, claims, terms, privacy, conflicts and material failures. Preserve the exact delivered form/facts and accountable sender; meaningful human recourse and response effectiveness are evaluated separately from displaying a notice.",
+      "contract": "07-integrations-capacity.md#4-communication-and-independent-continuity",
+      "evidence": [
+        "07-integrations-capacity.md#4-communication-and-independent-continuity",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "The applicable disclosure duties and audience understanding require actual assessment.",
+      "implementation_location": "system/packages/company/disclosures",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An unreviewed model statement is presented as professional human advice or a changed term is hidden in a summary."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q06",
+      "field": 27,
+      "question": "What claims may be made publicly, and what must be substantiated first?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Public claims use approved content forms with protected slots resolved from current accepted facts and exact predicates; free text needs competent accountable review or separately admitted constraints. Compliance, certification, consent, guaranteed returns and completed settlement cannot be invented through tone or translation fields.",
+      "contract": "07-integrations-capacity.md#4-communication-and-independent-continuity",
+      "evidence": [
+        "07-integrations-capacity.md#4-communication-and-independent-continuity",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Substantiation for actual claims/products and reviewer availability remain prerequisites.",
+      "implementation_location": "system/packages/integrations/claim-gate",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A destination-clean model invents a guarantee that passes because it contains no private data."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q07",
+      "field": 27,
+      "question": "What actions may only be taken by a human being?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Actual human consent, personal values/taste, legally reserved professional/signatory acts and physical/manual performance remain with legitimate capable people where required. The system prepares and records but does not treat a professional packet, UI approval or fictional role as the act itself.",
+      "contract": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+      "evidence": [
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Which acts are legally reserved depends on the actual jurisdiction/activity and qualified determination.",
+      "implementation_location": "system/packages/integrations/human-performance",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A filed-looking document or dispatch receipt is counted as a licensed professional's completed act."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q08",
+      "field": 27,
+      "question": "When is it time to ask a professional rather than work it out internally?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Seek an accepted qualified professional when the required predicate exceeds demonstrated internal competence, is externally reserved, or material duty/retention/rights ambiguity needs such standing. Reserve real fees/access/deadline and verify delivered result; unavailable help blocks new dependent exposure and leaves due duties in actual continuity.",
+      "contract": "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+      "evidence": [
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "No actual professional engagement, quote or availability has been established.",
+      "implementation_location": "system/packages/company/professional-service",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A prepared referral packet closes a due tax/legal/physical service obligation without a performer."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F27-Q09",
+      "field": 27,
+      "question": "Who is liable when something goes wrong?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Internal ResponsibilityAssignment records accountability but does not decide external legal liability. Preserve actual principal/account/signatory, agreement/mandate, incident/causal evidence and insurer/professional contacts where real; a competent jurisdiction-specific assessment determines external responsibility and response, without promising that AI attribution shields anyone.",
+      "contract": "03-company-capabilities.md#native-business-authority-and-meaning",
+      "evidence": [
+        "03-company-capabilities.md#native-business-authority-and-meaning",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual liability allocation, agreements, insurance and jurisdiction are unknown.",
+      "implementation_location": "system/packages/company/incidents",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "The company erases a duty or claims liability transferred merely because a worker or model performed the action."
+      },
+      "owner_components": [
+        "S1-C01",
+        "S1-C07",
+        "S1-C04"
+      ]
+    },
+    {
+      "id": "F28-Q01",
+      "field": 28,
+      "question": "How does something get from finished to actually live?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Finished artifacts remain staged until exact independent acceptance, current release prerequisites and protected deployment authorize their immutable manifest. G controls the deployment request; native version/readback and functional/beneficiary evidence establish live behavior, while unknown activation remains unknown and deployed programs become continuing descendants.",
+      "contract": "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+      "evidence": [
+        "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual provider deployment, public operation and human acceptance tests are pending.",
+      "implementation_location": "system/ops/release",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Upload acknowledgement or exit zero is reported as a usable live service."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q02",
+      "field": 28,
+      "question": "What must pass before that happens?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Require exact artifact/config/dependency digests, current grants/standing, complete source/evidence closure, real delivery/support/funding and the admitted launch manifest. JudgmentBinding must join every requirement ID to its exact subject/version/predicate/current accepted child with no missing/duplicate/substituted judgment or self-proof cycle.",
+      "contract": "03-company-capabilities.md#discovery-to-an-accepted-offer",
+      "evidence": [
+        "03-company-capabilities.md#discovery-to-an-accepted-offer",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Full predicate catalog and actual accepted operating prerequisites remain separate obligations.",
+      "implementation_location": "system/packages/company/launch",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "One generic accepted report is reused for distinct product/delivery/support subjects or an accepted uncertainty report passes launch."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q03",
+      "field": 28,
+      "question": "How is it undone if it turns out to be wrong?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Stop new exposure, fence incompatible writers, perform a currently authorized rollback/forward migration and reconcile all native effects. Preserve current revocations/deletion/unknown holds and transfer actual service/remedy duties; old code or a historical frontier cannot revive prior permissions.",
+      "contract": "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift",
+      "evidence": [
+        "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Old schema/meaning compatibility and available compensation must be tested.",
+      "implementation_location": "system/packages/improvement/rollback",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A rollback restores stale authority or loses a customer promise created by the failed version."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q04",
+      "field": 28,
+      "question": "Which changes cannot be undone?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Disclosure, delivered communication, settlement, physical performance, customer reliance and irreversible data changes cannot be assumed undoable. Their rollout plan identifies the boundary, potential duties, actual compensation and competent authority before exposure; generic canaries exclude unsupported irreversible experiments.",
+      "contract": "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift",
+      "evidence": [
+        "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Some actual consequences may have no complete remedy.",
+      "implementation_location": "system/packages/improvement/rollout",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A supposedly reversible deployment exposes a secret or creates an uncancellable commitment."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q05",
+      "field": 28,
+      "question": "How does anyone know the system is healthy right now?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Health is an authenticated current dependency/profile/generation view plus witness/capture/source/clock/identity/capacity and real duty status. Projections show age/omissions and distinguish native truth from local visibility; a process heartbeat or empty error count cannot establish healthy service or complete records.",
+      "contract": "01-contract-kernel.md#5-command-query-and-event-protocol",
+      "evidence": [
+        "01-contract-kernel.md#5-command-query-and-event-protocol",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Targets and expected source intervals need reference workload measurement.",
+      "implementation_location": "system/apps/control/health",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A healthy web process masks stale witness/source coverage or overdue customer performance."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q06",
+      "field": 28,
+      "question": "Who is told when it is not?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Notify the scoped accepted component/duty owner and genuine alternate through operator views and authorized custodian content forms, with exact affected scope, evidence, deadline and remaining actions. Alerting cannot disclose unrelated data or substitute for actual acknowledgment and response.",
+      "contract": "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+      "evidence": [
+        "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual on-call/custodian channels, availability and compensation are unconfigured.",
+      "implementation_location": "system/ops/alerts",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An alert only reaches the failed/revoked actor, or is delivered but counted as completed remedy."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q07",
+      "field": 28,
+      "question": "What happens at three in the morning when there is only one person?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Use preaccepted finite unattended controls and actually accepted continuity/alternate service; do not invent a second expert at night. Preserve bounded local work, stop new dependent exposure and record actual missed duty if nobody can perform it. The founder's attention/availability plan constrains what the company may promise.",
+      "contract": "04-human-operation.md#collaboration-absence-succession-and-departure",
+      "evidence": [
+        "04-human-operation.md#collaboration-absence-succession-and-departure",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual nighttime availability and professional access may be absent.",
+      "implementation_location": "system/packages/company/continuity",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "The plan claims 24-hour competent response from one unavailable person or a model stand-in."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q08",
+      "field": 28,
+      "question": "What is backed up, and has restoring it ever been tried?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Back up complete authoritative groups, current witness/receipt/membership, blobs/keys, revocations, unknown effects/duties, deletion/descendant inventories and required native source exports. Daily base/WAL and weekly trusted restore are specified; no such restore is claimed executed, and backup encryption without recoverable authorized keys is insufficient.",
+      "contract": "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+      "evidence": [
+        "08-improvement-implementation.md#4-storage-identity-observability-and-operations",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual complete dataset, retention, restore duration and root access are unmeasured.",
+      "implementation_location": "system/ops/backup-restore",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A backup exists but lacks current revocations, a required blob/key or the independent receipt frontier."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q09",
+      "field": 28,
+      "question": "What happens if the machine is lost entirely?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Fence the lost generation and recover from current independent R completeness/proof and authorized membership, not the lost host's own backup or an old signed snapshot. Reconcile native effects and restrictions before new authority; local-only StageRef work may be lost and is never claimed independently durable.",
+      "contract": "02-authority-recovery.md#11-outbox-membership-fencing-and-restore",
+      "evidence": [
+        "02-authority-recovery.md#11-outbox-membership-fencing-and-restore",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual A/R host/admin/account independence and primary-loss rehearsal remain prerequisites.",
+      "implementation_location": "system/packages/authority/recovery",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Restoring a primary backup omits an acknowledged consequence or resurrects a revoked worker."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F28-Q10",
+      "field": 28,
+      "question": "How much downtime is actually acceptable here?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Acceptable downtime is actual offer/obligation/continuity and owner decision data, not a universal number inferred from VM choice. UI latency profiles are intended measurement targets, while operating RPO/RTO and service availability require full restore/load/absence evidence before being promised.",
+      "contract": "04-human-operation.md#surfaces-derived-from-operator-jobs",
+      "evidence": [
+        "04-human-operation.md#surfaces-derived-from-operator-jobs",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual customer deadlines, funded continuity and measured recovery times are unknown.",
+      "implementation_location": "system/ops/service-objectives",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An internal two-second UI target is marketed as an end-to-end service/recovery guarantee."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C08",
+        "S1-C09"
+      ]
+    },
+    {
+      "id": "F31-Q01",
+      "field": 31,
+      "question": "What kinds of failure are there, and are they treated differently?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Distinguish invalid input, transient internal failure, auth/permission, provider capacity, stale context, invariant breach, unknown effect, competence gap and no progress. Each has its bounded refusal/retry/quarantine/reconcile/actual-human route, and all retain causal cost and surviving obligations.",
+      "contract": "05-work-agents-skills.md#6-concurrency-failure-retry-and-stop",
+      "evidence": [
+        "05-work-agents-skills.md#6-concurrency-failure-retry-and-stop",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Cause may remain unknown despite a known failure category.",
+      "implementation_location": "system/packages/work/failures",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An unknown external effect is handled as a retryable internal exception."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q02",
+      "field": 31,
+      "question": "How is a failure that announces itself distinguished from one that does not?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Explicit errors are captured with exact input/profile/attempt; silent failures are sought through expected source intervals, durable timers, capture/denominator gaps, destination readback and independently held control cases. Missing observation is not inactivity or successful cessation.",
+      "contract": "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Outside unmediated activity may remain unobservable and must be marked.",
+      "implementation_location": "system/packages/evidence/coverage",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A dropped webhook/capture interval disappears from an otherwise fluent complete account."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q03",
+      "field": 31,
+      "question": "How would anyone notice a check that passes without checking anything?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Run independently selected known-defect, sham/unaffected and clean valid controls, including skipped authorization, false citation, changed denominator and omitted failed attempt. Protect expected answers/test selection from the candidate and compare actual executed coverage, not test-count badges or a callable check name.",
+      "contract": "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Control coverage and shared evaluator roots need empirical assessment.",
+      "implementation_location": "system/packages/evidence/checker-controls",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A test exits zero without asserting anything and still qualifies protected activation."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q04",
+      "field": 31,
+      "question": "How is an intermittent problem told from a consistent one?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Fingerprint stable semantic cause/scope/category and record every occurrence with version, timing, load, cluster and uncertainty. Use bounded repeated/matched trials and changed-condition discriminators; correlated sessions/outages do not justify independent binomial claims, and cosmetic messages cannot create fresh retry budgets.",
+      "contract": "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Sparse observations may not distinguish intermittent from systematic causes.",
+      "implementation_location": "system/packages/work/failure-analysis",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A flaky repeated failure is dismissed after one pass or inflated into a universal impossibility claim."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q05",
+      "field": 31,
+      "question": "What happens to work that was interrupted halfway?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Persist exact partial artifacts, context/criteria, unknown effects, duties, causal use and next action in Continuation under the proper D1 or witnessed lane. Expire/fence old leases, reconcile possible external acts and resume only with compatible current authority/lineage and an accepted receiver; never replay effects to rebuild a cursor.",
+      "contract": "05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs",
+      "evidence": [
+        "05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Opaque native sessions may require fresh reconstruction with lost-influence limits.",
+      "implementation_location": "system/packages/work/continuation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Resume omits an approval-changing qualifier or repeats a payment that may already have succeeded."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q06",
+      "field": 31,
+      "question": "What happens when two things changed the same thing at once?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Use expected revisions and serial predicate rereads, exact path/resource leases and semantic/business conflicts beyond files. Integrate compatible proposals under current base and test the combined behavior; changed participant/scope identities invoke T-R1 union freeze and forward mapping of every unknown hold/duty.",
+      "contract": "02-authority-recovery.md#10-conflict-scope-and-participant-migrations--t-r1",
+      "evidence": [
+        "02-authority-recovery.md#10-conflict-scope-and-participant-migrations--t-r1",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Concrete domain identity mappings and combined-effect predicates require catalog/tests.",
+      "implementation_location": "system/packages/authority/conflict-migration",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Two differently named scopes authorize incompatible promises despite a clean textual merge."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q07",
+      "field": 31,
+      "question": "How is conflicting evidence about one event reconciled?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Compare entity, time, units, native source standing and interpretation before deciding whether reports actually conflict. Preserve contrary claims and current evidence closure; qualified reconciliation may settle, narrow or remain inconclusive/contested, and majority model agreement cannot override missing native proof.",
+      "contract": "06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Native feeds may remain delayed or irreconcilable within the duty deadline.",
+      "implementation_location": "system/packages/evidence/reconciliation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A last-arriving status overwrites stronger contrary evidence and discharges a disputed obligation."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q08",
+      "field": 31,
+      "question": "What does the company do when it cannot tell whether it succeeded?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Record unknown outcome explicitly, retain business/resource/potential-duty holds and obtain native same-operation status or another discriminating observation. Do not blindly retry a non-idempotent effect, refund assumed zero use or close the duty; an actual competent owner handles persistent uncertainty and continuity.",
+      "contract": "02-authority-recovery.md#6-independent-completeness-and-the-release-protocol--t-r2",
+      "evidence": [
+        "02-authority-recovery.md#6-independent-completeness-and-the-release-protocol--t-r2",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Some providers cannot furnish definitive identity/status, limiting admission.",
+      "implementation_location": "system/packages/authority/reconciliation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A timeout is converted to failure and a fresh request duplicates an already performed act."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q09",
+      "field": 31,
+      "question": "How does it degrade — badly all at once, or gracefully?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Degrade by dependency and consequence: protect current authority/evidence, park unavailable providers, continue unaffected admitted local work and staged saves, and use real accepted service alternatives. Retain known missed duties and unknowns; a blanket refusal is not successful company operation and a stale permissive cache is not graceful recovery.",
+      "contract": "02-authority-recovery.md#3-durability-classes-and-safe-work-during-outages",
+      "evidence": [
+        "02-authority-recovery.md#3-durability-classes-and-safe-work-during-outages",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual alternate capacity and common provider/admin failures may defeat service continuity.",
+      "implementation_location": "system/packages/work/degradation",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "The system either stops all harmless work or silently weakens witness/disclosure boundaries to appear available."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F31-Q10",
+      "field": 31,
+      "question": "What is the first thing to check when something is wrong?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "First establish actual affected principal/scope, current command/operation status and durable proof, last trustworthy source/capture/clock/identity state, and whether an effect may already exist. Contain through current standing before diagnosing; use exact original bytes/versions and missing intervals rather than rerunning the action as a probe.",
+      "contract": "01-contract-kernel.md#5-command-query-and-event-protocol",
+      "evidence": [
+        "01-contract-kernel.md#5-command-query-and-event-protocol",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Some observations may be unavailable and require a limited account.",
+      "implementation_location": "system/ops/incident-triage",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Diagnosis repeats a possible payment/send or treats the current primary row as independent proof."
+      },
+      "owner_components": [
+        "S1-C02",
+        "S1-C06",
+        "S1-C08"
+      ]
+    },
+    {
+      "id": "F43-Q01",
+      "field": 43,
+      "question": "What checks run before an action, and what runs after?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Before action validate identity/standing, exact schema/parameters/revisions, live disclosure/lineage, causal/resources/conflicts/duties, exact accepted prerequisites, independent durability and time gate. Afterward capture/reconcile native effect, assess the actual outcome/beneficiary, account costs/duties/descendants and monitor continuing service; neither phase substitutes for the other.",
+      "contract": "02-authority-recovery.md#6-independent-completeness-and-the-release-protocol--t-r2",
+      "evidence": [
+        "02-authority-recovery.md#6-independent-completeness-and-the-release-protocol--t-r2",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Every composed boundary and native outcome test remains unexecuted.",
+      "implementation_location": "system/packages/authority/gates",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "Valid preparation is treated as fulfilled delivery without protected post-effect evidence."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q02",
+      "field": 43,
+      "question": "What is checked deterministically versus by judgement?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Deterministic code checks identity/schema/arithmetic/revisions/epochs/bounds/joins and gate/proof semantics. Competent judgment evaluates meaning, evidence adequacy, values/taste and professional/customer predicates under actual standing; the model cannot decide its own final grant, and a structural validator cannot prove substantive competence.",
+      "contract": "06-knowledge-evidence-evaluation.md#6-evaluation-contracts-at-every-level",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#6-evaluation-contracts-at-every-level",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Some semantic/professional predicates need unavailable actual assessors.",
+      "implementation_location": "system/packages/evidence/assessment",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A shape-valid or signed record is accepted as true, useful or legally sufficient."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q03",
+      "field": 43,
+      "question": "What happens when a check is unsure?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "An unfinished assessment stays proposed; completed insufficient evidence is inconclusive; contrary evidence can make it rejected or contested. Only the exact current accepted subject/version/predicate with complete closure satisfies the dependent guard; unrelated valid work may continue and an accepted uncertainty report cannot replace a required judgment.",
+      "contract": "03-company-capabilities.md#discovery-to-an-accepted-offer",
+      "evidence": [
+        "03-company-capabilities.md#discovery-to-an-accepted-offer",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Required manifest/predicate catalog and real evidence remain to be completed/admitted.",
+      "implementation_location": "system/packages/company/launch-bindings",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "One inconclusive or wrong-subject child passes a composite launch because the report itself was accepted."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q04",
+      "field": 43,
+      "question": "Does a check fail open or closed, and was that chosen?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Authority, current disclosure, witness/time, protected evidence and required competence fail closed for their dependent act by explicit design. Staged saves and already admitted local computation have separate bounded paths; optional advisory checks may remain qualified observations only under an admitted policy, never silently waive a required predicate.",
+      "contract": "02-authority-recovery.md#3-durability-classes-and-safe-work-during-outages",
+      "evidence": [
+        "02-authority-recovery.md#3-durability-classes-and-safe-work-during-outages",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual admissible optional checks and consequence scope require reviewed policy.",
+      "implementation_location": "system/packages/authority/gate-policy",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A missing required check defaults to pass, or advisory uncertainty needlessly prevents all legitimate service."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q05",
+      "field": 43,
+      "question": "How much do the checks cost in time and money?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Reserve check/evaluation compute, capture, labeling, source work, professional/reviewer and owner attention within the causal/maintenance plan and report actual costs/latency including failed attempts. The priced infrastructure is an estimate; required safety and due service cannot be starved to improve a headline score or fit an invented budget.",
+      "contract": "07-integrations-capacity.md#6-capacity-money-and-scheduling",
+      "evidence": [
+        "07-integrations-capacity.md#6-capacity-money-and-scheduling",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual workload, independent labor rates and owner caps are unobserved.",
+      "implementation_location": "system/packages/evidence/evaluation-cost",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A supposedly cheap automated check shifts uncounted hours to the founder or omits expensive adverse cases."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q06",
+      "field": 43,
+      "question": "How would you know a check has stopped checking while still passing?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Use independent held-out defect/clean controls, original-source reconstruction, executed-test denominator and lineage health to challenge the checker itself. A known corrupted parser or skipped gate must withdraw affected acceptance even if average scores and heartbeat stay stable; no evaluator self-authorization is allowed.",
+      "contract": "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+      "evidence": [
+        "06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Control sensitivity and correlated evaluator error require tests.",
+      "implementation_location": "system/packages/evidence/checker-controls",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A check remains green after its measurement input or assertions are disconnected."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q07",
+      "field": 43,
+      "question": "Who can add a check, and who can remove one?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Anyone within proposal scope may propose adding/removing a check, but changing an acceptance predicate/evaluator/selection or enforcement root is a ProtectedChange with independent competent assessment and current authority. Removal accounts for covered duties/dependencies and cannot waive a core invariant or absent lawful mandate.",
+      "contract": "08-improvement-implementation.md#1-protected-improvement-contract",
+      "evidence": [
+        "08-improvement-implementation.md#1-protected-improvement-contract",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual protected owner/assessor assignments are operating prerequisites.",
+      "implementation_location": "system/packages/improvement/check-changes",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "The candidate removes the regression that would reject it and approves its new gate."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q08",
+      "field": 43,
+      "question": "What is checked on the way in — the request — versus on the way out?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Ingress verifies authenticated control versus untrusted data, schema/size/identity/rights/provenance and source completeness. Egress resolves exact protected parameters, destination/claim forms/current lineage and external authority; returned output is captured before use and independently assessed. Clean input alone cannot prevent invented outbound claims.",
+      "contract": "07-integrations-capacity.md#2-invocation-capture-and-truthful-outcomes",
+      "evidence": [
+        "07-integrations-capacity.md#2-invocation-capture-and-truthful-outcomes",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Parser, form semantics and all-channel capture need operational tests.",
+      "implementation_location": "system/packages/integrations/gates",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "A harmless-looking input produces an unsupported promise or private stdout disclosure that bypasses egress checks."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    },
+    {
+      "id": "F43-Q09",
+      "field": 43,
+      "question": "Are the same checks applied to work the system does for itself as to work it does for a customer?",
+      "track": "S05",
+      "status": "specified; independent review and all implementation/operating evidence pending",
+      "decision": "Internal research, tests, prompts, improvements and shadow runs use the same purpose/data/consequence/resource gates when they affect those scopes; self-change additionally protects evaluator/authority roots. Customer work adds its native beneficiary/duty predicates, so standards follow actual consequence rather than whether the company calls the work internal.",
+      "contract": "08-improvement-implementation.md#1-protected-improvement-contract",
+      "evidence": [
+        "08-improvement-implementation.md#1-protected-improvement-contract",
+        "01-contract-kernel.md",
+        "02-authority-recovery.md",
+        "../../research/substrate-claims.json",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "uncertainty": "Actual internal datasets/paid services and customer predicates require scope-specific admission.",
+      "implementation_location": "system/packages/improvement/authority",
+      "test": {
+        "kind": "required future falsifier, not executed",
+        "failure_condition": "An internal evaluation discloses private data, spends credits or alters its own grant under a testing exemption."
+      },
+      "owner_components": [
+        "S1-C04",
+        "S1-C06"
+      ]
+    }
+  ],
+  "consolidation_limits": [
+    "This supplies the nine-component 19-attribute matrix and 69 S05 answers, not the later full schema/predicate catalog.",
+    "Concrete edge predicates and composite reference roles remain the registered separate schema consolidation obligation.",
+    "Actual principal/jurisdiction/mandate/credential/professional/custodian/funding/attention and measured operating facts are deployment prerequisites.",
+    "No runtime, model, provider-account, isolation, restore, UI or operating test was executed for this catalog."
+  ],
+  "interface_checks": {
+    "record_identity": "Ref only canonical record revisions; aliases/composites/signed response values do not create arbitrary record targets.",
+    "durability": "D0 ephemeral, D1 StageRef local staging and D2 witnessed transition remain separate; native external-staged Cloudflare receipt is not a D2 command.",
+    "proof": "Committed GroupBody/BusinessResult/SendClaim omit future own hash/receipt; keyed proof/status joins externally and never renews permit.",
+    "launch": "Manifest precedes assembly; exact one-to-one requirement-ID/subject/version/predicate/current accepted child join; no missing/duplicate/substituted child or readiness self-evidence.",
+    "handoff": "Continuation plus actual accepted ResponsibilityAssignment transfer; receipt alone is not duty transfer.",
+    "acceptance": "proposed unfinished; inconclusive completed insufficient; contested canonical disputed; exact current accepted predicate needed at use.",
+    "source_maintenance": "Explicit SC-POLICY-1 inheritance for source reliance; source access date is not publication or current composition proof.",
+    "sensitive_storage": "Field-specific plaintext allowlist only; protected canonical bytes in encrypted blobs before persistent GroupBody/JSONB/WAL/log/index/backup; surviving linkage/copies keep deletion incomplete."
+  }
+}
