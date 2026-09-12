@@ -20,7 +20,7 @@
       "id": "FI-02",
       "issue": "Capability dependency lists contain startup cycles; a fresh venture needs a valid first investigation/design path without invented prior customers, support or fulfillment evidence.",
       "owner": "repair_company_foundations",
-      "status": "Reopened by independent FIR-01/FIR-02: prose clarified startup but actual routes/acceptance remained inconsistent; repair 86bb9ef awaits independent reassessment",
+      "status": "Independent F-integration-02 closes FIR01/FIR02 semantic startup gaps at86bb9ef; runtime checks remain unexecuted",
       "completion_evidence": {
         "commit": "cb1eac4",
         "specification": "planning/specification/03-company-capabilities.md#record-and-procedure-contract",

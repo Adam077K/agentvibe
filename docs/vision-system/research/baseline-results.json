@@ -53,6 +53,26 @@
     ],
     "raw_log": ".worktrees/vision-evidence/baseline-mission-control.log",
     "sha256": "1a5d49403867e81071f991cba33c1d53651fb65d73d500545e32b5a529680b72",
-    "scope": "baseline evidence; no source-code fix attempted during discovery"
+    "scope": "baseline evidence; no source-code fix attempted during discovery",
+    "followup_diagnostics": [
+      {
+        "date": "2026-09-12",
+        "kind": "Direct observation and bounded inference",
+        "source": "research/repository-observations.md#r17--baseline-transcript-count-failure-narrowed-by-metadata-only-probe",
+        "transcript_probe": {
+          "projects": 19,
+          "full_before": 2820,
+          "full_after": 2820,
+          "selected": 2814,
+          "traversals": 2814,
+          "missing_from_selected": 6,
+          "selected_outside_full": 0,
+          "duplicate_traversals": 0,
+          "stable_listing": true
+        },
+        "result": "Current discovery/oracle scope mismatch reproduces exact numeric gap; expected product scope and regression remain unresolved. No test rerun or runtime fix.",
+        "ledger_timeout": "Unresolved; sequential synchronous command and collector timeout inspected only."
+      }
+    ]
   }
 ]

@@ -41,7 +41,8 @@
     "Frozen independent Phase G acceptance protocol archived at planning/reviews/G-acceptance-protocol.md; no acceptance of current drafts",
     "Integrated kernel/authority 16a222f and company/human cb1eac4 specifications; orchestrator inspected substantive contracts and verified 46 catalog entries against author schema, 116 unique source IDs; no substantive full-coverage or runtime pass",
     "Integrated independent substrate source audit e7530ff and inspected focused receipt/hash and nftables encoding amendment e9201fa; source index now 258 locators, no blanket source/runtime verification",
-    "Independent FIR-01\u201304 archived at 3a19199; bounded company/kernel repairs integrated at 86bb9ef and sent for independent reassessment. Local 16 GiB/10 CPU/45 GiB available construction envelope observed, not operational proof."
+    "Independent FIR-01\u201304 archived at 3a19199; bounded company/kernel repairs integrated at 86bb9ef and sent for independent reassessment. Local 16 GiB/10 CPU/45 GiB available construction envelope observed, not operational proof.",
+    "F-integration-02 archived at23adbe7: FIR01\u201304 closed at specification level; new FIR05 repaired atef676de, read-only recheck underway. R17 metadata-only probe reproduces baseline six-file discovery/oracle mismatch; expected scope and ledger timeout unresolved."
   ],
   "active_work": [
     {
@@ -65,7 +66,7 @@
     },
     {
       "agent": "attack_architecture_evidence",
-      "scope": "Read-only independent reassessment of FIR-01\u201304 repairs at frozen86bb9ef; subset only, not Phase G acceptance"
+      "scope": "Read-only FIR05 recheck of frozenef676de; subset only, report/archive pending, no Phase G acceptance"
     },
     {
       "agent": "orchestrator",
@@ -73,7 +74,7 @@
     }
   ],
   "next_actions": [
-    "Receive independent FIR-01\u201304 reassessment of86bb9ef; archive judgment and resolve any remaining contract contradictions",
+    "Archive FIR05 recheck and preserve unexecuted conformance obligations; receive05\u201308 remaining specification tracks",
     "Integrate05\u201308 and machine-readable work/knowledge/integration/build contracts with substantive268+113 source answers",
     "Consolidate all46 required schema subjects and added records/value types, exact canonical references, transitions, authorization, retention/deletion/audit and full component matrix",
     "Answer and verify all566 original,62 supplemental and15 discovered concerns; expand chapter pointers into meaning-preserving traceability with planned implementation and tests",
@@ -111,7 +112,7 @@
     "tests": {
       "summary": "research/baseline-results.json",
       "suite": "48/48 steps passed; 8 ledger shadow findings remain",
-      "mission_control": "427 passed, 2 failed; causes unverified",
+      "mission_control": "427 passed,2 failed baseline; R17 current six-file discovery/oracle mismatch observed, intended scope and ledger timeout unresolved",
       "raw_evidence_directory": ".worktrees/vision-evidence"
     },
     "incidents": [],
@@ -125,7 +126,7 @@
     "specification_findings": "registers/specification-findings.json; ten cross-contract observations with scoped specification evidence, no runtime completion",
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
     "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance",
-    "integration_review": "planning/reviews/F-integration-01.md; four medium integration findings, repair86bb9ef under independent reassessment"
+    "integration_review": "planning/reviews/F-integration-01.md and F-integration-02.md; FIR01\u201304 conceptually closed, FIR05 repaired and independent recheck underway"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
