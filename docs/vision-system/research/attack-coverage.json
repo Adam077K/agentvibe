@@ -23,267 +23,834 @@
     {
       "id": "AC01",
       "case": "prompt injection",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T04"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC02",
       "case": "malicious external content",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T04"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-02"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC03",
       "case": "tool-output manipulation",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T04",
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-02"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC04",
       "case": "memory poisoning",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T04",
+            "T05"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-03"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC05",
       "case": "stale memory",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T05"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-04",
+            "CH-08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC06",
       "case": "false evidence",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T05",
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-02",
+            "CH-07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-03"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC07",
       "case": "model collusion",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC08",
       "case": "evaluator collusion",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC09",
       "case": "duplicate actions",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T01",
+            "T03"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-01"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC10",
       "case": "concurrent conflicting edits",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T02",
+            "T03"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC11",
       "case": "silent failure",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T01",
+            "T06",
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-01",
+            "CH-03",
+            "CH-04",
+            "CH-08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-01"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC12",
       "case": "false success",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T01",
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-01",
+            "CH-03",
+            "CH-04",
+            "CH-08",
+            "CH-09"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-01"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC13",
       "case": "irreversible external actions",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T01",
+            "T02",
+            "T03",
+            "T04",
+            "T08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-05",
+            "CH-06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-01"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC14",
       "case": "unauthorized spend",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T01",
+            "T02",
+            "T03",
+            "T08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-05"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-01"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC15",
       "case": "credential compromise",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T02",
+            "T08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC16",
       "case": "privilege escalation",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T02",
+            "T04",
+            "T08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC17",
       "case": "runaway delegation",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC18",
       "case": "runaway cost",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-02",
+            "CH-05"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC19",
       "case": "infinite retries",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC20",
       "case": "goal drift",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T05",
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-01",
+            "CH-02",
+            "CH-04",
+            "CH-05",
+            "CH-09"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-02",
+            "EAS-03"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC21",
       "case": "metric gaming",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-02",
+            "CH-07",
+            "CH-09"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-02"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC22",
       "case": "summary distortion",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T04",
+            "T05"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-04",
+            "CH-07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-03"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC23",
       "case": "owner overload",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-01",
+            "CH-02",
+            "CH-03",
+            "CH-04",
+            "CH-06",
+            "CH-07",
+            "CH-09"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-02",
+            "EAS-04"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC24",
       "case": "owner deskilling",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-04"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC25",
       "case": "provider outage",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC26",
       "case": "provider behavior change",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06",
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC27",
       "case": "subscription exhaustion",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T07"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC28",
       "case": "corrupted state",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T01",
+            "T02",
+            "T05",
+            "T08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-06",
+            "CH-08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-01"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC29",
       "case": "incomplete handoff",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T01",
+            "T03",
+            "T05"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-01",
+            "CH-03",
+            "CH-06",
+            "CH-08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-01",
+            "EAS-03"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC30",
       "case": "model update",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC31",
       "case": "dependency change",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-company-human.md",
+          "finding_ids": [
+            "CH-04"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC32",
       "case": "self-modification drift",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06",
+            "T08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        },
+        {
+          "artifact": "planning/reviews/D-architecture-evidence.md",
+          "finding_ids": [
+            "EAS-02"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     },
     {
       "id": "AC33",
       "case": "compromised improvement mechanism",
-      "candidate_reviews": [],
+      "candidate_reviews": [
+        {
+          "artifact": "planning/reviews/D-technical.md",
+          "finding_ids": [
+            "T06",
+            "T08"
+          ],
+          "kind": "reasoned attack or stated specification obligation; see report for limits"
+        }
+      ],
       "selected_architecture_response": null,
       "implementation_test": null,
-      "status": "awaiting independent candidate attacks"
+      "status": "reviewed conceptually; repairs and implementation evidence pending"
     }
   ],
-  "additional_cases": "coverage/discovered.json"
+  "additional_cases": "coverage/discovered.json",
+  "review_subject_commit": "595f931",
+  "limitations": [
+    "Coverage is the presence of a concrete review discussion, not a passing test.",
+    "Original reports preserve partial or unexamined scopes and empirical uncertainties.",
+    "No candidate scenario, exploit or longitudinal competence experiment has been executed."
+  ]
 }

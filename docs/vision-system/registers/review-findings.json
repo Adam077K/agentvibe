@@ -1,0 +1,401 @@
+[
+  {
+    "id": "T01",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC09",
+      "AC11",
+      "AC12",
+      "AC13",
+      "AC14",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "T02",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC10",
+      "AC13",
+      "AC14",
+      "AC15",
+      "AC16",
+      "AC28"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "T03",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC09",
+      "AC10",
+      "AC13",
+      "AC14",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "T04",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC01",
+      "AC02",
+      "AC03",
+      "AC04",
+      "AC13",
+      "AC16",
+      "AC22"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "T05",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC04",
+      "AC05",
+      "AC06",
+      "AC20",
+      "AC22",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "T06",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC03",
+      "AC06",
+      "AC07",
+      "AC08",
+      "AC11",
+      "AC12",
+      "AC21",
+      "AC26",
+      "AC30",
+      "AC31",
+      "AC32",
+      "AC33"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "T07",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC11",
+      "AC17",
+      "AC18",
+      "AC19",
+      "AC20",
+      "AC23",
+      "AC25",
+      "AC26",
+      "AC27"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "T08",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC13",
+      "AC14",
+      "AC15",
+      "AC16",
+      "AC28",
+      "AC32",
+      "AC33"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-01",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC11",
+      "AC12",
+      "AC20",
+      "AC23",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-02",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC02",
+      "AC03",
+      "AC06",
+      "AC18",
+      "AC20",
+      "AC21",
+      "AC23"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-03",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC11",
+      "AC12",
+      "AC23",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-04",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC05",
+      "AC11",
+      "AC12",
+      "AC20",
+      "AC22",
+      "AC23",
+      "AC31"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-05",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC13",
+      "AC14",
+      "AC18",
+      "AC20"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-06",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC13",
+      "AC23",
+      "AC25",
+      "AC27",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-07",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC06",
+      "AC08",
+      "AC21",
+      "AC22",
+      "AC23",
+      "AC24"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-08",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC05",
+      "AC11",
+      "AC12",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "CH-09",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC12",
+      "AC20",
+      "AC21",
+      "AC23"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "EAS-01",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC09",
+      "AC11",
+      "AC12",
+      "AC13",
+      "AC14",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "EAS-02",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_alternative_depth",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC20",
+      "AC21",
+      "AC23",
+      "AC32"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "EAS-03",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC04",
+      "AC06",
+      "AC20",
+      "AC22",
+      "AC29"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  },
+  {
+    "id": "EAS-04",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "open; targeted repair underway",
+    "attack_cases": [
+      "AC23",
+      "AC24"
+    ],
+    "resolution": null,
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict."
+  }
+]
