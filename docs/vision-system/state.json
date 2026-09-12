@@ -26,16 +26,17 @@
     "Baseline npm run check at b2cabad: 48/48 steps passed, exit 0; exclusions remain explicit; separate Mission Control check pending",
     "Independent L02 operations and L04 engineering archived; separate Mission Control baseline completed with two recorded failures",
     "Phase A framing written and read: planning/01-understand.md; independent recognition test not yet run; L01 research archived",
-    "L06 evaluation, L08 reliability and L09 human factors archived; nine independent reports integrated"
+    "L06 evaluation, L08 reliability and L09 human factors archived; nine independent reports integrated",
+    "L10 economics, L11 governance and L12 improvement reports read and archived; twelve independent lane reports integrated"
   ],
   "active_work": [
-    "L10 economics/capacity",
-    "L11 legal/privacy/governance",
-    "L12 controlled improvement",
-    "Preparing final independent lanes L13/L14"
+    "L13 contrarian alternatives independently researching",
+    "L14 novel concepts independently researching",
+    "Read-only source audit of six consequential L10/L11/L12 assertions",
+    "Cross-field failure-case inventory; no architectural decision selected"
   ],
   "next_actions": [
-    "Finish L10/L11/L12 and dispatch independent L13/L14 without showing existing conclusions",
+    "Finish L13/L14; archive findings and current-policy source audit, then compare all fourteen lanes",
     "Preserve remaining lane reports and audit consequential source claims",
     "Compare all fourteen independently formed reports; preserve disagreements and newly discovered fields",
     "Generate at least three materially different foundational candidates",
@@ -69,7 +70,7 @@
     "candidates": "not yet generated",
     "decisions": "no architectural decisions selected",
     "risks": "not yet synthesized",
-    "coverage": "coverage/questions.json",
+    "coverage": "coverage/questions.json, coverage/supplemental.json, coverage/discovered.json",
     "implementation_graph": "pending reviewed specification",
     "build_progress": "not started",
     "tests": {

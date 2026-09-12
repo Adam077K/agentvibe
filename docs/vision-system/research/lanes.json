@@ -74,29 +74,37 @@
   {
     "id": "L10",
     "topic": "Economics, subscriptions, capacity and infrastructure",
-    "status": "researching",
-    "agent": "lane10_economics"
+    "status": "independent findings archived",
+    "agent": "lane10_economics",
+    "artifact": "research/L10-economics.md",
+    "review": "selected consequential claims under independent source audit"
   },
   {
     "id": "L11",
     "topic": "Legal, privacy, governance and ethical consequences",
-    "status": "researching",
-    "agent": "lane11_governance"
+    "status": "independent findings archived",
+    "agent": "lane11_governance",
+    "artifact": "research/L11-governance.md",
+    "review": "selected consequential claims under independent source audit"
   },
   {
     "id": "L12",
     "topic": "Self-improvement and controlled system change",
-    "status": "researching",
-    "agent": "lane12_improvement"
+    "status": "independent findings archived",
+    "agent": "lane12_improvement",
+    "artifact": "research/L12-improvement.md",
+    "review": "selected consequential claims under independent source audit"
   },
   {
     "id": "L13",
     "topic": "Contrarian and architecture-breaking alternatives",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane13_contrarian"
   },
   {
     "id": "L14",
     "topic": "Novel concepts beyond current frameworks",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane14_novel"
   }
 ]

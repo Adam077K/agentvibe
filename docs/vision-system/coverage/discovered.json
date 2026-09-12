@@ -1,0 +1,230 @@
+[
+  {
+    "id": "D01",
+    "kind": "cross-field failure case",
+    "concern": "A run resumes after the external service has forgotten its idempotency key.",
+    "sources": [
+      "research/L08-reliability.md"
+    ],
+    "related_source_fields": [
+      2,
+      17,
+      37,
+      48
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D02",
+    "kind": "cross-field failure case",
+    "concern": "A restored backup predates revocation, deletion or completion and resurrects authority or effects.",
+    "sources": [
+      "research/L08-reliability.md"
+    ],
+    "related_source_fields": [
+      6,
+      16,
+      26,
+      28,
+      31
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D03",
+    "kind": "cross-field failure case",
+    "concern": "A correct final outcome hides a process violation such as omitted authorization.",
+    "sources": [
+      "research/L06-evaluation.md"
+    ],
+    "related_source_fields": [
+      14,
+      16,
+      40,
+      42,
+      43
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D04",
+    "kind": "cross-field failure case",
+    "concern": "A set of individually permitted actions exceeds aggregate financial, privacy or reputation exposure.",
+    "sources": [
+      "research/L07-security.md"
+    ],
+    "related_source_fields": [
+      15,
+      16,
+      20,
+      24
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D05",
+    "kind": "cross-field failure case",
+    "concern": "A model-written rationale hides a causal influence and is mistaken for a faithful reason.",
+    "sources": [
+      "research/L06-evaluation.md"
+    ],
+    "related_source_fields": [
+      4,
+      13,
+      42,
+      45,
+      48
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D06",
+    "kind": "cross-field failure case",
+    "concern": "An owner has authority to approve but lacks the domain competence to assess the consequence.",
+    "sources": [
+      "research/L09-human.md"
+    ],
+    "related_source_fields": [
+      21,
+      22,
+      27,
+      46,
+      51
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D07",
+    "kind": "cross-field failure case",
+    "concern": "Cancellation of a business goal leaves promises, subscriptions, customer data and remedies outstanding.",
+    "sources": [
+      "research/L02-operations.md"
+    ],
+    "related_source_fields": [
+      1,
+      24,
+      28,
+      53
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D08",
+    "kind": "cross-field failure case",
+    "concern": "A benchmark or work-management plan change erases distinctions without changing a displayed success state.",
+    "sources": [
+      "research/L02-operations.md"
+    ],
+    "related_source_fields": [
+      14,
+      31,
+      32,
+      40,
+      41
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D09",
+    "kind": "cross-field failure case",
+    "concern": "Summarization promotes untrusted material into authoritative policy or founder preference.",
+    "sources": [
+      "research/L05-memory.md"
+    ],
+    "related_source_fields": [
+      6,
+      7,
+      13,
+      33,
+      44,
+      45
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D10",
+    "kind": "cross-field failure case",
+    "concern": "A provider/model change invalidates a harness intervention that was previously helpful.",
+    "sources": [
+      "research/L04-engineering.md"
+    ],
+    "related_source_fields": [
+      18,
+      33,
+      41,
+      47,
+      50
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  }
+]

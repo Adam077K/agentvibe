@@ -30,6 +30,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-0978808222ac",
+    "url": "https://argo-rollouts.readthedocs.io/en/stable/features/analysis/",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-b029812dcd16",
     "url": "https://arize.com/docs/phoenix/",
     "cited_by": [
@@ -240,10 +250,40 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-babf0173ba8a",
+    "url": "https://arxiv.org/html/2310.03714v1",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-fd98577e74ad",
+    "url": "https://arxiv.org/html/2310.13548v4",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-6ae27c261b5d",
     "url": "https://arxiv.org/html/2404.13076v1",
     "cited_by": [
       "research/L06-evaluation.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-cbee86d2840a",
+    "url": "https://arxiv.org/html/2406.07496v1",
+    "cited_by": [
+      "research/L12-improvement.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -290,6 +330,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-c8e7434a928d",
+    "url": "https://arxiv.org/html/2505.22954v3",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-c94132f7ba90",
     "url": "https://arxiv.org/html/2602.01146v2",
     "cited_by": [
@@ -320,10 +370,40 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-9eca1299af37",
+    "url": "https://arxiv.org/pdf/1506.02629v2",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-945eb4eb0fba",
+    "url": "https://arxiv.org/pdf/1612.00796v2",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-8ac04f812225",
     "url": "https://arxiv.org/pdf/2102.09692",
     "cited_by": [
       "research/L09-human.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-4d2b28f2a848",
+    "url": "https://arxiv.org/pdf/2507.19457v2",
+    "cited_by": [
+      "research/L12-improvement.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -354,6 +434,36 @@
     "url": "https://cli.github.com/manual/gh_run_watch",
     "cited_by": [
       "research/L09-human.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-d69a094d34b1",
+    "url": "https://code.claude.com/docs/en/agent-sdk/overview",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-d4f4e2941ed1",
+    "url": "https://code.claude.com/docs/en/headless",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-2d64f2bee337",
+    "url": "https://code.claude.com/docs/en/legal-and-compliance",
+    "cited_by": [
+      "research/L10-economics.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -391,10 +501,40 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-1b5c7b499756",
+    "url": "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-5fa3c6dae9a9",
+    "url": "https://delcode.delaware.gov/title6/c012a/index.html",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-8349c3c1d714",
     "url": "https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/ScheduledJobs.html",
     "cited_by": [
       "research/L08-reliability.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-422d832bdc89",
+    "url": "https://developers.cloudflare.com/r2/pricing/",
+    "cited_by": [
+      "research/L10-economics.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -415,6 +555,16 @@
     "url": "https://developers.openai.com/api/docs/guides/agents/orchestration",
     "cited_by": [
       "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-acc5ad406397",
+    "url": "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai",
+    "cited_by": [
+      "research/L11-governance.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -642,6 +792,36 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-e636666c3ae8",
+    "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-74b46d9019c3",
+    "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-ad24ba38c4cd",
+    "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202601744",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-c6e16ea62253",
     "url": "https://geminicli.com/docs/cli/checkpointing/",
     "cited_by": [
@@ -752,6 +932,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-d4f1eb35b89d",
+    "url": "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/individual-rights/individual-rights/right-to-erasure/",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-b8568ffca0d8",
     "url": "https://iliad.stanford.edu/pdfs/publications/biyik2019asking.pdf",
     "cited_by": [
@@ -822,6 +1012,36 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-b86fe73675b0",
+    "url": "https://learn.chatgpt.com/docs/app-server",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-930b78c67d2f",
+    "url": "https://learn.chatgpt.com/docs/auth",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-803acf44becc",
+    "url": "https://learn.chatgpt.com/docs/automations",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-51f19553660c",
     "url": "https://learn.chatgpt.com/docs/code-review",
     "cited_by": [
@@ -832,10 +1052,41 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-533f3b185a69",
+    "url": "https://learn.chatgpt.com/docs/codex-sdk",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-3e7f9c6870d7",
+    "url": "https://learn.chatgpt.com/docs/enterprise/access-tokens",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-ef5ba26f3f87",
     "url": "https://learn.chatgpt.com/docs/non-interactive-mode",
     "cited_by": [
-      "research/L04-engineering.md"
+      "research/L04-engineering.md",
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-ac4d1ae97fe8",
+    "url": "https://learn.chatgpt.com/docs/pricing",
+    "cited_by": [
+      "research/L10-economics.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -908,6 +1159,26 @@
     "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization",
     "cited_by": [
       "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-e15662ab40ef",
+    "url": "https://openai.com/policies/row-terms-of-use/",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-bdba945de03d",
+    "url": "https://opentelemetry.io/docs/security/handling-sensitive-data/",
+    "cited_by": [
+      "research/L10-economics.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -1025,10 +1296,80 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-a29627dd3f30",
+    "url": "https://sre.google/workbook/canarying-releases/",
+    "cited_by": [
+      "research/L12-improvement.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-e7aff09ea2c8",
     "url": "https://styleguide.mailchimp.com/voice-and-tone/",
     "cited_by": [
       "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-4058a27c7619",
+    "url": "https://supabase.com/docs/guides/platform/backups",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-8210caea06ac",
+    "url": "https://support.claude.com/en/articles/11049741-what-is-the-max-plan",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-1a386ba36183",
+    "url": "https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-b2ab15dd01eb",
+    "url": "https://support.claude.com/en/articles/12304248-manage-api-key-environment-variables-in-claude-code",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-3682360a701c",
+    "url": "https://support.claude.com/en/articles/12429409-manage-usage-credits-for-paid-claude-plans",
+    "cited_by": [
+      "research/L10-economics.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-73326e0f966d",
+    "url": "https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan",
+    "cited_by": [
+      "research/L10-economics.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -1115,6 +1456,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-965fce80d2c3",
+    "url": "https://www.americanbar.org/content/dam/aba/administrative/professional_responsibility/ethics-opinions/aba-formal-opinion-512.pdf",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-ffc229d83891",
     "url": "https://www.anthropic.com/engineering/building-effective-agents",
     "cited_by": [
@@ -1149,6 +1500,16 @@
     "url": "https://www.anthropic.com/engineering/managed-agents",
     "cited_by": [
       "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-8ac8edab81d7",
+    "url": "https://www.anthropic.com/legal/consumer-terms",
+    "cited_by": [
+      "research/L10-economics.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -1195,6 +1556,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-d6fffb6f2ff8",
+    "url": "https://www.copyright.gov/ai/Copyright-and-Artificial-Intelligence-Part-2-Copyrightability-Report.pdf",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-f2560cdaac35",
     "url": "https://www.cs.cornell.edu/andru/cs711/2002fa/reading/sagas.pdf",
     "cited_by": [
@@ -1215,10 +1586,60 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-8d87b3b9e90e",
+    "url": "https://www.edpb.europa.eu/documents/guideline/automated-decision-making-and-profiling_en",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-9ad9e2087bde",
+    "url": "https://www.edpb.europa.eu/sme/be-compliant/international-data-transfers_en",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-4b6e804f792d",
+    "url": "https://www.edpb.europa.eu/system/files/documents/files/file1/edpb_guidelines_202005_consent_en.pdf",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-070e07c0928a",
+    "url": "https://www.eeoc.gov/sites/default/files/2024-04/20240429_Employment%20Discrimination%20and%20AI%20for%20Workers.pdf",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-97a2364e3534",
     "url": "https://www.eosworldwide.com/eos-model",
     "cited_by": [
       "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-81c76c869984",
+    "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software",
+    "cited_by": [
+      "research/L11-governance.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -1230,6 +1651,36 @@
     "cited_by": [
       "research/L01-intent.md",
       "research/L09-human.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-194ba0c87fd7",
+    "url": "https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-67611b5ed6f0",
+    "url": "https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-5d3ef339ede7",
+    "url": "https://www.gov.uk/running-a-limited-company",
+    "cited_by": [
+      "research/L11-governance.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -1260,6 +1711,26 @@
     "url": "https://www.ics.uci.edu/~gmark/chi08-mark.pdf",
     "cited_by": [
       "research/L09-human.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-329e60b0438d",
+    "url": "https://www.irs.gov/businesses/small-businesses-self-employed/closing-a-business",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-02096107ed80",
+    "url": "https://www.irs.gov/tax-professionals/understanding-tax-return-preparer-credentials-and-qualifications",
+    "cited_by": [
+      "research/L11-governance.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
@@ -1306,6 +1777,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-54dbc1541342",
+    "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+    "cited_by": [
+      "research/L11-governance.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
     "id": "S-d8137edae9e4",
     "url": "https://www.postgresql.org/docs/18/continuous-archiving.html",
     "cited_by": [
@@ -1330,6 +1811,16 @@
     "url": "https://www.postgresql.org/docs/18/warm-standby.html",
     "cited_by": [
       "research/L08-reliability.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-9f0fa2af5588",
+    "url": "https://www.sec.gov/newsroom/press-releases/2017-52",
+    "cited_by": [
+      "research/L11-governance.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; independent source/claim audit pending",
