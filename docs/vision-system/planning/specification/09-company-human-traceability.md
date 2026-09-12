@@ -1,0 +1,91 @@
+# Company and human question traceability
+
+**Contract:** CHT-1.0 · **architecture:** S1.0 · **authoring base:** `857a98c` · 2026-09-12. **Status:** substantive Phase F answers, unimplemented and pending independent complete-plan review. This amendment changes only `source_question_contracts` in [capabilities.json](capabilities.json). It does not change capability procedures, record schemas, authority, selected architecture, original questions or root coverage statuses.
+
+The catalog now answers all **116 exact S01/S06 questions** from the [work map](../package-work-map.json): 67 company questions and 49 human-operation questions. Each entry preserves the original question, supplies an actual answer, points to the specific record and capability contracts, identifies the applied design decision and bounded evidence, states uncertainty, and names planned implementation and a distinct unexecuted conformance case. These are answer and design traces. They are not 116 implemented functions, passing tests or proof that every operating prerequisite exists.
+
+The binding sources are [01 kernel](01-contract-kernel.md), [02 authority/recovery](02-authority-recovery.md), [03 company procedures](03-company-capabilities.md), [04 human operation](04-human-operation.md), [05 execution/skills](05-work-agents-skills.md), [06 knowledge/evaluation](06-knowledge-evidence-evaluation.md) and [their machine contracts](work-knowledge-contracts.json). The committed [07 integrations/capacity](07-integrations-capacity.md) and [08 construction/improvement](08-improvement-implementation.md), source commit `2807d06c4b934499c03959b9ddbe98c4016d7897`, root integration `c3519f5`, supply selected adapters, dated cost/comparator assumptions and package boundaries. They were read from committed Git objects because this isolated authoring base predates them. This trace does not mistake a selected route for a configured account or accepted service.
+
+The following decision IDs identify applications of the existing S1 contracts, not new foundational decisions. The substantive per-question text remains in the catalog; the sections here explain the common decision and its material limits.
+
+## Intent and goals
+
+**CHT-D01 · F01-Q01–18.** Canonical IntentVersion owns endorsed ends; Goal, Mission, Project and Workstream express distinct intent/grouping scopes, while Case and WorkOrder govern admitted execution. Ideas, commitments, external promises, accepted outcomes and remaining duties stay distinct. Legitimate direction authority endorses meaning; actual domain owners choose routine means within mandate. Exact original wording, interpretation, examples, review dates, falsifiers and amendment reasons survive worker and provider changes.
+
+Goal completion requires its actual outcome predicate and current exact acceptance evidence. Completed-inconclusive assessment is not accepted product or goal evidence. A stale or abandoned goal receives an owned disposition and surviving-duty plan; it does not quietly disappear or reset its causal allowance. Bounded autonomous discovery and scheduled cross-domain review preserve S1's chosen rights without adding C2's compulsory inquiry jurisdiction. The research archive [L01](../../research/L01-intent.md) informs intent persistence; this trace claims neither a tested persistence method nor an empirical architecture winner.
+
+## Economics and allocation
+
+**CHT-D02 · F20-Q01–12.** ResourceAccount and Reservation represent the actual scarce unit: currency, provider allowance, execution capacity or minutes. No composite Budget becomes another spendable record. Economics distinguishes observed zero, estimate and unknown, includes unsuccessful attempts and institutional/customer/owner labor, and reports separate endpoints rather than manufacturing a universal value/risk metric. Allocation requires legitimate authority and explicit opportunity cost while preserving actual due-duty resources.
+
+Pricing has distinct provisional-hypothesis, bounded-validation and demand-supported acceptance. Unknown demand permits honest preparation; it does not support scale. Make/buy comparisons include inspection, evidence access, integration, recurring obligations and replacement. [07's worksheet](07-integrations-capacity.md#7-deployment-economics-and-comparators) supplies dated tariff observations and estimated quantities with identified unknown categories, including actual qualified professional and custodian work. It establishes no affordability finding, current invoice or authorized cap. [L10](../../research/L10-economics.md) is background evidence, not a measured business result.
+
+## Ventures and shared consequences
+
+**CHT-D03 · F24-Q01–10.** Venture identity is separate from actual legal principal and authoritative native field ownership. Shared accounts, entitlements, providers, data, source parsers and people remain interactions even across distinct brands. Scope containment preserves unknown holds and legitimate service; it cannot infer independence from a venture ID or repeated role titles.
+
+Stage-specific acceptance distinguishes useful discovery, validated need, performed delivery and sustainable maintenance. Portfolio views preserve gaps and individual failures through aggregation. Pause, restart, transfer and closure each have real prerequisites and due-duty custody. Cross-venture learning requires compatible meaning, rights and recipient/purpose authority. The [native business boundaries](03-company-capabilities.md#native-business-authority-and-meaning) and [L02 operational evidence](../../research/L02-operations.md) support these distinctions; actual separation and economics remain operating evidence.
+
+## Complete company procedures
+
+**CHT-D04 · F25-Q01.** This compound source question has one answer entry and **15 named job routes**, not 15 invented source questions. Each route gives typed-contract pointers, actual intake, executable procedure boundary, provider/human dependency and substantive acceptance. Its `supporting_capability_contracts` contains all CAP-01–46. The named jobs cover deciding, designing, building, testing, running, finding people, talking, selling, support, books, rules/contracts, market truth, supplier negotiation, hiring and the worker-versus-procedure question.
+
+Company procedures own useful outcomes. Temporary model instances perform bounded interpretation/generation; deterministic code validates/computes and executes admitted steps; actual people, professionals and native services supply their distinct performance. Producer/evaluator independence and accepted responsibility survive these choices. No permanent capability-to-agent roster is implied.
+
+The concrete committed routes are Brave plus authorized HTTP fetch; Fastmail intake; Postmark controlled outbound communication; Cloudflare public assets/forms; Stripe payment/refund/reconciliation; original statements and generated hledger validation; and accepted human/professional service through the authenticated portal/mail route. Account eligibility, exact grants, disclosure, fees, actual performers and capacity remain prerequisites. Specialized media and venture-specific physical work need an actual admitted creator/performer. A prepared professional packet, proposed account, image description or task handoff cannot satisfy the corresponding business acceptance.
+
+The ordinary conformance path must perform research, experience production, independent assessment, institutional/capacity readiness, a permitted offer, actual agreement/payment conditions, onboarding/delivery, support, books and responsible ending. The adverse variants remove a needed artifact, performer or acceptance child and verify both truthful noncompletion and continuing legitimate work. Full [G](../reviews/G-acceptance-protocol.md) still assesses complete outcomes, burden and simpler comparators; the number of procedures earns no credit.
+
+## Audience and public relationships
+
+**CHT-D05 · F29-Q01–09.** Audience beliefs are evidence-bearing claims; generated personas are hypotheses. Brand/offer promises are constrained by actual capability, source support, rights and owner taste. Useful content, discovery and relationship work have labor and disclosure costs even when placement is unpaid. Campaigns hold exact audience, assets, cadence, expiry and measurement; an expired schedule does not authorize a later send burst.
+
+First encounters establish truthful expectations; ongoing communication preserves exact sold terms, restrictions and outstanding duties. Real interest uses coherent denominators and actual conversations, agreements or use rather than vanity activity. A public correction includes affected people and remedies where due. Original ordinary/adverse encounters challenge favorable account selection. [Company commerce](03-company-capabilities.md#customer-journey-commerce-and-repair) and [07's route contracts](07-integrations-capacity.md#3-selected-fulfillment-adapters) anchor the procedures without establishing audience response or publication authority now.
+
+## Culture, history and correction
+
+**CHT-D06 · F30-Q01–08.** Endorsed values remain explicit and operationally testable through hard decisions. Newcomers receive scoped originals, settled constraints and legitimate reopening routes. A factual contradiction can be investigated without silently changing personal ends. Corrections append attributed versions and propagate invalidation while preserving the older decision's actual meaning and applicable retention limits.
+
+Distinct memory forms and purpose-filtered account views make history usable. A successor must perform an unfamiliar duty using the account; receiving a fluent summary is insufficient. Sensitive short fields, numeric values and relationships obey [06's storage contract](06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting): necessary surviving plaintext copies keep deletion incomplete. [L05](../../research/L05-memory.md) supports the distinction between retention, retrieval, correct use and validity; the selected approach remains untested on the company's actual corpus.
+
+## Institutional readiness and ending
+
+**CHT-D07 · F53-Q01–09.** Actual principal, signatory, activity/location facts, account access, required rights/registrations and competent determinations establish readiness for the particular activity. FormationReadiness records exact dependencies, owner, evidence and supported lead-time ranges. This specification provides no universal jurisdiction, legal form, filing rule or setup duration.
+
+Pre-sale `company.delivery_capacity.verify.v1` checks actual availability, competence, materials/access, performance window and continuity without needing an earlier SalesAgreement. Launch then joins the current distinct product, delivery, support and offer-condition judgments against its admitted requirements manifest. Customer fulfillment later needs actual agreement-bound performance. Money observed outside the intended route remains a possible real duty for competent resolution. Filing and closure require actual submissions/dispositions, not reminders or prepared packets. [L11](../../research/L11-governance.md) supplies conditional background; jurisdiction-specific determinations and accepted professional services remain real operating work.
+
+## Operator account and intervention
+
+**CHT-D08 · F21-Q01–11.** C09 projects authoritative records with current permission filtering, Position, source watermarks, omissions and freshness. The account begins with due consequences, unknown effects and changes since last acknowledgment. It does not wait for model narrative or use fictional busyness as progress. Each decision retains exact terms, reasons, limits and latest/no-answer behavior.
+
+Phone and terminal views preserve consequential distinctions and accessible inspection. Intervention separates request, release fence, worker cessation, external reconciliation and actual remedy. A stale or disconnected view cannot authorize an effect; same-ID lookup resolves lost acknowledgments. Batch minutes and adopted availability control attention, with actual due-duty alternatives. [04's surface contracts](04-human-operation.md#surfaces-derived-from-operator-jobs) and [L09](../../research/L09-human.md) supply design and bounded evidence; latency targets, accessibility under real use and a thirty-second triage experience are unexecuted tests.
+
+## Personal authority and absence
+
+**CHT-D09 · F22-Q01–10.** Ask this particular person only where their legitimate decision right or indispensable capacity is actually needed. Routine choices use explicit current mandates; past similar approvals do not create new authority. A changed mind creates an exact successor decision and affects future work without erasing old promises.
+
+Absent response invokes the already adopted no-answer route, accepted substitute or bounded preservation, never consent. A month-long owner/provider absence requires real alternate standing, access, competence, funds and performance. Practiced oversight includes original adverse evidence and unfamiliar intervention, while values stay with their actual owner. [04's absence contract](04-human-operation.md#collaboration-absence-succession-and-departure) remains an operating-capacity obligation, not a claim that a backup packet solves unavailable people.
+
+## Observation and bounded accounts
+
+**CHT-D10 · F42-Q01–09.** Trace exact work, causal episode, attempts, concurrent branches, artifacts, decisions, effects and accepted transfers. Telemetry and event order establish observed sequence and gaps; they do not by themselves establish cause or complete native capture. Keep endorsed reasons, executor explanation and causal hypothesis distinct.
+
+Account reconstruction, captured-response replay, live rerun and distribution replication have different guarantees and grants. Evidence minimization excludes secrets and unrelated personal data while preserving declared omissions and legitimate duties. Cost/capacity exhaustion cannot silently delete required evidence. An unfamiliar investigator must reconstruct the bounded result with honest limits. [06's evidence/account contract](06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction) and [L06](../../research/L06-evaluation.md) control these distinctions; no current completeness or reproducibility result is claimed.
+
+## Human decisions and practiced competence
+
+**CHT-D11 · F46-Q01–09.** Human requirements name the actual reason: values/taste, standing, specialist competence, relationship/service work or independent evidence. Layered packets preserve critical terms and contrary facts. Only dependent work waits; current authorized work continues with preserved resources and duties. Exact affirmative response, silence and release remain separate events.
+
+Independent ordinary/adverse samples, pre-advice judgments and unfamiliar delayed transfer can test meaningful understanding within consented time. A material domain gap changes the affected operational path through assistance, narrowing, rehearsal or wait, with contestation and values authority preserved. Standing bounded preservation may act immediately when its declared evidence/authority requires it; urgency alone does not authorize broad control. No general intelligence score, surveillance profile or universal learning dose is introduced.
+
+## Collaboration, transfer and departure
+
+**CHT-D12 · F51-Q01–10.** Canonical IdentityBinding, Principal and Mandate control people; ActorBinding is their filtered projection. Joint decisions require the exact declared combination. Specialist authority and founder authority differ, and shared contribution retains an accountable outcome sponsor.
+
+Human handoff is Continuation plus accepted ResponsibilityAssignment/HandoffAcceptance after actual access and competence checks. Receipt alone does not discharge the sender. Succession and departure inventory native descendants, fees, data, unknown effects and due duties, then require acknowledged cutover and continuing residual custody. A company of one is a scope choice only within demonstrated actual capacity; invented model roles cannot supply missing professionals or independent continuity.
+
+## Validation and remaining specification work
+
+Local validation checks the unchanged original 116-ID set and question bytes; every answer's required fields; specific catalog/record/decision links; planned test uniqueness; all 46 F25 capability refs; the 15 explicit job routes; and that no other catalog top-level member changed. Links to committed 07/08 are checked against source Git objects where absent locally. Schema shape, reference and whitespace checks establish trace integrity only.
+
+Full-schema consolidation remains a separate task: concrete TypedPredicate registry and materially distinct edge guards, company composite Evaluation reference roles, Handoff's accepted responsibility binding, remaining domain aliases and field-level physical storage/deletion classifications. This amendment references the existing contracts without repairing them by creating duplicate authorities. The complete component matrix, independent G review, implementation, actual provider/performer admission, useful-progress trials and longitudinal owner/business evidence remain outstanding according to their own tracks.
