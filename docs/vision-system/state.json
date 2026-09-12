@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "project": "Full-company responsible work system",
+  "directive_date": "2026-09-12",
+  "phase": "A-understand-and-B-independent-expansion",
+  "status": "active",
+  "base_commit": "b2cabad",
+  "branch": "ceo-3-1789160853",
+  "architecture_version": null,
+  "planning_accepted": false,
+  "implementation_started": false,
+  "completed": [
+    "Read routing instructions and orchestrator procedure",
+    "Read research-question and ship-feature playbooks",
+    "Read CLAUDE.md context and historical caveats",
+    "Read deep-research and OpenAI documentation skills",
+    "Confirm clean initial worktree and branch",
+    "Search requested vision filename in checkout, all reachable git history by filename, and filenames under /Users/adamks/VibeCoding",
+    "Inspect template VISION.md and ARCHITECTURE.md and prior agent re-dive plan",
+    "Located requested source on vision-path-and-warroom-codex; preserved both path document and its referenced field map with exact git provenance",
+    "Read complete THE-PATH-TO-THE-VISION.md (162 lines) and THE-VISION-AND-THE-FIELDS.md (762 lines)",
+    "Parsed 53 fields and 566 questions into coverage/questions.json; count agrees with question-mark count",
+    "Read current GitHub issue and PR lists; PR 131 identified more recent planning branches",
+    "Read first 200 lines of 2026-09-11 autopsy; historical source claim of architecture lock-in preserved without adopting its findings as measurements"
+  ],
+  "active_work": [
+    "L03 architectures",
+    "L05 memory",
+    "L07 security",
+    "Repository and instruction inventory"
+  ],
+  "next_actions": [
+    "Receive and preserve independent lane returns without sharing conclusions with unfinished lanes",
+    "Dispatch remaining independent research lanes in bounded batches",
+    "Build Phase A framing and separately cover source Part one and Part three plus directive deliverables",
+    "Complete Phase A framing with explicit epistemic labels and requirements inventory",
+    "Compare lane findings, preserve disagreements, then generate three materially different candidates",
+    "Run independent candidate attacks, synthesize, specify and independently review the complete planning package",
+    "Commit accepted planning package before building the complete system in dependency order"
+  ],
+  "dependencies": [
+    {
+      "id": "D-VISION-SOURCE",
+      "state": "located and preserved",
+      "blocks": [],
+      "does_not_block": [
+        "independent research",
+        "repository inspection",
+        "provisional framing",
+        "candidate exploration"
+      ]
+    }
+  ],
+  "registers": {
+    "research": "research/lanes.json",
+    "sources": "not yet assembled; source records will accompany each lane",
+    "evidence": "research/repository-observations.md",
+    "claims": "not yet assembled",
+    "assumptions": "not yet assembled",
+    "contradictions": "not yet assembled",
+    "questions": "registers/open-questions.json",
+    "founder_decisions": "registers/open-questions.json",
+    "candidates": "not yet generated",
+    "decisions": "no architectural decisions selected",
+    "risks": "not yet synthesized",
+    "coverage": "coverage/questions.json",
+    "implementation_graph": "pending reviewed specification",
+    "build_progress": "not started",
+    "tests": "baseline not yet run",
+    "incidents": [],
+    "migrations": [],
+    "history": "history.jsonl"
+  },
+  "constraints": [
+    "Full company lifecycle; do not reduce to coding or a dashboard",
+    "Determine work and authority before agent roles",
+    "Preserve founder intent and epistemic distinctions",
+    "Truthful accounts include failed, skipped, omitted, stale and unverified work",
+    "Autonomy bounded by consequence; success history cannot raise consequence ceiling",
+    "Preserve owner competence through designed participation",
+    "Use independent research and architecture-neutral adversarial review",
+    "No silent subscription-to-metered-API fallback",
+    "No unapproved external consequential actions",
+    "No full implementation before planning completion and independent review"
+  ],
+  "active_risks": [
+    "Historical repository reports contain retractions and stale runtime claims",
+    "Available subagents share a model family; context independence is not statistical independence",
+    "This session has unrestricted tools; a read-only brief is not enforced tool isolation",
+    "Initial git history path pattern failed to match nested source; corrected by inspecting branch trees"
+  ]
+}

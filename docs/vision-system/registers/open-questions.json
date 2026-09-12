@@ -1,0 +1,34 @@
+[
+  {
+    "id": "Q-001",
+    "kind": "Unknown",
+    "question": "Where is THE-PATH-TO-THE-VISION.md?",
+    "status": "Answered",
+    "owner": "founder or source custodian",
+    "evidence": "No matching filename in current checkout, reachable git history search, or filenames under /Users/adamks/VibeCoding on 2026-09-12",
+    "packet": {
+      "decision_required": "Supply the path, repository/ref or URL of the referenced document",
+      "why_this_owner": "The source is referenced in the directive but was not provided or found",
+      "latest_responsible_time": "Before asserting exact field-map coverage or planning completion",
+      "options": [
+        "Provide the source location",
+        "Explicitly identify a replacement authoritative field map"
+      ],
+      "consequences": [
+        "Allows exact coverage against original ambition",
+        "Requires recording that the original source was superseded by founder direction"
+      ],
+      "uncertainty": "The document may exist outside the searched directory or under another filename",
+      "reversibility": "Research and provisional planning can be revised after receipt",
+      "recommendation": "Locate and read the original source",
+      "if_no_answer": "Continue independent branches; retain a blocking gap on exact coverage and planning acceptance",
+      "unrelated_work_continues": true
+    },
+    "asked": "2026-09-12 via asynchronous text question",
+    "resolution": {
+      "commit": "331b4c97657c0d4c648633779eff7668503f7c06",
+      "path": "docs/03-system-design/final-v2/THE-PATH-TO-THE-VISION.md",
+      "note": "Found by inspecting existing branch tree. Earlier git log path pattern missed nested file. No founder action remains."
+    }
+  }
+]
