@@ -4,6 +4,8 @@ Status: final-intended Phase F contracts, awaiting independent complete-plan rev
 
 This extends [the kernel](01-contract-kernel.md), [authority and recovery](02-authority-recovery.md), [company procedures](03-company-capabilities.md) and [human operation](04-human-operation.md). The selected architecture and consequence protocol remain binding. Source reports [L10](../../research/L10-economics.md), [N01](../../research/implementation/N01-native-execution.md) and the independently archived substrate audit describe conditional evidence, not successful admission. The 74 S03 answers are in [the companion catalog](integrations-capacity-build.json). All module paths below are intended construction paths, not existing implementations.
 
+External-source claims explicitly inherit SC-POLICY-1 through [integration-claims.json](../../research/integration-claims.json), which records publication/version unknowns, source interests, qualified confidence, narrow corroboration, retrieval/capture limits and revalidation/invalidators; this metadata supplies no account admission or runtime proof.
+
 ## 1. Integration identity and admission
 
 IC1 owns integration.* and capacity.* commands on the common POST /v1/commands envelope. It does not introduce an alternate grant, command receipt, effect state, evidence judgment or company ledger. S1-C03 requests work; C04 alone issues consequence authority; C05 supplies current disclosure/validity; C06 captures and assesses; C08 reconciles; C07 owns external standing and actual service; C09 projects status. A connection is neither a principal nor an agent.
