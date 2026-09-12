@@ -31,3 +31,8 @@ R10 (direct observation): the current GitHub query returned open PR 131, `docs/f
 R11 (historical source claim): `git:docs/03-system-design/final-v3/round-1/autopsy.md@331b4c97657c0d4c648633779eff7668503f7c06`, read through line 200, argues that previous research fixed the prior design as a premise and treated a frozen coverage denominator as proof of completeness. This diagnosis informs the process; its measurements have not been replayed.
 
 R12 (direct observation, 2026-09-12): inspected `SPINE.md` lines 1–22 and `rethink/L2-company.md` lines 1–22 at the preserved source commit. The former states that the earlier plan stands unless a founder overrule or research fact overturns it; the latter explicitly fixes fourteen agents plus an Operator and refuses to reopen that count. This independently confirms the presence of narrowing instructions cited by the autopsy. The causal claim that these instructions explain all later narrowing remains an inference. Current research lanes receive neither rule.
+
+
+## R13 — Local isolation-tool availability
+
+**Direct observation, 2026-09-12:** Python platform/command-path discovery reported Darwin 25.5.0 on arm64, `/usr/bin/sandbox-exec`, Node, Bun and Git. Docker, Podman, Lima and bubblewrap commands were absent from PATH; `/var/run/docker.sock` did not exist. This was read-only command discovery, not a sandbox escape test, daemon inventory or proof that any present tool enforces the required boundaries. Architecture remains unconstrained by the current machine; an implementation may justify installing or targeting another supported substrate. Recheck before a runner depends on these observations.

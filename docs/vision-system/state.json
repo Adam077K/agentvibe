@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "B-independent-expansion",
+  "phase": "C-competing-architectures",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-3-1789160853",
@@ -27,20 +27,18 @@
     "Independent L02 operations and L04 engineering archived; separate Mission Control baseline completed with two recorded failures",
     "Phase A framing written and read: planning/01-understand.md; independent recognition test not yet run; L01 research archived",
     "L06 evaluation, L08 reliability and L09 human factors archived; nine independent reports integrated",
-    "L10 economics, L11 governance and L12 improvement reports read and archived; twelve independent lane reports integrated"
+    "L10 economics, L11 governance and L12 improvement reports read and archived; twelve independent lane reports integrated",
+    "All fourteen independent lane reports archived and read; cross-lane comparison preserved without architecture selection",
+    "Six consequential current-policy and benchmark claims independently source-audited; L12 precision and caption corrections committed"
   ],
   "active_work": [
-    "L13 contrarian alternatives independently researching",
-    "L14 novel concepts independently researching",
-    "Read-only source audit of six consequential L10/L11/L12 assertions",
-    "Cross-field failure-case inventory; no architectural decision selected"
+    "Construct three materially different foundational candidates with equal full-lifecycle scope",
+    "Preserve comparative criteria, uncertainty and research disagreements"
   ],
   "next_actions": [
-    "Finish L13/L14; archive findings and current-policy source audit, then compare all fourteen lanes",
-    "Preserve remaining lane reports and audit consequential source claims",
-    "Compare all fourteen independently formed reports; preserve disagreements and newly discovered fields",
-    "Generate at least three materially different foundational candidates",
-    "Run independent candidate attacks before selection",
+    "Produce records/cases, federated responsibility and adaptive coordination candidates; define every candidate dimension and simpler alternatives",
+    "Independently attack all candidates across required dimensions and failure cases before selection",
+    "Synthesize only after attacks; preserve dissent and explicit reopening conditions",
     "Specify complete system and answer all coverage items with exact support",
     "Run independent architecture-neutral planning review; commit accepted package",
     "Build complete system in dependency order, preserving evidence and tests"

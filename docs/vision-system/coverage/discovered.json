@@ -226,5 +226,127 @@
     "owner": "orchestrator",
     "implementation_location": null,
     "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D11",
+    "kind": "cross-field failure case",
+    "concern": "An improvement candidate changes evidence capture while its hidden evaluator remains intact.",
+    "sources": [
+      "research/L12-improvement.md"
+    ],
+    "related_source_fields": [
+      23,
+      32,
+      40,
+      41,
+      42,
+      47,
+      49
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D12",
+    "kind": "cross-field failure case",
+    "concern": "A supported authentication path silently changes billing mode because an API key or credit setting overrides subscription access.",
+    "sources": [
+      "research/L10-economics.md"
+    ],
+    "related_source_fields": [
+      16,
+      18,
+      20,
+      35,
+      36
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D13",
+    "kind": "cross-field failure case",
+    "concern": "A search result repeats a withdrawn provider policy, or a legal transition is applied to the wrong provision.",
+    "sources": [
+      "research/L10-economics.md",
+      "research/L11-governance.md"
+    ],
+    "related_source_fields": [
+      7,
+      13,
+      18,
+      27,
+      35,
+      44
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D14",
+    "kind": "cross-field failure case",
+    "concern": "An owner loses capacity while refunds, legal holds, complaints and recurring service obligations continue.",
+    "sources": [
+      "research/L11-governance.md"
+    ],
+    "related_source_fields": [
+      22,
+      24,
+      26,
+      28,
+      30,
+      31,
+      51,
+      53
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+  },
+  {
+    "id": "D15",
+    "kind": "cross-field failure case",
+    "concern": "A benchmark caption claims superiority that its own table values contradict.",
+    "sources": [
+      "research/L12-improvement.md"
+    ],
+    "related_source_fields": [
+      13,
+      14,
+      40,
+      44,
+      49
+    ],
+    "status": "Requires further evidence",
+    "answer_location": null,
+    "component": null,
+    "decision": null,
+    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "owner": "orchestrator",
+    "implementation_location": null,
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
   }
 ]

@@ -77,7 +77,7 @@
     "status": "independent findings archived",
     "agent": "lane10_economics",
     "artifact": "research/L10-economics.md",
-    "review": "selected consequential claims under independent source audit"
+    "review": "selected assertions audited in research/reviews/2026-09-12-current-claims.md; L12 corrected; not an audit of every assertion"
   },
   {
     "id": "L11",
@@ -85,7 +85,7 @@
     "status": "independent findings archived",
     "agent": "lane11_governance",
     "artifact": "research/L11-governance.md",
-    "review": "selected consequential claims under independent source audit"
+    "review": "selected assertions audited in research/reviews/2026-09-12-current-claims.md; L12 corrected; not an audit of every assertion"
   },
   {
     "id": "L12",
@@ -93,18 +93,22 @@
     "status": "independent findings archived",
     "agent": "lane12_improvement",
     "artifact": "research/L12-improvement.md",
-    "review": "selected consequential claims under independent source audit"
+    "review": "selected assertions audited in research/reviews/2026-09-12-current-claims.md; L12 corrected; not an audit of every assertion"
   },
   {
     "id": "L13",
     "topic": "Contrarian and architecture-breaking alternatives",
-    "status": "researching",
-    "agent": "lane13_contrarian"
+    "status": "independent findings archived",
+    "agent": "lane13_contrarian",
+    "artifact": "research/L13-contrarian.md",
+    "review": "not independently source-audited"
   },
   {
     "id": "L14",
     "topic": "Novel concepts beyond current frameworks",
-    "status": "researching",
-    "agent": "lane14_novel"
+    "status": "independent findings archived",
+    "agent": "lane14_novel",
+    "artifact": "research/L14-novel.md",
+    "review": "not independently source-audited"
   }
 ]

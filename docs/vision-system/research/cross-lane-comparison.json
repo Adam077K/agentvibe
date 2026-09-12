@@ -1,0 +1,162 @@
+{
+  "date": "2026-09-12",
+  "phase": "B to C",
+  "architecture_selected": false,
+  "limitations": [
+    "All lanes formed initial findings before sharing conclusions.",
+    "Independent contexts share a model family; agreement is not statistically independent confirmation.",
+    "Most system descriptions are documentation or author experiments; no whole-company outcome has been established.",
+    "Six consequential current-policy/benchmark assertions received independent primary-source audit; other citations retain their stated source-access and applicability limits."
+  ],
+  "comparisons": [
+    {
+      "id": "X01",
+      "topic": "Intent and obligations",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L01/L02/L11/L13/L14 distinguish purpose, instructions and continuing promises. Cancellation cannot itself establish that obligations ended.",
+      "status": "agreement on need; implementation open",
+      "lanes": [
+        "L01",
+        "L02",
+        "L11",
+        "L13",
+        "L14"
+      ],
+      "discriminating_question": "How does each candidate preserve an obligation absent from its task structure or disputed by a counterparty?",
+      "decision": null
+    },
+    {
+      "id": "X02",
+      "topic": "Production and institutional boundaries",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L02/L10/L13 leave make-versus-buy open. Native business records, professional judgment and supplier evidence have different authority and cost.",
+      "status": "unresolved trade-off",
+      "lanes": [
+        "L02",
+        "L10",
+        "L11",
+        "L13"
+      ],
+      "discriminating_question": "Which responsibilities must be owned internally, and when would suppliers or existing domain tools be a better implementation?",
+      "decision": null
+    },
+    {
+      "id": "X03",
+      "topic": "Coordination",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L03/L04/L08 describe useful durable and agent mechanisms; L13 offers records/cases, federation and negotiation; L14 proposes alternative organizing objects. Documentation establishes mechanisms, not a winning whole-company architecture.",
+      "status": "foundational alternatives retained",
+      "lanes": [
+        "L03",
+        "L04",
+        "L08",
+        "L13",
+        "L14"
+      ],
+      "discriminating_question": "What decides the next move, where is its authority enforced, and when does coordination complexity outweigh benefit?",
+      "decision": null
+    },
+    {
+      "id": "X04",
+      "topic": "Knowledge structures",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L05 preserves conditional disagreement between graph-memory and selective flat retrieval results; L13 challenges universal semantics; L14 needs uncertain state without a magical digital twin.",
+      "status": "empirical and semantic disagreement",
+      "lanes": [
+        "L05",
+        "L13",
+        "L14"
+      ],
+      "discriminating_question": "What must share meaning, what stays native, and how can a false or stale belief be corrected without erasing its history?",
+      "decision": null
+    },
+    {
+      "id": "X05",
+      "topic": "Evidence versus truth",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L06/L07/L12 distinguish authentic capture, provenance, model explanations, outcome checks and truth. Hidden evaluators can rely on candidate-controlled logging. L13/L14 require an observation boundary.",
+      "status": "agreement on distinctions; completeness unproven",
+      "lanes": [
+        "L06",
+        "L07",
+        "L12",
+        "L13",
+        "L14"
+      ],
+      "discriminating_question": "What can the account prove, what remains outside observation, and how is missing or manipulated evidence detected?",
+      "decision": null
+    },
+    {
+      "id": "X06",
+      "topic": "Authority and recovery",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L07/L08/L10 require authority across retries, provider switching, revocation and aggregate exposure. L11 adds legal principal and continuing duties.",
+      "status": "agreement on invariant; enforcement options open",
+      "lanes": [
+        "L07",
+        "L08",
+        "L10",
+        "L11"
+      ],
+      "discriminating_question": "How can a delayed or restored worker be prevented from acting under obsolete authority, including ambiguous external completion?",
+      "decision": null
+    },
+    {
+      "id": "X07",
+      "topic": "Owner competence and attention",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L01/L09/L14 support designed participation but no founder-specific dose is validated. Adaptive learning encounters compete with a transparent fixed rotation. Authority does not establish competence.",
+      "status": "unresolved human-factors hypothesis",
+      "lanes": [
+        "L01",
+        "L09",
+        "L14"
+      ],
+      "discriminating_question": "How does the owner stay capable without becoming a full-time reviewer or being subjected to opaque personal profiling?",
+      "decision": null
+    },
+    {
+      "id": "X08",
+      "topic": "Economics and scope",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L10 separates money, provider allowance, execution capacity and attention. L13 counts assurance, coordination and exit costs; L14 proposes closure reserves but does not validate an enterprise dynamics model.",
+      "status": "unresolved feasibility and modeling trade-off",
+      "lanes": [
+        "L10",
+        "L13",
+        "L14"
+      ],
+      "discriminating_question": "Can complete delivery and responsible termination remain affordable when providers, owner time or suppliers are unavailable?",
+      "decision": null
+    },
+    {
+      "id": "X09",
+      "topic": "Records and deletion",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L05/L11 require provenance, corrections and selective forgetting, including restored copies. Indefinite personal-data retention is not entailed by truthful history.",
+      "status": "design tension preserved",
+      "lanes": [
+        "L05",
+        "L08",
+        "L11"
+      ],
+      "discriminating_question": "How are legally retained facts, erased personal data, unavailable vendor copies and honest reconstruction separated?",
+      "decision": null
+    },
+    {
+      "id": "X10",
+      "topic": "Improvement and simplification",
+      "epistemic_type": "Synthesis inference from independently formed reports",
+      "account": "L04/L12 report bounded improvements and model-dependent harness value; L13/L14 require simpler competitors. No evidence authorizes self-expansion of protected policy.",
+      "status": "agreement on tests; change allocation open",
+      "lanes": [
+        "L04",
+        "L12",
+        "L13",
+        "L14"
+      ],
+      "discriminating_question": "What can change, who independently observes its effect, and what evidence causes machinery to be removed?",
+      "decision": null
+    }
+  ]
+}
