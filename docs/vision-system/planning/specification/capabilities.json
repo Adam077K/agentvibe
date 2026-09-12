@@ -5206,89 +5206,288 @@
       "status": "selected-logical-unimplemented",
       "implementation_boundary": "Owned record procedures and deterministic validators described in 03-company-capabilities.md; no external CRM is required.",
       "substantive_path": "Persist domain records, exact references and accepted corrections through kernel commands.",
-      "unresolved_prerequisite": "Kernel implementation and per-domain acceptance tests remain required.",
-      "implemented": false
+      "unresolved_prerequisite": "Implement the exact typed domain procedures and deterministic validators; obtain current acceptance evidence on their actual intended outputs. Actual domain sponsors, mandates, source ownership, sensitive-field classification and retention/deletion duties must be established.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "03-company-capabilities.md#record-and-procedure-contract",
+          "version": "company.cap01–46.v1"
+        }
+      ],
+      "selected_route_ids": [],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Implement the exact typed domain procedures and deterministic validators; obtain current acceptance evidence on their actual intended outputs.",
+        "Actual domain sponsors, mandates, source ownership, sensitive-field classification and retention/deletion duties must be established."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-NATIVE": {
       "name": "Constrained internal native production",
-      "status": "candidate-feasible-unadmitted",
+      "status": "selected-profile-unimplemented-unadmitted",
       "implementation_boundary": "N01: Claude restricted drafting or brokered MCP; Codex exec where effective launch and context admission conform.",
       "substantive_path": "Authorized package -> staged output -> deterministic parsing/build/render/test -> independent acceptance.",
-      "unresolved_prerequisite": "Pin and test actual client/billing/configuration, recipients, all tools, worker boundary, quota and resume behavior; no silent API fallback.",
+      "unresolved_prerequisite": "Pin and test actual binary/configuration/startup/tool inventory, all-channel isolation, clean authorized context, output capture and job-bound continuation. Actual account ownership, permitted subscription use, API-key override absence, billing/extra-credit settings, allowance observations, finite resources and accepted recovery custodian remain unestablished. Supplied-input Claude is the selected initial route; mediated/Codex eligibility requires its own successful exact-profile admission, not mere availability.",
       "implemented": false,
-      "evidence_source": "../../research/implementation/N01-native-execution.md (archived 10dc7035d78a95e554d0419fdde516c50bea9ff7; documentary snapshot 2026-09-12; no execution/isolation test)"
+      "evidence_source": "../../research/implementation/N01-native-execution.md (archived 10dc7035d78a95e554d0419fdde516c50bea9ff7; documentary snapshot 2026-09-12; no execution/isolation test)",
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#5-native-subscription-execution",
+          "version": "IC1.0 / N-CLAUDE-SUPPLIED/v1; mediated and Codex profiles require separate admission"
+        }
+      ],
+      "selected_route_ids": [
+        "N-CLAUDE-SUPPLIED/v1",
+        "N-CLAUDE-MEDIATED/v1",
+        "N-CODEX-SUPPLIED/v1"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Pin and test actual binary/configuration/startup/tool inventory, all-channel isolation, clean authorized context, output capture and job-bound continuation.",
+        "Actual account ownership, permitted subscription use, API-key override absence, billing/extra-credit settings, allowance observations, finite resources and accepted recovery custodian remain unestablished.",
+        "Supplied-input Claude is the selected initial route; mediated/Codex eligibility requires its own successful exact-profile admission, not mere availability."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-SOURCE": {
       "name": "Original source ingestion",
-      "status": "selected-logical-unimplemented",
+      "status": "selected-contract-unimplemented-unadmitted",
       "implementation_boundary": "Typed file/statement/message importer with explicit format, issuer, source IDs, observation time, coverage and permitted recipients.",
       "substantive_path": "Preserve original bytes/digest and parse into attributed observations; quarantine unknown schema or conflicting source identity.",
-      "unresolved_prerequisite": "Implement and test each selected source format; source export and complete coverage are not assumed.",
-      "implemented": false
+      "unresolved_prerequisite": "Implement each original message/form/statement source format, issuer/account binding, period coverage, parser version, deduplication and protected capture. Actual export access, source rights, counterparties, data recipients, account-specific CSV/XML/PDF mapping and gap reconciliation are unknown until established; model text is not a source statement.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+          "version": "IC1.0"
+        }
+      ],
+      "selected_route_ids": [
+        "IC-MAIL-IN",
+        "IC-PUBLIC",
+        "IC-BOOKS",
+        "IC-HUMAN"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Implement each original message/form/statement source format, issuer/account binding, period coverage, parser version, deduplication and protected capture.",
+        "Actual export access, source rights, counterparties, data recipients, account-specific CSV/XML/PDF mapping and gap reconciliation are unknown until established; model text is not a source statement."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-SEARCH": {
       "name": "External research discovery",
-      "status": "integration-choice-unresolved",
-      "implementation_boundary": "Clean public-only or otherwise destination-authorized query package through a brokered search/fetch adapter; provider not yet selected.",
+      "status": "selected-contract-unimplemented-unadmitted",
+      "implementation_boundary": "IC1.0 selects Brave Search API plus authorized HTTP fetch; an accepted human can supply known URLs/documents. No further baseline vendor selection is required.",
       "substantive_path": "Approve exact query/destination -> execute bounded request -> capture dated result/original -> analyze in authorized context.",
-      "unresolved_prerequisite": "Integration track must choose provider and implement query disclosure, fetch redirects, output lineage and limits before use.",
-      "implemented": false
+      "unresolved_prerequisite": "Actual Brave account/principal and current plan/terms/API credential, funded call allowance and independent recovery access remain unestablished. Implement current exact-query/disclosure approval, destination/IP/redirect confinement, captured dated originals, parser/lineage and bounded retries; private queries need actual destination authority. Human-supplied sources are a separately accepted performance route with actual source access and burden, not an assumed available fallback.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+          "version": "IC1.0"
+        }
+      ],
+      "selected_route_ids": [
+        "IC-SEARCH",
+        "IC-HUMAN"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Actual Brave account/principal and current plan/terms/API credential, funded call allowance and independent recovery access remain unestablished.",
+        "Implement current exact-query/disclosure approval, destination/IP/redirect confinement, captured dated originals, parser/lineage and bounded retries; private queries need actual destination authority.",
+        "Human-supplied sources are a separately accepted performance route with actual source access and burden, not an assumed available fallback."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-CONTACT": {
       "name": "Inbound and outbound communication",
-      "status": "integration-choice-unresolved",
-      "implementation_boundary": "First-party conversation/case records plus admitted form/mailbox ingestion and controlled send adapter; no mail/social provider selected.",
+      "status": "selected-contract-unimplemented-unadmitted",
+      "implementation_boundary": "IC1.0 selects Fastmail JMAP intake, Postmark controlled outbound, Cloudflare intake forms and the accepted human/manual route.",
       "substantive_path": "Capture actual incoming communication; release exact permitted recipient/body; reconcile actual send and maintain suppression/due replies.",
-      "unresolved_prerequisite": "Choose channel/provider and implement identity, ingestion, recipient resolution, first-send cutoff, status, suppression and alternate channel.",
-      "implemented": false
+      "unresolved_prerequisite": "Actual mailbox/Postmark/product accounts, sender/domain identity, plan/terms eligibility, contact/consent basis, credentials, current suppression and billing settings remain unestablished. Implement source cursors, exact sender/recipient/content resolution, applicable first-send cutoff, provider-specific webhook authentication/event identity, durable ingress, unknown-send reconciliation and maintained suppression. Actual response/correction/grievance custodians, accessible alternative, accepted capacity and measured review/performer minutes are required; company authorization alone does not establish provider permission.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+          "version": "IC1.0"
+        }
+      ],
+      "selected_route_ids": [
+        "IC-MAIL-IN",
+        "IC-MAIL-OUT",
+        "IC-PUBLIC",
+        "IC-HUMAN"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Actual mailbox/Postmark/product accounts, sender/domain identity, plan/terms eligibility, contact/consent basis, credentials, current suppression and billing settings remain unestablished.",
+        "Implement source cursors, exact sender/recipient/content resolution, applicable first-send cutoff, provider-specific webhook authentication/event identity, durable ingress, unknown-send reconciliation and maintained suppression.",
+        "Actual response/correction/grievance custodians, accessible alternative, accepted capacity and measured review/performer minutes are required; company authorization alone does not establish provider permission."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-PUBLISH": {
       "name": "Publication and customer deployment",
-      "status": "integration-choice-unresolved",
-      "implementation_boundary": "Staged asset/release proposal to a controlled hosting/CMS/distribution adapter; no public host or channel selected.",
+      "status": "selected-contract-unimplemented-unadmitted",
+      "implementation_boundary": "IC1.0 selects Cloudflare Workers Static Assets, Workers Free and D1 Free for the bounded public/product profile; actual specialist creation/physical work follows IC-HUMAN.",
       "substantive_path": "Validate exact artifact/claim/audience -> release through C04 -> observe accessible published version -> maintain correction/removal.",
-      "unresolved_prerequisite": "Integration and deployment tracks choose actual target and implement release/status/cancellation/rollback/visibility checks.",
-      "implemented": false
+      "unresolved_prerequisite": "Actual product account/domain, scoped deployment credential, content/asset rights, audience/disclosure authority, current plan limits and provider terms are unestablished. Implement exact digest/version release, observed public behavior, functional/accessibility tests, customer data export/recovery, removal and continuing-descendant accounting. Venture-specific CMS, media tooling or actuator extensions remain genuinely unselected if needed; they must be separately admitted before the dependent promise, without replacing the selected baseline.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+          "version": "IC1.0"
+        }
+      ],
+      "selected_route_ids": [
+        "IC-PUBLIC",
+        "IC-HUMAN"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Actual product account/domain, scoped deployment credential, content/asset rights, audience/disclosure authority, current plan limits and provider terms are unestablished.",
+        "Implement exact digest/version release, observed public behavior, functional/accessibility tests, customer data export/recovery, removal and continuing-descendant accounting.",
+        "Venture-specific CMS, media tooling or actuator extensions remain genuinely unselected if needed; they must be separately admitted before the dependent promise, without replacing the selected baseline."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-MONEY": {
       "name": "Actual account movement and filings",
-      "status": "integration-choice-unresolved",
-      "implementation_boundary": "Actual bank/payment/filing adapter or separately admitted competent human operating the actual principal account; provider unselected.",
+      "status": "selected-contract-unimplemented-unadmitted",
+      "implementation_boundary": "IC1.0 selects Stripe Checkout/refunds/balance reconciliation, original statements with generated hledger 1.52 validation, and actual authorized manual bank/filing performance.",
       "substantive_path": "Validate exact authorized instruction -> record bounded dispatch/start -> obtain independent receipt/statement -> reconcile amount, beneficiary and unknown effects.",
-      "unresolved_prerequisite": "Implement provider-specific automated or manual adapter; verify actual accounts, authority, funding and professional treatment at operating setup.",
-      "implemented": false
+      "unresolved_prerequisite": "Actual eligible principal, active Stripe/bank account, supported products/currencies, exact money authority, funded holds and current provider terms/fees remain unestablished. Implement provider-specific idempotency/status/webhook/reconciliation contracts, account-specific original statement mappings and independent settlement evidence; a balanced journal is not cash or filing. Actual bank choice, jurisdiction/chart/treatment, competent accountant/filing engagement, account access, signatory, deadline, fee and received submission evidence remain operating prerequisites.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+          "version": "IC1.0"
+        }
+      ],
+      "selected_route_ids": [
+        "IC-PAY",
+        "IC-BOOKS",
+        "IC-HUMAN"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Actual eligible principal, active Stripe/bank account, supported products/currencies, exact money authority, funded holds and current provider terms/fees remain unestablished.",
+        "Implement provider-specific idempotency/status/webhook/reconciliation contracts, account-specific original statement mappings and independent settlement evidence; a balanced journal is not cash or filing.",
+        "Actual bank choice, jurisdiction/chart/treatment, competent accountant/filing engagement, account access, signatory, deadline, fee and received submission evidence remain operating prerequisites."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-PERSON": {
       "name": "Actual human, professional or physical work",
-      "status": "operating-assignment-required",
-      "implementation_boundary": "Accepted person/provider engagement with concrete deliverable, competence, capacity, access, fee/resource authority and alternate.",
+      "status": "selected-contract-operating-assignment-required",
+      "implementation_boundary": "IC1.0 selects the authenticated service portal/Fastmail assignment and evidence route with actual separately accepted human, professional or physical performance.",
       "substantive_path": "Accepted assignment -> actual work -> substantive deliverable/inspection -> scoped independent acceptance and surviving duties.",
-      "unresolved_prerequisite": "Actual available person/service and lawful mandate are not supplied by software; unavailable result remains unfulfilled.",
-      "implemented": false
+      "unresolved_prerequisite": "Actual identified willing qualified performer, lawful mandate/competence scope, conflict checks, materials/access, availability, fee reservation and accepted alternate are unestablished. Implement exact scope/acknowledgment, substantive work/native evidence, independent acceptance, missed-deadline and replacement behavior; packet delivery cannot establish performance.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+          "version": "IC1.0"
+        }
+      ],
+      "selected_route_ids": [
+        "IC-HUMAN"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Actual identified willing qualified performer, lawful mandate/competence scope, conflict checks, materials/access, availability, fee reservation and accepted alternate are unestablished.",
+        "Implement exact scope/acknowledgment, substantive work/native evidence, independent acceptance, missed-deadline and replacement behavior; packet delivery cannot establish performance."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-REMEDY": {
       "name": "Independent grievance and continuity route",
-      "status": "integration-and-arrangement-unresolved",
-      "implementation_boundary": "Reachable noncustomer form/mail/manual channel independent of the disputed custodian and capable residual performer.",
+      "status": "selected-contract-operating-arrangement-required",
+      "implementation_boundary": "IC1.0 selects the public Cloudflare intake/static grievance page, separately administered Fastmail continuity mailbox and actual accepted independent custodian performance.",
       "substantive_path": "Preserve individual intake -> competent reasons/escalation -> actual funded remedy or lawful disposition -> verify continuing accessibility.",
-      "unresolved_prerequisite": "Select and exercise alternate channel, actual competent forum/custodian, funding and joint-failure continuity.",
-      "implemented": false
+      "unresolved_prerequisite": "Actual reachable competent custodian/alternate outside the disputed dependency, login/recovery/MFA, mandate, funded remedy/fees, availability and applicable forum are unestablished. Implement and exercise accessible noncustomer intake, durable/staged receipt distinction, due progress and original evidence access; shared DNS/provider/admin roots remain disclosed. Actual benign unfamiliar duty and joint-failure continuity rehearsal must precede live-route claims; a URL, mailbox or named alternate alone is not meaningful redress.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+          "version": "IC1.0"
+        }
+      ],
+      "selected_route_ids": [
+        "IC-PUBLIC",
+        "IC-MAIL-IN",
+        "IC-HUMAN"
+      ],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Actual reachable competent custodian/alternate outside the disputed dependency, login/recovery/MFA, mandate, funded remedy/fees, availability and applicable forum are unestablished.",
+        "Implement and exercise accessible noncustomer intake, durable/staged receipt distinction, due progress and original evidence access; shared DNS/provider/admin roots remain disclosed.",
+        "Actual benign unfamiliar duty and joint-failure continuity rehearsal must precede live-route claims; a URL, mailbox or named alternate alone is not meaningful redress."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-RUNTIME": {
       "name": "Kernel, evidence and recovery execution",
-      "status": "separate-track-unimplemented",
+      "status": "selected-contract-unimplemented-unadmitted",
       "implementation_boundary": "S1-C02/C04/C05/C06/C08 contracts in companion kernel, authority and later execution/context/evaluation/deployment specifications.",
       "substantive_path": "Admit exact work -> enforce bounded attempt/effect -> accept evidence -> reconcile/resume from authoritative frontier.",
-      "unresolved_prerequisite": "Companion specifications and tests must establish usable runtime, independent durability and effective revocation; this catalog does not implement them.",
-      "implemented": false
+      "unresolved_prerequisite": "Implement and validate the selected kernel, work, context, evidence, authority and deployment contracts; no prose establishes protected runtime behavior. Actual infrastructure, independent administration/keys, funding, effective revocation/restore and provider/worker capacity require operational admission.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "01-contract-kernel.md",
+          "version": "S1-KERNEL 1.0.0"
+        },
+        {
+          "location": "02-authority-recovery.md",
+          "version": "S1-AUTHORITY 1.0.0"
+        },
+        {
+          "location": "05-work-agents-skills.md",
+          "version": "WORK-1.0"
+        },
+        {
+          "location": "06-knowledge-evidence-evaluation.md",
+          "version": "KNOWLEDGE-1.0"
+        },
+        {
+          "location": "07-integrations-capacity.md",
+          "version": "IC1.0"
+        },
+        {
+          "location": "08-improvement-implementation.md",
+          "version": "IB1.0"
+        }
+      ],
+      "selected_route_ids": [],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Implement and validate the selected kernel, work, context, evidence, authority and deployment contracts; no prose establishes protected runtime behavior.",
+        "Actual infrastructure, independent administration/keys, funding, effective revocation/restore and provider/worker capacity require operational admission."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     },
     "R-OPERATOR": {
       "name": "Permission-filtered operator surfaces",
       "status": "selected-logical-unimplemented",
       "implementation_boundary": "04-human-operation.md: account, decisions, work, evidence, people, requests, capacity, continuity and full terminal surfaces.",
       "substantive_path": "Authenticate scope -> inspect current evidence/unknowns -> issue exact command -> observe authoritative response and actual effect.",
-      "unresolved_prerequisite": "Implement accessibility, identity recovery, projection freshness and human usability; no demonstrated attention or competence benefit.",
-      "implemented": false
+      "unresolved_prerequisite": "Implement and evaluate the permission-filtered account/decision/work/evidence/people/requests/capacity/continuity/terminal jobs with current identity, source freshness and exact commands. Actual human availability, consent, accessible use, identity recovery and observed attention/competence benefit remain unestablished.",
+      "implemented": false,
+      "selected_contracts": [
+        {
+          "location": "04-human-operation.md",
+          "version": "HUMAN-1.0"
+        }
+      ],
+      "selected_route_ids": [],
+      "admission_state": "not_established",
+      "remaining_admission": [
+        "Implement and evaluate the permission-filtered account/decision/work/evidence/people/requests/capacity/continuity/terminal jobs with current identity, source freshness and exact commands.",
+        "Actual human availability, consent, accessible use, identity recovery and observed attention/competence benefit remain unestablished."
+      ],
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
     }
   },
   "seed_record_factories": {
@@ -18137,5 +18336,12 @@
       "Completed inconclusive assessment remains distinct from unfinished, rejected and contested; downstream acceptance requires exact current accepted subject predicate.",
       "Launch composes a complete exact requirement-ID/subject/version/predicate-to-child-judgment join; missing/wrong/stale child fails while ordinary distinct-subject launch remains possible."
     ]
+  },
+  "fulfillment_binding_contract": {
+    "version": "R-IC-1.0",
+    "kind": "XSR-03 author repair, pending independent review",
+    "rule": "Resolve capability.fulfillment_route_refs to selected_contracts/selected_route_ids and the same explicit remaining_admission facts. Selection, implementation, profile admission, account standing and actual performer availability are distinct. Do not display admitted/available from selected status.",
+    "source": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+    "root_projection": "Any readiness projection must show the exact selected contract plus unmet admission facts; preserve unknown operating inputs, rather than reopening a baseline provider selection."
   }
 }
