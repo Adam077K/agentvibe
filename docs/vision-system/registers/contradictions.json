@@ -60,5 +60,20 @@
       "planning/01-understand.md"
     ],
     "status": "design tension"
+  },
+  {
+    "id": "X06",
+    "kind": "Direct observation of differing review detections, not a claim of contradictory runtime evidence",
+    "positions": [
+      "F-coverage-components-01 at2407bc1 established no new material contradiction after broad643answer/component review",
+      "F-cross-scope-01 at51de3b4 identified boundedXSR01first-contact interpretation, XSR02distinctiveverification joins andXSR03selectedroute status discrepancies"
+    ],
+    "disposition": "Preserve both frozen reports. A broad no-new-finding verdict does not close a focused finding or prove reviewer sensitivity. XSR01 corrected and independently rechecked; XSR02/03 still require correction/recheck. Do not count related same-family reviews as independent statistical corroboration.",
+    "sources": [
+      "planning/reviews/F-coverage-components-01.md",
+      "planning/reviews/F-cross-scope-01.md",
+      "planning/reviews/F-cross-scope-02.md"
+    ],
+    "status": "Review-scope and sensitivity limit retained; focused unresolved findings remain controlling"
   }
 ]
