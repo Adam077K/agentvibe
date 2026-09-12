@@ -36,7 +36,8 @@
     "Integrated and fully read C2 alternative-depth, company responsibility and technical foundation addenda at 4182ead; no finding closed by author assertion",
     "Independent architecture/evidence and technical reassessments returned: all original foundational blockers conceptually closed; fresh company reassessment also permits synthesis. Four sharpened specification obligations remain; empirical and deployment claims unproved. Archival underway.",
     "Read complete E1 selection and status amendment; adopt S1.0 after independent review reconciliation, with ten explicit design decisions and empirical uncertainties retained",
-    "N01 native subscription execution feasibility sourced and archived; three selected native-control claim groups independently source-audited, no model invocation or isolation test"
+    "N01 native subscription execution feasibility sourced and archived; three selected native-control claim groups independently source-audited, no model invocation or isolation test",
+    "Architecture-neutral Phase G acceptance protocol formed independently before active specification drafts; archival pending, no planning acceptance"
   ],
   "active_work": [
     {
@@ -62,12 +63,12 @@
     },
     {
       "agent": "attack_architecture_evidence",
-      "scope": "Read-only preparation of architecture-neutral full-plan acceptance protocol before reading active specification drafts; no current acceptance"
+      "scope": "Archive independently prepared acceptance protocol in a separate scribe turn; no current acceptance"
     }
   ],
   "next_actions": [
     "Integrate concrete kernel/authority and company/human specifications; reconcile shared IDs, envelopes, boundaries and state contracts",
-    "Receive and archive current native execution feasibility evidence; derive admitted provider/integration paths without silent paid fallback",
+    "Archive frozen Phase G acceptance protocol; use it to review the complete package without rewarding selected architectural vocabulary",
     "Complete work/agent/skills, context/evidence/evaluations, integrations/capacity, controlled improvement, deployment/build and all required schemas",
     "Answer 566 original, 62 supplemental and 15 discovered concerns with exact substantive support and planned implementation pointers; maintain full capability paths",
     "Run independent architecture-neutral complete-plan reviews, resolve foundational gaps and commit accepted package before implementation",
@@ -95,7 +96,7 @@
     "contradictions": "registers/contradictions.json",
     "questions": "registers/open-questions.json and coverage/questions.json",
     "founder_decisions": "registers/open-questions.json",
-    "candidates": "planning/candidates/A-records-and-cases.md; B-federated-responsibility.md; C-adaptive-coordination.md with AC-foundational-distinction.md; technical-foundation-repairs-v1.md; company-foundation-repairs-v1.md \u2014 proposals only",
+    "candidates": "planning/candidates/ original A/B/C and repair addenda; selection and rejected alternatives in planning/02-architecture-selection.md",
     "decisions": "registers/decisions.json; AD-001\u2013010, architecture S1.0",
     "risks": "registers/risks.json; 17 material groups, controls unimplemented",
     "coverage": "coverage/questions.json, coverage/supplemental.json, coverage/discovered.json",
@@ -110,7 +111,7 @@
     "incidents": [],
     "migrations": [],
     "history": "history.jsonl",
-    "attack_coverage": "research/attack-coverage.json plus coverage/discovered.json; original independent attacks archived, repair reassessment pending",
+    "attack_coverage": "research/attack-coverage.json and registers/review-findings.json; original foundations conceptually repaired, sharpened implementation obligations and empirical uncertainties remain",
     "review_findings": "registers/review-findings.json",
     "capability_requirements": "coverage/capability-requirements.json; 46 decomposed outcome requirements, not implemented capabilities",
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",

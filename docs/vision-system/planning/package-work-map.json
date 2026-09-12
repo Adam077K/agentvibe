@@ -96,11 +96,13 @@
         "Owner purpose versus inferred operating choices",
         "Customer value, obligations, institutional capacity and resource economics"
       ],
-      "status": "authoring allocation only; selected architecture and concrete answers pending",
+      "status": "active specification authoring; draft not accepted",
       "dependencies": [
-        "Phase E selection with preserved review obligations"
+        "S1.0 selected logical architecture and retained D2 obligations",
+        "Compatible kernel, domain and common-record contracts",
+        "Independent complete-plan review before implementation"
       ],
-      "author": null,
+      "author": "repair_company_foundations",
       "reviewer": null,
       "answer_locations": []
     },
@@ -295,9 +297,11 @@
         "Provider-independent durable continuation and refusal",
         "Fixed versus adaptive paths, context-limited temporary executors and independent judges"
       ],
-      "status": "authoring allocation only; selected architecture and concrete answers pending",
+      "status": "remaining Phase F specification work; no answer or implementation claimed",
       "dependencies": [
-        "Phase E selection with preserved review obligations"
+        "S1.0 selected logical architecture and retained D2 obligations",
+        "Compatible kernel, domain and common-record contracts",
+        "Independent complete-plan review before implementation"
       ],
       "author": null,
       "reviewer": null,
@@ -400,9 +404,11 @@
         "Subscription authentication, limits, interruption, no silent metered fallback",
         "Tool and service admission, removal, provider change and substantive end-to-end integration"
       ],
-      "status": "authoring allocation only; selected architecture and concrete answers pending",
+      "status": "remaining Phase F specification work; no answer or implementation claimed",
       "dependencies": [
-        "Phase E selection with preserved review obligations"
+        "S1.0 selected logical architecture and retained D2 obligations",
+        "Compatible kernel, domain and common-record contracts",
+        "Independent complete-plan review before implementation"
       ],
       "author": null,
       "reviewer": null,
@@ -543,9 +549,11 @@
         "Transitive evidence dependencies and claim-versus-cause distinctions",
         "Independent outcome/process/account tests, negative controls, repeated trials and evaluator drift"
       ],
-      "status": "authoring allocation only; selected architecture and concrete answers pending",
+      "status": "remaining Phase F specification work; no answer or implementation claimed",
       "dependencies": [
-        "Phase E selection with preserved review obligations"
+        "S1.0 selected logical architecture and retained D2 obligations",
+        "Compatible kernel, domain and common-record contracts",
+        "Independent complete-plan review before implementation"
       ],
       "author": null,
       "reviewer": null,
@@ -644,11 +652,13 @@
         "Recoverable effects and obligations, conflict domains, deletion/revocation fencing",
         "Threat model, privacy/professional determinations, incidents, backup and verified restore"
       ],
-      "status": "authoring allocation only; selected architecture and concrete answers pending",
+      "status": "active specification authoring; draft not accepted",
       "dependencies": [
-        "Phase E selection with preserved review obligations"
+        "S1.0 selected logical architecture and retained D2 obligations",
+        "Compatible kernel, domain and common-record contracts",
+        "Independent complete-plan review before implementation"
       ],
-      "author": null,
+      "author": "attack_technical",
       "reviewer": null,
       "answer_locations": []
     },
@@ -723,11 +733,13 @@
         "Owner competence and attention without surveillance or full-time review",
         "Terminal, intervention, approvals, evidence, absence recovery and multiple legitimate owners"
       ],
-      "status": "authoring allocation only; selected architecture and concrete answers pending",
+      "status": "active specification authoring; draft not accepted",
       "dependencies": [
-        "Phase E selection with preserved review obligations"
+        "S1.0 selected logical architecture and retained D2 obligations",
+        "Compatible kernel, domain and common-record contracts",
+        "Independent complete-plan review before implementation"
       ],
-      "author": null,
+      "author": "repair_company_foundations",
       "reviewer": null,
       "answer_locations": []
     },
@@ -790,9 +802,11 @@
         "Final repository modules, deployment, release and dependency-ordered construction",
         "Migration of meanings and surviving duties; recoverable build progress and operability"
       ],
-      "status": "authoring allocation only; selected architecture and concrete answers pending",
+      "status": "remaining Phase F specification work; no answer or implementation claimed",
       "dependencies": [
-        "Phase E selection with preserved review obligations"
+        "S1.0 selected logical architecture and retained D2 obligations",
+        "Compatible kernel, domain and common-record contracts",
+        "Independent complete-plan review before implementation"
       ],
       "author": null,
       "reviewer": null,
@@ -803,12 +817,12 @@
     {
       "deliverable": "8.5",
       "responsibility": "Preserve original alternatives, revisions, independent attacks and comparative selection rationale",
-      "status": "candidates and first attacks archived; repair reassessment active"
+      "status": "Original alternatives, repaired C2 distinction, D/D2 attacks and S1.0 selection preserved; empirical comparisons unexecuted"
     },
     {
       "deliverable": "8.6",
       "responsibility": "Integrate selected logical/runtime/deployment/data/trust/authority/integration/interaction/improvement architecture and every component contract",
-      "status": "awaiting Phase E"
+      "status": "S1.0 logical selection complete; concrete runtime, trust and component contracts being authored"
     },
     {
       "deliverable": "8.11",
@@ -861,7 +875,7 @@
         "Deployment",
         "Rollback"
       ],
-      "status": "not specified"
+      "status": "Shared envelope and core records being authored; complete subject bindings and schema catalog remain"
     },
     {
       "deliverable": "8.24",
