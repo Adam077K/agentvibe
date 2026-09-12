@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "D-independent-candidate-attacks",
+  "phase": "D-review-findings-and-targeted-revision",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-3-1789160853",
@@ -30,35 +30,36 @@
     "L10 economics, L11 governance and L12 improvement reports read and archived; twelve independent lane reports integrated",
     "All fourteen independent lane reports archived and read; cross-lane comparison preserved without architecture selection",
     "Six consequential current-policy and benchmark claims independently source-audited; L12 precision and caption corrections committed",
-    "Three materially different candidates archived and fully read: records/cases, federated responsibility and adaptive coordination; each covers shared eight scenarios and candidate dimensions"
+    "Three materially different candidates archived and fully read: records/cases, federated responsibility and adaptive coordination; each covers shared eight scenarios and candidate dimensions",
+    "All three independent candidate attack judgments returned; archival in separate builder/scribe turns underway. Candidate set is not cleared for selection."
   ],
   "active_work": [
     {
       "agent": "attack_technical",
-      "role": "read-only independent reviewer",
-      "scope": "technical, security, reliability, evaluation",
-      "subject_commit": "595f931",
-      "status": "reviewing"
+      "status": "archiving completed independent report",
+      "artifact": "planning/reviews/D-technical.md",
+      "worktree": ".worktrees/attack-technical"
     },
     {
       "agent": "attack_company_human",
-      "role": "read-only independent reviewer",
-      "scope": "business lifecycle, economics, human factors, legal/privacy/ethics",
-      "subject_commit": "595f931",
-      "status": "reviewing"
+      "status": "archiving completed independent report",
+      "artifact": "planning/reviews/D-company-human.md",
+      "worktree": ".worktrees/attack-company-human"
     },
     {
       "agent": "attack_architecture_evidence",
-      "role": "read-only independent reviewer",
-      "scope": "foundational alternatives, evidence, coherence, buildability, changeability",
-      "subject_commit": "595f931",
-      "status": "reviewing"
+      "status": "archiving completed independent report",
+      "artifact": "planning/reviews/D-architecture-evidence.md",
+      "worktree": ".worktrees/attack-architecture-evidence"
     }
   ],
   "next_actions": [
-    "Collect three independent candidate attack reports; preserve judgments unchanged via separate archival role",
-    "Map all33required attacks,14attackdimensions and15discoveredcases to actual review findings; close substantive gaps",
-    "Resolve blocking foundational candidate issues or synthesize a revised architecture and independently review relevant repairs",
+    "Integrate and verify the three report-only archival commits without changing judgments",
+    "Resolve EAS-02: demonstrate nonoptional materially different A/C control rights and a concrete discriminating trace, or replace C as a foundation before selection",
+    "Repair A/B lost-operation recovery T01/EAS-01; address B multi-issuer commit/revocation T02 and orphaned sponsorship CH-01 if retaining B",
+    "Resolve shared responsibility foundations CH-03 external redress and CH-05 interacting nonmonetary/entity consequences; close transitive evidence/authority assumptions T06/T08",
+    "Map all33required attacks and15discovered cases to findings; preserve empirical kill tests and exact specification obligations",
+    "Independently re-review targeted foundational repairs before architectural selection",
     "Specify complete system and answer all coverage items with exact support",
     "Run independent architecture-neutral planning review; commit accepted package",
     "Build complete system in dependency order, preserving evidence and tests"
@@ -119,6 +120,11 @@
     "Available subagents share a model family; context independence is not statistical independence",
     "This session has unrestricted tools; a read-only brief is not enforced tool isolation",
     "Initial git history path pattern failed to match nested source; corrected by inspecting branch trees",
-    "Baseline Mission Control has two failures: corpus-count assertion and ledger comparison timeout; causes unverified"
+    "Baseline Mission Control has two failures: corpus-count assertion and ledger comparison timeout; causes unverified",
+    "Independent review EAS-02: A/C may differ only optionally; three foundational alternatives not yet established",
+    "T01/EAS-01: A/B recovery omits mandatory independent pre-dispatch durability or proven complete reconstruction",
+    "T02/CH-01: B cross-issuer release and orphaned cross-domain work ownership unresolved",
+    "CH-02/T07: evidence disturbance can suppress service and cause global work cascades",
+    "CH-03/CH-05/T06/T08: redress, interacting exposure and transitive trust/authority responsibilities require explicit decisions"
   ]
 }
