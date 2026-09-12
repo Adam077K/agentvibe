@@ -127,7 +127,8 @@
     "specification_findings": "registers/specification-findings.json; ten cross-contract observations with scoped specification evidence, no runtime completion",
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
     "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance",
-    "integration_review": "planning/reviews/F-integration-01.md through F-integration-03.md; FIR01\u201305 closed at specification level, runtime checks unexecuted"
+    "integration_review": "planning/reviews/F-integration-01.md through F-integration-03.md; FIR01\u201305 closed at specification level, runtime checks unexecuted",
+    "specification_inspections": "research/specification-inspections.json; complete-draft read hashes avoid repeated inspection, no independent acceptance"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",

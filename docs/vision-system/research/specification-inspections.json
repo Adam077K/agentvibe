@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "kind": "Orchestrator integration inspection; not independent acceptance",
+  "inspections": [
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/05-work-agents-skills.md",
+      "source_worktree": ".worktrees/phase-f-work-knowledge",
+      "source_state": "Uncommitted draft while author completed S04 question answers",
+      "sha256": "51c4a361f70c5bedbc16aa4d0b734d2781f074ae943b5640d1aac8a757aa2a78",
+      "read_scope": "Complete document",
+      "result": "Concrete work/schedule/temporary-agent/skill contracts read; no independent verdict or runtime proof. Read only subsequent differences at integration if this hash changes.",
+      "remaining": "Inspect machine-record/state contracts and all268 substantive answers after handoff; independent review; full schema/component/coverage consolidation."
+    }
+  ]
+}
