@@ -59,6 +59,10 @@
     {
       "agent": "orchestrator",
       "scope": "Cross-contract integration, decision/coverage/state governance; remaining Phase F tracks and independent review"
+    },
+    {
+      "agent": "attack_architecture_evidence",
+      "scope": "Read-only preparation of architecture-neutral full-plan acceptance protocol before reading active specification drafts; no current acceptance"
     }
   ],
   "next_actions": [
@@ -135,5 +139,15 @@
     "EAS-R1: comparator can erase inquiry-right treatment or reward C2 by definition; separate own-rights conformance, business outcomes and representation control",
     "Technical R1\u2013R3: dynamic scope/alias/participant migration, independently durable status after lost acknowledgments and delayed first transport must be specified precisely",
     "Accumulated institutional maintenance, disclosure review, independent administration, professional continuity and owner attention may defeat operating economics"
-  ]
+  ],
+  "implementation_substrate_proposals": {
+    "status": "Authoring proposals; not yet root-integrated/reviewed contracts",
+    "source_agent": "attack_technical",
+    "items": [
+      "Node24 LTS, PostgreSQL18 single logical writer, SQL outbox/timers, HTTPS JSON",
+      "Independent synchronous recovery standby and witness of exact persisted group/frontier; no dispatch from primary status row alone",
+      "Supported nftables packet-hook deadline gate considered instead of custom eBPF; exact temporal/partial-request/clock/failure contract pending review"
+    ],
+    "warning": "Current machine availability and local tests cannot establish independent host/admin fault domains or fund a deployment"
+  }
 }
