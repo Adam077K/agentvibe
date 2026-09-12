@@ -1,0 +1,311 @@
+[
+  {
+    "id": "AD-001",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Common authority for admitted work and surviving obligations",
+    "problem": "Cross-domain work must have continuing custody and a consistent agenda without making the owner the routine coordinator.",
+    "decision": "Adopt S1.0, derived from repaired A, with one logical admission authority, native production and protected consequence/evidence/recovery boundaries.",
+    "alternatives": [
+      "S0 native tools with manual coordination",
+      "B native federation and independent issuers",
+      "C2 compulsory inquiry jurisdiction"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#2-alternatives-compared-on-the-same-requirements",
+      "research/L02-operations.md",
+      "research/L13-contrarian.md"
+    ],
+    "epistemic_basis": "Structural inference: fewer independently administered internal coordination contracts; no measured superiority.",
+    "accepted_design_costs": [
+      "Concentrated agenda discretion",
+      "Semantic mapping and case-maintenance labor"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen if omitted duties or proportional owner coordination persist; prefer S0 if equivalent outcomes cost less, B for beneficial real administrative autonomy, C2 for useful neglected inquiry.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-002",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Specialized production without a department-agent roster",
+    "problem": "Actual company delivery needs different methods and competent standing, not a named model per function.",
+    "decision": "Allocate known predicates to deterministic code, waits/repetition to durable procedures, interpretation/generation to bounded model work, and real human/professional/physical work to accepted capable performers.",
+    "alternatives": [
+      "Persistent department agents",
+      "All-agent execution",
+      "All fixed procedures"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#3-selected-logical-and-responsibility-model",
+      "research/L02-operations.md",
+      "research/L03-architectures.md"
+    ],
+    "epistemic_basis": "Design allocation by work/authority; persistent identity benefit remains unproved.",
+    "accepted_design_costs": [
+      "More explicit capability admission",
+      "Unavailable real performers remain operational blockers"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen an allocation when measured outcomes, cost or continuity favor another mode without greater unauthorized consequence.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-003",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "One ordered consequential release boundary",
+    "problem": "Duplicated business effects, conflicting permissions and restored missing promises can create undetected exposure.",
+    "decision": "Adopt transactional authority per overlapping scope with exact operation prerequisites, business conflict holds, independently durable envelopes/release records and explicit cancellation/first-send semantics.",
+    "alternatives": [
+      "Independent online checks without common cutoff",
+      "Provider idempotency alone",
+      "Primary-local action logs"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#4-control-admission-and-external-effects",
+      "planning/reviews/D2-technical.md",
+      "research/L08-reliability.md"
+    ],
+    "epistemic_basis": "Conceptually reviewed contract within surviving roots; implementation proof required.",
+    "accepted_design_costs": [
+      "Synchronous latency",
+      "Unavailable effects during missing prerequisites",
+      "Independent administration and recovery cost"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen on a lost released operation, conflicting hold, unsafe status lookup, late invocation outside contract, or unaffordable/unavailable required roots.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-004",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Native meaning with conservative context validity",
+    "problem": "A copied status or uncited sensitive input can silently become accepted knowledge or outward disclosure.",
+    "decision": "Keep native domain records and minimal cross-boundary mappings; capture full input lineage; atomically validate usable derivatives and serialize restrictions with consequential release.",
+    "alternatives": [
+      "Universal company ontology",
+      "Model-selected citations as lineage",
+      "Unconditional native-session resume",
+      "Graph/vector memory by default"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#5-native-meaning-evidence-memory-and-improvement",
+      "research/L05-memory.md",
+      "planning/candidates/technical-foundation-repairs-v1.md#6-concurrent-invalidation-publication-deletion-and-resume"
+    ],
+    "epistemic_basis": "Selective integration is a design choice; utility under conservative lineage remains empirical.",
+    "accepted_design_costs": [
+      "Mapping ownership and review",
+      "Over-invalidation and rework",
+      "Native resume may be unavailable"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen if a restricted derivative becomes usable or permitted work is persistently blocked without acceptable value; evaluate targeted retrieval alternatives against a real failure.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-005",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Protect interpretation as well as evidence capture",
+    "problem": "Unchanged logs or judges can mislead when parsers, denominators, source selection or administrative dependencies change.",
+    "decision": "Version and protect the transitive evidence base; state each claim's independence target and separate reported rationale from established cause.",
+    "alternatives": [
+      "Log integrity as truth",
+      "Two model judges as independence",
+      "Single aggregate success score"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#5-native-meaning-evidence-memory-and-improvement",
+      "research/L06-evaluation.md",
+      "research/L12-improvement.md",
+      "planning/reviews/D2-architecture-evidence-company.md"
+    ],
+    "epistemic_basis": "Independent conceptual review closes specified attacks, not all false evidence or shared-model error.",
+    "accepted_design_costs": [
+      "Separate observations/interpretation and calibration labor",
+      "Uncertainty remains even after agreement"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen on false acceptance from a shared dependency, concealed exclusion or causal explanation stronger than its evidence.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-006",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Fixed contestable owner participation and meaningful external redress",
+    "problem": "The owner can become confidently uninformed while affected people cannot reach a remedy.",
+    "decision": "Use transparent adverse sampling and domain-specific competence response; maintain accessible grievance custody, reasons, deadlines, competent escalation and surviving remedy resources.",
+    "alternatives": [
+      "Fully automated owner briefings",
+      "Global competence scoring",
+      "Internal ticket closure as remedy completion",
+      "C2 general inquiry jurisdiction by default"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#7-human-operation-and-failure-boundaries",
+      "research/L09-human.md",
+      "planning/candidates/company-foundation-repairs-v1.md"
+    ],
+    "epistemic_basis": "Mechanisms required by the founder; longitudinal benefit and affordable institutional capacity unproved.",
+    "accepted_design_costs": [
+      "Owner participation time",
+      "Independent review and continuity resources",
+      "Role conflicts cannot be removed by renaming"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen if unfamiliar material misunderstanding escapes, user disagreement is treated as incapacity, complaints strand, or required burden defeats viable operation.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-007",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Separate money, provider capacity, compute and attention",
+    "problem": "Subscription access can be mistaken for unlimited capacity or silently replaced with metered usage.",
+    "decision": "Preserve separate resource accounts and versioned execution adapters; admit only actual identity/auth/billing paths and explicit additional-spend policy.",
+    "alternatives": [
+      "Per-token cost as universal model",
+      "Automatic paid fallback",
+      "Shared customer use of personal subscription credentials"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#8-retained-mechanisms-costs-and-repository-transition",
+      "research/L10-economics.md",
+      "inputs/directive-contract.json"
+    ],
+    "epistemic_basis": "Founder constraint plus dated provider evidence; remaining allowance and future throughput unknown.",
+    "accepted_design_costs": [
+      "Queueing and interruption",
+      "Provider-specific conformance and entitlement checks",
+      "No guaranteed interchangeability"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen on changed provider terms, observed billing-path ambiguity, capability drift or sustained inability to perform within authorized capacity.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-008",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Controlled improvement with a protected acceptance boundary",
+    "problem": "An improver can make its own results look better or expand authority while optimizing output.",
+    "decision": "Require versioned evidence-backed change proposals, independent evaluation, controlled rollout and rollback; protected intent, authority, identity, evidence and evaluator dependencies require separate authorized changes.",
+    "alternatives": [
+      "Unreviewed recursive self-modification",
+      "Reward score as authority",
+      "Mutable judge inputs outside change control"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#5-native-meaning-evidence-memory-and-improvement",
+      "research/L12-improvement.md",
+      "planning/reviews/D2-technical.md"
+    ],
+    "epistemic_basis": "Design contract motivated by observed benchmark failure modes; company improvement benefit remains a hypothesis.",
+    "accepted_design_costs": [
+      "Regression/evaluation and rollout work",
+      "Slower protected changes",
+      "External consequences need separate remediation"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen if cumulative accepted changes drift protected meaning, compromise evaluation or cannot be rolled back with dependent state.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-009",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Full capability lifecycle with actual fulfillment",
+    "problem": "A catalog, plan or truthful blocked packet can be mistaken for completed company work.",
+    "decision": "Require usable intake, substantive execution or accepted delegation, evidence-backed acceptance, failure, replacement and closure for every capability requirement.",
+    "alternatives": [
+      "Dashboard-only delivery",
+      "Coding vertical slice presented as complete system",
+      "Simulated professional or physical capacity"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#6-complete-lifecycle-and-actual-fulfillment",
+      "coverage/capability-requirements.json",
+      "inputs/directive-contract.json"
+    ],
+    "epistemic_basis": "Founder scope constraint; specific ventures and real operating dependencies remain unset.",
+    "accepted_design_costs": [
+      "Broad integration and service-procedure scope",
+      "Real external mandates/capacity required before promises"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen any completion claim that lacks performance or legitimate disposition, or omits a planned capability or recovery path.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-010",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-12",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Selective repository reuse and reversible migration",
+    "problem": "Historical harness descriptions and passing checks can be mistaken for the new system's architecture or safety proof.",
+    "decision": "Reuse only mechanisms mapped and tested against selected contracts; import uncertainty, fence scope transfer and preserve old evidence and buildable states.",
+    "alternatives": [
+      "Inherit old roster/stack/dashboard boundaries",
+      "Wholesale rewrite without reuse evidence",
+      "Uncontrolled dual writers during migration"
+    ],
+    "evidence_and_reasoning": [
+      "planning/02-architecture-selection.md#8-retained-mechanisms-costs-and-repository-transition",
+      "research/repository-observations.md#r15--reuse-boundaries-in-the-existing-local-control-plane",
+      "research/baseline-results.json"
+    ],
+    "epistemic_basis": "Direct scoped repository observations plus migration design; two existing Mission Control failures unresolved.",
+    "accepted_design_costs": [
+      "Adapter/migration verification",
+      "Temporary parallel read projections",
+      "Explicit semantic and access inventories"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen on incompatible meanings, hidden native writes, regression, lost obligations/restrictions or insufficient recovery evidence.",
+    "implementation_evidence": null
+  }
+]

@@ -2,68 +2,104 @@
   {
     "owner": "orchestrator",
     "status": "open",
-    "review_by": "before architecture synthesis",
+    "review_by": "Before relevant empirical benefit claim; predeclare tests in Phase F and recheck at actual operating trials",
     "id": "H01",
     "kind": "Hypothesis",
     "statement": "The system can increase useful company work without proportional growth in owner checking.",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md Part one",
     "confidence": "unestablished",
-    "invalidation": "Representative longitudinal workloads require checking time proportional to volume or owner understanding deteriorates."
+    "invalidation": "Representative longitudinal workloads require checking time proportional to volume or owner understanding deteriorates.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": null,
+    "source_type": "Preserved founder vision",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "Founder and system designers have an interest in the system being useful; no independent business validation",
+    "corroboration": "Research describes related mechanisms and limits; no direct longitudinal company validation"
   },
   {
     "owner": "orchestrator",
     "status": "open",
-    "review_by": "before architecture synthesis",
+    "review_by": "Before relevant empirical benefit claim; predeclare tests in Phase F and recheck at actual operating trials",
     "id": "H02",
     "kind": "Hypothesis",
     "statement": "Cheap generation plus responsible closure makes more venture attempts affordable.",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md Part one",
     "confidence": "unestablished",
-    "invalidation": "Acquisition, support, liability, closure or attention costs dominate savings across representative attempts."
+    "invalidation": "Acquisition, support, liability, closure or attention costs dominate savings across representative attempts.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": null,
+    "source_type": "Preserved founder vision",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "Founder and system designers have an interest in the system being useful; no independent business validation",
+    "corroboration": "Research describes related mechanisms and limits; no direct longitudinal company validation"
   },
   {
     "owner": "orchestrator",
     "status": "open",
-    "review_by": "before architecture synthesis",
+    "review_by": "Before relevant empirical benefit claim; predeclare tests in Phase F and recheck at actual operating trials",
     "id": "H03",
     "kind": "Hypothesis",
     "statement": "Truthful accounting has durable commercial differentiation.",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md Part one",
     "confidence": "unestablished",
-    "invalidation": "Alternatives meet defined owner-accountability needs with adequate economics; willingness to adopt is absent."
+    "invalidation": "Alternatives meet defined owner-accountability needs with adequate economics; willingness to adopt is absent.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": null,
+    "source_type": "Preserved founder vision",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "Founder and system designers have an interest in the system being useful; no independent business validation",
+    "corroboration": "Research describes related mechanisms and limits; no direct longitudinal company validation"
   },
   {
     "owner": "orchestrator",
     "status": "open",
-    "review_by": "before architecture synthesis",
+    "review_by": "Before relevant empirical benefit claim; predeclare tests in Phase F and recheck at actual operating trials",
     "id": "H04",
     "kind": "Hypothesis",
     "statement": "Selected direct work can preserve owner competence within the attention saved.",
     "source": "inputs/directive-contract.json invariant and research/L01-intent.md",
     "confidence": "unestablished",
-    "invalidation": "Repeated evaluations find no competence benefit, unacceptable burden, or misleading competence proxies."
+    "invalidation": "Repeated evaluations find no competence benefit, unacceptable burden, or misleading competence proxies.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": "2026-09-12",
+    "source_type": "Founder directive and research",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "Founder and system designers have an interest in the system being useful; no independent business validation",
+    "corroboration": "Research describes related mechanisms and limits; no direct longitudinal company validation"
   },
   {
     "owner": "orchestrator",
     "status": "open",
-    "review_by": "before architecture synthesis",
+    "review_by": "Before provider execution admission and on provider/auth/billing change",
     "id": "A01",
     "kind": "Assumption",
     "statement": "Internal work primarily uses authorized personal Claude Code and Codex subscription environments, approximately USD 200/month each.",
     "source": "inputs/directive-contract.json subscription_assumption",
     "confidence": "founder operating assumption, not current price or entitlement verification",
-    "invalidation": "Verified provider terms, account identity or capacity do not support intended use."
+    "invalidation": "Verified provider terms, account identity or capacity do not support intended use.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": "2026-09-12",
+    "source_type": "Founder directive and research",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "No independent entitlement/legal determination implied",
+    "corroboration": "See source artifact for exact corroboration scope"
   },
   {
     "owner": "orchestrator",
     "status": "open",
-    "review_by": "before architecture synthesis",
+    "review_by": "Before dependent venture commitments; does not block general software specification or construction",
     "id": "U01",
     "kind": "Unknown",
     "statement": "Target venture, jurisdiction, legal form, professional duties, operating limits and customer data categories are not chosen.",
     "source": "planning/01-understand.md",
     "confidence": "not supplied",
-    "invalidation": "Authenticated owner supplies an operational profile; external legal/professional authority verifies applicable obligations."
+    "invalidation": "Authenticated owner supplies an operational profile; external legal/professional authority verifies applicable obligations.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": "2026-09-12",
+    "source_type": "Founder directive and research",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "No independent entitlement/legal determination implied",
+    "corroboration": "See source artifact for exact corroboration scope"
   },
   {
     "owner": "orchestrator",
@@ -74,7 +110,13 @@
     "statement": "Baseline npm run check passed 48/48 steps and separate Mission Control checks passed 427/429 tests.",
     "source": "research/baseline-results.json",
     "confidence": "high for recorded run only",
-    "invalidation": "Raw evidence hash differs or result transcription is disproved."
+    "invalidation": "Raw evidence hash differs or result transcription is disproved.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": "2026-09-12",
+    "source_type": "Local measurement or source extraction",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "No independent entitlement/legal determination implied",
+    "corroboration": "See source artifact for exact corroboration scope"
   },
   {
     "owner": "orchestrator",
@@ -85,6 +127,12 @@
     "statement": "Exact field-map extraction yields 53 numbered fields and 566 questions.",
     "source": "coverage/questions.json and inputs/THE-VISION-AND-THE-FIELDS.md",
     "confidence": "high for preserved input version",
-    "invalidation": "Independent extraction reveals omissions or source version changes."
+    "invalidation": "Independent extraction reveals omissions or source version changes.",
+    "reviewed_at": "2026-09-12 S1.0 synthesis; not empirically resolved",
+    "source_date": "2026-09-12",
+    "source_type": "Local measurement or source extraction",
+    "primary_or_secondary": "primary for stated intent or scoped local observation; empirical transfer unestablished",
+    "possible_conflicts": "No independent entitlement/legal determination implied",
+    "corroboration": "See source artifact for exact corroboration scope"
   }
 ]
