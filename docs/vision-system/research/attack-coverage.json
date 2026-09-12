@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "kind": "Orchestrator review-coverage state; not a completed threat model or test result",
+  "source": "inputs/directive-contract.json attack_cases and attack_dimensions",
+  "architecture_selected": false,
+  "dimensions": [
+    "technical",
+    "architectural",
+    "product",
+    "operational",
+    "organizational",
+    "economic",
+    "human",
+    "security",
+    "privacy",
+    "legal",
+    "ethical",
+    "reliability",
+    "evaluation",
+    "long-term adaptability"
+  ],
+  "cases": [
+    {
+      "id": "AC01",
+      "case": "prompt injection",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC02",
+      "case": "malicious external content",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC03",
+      "case": "tool-output manipulation",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC04",
+      "case": "memory poisoning",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC05",
+      "case": "stale memory",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC06",
+      "case": "false evidence",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC07",
+      "case": "model collusion",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC08",
+      "case": "evaluator collusion",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC09",
+      "case": "duplicate actions",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC10",
+      "case": "concurrent conflicting edits",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC11",
+      "case": "silent failure",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC12",
+      "case": "false success",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC13",
+      "case": "irreversible external actions",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC14",
+      "case": "unauthorized spend",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC15",
+      "case": "credential compromise",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC16",
+      "case": "privilege escalation",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC17",
+      "case": "runaway delegation",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC18",
+      "case": "runaway cost",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC19",
+      "case": "infinite retries",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC20",
+      "case": "goal drift",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC21",
+      "case": "metric gaming",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC22",
+      "case": "summary distortion",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC23",
+      "case": "owner overload",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC24",
+      "case": "owner deskilling",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC25",
+      "case": "provider outage",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC26",
+      "case": "provider behavior change",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC27",
+      "case": "subscription exhaustion",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC28",
+      "case": "corrupted state",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC29",
+      "case": "incomplete handoff",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC30",
+      "case": "model update",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC31",
+      "case": "dependency change",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC32",
+      "case": "self-modification drift",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    },
+    {
+      "id": "AC33",
+      "case": "compromised improvement mechanism",
+      "candidate_reviews": [],
+      "selected_architecture_response": null,
+      "implementation_test": null,
+      "status": "awaiting independent candidate attacks"
+    }
+  ],
+  "additional_cases": "coverage/discovered.json"
+}

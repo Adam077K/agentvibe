@@ -98,7 +98,8 @@
     },
     "incidents": [],
     "migrations": [],
-    "history": "history.jsonl"
+    "history": "history.jsonl",
+    "attack_coverage": "research/attack-coverage.json plus coverage/discovered.json; independent attacks pending"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
