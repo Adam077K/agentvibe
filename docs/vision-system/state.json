@@ -47,16 +47,17 @@
     "Integrated05/06 and work-knowledge contracts at857a98c: root read complete prose plus storage/consolidation changes and all268 answer paragraphs; schema/source text checks pass, full machine detail and independent review pending.",
     "Integrated07/08 plus113-answer integration/build/pricing catalog atc3519f5; root substantive inspection remains, author validation is not acceptance.",
     "EPT01 audit archived atda529a0; shared26-group claim-maintenance repair12e4f8c independently closed and recheck archived atb7902b2. Source index260 locators, not260 independently verified claims.",
-    "Integrated116 substantive company/human answers and09 at3ff24a1; root read all116 answer paragraphs and15 F25 routes. Root completed07/08,113answer/pricing and40record/38command substantive inspection; selected economics primary checks and arithmetic recorded, not independent acceptance."
+    "Integrated116 substantive company/human answers and09 at3ff24a1; root read all116 answer paragraphs and15 F25 routes. Root completed07/08,113answer/pricing and40record/38command substantive inspection; selected economics primary checks and arithmetic recorded, not independent acceptance.",
+    "Integrated10/9\u00d719component contracts and69source answers at7cf71f5; root read complete171attributes and69answer/uncertainty paragraphs. Authored12 with77specific supplemental/discovered answers at1dfe319. All566originalquestions now have unique exact substantive answer/evidence/decision/plannedmodule joins; no independent acceptance upgrade."
   ],
   "active_work": [
     {
       "agent": "attack_technical",
-      "scope": "Author complete9-component19-attribute matrix and69 S05 substantive authority/privacy/reliability answers",
-      "base": "c3519f5",
+      "scope": "Author07/08 consequential source metadata inheritance and integration-claims register; no repeated broad research",
+      "base": "7cf71f5",
       "artifacts": [
-        "planning/specification/10-components-authority-traceability.md",
-        "planning/specification/components-authority.json"
+        "research/integration-claims.json",
+        "07/08 explicit maintenance inheritance"
       ]
     },
     {
@@ -74,16 +75,15 @@
     },
     {
       "agent": "orchestrator",
-      "scope": "Complete77 supplemental/discovered answers and root traceability; integrate component/schema work and independent findings; fullG then build"
+      "scope": "Validate traceability links and preserve readable package; integrate metadata/schema/reviews, assess FI12 acceptance-revision discovery, then fullG and build"
     }
   ],
   "next_actions": [
-    "Complete77 supplemental/discovered substantive answers and root566question mapping; preserve unimplemented status",
-    "Receive independent05\u201308 integration findings and resolve actual incompatibilities; preserve FIR01\u201305 andEPT01 scoped closures",
-    "Integrate69 authority answers and9-component complete matrix",
-    "Integrate full canonical schema/predicate catalog across all required/added subjects; independently inspect exact guards and aliases",
-    "Complete root566-question,62 supplemental and15 discovered coverage with substantive evidence/decision/implementation/test mapping",
-    "Run independent architecture-neutral complete-plan reviews; resolve foundational gaps and commit accepted package before full implementation",
+    "Validate566+77source joins and package navigation; preserve pending independent acceptance and all unimplemented evidence",
+    "Receive frozen05\u201308 independent integration judgment and resolve actual incompatibilities",
+    "Integrate07/08 source-maintenance metadata and index all new citations",
+    "Integrate full canonical schema/predicate catalog; independently review FI12 acceptance/state exact-revision contract and all required/added subjects",
+    "Run independent architecture-neutral complete-plan reviews including09/10/12 and complete coverage; resolve foundational gaps and commit accepted package before full implementation",
     "Build complete accepted design in dependency order with security, tests, evaluations, integration, recovery and operability"
   ],
   "dependencies": [
@@ -111,8 +111,8 @@
     "candidates": "planning/candidates/ original A/B/C and repair addenda; selection and rejected alternatives in planning/02-architecture-selection.md",
     "decisions": "registers/decisions.json; AD-001\u2013010, architecture S1.0",
     "risks": "registers/risks.json; 17 material groups, controls unimplemented",
-    "coverage": "coverage/questions.json, coverage/supplemental.json, coverage/discovered.json",
-    "implementation_graph": "pending reviewed specification",
+    "coverage": "coverage/questions.json566 substantive-answer joins; supplemental.json62 anddiscovered.json15 joined toscope-lifecycle-contracts; independent acceptance pending",
+    "implementation_graph": "planning/implementation-graph.json;12stages exact08dependency DAG, all not-started",
     "build_progress": "not started",
     "tests": {
       "summary": "research/baseline-results.json",

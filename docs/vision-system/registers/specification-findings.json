@@ -80,8 +80,12 @@
       "id": "FI-07",
       "issue": "Nine component interface rows do not alone supply every required responsibility, nonresponsibility, owner, state, lifecycle, trust, observability, evaluation, scaling, version and removal contract.",
       "owner": "Remaining component/schema/build integration",
-      "status": "Explicit remaining component-matrix obligation in kernel section 2",
-      "completion_evidence": null
+      "status": "Nine component by19attribute contracts specified and root-read; independent integration/full-plan judgment and implementation remain",
+      "completion_evidence": {
+        "commit": "7cf71f5",
+        "specification": "planning/specification/10-components-authority-traceability.md",
+        "runtime": null
+      }
     },
     {
       "id": "FI-08",
@@ -119,6 +123,20 @@
       "owner": "Full schema consolidation after05\u201308 integration",
       "status": "Known consolidation obligation; draft inspection, not independent blocking verdict",
       "completion_evidence": null
+    },
+    {
+      "id": "FI-12",
+      "issue": "An acceptance judgment on a proposed subject revision may mismatch immediately if the subject becomes validated/accepted by incrementing that same revision. Exact FIR subject/version binding requires a coherent candidate-state and judgment write contract, not equivalence by summary.",
+      "owner": "Canonical schema author; independent reviewer after concrete alternatives",
+      "status": "Implementation discovery during canonical design; atomic exact candidate-postimage/judgment group versus derived acceptance status being compared",
+      "completion_evidence": null,
+      "constraints": [
+        "No future own hash/receipt cycle",
+        "Exact complete candidate bytes assessed by legitimate independent C06 before accepted use",
+        "No invented native performance or beneficiary acceptance",
+        "Later business mutation invalidates affected evidence",
+        "Validate prior and same-group references/current authority without arbitrary forward references"
+      ]
     }
   ],
   "planning_accepted": false,

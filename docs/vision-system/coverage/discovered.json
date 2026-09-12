@@ -18,7 +18,7 @@
       "S1-C04",
       "S1-C08"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/integrations/reconciliation.ts",
@@ -51,7 +51,7 @@
       "S1-C05",
       "S1-C08"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/authority/recovery.ts",
@@ -83,7 +83,7 @@
       "S1-C04",
       "S1-C06"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/evidence/judgments.ts",
@@ -113,7 +113,7 @@
     "component": [
       "S1-C04"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/authority/reservations.ts",
@@ -144,7 +144,7 @@
     "component": [
       "S1-C06"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/evidence/accounts.ts",
@@ -176,7 +176,7 @@
       "S1-C07",
       "S1-C04"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/company/decision-packets.ts",
@@ -207,7 +207,7 @@
       "S1-C07",
       "S1-C08"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/company/closure.ts",
@@ -239,7 +239,7 @@
       "S1-C04",
       "S1-C06"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/improvement/migrations.ts",
@@ -272,7 +272,7 @@
       "S1-C01",
       "S1-C05"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/context/manifests.ts",
@@ -304,7 +304,7 @@
       "S1-C03",
       "S1-C06"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/runtime/qualification.ts",
@@ -338,7 +338,7 @@
       "S1-C06",
       "S1-C04"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/evidence/dependencies.ts",
@@ -370,7 +370,7 @@
       "S1-C03",
       "S1-C04"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/runtime/auth-attestation.ts",
@@ -404,7 +404,7 @@
       "S1-C05",
       "S1-C07"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/context/source-validity.ts",
@@ -440,7 +440,7 @@
       "S1-C07",
       "S1-C08"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/company/continuity.ts",
@@ -472,7 +472,7 @@
       "S1-C05",
       "S1-C06"
     ],
-    "decision": "SL-D01",
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
     "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
     "implementation_location": "system/packages/evidence/source-checks.ts",

@@ -87,6 +87,15 @@
       "read_scope": "All40 record payload/state/transition-contract/authority fields and ordered edge pairs (shared guard inspected once), all38 command payload/guard/result/failure records, value types/decisions/evidence sources/planned tests/storage/consolidation; all268 answer paragraphs read previously. Shared retention contract read once, not repeated as separate evidence",
       "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
       "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/10-components-authority-traceability.md",
+      "source_commit": "7cf71f5",
+      "sha256": "a04148260cf5a8aa7ef9e16fd1bfcb8bc099a1562f28a9b01aba677fb399f8a1",
+      "read_scope": "Complete introductory/shared interface prose and all171 component attribute paragraphs; all69 original question/answer/uncertainty paragraphs from companion, sample complete entries and selected tests; companion interface_checks and limits. Duplicate69question pointer table not reread separately.",
+      "result": "Concrete component contracts and69answer substance inspected by root; author parity/links checked independently below. No independent acceptance or runtime test.",
+      "remaining": "Full canonical schema predicates; complete-plan review; runtime and actual operating evidence."
     }
   ]
 }
