@@ -408,13 +408,13 @@
         "Subscription authentication, limits, interruption, no silent metered fallback",
         "Tool and service admission, removal, provider change and substantive end-to-end integration"
       ],
-      "status": "remaining Phase F specification work; no answer or implementation claimed",
+      "status": "active specification authoring; no complete-plan acceptance",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
         "Independent complete-plan review before implementation"
       ],
-      "author": null,
+      "author": "attack_technical",
       "reviewer": null,
       "answer_locations": []
     },
@@ -656,7 +656,7 @@
         "Recoverable effects and obligations, conflict domains, deletion/revocation fencing",
         "Threat model, privacy/professional determinations, incidents, backup and verified restore"
       ],
-      "status": "Initial kernel/authority contracts integrated; focused proof/encoding amendment and independent review pending",
+      "status": "Kernel/authority and focused amendments integrated; independent Phase F integration review active",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -813,13 +813,13 @@
         "Final repository modules, deployment, release and dependency-ordered construction",
         "Migration of meanings and surviving duties; recoverable build progress and operability"
       ],
-      "status": "remaining Phase F specification work; no answer or implementation claimed",
+      "status": "active specification authoring; no complete-plan acceptance",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
         "Independent complete-plan review before implementation"
       ],
-      "author": null,
+      "author": "attack_technical",
       "reviewer": null,
       "answer_locations": []
     }

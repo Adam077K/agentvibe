@@ -39,16 +39,23 @@
     "N01 native subscription execution feasibility sourced and archived; three selected native-control claim groups independently source-audited, no model invocation or isolation test",
     "Architecture-neutral Phase G acceptance protocol formed independently before active specification drafts; archival pending, no planning acceptance",
     "Frozen independent Phase G acceptance protocol archived at planning/reviews/G-acceptance-protocol.md; no acceptance of current drafts",
-    "Integrated kernel/authority 16a222f and company/human cb1eac4 specifications; orchestrator inspected substantive contracts and verified 46 catalog entries against author schema, 116 unique source IDs; no substantive full-coverage or runtime pass"
+    "Integrated kernel/authority 16a222f and company/human cb1eac4 specifications; orchestrator inspected substantive contracts and verified 46 catalog entries against author schema, 116 unique source IDs; no substantive full-coverage or runtime pass",
+    "Integrated independent substrate source audit e7530ff and inspected focused receipt/hash and nftables encoding amendment e9201fa; source index now 258 locators, no blanket source/runtime verification"
   ],
   "active_work": [
     {
       "agent": "attack_technical",
-      "scope": "Focused receipt/hash cycle and exact nftables encoding amendment to integrated 01/02; S03/S07 task follows"
+      "scope": "Author S03/S07 actual integrations/native capacity, priced infrastructure and labor comparison, controlled improvement, full deployment/build graph, 113 substantive source answers",
+      "artifacts": [
+        "planning/specification/07-integrations-capacity.md",
+        "planning/specification/08-improvement-implementation.md",
+        "planning/specification/integrations-capacity-build.json"
+      ]
     },
     {
       "agent": "repair_company_foundations",
-      "scope": "Author S02/S04 execution, agents, skills, knowledge/context/evidence/evaluation and 268 substantive source answers in new isolated worktree",
+      "scope": "Author S02/S04 work/agents/skills, knowledge/context/evidence/evaluation and 268 substantive source answers",
+      "worktree": ".worktrees/phase-f-work-knowledge",
       "artifacts": [
         "planning/specification/05-work-agents-skills.md",
         "planning/specification/06-knowledge-evidence-evaluation.md",
@@ -57,20 +64,20 @@
     },
     {
       "agent": "attack_architecture_evidence",
-      "scope": "Archive independent substrate-control source audit in separate scribe turn, then independent review"
+      "scope": "Independent read-only Phase F integration review of frozen01\u201304 and capability catalog at e7530ff; no full Phase G acceptance"
     },
     {
       "agent": "orchestrator",
-      "scope": "Integrate and verify contracts, preserve findings/state, complete schema/coverage/build work and independent review"
+      "scope": "Verify/integrate contracts and source meaning, preserve findings/state, route full schema/component/coverage consolidation and independent complete-plan review"
     }
   ],
   "next_actions": [
-    "Integrate focused kernel/authority amendment and independent substrate source audit; assign S03/S07 integrations/economics/improvement/build specifications",
-    "Receive independent substrate source audit; integrate author corrections and verify final committed type/startup/durability/native-cost contracts",
-    "Complete work/agent/skills, context/evidence/evaluations, integrations/capacity, controlled improvement, deployment/build and all required schemas",
-    "Answer 566 original, 62 supplemental and 15 discovered concerns with exact substantive support and planned implementation pointers; maintain full capability paths",
+    "Receive focused independent Phase F integration findings and resolve contradictions within frozen01\u201304 contracts",
+    "Integrate05\u201308 and machine-readable work/knowledge/integration/build contracts with substantive268+113 source answers",
+    "Consolidate all46 required schema subjects and added records/value types, exact canonical references, transitions, authorization, retention/deletion/audit and full component matrix",
+    "Answer and verify all566 original,62 supplemental and15 discovered concerns; expand chapter pointers into meaning-preserving traceability with planned implementation and tests",
     "Run independent architecture-neutral complete-plan reviews, resolve foundational gaps and commit accepted package before implementation",
-    "Build the complete accepted design in dependency order, with security, tests, evaluations, integration, recovery and operability"
+    "Build complete accepted design in dependency order with security, tests, evaluations, integration, recovery and operability"
   ],
   "dependencies": [
     {
@@ -115,7 +122,8 @@
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
     "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md",
     "specification_findings": "registers/specification-findings.json; ten cross-contract observations with scoped specification evidence, no runtime completion",
-    "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance"
+    "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
+    "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",

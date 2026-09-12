@@ -24,6 +24,8 @@ The [structured directive contract](inputs/directive-contract.json) records the 
 
 The [native execution feasibility report](research/implementation/N01-native-execution.md) and [selected-control claim audit](research/reviews/2026-09-12-native-controls.md) identify concrete subscription paths and their admission tests. No native model invocation or isolation test was performed for that research. The [risk register](registers/risks.json) retains technical, company, institutional and human risks; described controls remain unimplemented.
 
+The independent [substrate source audit](research/reviews/2026-09-12-substrate-controls.md) distinguishes PostgreSQL's actual replication behavior from the proposed witness protocol, qualifies nftables time and packet-evaluation claims, and identifies deployment dependencies and cost categories. Its source checks do not establish working runtime enforcement or affordable operation.
+
 The [baseline results](research/baseline-results.json) record 48/48 repository check steps passing and the separate Mission Control result of 427 passing and 2 failing tests. These are measurements of `b2cabad`, not verification of the new system. Raw logs remain in the ignored local evidence directory named by the records.
 
 The existing harness remains evidence and a possible source of reusable mechanisms. Its seven-engine roster, stack template, workflow vocabulary and dashboard do not constrain the new architecture. The new directive supplies the phase sequence and exit criteria where existing playbooks only describe bounded research questions and individual features.

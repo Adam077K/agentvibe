@@ -81,15 +81,23 @@
       "id": "FI-08",
       "issue": "Committed group, SendClaim and stored business result must not contain their own future signed receipt/hash; post-witness proof must be attached by exact external identity.",
       "owner": "attack_technical",
-      "status": "Focused amendment active",
-      "completion_evidence": null
+      "status": "Addressed in committed amendment and inspected by orchestrator; independent integration review and runtime tests pending",
+      "completion_evidence": {
+        "commit": "e9201fa",
+        "specification": "planning/specification/01-contract-kernel.md and 02-authority-recovery.md",
+        "runtime": null
+      }
     },
     {
       "id": "FI-09",
       "issue": "Independent audit found nftables timestamp unit/timezone documentation conflict and kernel-buffer versus wire-frame distinction; qualify exact userspace encoding and hook claim.",
       "owner": "attack_technical",
-      "status": "Source report returned; archival and focused amendment active",
-      "completion_evidence": null
+      "status": "Addressed in committed amendment and inspected by orchestrator; independent integration review and runtime tests pending",
+      "completion_evidence": {
+        "commit": "e9201fa",
+        "specification": "planning/specification/01-contract-kernel.md and 02-authority-recovery.md",
+        "runtime": null
+      }
     },
     {
       "id": "FI-10",
