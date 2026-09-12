@@ -4,7 +4,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC09",
       "AC11",
@@ -14,8 +14,13 @@
       "AC28",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -26,7 +31,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC10",
       "AC13",
@@ -35,8 +40,13 @@
       "AC16",
       "AC28"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -47,7 +57,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC09",
       "AC10",
@@ -55,8 +65,13 @@
       "AC14",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -67,7 +82,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC01",
       "AC02",
@@ -77,8 +92,13 @@
       "AC16",
       "AC22"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -89,7 +109,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC04",
       "AC05",
@@ -99,8 +119,13 @@
       "AC28",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -111,7 +136,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC03",
       "AC06",
@@ -126,8 +151,13 @@
       "AC32",
       "AC33"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -138,7 +168,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC11",
       "AC17",
@@ -150,8 +180,13 @@
       "AC26",
       "AC27"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -162,7 +197,7 @@
     "source": "planning/reviews/D-technical.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC13",
       "AC14",
@@ -172,8 +207,13 @@
       "AC32",
       "AC33"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -184,7 +224,7 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC11",
       "AC12",
@@ -192,8 +232,13 @@
       "AC23",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -204,7 +249,7 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC02",
       "AC03",
@@ -214,8 +259,13 @@
       "AC21",
       "AC23"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -226,15 +276,20 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC11",
       "AC12",
       "AC23",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -245,7 +300,7 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
     "attack_cases": [
       "AC05",
       "AC11",
@@ -255,8 +310,13 @@
       "AC23",
       "AC31"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Semantic-maintenance scale and total labor must be measured; maintenance response and falsification protocol now specified.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -267,15 +327,20 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC13",
       "AC14",
       "AC18",
       "AC20"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -286,7 +351,7 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
     "attack_cases": [
       "AC13",
       "AC23",
@@ -295,8 +360,13 @@
       "AC28",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Actual accepted competent continuity, funding and joint-failure exercises remain deployment prerequisites and empirical feasibility risks.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -307,7 +377,7 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
     "attack_cases": [
       "AC06",
       "AC08",
@@ -316,8 +386,13 @@
       "AC23",
       "AC24"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Contestable adverse sampling and domain-specific competence response specified; longitudinal transfer and burden unproved.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -328,7 +403,7 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC05",
       "AC11",
@@ -336,8 +411,13 @@
       "AC28",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -348,15 +428,20 @@
     "source": "planning/reviews/D-company-human.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
     "attack_cases": [
       "AC12",
       "AC20",
       "AC21",
       "AC23"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Business usefulness, economics and external human burden added to evaluation; actual benefit remains unmeasured.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
@@ -367,7 +452,7 @@
     "source": "planning/reviews/D-architecture-evidence.md",
     "review_subject": "595f931",
     "owner": "repair_technical_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC09",
       "AC11",
@@ -377,8 +462,13 @@
       "AC28",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -389,15 +479,20 @@
     "source": "planning/reviews/D-architecture-evidence.md",
     "review_subject": "595f931",
     "owner": "repair_alternative_depth",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC20",
       "AC21",
       "AC23",
       "AC32"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "C2 establishes nonoptional inquiry initiation, bounded work and separate retirement rights. Original C1 remains A-compatible. No blackboard or business benefit established; EAS-R1 comparator obligation retained.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/AC-foundational-distinction.md",
@@ -408,7 +503,7 @@
     "source": "planning/reviews/D-architecture-evidence.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC04",
       "AC06",
@@ -416,8 +511,13 @@
       "AC22",
       "AC29"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
@@ -428,16 +528,99 @@
     "source": "planning/reviews/D-architecture-evidence.md",
     "review_subject": "595f931",
     "owner": "repair_company_foundations",
-    "status": "open; proposed repair archived, independent reassessment pending",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
     "attack_cases": [
       "AC23",
       "AC24"
     ],
-    "resolution": null,
-    "independent_recheck": null,
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
     "implementation_evidence": null,
     "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
     "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
     "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
+  },
+  {
+    "id": "EAS-R1",
+    "source": "planning/reviews/D2-architecture-evidence-company.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Comparator integrity",
+    "owner": "S04",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC20",
+      "AC21",
+      "AC23"
+    ],
+    "resolution": null,
+    "required_contract": "Separate own-rights conformance, business outcomes, rights-equivalent case-engine control and fully adaptive simpler policy. Match external duties/resources/information without forcing equal internal inquiry deadlines or rewarding C2 by definition.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
+  },
+  {
+    "id": "T-R1",
+    "source": "planning/reviews/D2-technical.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Fenced changes of alias, scope and required participants",
+    "owner": "S05",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC09",
+      "AC10",
+      "AC13",
+      "AC14",
+      "AC28"
+    ],
+    "resolution": null,
+    "required_contract": "Migrate existing uncertain holds; invalidate obsolete unreleased preparations; order the union of overlapping scopes before resumption. Test alias merges, added issuers and cross-scope discoveries under partition/recovery.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
+  },
+  {
+    "id": "T-R2",
+    "source": "planning/reviews/D2-technical.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Independent durability proof for status after lost acknowledgment",
+    "owner": "S05",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC09",
+      "AC11",
+      "AC12",
+      "AC13",
+      "AC28"
+    ],
+    "resolution": null,
+    "required_contract": "A locally committed release/status row cannot authorize dispatch without exact independent durability evidence/frontier. Interrupt every commit/replication/ack/status/failover boundary and lose primary.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
+  },
+  {
+    "id": "T-R3",
+    "source": "planning/reviews/D2-technical.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Delayed first transmission and revocation exposure",
+    "owner": "S03/S05/S06",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC09",
+      "AC13",
+      "AC14",
+      "AC16",
+      "AC28"
+    ],
+    "resolution": null,
+    "required_contract": "Specify gateway-generation fencing, first-transport deadline and cancellation/expiry separately from retry and delayed provider acceptance; grants and operator stop state disclose residual window.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
   }
 ]
