@@ -120,7 +120,7 @@
     {
       "id": "FI-11",
       "issue": "Full schema consolidation must supply registered TypedPredicate IDs and argument shapes plus materially distinct per-transition guards; draft40-record work catalog has373 edges sharing one common guard and delegating to short record-specific prose. A copied guard count does not establish buildability.",
-      "owner": "Full schema consolidation after05\u201308 integration",
+      "owner": "Full schema consolidation after05–08 integration",
       "status": "Known consolidation obligation; draft inspection, not independent blocking verdict",
       "completion_evidence": null
     },
@@ -128,15 +128,23 @@
       "id": "FI-12",
       "issue": "An acceptance judgment on a proposed subject revision may mismatch immediately if the subject becomes validated/accepted by incrementing that same revision. Exact FIR subject/version binding requires a coherent candidate-state and judgment write contract, not equivalence by summary.",
       "owner": "Canonical schema author; independent reviewer after concrete alternatives",
-      "status": "Implementation discovery during canonical design; atomic exact candidate-postimage/judgment group versus derived acceptance status being compared",
+      "status": "Design-contract discovery; author selected immutable business revisions plus separately versioned intrinsic LifecycleStatus for concrete amendment; independent review pending",
       "completion_evidence": null,
       "constraints": [
-        "No future own hash/receipt cycle",
-        "Exact complete candidate bytes assessed by legitimate independent C06 before accepted use",
-        "No invented native performance or beneficiary acceptance",
-        "Later business mutation invalidates affected evidence",
-        "Validate prior and same-group references/current authority without arbitrary forward references"
-      ]
+        "Exact immutable business subject and acceptance predicate, with current authoritative judgment/status validity at use",
+        "No own future hash/receipt or recursively self-accepted LifecycleStatus",
+        "No invented native performance, professional standing or beneficiary acceptance",
+        "Later business mutation invalidates affected current acceptance and transitive evidence",
+        "No arbitrary forward references, stale status replay or projection-created authority",
+        "Actual competent human evaluator/owner bootstrap without recursive self-certification"
+      ],
+      "proposal": {
+        "kind": "Design proposal from canonical author,2026-09-12; not yet committed/integrated or independently accepted",
+        "selected": "Immutable business payload revisions plus intrinsic LifecycleStatus revisions and one current status head per exact business subject. State does not mutate judged business bytes. LifecycleStatus has no lifecycle/acceptance of its own.",
+        "concurrency": "Jointly CAS current business head, prior lifecycle head and relevant live validity heads in the same ordered transaction. New business revision initializes status and invalidates old current acceptance; C04 reads current subject/status/dependency closure at use.",
+        "rejected_alternative": "Atomic frozen complete candidate-postimage and judgment group with final independent digest endorsements; adds routine preparation/confirmation labor and brittle self/child joins. Broader mechanical migration of existing lifecycle contracts preferred, pending defensibility review.",
+        "remaining": "Complete affected schema/API/storage/command/source mappings, finite actual human bootstrap, exact tests, migration version and independent conformance judgment."
+      }
     }
   ],
   "planning_accepted": false,
