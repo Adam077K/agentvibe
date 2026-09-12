@@ -37,7 +37,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-006 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-0978808222ac",
@@ -487,7 +487,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-020 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-f398de2f8336",
@@ -701,7 +701,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-021 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-dad22c084573",
@@ -762,7 +762,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-024 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-9299941ca0b0",
@@ -782,7 +782,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-022 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-d642f5d629bd",
@@ -853,7 +853,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-018 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-fde9dfb8a729",
@@ -924,7 +924,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-023 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-f2ef2bd1e39e",
@@ -1125,7 +1125,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-013 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-b4007512b3e9",
@@ -1513,7 +1513,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-015 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-08e2f31281e3",
@@ -1523,7 +1523,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-001 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-e15662ab40ef",
@@ -1623,7 +1623,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-017 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-227aa6dd9926",
@@ -1684,7 +1684,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-014 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-7409e2acd490",
@@ -2218,7 +2218,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-011 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-85173920e197",
@@ -2228,7 +2228,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-011 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-e154ac48b200",
@@ -2238,7 +2238,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-012 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-f3b775ab590f",
@@ -2319,7 +2319,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-016 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-8ef7f20336bf",
@@ -2329,7 +2329,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-021 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-54dbc1541342",
@@ -2396,7 +2396,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-010 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-773a705a10f4",
@@ -2436,7 +2436,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-005 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-dd9531fbac9f",
@@ -2446,7 +2446,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-002 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-e2906621865c",
@@ -2478,7 +2478,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-009 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-dcbd85419840",
@@ -2498,7 +2498,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-003 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-38efd342c8fe",
@@ -2518,7 +2518,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-008 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-886568d8f77b",
@@ -2528,7 +2528,7 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-007 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
     "id": "S-9f0fa2af5588",
@@ -2610,6 +2610,26 @@
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-019 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
+  },
+  {
+    "id": "S-dc70c9fb4a8e",
+    "url": "https://www.postgresql.org/docs/18/textsearch-controls.html",
+    "cited_by": [
+      "planning/specification/06-knowledge-evidence-evaluation.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author-reported source support; see scoped audit and claim register, no blanket verification",
+    "metadata_location": "research/substrate-claims.json#/claims/SC-025 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
+  },
+  {
+    "id": "S-1be83030edc8",
+    "url": "https://www.postgresql.org/docs/18/textsearch-indexes.html",
+    "cited_by": [
+      "planning/specification/06-knowledge-evidence-evaluation.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author-reported source support; see scoped audit and claim register, no blanket verification",
+    "metadata_location": "research/substrate-claims.json#/claims/SC-026 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   }
 ]

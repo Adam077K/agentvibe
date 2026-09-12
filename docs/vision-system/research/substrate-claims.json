@@ -1,0 +1,629 @@
+{
+  "schema_version": 1,
+  "created": "2026-09-12",
+  "kind": "Planning evidence and claim-maintenance register; not runtime state",
+  "status": "EPT01 repair awaiting independent metadata-scope recheck",
+  "policy": {
+    "id": "SC-POLICY-1",
+    "kind": "Decision",
+    "owner": "Orchestrator for planning; assigned dependency/knowledge custodian before operating reliance",
+    "applies_to": "Every claim record in this file explicitly inherits every policy field below; exceptions are recorded in the claim. Scope includes the entire primary-source tables of kernel13 and authority15, plus the lexical primitives in knowledge3.",
+    "source_interests": "Maintainers/providers document and promote adoption of their own systems and may sell hosting, support or related services; repository authors may receive sponsorship. Standards bodies specify a normative format, which does not validate an implementation. No claim of financial disinterest or independent source incentive is made.",
+    "confidence_rule": "Confidence is scoped to observed/reported source wording and exact version. Historical authenticity, present applicability, composed correctness, security sufficiency and business value are separate claims. Unmeasured dimensions remain unknown.",
+    "date_rule": "Record known source publication/version dates where captured; otherwise record unknown explicitly. Access date is an observation date only. Never infer a release date from a chosen version or substitute an access date.",
+    "freshness_rule": "A historical observation remains historical. Revalidate present reliance before final dependency locking and any operational admission, and on the earliest relevant upstream documentation, security advisory, maintenance/support, authentication/terms or specification correction even if the installed package has not changed. For living source reliance, schedule a check no later than30days after the last source review; earlier consequence-specific deadlines control.",
+    "initial_latest_scheduled_check": "2026-10-12; first implementation dependency lock or operational reliance may require earlier verification",
+    "expiration_behavior": "Overdue, inaccessible or contradicted material loses eligibility as a sole current prerequisite; retain historical attribution, seek current primary evidence or a justified compatible alternate, and restrict only dependent claims/actions. An old URL or exact binary pin does not renew source applicability.",
+    "invalidation_conditions": [
+      "Current primary text contradicts the recorded assertion or changes its scope/version/definition",
+      "A security or maintenance statement changes without a package upgrade",
+      "Selected version/flags/platform/authentication/terms differ from the cited scope",
+      "A controlled test contradicts documented behavior or exposes an unmodeled prerequisite",
+      "A cited observation cannot be reconstructed or a claimed independent audit did not examine that claim"
+    ],
+    "correction_behavior": "Append the correcting observation and affected decision/contract references; preserve the earlier assertion and known limits. Reopen relevant selection/admission and tests rather than silently rewriting history.",
+    "runtime_boundary": "No metadata record issues a grant, funds infrastructure, establishes professional availability or certifies implementation. Source review and runtime conformance have separate acceptance records."
+  },
+  "claims": {
+    "SC-001": {
+      "kind": "Source claim",
+      "claim_scope": "Node 24 is an LTS line; selecting it over the current non-LTS line is this specification's maintenance choice",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Node release schedule",
+          "url": "https://nodejs.org/en/about/previous-releases",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "Narrow release-page observation independently rechecked in the epistemic audit; source remains the same maintainer.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission.",
+      "version_observation": {
+        "value": "Node v24 LTS, v24.21.0 displayed",
+        "date": "2026-09-12",
+        "source": "reviews/2026-09-12-epistemic-traceability.md",
+        "scope": "Independent auditor reports current release-page observation; does not establish installed version or composed suitability."
+      }
+    },
+    "SC-002": {
+      "kind": "Source claim",
+      "claim_scope": "Serializable transactions can abort and require whole-transaction retry; ordinary sequences are not rolled back. The command counter/outbox layout is our contract",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL 18 transaction isolation",
+          "url": "https://www.postgresql.org/docs/18/transaction-iso.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-003": {
+      "kind": "Source claim",
+      "claim_scope": "PostgreSQL 18.6 was the supported current 18 patch at source check; current supported patch admission remains required",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL version policy",
+          "url": "https://www.postgresql.org/support/versioning/",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-004": {
+      "kind": "Source claim",
+      "claim_scope": "Synchronous and remote_apply behavior differs from asynchronous replication and remote_write. Independent witness semantics and administrative separation are additional requirements here",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL warm standby",
+          "url": "https://www.postgresql.org/docs/18/warm-standby.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-005": {
+      "kind": "Source claim",
+      "claim_scope": "SKIP LOCKED is suitable for queue-like contention, not general consistent reads",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL SELECT",
+          "url": "https://www.postgresql.org/docs/18/sql-select.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-006": {
+      "kind": "Source claim",
+      "claim_scope": "Draft 2020-12 uses its own validator and is not mixed with older drafts in one instance",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Ajv JSON Schema support",
+          "url": "https://ajv.js.org/json-schema.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-007": {
+      "kind": "Source claim",
+      "claim_scope": "UUIDv7 format; its timestamp does not supply this system's trusted time or ordering",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "RFC 9562",
+          "url": "https://www.rfc-editor.org/rfc/rfc9562.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary standard text",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-008": {
+      "kind": "Source claim",
+      "claim_scope": "Canonical JSON representation; hashing it cannot establish source truth, complete lineage or storage durability",
+      "claimed_in": "planning/specification/01-contract-kernel.md#13-primary-evidence-and-design-boundaries",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "RFC 8785",
+          "url": "https://www.rfc-editor.org/rfc/rfc8785.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary standard text",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-009": {
+      "kind": "Source claim",
+      "claim_scope": "Synchronous/remote_apply and availability tradeoffs; our independent receipt and complete frontier protocol remains an implementation obligation",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL 18 warm standby",
+          "url": "https://www.postgresql.org/docs/18/warm-standby.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-010": {
+      "kind": "Source claim",
+      "claim_scope": "Base backup plus WAL supports recovery; a chosen old recovery point does not by itself recover current authority/restrictions",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL continuous archiving/PITR",
+          "url": "https://www.postgresql.org/docs/18/continuous-archiving.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-011": {
+      "kind": "Source claim",
+      "claim_scope": "Selected maintained distribution and authentication/WebAuthn capabilities; actual standing and transaction authorization are kernel contracts",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Keycloak downloads",
+          "url": "https://www.keycloak.org/downloads",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        },
+        {
+          "title": "server administration",
+          "url": "https://www.keycloak.org/docs/latest/server_admin/",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "Independent auditor reports the displayed version/deprecated adapter only; WebAuthn and full deployment composition were not independently exercised.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission.",
+      "version_observation": {
+        "value": "26.7.3 displayed; Node adapter marked deprecated",
+        "date": "2026-09-12",
+        "source": "reviews/2026-09-12-epistemic-traceability.md",
+        "scope": "Observed advertised release, not a completed support-lifecycle, vulnerability or authentication-composition assessment."
+      }
+    },
+    "SC-012": {
+      "kind": "Source claim",
+      "claim_scope": "Production/database/TLS settings must be explicit and checked",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Keycloak configuration",
+          "url": "https://www.keycloak.org/server/all-config",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-013": {
+      "kind": "Source claim",
+      "claim_scope": "OIDC/OAuth client implementation chosen instead of a custom protocol implementation",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "openid-client",
+          "url": "https://github.com/panva/openid-client",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintained source repository/archive",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "Independent epistemic audit reports repository OAuth/OIDC and PKCE description; no implementation test. Sponsorship is disclosed institutional interest, not disproof.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-014": {
+      "kind": "Source claim",
+      "claim_scope": "Offline root/online intermediate and key custody practices; software custody does not defeat administrator compromise",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "step-ca production guidance",
+          "url": "https://smallstep.com/docs/step-ca/certificate-authority-server-production/",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No new verification: epistemic auditor failed to retrieve the production page twice. Original author observation remains attributed; retrieval failure is neither confirmation nor disproof.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-015": {
+      "kind": "Source claim",
+      "claim_scope": "Time, interface, protocol and address expressions and ruleset mechanisms; exact composed bypass resistance remains untested",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "nftables manual",
+          "url": "https://netfilter.org/projects/nftables/manpage.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-016": {
+      "kind": "Source claim",
+      "claim_scope": "src/meta.c date_type_parse converts integer seconds to nanoseconds; date-string timezone behavior must not be confused with the kernel representation",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "nftables 1.1.3 source archive",
+          "url": "https://www.netfilter.org/projects/nftables/files/nftables-1.1.3.tar.xz",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintained source repository/archive",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-017": {
+      "kind": "Source claim",
+      "claim_scope": "NFT_META_TIME_NS evaluates ktime_get_real_ns; claim is hook evaluation time, not provider acceptance",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Linux 6.8 nft_meta source",
+          "url": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/netfilter/nft_meta.c",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintained source repository/archive",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-018": {
+      "kind": "Source claim",
+      "claim_scope": "A kernel buffer can become multiple later segments/frames; the gate does not claim a per-wire-frame transmission deadline",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Linux segmentation offloads",
+          "url": "https://docs.kernel.org/networking/segmentation-offloads.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-019": {
+      "kind": "Source claim",
+      "claim_scope": "Kernel interfaces, peer keys and allowed-IP routing are supported primitives; the all-channel routing/egress composition above remains an admission test",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "WireGuard quick start",
+          "url": "https://www.wireguard.com/quickstart/",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-020": {
+      "kind": "Source claim",
+      "claim_scope": "NTS and configurable slew/clock behavior; truth/rate/uncertainty bounds require admitted sources/host behavior",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "chrony 4.6 configuration",
+          "url": "https://chrony-project.org/doc/4.6/chrony.conf.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Pinned identity appears in URL/title; verify precise applicability against selected build"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-021": {
+      "kind": "Source claim",
+      "claim_scope": "Concrete independently operated authenticated time-service choices; they are declared trust roots",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Cloudflare NTS",
+          "url": "https://developers.cloudflare.com/time-services/nts/",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        },
+        {
+          "title": "Netnod NTS",
+          "url": "https://www.netnod.se/nts/network-time-security",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-022": {
+      "kind": "Source claim",
+      "claim_scope": "Regions are a provider fault-isolation boundary; separate accounts/regions do not prove independent administrators or eliminate AWS as a common root",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "AWS Regions fault boundaries",
+          "url": "https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/regions.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-023": {
+      "kind": "Source claim",
+      "claim_scope": "Concrete example of retention/reuse semantics; every connector needs its own exact contract",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "Stripe idempotency",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-024": {
+      "kind": "Source claim",
+      "claim_scope": "Revocation interacts with policies and issued sessions; descendant/resource-policy containment must be established explicitly",
+      "claimed_in": "planning/specification/02-authority-recovery.md#15-primary-evidence-and-residual-obligations",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Specification author; see separately scoped audits, not inferred independent corroboration",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "AWS session permission revocation",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_disable-perms.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original source table did not record a publication/update date; access date is not substituted",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "version_identity": "Living page/repository; capture exact relevant version and content at next reliance"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed documented primitive; reported source access is not independently reproduced for every claim. No confidence in runtime composition, security sufficiency or comparative suitability is inferred.",
+      "corroboration": "No independent corroboration asserted unless the explicit audit below identifies the same narrow claim. Multiple URLs in this row are not automatically independent evidence.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; present operational applicability requires renewed source and runtime admission."
+    },
+    "SC-025": {
+      "kind": "Source claim",
+      "claim_scope": "PostgreSQL18 provides lexical vectors, query parsing and ranking; application relevance, permission safety and protected-text storage are additional design obligations.",
+      "claimed_in": "planning/specification/06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Work/knowledge specification author; not independently source-audited here",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL text-search controls",
+          "url": "https://www.postgresql.org/docs/18/textsearch-controls.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown; source access date recorded, publication/update date not captured",
+          "source_type": "Primary maintainer technical documentation",
+          "version_identity": "PostgreSQL18 documentation; verify exact installed patch and profile"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed primitive; no runtime authorization, recall, storage or usefulness result.",
+      "corroboration": "No independent corroboration asserted.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; current applicability requires renewed source and runtime admission."
+    },
+    "SC-026": {
+      "kind": "Source claim",
+      "claim_scope": "GIN provides a documented indexed text-search path; this does not establish correct authorized retrieval or the suitability of a persistent plaintext index.",
+      "claimed_in": "planning/specification/06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Work/knowledge specification author; not independently source-audited here",
+      "metadata_policy_ref": "SC-POLICY-1",
+      "sources": [
+        {
+          "title": "PostgreSQL text-search indexes",
+          "url": "https://www.postgresql.org/docs/18/textsearch-indexes.html",
+          "publication_date": null,
+          "publication_date_status": "Unknown; source access date recorded, publication/update date not captured",
+          "source_type": "Primary maintainer technical documentation",
+          "version_identity": "PostgreSQL18 documentation; verify exact installed patch and profile"
+        }
+      ],
+      "assessed_confidence": "Qualified confidence in the attributed primitive; no runtime authorization, recall, storage or usefulness result.",
+      "corroboration": "No independent corroboration asserted.",
+      "runtime_validation": null,
+      "current_reliance": "Historical planning observation; current applicability requires renewed source and runtime admission."
+    }
+  }
+}

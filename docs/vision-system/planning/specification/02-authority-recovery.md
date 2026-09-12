@@ -462,6 +462,8 @@ Operational independence tests require actual separate accounts/hosts/admin reco
 
 ## 15. Primary evidence and residual obligations
 
+The [shared substrate claim register](../../research/substrate-claims.json) explicitly applies SC-POLICY-1 to every source assertion in this section and the corresponding version/mechanism reliance above. It records reported access, source/version identity or unknown publication date, scoped confidence, maintainer interests, corroboration limits, and revalidation/invalidation even without a package upgrade. Historical observations do not certify current support, security or runtime composition.
+
 Sources were checked on 2026-09-12. They support mechanisms and documented boundaries, not the composed system's safety or economics. N01 preserves its own precise native version observations and links.
 
 | Primary source | Fact used / limit |

@@ -365,6 +365,8 @@ These are acceptance tests for implementation and operations. This authoring tas
 
 ## 13. Primary evidence and design boundaries
 
+The [shared substrate claim register](../../research/substrate-claims.json) explicitly applies SC-POLICY-1 to every source assertion in this section and the corresponding version/mechanism reliance above. It records reported access, source/version identity or unknown publication date, scoped confidence, maintainer interests, corroboration limits, and revalidation/invalidation even without a package upgrade. Historical observations do not certify current support, security or runtime composition.
+
 All sources below were checked on 2026-09-12. They support listed primitives, not the correctness of this composed system. API/version examples require actual deployment admission.
 
 | Source | Supported fact used; design inference kept separate |
