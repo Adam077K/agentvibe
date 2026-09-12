@@ -37,7 +37,8 @@
     "Independent architecture/evidence and technical reassessments returned: all original foundational blockers conceptually closed; fresh company reassessment also permits synthesis. Four sharpened specification obligations remain; empirical and deployment claims unproved. Archival underway.",
     "Read complete E1 selection and status amendment; adopt S1.0 after independent review reconciliation, with ten explicit design decisions and empirical uncertainties retained",
     "N01 native subscription execution feasibility sourced and archived; three selected native-control claim groups independently source-audited, no model invocation or isolation test",
-    "Architecture-neutral Phase G acceptance protocol formed independently before active specification drafts; archival pending, no planning acceptance"
+    "Architecture-neutral Phase G acceptance protocol formed independently before active specification drafts; archival pending, no planning acceptance",
+    "Frozen independent Phase G acceptance protocol archived at planning/reviews/G-acceptance-protocol.md; no acceptance of current drafts"
   ],
   "active_work": [
     {
@@ -63,12 +64,12 @@
     },
     {
       "agent": "attack_architecture_evidence",
-      "scope": "Archive independently prepared acceptance protocol in a separate scribe turn; no current acceptance"
+      "scope": "Read-only source audit of PostgreSQL durability proof, nftables time/gate semantics and concrete deployment prerequisites; report pending"
     }
   ],
   "next_actions": [
     "Integrate concrete kernel/authority and company/human specifications; reconcile shared IDs, envelopes, boundaries and state contracts",
-    "Archive frozen Phase G acceptance protocol; use it to review the complete package without rewarding selected architectural vocabulary",
+    "Receive independent substrate source audit; integrate author corrections and verify final committed type/startup/durability/native-cost contracts",
     "Complete work/agent/skills, context/evidence/evaluations, integrations/capacity, controlled improvement, deployment/build and all required schemas",
     "Answer 566 original, 62 supplemental and 15 discovered concerns with exact substantive support and planned implementation pointers; maintain full capability paths",
     "Run independent architecture-neutral complete-plan reviews, resolve foundational gaps and commit accepted package before implementation",
@@ -115,7 +116,9 @@
     "review_findings": "registers/review-findings.json",
     "capability_requirements": "coverage/capability-requirements.json; 46 decomposed outcome requirements, not implemented capabilities",
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
-    "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md"
+    "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md",
+    "specification_findings": "registers/specification-findings.json; seven cross-contract observations, final author revisions not yet verified",
+    "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
@@ -145,9 +148,11 @@
     "status": "Authoring proposals; not yet root-integrated/reviewed contracts",
     "source_agent": "attack_technical",
     "items": [
-      "Node24 LTS, PostgreSQL18 single logical writer, SQL outbox/timers, HTTPS JSON",
-      "Independent synchronous recovery standby and witness of exact persisted group/frontier; no dispatch from primary status row alone",
-      "Supported nftables packet-hook deadline gate considered instead of custom eBPF; exact temporal/partial-request/clock/failure contract pending review"
+      "Node24 LTS, PostgreSQL18 one logical writer, SQL outbox/timers and HTTPS JSON",
+      "Independent synchronous recovery standby plus writable witness of exact complete persisted groups/frontier; no dispatch from primary status alone",
+      "Supported nftables packet-hook deadline under explicit trusted-clock bounds; wire delivery/provider acceptance remain outside guarantee",
+      "Author proposes AWS A, R/G, N and X placements with G sharing the trusted R host/admin root, plus Keycloak and step-ca; concrete pricing and labor/comparator analysis still required",
+      "Native job windows through protected per-job tunnel; enforce observable job/wall/process/output/network bounds, record opaque provider subcalls/allowance honestly"
     ],
     "warning": "Current machine availability and local tests cannot establish independent host/admin fault domains or fund a deployment"
   }
