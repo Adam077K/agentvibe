@@ -46,7 +46,8 @@
     "F-integration-03 archived at7ea26e6: FIR05 closes at specification level; allFIR01\u201305 conformance and concurrency tests remain unexecuted, no full-plan acceptance.",
     "Integrated05/06 and work-knowledge contracts at857a98c: root read complete prose plus storage/consolidation changes and all268 answer paragraphs; schema/source text checks pass, full machine detail and independent review pending.",
     "Integrated07/08 plus113-answer integration/build/pricing catalog atc3519f5; root substantive inspection remains, author validation is not acceptance.",
-    "EPT01 audit archived atda529a0; shared26-group claim-maintenance repair12e4f8c independently closed and recheck archived atb7902b2. Source index260 locators, not260 independently verified claims."
+    "EPT01 audit archived atda529a0; shared26-group claim-maintenance repair12e4f8c independently closed and recheck archived atb7902b2. Source index260 locators, not260 independently verified claims.",
+    "Integrated116 substantive company/human answers and09 at3ff24a1; root read all116 answer paragraphs and15 F25 routes. Root completed07/08,113answer/pricing and40record/38command substantive inspection; selected economics primary checks and arithmetic recorded, not independent acceptance."
   ],
   "active_work": [
     {
@@ -60,11 +61,11 @@
     },
     {
       "agent": "repair_company_foundations",
-      "scope": "Expand116 S01/S06 chapter pointers to substantive exact question answers; no full-schema expansion in this bounded task",
-      "base": "857a98c; consume07/08 atc3519f5",
+      "scope": "Author complete canonical subject/value/command/state/predicate catalog and validate buildable cross-catalog bindings",
+      "base": "3ff24a1",
       "artifacts": [
-        "planning/specification/capabilities.json source_question_contracts",
-        "planning/specification/09-company-human-traceability.md if useful"
+        "planning/specification/11-schemas-state-contracts.md",
+        "planning/specification/canonical-contracts.json or split registries"
       ]
     },
     {
@@ -73,14 +74,14 @@
     },
     {
       "agent": "orchestrator",
-      "scope": "Inspect remaining machine contracts,07/08/113answers/pricing; integrate scoped reviews; consolidate final schema and coverage work, then fullG and build"
+      "scope": "Complete77 supplemental/discovered answers and root traceability; integrate component/schema work and independent findings; fullG then build"
     }
   ],
   "next_actions": [
-    "Read40 work/knowledge record-specific contracts and38 commands/value/invariants/decisions/tests, then07/08/113answers/pricing with primary support where needed",
+    "Complete77 supplemental/discovered substantive answers and root566question mapping; preserve unimplemented status",
     "Receive independent05\u201308 integration findings and resolve actual incompatibilities; preserve FIR01\u201305 andEPT01 scoped closures",
-    "Integrate116 company/human answers plus69 authority answers and full component matrix",
-    "Assign full schema/predicate catalog consolidation across46 required and all added subjects; exact composite aliases, command/state guards, retention/deletion/audit",
+    "Integrate69 authority answers and9-component complete matrix",
+    "Integrate full canonical schema/predicate catalog across all required/added subjects; independently inspect exact guards and aliases",
     "Complete root566-question,62 supplemental and15 discovered coverage with substantive evidence/decision/implementation/test mapping",
     "Run independent architecture-neutral complete-plan reviews; resolve foundational gaps and commit accepted package before full implementation",
     "Build complete accepted design in dependency order with security, tests, evaluations, integration, recovery and operability"
@@ -165,7 +166,7 @@
       "Node24 LTS, PostgreSQL18 one logical writer, SQL outbox/timers and HTTPS JSON",
       "Independent synchronous recovery standby plus writable witness of exact complete persisted groups/frontier; no dispatch from primary status alone",
       "Supported nftables packet-hook deadline under explicit trusted-clock bounds; wire delivery/provider acceptance remain outside guarantee",
-      "Author proposes AWS A, R/G, N and X placements with G sharing the trusted R host/admin root, plus Keycloak and step-ca; concrete pricing and labor/comparator analysis still required",
+      "AWS A, R/G, N, X plus trusted restore profile, priced $435.70/month infrastructure estimate; VPS/S0 comparators and actual-labor/eligibility unknowns explicit. No affordability or operating admission.",
       "Native job windows through protected per-job tunnel; enforce observable job/wall/process/output/network bounds, record opaque provider subcalls/allowance honestly"
     ],
     "warning": "Current machine availability and local tests cannot establish independent host/admin fault domains or fund a deployment"

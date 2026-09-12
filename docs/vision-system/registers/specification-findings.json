@@ -68,8 +68,13 @@
       "id": "FI-06",
       "issue": "Concrete protected deployment needs a priced bill of materials, maintenance labor and a simpler comparator under the same fault contract. Dedicated gateway host was not required by the stated trusted-host boundary.",
       "owner": "attack_technical; remaining S03/S07 author",
-      "status": "R/G co-location and alternatives specified; priced BOM, labor and operating feasibility remain mandatory",
-      "completion_evidence": null
+      "status": "Priced BOM, actual-labor unknowns and serious VPS/S0 comparators specified and root-inspected; independent assessment and operating feasibility remain",
+      "completion_evidence": {
+        "commit": "c3519f5",
+        "specification": "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
+        "inspection": "research/reviews/2026-09-12-integration-economics-inspection.md",
+        "runtime": null
+      }
     },
     {
       "id": "FI-07",

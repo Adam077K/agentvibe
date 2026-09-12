@@ -42,6 +42,51 @@
       "checks": "268 IDs/text match source and author answer JSON Schema; no silent claim of full predicate/record/command/coverage conformance.",
       "result": "Consolidation gaps FI10/FI11 remain. No further contradiction asserted in the inspected answer/prose scope; independent05\u201308 review active.",
       "remaining": "Read all40 record-specific payload/transition/authority contracts,38 commands, value types/invariants/decisions/tests and metadata refs; inspect07/08/113answers/pricing; full schema/component/coverage/G."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/07-integrations-capacity.md",
+      "source_commit": "3ff24a1",
+      "sha256": "fcd93efe87b4480461583648beab362c23917296355f375016f6e93a0639c82b",
+      "read_scope": "Complete prose, native/provider/admission and economics contracts",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/08-improvement-implementation.md",
+      "source_commit": "3ff24a1",
+      "sha256": "9ed86c6c3b6a7738af1cf7a50b75c7965f6bb5cf17423462960578dd00aab537",
+      "read_scope": "Complete prose, module/process map, improvement, local envelope, B00\u2013B11 graph and migration",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/09-company-human-traceability.md",
+      "source_commit": "3ff24a1",
+      "sha256": "ca251d6f14e408d2013a0daea4242e1614c4e6cb33c46e2e1f703d3defd73d59",
+      "read_scope": "Complete prose and all116 original question/answer paragraphs; F25 all15 named job intake/procedure/acceptance/availability routes; one complete entry and selected individual tests/uncertainty, not every linked field individually",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/integrations-capacity-build.json",
+      "source_commit": "3ff24a1",
+      "sha256": "93f70b7b72198446aa0959ef05d6b9b61e821d2918cae8b5848eaa448b34ed5f",
+      "read_scope": "All113 exact question/answer/uncertainty/falsifying-test paragraphs and complete pricing object; one full row; root arithmetic and selected current primary checks",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/work-knowledge-contracts.json",
+      "source_commit": "3ff24a1",
+      "sha256": "b375ec434b9b19c9f82287aef008151f29227162820d54ed276d87c58ca9fc19",
+      "read_scope": "All40 record payload/state/transition-contract/authority fields and ordered edge pairs (shared guard inspected once), all38 command payload/guard/result/failure records, value types/decisions/evidence sources/planned tests/storage/consolidation; all268 answer paragraphs read previously. Shared retention contract read once, not repeated as separate evidence",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
     }
   ]
 }
