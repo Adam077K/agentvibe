@@ -11,6 +11,16 @@
       "read_scope": "Complete document",
       "result": "Concrete work/schedule/temporary-agent/skill contracts read; no independent verdict or runtime proof. Read only subsequent differences at integration if this hash changes.",
       "remaining": "Inspect machine-record/state contracts and all268 substantive answers after handoff; independent review; full schema/component/coverage consolidation."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/06-knowledge-evidence-evaluation.md",
+      "source_worktree": ".worktrees/phase-f-work-knowledge",
+      "source_state": "Uncommitted draft before announced sensitive-short-field storage amendment",
+      "sha256": "b3d17f271d96ee19a357939515a827218ecd8d897e23672ed87026d7474ba236",
+      "read_scope": "Complete document",
+      "result": "Knowledge/context/retrieval/evidence/evaluation contracts read. Author separately addressing sensitive short fields, persistent lexical index scope and typed metadata sensitivity. No independent verdict/runtime proof.",
+      "remaining": "Inspect storage amendment and other changes at final commit; machine contracts/268 source answers and full schema consolidation remain."
     }
   ]
 }
