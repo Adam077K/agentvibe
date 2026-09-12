@@ -1,0 +1,719 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "kind": "Directive deliverable navigation and review checklist",
+  "items": [
+    {
+      "id": "8.1",
+      "title": "Vision",
+      "requires": [
+        "ambition",
+        "users",
+        "owner responsibilities",
+        "invariants",
+        "transformation",
+        "value",
+        "nondelegable responsibilities",
+        "non-goals",
+        "boundaries",
+        "unacceptable outcomes",
+        "failure measures",
+        "known costs",
+        "architecture-independent truths"
+      ],
+      "answer_scope": "Full-company purpose, users, boundaries, unacceptable outcomes, real human responsibilities and uncertain benefits remain architecture-independent.",
+      "locations": [
+        "planning/01-understand.md",
+        "planning/specification/12-scope-lifecycle-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.2",
+      "title": "Problem framing",
+      "requires": [
+        "stakeholders",
+        "jobs",
+        "environments",
+        "work categories",
+        "alternatives",
+        "limitations",
+        "pain",
+        "boundaries",
+        "external dependencies",
+        "assumptions",
+        "contradictions",
+        "questions",
+        "founder decisions",
+        "reframing triggers"
+      ],
+      "answer_scope": "Alternative work arrangements, operating facts and nondelegable owner inputs remain separate from technical choices; no assumed company jurisdiction.",
+      "locations": [
+        "planning/01-understand.md",
+        "planning/02-architecture-selection.md",
+        "registers/open-questions.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.3",
+      "title": "Evidence map",
+      "requires": [
+        "systems",
+        "academic findings",
+        "primary sources",
+        "industry practices",
+        "organizational and architecture patterns",
+        "benchmarks",
+        "failures",
+        "conflicts",
+        "outdated evidence",
+        "unsupported claims",
+        "open research",
+        "design implications",
+        "decision traceability"
+      ],
+      "answer_scope": "Initial14lanes, disagreements, selected current primary audits and decision trace retained. New07/08 source metadata consolidation active; source locators are not verified claims.",
+      "locations": [
+        "research/source-index.json",
+        "research/cross-lane-comparison.json",
+        "research/substrate-claims.json",
+        "registers/claims.json",
+        "registers/contradictions.json",
+        "registers/decisions.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.4",
+      "title": "Capability map",
+      "requires": [
+        "complete lifecycle",
+        "purpose",
+        "inputs",
+        "outputs",
+        "dependencies",
+        "authority",
+        "consequence",
+        "evidence",
+        "evaluation",
+        "implementation mode",
+        "failure",
+        "removal or replacement"
+      ],
+      "answer_scope": "46 complete capability contracts and15 F25named jobs route actual artifacts, native services and accepted human/professional/physical work; every outcome remains unimplemented.",
+      "locations": [
+        "planning/specification/03-company-capabilities.md",
+        "planning/specification/capabilities.json",
+        "planning/specification/scope-lifecycle-contracts.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.5",
+      "title": "Architecture alternatives",
+      "requires": [
+        "materially different structures",
+        "architecture-neutral trade-offs",
+        "complexity justification"
+      ],
+      "answer_scope": "A/common cases, B/federation and distinct C2/compulsory inquiry compared and attacked. C1/Acompatibility exposed; credible simpler S0 can win on matched outcomes.",
+      "locations": [
+        "planning/candidates/A-records-and-cases.md",
+        "planning/candidates/B-federated-responsibility.md",
+        "planning/candidates/C-adaptive-coordination.md",
+        "planning/candidates/AC-foundational-distinction.md",
+        "planning/02-architecture-selection.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.6",
+      "title": "Selected architecture",
+      "requires": [
+        "logical",
+        "runtime",
+        "deployment",
+        "data",
+        "trust",
+        "permission",
+        "integration",
+        "interaction",
+        "improvement",
+        "component contracts"
+      ],
+      "answer_scope": "Nine logical responsibilities retain control, information, evidence, authority and failure flows; nineteen attributes each; custom primitive and deployment costs explicit.",
+      "locations": [
+        "planning/02-architecture-selection.md",
+        "planning/specification/01-contract-kernel.md",
+        "planning/specification/02-authority-recovery.md",
+        "planning/specification/08-improvement-implementation.md",
+        "planning/specification/10-components-authority-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.7",
+      "title": "Agent operating model",
+      "requires": [
+        "agent definition and existence test",
+        "temporary vs persistent",
+        "generalist vs specialist",
+        "planner vs executor",
+        "producer vs evaluator",
+        "model selection",
+        "context",
+        "tools",
+        "delegation",
+        "subagents",
+        "orchestration",
+        "communication",
+        "disagreement",
+        "arbitration",
+        "retries",
+        "timeouts",
+        "interruption",
+        "recovery",
+        "termination",
+        "refusal",
+        "non-agent allocation"
+      ],
+      "answer_scope": "Temporary qualified procedures select deterministic, workflow, model, human and professional execution according to actual work, consequence and evidence.",
+      "locations": [
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.8",
+      "title": "Agent organization",
+      "requires": [
+        "justified roles only",
+        "responsibilities",
+        "authority",
+        "prohibitions",
+        "context/memory/tool boundaries",
+        "communication",
+        "evaluation",
+        "creation",
+        "modification",
+        "promotion",
+        "demotion",
+        "suspension",
+        "replacement",
+        "deletion",
+        "human-structure justification"
+      ],
+      "answer_scope": "Persistent department/persona roster not justified. Versioned templates and temporary instances have scoped creation/qualification/restriction/termination; success does not raise authority.",
+      "locations": [
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/10-components-authority-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.9",
+      "title": "Skills",
+      "requires": [
+        "unit",
+        "format",
+        "metadata",
+        "discovery",
+        "selection",
+        "loading",
+        "composition",
+        "conflicts",
+        "versions",
+        "testing",
+        "evaluation",
+        "ownership",
+        "provenance",
+        "freshness",
+        "deprecation",
+        "removal",
+        "relation to prompts/tools/workflows/policies/examples/code",
+        "selection degradation controls"
+      ],
+      "answer_scope": "Typed licensed/provenanced manifest plus procedure/examples/tests/helpers, bounded discovery/composition and library-scale selection tests.",
+      "locations": [
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.10",
+      "title": "Tools and connections",
+      "requires": [
+        "MCP and non-MCP",
+        "registration",
+        "discovery",
+        "selection",
+        "argument and output validation",
+        "permission scopes",
+        "credentials",
+        "rates",
+        "retries",
+        "idempotency",
+        "timeouts",
+        "degraded operation",
+        "provider changes",
+        "malicious output",
+        "audit",
+        "connection approval/removal",
+        "dependencies",
+        "partial-action compensation",
+        "untrusted data separation"
+      ],
+      "answer_scope": "Concrete native, search, mail, public delivery/intake, payments, books and accepted human routes with admission, current scope, captures, unknown effects and removal.",
+      "locations": [
+        "planning/specification/07-integrations-capacity.md",
+        "research/implementation/N01-native-execution.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.11",
+      "title": "Schemas and contracts",
+      "requires": [
+        "all required schema subjects",
+        "identity",
+        "required fields",
+        "ownership",
+        "source of truth",
+        "lifecycle",
+        "transitions",
+        "invariants",
+        "versions",
+        "relations",
+        "authorization",
+        "retention",
+        "deletion",
+        "audit"
+      ],
+      "answer_scope": "Foundational canonical consolidation active: full required/added subjects, concrete types/commands/per-edge predicates, composites and acceptance revision binding. Not complete.",
+      "locations": [
+        "planning/specification/01-contract-kernel.md",
+        "planning/specification/capabilities.json",
+        "planning/specification/work-knowledge-contracts.json",
+        "registers/specification-findings.json"
+      ],
+      "status": "foundational-consolidation-active",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.12",
+      "title": "Memory and context",
+      "requires": [
+        "working/session/episodic/semantic/procedural stores",
+        "founder preferences/corrections",
+        "decisions",
+        "assumptions",
+        "failures",
+        "customer information",
+        "history",
+        "external evidence",
+        "read/write/correct/delete permissions",
+        "provenance",
+        "freshness",
+        "expiry",
+        "contradictions",
+        "confidence",
+        "retrieval/ranking",
+        "assembly/reduction",
+        "summarization loss",
+        "contamination",
+        "privacy",
+        "selective forgetting",
+        "context manifest"
+      ],
+      "answer_scope": "Originals, working/session/episodic/semantic/procedural and consented preference contexts preserve purpose, freshness, contradictions, omissions, sensitive-copy boundaries and selective forgetting.",
+      "locations": [
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.13",
+      "title": "Evidence and truth",
+      "requires": [
+        "observation/measurement/claim/inference/hypothesis/decision/opinion/preference/unknown distinctions",
+        "evidence by consequence",
+        "provenance",
+        "citation",
+        "disagreement",
+        "incentives",
+        "expiry",
+        "revalidation",
+        "negative and missing evidence",
+        "long-held false-belief correction"
+      ],
+      "answer_scope": "Observation, claim, inference, decision and unknown stay distinct; transitive evidence closure, incentives, missing evidence and current revalidation govern important claims.",
+      "locations": [
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "research/substrate-claims.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.14",
+      "title": "Evaluation",
+      "requires": [
+        "model",
+        "prompt",
+        "agent",
+        "skill",
+        "tool call",
+        "handoff",
+        "workflow",
+        "run",
+        "artifact",
+        "decision",
+        "project",
+        "business outcome",
+        "safety outcome",
+        "attention outcome",
+        "fixed and changing cases",
+        "adversarial/regression/negative controls",
+        "repeated stochastic trials",
+        "trace/outcome/process/evidence quality",
+        "human calibration",
+        "independence",
+        "disagreement",
+        "drift",
+        "evaluate evaluators"
+      ],
+      "answer_scope": "All evaluation levels, fixed/fresh/adverse/negative/clean controls, complete denominators, stochastic uncertainty, competent calibration, independent roots and evaluator evaluation; no aggregate success score.",
+      "locations": [
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "planning/specification/08-improvement-implementation.md",
+        "planning/reviews/G-acceptance-protocol.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.15",
+      "title": "Threat model and risk register",
+      "requires": [
+        "assets",
+        "actors",
+        "attackers",
+        "boundaries",
+        "surfaces",
+        "misuse",
+        "accidents",
+        "intent error",
+        "manipulation",
+        "exfiltration",
+        "credentials",
+        "privilege",
+        "memory/supply-chain/dependency/tool/agent compromise",
+        "evaluator corruption",
+        "financial/reputational/privacy/legal/physical harm",
+        "overload",
+        "competence",
+        "control",
+        "per-risk cause/uncertainty/consequence/detection/prevention/containment/rollback/residual/owner/escalation"
+      ],
+      "answer_scope": "Seventeen material risk groups and33attack cases retain causes, unknown likelihood, consequence, detection/prevention/containment/compensation/residual/actual owner/escalation; no runtime protection yet.",
+      "locations": [
+        "registers/risks.json",
+        "research/attack-coverage.json",
+        "planning/specification/02-authority-recovery.md",
+        "planning/specification/10-components-authority-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.16",
+      "title": "Permissions and consequences",
+      "requires": [
+        "reversibility",
+        "financial",
+        "public",
+        "legal",
+        "customer",
+        "privacy",
+        "security",
+        "sensitivity",
+        "integrity",
+        "blast radius",
+        "identity",
+        "least privilege",
+        "tools",
+        "sandbox",
+        "budget",
+        "evidence",
+        "review",
+        "approval",
+        "monitoring",
+        "rollback",
+        "post-action verification",
+        "no self-grant or silent inheritance"
+      ],
+      "answer_scope": "C0–C5 consequence dimensions, actual standing and scoped grants, exact current judgments/parameters/reservations and independent witnessed release; no self-grants or ambient inheritance.",
+      "locations": [
+        "planning/specification/02-authority-recovery.md",
+        "planning/specification/04-human-operation.md",
+        "planning/specification/10-components-authority-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.17",
+      "title": "Reliability",
+      "requires": [
+        "scheduling",
+        "queues",
+        "concurrency",
+        "locks",
+        "leases",
+        "heartbeats",
+        "checkpoints",
+        "retry classification",
+        "idempotency",
+        "deduplication",
+        "partial completion",
+        "compensation",
+        "resume",
+        "cancel",
+        "stuck/loop detection",
+        "isolation",
+        "degradation",
+        "backup",
+        "restore",
+        "disaster recovery",
+        "recovery verification"
+      ],
+      "answer_scope": "SQL scheduling, bounded causal retry/leases, exact deduplication, unknown-effect reconciliation, checkpoints, fresh frontier restore, current deletion and actual continuity.",
+      "locations": [
+        "planning/specification/02-authority-recovery.md",
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/08-improvement-implementation.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.18",
+      "title": "Human operation",
+      "requires": [
+        "intent",
+        "goals",
+        "direction changes",
+        "commitments",
+        "decisions",
+        "approvals",
+        "evidence",
+        "uncertainty",
+        "intervention",
+        "pause/stop/resume",
+        "correction",
+        "taste",
+        "attention",
+        "absence recovery",
+        "avoid full-time reviewer"
+      ],
+      "answer_scope": "Intent, exact decisions, evidence inspection, scoped interruption, corrections, taste, finite attention, authentic practice and actual absence/succession performance.",
+      "locations": [
+        "planning/specification/04-human-operation.md",
+        "planning/specification/09-company-human-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.19",
+      "title": "Mission Control and surfaces",
+      "requires": [
+        "derive from operator needs",
+        "authoritative projections",
+        "user/job/source/state/uncertainty/actions/permissions/latency/failure/accessibility/mobile/false-confidence for every surface",
+        "pixel-art state honesty if used",
+        "state outside UI"
+      ],
+      "answer_scope": "Ten job-derived surfaces with truthful authoritative projections, latency/failure/accessibility/mobile and uncertainty. Pixel presence was considered but not selected without an operator job; no fictional activity.",
+      "locations": [
+        "planning/specification/04-human-operation.md",
+        "planning/specification/10-components-authority-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.20",
+      "title": "Terminal and coding surface",
+      "requires": [
+        "conversation",
+        "commands",
+        "plans",
+        "live work",
+        "parallel workers",
+        "code/diffs/tests",
+        "approvals",
+        "evidence",
+        "failures",
+        "checkpoints",
+        "environment",
+        "context inspection",
+        "task switching",
+        "interruption",
+        "recovery",
+        "traditional shell versus new interactions"
+      ],
+      "answer_scope": "Conversation and typed commands join live work, context, diffs/tests, exact approvals, environment, failures, parallel work and recoverable task switching; actual shell remains confined execution.",
+      "locations": [
+        "planning/specification/04-human-operation.md",
+        "planning/specification/05-work-agents-skills.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.21",
+      "title": "Economics and capacity",
+      "requires": [
+        "subscription money/capacity separation",
+        "provider/account/allowed usage/auth/allowance/reset/weekly-session limits/concurrency/pressure/queue/workload/fallback/switching/interruption/resume/credits",
+        "no silent paid fallback",
+        "explicit spend policy",
+        "infrastructure/storage/database/backup/observability/search/services/domains/comms/security/attention cost",
+        "internal vs customer product economics",
+        "no assumed subscription credential sharing/proxy/resale/embedding",
+        "provider/execution adapters"
+      ],
+      "answer_scope": "Subscription scarcity and money separate; no silent API/credit fallback. Concrete estimated AWS/VPS/S0, infrastructure/services/restores/domains and unknown actual human/professional/attention costs; customer economics separate.",
+      "locations": [
+        "planning/specification/07-integrations-capacity.md",
+        "planning/specification/integrations-capacity-build.json",
+        "research/reviews/2026-09-12-integration-economics-inspection.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.22",
+      "title": "Self-improvement",
+      "requires": [
+        "prompt/instruction/skill/tool/workflow/schema/routing/memory/evaluation/agent/UI/architecture changes",
+        "problem/evidence/change/affected/benefit/harm/tests/rollout/monitoring/rollback/authority packet",
+        "protected policy/identity/permissions/audit/evidence/incidents/founder constraints/improvement safety mechanism"
+      ],
+      "answer_scope": "Versioned evidence-led proposals, frozen comparisons, controlled rollout, current-authority rollback and cumulative drift; protection roots and improvement judge cannot self-modify unchecked.",
+      "locations": [
+        "planning/specification/08-improvement-implementation.md",
+        "planning/specification/06-knowledge-evidence-evaluation.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.23",
+      "title": "Full implementation plan",
+      "requires": [
+        "repo map",
+        "services/modules/processes",
+        "topology",
+        "stores/schemas/interfaces/dependencies",
+        "infrastructure/environments/secrets",
+        "tests/evals/observability",
+        "migration/backup/recovery/security/release",
+        "dependency ordered stages",
+        "per-stage components/dependencies/contracts/tests/integrations/completion/risks/full-system relationship"
+      ],
+      "answer_scope": "Final modular repository/process/VM topology, environments, keys, tests/evals, observability, migration/backup/recovery/release;12dependency-ordered final construction stages, all unstarted.",
+      "locations": [
+        "planning/specification/08-improvement-implementation.md",
+        "planning/implementation-graph.json"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    },
+    {
+      "id": "8.24",
+      "title": "Coverage matrix",
+      "requires": [
+        "every field and meaningful question in original source",
+        "field/question/status/answer/component/evidence/decision/uncertainty/owner/implementation",
+        "no silent gaps",
+        "newly discovered fields"
+      ],
+      "answer_scope": "566exact questions plus62supplemental and15discovered concerns have answer, owner, decision, evidence, uncertainty and planned-module joins. Independent semantic acceptance pending.",
+      "locations": [
+        "coverage/questions.json",
+        "coverage/supplemental.json",
+        "coverage/discovered.json",
+        "planning/specification/09-company-human-traceability.md",
+        "planning/specification/10-components-authority-traceability.md",
+        "planning/specification/12-scope-lifecycle-traceability.md"
+      ],
+      "status": "substance-authored-independent-complete-plan-review-pending",
+      "owner": "orchestrator",
+      "implementation_status": "not-started",
+      "validation_note": "This is a navigation/completeness checklist, not a reviewer verdict or assurance that all listed subrequirements are substantively satisfied."
+    }
+  ]
+}

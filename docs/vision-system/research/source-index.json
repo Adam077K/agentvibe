@@ -470,14 +470,61 @@
     "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
+    "id": "S-e77d95958571",
+    "url": "https://aws.amazon.com/route53/pricing/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S21"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S21; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S21"
+    ]
+  },
+  {
     "id": "S-5a608d5062fc",
     "url": "https://aws.amazon.com/vpc/pricing/",
     "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S21",
       "research/reviews/2026-09-12-substrate-controls.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
-    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S21"
+    ]
+  },
+  {
+    "id": "S-9b2db8cca367",
+    "url": "https://brave.com/search/api/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S01"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S01; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S01"
+    ]
+  },
+  {
+    "id": "S-434e7b7d7f63",
+    "url": "https://caddyserver.com/docs/automatic-https",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S26"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S26; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S26"
+    ]
   },
   {
     "id": "S-3a962005addd",
@@ -533,12 +580,17 @@
     "id": "S-3b3cc92a63bf",
     "url": "https://code.claude.com/docs/en/cli-reference",
     "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
       "research/implementation/N01-native-execution.md",
+      "research/integration-claims.json#/claims/IC-S14",
       "research/reviews/2026-09-12-native-controls.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
-    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S14"
+    ]
   },
   {
     "id": "S-aa16149a654b",
@@ -554,12 +606,17 @@
     "id": "S-d4f4e2941ed1",
     "url": "https://code.claude.com/docs/en/headless",
     "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
       "research/L10-economics.md",
-      "research/implementation/N01-native-execution.md"
+      "research/implementation/N01-native-execution.md",
+      "research/integration-claims.json#/claims/IC-S14"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S14"
+    ]
   },
   {
     "id": "S-a636647132db",
@@ -684,6 +741,34 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-423fd7c977ad",
+    "url": "https://developers.cloudflare.com/d1/platform/limits/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S06"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S06; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S06"
+    ]
+  },
+  {
+    "id": "S-41fee3fbebed",
+    "url": "https://developers.cloudflare.com/d1/platform/pricing/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S06"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S06; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S06"
+    ]
+  },
+  {
     "id": "S-422d832bdc89",
     "url": "https://developers.cloudflare.com/r2/pricing/",
     "cited_by": [
@@ -702,6 +787,62 @@
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
     "metadata_location": "research/substrate-claims.json#/claims/SC-021 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
+  },
+  {
+    "id": "S-ea34a78fe70c",
+    "url": "https://developers.cloudflare.com/workers/configuration/routing/custom-domains/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S07"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S07; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S07"
+    ]
+  },
+  {
+    "id": "S-f7177cb67258",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S05"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S05; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S05"
+    ]
+  },
+  {
+    "id": "S-2a3fb71dbd7a",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S05"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S05; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S05"
+    ]
+  },
+  {
+    "id": "S-f2c853e36301",
+    "url": "https://developers.cloudflare.com/workers/static-assets/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S05"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S05; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S05"
+    ]
   },
   {
     "id": "S-dad22c084573",
@@ -815,6 +956,34 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-4f4c61de53a1",
+    "url": "https://docs.hetzner.com/cloud/servers/overview/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S23"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S23; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S23"
+    ]
+  },
+  {
+    "id": "S-29a6e281a52d",
+    "url": "https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S22"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S22; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S22"
+    ]
+  },
+  {
     "id": "S-e2dc079d8290",
     "url": "https://docs.iza.org/dp18143.pdf",
     "cited_by": [
@@ -916,15 +1085,62 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-e22048b071b9",
+    "url": "https://docs.stripe.com/api/checkout/sessions/create",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S09"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S09; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S09"
+    ]
+  },
+  {
+    "id": "S-15f8b008d0a8",
+    "url": "https://docs.stripe.com/api/checkout/sessions/expire",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S09"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S09; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S09"
+    ]
+  },
+  {
     "id": "S-037177a4a0a8",
     "url": "https://docs.stripe.com/api/idempotent_requests",
     "cited_by": [
+      "planning/specification/02-authority-recovery.md",
+      "planning/specification/07-integrations-capacity.md",
       "research/L08-reliability.md",
-      "planning/specification/02-authority-recovery.md"
+      "research/integration-claims.json#/claims/IC-S09"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "research/substrate-claims.json#/claims/SC-023 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
+    "metadata_location": "research/substrate-claims.json#/claims/SC-023 (inherits SC-POLICY-1); original research/audit reports retain their scopes",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S09"
+    ]
+  },
+  {
+    "id": "S-87a8b7ca2a7a",
+    "url": "https://docs.stripe.com/api/refunds/create",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S09"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S09; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S09"
+    ]
   },
   {
     "id": "S-f2ef2bd1e39e",
@@ -935,6 +1151,20 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-43794d50912b",
+    "url": "https://docs.stripe.com/webhooks",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S09"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S09; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S09"
+    ]
   },
   {
     "id": "S-7e6ec8bd95c9",
@@ -1118,6 +1348,20 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-51c0537c2ef4",
+    "url": "https://github.com/panva/jose",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S08"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S08; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S08"
+    ]
+  },
+  {
     "id": "S-a67c9c6498a8",
     "url": "https://github.com/panva/openid-client",
     "cited_by": [
@@ -1196,6 +1440,34 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-9e93db759e1e",
+    "url": "https://hledger.org/1.52/hledger.html",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S11"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S11; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S11"
+    ]
+  },
+  {
+    "id": "S-83184d2c8ee5",
+    "url": "https://hono.dev/docs/getting-started/nodejs",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S25"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S25; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S25"
+    ]
   },
   {
     "id": "S-d4f1eb35b89d",
@@ -1292,11 +1564,16 @@
     "id": "S-b86fe73675b0",
     "url": "https://learn.chatgpt.com/docs/app-server",
     "cited_by": [
-      "research/L10-economics.md"
+      "planning/specification/07-integrations-capacity.md",
+      "research/L10-economics.md",
+      "research/integration-claims.json#/claims/IC-S16"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S16"
+    ]
   },
   {
     "id": "S-930b78c67d2f",
@@ -1380,16 +1657,35 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-496d863e095c",
+    "url": "https://learn.chatgpt.com/docs/enterprise/usage-limits",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S16"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S16; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S16"
+    ]
+  },
+  {
     "id": "S-ef5ba26f3f87",
     "url": "https://learn.chatgpt.com/docs/non-interactive-mode",
     "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
       "research/L04-engineering.md",
       "research/L10-economics.md",
-      "research/implementation/N01-native-execution.md"
+      "research/implementation/N01-native-execution.md",
+      "research/integration-claims.json#/claims/IC-S15"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S15"
+    ]
   },
   {
     "id": "S-0a8a5fe1e7b9",
@@ -1405,12 +1701,17 @@
     "id": "S-6174ff3fc477",
     "url": "https://learn.chatgpt.com/docs/permissions",
     "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
       "research/implementation/N01-native-execution.md",
+      "research/integration-claims.json#/claims/IC-S15",
       "research/reviews/2026-09-12-native-controls.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "Primary-document claim support as scoped by cited report; no runtime or whole-page validation",
-    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only"
+    "metadata_location": "Source dates, vendor interests, inference limits and revalidation conditions in cited report; locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S15"
+    ]
   },
   {
     "id": "S-ac4d1ae97fe8",
@@ -1536,6 +1837,20 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-77982a254b78",
+    "url": "https://opentelemetry.io/docs/languages/js/getting-started/nodejs/",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S29"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S29; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S29"
+    ]
+  },
+  {
     "id": "S-bdba945de03d",
     "url": "https://opentelemetry.io/docs/security/handling-sensitive-data/",
     "cited_by": [
@@ -1544,6 +1859,34 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-fa188619840a",
+    "url": "https://opentofu.org/docs/intro/",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S27"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S27; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S27"
+    ]
+  },
+  {
+    "id": "S-132f19e37359",
+    "url": "https://opentofu.org/docs/language/state/sensitive-data/",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S27"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S27; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S27"
+    ]
   },
   {
     "id": "S-c424685442d6",
@@ -1566,6 +1909,84 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-9958f7e3efd4",
+    "url": "https://porkbun.com/products/domains",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S13"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S13; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S13"
+    ]
+  },
+  {
+    "id": "S-3f11bdd44156",
+    "url": "https://postmarkapp.com/developer/api/email-api",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S04"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S04; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S04"
+    ]
+  },
+  {
+    "id": "S-052b4cfc3701",
+    "url": "https://postmarkapp.com/developer/api/suppressions-api",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S04"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S04; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S04"
+    ]
+  },
+  {
+    "id": "S-b3085e916356",
+    "url": "https://postmarkapp.com/developer/webhooks/webhooks-overview",
+    "cited_by": [
+      "planning/reviews/F-integration-04.md",
+      "research/reviews/2026-09-12-postmark-admission-inspection.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Independent reviewer narrow provider-source check and subsequent root inspection of same provider; no runtime or account admission",
+    "metadata_location": "research/reviews/2026-09-12-postmark-admission-inspection.md; inherits SC-POLICY-1"
+  },
+  {
+    "id": "S-6f25ff683fea",
+    "url": "https://postmarkapp.com/pricing",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S04"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S04; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S04"
+    ]
+  },
+  {
+    "id": "S-8595dd938027",
+    "url": "https://postmarkapp.com/terms-of-service",
+    "cited_by": [
+      "planning/reviews/F-integration-04.md",
+      "research/reviews/2026-09-12-postmark-admission-inspection.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Independent reviewer narrow provider-source check and subsequent root inspection of same provider; no runtime or account admission",
+    "metadata_location": "research/reviews/2026-09-12-postmark-admission-inspection.md; inherits SC-POLICY-1"
+  },
+  {
     "id": "S-0164ec4d378b",
     "url": "https://preprodcms.bain.com/insights/who-has-d-how-clear-decision-roles-enhance-organizational-performance/",
     "cited_by": [
@@ -1574,6 +1995,76 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-1458b0bc87e6",
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDataTransfer/current/eu-central-1/index.json",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S20"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S20; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S20"
+    ]
+  },
+  {
+    "id": "S-a06af1ea29c6",
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-central-1/index.csv",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S18"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S18; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S18"
+    ]
+  },
+  {
+    "id": "S-b4eeeeef2330",
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-1/index.csv",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S18"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S18; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S18"
+    ]
+  },
+  {
+    "id": "S-81860f6152ca",
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/eu-west-1/index.json",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S19"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S19; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S19"
+    ]
+  },
+  {
+    "id": "S-5723a2773a41",
+    "url": "https://prometheus.io/docs/practices/naming/",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S29"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S29; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S29"
+    ]
   },
   {
     "id": "S-ded4fae0382a",
@@ -1624,6 +2115,20 @@
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
     "metadata_location": "research/substrate-claims.json#/claims/SC-017 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
+  },
+  {
+    "id": "S-2d498f66722d",
+    "url": "https://react.dev/reference/react",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S25"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S25; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S25"
+    ]
   },
   {
     "id": "S-227aa6dd9926",
@@ -1718,6 +2223,20 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-bedd4a7944b3",
+    "url": "https://stripe.com/pricing",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S10"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S10; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S10"
+    ]
+  },
+  {
     "id": "S-e7aff09ea2c8",
     "url": "https://styleguide.mailchimp.com/voice-and-tone/",
     "cited_by": [
@@ -1761,12 +2280,17 @@
     "id": "S-b2ab15dd01eb",
     "url": "https://support.claude.com/en/articles/12304248-manage-api-key-environment-variables-in-claude-code",
     "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
       "research/L10-economics.md",
-      "research/implementation/N01-native-execution.md"
+      "research/implementation/N01-native-execution.md",
+      "research/integration-claims.json#/claims/IC-S17"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S17"
+    ]
   },
   {
     "id": "S-3682360a701c",
@@ -1782,12 +2306,17 @@
     "id": "S-73326e0f966d",
     "url": "https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan",
     "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
       "research/L10-economics.md",
-      "research/implementation/N01-native-execution.md"
+      "research/implementation/N01-native-execution.md",
+      "research/integration-claims.json#/claims/IC-S14"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
-    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S14"
+    ]
   },
   {
     "id": "S-06970267e484",
@@ -1838,6 +2367,20 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-cf35f9d1b511",
+    "url": "https://vite.dev/guide/",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S25"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S25; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S25"
+    ]
   },
   {
     "id": "S-80cd7a3df17a",
@@ -1980,6 +2523,20 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-f84583833e0c",
+    "url": "https://www.bench.co/pricing",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S24"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S24; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S24"
+    ]
+  },
+  {
     "id": "S-15aa2c14a522",
     "url": "https://www.braintrust.dev/docs/annotate/datasets/use-in-evaluations",
     "cited_by": [
@@ -2090,6 +2647,48 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-b4d400e4002a",
+    "url": "https://www.fastmail.com/dev/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S02"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S02; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S02"
+    ]
+  },
+  {
+    "id": "S-e8b29d809fb0",
+    "url": "https://www.fastmail.com/pricing/us/?plan-type=business",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S03"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S03; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S03"
+    ]
+  },
+  {
+    "id": "S-420e3e89d84f",
+    "url": "https://www.fastmail.help/hc/en-us/articles/1500000277382-Account-limits",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S02"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S02; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S02"
+    ]
+  },
+  {
     "id": "S-81c76c869984",
     "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software",
     "cited_by": [
@@ -2098,6 +2697,20 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-5e2791cc0c97",
+    "url": "https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html",
+    "cited_by": [
+      "planning/specification/08-improvement-implementation.md",
+      "research/integration-claims.json#/claims/IC-S28"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S28; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S28"
+    ]
   },
   {
     "id": "S-af5413d7aefe",
@@ -2161,6 +2774,20 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-8c4f4fd92ccd",
+    "url": "https://www.hetzner.com/cloud/block-storage/",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S23"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S23; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S23"
+    ]
+  },
+  {
     "id": "S-e07ee5280973",
     "url": "https://www.ics.uci.edu/~gmark/chi08-mark.pdf",
     "cited_by": [
@@ -2199,6 +2826,20 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-4f6a94293700",
+    "url": "https://www.iso20022.org/iso-20022-message-definitions",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S12"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S12; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S12"
+    ]
   },
   {
     "id": "S-0211aed3cfa3",
@@ -2439,6 +3080,26 @@
     "metadata_location": "research/substrate-claims.json#/claims/SC-005 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   },
   {
+    "id": "S-dc70c9fb4a8e",
+    "url": "https://www.postgresql.org/docs/18/textsearch-controls.html",
+    "cited_by": [
+      "planning/specification/06-knowledge-evidence-evaluation.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author-reported source support; see scoped audit and claim register, no blanket verification",
+    "metadata_location": "research/substrate-claims.json#/claims/SC-025 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
+  },
+  {
+    "id": "S-1be83030edc8",
+    "url": "https://www.postgresql.org/docs/18/textsearch-indexes.html",
+    "cited_by": [
+      "planning/specification/06-knowledge-evidence-evaluation.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author-reported source support; see scoped audit and claim register, no blanket verification",
+    "metadata_location": "research/substrate-claims.json#/claims/SC-026 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
+  },
+  {
     "id": "S-dd9531fbac9f",
     "url": "https://www.postgresql.org/docs/18/transaction-iso.html",
     "cited_by": [
@@ -2509,6 +3170,34 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-7821364debe0",
+    "url": "https://www.rfc-editor.org/rfc/rfc7518",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S08"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S08; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S08"
+    ]
+  },
+  {
+    "id": "S-beb03adfe592",
+    "url": "https://www.rfc-editor.org/rfc/rfc8621",
+    "cited_by": [
+      "planning/specification/07-integrations-capacity.md",
+      "research/integration-claims.json#/claims/IC-S02"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Reported source claim, not blanket independent verification, current account eligibility or runtime evidence",
+    "metadata_location": "research/integration-claims.json#/claims/IC-S02; inherits SC-POLICY-1",
+    "claim_maintenance_refs": [
+      "research/integration-claims.json#/claims/IC-S02"
+    ]
   },
   {
     "id": "S-953dba0851e1",
@@ -2611,25 +3300,5 @@
     "access_date_reported": "2026-09-12",
     "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
     "metadata_location": "research/substrate-claims.json#/claims/SC-019 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
-  },
-  {
-    "id": "S-dc70c9fb4a8e",
-    "url": "https://www.postgresql.org/docs/18/textsearch-controls.html",
-    "cited_by": [
-      "planning/specification/06-knowledge-evidence-evaluation.md"
-    ],
-    "access_date_reported": "2026-09-12",
-    "verification": "Author-reported source support; see scoped audit and claim register, no blanket verification",
-    "metadata_location": "research/substrate-claims.json#/claims/SC-025 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
-  },
-  {
-    "id": "S-1be83030edc8",
-    "url": "https://www.postgresql.org/docs/18/textsearch-indexes.html",
-    "cited_by": [
-      "planning/specification/06-knowledge-evidence-evaluation.md"
-    ],
-    "access_date_reported": "2026-09-12",
-    "verification": "Author-reported source support; see scoped audit and claim register, no blanket verification",
-    "metadata_location": "research/substrate-claims.json#/claims/SC-026 (inherits SC-POLICY-1); original research/audit reports retain their scopes"
   }
 ]

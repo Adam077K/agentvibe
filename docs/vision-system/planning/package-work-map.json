@@ -96,7 +96,7 @@
         "Owner purpose versus inferred operating choices",
         "Customer value, obligations, institutional capacity and resource economics"
       ],
-      "status": "01\u201304/catalog integrated and five scoped FIR findings independently closed at specification level; full schema/coverage and complete-plan review remain",
+      "status": "All assigned source answers and substantive specifications integrated and root-read; independent complete-plan acceptance and implementation pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -107,7 +107,8 @@
       "answer_locations": [
         "planning/specification/03-company-capabilities.md",
         "planning/specification/04-human-operation.md",
-        "planning/specification/capabilities.json"
+        "planning/specification/capabilities.json",
+        "planning/specification/09-company-human-traceability.md"
       ]
     },
     {
@@ -301,7 +302,7 @@
         "Provider-independent durable continuation and refusal",
         "Fixed versus adaptive paths, context-limited temporary executors and independent judges"
       ],
-      "status": "05/06 and268 source answers integrated; root answer/prose inspection complete, machine detail and independent review pending",
+      "status": "All assigned source answers and substantive specifications integrated and root-read; independent complete-plan acceptance and implementation pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -412,7 +413,7 @@
         "Subscription authentication, limits, interruption, no silent metered fallback",
         "Tool and service admission, removal, provider change and substantive end-to-end integration"
       ],
-      "status": "07/08 and113 source answers integrated; root and independent inspection active",
+      "status": "All assigned source answers and substantive specifications integrated and root-read; independent complete-plan acceptance and implementation pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -561,7 +562,7 @@
         "Transitive evidence dependencies and claim-versus-cause distinctions",
         "Independent outcome/process/account tests, negative controls, repeated trials and evaluator drift"
       ],
-      "status": "05/06 and268 source answers integrated; root answer/prose inspection complete, machine detail and independent review pending",
+      "status": "All assigned source answers and substantive specifications integrated and root-read; independent complete-plan acceptance and implementation pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -668,7 +669,7 @@
         "Recoverable effects and obligations, conflict domains, deletion/revocation fencing",
         "Threat model, privacy/professional determinations, incidents, backup and verified restore"
       ],
-      "status": "01\u201304/catalog integrated and five scoped FIR findings independently closed at specification level; full schema/coverage and complete-plan review remain",
+      "status": "All assigned source answers and substantive specifications integrated and root-read; independent complete-plan acceptance and implementation pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -678,7 +679,9 @@
       "reviewer": null,
       "answer_locations": [
         "planning/specification/01-contract-kernel.md",
-        "planning/specification/02-authority-recovery.md"
+        "planning/specification/02-authority-recovery.md",
+        "planning/specification/10-components-authority-traceability.md",
+        "planning/specification/components-authority.json"
       ]
     },
     {
@@ -752,7 +755,7 @@
         "Owner competence and attention without surveillance or full-time review",
         "Terminal, intervention, approvals, evidence, absence recovery and multiple legitimate owners"
       ],
-      "status": "01\u201304/catalog integrated and five scoped FIR findings independently closed at specification level; full schema/coverage and complete-plan review remain",
+      "status": "All assigned source answers and substantive specifications integrated and root-read; independent complete-plan acceptance and implementation pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -763,7 +766,8 @@
       "answer_locations": [
         "planning/specification/03-company-capabilities.md",
         "planning/specification/04-human-operation.md",
-        "planning/specification/capabilities.json"
+        "planning/specification/capabilities.json",
+        "planning/specification/09-company-human-traceability.md"
       ]
     },
     {
@@ -825,7 +829,7 @@
         "Final repository modules, deployment, release and dependency-ordered construction",
         "Migration of meanings and surviving duties; recoverable build progress and operability"
       ],
-      "status": "07/08 and113 source answers integrated; root and independent inspection active",
+      "status": "All assigned source answers and substantive specifications integrated and root-read; independent complete-plan acceptance and implementation pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -849,7 +853,7 @@
     {
       "deliverable": "8.6",
       "responsibility": "Integrate selected logical/runtime/deployment/data/trust/authority/integration/interaction/improvement architecture and every component contract",
-      "status": "S1.0 logical selection complete; concrete runtime, trust and component contracts being authored"
+      "status": "Selected architecture01\u201310 and9\u00d719component attributes integrated; full canonical bindings and independent review pending"
     },
     {
       "deliverable": "8.11",
@@ -902,12 +906,12 @@
         "Deployment",
         "Rollback"
       ],
-      "status": "Shared envelope and core records being authored; complete subject bindings and schema catalog remain"
+      "status": "Canonical author active; concrete per-edge predicates andFI12exact acceptance/revision contract remain foundational work"
     },
     {
       "deliverable": "8.24",
       "responsibility": "For each question, retain exact answer, component, evidence, decision, uncertainty, owner and eventual implementation pointer; validate linked substantive answers",
-      "status": "566 original, 62 supplemental and 15 discovered items inventoried; answers pending"
+      "status": "All566+62+15concerns have substantive answer joins; independent semantic acceptance pending"
     }
   ],
   "cross_track_contracts": [

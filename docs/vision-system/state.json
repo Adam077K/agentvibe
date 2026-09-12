@@ -41,49 +41,40 @@
     "Frozen independent Phase G acceptance protocol archived at planning/reviews/G-acceptance-protocol.md; no acceptance of current drafts",
     "Integrated kernel/authority 16a222f and company/human cb1eac4 specifications; orchestrator inspected substantive contracts and verified 46 catalog entries against author schema, 116 unique source IDs; no substantive full-coverage or runtime pass",
     "Integrated independent substrate source audit e7530ff and inspected focused receipt/hash and nftables encoding amendment e9201fa; source index now 258 locators, no blanket source/runtime verification",
-    "Independent FIR-01\u201304 archived at 3a19199; bounded company/kernel repairs integrated at 86bb9ef and sent for independent reassessment. Local 16 GiB/10 CPU/45 GiB available construction envelope observed, not operational proof.",
-    "F-integration-02 archived at23adbe7: FIR01\u201304 closed at specification level; new FIR05 repaired atef676de, read-only recheck underway. R17 metadata-only probe reproduces baseline six-file discovery/oracle mismatch; expected scope and ledger timeout unresolved.",
-    "F-integration-03 archived at7ea26e6: FIR05 closes at specification level; allFIR01\u201305 conformance and concurrency tests remain unexecuted, no full-plan acceptance.",
+    "Independent FIR-01–04 archived at 3a19199; bounded company/kernel repairs integrated at 86bb9ef and sent for independent reassessment. Local 16 GiB/10 CPU/45 GiB available construction envelope observed, not operational proof.",
+    "F-integration-02 archived at23adbe7: FIR01–04 closed at specification level; new FIR05 repaired atef676de, read-only recheck underway. R17 metadata-only probe reproduces baseline six-file discovery/oracle mismatch; expected scope and ledger timeout unresolved.",
+    "F-integration-03 archived at7ea26e6: FIR05 closes at specification level; allFIR01–05 conformance and concurrency tests remain unexecuted, no full-plan acceptance.",
     "Integrated05/06 and work-knowledge contracts at857a98c: root read complete prose plus storage/consolidation changes and all268 answer paragraphs; schema/source text checks pass, full machine detail and independent review pending.",
     "Integrated07/08 plus113-answer integration/build/pricing catalog atc3519f5; root substantive inspection remains, author validation is not acceptance.",
     "EPT01 audit archived atda529a0; shared26-group claim-maintenance repair12e4f8c independently closed and recheck archived atb7902b2. Source index260 locators, not260 independently verified claims.",
     "Integrated116 substantive company/human answers and09 at3ff24a1; root read all116 answer paragraphs and15 F25 routes. Root completed07/08,113answer/pricing and40record/38command substantive inspection; selected economics primary checks and arithmetic recorded, not independent acceptance.",
-    "Integrated10/9\u00d719component contracts and69source answers at7cf71f5; root read complete171attributes and69answer/uncertainty paragraphs. Authored12 with77specific supplemental/discovered answers at1dfe319. All566originalquestions now have unique exact substantive answer/evidence/decision/plannedmodule joins; no independent acceptance upgrade."
+    "Integrated10/9×19component contracts and69source answers at7cf71f5; root read complete171attributes and69answer/uncertainty paragraphs. Authored12 with77specific supplemental/discovered answers at1dfe319. All566originalquestions now have unique exact substantive answer/evidence/decision/plannedmodule joins; no independent acceptance upgrade.",
+    "Integrated29-group integration/build source-maintenance register at2407bc1; root inspected specific scopes/limits and indexed52sources. Archived bounded independent F-integration-04 at4e24213; no new blocking contradiction, complete canonical conformance and actual provider admission remain."
   ],
   "active_work": [
     {
-      "agent": "attack_technical",
-      "scope": "Author07/08 consequential source metadata inheritance and integration-claims register; no repeated broad research",
-      "base": "7cf71f5",
-      "artifacts": [
-        "research/integration-claims.json",
-        "07/08 explicit maintenance inheritance"
-      ]
+      "agent": "repair_company_foundations",
+      "scope": "Complete11 canonical types, values, commands and per-edge predicates. FI12 proposes immutable business revisions plus authoritative separately versioned LifecycleStatus; enumerate affected contracts. Independent acceptance pending.",
+      "base": "3ff24a1"
     },
     {
-      "agent": "repair_company_foundations",
-      "scope": "Author complete canonical subject/value/command/state/predicate catalog and validate buildable cross-catalog bindings",
-      "base": "3ff24a1",
-      "artifacts": [
-        "planning/specification/11-schemas-state-contracts.md",
-        "planning/specification/canonical-contracts.json or split registries"
-      ]
+      "agent": "attack_technical",
+      "scope": "Independent read-only company/work/lifecycle semantic coverage and positive/adverse journeys at51de3b4; own01/02/07/08/10 only interfaces, not independent certification."
     },
     {
       "agent": "attack_architecture_evidence",
-      "scope": "Independent read-only05\u201308/machine-contract integration review atc3519f5; known full schema/predicate/component/coverage remains, noGacceptance"
+      "scope": "Independent read-only09/10/12 and full643coverage/component/operator scope review at2407bc1. Pending11 andFI12 declared; no fullG."
     },
     {
       "agent": "orchestrator",
-      "scope": "Validate traceability links and preserve readable package; integrate metadata/schema/reviews, assess FI12 acceptance-revision discovery, then fullG and build"
+      "scope": "Source and coverage navigation maintenance, schema integration and independent FI12/fullG review routing; then accepted plan and full build."
     }
   ],
   "next_actions": [
-    "Validate566+77source joins and package navigation; preserve pending independent acceptance and all unimplemented evidence",
-    "Receive frozen05\u201308 independent integration judgment and resolve actual incompatibilities",
-    "Integrate07/08 source-maintenance metadata and index all new citations",
-    "Integrate full canonical schema/predicate catalog; independently review FI12 acceptance/state exact-revision contract and all required/added subjects",
-    "Run independent architecture-neutral complete-plan reviews including09/10/12 and complete coverage; resolve foundational gaps and commit accepted package before full implementation",
+    "Receive bounded company/component/coverage reviews; resolve actual incompatibilities without treating locator counts as acceptance",
+    "Concretize Postmark terms, origin authentication and event-specific deduplication with positive permitted mail path; inspect narrow source follow-up and preserve actual-account unknowns",
+    "Integrate full canonical schema/predicate catalog and affected exact-revision/LifecycleStatus amendments; independently review FI10/11/12 and all required/added subjects",
+    "Run independent architecture-neutral complete-plan reviews, resolve foundational gaps, commit accepted full package and present navigable planning report before implementation",
     "Build complete accepted design in dependency order with security, tests, evaluations, integration, recovery and operability"
   ],
   "dependencies": [
@@ -101,15 +92,15 @@
   ],
   "registers": {
     "research": "research/lanes.json",
-    "sources": "research/source-index.json",
+    "sources": "research/source-index.json; 305 unique locators, not independently verified claims",
     "evidence": "research/repository-observations.md",
-    "claims": "registers/claims.json (hypotheses/observations) and research/substrate-claims.json (26 source-claim groups with shared maintenance)",
+    "claims": "registers/claims.json; research/substrate-claims.json26groups and research/integration-claims.json29groups with SC-POLICY-1 maintenance",
     "assumptions": "registers/claims.json",
     "contradictions": "registers/contradictions.json",
     "questions": "registers/open-questions.json and coverage/questions.json",
     "founder_decisions": "registers/open-questions.json",
     "candidates": "planning/candidates/ original A/B/C and repair addenda; selection and rejected alternatives in planning/02-architecture-selection.md",
-    "decisions": "registers/decisions.json; AD-001\u2013010, architecture S1.0",
+    "decisions": "registers/decisions.json; AD-001–010, architecture S1.0",
     "risks": "registers/risks.json; 17 material groups, controls unimplemented",
     "coverage": "coverage/questions.json566 substantive-answer joins; supplemental.json62 anddiscovered.json15 joined toscope-lifecycle-contracts; independent acceptance pending",
     "implementation_graph": "planning/implementation-graph.json;12stages exact08dependency DAG, all not-started",
@@ -128,12 +119,13 @@
     "capability_requirements": "coverage/capability-requirements.json; 46 decomposed outcome requirements, not implemented capabilities",
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
     "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md",
-    "specification_findings": "registers/specification-findings.json; eleven cross-contract observations with scoped evidence, full schema/predicate and semantic coverage obligations remain",
+    "specification_findings": "registers/specification-findings.json; FI01–12 including current schema/predicate and immutable subject/acceptance revision discovery",
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
     "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance",
-    "integration_review": "planning/reviews/F-integration-01.md through F-integration-03.md; FIR01\u201305 closed at specification level, runtime checks unexecuted",
+    "integration_review": "planning/reviews/F-integration-01.md through F-integration-04.md; FIR01–05 scoped closure, bounded05–08 no new blocking contradiction; no runtime/fullG",
     "specification_inspections": "research/specification-inspections.json; complete-draft read hashes avoid repeated inspection, no independent acceptance",
-    "epistemic_review": "research/reviews/2026-09-12-epistemic-traceability.md and epistemic-recheck.md; EPT01 metadata scope closed, no runtime acceptance"
+    "epistemic_review": "research/reviews/2026-09-12-epistemic-traceability.md and epistemic-recheck.md; EPT01 metadata scope closed, no runtime acceptance",
+    "package_navigation": "coverage/package.json;24directive deliverable families, explicit pending11 and independent acceptance"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
@@ -156,7 +148,7 @@
     "Collaboration tool refused original company reviewer resumption and fresh reviewer spawn with agent thread limit reached; architecture reviewer performs separately labeled fresh company reassessment, not original reviewer signoff",
     "Conceptual closure of original attacks depends on faithfully implementing amended contracts and surviving declared fault roots; no runtime guarantees established",
     "EAS-R1: comparator can erase inquiry-right treatment or reward C2 by definition; separate own-rights conformance, business outcomes and representation control",
-    "Technical R1\u2013R3: dynamic scope/alias/participant migration, independently durable status after lost acknowledgments and delayed first transport must be specified precisely",
+    "Technical R1–R3: dynamic scope/alias/participant migration, independently durable status after lost acknowledgments and delayed first transport must be specified precisely",
     "Accumulated institutional maintenance, disclosure review, independent administration, professional continuity and owner attention may defeat operating economics"
   ],
   "implementation_substrate_proposals": {
