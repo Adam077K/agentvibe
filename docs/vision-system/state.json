@@ -124,7 +124,7 @@
     "capability_requirements": "coverage/capability-requirements.json; 46 decomposed outcome requirements, not implemented capabilities",
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
     "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md",
-    "specification_findings": "registers/specification-findings.json; ten cross-contract observations with scoped specification evidence, no runtime completion",
+    "specification_findings": "registers/specification-findings.json; eleven cross-contract observations with scoped evidence, full schema/predicate and semantic coverage obligations remain",
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
     "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance",
     "integration_review": "planning/reviews/F-integration-01.md through F-integration-03.md; FIR01\u201305 closed at specification level, runtime checks unexecuted",

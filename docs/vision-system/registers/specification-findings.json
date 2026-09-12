@@ -106,7 +106,14 @@
       "owner": "Full schema and coverage consolidation",
       "status": "Remaining full-plan integration obligation",
       "completion_evidence": null,
-      "inspection_note": "Previously cited Ref<Budget> example was already repaired in cb1eac4: Experiment uses ResourceAccount and Reservation references. Remaining obligation is full consolidation and semantic coverage, not that stale example."
+      "inspection_note": "Previously cited Ref<Budget> example was already repaired in cb1eac4: Experiment uses ResourceAccount and Reservation references. Remaining obligation is full consolidation and semantic coverage, not that stale example. Work/knowledge draft makes Evaluation a composite; company Ref<Evaluation> fields need role-specific exact Plan/Run/Judgment bindings. Handoff must preserve accepted assignment transfer alongside Continuation."
+    },
+    {
+      "id": "FI-11",
+      "issue": "Full schema consolidation must supply registered TypedPredicate IDs and argument shapes plus materially distinct per-transition guards; draft40-record work catalog has373 edges sharing one common guard and delegating to short record-specific prose. A copied guard count does not establish buildability.",
+      "owner": "Full schema consolidation after05\u201308 integration",
+      "status": "Known consolidation obligation; draft inspection, not independent blocking verdict",
+      "completion_evidence": null
     }
   ],
   "planning_accepted": false,

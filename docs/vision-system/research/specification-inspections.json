@@ -21,6 +21,14 @@
       "read_scope": "Complete document",
       "result": "Knowledge/context/retrieval/evidence/evaluation contracts read. Author separately addressing sensitive short fields, persistent lexical index scope and typed metadata sensitivity. No independent verdict/runtime proof.",
       "remaining": "Inspect storage amendment and other changes at final commit; machine contracts/268 source answers and full schema consolidation remain."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/work-knowledge-contracts.json",
+      "source_worktree": ".worktrees/phase-f-work-knowledge",
+      "source_state": "Uncommitted changing draft; no fixed hash or whole-file read claimed",
+      "read_scope": "All48 subject bindings, complete Goal/Mission records; selected transition summaries and payload names for WorkflowRun,AgentInstance,RetrievalAttempt,EvaluationRun,IndexSnapshot; common type contract, one question-answer and one command sample; structural counts only for remainder",
+      "result": "268 answers present by count, not substantively read. Common predicate/guard and Evaluation/Handoff consolidation obligations routed as FI10/FI11. No complete catalog or coverage pass."
     }
   ]
 }
