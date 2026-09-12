@@ -63,7 +63,6 @@
       "DeletionScope",
       "AccessGraph",
       "Case",
-      "RecoveryFrontier",
       "Checkpoint",
       "Disposition",
       "GrievanceCase",
@@ -81,7 +80,8 @@
       "AttemptReport",
       "ResourceAccount",
       "ProtectedChange",
-      "Continuation"
+      "Continuation",
+      "Observation"
     ],
     "default_state": "Only domain-owned types use the default proposed/validated/superseded/restricted enum. Canonical core extensions use the kernel state machine without override."
   },
@@ -298,7 +298,10 @@
       "refund_effects": "string",
       "authority_ref": "Ref<Permission>?",
       "state": "Enum<proposed,test-authorized,adopted,retired>",
-      "price": "Money"
+      "price": "Money",
+      "evidence_basis": "Enum<provisional_hypothesis,demand_supported>",
+      "demand_judgment_ref": "Ref<EvidenceJudgment>?",
+      "acceptance_scope": "Enum<internal_provisional,bounded_validation,demand_supported_offer,scale_recommendation>"
     },
     "Economics": {
       "period_start": "Instant",
@@ -537,13 +540,13 @@
     },
     "RecoveryPacket": {
       "affected_scope": "string",
-      "frontier_refs": "Ref<RecoveryFrontier>[]",
       "unknown_effects": "Ref<Operation>[]",
       "restriction_refs": "Ref<Configuration>[]",
       "continuation_refs": "Ref<Checkpoint>[]",
       "acceptance_ref": "Ref<AcceptanceRecord>?",
       "residual_scope": "string[]",
-      "state": "Enum<proposed,validated,superseded,restricted>"
+      "state": "Enum<proposed,validated,superseded,restricted>",
+      "frontier_evidence_refs": "Ref<Observation>[]"
     },
     "PivotPlan": {
       "old_intent": "Ref<Intent>",
@@ -1579,13 +1582,13 @@
       "happy_path": [
         "Obtain criteria and independent source/destination evidence rather than producer summary alone.",
         "Evaluate utility, process, permission and missing evidence using negative controls.",
-        "Issue accepted/rejected/inconclusive/disputed verdict; assign every material defect and preserve disagreement."
+        "Issue canonical accepted/rejected/inconclusive/contested EvidenceJudgment on the exact subject and criteria; disputed is a UI label for contested. Assign defects and preserve completed assessment separately from subject acceptance."
       ],
       "evidence_produced": [
         "Scoped verdict, denominators, adverse cases and defect dispositions"
       ],
       "evaluation": {
-        "method": "Correct artifact produced without authorization and authorized artifact that fails outcome must not both be green.",
+        "method": "Return a completed inconclusive assessment when material evidence is unavailable; keep unfinished assessment proposed and challenged evidence contested. A launch relying on the inconclusive subject or an accepted uncertainty-report proposition must remain blocked.",
         "status": "unexecuted"
       },
       "failure_behavior": [
@@ -1609,7 +1612,7 @@
       ],
       "acceptance_contract": {
         "responsible_role": "Independent acceptance owner",
-        "substantive_condition": "Subject passes original criteria on inspectable evidence, including adverse cases and unavailable sources; missing evidence cannot become a pass.",
+        "substantive_condition": "The scoped assessment is actually complete, attributable and evidence-faithful, including a rejected or inconclusive result when warranted. Only a current accepted EvidenceJudgment on the exact required subject/version and predicate satisfies downstream product/launch acceptance; a complete report about uncertainty does not.",
         "evidence_verifier_component": "S1-C06",
         "independence_requirement": "Assessor identity and conflict/competence conditions follow the work acceptance mandate; producer testimony is labeled and is not independent observation."
       },
@@ -1718,7 +1721,10 @@
         "RISK-07",
         "RISK-12"
       ],
-      "dependency_interpretation": "interface-availability-and-step-specific-record-guards; no required prior completed run"
+      "dependency_interpretation": "interface-availability-and-step-specific-record-guards; no required prior completed run",
+      "readiness_procedure_refs": [
+        "company.delivery_capacity.verify.v1"
+      ]
     },
     {
       "id": "CAP-13",
@@ -2242,15 +2248,15 @@
         "customer-terms"
       ],
       "happy_path": [
-        "Compare willingness-to-pay evidence and alternatives with delivered cost, support, refunds and closure obligations.",
+        "Classify available demand as actual supported observation or honest unknown; compare provisional price and alternatives with observed/estimated/unknown delivery, support, refund and closure costs.",
         "Model recurring and failed-attempt contributions by cohort, preserving unknown costs and owner time separately.",
-        "Propose/test bounded terms, record adoption and affected existing offers without retroactive repricing."
+        "Return an internal provisional hypothesis, separately authorized bounded validation terms, or demand-supported adoption/scale recommendation according to its explicit acceptance scope; retain existing agreement terms."
       ],
       "evidence_produced": [
         "Price alternatives, cost assumptions and authorized terms"
       ],
       "evaluation": {
-        "method": "High conversion with negative after-service contribution must be visible rather than a successful pricing result.",
+        "method": "With an empty genuine customer ObservationSet, permit an honest provisional draft and explicitly authorized bounded pilot, reject demand-supported or scale acceptance; real applicable evidence can later qualify a new revision.",
         "status": "unexecuted"
       },
       "failure_behavior": [
@@ -2274,7 +2280,7 @@
       ],
       "acceptance_contract": {
         "responsible_role": "Pricing authority",
-        "substantive_condition": "Price recommendation uses actual demand and complete declared costs; accepted new terms identify consequences for renewal and existing agreements.",
+        "substantive_condition": "Accept internal_provisional as an honestly attributed price hypothesis with unknown demand/costs preserved. bounded_validation additionally requires an exact current test grant and real offer capacity. demand_supported_offer or scale_recommendation additionally requires actual applicable demand evidence and a current accepted judgment on the stated commercial/scale criterion. None retroactively reprices existing agreements.",
         "evidence_verifier_component": "S1-C06",
         "independence_requirement": "Assessor identity and conflict/competence conditions follow the work acceptance mandate; producer testimony is labeled and is not independent observation."
       },
@@ -3401,7 +3407,10 @@
         "RISK-12",
         "RISK-14"
       ],
-      "dependency_interpretation": "interface-availability-and-step-specific-record-guards; no required prior completed run"
+      "dependency_interpretation": "interface-availability-and-step-specific-record-guards; no required prior completed run",
+      "auxiliary_procedure_refs": [
+        "company.delivery_capacity.verify.v1"
+      ]
     },
     {
       "id": "CAP-31",
@@ -4003,7 +4012,7 @@
         "continuity"
       ],
       "happy_path": [
-        "Contain affected egress; obtain complete registry membership, sealed frontier, keys and current restrictions.",
+        "Contain affected egress; query C08 for a fresh nonce-bound signed RecoveryFrontier response and validate current membership/generation, completeness, keys and restrictions. Capture the response as attributed historical evidence only.",
         "Reconstruct potential duties and unknown effects; reconcile external state and continuation inputs.",
         "Validate independent safe scopes and actual substitute performance; issue fresh authority only after recovery acceptance."
       ],
@@ -4011,11 +4020,12 @@
         "Frontiers, independent durability proof, effect reconciliation and actual duty completion"
       ],
       "evaluation": {
-        "method": "Lose local commit acknowledgment then restart; status lookup cannot authorize dispatch without independent durability evidence.",
+        "method": "Replay an old correctly signed frontier response after generation/epoch change: historical evidence remains inspectable, but current recovery admission requires a newly queried valid nonce-bound response.",
         "status": "unexecuted"
       },
       "failure_behavior": [
-        "Missing frontier or unfenced descendant contains larger affected scope; intact disjoint service alternatives remain allowed."
+        "Missing frontier or unfenced descendant contains larger affected scope; intact disjoint service alternatives remain allowed.",
+        "Saved frontier evidence or an unavailable current witness cannot authorize resumption; retain current unknown effects and activate available accepted continuity."
       ],
       "replacement_removal": "Replace recovery substrate only after a full restore/duty exercise and fresh trusted roots; old backups cannot revive grants.",
       "actual_dependencies": [
@@ -5363,7 +5373,7 @@
     "RecoveryPacket": {
       "command_type": "company.record.propose",
       "initial_state": "proposed",
-      "input_contract": "Observed affected scope, available frontier, unknown effects, current restrictions and continuation refs; no presumed completeness",
+      "input_contract": "Observed affected scope, attributed historical frontier-response Observation refs, unknown effects, current restrictions and continuation refs; fresh nonce-bound C08 query is required during actual recovery.",
       "next_procedure": "CAP-37",
       "prohibited_claim": "Creation cannot assert external performance, acceptance, lawful standing, grants or competence."
     },
@@ -5385,7 +5395,7 @@
       "command_type": "company.record.propose",
       "initial_state": "proposed",
       "input_contract": "Actual performer assignments, workflow/materials/access, available window, resources, continuity and current verification; admission requires verified state",
-      "next_procedure": "CAP-30",
+      "next_procedure": "company.delivery_capacity.verify.v1",
       "prohibited_claim": "Creation cannot assert external performance, acceptance, lawful standing, grants or competence."
     },
     "ImprovementProposal": {
@@ -7183,7 +7193,7 @@
       "canonical_type": "EvidenceJudgment",
       "kind": "canonical-payload-extension-and-view",
       "owner": "S1-C06",
-      "rule": "Criteria/outcome/process evidence and domain result notes extend the same canonical judgment. Acceptance, contestation, validity and deciding authority use EvidenceJudgment state and refs; no independent verdict field."
+      "rule": "Domain fields extend canonical EvidenceJudgment. Its states distinguish proposed unfinished, accepted subject criterion met, rejected subject criterion failed, inconclusive completed assessment with insufficient evidence, contested challenged evidence/judgment, stale and withdrawn. Disputed is a presentation alias for contested, never a separate verdict. Exact subject/version/predicate and current scope/closure guard downstream acceptance."
     },
     "StrategyDecision": {
       "canonical_type": "DecisionRecord",
@@ -7260,6 +7270,11 @@
       "canonical_type": null,
       "kind": "composite-subject",
       "rule": "Budget subject binds exact ResourceAccount and Reservation scope references; it is not a separately spendable authority record."
+    },
+    "RecoveryFrontier": {
+      "canonical_type": null,
+      "kind": "fresh-signed-query-response",
+      "rule": "Authority/recovery section 6.1 owns the nonce-bound current response. It is not a stored record or Ref type. Exact historical response bytes plus request/nonce/time may be captured as ArtifactVersion and attributed Observation; snapshots never satisfy fresh recovery authority."
     }
   },
   "first_venture_path": [
@@ -7380,13 +7395,96 @@
     ],
     "PriceProposal": [
       "Price is an exact proposed canonical Money amount, not evidence that a customer accepts it.",
-      "Adoption and test exposure require current authority; estimated demand/costs remain attributed in the linked Economics/ObservationSet."
+      "Adoption and test exposure require current authority; estimated demand/costs remain attributed in the linked Economics/ObservationSet.",
+      "internal_provisional requires evidence_basis provisional_hypothesis and state proposed; missing demand is permitted and explicit.",
+      "bounded_validation permits provisional_hypothesis with state test-authorized only under its exact current limited grant and actual readiness; it is not demand-supported adoption.",
+      "demand_supported_offer or scale_recommendation requires evidence_basis demand_supported, actual applicable willingness evidence and current accepted demand_judgment_ref on the exact criterion; state adopted cannot arise from an unknown-demand provisional result."
     ],
     "DeliveryCapacity": [
       "verified requires actual performer acknowledgment, applicable access/materials, window, resources and continuity evidence; not compute availability."
     ],
     "Experiment": [
       "running requires exact controlling Case and current resource/grant admission; registered protocol alone cannot cause external work."
+    ],
+    "LaunchReadiness": [
+      "fulfillment_capacity and support_capacity must be current verified DeliveryCapacity produced by the pre-sale capacity procedure or a compatible current accepted renewal.",
+      "acceptance_ref must resolve to current accepted EvidenceJudgment on each exact required launch/product/capacity subject and predicate, with valid evidence closure, scope and expiry.",
+      "A completed rejected/inconclusive assessment or an accepted report about missing evidence cannot meet a required subject acceptance predicate."
+    ]
+  },
+  "auxiliary_procedures": {
+    "company.delivery_capacity.verify.v1": {
+      "procedure_id": "company.delivery_capacity.verify.v1",
+      "parent_capability_id": "CAP-30",
+      "owner_component": "S1-C03",
+      "inputs": [
+        {
+          "name": "proposed_capacity",
+          "type": "Ref<DeliveryCapacity>"
+        },
+        {
+          "name": "performers",
+          "type": "Ref<ResponsibilityAssignment>[]"
+        },
+        {
+          "name": "service_workflow",
+          "type": "Ref<Workflow>"
+        },
+        {
+          "name": "materials_access",
+          "type": "Ref<Evidence>[]"
+        },
+        {
+          "name": "window",
+          "type": "TimeWindow"
+        },
+        {
+          "name": "reservations",
+          "type": "Ref<Reservation>[]"
+        },
+        {
+          "name": "continuity",
+          "type": "Ref<ContinuityArrangement>"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "capacity",
+          "type": "Ref<DeliveryCapacity>"
+        },
+        {
+          "name": "judgment",
+          "type": "Ref<EvidenceJudgment>"
+        }
+      ],
+      "implementation_mode": [
+        "deterministic",
+        "workflow",
+        "human",
+        "professional",
+        "service"
+      ],
+      "authority": "Existing internal inspection/rehearsal mandate and actual access/data/resource grants; professional or physical checks require actual competent accepted performer. No sales, payment or publication is authorized by verification.",
+      "happy_path": [
+        "Validate exact intended service/scope/window and obtain actual performer availability, competence and capacity acknowledgment.",
+        "Exercise required access, tools/materials and a bounded authorized service/alternate rehearsal; preserve actual observations and gaps without inventing a customer order.",
+        "Independent C06 acceptance verifies exact readiness predicate; set verified only for supported scope/window, otherwise constrained/unavailable with owned corrective work."
+      ],
+      "acceptance": "Current accepted EvidenceJudgment on actual capacity/competence/access/materials/window/continuity, exact proposed service scope and current reservations; no SalesAgreement or prior customer required.",
+      "failure_behavior": "Missing actual person/resource/observability leaves capacity unverified and blocks only dependent offers; preparation continues. Expiry/dependency change invalidates verified scope before new offer admission.",
+      "replacement_removal": "Replacement performer/route repeats the affected checks; retains old commitments and continuity responsibility until acknowledged transfer.",
+      "evaluation": "Before first sale, actual available performer and service rehearsal can produce verified readiness; a mock performer, transmitted packet or unavailable alternate cannot.",
+      "completion_claim": false,
+      "implementation_status": "specified-unimplemented"
+    }
+  },
+  "foundation_interface_repairs": {
+    "status": "FIR interface repairs specified; independent reassessment and runtime checks pending",
+    "cases": [
+      "Historical signed frontier retained as evidence but refused as fresh authority.",
+      "First offer obtains verified real capacity without any SalesAgreement or fictional customer.",
+      "Unknown demand yields provisional/test-authorized price only; actual evidence permits later supported acceptance.",
+      "Completed inconclusive assessment remains distinct from unfinished, rejected and contested; downstream acceptance requires exact current accepted subject predicate."
     ]
   }
 }
