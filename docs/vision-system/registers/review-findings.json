@@ -718,14 +718,19 @@
     "title": "Singular launch acceptance reference cannot match distinct required subjects",
     "severity": "medium",
     "owner": "repair_company_foundations",
-    "status": "Repair integrated; independent reassessment report pending archival",
+    "status": "Closed at specification level by independent recheck; positive, negative and concurrency conformance tests unexecuted",
     "required_contract": "Map admitted exact requirement IDs, subjects, versions and predicates to current accepted child judgments; complete valid multi-subject launch succeeds, missing/wrong/stale child cannot pass.",
     "resolution": {
       "source_commit": "2c7a4a3fcb6a25eba90785a19a181e8ed7b8ed3a",
       "integrated_commit": "ef676de",
       "scope": "03-company-capabilities.md and capabilities.json: requirements manifest and JudgmentBinding collection"
     },
-    "independent_recheck": null,
+    "independent_recheck": {
+      "source": "planning/reviews/F-integration-03.md",
+      "subject": "ef676def08e4074cfa2d5db812039b3c5cbf2255",
+      "archive_commit": "7ea26e6",
+      "runtime_verification": false
+    },
     "implementation_evidence": null
   }
 ]
