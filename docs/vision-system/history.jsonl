@@ -1,2 +1,3 @@
 {"event":"discovery.started","date":"2026-09-12","base_commit":"b2cabad","phase":"A/B","architecture_selected":false,"note":"Independent lanes L03/L05/L07 dispatched; requested source absent from searched scope; asynchronous location question pending. Existing harness remains evidence rather than architecture authority."}
 {"event": "source.located", "date": "2026-09-12", "commit": "331b4c97657c0d4c648633779eff7668503f7c06", "question": "Q-001", "correction": "Earlier glob missed nested git path; source was present on another existing branch."}
+{"event": "research.first_batch_archived", "date": "2026-09-12", "lanes": ["L03", "L05", "L07"], "source_commits": ["5cf5b7c", "79eb2d7", "fdd280b"], "architecture_selected": false, "next_lanes": ["L01", "L02", "L04"]}

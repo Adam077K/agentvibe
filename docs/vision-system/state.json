@@ -21,13 +21,15 @@
     "Read complete THE-PATH-TO-THE-VISION.md (162 lines) and THE-VISION-AND-THE-FIELDS.md (762 lines)",
     "Parsed 53 fields and 566 questions into coverage/questions.json; count agrees with question-mark count",
     "Read current GitHub issue and PR lists; PR 131 identified more recent planning branches",
-    "Read first 200 lines of 2026-09-11 autopsy; historical source claim of architecture lock-in preserved without adopting its findings as measurements"
+    "Read first 200 lines of 2026-09-11 autopsy; historical source claim of architecture lock-in preserved without adopting its findings as measurements",
+    "Archived first independent findings L03/L05/L07 in local commits; evidence audit pending",
+    "Baseline npm run check at b2cabad: 48/48 steps passed, exit 0; exclusions remain explicit; separate Mission Control check pending"
   ],
   "active_work": [
-    "L03 architectures",
-    "L05 memory",
-    "L07 security",
-    "Repository and instruction inventory"
+    "L01 intent and Phase A framing",
+    "L02 operations",
+    "L04 engineering",
+    "Baseline check suite in detached worktree at b2cabad"
   ],
   "next_actions": [
     "Receive and preserve independent lane returns without sharing conclusions with unfinished lanes",
@@ -66,7 +68,28 @@
     "coverage": "coverage/questions.json",
     "implementation_graph": "pending reviewed specification",
     "build_progress": "not started",
-    "tests": "baseline not yet run",
+    "tests": {
+      "baseline_process_session": 93835,
+      "command": "npm run check",
+      "commit": "b2cabad",
+      "worktree": ".worktrees/vision-baseline",
+      "log": "/tmp/agentvibe-vision-baseline-check.log",
+      "status": "suite passed; separate Mission Control check running",
+      "excluded_steps_recorded_in": "scripts/lib/check-suite.js",
+      "result": {
+        "passed_steps": 48,
+        "total_steps": 48,
+        "failed_steps": 0,
+        "exit_code": 0,
+        "seconds_sample": 243.6
+      },
+      "mission_control": {
+        "session": 71424,
+        "log": "/tmp/agentvibe-vision-baseline-mc.log",
+        "status": "running",
+        "setup": "bun install --frozen-lockfile --ignore-scripts --cwd mission-control"
+      }
+    },
     "incidents": [],
     "migrations": [],
     "history": "history.jsonl"

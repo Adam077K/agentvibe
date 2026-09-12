@@ -1,0 +1,27 @@
+[
+  {
+    "id": "B01",
+    "kind": "Direct observation",
+    "subject_commit": "b2cabad",
+    "command": "npm run check",
+    "cwd": ".worktrees/vision-baseline",
+    "exit_code": 0,
+    "passed_steps": 48,
+    "total_steps": 48,
+    "failed_steps": 0,
+    "elapsed_seconds_sample": 243.6,
+    "ledger": {
+      "pass": 84,
+      "would_block_shadow": 8,
+      "block": 0
+    },
+    "raw_log": ".worktrees/vision-evidence/baseline-check.log",
+    "sha256": "4bda1f061e03b769bd7ce4e7102709c532f297a8fcdc106d37807c6253bec996",
+    "limits": [
+      "Step success includes configured shadow findings; this is not a clean claim-ledger verdict",
+      "Mission Control is excluded from this suite and was started separately",
+      "Installed locked Mission Control dependencies after this suite had reached its ledger phase; earlier missing-dependency shadow findings are retained",
+      "No bound independent QA approval for a new product is established by this baseline"
+    ]
+  }
+]

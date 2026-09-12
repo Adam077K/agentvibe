@@ -5,8 +5,8 @@
     "commit": "331b4c97657c0d4c648633779eff7668503f7c06",
     "sha256": "8f2b5bdea3166a62afe7b5c542bdd0c4238d1585a280d91265cd0ad592dba0d4",
     "bytes": 8476,
-    "kind": "Founder source document",
-    "status": "preserved; read status tracked separately"
+    "kind": "User-referenced prior synthesis containing founder statements and author assertions",
+    "status": "preserved and read in full"
   },
   {
     "path": "inputs/THE-VISION-AND-THE-FIELDS.md",
@@ -14,7 +14,7 @@
     "commit": "331b4c97657c0d4c648633779eff7668503f7c06",
     "sha256": "0067d5de64d9846f96ac5ebb91dbedb530157a8506432c4372728885193a0d3e",
     "bytes": 55503,
-    "kind": "Founder source document",
-    "status": "preserved; read status tracked separately"
+    "kind": "User-referenced prior synthesis containing founder statements and author assertions",
+    "status": "preserved and read in full"
   }
 ]
