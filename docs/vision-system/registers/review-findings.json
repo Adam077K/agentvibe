@@ -622,5 +622,73 @@
     "independent_recheck": null,
     "implementation_evidence": null,
     "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
+  },
+  {
+    "id": "FIR-01",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Pre-sale capacity route requires an existing sale",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Repair integrated; independent reassessment pending",
+    "required_contract": "Declare actual pre-sale capacity assessment inputs, responsible acceptance, output and verified-state transition without a customer agreement.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "FIR-02",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Pilot pricing conflicts with actual-demand acceptance",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Repair integrated; independent reassessment pending",
+    "required_contract": "Separate unknown-demand bounded price experiment acceptance from evidence-dependent adoption and scale decisions; preserve actual authority, reserves and capacity.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "FIR-03",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Recovery packet references a query response as a record",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Repair integrated; independent reassessment pending",
+    "required_contract": "Capture signed frontier response bytes and attribution as historical evidence; require a fresh nonce-bound query for authority-dependent recovery.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "FIR-04",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Quality procedure promises verdict absent from canonical judgment",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Repair integrated; independent reassessment pending",
+    "required_contract": "Represent completed inconclusive assessment separately from proposed, rejected, contested and exact subject acceptance; preserve historical reassessment.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": null,
+    "implementation_evidence": null
   }
 ]

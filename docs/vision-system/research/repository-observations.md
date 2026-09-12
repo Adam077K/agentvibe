@@ -53,3 +53,10 @@ R12 (direct observation, 2026-09-12): inspected `SPINE.md` lines 1–22 and `ret
 - The usage code fixes a five-hour window and reads transcript output-token records. This may supply measured workload observations within its parser scope; it cannot establish remaining provider allowance, current policy, total money spent, or a universal unit of subscription capacity.
 
 **Inference for implementation planning:** reuse individual patterns or modules only after mapping their inputs, trust boundary, persistence and semantics to the selected contracts. Neither replacing the entire repository nor extending the old dashboard in place is justified by file existence. Existing tests and the separately recorded baseline remain useful regression evidence, with the two Mission Control failures still unresolved.
+
+
+## R16 — Local construction resource envelope
+
+**Direct observation, 2026-09-12, before 12:03 UTC:** read-only `sysctl hw.memsize hw.ncpu hw.physicalcpu hw.logicalcpu` reported 17,179,869,184 bytes (16 GiB) of memory and 10 physical/logical CPUs. `df -h .` reported a 460 GiB data volume with 367 GiB used and 45 GiB available (89% capacity). These are volatile host observations, not performance, isolation or independent-fault-domain evidence. R13's absent isolation tools were not rechecked.
+
+**Implementation implication:** construction and local recovery fixtures must fit the available memory/disk or justify a supported alternative. The operational multi-host profile cannot be treated as validated or fully reproduced on this laptop. This observation does not narrow the final system's scope, authorize paid infrastructure or establish a deployment. No software or VM was installed by this probe.

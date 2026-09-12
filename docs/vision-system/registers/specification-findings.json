@@ -20,12 +20,13 @@
       "id": "FI-02",
       "issue": "Capability dependency lists contain startup cycles; a fresh venture needs a valid first investigation/design path without invented prior customers, support or fulfillment evidence.",
       "owner": "repair_company_foundations",
-      "status": "Addressed in committed specification and inspected by orchestrator; full schema consolidation, independent review and runtime verification remain",
+      "status": "Reopened by independent FIR-01/FIR-02: prose clarified startup but actual routes/acceptance remained inconsistent; repair 86bb9ef awaits independent reassessment",
       "completion_evidence": {
         "commit": "cb1eac4",
         "specification": "planning/specification/03-company-capabilities.md#record-and-procedure-contract",
         "catalog": "planning/specification/capabilities.json",
-        "runtime": null
+        "runtime": null,
+        "limitation": "Earlier root inspection missed the capacity-route and pricing-acceptance joins; not independent closure."
       }
     },
     {
@@ -101,10 +102,11 @@
     },
     {
       "id": "FI-10",
-      "issue": "Final catalog must expand composite Budget/Handoff subjects and presentation aliases to concrete record/value reference types; current Ref<Budget> cannot imply a separately spendable Budget record. Per-question pointers must become substantive answers, not chapter-link counts.",
+      "issue": "Final catalog must expand composite Budget/Handoff subjects and presentation aliases to concrete record/value reference types. Per-question pointers must become substantive answers, not chapter-link counts.",
       "owner": "Full schema and coverage consolidation",
       "status": "Remaining full-plan integration obligation",
-      "completion_evidence": null
+      "completion_evidence": null,
+      "inspection_note": "Previously cited Ref<Budget> example was already repaired in cb1eac4: Experiment uses ResourceAccount and Reservation references. Remaining obligation is full consolidation and semantic coverage, not that stale example."
     }
   ],
   "planning_accepted": false,
