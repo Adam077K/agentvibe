@@ -32,7 +32,8 @@
       "SourceWatermark": "Imported inline kernel source watermark = {source_id,source_revision,observed_at,complete_through?,omissions:string[]}; never a Ref or independent authority record.",
       "MoneyKnowledge": "Discriminated value type defined in value_types; preserves observed zero, estimate and unknown separately.",
       "MinutesKnowledge": "Discriminated value type defined in value_types; does not authorize attention capacity.",
-      "AccountBalanceObservation": "Product value type defined in value_types; retains per-account missing balance evidence."
+      "AccountBalanceObservation": "Product value type defined in value_types; retains per-account missing balance evidence.",
+      "JudgmentBinding": "Product value type in value_types: exact requirement/subject/predicate/current judgment binding; it cannot choose or weaken the required acceptance manifest."
     },
     "imports": [
       "Record",
@@ -233,8 +234,9 @@
       "claim_and_rights_refs": "Ref<Claim>[]",
       "continuity_ref": "Ref<ContinuityArrangement>",
       "grant_refs": "Ref<Permission>[]",
-      "acceptance_ref": "Ref<AcceptanceRecord>",
-      "state": "Enum<proposed,validated,superseded,restricted>"
+      "state": "Enum<proposed,validated,superseded,restricted>",
+      "acceptance_requirements_ref": "Ref<Configuration>",
+      "acceptance_bindings": "JudgmentBinding[]"
     },
     "ContentAsset": {
       "brief": "string",
@@ -1645,8 +1647,12 @@
           "type": "Ref<FormationReadiness>"
         },
         {
-          "name": "acceptance",
-          "type": "Ref<AcceptanceRecord>"
+          "name": "acceptance_requirements",
+          "type": "Ref<Configuration>"
+        },
+        {
+          "name": "acceptances",
+          "type": "JudgmentBinding[]"
         }
       ],
       "outputs": [
@@ -1680,14 +1686,14 @@
       ],
       "happy_path": [
         "Verify actual delivery, support, remedies, rights, funding and continuity against the offered service.",
-        "Bind approved artifacts and current claims to release proposal; check late restrictions at release.",
+        "Resolve the admitted launch acceptance manifest against exact Offer/ProductSpec/artifact/delivery/support subject versions; require a complete one-to-one requirement-ID join to current accepted child judgments before the release proposal.",
         "Observe launch result and early fulfillment; activate monitoring and correction obligations."
       ],
       "evidence_produced": [
         "Readiness evidence, exact release record and actual service observations"
       ],
       "evaluation": {
-        "method": "A valid launch with first failed sale must enter delivery/remedy flow, not stop at publication receipt.",
+        "method": "A normal launch with distinct current accepted product, delivery-capacity, support-capacity and required offer-condition judgments succeeds. Missing, duplicate, wrong-subject, wrong-predicate or stale bindings fail; an accepted uncertainty-report judgment cannot replace a required child.",
         "status": "unexecuted"
       },
       "failure_behavior": [
@@ -7379,6 +7385,15 @@
         "observed_at": "Instant?",
         "source_coverage": "string"
       }
+    },
+    "JudgmentBinding": {
+      "kind": "product",
+      "fields": {
+        "requirement_id": "string",
+        "subject_ref": "Ref<Record>",
+        "predicate_ref": "Ref<Configuration>",
+        "judgment_ref": "Ref<EvidenceJudgment>"
+      }
     }
   },
   "domain_validators": {
@@ -7407,9 +7422,12 @@
       "running requires exact controlling Case and current resource/grant admission; registered protocol alone cannot cause external work."
     ],
     "LaunchReadiness": [
-      "fulfillment_capacity and support_capacity must be current verified DeliveryCapacity produced by the pre-sale capacity procedure or a compatible current accepted renewal.",
-      "acceptance_ref must resolve to current accepted EvidenceJudgment on each exact required launch/product/capacity subject and predicate, with valid evidence closure, scope and expiry.",
-      "A completed rejected/inconclusive assessment or an accepted report about missing evidence cannot meet a required subject acceptance predicate."
+      "acceptance_requirements_ref must identify the current independently admitted launch policy/requirements manifest selected from actual offer/service scope and mandates; the producer cannot choose easier criteria.",
+      "The manifest resolves every required requirement_id to an exact subject_ref and predicate_ref before readiness assembly, including relevant product/artifact, delivery capacity, support capacity and offer/readiness-condition subjects. The readiness record itself is not its own future evidence subject.",
+      "acceptance_bindings must contain exactly one binding for every required requirement_id, no duplicate IDs and no unapproved additions; each subject_ref and predicate_ref must equal the resolved manifest values.",
+      "Every binding.judgment_ref must resolve to current accepted EvidenceJudgment with matching exact subject/version and predicate/scope, current full evidence closure, authority and expiry. One judgment can be reused only when the required exact subject and predicate truly match.",
+      "A completed rejected/inconclusive/contested/stale judgment or an accepted report about missing evidence cannot meet a required child predicate. Any changed required child or mapping invalidates the composite readiness before release.",
+      "fulfillment_capacity and support_capacity must remain current verified DeliveryCapacity from pre-sale verification or a compatible accepted renewal. Distinct legitimate subjects require distinct matching judgments, not an impossible single Ref."
     ]
   },
   "auxiliary_procedures": {
@@ -7484,7 +7502,8 @@
       "Historical signed frontier retained as evidence but refused as fresh authority.",
       "First offer obtains verified real capacity without any SalesAgreement or fictional customer.",
       "Unknown demand yields provisional/test-authorized price only; actual evidence permits later supported acceptance.",
-      "Completed inconclusive assessment remains distinct from unfinished, rejected and contested; downstream acceptance requires exact current accepted subject predicate."
+      "Completed inconclusive assessment remains distinct from unfinished, rejected and contested; downstream acceptance requires exact current accepted subject predicate.",
+      "Launch composes a complete exact requirement-ID/subject/version/predicate-to-child-judgment join; missing/wrong/stale child fails while ordinary distinct-subject launch remains possible."
     ]
   }
 }
