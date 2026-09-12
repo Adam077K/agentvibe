@@ -43,43 +43,46 @@
     "Integrated independent substrate source audit e7530ff and inspected focused receipt/hash and nftables encoding amendment e9201fa; source index now 258 locators, no blanket source/runtime verification",
     "Independent FIR-01\u201304 archived at 3a19199; bounded company/kernel repairs integrated at 86bb9ef and sent for independent reassessment. Local 16 GiB/10 CPU/45 GiB available construction envelope observed, not operational proof.",
     "F-integration-02 archived at23adbe7: FIR01\u201304 closed at specification level; new FIR05 repaired atef676de, read-only recheck underway. R17 metadata-only probe reproduces baseline six-file discovery/oracle mismatch; expected scope and ledger timeout unresolved.",
-    "F-integration-03 archived at7ea26e6: FIR05 closes at specification level; allFIR01\u201305 conformance and concurrency tests remain unexecuted, no full-plan acceptance."
+    "F-integration-03 archived at7ea26e6: FIR05 closes at specification level; allFIR01\u201305 conformance and concurrency tests remain unexecuted, no full-plan acceptance.",
+    "Integrated05/06 and work-knowledge contracts at857a98c: root read complete prose plus storage/consolidation changes and all268 answer paragraphs; schema/source text checks pass, full machine detail and independent review pending.",
+    "Integrated07/08 plus113-answer integration/build/pricing catalog atc3519f5; root substantive inspection remains, author validation is not acceptance.",
+    "EPT01 audit archived atda529a0; shared26-group claim-maintenance repair12e4f8c independently closed and recheck archived atb7902b2. Source index260 locators, not260 independently verified claims."
   ],
   "active_work": [
     {
       "agent": "attack_technical",
-      "scope": "Author S03/S07 actual integrations/native capacity, priced infrastructure and labor comparison, controlled improvement, full deployment/build graph, 113 substantive source answers",
+      "scope": "Author complete9-component19-attribute matrix and69 S05 substantive authority/privacy/reliability answers",
+      "base": "c3519f5",
       "artifacts": [
-        "planning/specification/07-integrations-capacity.md",
-        "planning/specification/08-improvement-implementation.md",
-        "planning/specification/integrations-capacity-build.json"
+        "planning/specification/10-components-authority-traceability.md",
+        "planning/specification/components-authority.json"
       ]
     },
     {
       "agent": "repair_company_foundations",
-      "scope": "Author S02/S04 work/agents/skills, knowledge/context/evidence/evaluation and 268 substantive source answers; separate FIR-01\u201304 repair commit integrated, independent reassessment pending",
-      "worktree": ".worktrees/phase-f-work-knowledge",
+      "scope": "Expand116 S01/S06 chapter pointers to substantive exact question answers; no full-schema expansion in this bounded task",
+      "base": "857a98c; consume07/08 atc3519f5",
       "artifacts": [
-        "planning/specification/05-work-agents-skills.md",
-        "planning/specification/06-knowledge-evidence-evaluation.md",
-        "planning/specification/work-knowledge-contracts.json"
+        "planning/specification/capabilities.json source_question_contracts",
+        "planning/specification/09-company-human-traceability.md if useful"
       ]
     },
     {
       "agent": "attack_architecture_evidence",
-      "scope": "FIR01\u201305 judgments archived; available for independent frozen remaining-contract/evidence review, no Phase G acceptance yet"
+      "scope": "Independent read-only05\u201308/machine-contract integration review atc3519f5; known full schema/predicate/component/coverage remains, noGacceptance"
     },
     {
       "agent": "orchestrator",
-      "scope": "Verify/integrate contracts and source meaning, preserve findings/state, route full schema/component/coverage consolidation and independent complete-plan review"
+      "scope": "Inspect remaining machine contracts,07/08/113answers/pricing; integrate scoped reviews; consolidate final schema and coverage work, then fullG and build"
     }
   ],
   "next_actions": [
-    "Receive coherent05\u201308 artifacts; inspect/integrate and route independent review while remaining schema/coverage consolidation proceeds",
-    "Integrate05\u201308 and machine-readable work/knowledge/integration/build contracts with substantive268+113 source answers",
-    "Consolidate all46 required schema subjects and added records/value types, exact canonical references, transitions, authorization, retention/deletion/audit and full component matrix",
-    "Answer and verify all566 original,62 supplemental and15 discovered concerns; expand chapter pointers into meaning-preserving traceability with planned implementation and tests",
-    "Run independent architecture-neutral complete-plan reviews, resolve foundational gaps and commit accepted package before implementation",
+    "Read40 work/knowledge record-specific contracts and38 commands/value/invariants/decisions/tests, then07/08/113answers/pricing with primary support where needed",
+    "Receive independent05\u201308 integration findings and resolve actual incompatibilities; preserve FIR01\u201305 andEPT01 scoped closures",
+    "Integrate116 company/human answers plus69 authority answers and full component matrix",
+    "Assign full schema/predicate catalog consolidation across46 required and all added subjects; exact composite aliases, command/state guards, retention/deletion/audit",
+    "Complete root566-question,62 supplemental and15 discovered coverage with substantive evidence/decision/implementation/test mapping",
+    "Run independent architecture-neutral complete-plan reviews; resolve foundational gaps and commit accepted package before full implementation",
     "Build complete accepted design in dependency order with security, tests, evaluations, integration, recovery and operability"
   ],
   "dependencies": [
@@ -99,7 +102,7 @@
     "research": "research/lanes.json",
     "sources": "research/source-index.json",
     "evidence": "research/repository-observations.md",
-    "claims": "registers/claims.json",
+    "claims": "registers/claims.json (hypotheses/observations) and research/substrate-claims.json (26 source-claim groups with shared maintenance)",
     "assumptions": "registers/claims.json",
     "contradictions": "registers/contradictions.json",
     "questions": "registers/open-questions.json and coverage/questions.json",
@@ -128,7 +131,8 @@
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
     "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance",
     "integration_review": "planning/reviews/F-integration-01.md through F-integration-03.md; FIR01\u201305 closed at specification level, runtime checks unexecuted",
-    "specification_inspections": "research/specification-inspections.json; complete-draft read hashes avoid repeated inspection, no independent acceptance"
+    "specification_inspections": "research/specification-inspections.json; complete-draft read hashes avoid repeated inspection, no independent acceptance",
+    "epistemic_review": "research/reviews/2026-09-12-epistemic-traceability.md and epistemic-recheck.md; EPT01 metadata scope closed, no runtime acceptance"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",

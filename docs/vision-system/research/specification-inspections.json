@@ -29,6 +29,19 @@
       "source_state": "Uncommitted changing draft; no fixed hash or whole-file read claimed",
       "read_scope": "All48 subject bindings, complete Goal/Mission records; selected transition summaries and payload names for WorkflowRun,AgentInstance,RetrievalAttempt,EvaluationRun,IndexSnapshot; common type contract, one question-answer and one command sample; structural counts only for remainder",
       "result": "268 answers present by count, not substantively read. Common predicate/guard and Evaluation/Handoff consolidation obligations routed as FI10/FI11. No complete catalog or coverage pass."
+    },
+    {
+      "date": "2026-09-12",
+      "subject_commit": "857a98c with12e4f8c metadata inheritance",
+      "paths": [
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ],
+      "read_scope": "05 complete original prefix verified unchanged by SHA256 plus full appended consolidation paragraph;06 changed lexical/storage/retention/conformance passages and new source-metadata inheritance read; all268 exact source question texts and substantive answer paragraphs read in four ordered batches. Earlier machine-record read scope remains partial.",
+      "checks": "268 IDs/text match source and author answer JSON Schema; no silent claim of full predicate/record/command/coverage conformance.",
+      "result": "Consolidation gaps FI10/FI11 remain. No further contradiction asserted in the inspected answer/prose scope; independent05\u201308 review active.",
+      "remaining": "Read all40 record-specific payload/transition/authority contracts,38 commands, value types/invariants/decisions/tests and metadata refs; inspect07/08/113answers/pricing; full schema/component/coverage/G."
     }
   ]
 }

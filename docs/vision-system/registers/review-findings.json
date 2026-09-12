@@ -732,5 +732,26 @@
       "runtime_verification": false
     },
     "implementation_evidence": null
+  },
+  {
+    "id": "EPT-01",
+    "source": "research/reviews/2026-09-12-epistemic-traceability.md",
+    "review_subject": "b9aee22a6589df5037573b172292b49c0abb64e5",
+    "title": "New substrate assertions lack explicit complete claim-maintenance scope",
+    "severity": "low",
+    "owner": "orchestrator evidence register",
+    "status": "Closed at planning evidence-map level by independent recheck; runtime/source-refresh mechanisms unimplemented",
+    "required_contract": "Explicit shared source/date/type/confidence/incentive/corroboration and source-claim expiry/invalidation treatment, including upstream changes without a package upgrade.",
+    "resolution": {
+      "commit": "12e4f8c",
+      "artifact": "research/substrate-claims.json",
+      "scope": "26 source claim groups, SC-POLICY-1 and explicit inheritance in01/02/06"
+    },
+    "independent_recheck": {
+      "source": "research/reviews/2026-09-12-epistemic-recheck.md",
+      "subject": "12e4f8c99cdc0bc3c6e9b325c9a61ab75667d9b4",
+      "archive_commit": "b7902b2"
+    },
+    "implementation_evidence": null
   }
 ]

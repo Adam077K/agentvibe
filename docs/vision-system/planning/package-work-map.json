@@ -301,7 +301,7 @@
         "Provider-independent durable continuation and refusal",
         "Fixed versus adaptive paths, context-limited temporary executors and independent judges"
       ],
-      "status": "active specification authoring; draft not accepted",
+      "status": "05/06 and268 source answers integrated; root answer/prose inspection complete, machine detail and independent review pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -309,7 +309,11 @@
       ],
       "author": "repair_company_foundations",
       "reviewer": null,
-      "answer_locations": []
+      "answer_locations": [
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ]
     },
     {
       "id": "S03",
@@ -408,7 +412,7 @@
         "Subscription authentication, limits, interruption, no silent metered fallback",
         "Tool and service admission, removal, provider change and substantive end-to-end integration"
       ],
-      "status": "active specification authoring; no complete-plan acceptance",
+      "status": "07/08 and113 source answers integrated; root and independent inspection active",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -416,7 +420,11 @@
       ],
       "author": "attack_technical",
       "reviewer": null,
-      "answer_locations": []
+      "answer_locations": [
+        "planning/specification/07-integrations-capacity.md",
+        "planning/specification/08-improvement-implementation.md",
+        "planning/specification/integrations-capacity-build.json"
+      ]
     },
     {
       "id": "S04",
@@ -553,7 +561,7 @@
         "Transitive evidence dependencies and claim-versus-cause distinctions",
         "Independent outcome/process/account tests, negative controls, repeated trials and evaluator drift"
       ],
-      "status": "active specification authoring; draft not accepted",
+      "status": "05/06 and268 source answers integrated; root answer/prose inspection complete, machine detail and independent review pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -561,7 +569,11 @@
       ],
       "author": "repair_company_foundations",
       "reviewer": null,
-      "answer_locations": []
+      "answer_locations": [
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ]
     },
     {
       "id": "S05",
@@ -813,7 +825,7 @@
         "Final repository modules, deployment, release and dependency-ordered construction",
         "Migration of meanings and surviving duties; recoverable build progress and operability"
       ],
-      "status": "active specification authoring; no complete-plan acceptance",
+      "status": "07/08 and113 source answers integrated; root and independent inspection active",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -821,7 +833,11 @@
       ],
       "author": "attack_technical",
       "reviewer": null,
-      "answer_locations": []
+      "answer_locations": [
+        "planning/specification/07-integrations-capacity.md",
+        "planning/specification/08-improvement-implementation.md",
+        "planning/specification/integrations-capacity-build.json"
+      ]
     }
   ],
   "cross_cutting": [

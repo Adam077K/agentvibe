@@ -2,7 +2,7 @@
   "schema_version": 1,
   "created": "2026-09-12",
   "kind": "Planning evidence and claim-maintenance register; not runtime state",
-  "status": "EPT01 repair awaiting independent metadata-scope recheck",
+  "status": "EPT01 metadata scope independently rechecked at12e4f8c; closed at planning evidence-map level only",
   "policy": {
     "id": "SC-POLICY-1",
     "kind": "Decision",
@@ -625,5 +625,6 @@
       "runtime_validation": null,
       "current_reliance": "Historical planning observation; current applicability requires renewed source and runtime admission."
     }
-  }
+  },
+  "review_ref": "reviews/2026-09-12-epistemic-recheck.md"
 }
