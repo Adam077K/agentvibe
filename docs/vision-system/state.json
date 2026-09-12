@@ -25,22 +25,24 @@
     "Archived first independent findings L03/L05/L07 in local commits; evidence audit pending",
     "Baseline npm run check at b2cabad: 48/48 steps passed, exit 0; exclusions remain explicit; separate Mission Control check pending",
     "Independent L02 operations and L04 engineering archived; separate Mission Control baseline completed with two recorded failures",
-    "Phase A framing written and read: planning/01-understand.md; independent recognition test not yet run; L01 research archived"
+    "Phase A framing written and read: planning/01-understand.md; independent recognition test not yet run; L01 research archived",
+    "L06 evaluation, L08 reliability and L09 human factors archived; nine independent reports integrated"
   ],
   "active_work": [
-    "L06 evaluation",
-    "L08 reliability",
-    "L09 human factors",
-    "Research coverage and evidence state"
+    "L10 economics/capacity",
+    "L11 legal/privacy/governance",
+    "L12 controlled improvement",
+    "Preparing final independent lanes L13/L14"
   ],
   "next_actions": [
-    "Receive and preserve independent lane returns without sharing conclusions with unfinished lanes",
-    "Dispatch remaining independent research lanes in bounded batches",
-    "Build Phase A framing and separately cover source Part one and Part three plus directive deliverables",
-    "Complete Phase A framing with explicit epistemic labels and requirements inventory",
-    "Compare lane findings, preserve disagreements, then generate three materially different candidates",
-    "Run independent candidate attacks, synthesize, specify and independently review the complete planning package",
-    "Commit accepted planning package before building the complete system in dependency order"
+    "Finish L10/L11/L12 and dispatch independent L13/L14 without showing existing conclusions",
+    "Preserve remaining lane reports and audit consequential source claims",
+    "Compare all fourteen independently formed reports; preserve disagreements and newly discovered fields",
+    "Generate at least three materially different foundational candidates",
+    "Run independent candidate attacks before selection",
+    "Specify complete system and answer all coverage items with exact support",
+    "Run independent architecture-neutral planning review; commit accepted package",
+    "Build complete system in dependency order, preserving evidence and tests"
   ],
   "dependencies": [
     {

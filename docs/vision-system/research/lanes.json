@@ -42,8 +42,10 @@
   {
     "id": "L06",
     "topic": "Evaluation, evidence, truth and reproducibility",
-    "status": "researching",
-    "agent": "lane06_evaluation"
+    "status": "independent findings archived",
+    "agent": "lane06_evaluation",
+    "artifact": "research/L06-evaluation.md",
+    "review": "not yet independently evidence-audited"
   },
   {
     "id": "L07",
@@ -56,29 +58,36 @@
   {
     "id": "L08",
     "topic": "Reliability, durable execution and incident recovery",
-    "status": "researching",
-    "agent": "lane08_reliability"
+    "status": "independent findings archived",
+    "agent": "lane08_reliability",
+    "artifact": "research/L08-reliability.md",
+    "review": "not yet independently evidence-audited"
   },
   {
     "id": "L09",
     "topic": "Human factors, founder attention, competence and interfaces",
-    "status": "researching",
-    "agent": "lane09_human"
+    "status": "independent findings archived",
+    "agent": "lane09_human",
+    "artifact": "research/L09-human.md",
+    "review": "not yet independently evidence-audited"
   },
   {
     "id": "L10",
     "topic": "Economics, subscriptions, capacity and infrastructure",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane10_economics"
   },
   {
     "id": "L11",
     "topic": "Legal, privacy, governance and ethical consequences",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane11_governance"
   },
   {
     "id": "L12",
     "topic": "Self-improvement and controlled system change",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane12_improvement"
   },
   {
     "id": "L13",
