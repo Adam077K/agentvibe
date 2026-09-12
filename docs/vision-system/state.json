@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "D-independent-reassessment-of-repairs",
+  "phase": "E-synthesis-with-reviewed-candidate-amendments",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-3-1789160853",
@@ -33,31 +33,37 @@
     "Three materially different candidates archived and fully read: records/cases, federated responsibility and adaptive coordination; each covers shared eight scenarios and candidate dimensions",
     "All three independent candidate attack judgments returned; archival in separate builder/scribe turns underway. Candidate set is not cleared for selection.",
     "All three independent attack reports archived unchanged in local commits; 21 findings and all33 attack cases mapped without claiming passing tests",
-    "Integrated and fully read C2 alternative-depth, company responsibility and technical foundation addenda at 4182ead; no finding closed by author assertion"
+    "Integrated and fully read C2 alternative-depth, company responsibility and technical foundation addenda at 4182ead; no finding closed by author assertion",
+    "Independent architecture/evidence and technical reassessments returned: all original foundational blockers conceptually closed; fresh company reassessment also permits synthesis. Four sharpened specification obligations remain; empirical and deployment claims unproved. Archival underway."
   ],
   "active_work": [
     {
+      "agent": "repair_company_foundations",
+      "scope": "New framer task: independently choose/synthesize architecture; no winner dictated",
+      "artifact": "planning/02-architecture-selection.md"
+    },
+    {
       "agent": "attack_architecture_evidence",
-      "subject_commit": "4182ead431220dc94ce61335170a798815aaf02c",
-      "scope": "Independent EAS01-04 reassessment plus separately labeled fresh CH01-09 assessment; original company reviewer unavailable"
+      "scope": "Separate scribe turn archiving unchanged final reassessment and fresh company assessment",
+      "artifact": "planning/reviews/D2-architecture-evidence-company.md"
     },
     {
       "agent": "attack_technical",
-      "subject_commit": "4182ead431220dc94ce61335170a798815aaf02c",
-      "scope": "Independent T01-08 and shared contract reassessment"
+      "scope": "Separate scribe turn archiving unchanged final technical reassessment",
+      "artifact": "planning/reviews/D2-technical.md"
     },
     {
       "agent": "orchestrator",
-      "scope": "Package construction and coverage work allocation; no architecture selection before reassessment"
+      "scope": "Reconcile independent dispositions and specification obligations; complete-package coordination"
     }
   ],
   "next_actions": [
-    "Receive and archive independent reassessments of immutable 4182ead; preserve conceptual closure separately from unexecuted conformance and deployment prerequisites",
-    "Resolve any remaining foundational blockers without overriding reviewer verdicts",
-    "Synthesize and justify selected architecture against A, B and C2 (or another foundation if C2 fails distinctness review)",
-    "Specify complete system and answer all coverage items with exact support",
-    "Run independent architecture-neutral complete-plan review; commit accepted planning package and decisions",
-    "Build complete system in dependency order, preserving evidence, security, tests, integration, recovery and operability"
+    "Integrate unchanged D2 reassessment archives and preserve conceptual versus empirical/deployment dispositions",
+    "Review Phase E selection artifact against actual candidate rights, stronger simple controls, evidence and full-company capabilities",
+    "Carry EAS-R1 comparator separation and technical R1\u2013R3 dynamic-scope migration/durability-status/delayed-first-send obligations into concrete Phase F contracts",
+    "Specify all 24 package groups, 46 minimum schema subjects and substantive capability paths; answer 566 original plus supplemental/discovered concerns with exact support",
+    "Run independent architecture-neutral complete-plan review and close foundational gaps; commit accepted package before implementation",
+    "Build, integrate, test, secure, document and make the entire accepted design operable in dependency order"
   ],
   "dependencies": [
     {
@@ -97,7 +103,9 @@
     "migrations": [],
     "history": "history.jsonl",
     "attack_coverage": "research/attack-coverage.json plus coverage/discovered.json; original independent attacks archived, repair reassessment pending",
-    "review_findings": "registers/review-findings.json"
+    "review_findings": "registers/review-findings.json",
+    "capability_requirements": "coverage/capability-requirements.json; 46 decomposed outcome requirements, not implemented capabilities",
+    "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
@@ -117,11 +125,10 @@
     "This session has unrestricted tools; a read-only brief is not enforced tool isolation",
     "Initial git history path pattern failed to match nested source; corrected by inspecting branch trees",
     "Baseline Mission Control has two failures: corpus-count assertion and ledger comparison timeout; causes unverified",
-    "Independent review EAS-02: A/C may differ only optionally; three foundational alternatives not yet established",
-    "T01/EAS-01: A/B recovery omits mandatory independent pre-dispatch durability or proven complete reconstruction",
-    "T02/CH-01: B cross-issuer release and orphaned cross-domain work ownership unresolved",
-    "CH-02/T07: evidence disturbance can suppress service and cause global work cascades",
-    "CH-03/CH-05/T06/T08: redress, interacting exposure and transitive trust/authority responsibilities require explicit decisions",
-    "Collaboration tool refused original company reviewer resumption and fresh reviewer spawn with agent thread limit reached; architecture reviewer performs separately labeled fresh company reassessment, not original reviewer signoff"
+    "Collaboration tool refused original company reviewer resumption and fresh reviewer spawn with agent thread limit reached; architecture reviewer performs separately labeled fresh company reassessment, not original reviewer signoff",
+    "Conceptual closure of original attacks depends on faithfully implementing amended contracts and surviving declared fault roots; no runtime guarantees established",
+    "EAS-R1: comparator can erase inquiry-right treatment or reward C2 by definition; separate own-rights conformance, business outcomes and representation control",
+    "Technical R1\u2013R3: dynamic scope/alias/participant migration, independently durable status after lost acknowledgments and delayed first transport must be specified precisely",
+    "Accumulated institutional maintenance, disclosure review, independent administration, professional continuity and owner attention may defeat operating economics"
   ]
 }
