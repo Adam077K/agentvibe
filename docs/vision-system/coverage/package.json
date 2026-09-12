@@ -322,12 +322,13 @@
         "deletion",
         "audit"
       ],
-      "answer_scope": "Foundational canonical consolidation active: full required/added subjects, concrete types/commands/per-edge predicates, composites and acceptance revision binding. Not complete.",
+      "answer_scope": "Early CS1 prose is integrated: an explicit version 2 representation, immutable business revisions, LifecycleStatus, CAS, proof, bootstrap and migration proposal. Full machine schema, predicate and command registries and the affected-specification amendment remain active author work; no completeness claim.",
       "locations": [
         "planning/specification/01-contract-kernel.md",
         "planning/specification/capabilities.json",
         "planning/specification/work-knowledge-contracts.json",
-        "registers/specification-findings.json"
+        "registers/specification-findings.json",
+        "planning/specification/11-schemas-state-contracts.md"
       ],
       "status": "foundational-consolidation-active",
       "owner": "orchestrator",

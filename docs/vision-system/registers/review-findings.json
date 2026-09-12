@@ -782,9 +782,14 @@
     "title": "Question verification references do not exercise distinctive exit/reopening claims",
     "severity": "medium",
     "owner": "orchestrator integration; isolated author and independent reviewer",
-    "status": "Open; bounded author repair pending",
+    "status": "Author correction 5349c3f integrated as dd17e17; 268 root verification projections refreshed. Independent recheck pending.",
     "required_contract": "Semantic question→contract→verification reconciliation; precise vendor-exit and equivalent-reopening subcases plus other affected joins, not test-family labels alone.",
-    "resolution": null,
+    "resolution": {
+      "source_commit": "5349c3f089ac6652d194db52e4d956e336468001",
+      "root_commit": "dd17e17",
+      "artifact": "planning/specification/work-knowledge-contracts.json#/verification_subcases",
+      "scope": "54 shared subcases, 159 observations and 394 joins for 268 unchanged answers; structural validation and root subcase inspection, without independent semantic closure."
+    },
     "independent_recheck": null,
     "implementation_evidence": null
   },

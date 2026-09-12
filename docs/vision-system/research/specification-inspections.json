@@ -105,6 +105,24 @@
       "read_scope": "Shared method/policy/limits and full IC-S01 sample; all29 groups title, claim scope, design distinction, invalidators, corroboration and source-date/URL/retrieval-failure exceptions. Repeated generic per-source fields not individually reread. Large initial output attempts truncated and were replaced with small projected batches.",
       "result": "Metadata preserves historical attributed scope, unknown source dates/account applicability, missing source bodies, failed retrievals and source-specific invalidators. Source locator index merged; this is root integration inspection, not independent source verification.",
       "remaining": "Independent epistemic completeness review; concrete Postmark admission follow-up; actual locking/account/runtime checks."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/11-schemas-state-contracts.md",
+      "subject": "9f8922a7284942a8dfc6c2af66e85341160ed258",
+      "sha256": "79b83bc7db1975b5fda332688a3e78748bc6edc8d87360b7ff92ab53aca0e6e0",
+      "read_scope": "Complete 170-line early prose: FI-12 alternatives, immutable business revisions and LifecycleStatus, CAS/invalidation, proof, predicate boundary, finite bootstrap, storage, affected migration and 15 paired cases. The machine registry is explicitly forthcoming.",
+      "result": "Explicit representation proposal read. Independent FI-12 review is active. Earlier 01–10 contracts are not yet mechanically amended; full types, guards and command registry are not claimed.",
+      "remaining": "Independent scoped and complete Phase G review, complete canonical amendment, construction and runtime/operating qualification."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/work-knowledge-contracts.json",
+      "subject": "5349c3f089ac6652d194db52e4d956e336468001",
+      "sha256": "b9ccfa8e7402020580df6010303c122e231b0444e7dbaf139a47e5e3fb360496",
+      "read_scope": "All 54 shared subcase names/stimuli and 159 distinct expected observations; common procedure, positive-control and execution-boundary fields read once and identical values verified. Six question bindings inspected semantically, including the two XSR-02 examples; all 394 bindings resolved structurally. Original 268 IDs, questions and answers unchanged by Git comparison.",
+      "result": "Refreshed 268 root coverage verification projections with package-relative pointers. Specific verification cases are authored; independent XSR-02 closure is pending and every runtime test remains unexecuted.",
+      "remaining": "Independent scoped and complete Phase G review, complete canonical amendment, construction and runtime/operating qualification."
     }
   ]
 }
