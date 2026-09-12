@@ -96,7 +96,7 @@
     "founder_decisions": "registers/open-questions.json",
     "candidates": "planning/candidates/A-records-and-cases.md; B-federated-responsibility.md; C-adaptive-coordination.md with AC-foundational-distinction.md; technical-foundation-repairs-v1.md; company-foundation-repairs-v1.md \u2014 proposals only",
     "decisions": "registers/decisions.json; AD-001\u2013010, architecture S1.0",
-    "risks": "not yet synthesized",
+    "risks": "registers/risks.json; 17 material groups, controls unimplemented",
     "coverage": "coverage/questions.json, coverage/supplemental.json, coverage/discovered.json",
     "implementation_graph": "pending reviewed specification",
     "build_progress": "not started",

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "Orchestrator review-coverage state; not a completed threat model or test result",
   "source": "inputs/directive-contract.json attack_cases and attack_dimensions",
-  "architecture_selected": false,
+  "architecture_selected": "S1.0 logical specification anchor; full-plan acceptance pending",
   "dimensions": [
     "technical",
     "architectural",
@@ -32,9 +32,21 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-01",
+          "RISK-03",
+          "RISK-16"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC02",
@@ -55,9 +67,21 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-01",
+          "RISK-03",
+          "RISK-16"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC03",
@@ -79,9 +103,21 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-01",
+          "RISK-03",
+          "RISK-16"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC04",
@@ -103,9 +139,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-03",
+          "RISK-04"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC05",
@@ -127,9 +174,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-04",
+          "RISK-13"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC06",
@@ -159,9 +217,21 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-04",
+          "RISK-05",
+          "RISK-15"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC07",
@@ -175,9 +245,19 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-01"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC08",
@@ -198,9 +278,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-05",
+          "RISK-15"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC09",
@@ -222,9 +313,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-06",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC10",
@@ -239,9 +341,21 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-06",
+          "RISK-07",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC11",
@@ -274,9 +388,22 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-05",
+          "RISK-06",
+          "RISK-12",
+          "RISK-13"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC12",
@@ -309,9 +436,23 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-05",
+          "RISK-06",
+          "RISK-12",
+          "RISK-13",
+          "RISK-14"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC13",
@@ -344,9 +485,24 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-02",
+          "RISK-03",
+          "RISK-06",
+          "RISK-07",
+          "RISK-12",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC14",
@@ -377,9 +533,22 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-02",
+          "RISK-06",
+          "RISK-07",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC15",
@@ -394,9 +563,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-02",
+          "RISK-16"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC16",
@@ -412,9 +592,23 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-01",
+          "RISK-02",
+          "RISK-03",
+          "RISK-07",
+          "RISK-16"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC17",
@@ -428,9 +622,19 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-08"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC18",
@@ -452,9 +656,19 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-08"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC19",
@@ -468,9 +682,19 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-08"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC20",
@@ -504,9 +728,22 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-08",
+          "RISK-11",
+          "RISK-14",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC21",
@@ -536,9 +773,23 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-05",
+          "RISK-10",
+          "RISK-11",
+          "RISK-14",
+          "RISK-15"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC22",
@@ -568,9 +819,22 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-04",
+          "RISK-05",
+          "RISK-10",
+          "RISK-11"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC23",
@@ -605,9 +869,23 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-08",
+          "RISK-10",
+          "RISK-12",
+          "RISK-13",
+          "RISK-14"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC24",
@@ -628,9 +906,19 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-10"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC25",
@@ -651,9 +939,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-09",
+          "RISK-12"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC26",
@@ -668,9 +967,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-09",
+          "RISK-16"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC27",
@@ -691,9 +1001,21 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-08",
+          "RISK-09",
+          "RISK-12"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC28",
@@ -725,9 +1047,24 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-02",
+          "RISK-06",
+          "RISK-07",
+          "RISK-12",
+          "RISK-13",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC29",
@@ -761,9 +1098,24 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-04",
+          "RISK-06",
+          "RISK-11",
+          "RISK-12",
+          "RISK-13",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC30",
@@ -777,9 +1129,21 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-05",
+          "RISK-09",
+          "RISK-15"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC31",
@@ -800,9 +1164,23 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-05",
+          "RISK-09",
+          "RISK-15",
+          "RISK-16",
+          "RISK-17"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC32",
@@ -824,9 +1202,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-11",
+          "RISK-15"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     },
     {
       "id": "AC33",
@@ -841,9 +1230,20 @@
           "kind": "reasoned attack or stated specification obligation; see report for limits"
         }
       ],
-      "selected_architecture_response": null,
+      "selected_architecture_response": {
+        "architecture": "S1.0",
+        "selection": "planning/02-architecture-selection.md",
+        "risk_groups": [
+          "RISK-15",
+          "RISK-16"
+        ],
+        "reviewed_repairs": [
+          "planning/reviews/D2-technical.md",
+          "planning/reviews/D2-architecture-evidence-company.md"
+        ]
+      },
       "implementation_test": null,
-      "status": "reviewed conceptually; repairs and implementation evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
     }
   ],
   "additional_cases": "coverage/discovered.json",

@@ -1,0 +1,654 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "scope": "Material risk groups covering all 33 directive attacks plus company, institutional and human failure. This is not a completed threat-model implementation or an aggregate risk score.",
+  "risks": [
+    {
+      "id": "RISK-01",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Untrusted content becomes authority",
+      "cause": "Retrieved pages, tool metadata or model messages masquerade as instructions, grants or corroboration.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Unauthorized work, changed recipients, disclosure or commitments.",
+      "attack_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC07",
+        "AC16"
+      ],
+      "prevention": "Separate attributed data from authenticated commands; protected tool schemas and grants determine effect semantics.",
+      "detection": "Inject instructions and forged tool annotations while comparing proposed work and actual release against independent policy.",
+      "containment": "Suspend affected producer/tool scope, preserve raw evidence and revalidate every dependent proposal.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Misleading content may still influence judgment within an allowed proposal scope; perfect model compliance is not assumed.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Consequence authority and release",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-02",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Credential and descendant authority compromise",
+      "cause": "A credential-bearing adapter creates tokens, sessions, forwarding, deployments or schedules that survive parent revocation.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Spending, exfiltration, persistent access and consequential external actions.",
+      "attack_cases": [
+        "AC13",
+        "AC14",
+        "AC15",
+        "AC16",
+        "AC28"
+      ],
+      "prevention": "Inspect actual native permissions, remove minting paths where possible, separate worker credentials and independent recovery administration.",
+      "detection": "Compare effective access graph with independent provider inventory and test every admitted delegation edge.",
+      "containment": "Stop broker release, revoke provider-native descendants and fence execution; restore only after verified denial.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "A stolen credential can exercise real native permissions until containment; unenumerable routes keep the scope contained.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Recovery and continuity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-03",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Disclosure through permitted destinations",
+      "cause": "Mixed sensitive context, model-selected fields, tool output or masked credentials carry forbidden data or authority through an allowed host.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Privacy/confidentiality harm, unauthorized inference or public exposure.",
+      "attack_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC04",
+        "AC13",
+        "AC16"
+      ],
+      "prevention": "Destination/purpose-specific clean context or trusted deterministic rendering; exact parameter authority and mediated all-surface egress.",
+      "detection": "Synthetic canaries in content, encoding, attachments, queries, URLs, metadata and child-process output to the model provider.",
+      "containment": "Revoke dependent release, isolate context compartment, inventory recipients and initiate authorized downstream correction/deletion.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "No scanner proves all semantic disclosure safe; unrestricted mixed-context generation needs a legitimate specific disclosure decision.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Context and validity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-04",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Stale or poisoned knowledge becomes usable again",
+      "cause": "Old session state, incomplete citations, offline stores or late derivatives evade a correction, revocation or deletion.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Incorrect decisions, contaminated evidence, renewed prohibited use and misleading accounts.",
+      "attack_cases": [
+        "AC04",
+        "AC05",
+        "AC06",
+        "AC22",
+        "AC29"
+      ],
+      "prevention": "Loader-captured conservative lineage, atomic publication/derivative registration and current validity gates before read/release.",
+      "detection": "Race staged output and handoffs against restriction changes; restore/rejoin old stores and discover late descendants.",
+      "containment": "Restrict affected references first, then reconcile descendants and restart clean context where required.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Conservative lineage can block useful work; inaccessible vendor copies and forgotten inputs limit reconstruction.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Context and validity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-05",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "False success through shared evidence interpretation",
+      "cause": "Producer and judge share corrupt parsers, source selection, denominators, administrative roots or unsupported causal accounts.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Owner accepts failed/unauthorized work or an economically harmful decision with false confidence.",
+      "attack_cases": [
+        "AC06",
+        "AC08",
+        "AC11",
+        "AC12",
+        "AC21",
+        "AC22",
+        "AC30",
+        "AC31"
+      ],
+      "prevention": "Protect the transitive evidence base; declare independence targets; retain attempted/eligible/excluded/missing denominators and rationale-versus-cause.",
+      "detection": "Change shared decoding/metrics without changing judge files; use authorized-bad-outcome and unauthorized-good-outcome controls.",
+      "containment": "Invalidate affected acceptance, preserve original observations and re-evaluate through the required independent interpretation.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Independent judges can still agree incorrectly; unavailable original evidence must remain unknown.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Evidence and acceptance",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-06",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Lost or duplicated effects and promises",
+      "cause": "Restore loses post-backup operations or zero-immediate-cost promises; retries use new identities after ambiguous outcomes.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Double refunds/spending, omitted delivery duties and missing continuing liabilities.",
+      "attack_cases": [
+        "AC09",
+        "AC10",
+        "AC11",
+        "AC12",
+        "AC13",
+        "AC14",
+        "AC28",
+        "AC29"
+      ],
+      "prevention": "Independently durable executable envelopes/release records, complete membership/frontiers, business conflict holds and no blind retries.",
+      "detection": "Lose primary after payment, promise and inbound acceptance; hide destination history and expire provider deduplication.",
+      "containment": "Fence old egress, restore holds pessimistically, reconcile complete independent prefixes and preserve unknown effects.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Loss of every declared recovery root or uninstrumented channels prevents a complete account; containment is not fulfillment.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Recovery and continuity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-07",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Revocation, time or scope migration race",
+      "cause": "Permissions change after checks; old aliases hide holds; added participants or delayed first sends escape their original validity window.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Release without complete current authority or duplicated business consequence.",
+      "attack_cases": [
+        "AC10",
+        "AC13",
+        "AC14",
+        "AC16",
+        "AC28"
+      ],
+      "prevention": "One order for overlapping constraints; fenced alias/scope/participant migration; independent durability proof on status; bounded first transport and generation fencing.",
+      "detection": "Interleave reclassification, expiry, revocation, paused gateways, lost acknowledgments, partitions and restore.",
+      "containment": "Contain union of old/new conflict domains, invalidate unreleased preparations and retain already released exposure for reconciliation.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "External acceptance is not atomic with internal authorization; provider suppression limits remain explicit.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Consequence authority and release",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-08",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Runaway delegated work, retries and capacity use",
+      "cause": "Fresh tasks, corrections and allowance resets replenish apparent budgets while descendants share one unresolved disturbance.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Runaway cost/capacity, owner interruptions and starvation of owed service.",
+      "attack_cases": [
+        "AC17",
+        "AC18",
+        "AC19",
+        "AC20",
+        "AC23",
+        "AC27"
+      ],
+      "prevention": "Durable causal episode totals plus company caps, attenuation, classified retry, progress tests and reserved due-service/grievance capacity.",
+      "detection": "Sustain fresh false signals across resets with a true severe complaint and ordinary valid service.",
+      "containment": "Stop discretionary descendants, preserve intake/standing, invoke capacity incident and accepted alternate.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Finite systems cannot guarantee unlimited arrival throughput; legitimate delays and service loss must remain visible.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Case admission and scheduler",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-09",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Provider outage, policy or semantic drift",
+      "cause": "Account limits, auth route, model behavior or provider response semantics change while old success/configuration assumptions remain.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Interrupted service, unsupported automation, metered spending or false acceptance.",
+      "attack_cases": [
+        "AC25",
+        "AC26",
+        "AC27",
+        "AC30",
+        "AC31"
+      ],
+      "prevention": "Versioned admission and effective launch attestation; separate money/allowance/compute; explicit resume and no paid fallback.",
+      "detection": "Inject quota/auth loss, schema-preserving semantic change and unavailable native resume; replay adapter conformance.",
+      "containment": "Park affected execution, keep portable work state, use only independently admitted alternatives and continuity resources.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Subscriptions provide no assumed SLA or fixed per-call capacity; substitutes may differ materially.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Domain production interfaces",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-10",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Owner overload or loss of competence",
+      "cause": "Curated summaries and familiar exercises conceal misunderstood customers, money, trade-offs or intervention behavior.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Deskilling, rubber-stamped decisions, loss of control or a full-time review burden.",
+      "attack_cases": [
+        "AC21",
+        "AC22",
+        "AC23",
+        "AC24"
+      ],
+      "prevention": "Contestable fixed participation, independent adverse selection, delayed unfamiliar transfer checks and consequence-specific competent assistance.",
+      "detection": "Measure raw owner minutes, missed material misunderstanding, actual intervention and sample omissions; distinguish taste disagreement.",
+      "containment": "Narrow affected new exposure, provide competent assistance and invoke continuity for existing duties.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Longitudinal benefit and tolerable cadence are unproved; no global competence score or model transfer of values authority.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Human and external responsibility interface",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-11",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Intent and governing meaning drift",
+      "cause": "Summaries, changed priorities or incremental optimization erase reasons, rejected alternatives, promises or legitimate changes of mind.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Wrong business direction, identity/taste loss and broken external commitments.",
+      "attack_cases": [
+        "AC20",
+        "AC21",
+        "AC22",
+        "AC29",
+        "AC32"
+      ],
+      "prevention": "Version endorsed purpose and mandate separately from inference/proposal; propagate explicit changes while preserving surviving duties.",
+      "detection": "Trace representative delivered artifacts and decisions to original intent, adverse evidence and versioned alternatives.",
+      "containment": "Pause affected new commitments, restore authentic decision context and obtain the actual owner decision when values are unresolved.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "No model can infer a founder-only promise or uniquely choose equally defensible personal ends.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Direction and responsibility register",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-12",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Institutional, professional or continuity incapacity",
+      "cause": "A named role, completed packet or nominal backup substitutes for actual competence, authority, funding, availability or physical delivery.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Missed filings, failed service, legal/financial exposure and stranded customer obligations.",
+      "attack_cases": [
+        "AC11",
+        "AC12",
+        "AC13",
+        "AC23",
+        "AC25",
+        "AC27",
+        "AC28",
+        "AC29"
+      ],
+      "prevention": "Accepted responsibility and continuity packets; verify actual principal, specialist determination, access, capacity and joint-failure performance before promises.",
+      "detection": "Remove founder and material supplier during refund uncertainty, specialist deadline and continuing service.",
+      "containment": "Stop dependent new liabilities; use accepted substitutes, lawful alternatives and authorized remedies; retain owned unmet duties.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Shared institutional failures, scarce specialists or unaffordable continuity can defeat venture viability.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Human and external responsibility interface",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-13",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Ineffective redress and irresponsible closure",
+      "cause": "Noncustomers, disputed custodians or late data copies lose a reachable remedy when internal tickets or software close.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Unremedied harm, denied standing, data resurrection and surviving legal/reputational liabilities.",
+      "attack_cases": [
+        "AC05",
+        "AC11",
+        "AC12",
+        "AC23",
+        "AC28",
+        "AC29"
+      ],
+      "prevention": "Independent grievance lifecycle, meaningful deadlines/reasons/escalation, reserved remedy capacity and continuing deletion/closure scope.",
+      "detection": "Challenge a custodian after product closure; reconnect offline data and discover a late export while a remedy is disputed.",
+      "containment": "Activate accepted alternate, restrict affected use, preserve live intake and reconcile actual remedy or legitimate transfer.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Required external forums, retention bases and remedy funding are deployment-specific; internal labels cannot bind another person.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Human and external responsibility interface",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-14",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Business failure and shifted human burden",
+      "cause": "Internal task output and aggregate metrics obscure weak demand, poor delivery, concentrated harm or costs shifted to customers/applicants/contractors.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Unviable ventures, reputational loss and exploitation of external attention or unpaid repair labor.",
+      "attack_cases": [
+        "AC12",
+        "AC20",
+        "AC21",
+        "AC23"
+      ],
+      "prevention": "Predeclared customer/economic propositions, cohort measures, full continuing/closure costs and original adverse observations.",
+      "detection": "Compare delivered usefulness, contribution, repeated use where relevant and external effort against matched alternatives, including intentional subsidy.",
+      "containment": "Correct offer/operations, narrow acquisition or propose legitimate closure while continuing owed duties.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "No architecture establishes product-market fit or founder appetite for subsidy; actual market effects require evidence.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Domain production interfaces",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-15",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Compromised improvement and cumulative change",
+      "cause": "An improver changes protected policy or evaluator dependencies, exploits a holdout or accumulates individually small changes into governing drift.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Weakened identity/authority, fabricated improvement, unrecoverable history and loss of control.",
+      "attack_cases": [
+        "AC06",
+        "AC08",
+        "AC21",
+        "AC30",
+        "AC31",
+        "AC32",
+        "AC33"
+      ],
+      "prevention": "Separate protected change authority, dependency-complete proposals, independent controls, rollout monitoring and state-aware rollback.",
+      "detection": "Attack shared judge dependencies and apply sequences of individually accepted changes; verify protected intent and authority invariants.",
+      "containment": "Suspend improvement release, retain incidents/evidence and roll back compatible internal state; reconcile external consequences separately.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Adaptive evaluations can themselves drift or be gamed; no single success metric may authorize change.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Evidence and acceptance",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-16",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Isolation and software supply-chain failure",
+      "cause": "Native configuration precedence, managed hooks, unmediated tools, executable dependencies or local services bypass intended worker restrictions.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Host compromise, secret access, unauthorized native effects and poisoned acceptance.",
+      "attack_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC15",
+        "AC16",
+        "AC26",
+        "AC31",
+        "AC33"
+      ],
+      "prevention": "Pin effective profiles and executable/schema provenance; isolate workers; deny unneeded tools, sockets, startup sources and network surfaces.",
+      "detection": "Use synthetic secrets and hostile dependencies against files, process environment, symlinks, linked Git metadata, IPC and all native egress surfaces.",
+      "containment": "Withdraw adapter admission, isolate executable scope, preserve independent evidence and recover effective access through separate administration.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Host/kernel escape beyond tested boundary and compromised ultimate administrators remain declared exclusions, not hidden guarantees.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Recovery and continuity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    },
+    {
+      "id": "RISK-17",
+      "kind": "Design risk",
+      "status": "open; controls specified or being specified, no implementation proof",
+      "architecture": "S1.0",
+      "title": "Cross-venture interaction and migration error",
+      "cause": "Separate accounts mask shared populations/dependencies; migration drops meanings, outstanding holds, restrictions or legitimate principal boundaries.",
+      "likelihood_or_uncertainty": "Plausible adversarial or operational sequence; frequency unmeasured. No numeric probability inferred from conceptual review.",
+      "consequence": "Cross-entity subsidy, cumulative contact/privacy harm, duplicate effects or duties lost during transition.",
+      "attack_cases": [
+        "AC09",
+        "AC10",
+        "AC13",
+        "AC14",
+        "AC20",
+        "AC28",
+        "AC29",
+        "AC31"
+      ],
+      "prevention": "Versioned interaction determinations, semantic ownership, restricted resource accounts and fenced single-scope migration with uncertain history preserved.",
+      "detection": "Reveal shared recipient/supplier/purpose during migration; transfer while an effect and deletion scope remain unresolved.",
+      "containment": "Contain interacting scopes, restore old meaning or reconcile the union, and require accepted successor responsibility before retiring controls.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Interaction discovery and hidden off-platform facts are incomplete; excessive conservatism can defeat useful work.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Direction and responsibility register",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate actual material consequence, missing mandate, unavailable competent continuity, required personal value choice or residual exposure acceptance to its legitimate owner with the directive decision packet; continue unrelated authorized work.",
+      "design_evidence": [
+        "planning/02-architecture-selection.md",
+        "planning/candidates/technical-foundation-repairs-v1.md",
+        "planning/candidates/company-foundation-repairs-v1.md",
+        "planning/reviews/D2-technical.md",
+        "planning/reviews/D2-architecture-evidence-company.md"
+      ],
+      "implementation_evidence": null,
+      "revalidation": "At concrete specification review, each affected release/admission, successful falsifier, provider/dependency change or incident."
+    }
+  ]
+}
