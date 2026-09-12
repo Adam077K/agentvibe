@@ -1,0 +1,90 @@
+[
+  {
+    "owner": "orchestrator",
+    "status": "open",
+    "review_by": "before architecture synthesis",
+    "id": "H01",
+    "kind": "Hypothesis",
+    "statement": "The system can increase useful company work without proportional growth in owner checking.",
+    "source": "inputs/THE-VISION-AND-THE-FIELDS.md Part one",
+    "confidence": "unestablished",
+    "invalidation": "Representative longitudinal workloads require checking time proportional to volume or owner understanding deteriorates."
+  },
+  {
+    "owner": "orchestrator",
+    "status": "open",
+    "review_by": "before architecture synthesis",
+    "id": "H02",
+    "kind": "Hypothesis",
+    "statement": "Cheap generation plus responsible closure makes more venture attempts affordable.",
+    "source": "inputs/THE-VISION-AND-THE-FIELDS.md Part one",
+    "confidence": "unestablished",
+    "invalidation": "Acquisition, support, liability, closure or attention costs dominate savings across representative attempts."
+  },
+  {
+    "owner": "orchestrator",
+    "status": "open",
+    "review_by": "before architecture synthesis",
+    "id": "H03",
+    "kind": "Hypothesis",
+    "statement": "Truthful accounting has durable commercial differentiation.",
+    "source": "inputs/THE-VISION-AND-THE-FIELDS.md Part one",
+    "confidence": "unestablished",
+    "invalidation": "Alternatives meet defined owner-accountability needs with adequate economics; willingness to adopt is absent."
+  },
+  {
+    "owner": "orchestrator",
+    "status": "open",
+    "review_by": "before architecture synthesis",
+    "id": "H04",
+    "kind": "Hypothesis",
+    "statement": "Selected direct work can preserve owner competence within the attention saved.",
+    "source": "inputs/directive-contract.json invariant and research/L01-intent.md",
+    "confidence": "unestablished",
+    "invalidation": "Repeated evaluations find no competence benefit, unacceptable burden, or misleading competence proxies."
+  },
+  {
+    "owner": "orchestrator",
+    "status": "open",
+    "review_by": "before architecture synthesis",
+    "id": "A01",
+    "kind": "Assumption",
+    "statement": "Internal work primarily uses authorized personal Claude Code and Codex subscription environments, approximately USD 200/month each.",
+    "source": "inputs/directive-contract.json subscription_assumption",
+    "confidence": "founder operating assumption, not current price or entitlement verification",
+    "invalidation": "Verified provider terms, account identity or capacity do not support intended use."
+  },
+  {
+    "owner": "orchestrator",
+    "status": "open",
+    "review_by": "before architecture synthesis",
+    "id": "U01",
+    "kind": "Unknown",
+    "statement": "Target venture, jurisdiction, legal form, professional duties, operating limits and customer data categories are not chosen.",
+    "source": "planning/01-understand.md",
+    "confidence": "not supplied",
+    "invalidation": "Authenticated owner supplies an operational profile; external legal/professional authority verifies applicable obligations."
+  },
+  {
+    "owner": "orchestrator",
+    "status": "recorded",
+    "review_by": "before reuse decisions",
+    "id": "O01",
+    "kind": "Direct observation",
+    "statement": "Baseline npm run check passed 48/48 steps and separate Mission Control checks passed 427/429 tests.",
+    "source": "research/baseline-results.json",
+    "confidence": "high for recorded run only",
+    "invalidation": "Raw evidence hash differs or result transcription is disproved."
+  },
+  {
+    "owner": "orchestrator",
+    "status": "recorded",
+    "review_by": "coverage review",
+    "id": "O02",
+    "kind": "Direct observation",
+    "statement": "Exact field-map extraction yields 53 numbered fields and 566 questions.",
+    "source": "coverage/questions.json and inputs/THE-VISION-AND-THE-FIELDS.md",
+    "confidence": "high for preserved input version",
+    "invalidation": "Independent extraction reveals omissions or source version changes."
+  }
+]

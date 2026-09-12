@@ -2,14 +2,18 @@
   {
     "id": "L01",
     "topic": "Vision and founder-intent preservation",
-    "status": "researching",
-    "agent": "lane01_intent"
+    "status": "independent findings archived",
+    "agent": "lane01_intent",
+    "artifact": "research/L01-intent.md",
+    "review": "not yet independently evidence-audited"
   },
   {
     "id": "L02",
     "topic": "Company and organizational operations",
-    "status": "researching",
-    "agent": "lane02_operations"
+    "status": "independent findings archived",
+    "agent": "lane02_operations",
+    "artifact": "research/L02-operations.md",
+    "review": "not yet independently evidence-audited"
   },
   {
     "id": "L03",
@@ -22,8 +26,10 @@
   {
     "id": "L04",
     "topic": "Coding, terminal and software engineering",
-    "status": "researching",
-    "agent": "lane04_engineering"
+    "status": "independent findings archived",
+    "agent": "lane04_engineering",
+    "artifact": "research/L04-engineering.md",
+    "review": "not yet independently evidence-audited"
   },
   {
     "id": "L05",
@@ -36,7 +42,8 @@
   {
     "id": "L06",
     "topic": "Evaluation, evidence, truth and reproducibility",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane06_evaluation"
   },
   {
     "id": "L07",
@@ -49,12 +56,14 @@
   {
     "id": "L08",
     "topic": "Reliability, durable execution and incident recovery",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane08_reliability"
   },
   {
     "id": "L09",
     "topic": "Human factors, founder attention, competence and interfaces",
-    "status": "queued"
+    "status": "researching",
+    "agent": "lane09_human"
   },
   {
     "id": "L10",

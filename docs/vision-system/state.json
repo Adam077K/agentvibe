@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "A-understand-and-B-independent-expansion",
+  "phase": "B-independent-expansion",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-3-1789160853",
@@ -23,13 +23,15 @@
     "Read current GitHub issue and PR lists; PR 131 identified more recent planning branches",
     "Read first 200 lines of 2026-09-11 autopsy; historical source claim of architecture lock-in preserved without adopting its findings as measurements",
     "Archived first independent findings L03/L05/L07 in local commits; evidence audit pending",
-    "Baseline npm run check at b2cabad: 48/48 steps passed, exit 0; exclusions remain explicit; separate Mission Control check pending"
+    "Baseline npm run check at b2cabad: 48/48 steps passed, exit 0; exclusions remain explicit; separate Mission Control check pending",
+    "Independent L02 operations and L04 engineering archived; separate Mission Control baseline completed with two recorded failures",
+    "Phase A framing written and read: planning/01-understand.md; independent recognition test not yet run; L01 research archived"
   ],
   "active_work": [
-    "L01 intent and Phase A framing",
-    "L02 operations",
-    "L04 engineering",
-    "Baseline check suite in detached worktree at b2cabad"
+    "L06 evaluation",
+    "L08 reliability",
+    "L09 human factors",
+    "Research coverage and evidence state"
   ],
   "next_actions": [
     "Receive and preserve independent lane returns without sharing conclusions with unfinished lanes",
@@ -55,12 +57,12 @@
   ],
   "registers": {
     "research": "research/lanes.json",
-    "sources": "not yet assembled; source records will accompany each lane",
+    "sources": "research/source-index.json",
     "evidence": "research/repository-observations.md",
-    "claims": "not yet assembled",
-    "assumptions": "not yet assembled",
-    "contradictions": "not yet assembled",
-    "questions": "registers/open-questions.json",
+    "claims": "registers/claims.json",
+    "assumptions": "registers/claims.json",
+    "contradictions": "registers/contradictions.json",
+    "questions": "registers/open-questions.json and coverage/questions.json",
     "founder_decisions": "registers/open-questions.json",
     "candidates": "not yet generated",
     "decisions": "no architectural decisions selected",
@@ -69,26 +71,10 @@
     "implementation_graph": "pending reviewed specification",
     "build_progress": "not started",
     "tests": {
-      "baseline_process_session": 93835,
-      "command": "npm run check",
-      "commit": "b2cabad",
-      "worktree": ".worktrees/vision-baseline",
-      "log": "/tmp/agentvibe-vision-baseline-check.log",
-      "status": "suite passed; separate Mission Control check running",
-      "excluded_steps_recorded_in": "scripts/lib/check-suite.js",
-      "result": {
-        "passed_steps": 48,
-        "total_steps": 48,
-        "failed_steps": 0,
-        "exit_code": 0,
-        "seconds_sample": 243.6
-      },
-      "mission_control": {
-        "session": 71424,
-        "log": "/tmp/agentvibe-vision-baseline-mc.log",
-        "status": "running",
-        "setup": "bun install --frozen-lockfile --ignore-scripts --cwd mission-control"
-      }
+      "summary": "research/baseline-results.json",
+      "suite": "48/48 steps passed; 8 ledger shadow findings remain",
+      "mission_control": "427 passed, 2 failed; causes unverified",
+      "raw_evidence_directory": ".worktrees/vision-evidence"
     },
     "incidents": [],
     "migrations": [],
@@ -110,6 +96,7 @@
     "Historical repository reports contain retractions and stale runtime claims",
     "Available subagents share a model family; context independence is not statistical independence",
     "This session has unrestricted tools; a read-only brief is not enforced tool isolation",
-    "Initial git history path pattern failed to match nested source; corrected by inspecting branch trees"
+    "Initial git history path pattern failed to match nested source; corrected by inspecting branch trees",
+    "Baseline Mission Control has two failures: corpus-count assertion and ledger comparison timeout; causes unverified"
   ]
 }

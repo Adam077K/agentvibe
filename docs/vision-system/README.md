@@ -10,6 +10,16 @@ This package responds to the founder's **Autonomous Discovery, System Design, an
 - [Repository observations](research/repository-observations.md) separates observed files from historical reports.
 - [Change history](history.jsonl) records meaningful checkpoints.
 
+## Current artifacts
+
+Read the [Understand framing](planning/01-understand.md) for the ambition, invariants, tensions, nondelegable responsibilities and unproven hypotheses. It is a framing artifact, not an accepted architecture.
+
+Independent reports currently archived: [intent](research/L01-intent.md), [company operations](research/L02-operations.md), [architectures](research/L03-architectures.md), [engineering and terminals](research/L04-engineering.md), [memory](research/L05-memory.md), and [security](research/L07-security.md). The [lane register](research/lanes.json) records unfinished work. The [source index](research/source-index.json) locates citations; it does not claim their independent verification.
+
+The [structured directive contract](inputs/directive-contract.json) records the minimum package, phase exits, schemas and review dimensions. The [supplemental coverage](coverage/supplemental.json) retains vision, sector and lifecycle concerns outside the 566 questions. [Hypotheses and observations](registers/claims.json) and [contradictions](registers/contradictions.json) preserve uncertainty.
+
+The [baseline results](research/baseline-results.json) record 48/48 repository check steps passing and the separate Mission Control result of 427 passing and 2 failing tests. These are measurements of `b2cabad`, not verification of the new system. Raw logs remain in the ignored local evidence directory named by the records.
+
 The existing harness remains evidence and a possible source of reusable mechanisms. Its seven-engine roster, stack template, workflow vocabulary and dashboard do not constrain the new architecture. The new directive supplies the phase sequence and exit criteria where existing playbooks only describe bounded research questions and individual features.
 
 Both source documents are preserved in [inputs](inputs/provenance.json) from commit `331b4c97657c0d4c648633779eff7668503f7c06` on `vision-path-and-warroom-codex`. They have been read in full. The initial path-pattern search missed a nested file; branch-tree inspection resolved the gap. The [question register](coverage/questions.json) currently records all 53 fields and 566 questions as requiring research or design; parsing is not answering.

@@ -1,0 +1,923 @@
+[
+  {
+    "id": "S-325200553b80",
+    "url": "https://adk.dev/agents/",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-1cdb4183bf4f",
+    "url": "https://adk.dev/workflows/",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-8de31d5525fd",
+    "url": "https://arxiv.org/abs/2307.03172v3",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-9274f6ba4d4a",
+    "url": "https://arxiv.org/abs/2307.13854v4",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ec7ede4a4fcf",
+    "url": "https://arxiv.org/abs/2308.08155",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ca63ac166d9d",
+    "url": "https://arxiv.org/abs/2310.08560v2",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-a95d561effeb",
+    "url": "https://arxiv.org/abs/2404.07972v2",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-5882d9292e7d",
+    "url": "https://arxiv.org/abs/2405.15793v3",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-c70d6ad6e6d3",
+    "url": "https://arxiv.org/abs/2406.13352",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-e94011411190",
+    "url": "https://arxiv.org/abs/2407.12784",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-6b82feaf43b4",
+    "url": "https://arxiv.org/abs/2407.12784v1",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-daa6c7ff5310",
+    "url": "https://arxiv.org/abs/2503.03704v5",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-01d66b8c8183",
+    "url": "https://arxiv.org/abs/2503.13657v3",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-12aea111ef35",
+    "url": "https://arxiv.org/abs/2510.05244",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-5a2a10934daf",
+    "url": "https://arxiv.org/html/1606.03137v4",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-faa9c3accdd6",
+    "url": "https://arxiv.org/html/1712.05812v6",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-1303948cb881",
+    "url": "https://arxiv.org/html/2303.17760v2",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-1754d957914c",
+    "url": "https://arxiv.org/html/2308.00352v7",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-70244dbd073c",
+    "url": "https://arxiv.org/html/2407.16741v3",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-8567775a3868",
+    "url": "https://arxiv.org/html/2410.10813v2",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-c6dcc9f1916c",
+    "url": "https://arxiv.org/html/2501.13956v1",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-c94132f7ba90",
+    "url": "https://arxiv.org/html/2602.01146v2",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-0aeb178b1c28",
+    "url": "https://arxiv.org/html/2604.20006v1",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-72b4d4d36eeb",
+    "url": "https://arxiv.org/html/2608.28978v1",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-5f97cd27c480",
+    "url": "https://code.claude.com/docs/en/sandboxing",
+    "cited_by": [
+      "research/L04-engineering.md",
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ecea8146f24b",
+    "url": "https://csrc.nist.gov/pubs/sp/800/207/final",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-17e180af4fb8",
+    "url": "https://datatracker.ietf.org/doc/html/rfc9396",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-dad22c084573",
+    "url": "https://developers.openai.com/api/docs/guides/agents/guardrails-approvals",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ebdaea6b49c8",
+    "url": "https://developers.openai.com/api/docs/guides/agents/orchestration",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-c704c4f29c34",
+    "url": "https://discovery.ucl.ac.uk/id/eprint/749/1/2.2_rtprob.pdf",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-d642f5d629bd",
+    "url": "https://docs.crewai.com/v1.15.21/en/concepts/crews",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-3fced69968fd",
+    "url": "https://docs.crewai.com/v1.15.21/en/concepts/flows",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-399cf6369bd3",
+    "url": "https://docs.langchain.com/oss/python/langgraph/overview",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-99e58642fe77",
+    "url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-6ca3377c4912",
+    "url": "https://docs.openhands.dev/sdk/arch/overview",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-7e6ec8bd95c9",
+    "url": "https://docs.temporal.io/activity-definition",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-23a0b3fa7707",
+    "url": "https://docs.temporal.io/workflow-execution",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-d1b4253300bc",
+    "url": "https://docs.xtdb.com/about/time-in-xtdb.html",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ec986ed2ba70",
+    "url": "https://docs.xtdb.com/reference/main/sql/txs.html",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-c6e16ea62253",
+    "url": "https://geminicli.com/docs/cli/checkpointing/",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-c00da69e0718",
+    "url": "https://geminicli.com/docs/cli/sandbox/",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-34bb29cc9846",
+    "url": "https://geminicli.com/docs/core/",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-d9cd908d7c71",
+    "url": "https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-b60b47425db1",
+    "url": "https://git-scm.com/docs/git-worktree",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-1c8b2ca9caff",
+    "url": "https://github.blog/changelog/2026-06-26-read-only-actions-cache-for-untrusted-triggers/",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-eca37678e973",
+    "url": "https://github.com/openai/swarm",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-a7657266641a",
+    "url": "https://handbook.gitlab.com/handbook/people-group/general-onboarding/onboarding-buddies/",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-528125e192a3",
+    "url": "https://handbook.gitlab.com/handbook/resellers/channel-working-with-gitlab/",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-2c619d0f3c22",
+    "url": "https://help.asana.com/s/article/approvals",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-b8568ffca0d8",
+    "url": "https://iliad.stanford.edu/pdfs/publications/biyik2019asking.pdf",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-8bd28a29817f",
+    "url": "https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-faba42737ed8",
+    "url": "https://iris.unibocconi.it/handle/11565/4061792",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-21b0cd54d14a",
+    "url": "https://jaygalbraith.com/wp-content/uploads/2024/03/StarModel.pdf",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-31ee88a04291",
+    "url": "https://knowledge.hubspot.com/records/use-lifecycle-stages",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-05d46e263670",
+    "url": "https://learn.chatgpt.com/docs/agent-approvals-security",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-51f19553660c",
+    "url": "https://learn.chatgpt.com/docs/code-review",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ef5ba26f3f87",
+    "url": "https://learn.chatgpt.com/docs/non-interactive-mode",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-05f7482fa320",
+    "url": "https://learn.microsoft.com/en-us/agent-framework/overview/",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-22123361aff4",
+    "url": "https://legacy.sba.gov/business-guide/manage-your-business/close-or-sell-your-business",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ea3e8f6ca91c",
+    "url": "https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-1b6b251f1e5c",
+    "url": "https://metr.org/blog/2026-02-24-uplift-update/",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-cd7e36d6137a",
+    "url": "https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/core-concepts/architecture.html",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-419540fd82a4",
+    "url": "https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-51483c7a0338",
+    "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-f4661d558e6c",
+    "url": "https://people.mpi-sws.org/~dg/papers/csf16-caps.pdf",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-0164ec4d378b",
+    "url": "https://preprodcms.bain.com/insights/who-has-d-how-clear-decision-roles-enhance-organizational-performance/",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-9b322963f3ce",
+    "url": "https://raw.githubusercontent.com/odoo/documentation/19.0/content/applications/finance/accounting/bank/reconciliation.rst",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-f2ba24b15b46",
+    "url": "https://raw.githubusercontent.com/odoo/documentation/19.0/content/applications/inventory_and_mrp/purchase/manage_deals/control_bills.rst",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-0077eff80605",
+    "url": "https://scalingup.com/",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-7409e2acd490",
+    "url": "https://sre.google/sre-book/managing-incidents/",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-e7aff09ea2c8",
+    "url": "https://styleguide.mailchimp.com/voice-and-tone/",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-df6ba910c0fd",
+    "url": "https://support.zendesk.com/hc/en-us/articles/8263915942938-About-the-ticket-lifecycle-and-ticket-statuses",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-96b6da2811f2",
+    "url": "https://swe-agent.com/latest/background/aci/",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-358a0434e6ff",
+    "url": "https://web.mit.edu/Saltzer/www/publications/protection/Basic.html",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-b0cd135b965b",
+    "url": "https://webperso.info.ucl.ac.be/~avl/files/RE01.pdf",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-fa32b7ceb7b6",
+    "url": "https://www.aisi.gov.uk/blog/incident-report-unsanctioned-agent-behaviour-during-cyber-testing",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-ffc229d83891",
+    "url": "https://www.anthropic.com/engineering/building-effective-agents",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-7f7a70a67649",
+    "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-9fa759b72385",
+    "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-8537165d23c7",
+    "url": "https://www.anthropic.com/engineering/managed-agents",
+    "cited_by": [
+      "research/L03-architectures.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-f2c3df0f62f6",
+    "url": "https://www.anthropic.com/news/prompt-injection-defenses",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-9d653677d03c",
+    "url": "https://www.anthropic.com/research/sabotage-evaluations",
+    "cited_by": [
+      "research/L07-security.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-33750722544f",
+    "url": "https://www.consumerfinance.gov/archive/newsroom/consumer-financial-protection-bureau-fines-wells-fargo-100-million-widespread-illegal-practice-secretly-opening-unauthorized-accounts/",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-467406e1508d",
+    "url": "https://www.csc2.ncsu.edu/faculty/mpsingh/papers/mas/aamas-02-protocols.pdf",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-97a2364e3534",
+    "url": "https://www.eosworldwide.com/eos-model",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-af5413d7aefe",
+    "url": "https://www.frontiersin.org/journals/robotics-and-ai/articles/10.3389/frobt.2018.00015/full",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-854443268177",
+    "url": "https://www.gov.uk/service-manual/service-standard/point-1-understand-user-needs",
+    "cited_by": [
+      "research/L02-operations.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-70e3797e085a",
+    "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2019/01/Guidelines-for-Human-AI-Interaction-camera-ready.pdf",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-433a37bad4e6",
+    "url": "https://www.swebench.com/",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-dbd0851f1b60",
+    "url": "https://www.tbench.ai/news/terminal-bench-2-1",
+    "cited_by": [
+      "research/L04-engineering.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-dc43d689f9d9",
+    "url": "https://www.w3.org/TR/2013/REC-prov-dm-20130430/",
+    "cited_by": [
+      "research/L01-intent.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  },
+  {
+    "id": "S-0801e1ee8a70",
+    "url": "https://www.w3.org/TR/prov-dm/",
+    "cited_by": [
+      "research/L05-memory.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "researcher reports primary source access; independent source/claim audit pending",
+    "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; this is a locator index, not a source-quality verdict"
+  }
+]

@@ -1,0 +1,64 @@
+[
+  {
+    "id": "X01",
+    "kind": "Disagreement",
+    "positions": [
+      "Historical vision says truthful account is the only part worth building",
+      "Latest directive requires complete company system"
+    ],
+    "disposition": "Use account as cross-cutting invariant; full system remains target",
+    "authority": "latest founder directive",
+    "status": "resolved interpretation; architecture not selected"
+  },
+  {
+    "id": "X02",
+    "kind": "Disagreement",
+    "positions": [
+      "Historical source invites agent-count and roster decisions",
+      "Latest directive requires determining work before agents and allows eliminating familiar abstractions"
+    ],
+    "disposition": "Roster questions answered through responsibility allocation after alternatives, not as predetermined components",
+    "authority": "latest founder directive",
+    "status": "resolved process constraint"
+  },
+  {
+    "id": "X03",
+    "kind": "Disagreement",
+    "positions": [
+      "Historical source says no vendor will build truthful account",
+      "Existing provider products include traces, review and event records"
+    ],
+    "disposition": "Market exclusivity remains hypothesis; define/account-test comparable mechanisms",
+    "sources": [
+      "research/L03-architectures.md",
+      "research/L04-engineering.md"
+    ],
+    "status": "unresolved empirical scope"
+  },
+  {
+    "id": "X04",
+    "kind": "Disagreement",
+    "positions": [
+      "Temporal graph-memory system reports gains",
+      "Independent implementation reports graph pipeline below flat retrieval"
+    ],
+    "disposition": "Different extractors, tasks and controls; retain comparison as workload-dependent",
+    "sources": [
+      "research/L05-memory.md"
+    ],
+    "status": "unresolved, no universal winner"
+  },
+  {
+    "id": "X05",
+    "kind": "Disagreement",
+    "positions": [
+      "Detailed evidence and direct participation preserve accountability",
+      "Evidence volume and participation consume attention/privacy"
+    ],
+    "disposition": "Specify selective accountable disclosure and evaluate owner outcomes; no universal review ratio assumed",
+    "sources": [
+      "planning/01-understand.md"
+    ],
+    "status": "design tension"
+  }
+]

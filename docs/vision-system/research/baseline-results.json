@@ -23,5 +23,36 @@
       "Installed locked Mission Control dependencies after this suite had reached its ledger phase; earlier missing-dependency shadow findings are retained",
       "No bound independent QA approval for a new product is established by this baseline"
     ]
+  },
+  {
+    "id": "B02",
+    "kind": "Direct observation",
+    "subject_commit": "b2cabad",
+    "command": "npm run check:mc",
+    "cwd": ".worktrees/vision-baseline",
+    "exit_code": 1,
+    "passed_tests": 427,
+    "failed_tests": 2,
+    "total_tests": 429,
+    "assertions": 2919,
+    "test_files": 12,
+    "elapsed_seconds_sample": 218.95,
+    "setup": "bun install --frozen-lockfile --ignore-scripts --cwd mission-control",
+    "failures": [
+      {
+        "test": "GET /api/sessions performance against the real corpus",
+        "failure": "filesScanned received 2814, expected at least 2820 at live.test.ts:399",
+        "cause": "unverified; not a timing-assertion failure",
+        "timing_observed": "cold 4657 ms; second call 23 ms"
+      },
+      {
+        "test": "claim counts by verdict: MC summary equals ledger verify --offline",
+        "failure": "test timed out after 120000 ms",
+        "cause": "unverified"
+      }
+    ],
+    "raw_log": ".worktrees/vision-evidence/baseline-mission-control.log",
+    "sha256": "1a5d49403867e81071f991cba33c1d53651fb65d73d500545e32b5a529680b72",
+    "scope": "baseline evidence; no source-code fix attempted during discovery"
   }
 ]
