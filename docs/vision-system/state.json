@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "C-competing-architectures",
+  "phase": "D-independent-candidate-attacks",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-3-1789160853",
@@ -29,35 +29,36 @@
     "L06 evaluation, L08 reliability and L09 human factors archived; nine independent reports integrated",
     "L10 economics, L11 governance and L12 improvement reports read and archived; twelve independent lane reports integrated",
     "All fourteen independent lane reports archived and read; cross-lane comparison preserved without architecture selection",
-    "Six consequential current-policy and benchmark claims independently source-audited; L12 precision and caption corrections committed"
+    "Six consequential current-policy and benchmark claims independently source-audited; L12 precision and caption corrections committed",
+    "Three materially different candidates archived and fully read: records/cases, federated responsibility and adaptive coordination; each covers shared eight scenarios and candidate dimensions"
   ],
   "active_work": [
     {
-      "agent": "candidate_a_cases",
-      "artifact": "planning/candidates/A-records-and-cases.md",
-      "worktree": ".worktrees/candidate-a",
-      "branch": "docs/vision-candidate-a",
-      "status": "independent candidate construction"
+      "agent": "attack_technical",
+      "role": "read-only independent reviewer",
+      "scope": "technical, security, reliability, evaluation",
+      "subject_commit": "595f931",
+      "status": "reviewing"
     },
     {
-      "agent": "candidate_b_federation",
-      "artifact": "planning/candidates/B-federated-responsibility.md",
-      "worktree": ".worktrees/candidate-b",
-      "branch": "docs/vision-candidate-b",
-      "status": "independent candidate construction"
+      "agent": "attack_company_human",
+      "role": "read-only independent reviewer",
+      "scope": "business lifecycle, economics, human factors, legal/privacy/ethics",
+      "subject_commit": "595f931",
+      "status": "reviewing"
     },
     {
-      "agent": "candidate_c_adaptive",
-      "artifact": "planning/candidates/C-adaptive-coordination.md",
-      "worktree": ".worktrees/candidate-c",
-      "branch": "docs/vision-candidate-c",
-      "status": "independent candidate construction"
+      "agent": "attack_architecture_evidence",
+      "role": "read-only independent reviewer",
+      "scope": "foundational alternatives, evidence, coherence, buildability, changeability",
+      "subject_commit": "595f931",
+      "status": "reviewing"
     }
   ],
   "next_actions": [
-    "Produce records/cases, federated responsibility and adaptive coordination candidates; define every candidate dimension and simpler alternatives",
-    "Independently attack all candidates across required dimensions and failure cases before selection",
-    "Synthesize only after attacks; preserve dissent and explicit reopening conditions",
+    "Collect three independent candidate attack reports; preserve judgments unchanged via separate archival role",
+    "Map all33required attacks,14attackdimensions and15discoveredcases to actual review findings; close substantive gaps",
+    "Resolve blocking foundational candidate issues or synthesize a revised architecture and independently review relevant repairs",
     "Specify complete system and answer all coverage items with exact support",
     "Run independent architecture-neutral planning review; commit accepted package",
     "Build complete system in dependency order, preserving evidence and tests"
@@ -84,7 +85,7 @@
     "contradictions": "registers/contradictions.json",
     "questions": "registers/open-questions.json and coverage/questions.json",
     "founder_decisions": "registers/open-questions.json",
-    "candidates": "planning/candidates/ \u2014 three independently authored alternatives in progress; no selected architecture",
+    "candidates": "planning/candidates/A-records-and-cases.md; B-federated-responsibility.md; C-adaptive-coordination.md \u2014 all unselected",
     "decisions": "no architectural decisions selected",
     "risks": "not yet synthesized",
     "coverage": "coverage/questions.json, coverage/supplemental.json, coverage/discovered.json",
