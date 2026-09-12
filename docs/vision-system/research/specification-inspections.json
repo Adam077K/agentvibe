@@ -123,6 +123,15 @@
       "read_scope": "All 54 shared subcase names/stimuli and 159 distinct expected observations; common procedure, positive-control and execution-boundary fields read once and identical values verified. Six question bindings inspected semantically, including the two XSR-02 examples; all 394 bindings resolved structurally. Original 268 IDs, questions and answers unchanged by Git comparison.",
       "result": "Refreshed 268 root coverage verification projections with package-relative pointers. Specific verification cases are authored; independent XSR-02 closure is pending and every runtime test remains unexecuted.",
       "remaining": "Independent scoped and complete Phase G review, complete canonical amendment, construction and runtime/operating qualification."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/capabilities.json",
+      "subject": "d9652586a35940615cfa278f6cfaeca8df1e1124",
+      "sha256": "89c2ec9a6210c25ace58b1c7b847fa220d49e1d93599b5dae4500cb0a2dd47a2",
+      "read_scope": "All 11 complete fulfillment-route objects, binding contract and changed 03 route prose. Initial 03 diff output was truncated; entire changed source section was then read.",
+      "result": "Selected contract versions/routes and actual implementation, account, funding, jurisdiction, custody and performer unknowns are separated. All local contract paths resolve; all 116 source-answer objects are unchanged.",
+      "remaining": "Independent XSR-03 recheck; canonical version-2 migration must preserve route bindings. No implementation or actual account admission."
     }
   ]
 }

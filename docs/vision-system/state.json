@@ -53,7 +53,8 @@
     "Independent cross-scope review at51de3b4 archivedc5cfc31:643exactjoins resolve,461non-authored answers semantically read; XSR01–03 bounded issues. RootXSR01clarificationd199316 pending independent recheck; no wholeG.",
     "XSR01 independently closed atd199316; recheck source1c54e006 archived. Actual interview/pilot/provider/professional/owner evidence and runtime remain unexecuted.",
     "F-coverage-components-01 at2407bc1 archivedce05f49: reviewer read643substantive answers,9×19components and24families; no new foundational blocker. Does not close focusedXSR02/03 or pendingcanonical11/FI12.",
-    "Integrated early CS1 prose 95616bc and XSR-02 repair dd17e17. Root read complete 11 proposal and all 54 shared verification cases/159 observations; all 394 joins resolve and 268 original answer bodies are unchanged. Full canonical registry and independent review remain pending."
+    "Integrated early CS1 prose 95616bc and XSR-02 repair dd17e17. Root read complete 11 proposal and all 54 shared verification cases/159 observations; all 394 joins resolve and 268 original answer bodies are unchanged. Full canonical registry and independent review remain pending.",
+    "Integrated XSR-03 route repair a66f2ae; root read all 11 route objects and changed 03 prose. Selected contracts and unmet operating prerequisites agree at the inspected boundary; independent recheck pending."
   ],
   "active_work": [
     {
@@ -63,7 +64,7 @@
     },
     {
       "agent": "attack_technical",
-      "scope": "Author XSR-03 selected-route consistency and concrete Postmark profile/metadata. XSR-02 repair is integrated with root projections refreshed; independent recheck pending."
+      "scope": "Finish concrete Postmark ingress, event identity, terms and metadata amendment. XSR-02/03 repairs are integrated and root-inspected; independent rechecks remain pending."
     },
     {
       "agent": "attack_architecture_evidence",

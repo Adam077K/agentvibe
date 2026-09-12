@@ -800,9 +800,14 @@
     "title": "Fulfillment routes retain unresolved vendor choice after selection",
     "severity": "low",
     "owner": "orchestrator integration; isolated author and independent reviewer",
-    "status": "Open; bounded author repair pending",
+    "status": "Author correction d9652586 integrated as a66f2ae; root read all 11 routes and changed prose. Independent recheck pending.",
     "required_contract": "R-routes delegate to selected versioned IC contracts; preserve unimplemented and actual-account/endpoint/funding/engagement unknowns.",
-    "resolution": null,
+    "resolution": {
+      "source_commit": "d9652586a35940615cfa278f6cfaeca8df1e1124",
+      "root_commit": "a66f2ae",
+      "artifact": "planning/specification/capabilities.json#/fulfillment_routes",
+      "scope": "11 routes delegate to selected specification contracts and explicit remaining admission facts; no actual availability or provider authorization."
+    },
     "independent_recheck": null,
     "implementation_evidence": null
   }
