@@ -32,8 +32,27 @@
     "Six consequential current-policy and benchmark claims independently source-audited; L12 precision and caption corrections committed"
   ],
   "active_work": [
-    "Construct three materially different foundational candidates with equal full-lifecycle scope",
-    "Preserve comparative criteria, uncertainty and research disagreements"
+    {
+      "agent": "candidate_a_cases",
+      "artifact": "planning/candidates/A-records-and-cases.md",
+      "worktree": ".worktrees/candidate-a",
+      "branch": "docs/vision-candidate-a",
+      "status": "independent candidate construction"
+    },
+    {
+      "agent": "candidate_b_federation",
+      "artifact": "planning/candidates/B-federated-responsibility.md",
+      "worktree": ".worktrees/candidate-b",
+      "branch": "docs/vision-candidate-b",
+      "status": "independent candidate construction"
+    },
+    {
+      "agent": "candidate_c_adaptive",
+      "artifact": "planning/candidates/C-adaptive-coordination.md",
+      "worktree": ".worktrees/candidate-c",
+      "branch": "docs/vision-candidate-c",
+      "status": "independent candidate construction"
+    }
   ],
   "next_actions": [
     "Produce records/cases, federated responsibility and adaptive coordination candidates; define every candidate dimension and simpler alternatives",
@@ -65,7 +84,7 @@
     "contradictions": "registers/contradictions.json",
     "questions": "registers/open-questions.json and coverage/questions.json",
     "founder_decisions": "registers/open-questions.json",
-    "candidates": "not yet generated",
+    "candidates": "planning/candidates/ \u2014 three independently authored alternatives in progress; no selected architecture",
     "decisions": "no architectural decisions selected",
     "risks": "not yet synthesized",
     "coverage": "coverage/questions.json, coverage/supplemental.json, coverage/discovered.json",
