@@ -96,7 +96,7 @@
         "Owner purpose versus inferred operating choices",
         "Customer value, obligations, institutional capacity and resource economics"
       ],
-      "status": "active specification authoring; draft not accepted",
+      "status": "Initial contracts integrated; full schema/coverage and independent complete-plan review remain",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -104,7 +104,11 @@
       ],
       "author": "repair_company_foundations",
       "reviewer": null,
-      "answer_locations": []
+      "answer_locations": [
+        "planning/specification/03-company-capabilities.md",
+        "planning/specification/04-human-operation.md",
+        "planning/specification/capabilities.json"
+      ]
     },
     {
       "id": "S02",
@@ -297,13 +301,13 @@
         "Provider-independent durable continuation and refusal",
         "Fixed versus adaptive paths, context-limited temporary executors and independent judges"
       ],
-      "status": "remaining Phase F specification work; no answer or implementation claimed",
+      "status": "active specification authoring; draft not accepted",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
         "Independent complete-plan review before implementation"
       ],
-      "author": null,
+      "author": "repair_company_foundations",
       "reviewer": null,
       "answer_locations": []
     },
@@ -549,13 +553,13 @@
         "Transitive evidence dependencies and claim-versus-cause distinctions",
         "Independent outcome/process/account tests, negative controls, repeated trials and evaluator drift"
       ],
-      "status": "remaining Phase F specification work; no answer or implementation claimed",
+      "status": "active specification authoring; draft not accepted",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
         "Independent complete-plan review before implementation"
       ],
-      "author": null,
+      "author": "repair_company_foundations",
       "reviewer": null,
       "answer_locations": []
     },
@@ -652,7 +656,7 @@
         "Recoverable effects and obligations, conflict domains, deletion/revocation fencing",
         "Threat model, privacy/professional determinations, incidents, backup and verified restore"
       ],
-      "status": "active specification authoring; draft not accepted",
+      "status": "Initial kernel/authority contracts integrated; focused proof/encoding amendment and independent review pending",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -660,7 +664,10 @@
       ],
       "author": "attack_technical",
       "reviewer": null,
-      "answer_locations": []
+      "answer_locations": [
+        "planning/specification/01-contract-kernel.md",
+        "planning/specification/02-authority-recovery.md"
+      ]
     },
     {
       "id": "S06",
@@ -733,7 +740,7 @@
         "Owner competence and attention without surveillance or full-time review",
         "Terminal, intervention, approvals, evidence, absence recovery and multiple legitimate owners"
       ],
-      "status": "active specification authoring; draft not accepted",
+      "status": "Initial contracts integrated; full schema/coverage and independent complete-plan review remain",
       "dependencies": [
         "S1.0 selected logical architecture and retained D2 obligations",
         "Compatible kernel, domain and common-record contracts",
@@ -741,7 +748,11 @@
       ],
       "author": "repair_company_foundations",
       "reviewer": null,
-      "answer_locations": []
+      "answer_locations": [
+        "planning/specification/03-company-capabilities.md",
+        "planning/specification/04-human-operation.md",
+        "planning/specification/capabilities.json"
+      ]
     },
     {
       "id": "S07",

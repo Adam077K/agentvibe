@@ -38,37 +38,34 @@
     "Read complete E1 selection and status amendment; adopt S1.0 after independent review reconciliation, with ten explicit design decisions and empirical uncertainties retained",
     "N01 native subscription execution feasibility sourced and archived; three selected native-control claim groups independently source-audited, no model invocation or isolation test",
     "Architecture-neutral Phase G acceptance protocol formed independently before active specification drafts; archival pending, no planning acceptance",
-    "Frozen independent Phase G acceptance protocol archived at planning/reviews/G-acceptance-protocol.md; no acceptance of current drafts"
+    "Frozen independent Phase G acceptance protocol archived at planning/reviews/G-acceptance-protocol.md; no acceptance of current drafts",
+    "Integrated kernel/authority 16a222f and company/human cb1eac4 specifications; orchestrator inspected substantive contracts and verified 46 catalog entries against author schema, 116 unique source IDs; no substantive full-coverage or runtime pass"
   ],
   "active_work": [
     {
       "agent": "attack_technical",
-      "artifacts": [
-        "planning/specification/01-contract-kernel.md",
-        "planning/specification/02-authority-recovery.md"
-      ],
-      "scope": "Concrete common contracts, runtime substrate choice, authority and recovery"
+      "scope": "Focused receipt/hash cycle and exact nftables encoding amendment to integrated 01/02; S03/S07 task follows"
     },
     {
       "agent": "repair_company_foundations",
+      "scope": "Author S02/S04 execution, agents, skills, knowledge/context/evidence/evaluation and 268 substantive source answers in new isolated worktree",
       "artifacts": [
-        "planning/specification/03-company-capabilities.md",
-        "planning/specification/04-human-operation.md",
-        "planning/specification/capabilities.json"
-      ],
-      "scope": "Complete capability lifecycle and human/operator contracts"
-    },
-    {
-      "agent": "orchestrator",
-      "scope": "Cross-contract integration, decision/coverage/state governance; remaining Phase F tracks and independent review"
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ]
     },
     {
       "agent": "attack_architecture_evidence",
-      "scope": "Read-only source audit of PostgreSQL durability proof, nftables time/gate semantics and concrete deployment prerequisites; report pending"
+      "scope": "Archive independent substrate-control source audit in separate scribe turn, then independent review"
+    },
+    {
+      "agent": "orchestrator",
+      "scope": "Integrate and verify contracts, preserve findings/state, complete schema/coverage/build work and independent review"
     }
   ],
   "next_actions": [
-    "Integrate concrete kernel/authority and company/human specifications; reconcile shared IDs, envelopes, boundaries and state contracts",
+    "Integrate focused kernel/authority amendment and independent substrate source audit; assign S03/S07 integrations/economics/improvement/build specifications",
     "Receive independent substrate source audit; integrate author corrections and verify final committed type/startup/durability/native-cost contracts",
     "Complete work/agent/skills, context/evidence/evaluations, integrations/capacity, controlled improvement, deployment/build and all required schemas",
     "Answer 566 original, 62 supplemental and 15 discovered concerns with exact substantive support and planned implementation pointers; maintain full capability paths",
@@ -117,7 +114,7 @@
     "capability_requirements": "coverage/capability-requirements.json; 46 decomposed outcome requirements, not implemented capabilities",
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
     "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md",
-    "specification_findings": "registers/specification-findings.json; seven cross-contract observations, final author revisions not yet verified",
+    "specification_findings": "registers/specification-findings.json; ten cross-contract observations with scoped specification evidence, no runtime completion",
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance"
   },
   "constraints": [
