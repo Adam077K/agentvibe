@@ -30,6 +30,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-2a565beb5c1c",
+    "url": "https://ajv.js.org/json-schema.html",
+    "cited_by": [
+      "planning/specification/01-contract-kernel.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
     "id": "S-0978808222ac",
     "url": "https://argo-rollouts.readthedocs.io/en/stable/features/analysis/",
     "cited_by": [
@@ -440,6 +450,46 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-7eed998beaf9",
+    "url": "https://aws.amazon.com/ebs/pricing/",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-e0bded851e40",
+    "url": "https://aws.amazon.com/ec2/pricing/on-demand/",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-5a608d5062fc",
+    "url": "https://aws.amazon.com/vpc/pricing/",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-3a962005addd",
+    "url": "https://chrony-project.org/doc/4.6/chrony.conf.html",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
     "id": "S-f398de2f8336",
     "url": "https://cli.github.com/manual/gh_auth_status",
     "cited_by": [
@@ -644,6 +694,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-d54921b020c2",
+    "url": "https://developers.cloudflare.com/time-services/nts/",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
     "id": "S-dad22c084573",
     "url": "https://developers.openai.com/api/docs/guides/agents/guardrails-approvals",
     "cited_by": [
@@ -695,6 +755,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-99dfbcfd4479",
+    "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_disable-perms.html",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
     "id": "S-9299941ca0b0",
     "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html",
     "cited_by": [
@@ -703,6 +773,16 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-93be66fa0aaa",
+    "url": "https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/regions.html",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-d642f5d629bd",
@@ -743,6 +823,37 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-db62b8f8ab6d",
+    "url": "https://docs.kernel.org/core-api/timekeeping.html",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-f70effccb57f",
+    "url": "https://docs.kernel.org/networking/nf_flowtable.html",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-993ae883569f",
+    "url": "https://docs.kernel.org/networking/segmentation-offloads.html",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md",
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-fde9dfb8a729",
@@ -808,7 +919,8 @@
     "id": "S-037177a4a0a8",
     "url": "https://docs.stripe.com/api/idempotent_requests",
     "cited_by": [
-      "research/L08-reliability.md"
+      "research/L08-reliability.md",
+      "planning/specification/02-authority-recovery.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
@@ -1004,6 +1116,46 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-a67c9c6498a8",
+    "url": "https://github.com/panva/openid-client",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-b4007512b3e9",
+    "url": "https://github.com/postgres/postgres/blob/REL_18_STABLE/src/backend/replication/syncrep.c",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-2da371fe5bae",
+    "url": "https://github.com/torvalds/linux/blob/master/net/netfilter/nft_meta.c",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-d820b53b5b89",
+    "url": "https://github.com/torvalds/linux/blob/v6.12/net/netfilter/nft_meta.c",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-e6a5851fb103",
@@ -1353,6 +1505,27 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-0defde7f202b",
+    "url": "https://netfilter.org/projects/nftables/manpage.html",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md",
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-08e2f31281e3",
+    "url": "https://nodejs.org/en/about/previous-releases",
+    "cited_by": [
+      "planning/specification/01-contract-kernel.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
     "id": "S-e15662ab40ef",
     "url": "https://openai.com/policies/row-terms-of-use/",
     "cited_by": [
@@ -1443,6 +1616,16 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-d2f5ad2bfb8d",
+    "url": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/netfilter/nft_meta.c",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
     "id": "S-227aa6dd9926",
     "url": "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/",
     "cited_by": [
@@ -1491,6 +1674,17 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-20a872fd22d1",
+    "url": "https://smallstep.com/docs/step-ca/certificate-authority-server-production/",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md",
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-7409e2acd490",
@@ -1684,6 +1878,16 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-d8f988d7add5",
+    "url": "https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation#Matching_by_time",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-fa32b7ceb7b6",
@@ -1997,6 +2201,66 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-0211aed3cfa3",
+    "url": "https://www.kernel.org/category/releases.html",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-3e9e87f4b4b4",
+    "url": "https://www.keycloak.org/docs/latest/server_admin/",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-85173920e197",
+    "url": "https://www.keycloak.org/downloads",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-e154ac48b200",
+    "url": "https://www.keycloak.org/server/all-config",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-f3b775ab590f",
+    "url": "https://www.keycloak.org/server/db",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-6b11eaa088e6",
+    "url": "https://www.keycloak.org/server/enabletls",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
     "id": "S-09e0f592eec1",
     "url": "https://www.lri.fr/~mbl/ENS/CSCW/2017/papers/Winograd-HCI87.pdf",
     "cited_by": [
@@ -2045,6 +2309,27 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-51d09030b927",
+    "url": "https://www.netfilter.org/projects/nftables/files/nftables-1.1.3.tar.xz",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md",
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-8ef7f20336bf",
+    "url": "https://www.netnod.se/nts/network-time-security",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-54dbc1541342",
@@ -2106,11 +2391,72 @@
     "id": "S-d8137edae9e4",
     "url": "https://www.postgresql.org/docs/18/continuous-archiving.html",
     "cited_by": [
-      "research/L08-reliability.md"
+      "research/L08-reliability.md",
+      "planning/specification/02-authority-recovery.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-773a705a10f4",
+    "url": "https://www.postgresql.org/docs/18/hot-standby.html",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-dc5244bbc751",
+    "url": "https://www.postgresql.org/docs/18/hot-standby.html#HOT-STANDBY-CONFLICT",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-ccc134fffe01",
+    "url": "https://www.postgresql.org/docs/18/runtime-config-wal.html",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-082eb98f338c",
+    "url": "https://www.postgresql.org/docs/18/sql-select.html",
+    "cited_by": [
+      "planning/specification/01-contract-kernel.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-dd9531fbac9f",
+    "url": "https://www.postgresql.org/docs/18/transaction-iso.html",
+    "cited_by": [
+      "planning/specification/01-contract-kernel.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-e2906621865c",
+    "url": "https://www.postgresql.org/docs/18/tutorial-transactions.html",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-3c3563c88013",
@@ -2126,11 +2472,33 @@
     "id": "S-4beae8d416dc",
     "url": "https://www.postgresql.org/docs/18/warm-standby.html",
     "cited_by": [
-      "research/L08-reliability.md"
+      "research/L08-reliability.md",
+      "planning/specification/01-contract-kernel.md",
+      "planning/specification/02-authority-recovery.md"
     ],
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-dcbd85419840",
+    "url": "https://www.postgresql.org/docs/18/warm-standby.html#SYNCHRONOUS-REPLICATION",
+    "cited_by": [
+      "research/reviews/2026-09-12-substrate-controls.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-544607d71e2f",
+    "url": "https://www.postgresql.org/support/versioning/",
+    "cited_by": [
+      "planning/specification/01-contract-kernel.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-38efd342c8fe",
@@ -2141,6 +2509,26 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-953dba0851e1",
+    "url": "https://www.rfc-editor.org/rfc/rfc8785.html",
+    "cited_by": [
+      "planning/specification/01-contract-kernel.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
+  },
+  {
+    "id": "S-886568d8f77b",
+    "url": "https://www.rfc-editor.org/rfc/rfc9562.html",
+    "cited_by": [
+      "planning/specification/01-contract-kernel.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   },
   {
     "id": "S-9f0fa2af5588",
@@ -2213,5 +2601,15 @@
     "access_date_reported": "2026-09-12",
     "verification": "researcher reports primary source access; see selected-claim audit separately; no blanket verification",
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
+  },
+  {
+    "id": "S-d41c4b487466",
+    "url": "https://www.wireguard.com/quickstart/",
+    "cited_by": [
+      "planning/specification/02-authority-recovery.md"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "Author or independent source auditor reports source access; see exact cited contract/audit for claim scope, no blanket runtime verification",
+    "metadata_location": "Cited artifact records source/version and limits; this is a locator index only"
   }
 ]
