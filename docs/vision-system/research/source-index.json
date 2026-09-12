@@ -1928,6 +1928,22 @@
     "metadata_location": "publication/version dates, source type, incentives and transfer limits are recorded in cited lane reports; locator index only"
   },
   {
+    "id": "S-1ffd71e340f7",
+    "url": "https://www.nobelprize.org/uploads/2018/06/ostrom_lecture.pdf",
+    "cited_by": [
+      "research/repository-observations.md#r14--published-ostrom-source-replaces-draft-for-future-reliance"
+    ],
+    "access_date_reported": "2026-09-12",
+    "verification": "root opened title/introduction and PDF page15; published primary source supports named institutional mechanisms; no full-text or company-outcome validation",
+    "metadata_location": "research/repository-observations.md R14",
+    "source_date": "2009-12-08 lecture; 2010 collected publication according to publisher landing-page indexed text",
+    "type": "primary author lecture published by Nobel Foundation",
+    "incentive": "author explains own research program",
+    "confidence": "high for inspected source content; automated-company applicability unvalidated",
+    "expiry": "historical source does not expire; revalidate transfer at design/review",
+    "invalidation": "contrary passage, incorrect pagination/version or failure of transfer assumptions"
+  },
+  {
     "id": "S-dc322d5d5f13",
     "url": "https://www.omg.org/spec/CMMN/1.1/PDF",
     "cited_by": [
