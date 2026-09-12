@@ -1,0 +1,2432 @@
+{
+  "schema_version": "SL-1.0",
+  "base_commit": "091bf2f",
+  "kind": "Supplemental vision, sector, lifecycle and discovered-case specification trace",
+  "status": "Authored; independent complete-plan review and implementation pending",
+  "decision": "Applies existing S1 contracts; sector labels are replaced by actual activity admission, not legal clearance or a permanent worker roster.",
+  "records": [
+    {
+      "id": "VISION-01",
+      "concern": "responsibility for unobserved work",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Responsibility follows accepted actual mandates and surviving duties. Exact intent, decisions, attempts, native observations, independent judgments, costs and omissions form the owner account. An unfamiliar authorized reader must reconstruct the consequential result and next duty; an action log alone cannot satisfy responsibility.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/evidence/accounts.ts",
+      "test": {
+        "id": "SL-VISION-01",
+        "scenario": "An absent owner reconstructs a lucky success with unsupported original reasoning and an unpaid remedy; preserve all three distinctions.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-02",
+      "concern": "preserving intent across handovers",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Preserve original intent and exact endorsed interpretation, exclusions, taste examples, reasons and changes. ContextManifest and Continuation bind exact versions and losses; actual scope/understanding and responsibility acceptance are distinct from receipt. Current restrictions qualify resumed context without rewriting historical purpose.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C05",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/work/handoff.ts",
+      "test": {
+        "id": "SL-VISION-02",
+        "scenario": "Change provider and owner delegate after a misleading summary; recover the excluded audience and retain the old custodian until accepted transfer.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-03",
+      "concern": "truthful account including negative space",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Account for attempted, failed, skipped, inaccessible, unsearched, stale, contested and deliberately omitted work. Give omissions reason, selecting authority, affected claims and available originals. Separate unobservable influence from asserted causal explanation; deleted evidence limits reconstruction honestly.",
+      "component_ids": [
+        "S1-C05",
+        "S1-C06",
+        "S1-C09"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss",
+        "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/evidence/accounts.ts",
+      "test": {
+        "id": "SL-VISION-03",
+        "scenario": "A favorable summary omits a failed trial and privately inaccessible source; reveal the omission and access limit without leaking its protected content.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-04",
+      "concern": "cheap reversible attempts and responsible closure",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Use finite reversible discovery, explicit falsifiers and actual resource reservations before commitments. Preparation with unknown demand is useful, but price, service and institutional prerequisites strengthen before offering. Closure performs or transfers residual duties and data obligations. Cheap attempts are a hypothesis to test against complete cost, not an architectural fact.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#discovery-to-an-accepted-offer",
+        "03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-VISION-04",
+        "scenario": "Investigate a first venture without fabricated demand, then abandon after evidence defeats its premise while completing a real remaining refund.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-05",
+      "concern": "consequence-bounded autonomy",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Classify consequence by actual effect dimensions, interactions, reversibility, disclosure, money and blast radius. Current attenuated grants, exact prerequisites and witnessed release bound each effect. Performance history may change review sampling within the existing ceiling; it cannot expand maximum exposure.",
+      "component_ids": [
+        "S1-C04"
+      ],
+      "contract_refs": [
+        "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/authority/grants.ts",
+      "test": {
+        "id": "SL-VISION-05",
+        "scenario": "A historically successful producer requests greater spend and a new recipient; old authority cannot authorize either.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-06",
+      "concern": "owner competence",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "ParticipationPlan deliberately reserves authentic customer, taste, finance and intervention practice, selected ordinary/adverse originals and unfamiliar delayed transfer. Consent, accessibility, observed burden and contestation qualify the mechanism. Decline or changed taste is not general incompetence; a material domain gap changes only dependent work.",
+      "component_ids": [
+        "S1-C07",
+        "S1-C09"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#attention-and-practiced-competence"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/participation.ts",
+      "test": {
+        "id": "SL-VISION-06",
+        "scenario": "Reduce routine review yet test an unfamiliar adverse intervention; agreement with model advice does not count as understanding.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-07",
+      "concern": "attention limit and declining work",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Adopt actual minutes, interruption limits and availability; reserve service and recovery capacity and account for shifted customer/expert burden. Batch genuinely parallel decisions and decline new unsupported work while preserving existing duties. Repeated reminders do not manufacture more owner capacity.",
+      "component_ids": [
+        "S1-C02",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#decision-timing-and-no-answer-behavior",
+        "07-integrations-capacity.md#6-capacity-money-and-scheduling"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/participation.ts",
+      "test": {
+        "id": "SL-VISION-07",
+        "scenario": "A large incoming batch exhausts the chosen review window; stop discretionary intake without approving silence or starving due service.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-08",
+      "concern": "concentrated accountability and unpleasant decisions",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Keep actual outcome sponsors, joint decision rules, hard choices and real alternatives visible. A small team still owns unpleasant tradeoffs and may need competent external performers or independent custody. Software neither distributes accountability among fictional officers nor pretends all complementary human capacity can be eliminated.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#collaboration-absence-succession-and-departure"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/responsibility.ts",
+      "test": {
+        "id": "SL-VISION-08",
+        "scenario": "A partner leaves during a disputed obligation; record the legitimate decision and actual accepted substitute, not a renamed agent owner.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-09",
+      "concern": "nondelegable wanting and promises, relationships and taste",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Wanting, identity, values and taste remain with the legitimate person. Promises require actual standing and exact terms, and some relationship/service work needs actual human performance. The system prepares evidence and options and executes admitted routines without impersonating personal commitment or replacing a promised human conversation.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#operator-jobs-and-authority",
+        "07-integrations-capacity.md#4-communication-and-independent-continuity"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/direction/intent.ts",
+      "test": {
+        "id": "SL-VISION-09",
+        "scenario": "A model drafts an attractive new value and claims the founder personally heard a customer; neither becomes an endorsed fact or fulfilled relationship.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "VISION-10",
+      "concern": "failure if checking scales with output, no net value, or owner cannot explain business",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Evaluate useful whole-company outcomes, truthful account, rights, competence, attention and total economics separately against credible S0. Reopen or replace the design if verification labor scales intolerably, no net value appears, due service fails or the owner cannot explain and intervene. The system cannot declare success from throughput, documentation or safe refusal alone.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C06"
+      ],
+      "contract_refs": [
+        "08-improvement-implementation.md#8-baseline-comparison-transition-and-remaining-obligations"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/evals/whole-company/comparison.ts",
+      "test": {
+        "id": "SL-VISION-10",
+        "scenario": "S1 produces more records while S0 delivers equivalent duties with lower owner burden; report S0 advantage and trigger the chosen replacement decision.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-01",
+      "concern": "developer tools",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual developer tools activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify supported operating systems, repository access and artifact distribution. Success requires install/build/update/uninstall on an actual supported environment with recoverable customer state; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-01",
+        "scenario": "Prevent this false acceptance: malicious repository or update loses customer code. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-02",
+      "concern": "consumer apps",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual consumer apps activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual audience, personal data, consent and recurring terms. Success requires usable accessible onboarding, service, export and cancellation with real support; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-MAIL-IN,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-02",
+        "scenario": "Prevent this false acceptance: an apparently successful signup leaves a person unable to cancel. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-03",
+      "concern": "business software",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual business software activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify organization administrator authority, tenant boundaries and sold service terms. Success requires entitled workflows, isolation, customer export and continuing service; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-03",
+        "scenario": "Prevent this false acceptance: one tenant receives another organization’s records. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-04",
+      "concern": "data products and analysis",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual data products and analysis activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify dataset provenance, permitted uses, sensitive inferences and freshness. Success requires licensed reproducible scoped analysis with denominators and correction path; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-SEARCH,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-04",
+        "scenario": "Prevent this false acceptance: a biased sample is sold as comprehensive market truth. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-05",
+      "concern": "APIs and infrastructure",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual APIs and infrastructure activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify customer workload, dependency availability, secrets and continuity promise. Success requires contract-compatible live responses, measured capacity, migration and recovery; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-05",
+        "scenario": "Prevent this false acceptance: an accepted deploy acknowledges requests while losing customer data. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-06",
+      "concern": "games and interactive",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual games and interactive activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify audience age, purchases, licensed assets and interaction moderation. Success requires real playable artifact and purchase/support/refund behavior; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-06",
+        "scenario": "Prevent this false acceptance: in-app purchase succeeds without delivering an entitlement. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-07",
+      "concern": "research and synthesis",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual research and synthesis activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify question scope, source access, incentives and evidence limitations. Success requires source-backed supported answer with rival interpretations and truthful gaps; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-SEARCH,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-07",
+        "scenario": "Prevent this false acceptance: many repeated sources are miscounted as independent corroboration. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-08",
+      "concern": "education and courseware",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual education and courseware activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify learner needs, age/accessibility and claimed educational outcome. Success requires actual accessible instruction and assessed transfer under competent pedagogy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-08",
+        "scenario": "Prevent this false acceptance: completion clicks are mistaken for learning. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-09",
+      "concern": "publishing, writing and media",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual publishing, writing and media activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify rights, attribution, factual claims, editorial responsibility and audience. Success requires actual publishable medium, clearance and correction process; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-09",
+        "scenario": "Prevent this false acceptance: an image description is accepted as a finished licensed image. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-10",
+      "concern": "consulting and advisory",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual consulting and advisory activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify client problem, conflicts, competence and scope of any regulated advice. Success requires accepted professional work with supported limits and client deliverables; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-10",
+        "scenario": "Prevent this false acceptance: a polished packet substitutes for unavailable competent advice. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-11",
+      "concern": "design services",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual design services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify taste authority, medium, asset rights, accessibility and acceptance. Success requires rendered deliverables inspected in actual medium and usable by the client; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PUBLIC; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-11",
+        "scenario": "Prevent this false acceptance: an inaccessible interaction passes a static screenshot review. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-12",
+      "concern": "marketing and content services",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual marketing and content services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify audience/contact basis, claim support, consent and publication rights. Success requires actual supported content/placement plus coherent response measurement; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-MAIL-OUT,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-12",
+        "scenario": "Prevent this false acceptance: campaign automation contacts suppressed people. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-13",
+      "concern": "recruiting",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual recruiting activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify candidate privacy, declared criteria, conflicts and applicant burden. Success requires actual contestable selection and accepted engagement under legitimate authority; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-13",
+        "scenario": "Prevent this false acceptance: an unreviewed inference about a candidate replaces job evidence. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-14",
+      "concern": "bookkeeping",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual bookkeeping activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual principal, accounts, periods and qualified treatment. Success requires supported reconciled entries and actual required close/filing evidence; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-BOOKS,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-14",
+        "scenario": "Prevent this false acceptance: a balanced fabricated adjustment hides missing transactions. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-15",
+      "concern": "translation and localization",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual translation and localization activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify source rights, intended meaning, audience and required competence. Success requires actual translated medium with critical numbers/terms and uncertainty preserved; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-15",
+        "scenario": "Prevent this false acceptance: translation adds a binding guarantee absent from the source. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-16",
+      "concern": "customer support services",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual customer support services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify sold terms, entitlement, data access and response/remedy authority. Success requires actual helpful response, repair/refund or legitimate reasoned disposition; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-MAIL-IN,IC-MAIL-OUT,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-16",
+        "scenario": "Prevent this false acceptance: closing a ticket conceals an unresolved customer right. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-17",
+      "concern": "digital goods",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual digital goods activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify rights, entitlement, compatible format and refund terms. Success requires usable entitled asset and renewal/removal/export support; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-PAY,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-17",
+        "scenario": "Prevent this false acceptance: payment delivers an unusable or unlicensed download. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-18",
+      "concern": "print-on-demand and dropship",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual print-on-demand and dropship activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual supplier, stock, product claims, shipping and remedy responsibility. Success requires verified quality/capacity, actual dispatch/receipt and customer remedy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-18",
+        "scenario": "Prevent this false acceptance: supplier acknowledgement is mistaken for delivery. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-19",
+      "concern": "marketplaces",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual marketplaces activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify each party’s standing, platform duties, payment custody and dispute rules. Success requires actual matched transaction, service evidence and accessible redress; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-PUBLIC,IC-PAY,IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-19",
+        "scenario": "Prevent this false acceptance: platform disclaimers erase a real continuing customer duty. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-20",
+      "concern": "subscription boxes",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual subscription boxes activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify stock, supplier reliability, renewal consent and fulfillment windows. Success requires each recurring physical delivery and cancellation/refund reconciliation; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PAY; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-20",
+        "scenario": "Prevent this false acceptance: a billing reset renews an unsupported delivery promise. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-21",
+      "concern": "wholesale",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual wholesale activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify specifications, counterparties, inventory, credit and delivery terms. Success requires actual inspected goods, contract performance and reconciled settlement; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-21",
+        "scenario": "Prevent this false acceptance: a supplier invoice is accepted as conforming goods. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-22",
+      "concern": "physical retail",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual physical retail activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify premises, actual staff, inventory, access and customer protections. Success requires real staffed service, stock/cash reconciliation and returns; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-22",
+        "scenario": "Prevent this false acceptance: software reports open while no capable staff are present. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-23",
+      "concern": "finance: lending, advice, brokerage and payments",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual finance: lending, advice, brokerage and payments activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify precise activity, jurisdiction, regulated standing, conflicts and client exposure. Success requires actual eligible professional/native performance and required client/economic controls; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-23",
+        "scenario": "Prevent this false acceptance: a model or payment account is treated as licensed financial standing. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-24",
+      "concern": "insurance",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual insurance activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify underwriting/intermediation activity, actual authority and coverage terms. Success requires competent actual policy/claim service and evidence of binding coverage; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-24",
+        "scenario": "Prevent this false acceptance: a generated quote is reported as active coverage. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-25",
+      "concern": "health and clinical",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual health and clinical activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual clinical activity, professional standing, consent, privacy and care continuity. Success requires competent actual assessment/care and appropriate outcome/record obligations; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-25",
+        "scenario": "Prevent this false acceptance: an administrative assistant output is mistaken for clinical clearance. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-26",
+      "concern": "legal services",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual legal services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify client/matter/jurisdiction facts, competent representation, conflicts and privilege. Success requires actual qualified advice/representation and required filings/performance; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-26",
+        "scenario": "Prevent this false acceptance: a draft pleading is treated as submitted legal representation. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-27",
+      "concern": "pharmaceutical, food and safety-critical",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual pharmaceutical, food and safety-critical activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify precise product/process, competent safety determination, traceability and recall. Success requires actual admitted production/inspection and supported batch/delivery controls; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-27",
+        "scenario": "Prevent this false acceptance: a document marks an uninspected batch safe. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-28",
+      "concern": "children products and services",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual children products and services activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual age/activity, safeguarding, consent, privacy and trusted adults. Success requires age-appropriate accessible performance under required competent protection; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN,IC-PUBLIC; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-28",
+        "scenario": "Prevent this false acceptance: an inferred adult age bypasses an applicable protection. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-29",
+      "concern": "employment and livelihoods",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual employment and livelihoods activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual work relationship, rights, criteria, pay and contestation. Success requires lawful competent employment decisions and actual agreed work/payment; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-29",
+        "scenario": "Prevent this false acceptance: automation makes a livelihood decision from unsupported sensitive inference. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-30",
+      "concern": "manufacturing",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual manufacturing activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual facility/performer, materials, process, inspection and consequence limits. Success requires verified production capacity and conforming inspected goods; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-30",
+        "scenario": "Prevent this false acceptance: a simulated production run is counted as real inventory. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-31",
+      "concern": "logistics",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual logistics activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify actual carrier, custody, location, handling and service terms. Success requires traceable actual movement/receipt, exception handling and remedy; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-31",
+        "scenario": "Prevent this false acceptance: a tracking status is counted as beneficiary receipt despite contrary evidence. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-32",
+      "concern": "construction and trades",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual construction and trades activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify site, competent personnel, permits/determinations and physical safety. Success requires actual inspected work and legitimate completion/continuing responsibility; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-32",
+        "scenario": "Prevent this false acceptance: a schedule substitutes for missing competent onsite performance. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-33",
+      "concern": "hospitality",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual hospitality activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify premises, bookings, accessibility, staffing and service obligations. Success requires actual available and delivered stay/service plus refund and incident response; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-33",
+        "scenario": "Prevent this false acceptance: a booking is sold against unavailable real capacity. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-34",
+      "concern": "agriculture",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual agriculture activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify land/activity, competent process, biological uncertainty and handling. Success requires actual growing/handling work and supported harvest/quality evidence; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-34",
+        "scenario": "Prevent this false acceptance: a model forecast is promised as a guaranteed harvest. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "OPERATING-SECTOR-35",
+      "concern": "energy and utilities",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Admit the actual energy and utilities activity through FormationReadiness, scoped ProfessionalDetermination/InteractionDetermination and verified performance capacity. Specify precise service, infrastructure standing, competent control and continuity. Success requires actual metered/admitted service and emergency/repair responsibility; only its exact current domain judgments satisfy acceptance. Selected coordination routes are IC-HUMAN; additional specialist machines, actuators or provider endpoints require a versioned admitted extension before the dependent promise. Sector membership grants no permission or competence.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C03",
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "03-company-capabilities.md#fulfillment-routes-and-unresolved-adapters",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-OPERATING-SECTOR-35",
+        "scenario": "Prevent this false acceptance: software confirmation is treated as safe physical energization. Then demonstrate a bounded ordinary activity with actual qualified performer and native/beneficiary evidence.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Superseded by a better framing",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "CONSEQUENCE-SECTOR-01",
+      "concern": "owner competence, attention, enjoyment, isolation, identity, difficult decisions and burnout",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "ParticipationPlan measures consented minutes, authentic practice and actual interruption cost, with private decline/assistance routes. Enjoyment, isolation, identity and burnout are owner-reported values/conditions, not covert health or personality inferences. A chosen pause or relationship/support need returns to the person; real continuity remains assigned.",
+      "component_ids": [
+        "S1-C07",
+        "S1-C09"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#attention-and-practiced-competence"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/participation.ts",
+      "test": {
+        "id": "SL-CONSEQUENCE-SECTOR-01",
+        "scenario": "A founder declines a practice session and reports overload; do not diagnose incompetence, continue accepted duties and narrow new commitments.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "CONSEQUENCE-SECTOR-02",
+      "concern": "standing, liability, disclosure, diligence, insurance, contract capacity, consumer protection and cross-border exposure",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Activity and interaction determinations bind actual principal, signatory, location, liability, representation, diligence, insurance and customer/cross-border obligations to competent evidence. Insurance is a real scoped contract with exclusions, not a software safety claim. Required engagements and protections precede the dependent act; unknown law or standing is not a universal ban on preparatory research.",
+      "component_ids": [
+        "S1-C04",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/activity-admission.ts",
+      "test": {
+        "id": "SL-CONSEQUENCE-SECTOR-02",
+        "scenario": "Change audience country or advisory scope after an old assessment; recheck affected prerequisites and preserve unaffected lawful preparation.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "CONSEQUENCE-SECTOR-03",
+      "concern": "customer trust, truthful disclosure, public mistakes, reputation and authenticity",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Use exact supported content forms, honest machine/human representation, actual service and independently reachable grievance/correction. Reputation observations remain scoped and uncertain. Public mistake handling preserves the original claim, recipients, actual harm and remedy; correcting the page does not undo reliance.",
+      "component_ids": [
+        "S1-C03",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "07-integrations-capacity.md#4-communication-and-independent-continuity"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/communication.ts",
+      "test": {
+        "id": "SL-CONSEQUENCE-SECTOR-03",
+        "scenario": "A corrected public promise leaves an earlier customer exposed; retain and perform the customer-specific remedy.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "CONSEQUENCE-SECTOR-04",
+      "concern": "owner illness, succession, sale, vendor portability and retirement",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Absence, succession, sale and retirement require actual accepted standing, competent people, funds, account/key access and exercised unfamiliar duty performance. Transfer records and source meaning portably while reconciling native effects. Independent customer/custodian access survives the absent owner; packet delivery cannot prove takeover.",
+      "component_ids": [
+        "S1-C07",
+        "S1-C08"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#collaboration-absence-succession-and-departure"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/continuity.ts",
+      "test": {
+        "id": "SL-CONSEQUENCE-SECTOR-04",
+        "scenario": "Lose the owner and provider together during transfer; an accepted alternate must actually perform or the exact failure remains open.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "CONSEQUENCE-SECTOR-05",
+      "concern": "coordination overhead, quality drift, proxy optimization, unexplainable decisions and sprawl",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Measure coordination, selection, inspection, maintenance and failed-attempt cost against accepted beneficiary outcomes. Preserve source meaning through versioned mappings and protected changes; rationale is not complete cause. Retire redundant skills/tools after dependency accounting. A proxy score or growing catalog cannot define success.",
+      "component_ids": [
+        "S1-C02",
+        "S1-C06"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#8-drift-reopening-economics-and-comparators"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/evals/whole-company/comparison.ts",
+      "test": {
+        "id": "SL-CONSEQUENCE-SECTOR-05",
+        "scenario": "Double agents and skills with no improved service; account for extra labor and allow a simpler arrangement to win.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "CONSEQUENCE-SECTOR-06",
+      "concern": "adversarial content, unattended credentials, impersonation and compromised-run scope",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Treat external content and ordinary producers as untrusted. Actual identities, clean native login boundaries, isolated execution, trusted parameter resolution and witnessed finite effect windows contain reach. Credential or root compromise triggers scoped revocation, descendant inventory and real recovery; shared trusted roots remain disclosed.",
+      "component_ids": [
+        "S1-C04",
+        "S1-C08"
+      ],
+      "contract_refs": [
+        "02-authority-recovery.md#1-authority-and-fault-contract",
+        "07-integrations-capacity.md#5-native-subscription-execution"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/authority/containment.ts",
+      "test": {
+        "id": "SL-CONSEQUENCE-SECTOR-06",
+        "scenario": "A malicious tool tells a worker to reuse billing credentials through a descendant process; deny the route and account for any already exposed secret.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "CONSEQUENCE-SECTOR-07",
+      "concern": "competition, price effects, displacement, verification externalities and automated markets",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Market price effects, displaced work, automation interacting with automation and verification burdens are explicit hypotheses and affected-party concerns. CAP-22/33 and actual governance record evidence, affected people, harms, alternatives and legitimate constraints before changing offers or automation. Include customer/applicant/expert work in evaluation; do not claim private efficiency proves social benefit. No autonomous coordination with competitors is implied.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#finance-suppliers-people-and-institutional-work",
+        "06-knowledge-evidence-evaluation.md#6-evaluation-contracts-at-every-level"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/governance.ts",
+      "test": {
+        "id": "SL-CONSEQUENCE-SECTOR-07",
+        "scenario": "A cheap automated offer shifts hours of verification onto customers or destabilizes counterparties; retain those outcomes and require the actual scoped governance disposition.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-01",
+      "concern": "deciding what to try",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Bound an opportunity under original ends, available capacity and rival explanations; research can start before demand exists. Compare build, buy, partner, defer and stop. Procedures CAP-03/CAP-04/CAP-05/CAP-06 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-01",
+        "scenario": "An attractive unsupported premise is investigated within a finite reservation, not silently declared demand.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-02",
+      "concern": "validating before building",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Test the riskiest actual premise with authorized sources or bounded real experiments, preserving negative cases and uncertainty. A provisional offer remains distinct from demand-supported scale. Procedures CAP-04/CAP-05/CAP-18/CAP-29 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-02",
+        "scenario": "A small biased pilot cannot support a broad demand claim, but useful preparation continues.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-03",
+      "concern": "building",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Produce the actual specified medium using qualified temporary or deterministic work, isolated mutable scope and independent exact assessment. Design/render/test loops are part of delivery. Procedures CAP-07/CAP-08/CAP-09/CAP-10/CAP-11 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-03",
+        "scenario": "A build passes unit checks but fails the complete accessible customer journey; retain the defect.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-04",
+      "concern": "first contact with strangers",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Verify institutional and performance readiness, actual contact basis, exact audience/content and current release authority before first outward exposure. Strangers can reach actual support and grievance custody. Procedures CAP-12/CAP-13/CAP-14/CAP-40 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-04",
+        "scenario": "The first cold message has unsupported claims or no response capacity; block that exposure while allowing its preparation.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-05",
+      "concern": "early customers",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Preserve exact accepted terms, payment/credit conditions, onboarding, real delivery, feedback and remedy. A customer can disagree with the provider’s reported success. Procedures CAP-15/CAP-16/CAP-17/CAP-30/CAP-42 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-05",
+        "scenario": "Payment succeeds but delivery fails; carry actual remedy rather than counting the sale as complete.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-06",
+      "concern": "steady operation",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Perform recurring service, support, books, duties, security, source refresh and actual continuity within measured resources. Reconcile missed occurrences according to real promises. Procedures CAP-19/CAP-20/CAP-21/CAP-22/CAP-30/CAP-31/CAP-36/CAP-37 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-06",
+        "scenario": "A missed reporting period remains individually owed despite later healthy recurring runs.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-07",
+      "concern": "growth",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Scale only supported demand and verified delivery/support/people/financial capacity; preserve joint exposure across ventures and cumulative attention. Validate the changed operating profile before enlarging promises. Procedures CAP-24/CAP-25/CAP-26/CAP-27/CAP-38 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-07",
+        "scenario": "More concurrent sales exceed a real performer’s capacity even though model slots are free.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-08",
+      "concern": "maintenance and long tail",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Maintain sold versions, dependencies, security, accessibility, data rights and remaining promises beyond active development. Forecast renewals and long-tail custody explicitly; low revenue does not erase them. Procedures CAP-17/CAP-21/CAP-22/CAP-23/CAP-30/CAP-31/CAP-37 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-08",
+        "scenario": "An old low-revenue product still owes an export and security remedy; retain funded actual ownership.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-09",
+      "concern": "winding down",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Stop new commitments and actually close or transfer services, money, accounts, people, filings, customer notices and data, with native verification and accepted residual custody. Goal cancellation is not final company closure. Procedures CAP-39/CAP-40/CAP-41/CAP-42 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-09",
+        "scenario": "A closed project still has a renewing paid account and unresolved grievance; final closure fails until disposition.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "LIFECYCLE-STAGE-10",
+      "concern": "postmortem making next attempt cheaper",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Preserve supported lessons, failed alternatives, total cost and counterevidence. Transfer reusable methods through current rights and independent trials; retain original context and rejected generalizations. A postmortem must improve later decisions empirically. Procedures CAP-32/CAP-35/CAP-43/CAP-44/CAP-46 retain their specific contracts and actual acceptance.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C02",
+        "S1-C03",
+        "S1-C06",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#integrated-conformance-and-source-question-trace",
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/lifecycle.ts",
+      "test": {
+        "id": "SL-LIFECYCLE-STAGE-10",
+        "scenario": "A later venture copies a success into incompatible conditions; require a new applicability test and retain the failed transfer.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D01",
+      "concern": "A run resumes after the external service has forgotten its idempotency key.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Keep the immutable operation/business identity and held exposure. After the native idempotency retention window, query/reconcile actual effect; no blind resend or fresh-key/provider escape. If native evidence cannot settle it, retain unknown effect and actual remedy/custody.",
+      "component_ids": [
+        "S1-C04",
+        "S1-C08"
+      ],
+      "contract_refs": [
+        "07-integrations-capacity.md#2-invocation-capture-and-truthful-outcomes"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/integrations/reconciliation.ts",
+      "test": {
+        "id": "SL-D01",
+        "scenario": "Expire the provider’s key after a lost acknowledgement; a resumed run cannot create a duplicate payment.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D02",
+      "concern": "A restored backup predates revocation, deletion or completion and resurrects authority or effects.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Recover from a fresh independently signed current frontier, current revocations, unknown holds, deletion scopes and membership; old backups do not restore authority. Late offline descendants rejoin through restriction checks and retain unfinished deletion evidence.",
+      "component_ids": [
+        "S1-C04",
+        "S1-C05",
+        "S1-C08"
+      ],
+      "contract_refs": [
+        "02-authority-recovery.md#11-outbox-membership-fencing-and-restore"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/authority/recovery.ts",
+      "test": {
+        "id": "SL-D02",
+        "scenario": "Restore a snapshot before payment completion and data deletion; neither the payment nor deleted context is revived.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D03",
+      "concern": "A correct final outcome hides a process violation such as omitted authorization.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Evaluate outcome and process/consequence predicates separately. A correct artifact or satisfied customer cannot retroactively authorize a prohibited disclosure or spend. Record incident, real harm and repair while preserving the useful outcome as its own observation.",
+      "component_ids": [
+        "S1-C04",
+        "S1-C06"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#6-evaluation-contracts-at-every-level"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/evidence/judgments.ts",
+      "test": {
+        "id": "SL-D03",
+        "scenario": "A useful delivery used an unauthorized recipient; outcome success cannot pass the process predicate.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D04",
+      "concern": "A set of individually permitted actions exceeds aggregate financial, privacy or reputation exposure.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Reserve causal and shared resource/interaction exposure before action, with business conflict identity across tools and ventures. Attenuation intersects limits and descendants retain the original ceiling; a collection of small acts cannot bypass aggregate money, disclosure or audience bounds.",
+      "component_ids": [
+        "S1-C04"
+      ],
+      "contract_refs": [
+        "02-authority-recovery.md#5-reservations-exact-operation-identity-and-prerequisites"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/authority/reservations.ts",
+      "test": {
+        "id": "SL-D04",
+        "scenario": "Concurrent individually small sends exceed the campaign’s audience/currency bound; atomic reservation prevents excess.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D05",
+      "concern": "A model-written rationale hides a causal influence and is mistaken for a faithful reason.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Record endorsed reasons, attributed executor explanation, causal hypothesis and unobservable influence separately. Captured traces support bounded reconstruction but do not prove hidden-model causal fidelity. Explain uncertainty rather than requesting or fabricating private reasoning.",
+      "component_ids": [
+        "S1-C06"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/evidence/accounts.ts",
+      "test": {
+        "id": "SL-D05",
+        "scenario": "A lucky output supplies a persuasive post-hoc reason contradicting known inputs; retain the distinction.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D06",
+      "concern": "An owner has authority to approve but lacks the domain competence to assess the consequence.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Separate legitimate values/exposure authority from domain competence. Offer scoped assistance or an actual qualified assessor; preserve original deciding rights and contestation. If required competence is absent, restrict dependent work and retain actual continuity failure rather than appointing a fictional professional.",
+      "component_ids": [
+        "S1-C07",
+        "S1-C04"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#human-records-and-command-contract"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/decision-packets.ts",
+      "test": {
+        "id": "SL-D06",
+        "scenario": "Owner approves a specialist conclusion they cannot assess; require the actual competent predicate while accepting their legitimate taste decision.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D07",
+      "concern": "Cancellation of a business goal leaves promises, subscriptions, customer data and remedies outstanding.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Cancellation stops admitted new work but enumerates continuing payments, subscriptions, promises, customer data, grievance and remedy. Assign funded actual owners/alternates, verify native cancellation and retain residuals until legitimate discharge.",
+      "component_ids": [
+        "S1-C07",
+        "S1-C08"
+      ],
+      "contract_refs": [
+        "03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/closure.ts",
+      "test": {
+        "id": "SL-D07",
+        "scenario": "Cancel the venture during a late refund and account renewal; both remain visible duties after task shutdown.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D08",
+      "concern": "A benchmark or work-management plan change erases distinctions without changing a displayed success state.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Pin semantic mappings, benchmark populations/denominators and acceptance versions. A change uses compatibility tests, explicit migration and current independent judgment; retained display labels cannot bridge incompatible meanings. Preserve unknown holds under union fencing when scope changes.",
+      "component_ids": [
+        "S1-C04",
+        "S1-C06"
+      ],
+      "contract_refs": [
+        "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/improvement/migrations.ts",
+      "test": {
+        "id": "SL-D08",
+        "scenario": "Change the definition of delivered or remove failed trials while keeping green badges; invalidate the claimed comparison.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D09",
+      "concern": "Summarization promotes untrusted material into authoritative policy or founder preference.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Untrusted source text remains attributed data through summaries. Context transformations preserve source lineage, critical exclusions and omissions; only the legitimate current instruction/intent route promotes authority. Corrections invalidate downstream use under current access.",
+      "component_ids": [
+        "S1-C01",
+        "S1-C05"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/context/manifests.ts",
+      "test": {
+        "id": "SL-D09",
+        "scenario": "Summarize an injected page into a founder preference; prevent promotion and allow clean authorized retrieval.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D10",
+      "concern": "A provider/model change invalidates a harness intervention that was previously helpful.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Bind each prompt/skill/runtime to exact tested scope and evidence. Provider/model change triggers current qualification and matched outcome/cost tests; familiarity and stable interface do not prove preserved behavior. Continue suitable admitted work and park unsuitable routes.",
+      "component_ids": [
+        "S1-C03",
+        "S1-C06"
+      ],
+      "contract_refs": [
+        "07-integrations-capacity.md#5-native-subscription-execution",
+        "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/runtime/qualification.ts",
+      "test": {
+        "id": "SL-D10",
+        "scenario": "A provider update makes a previously useful instruction harmful; detect relevant regression before inherited eligibility.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D11",
+      "concern": "An improvement candidate changes evidence capture while its hidden evaluator remains intact.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Protect the entire evidence closure, including capture/parser, selection, fixture, labels, denominators and evaluator configuration. Candidate cannot alter its own capture roots or satisfy independence through an unchanged final judge. Drift invalidates affected judgments and triggers real reassessment.",
+      "component_ids": [
+        "S1-C06",
+        "S1-C04"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/evidence/dependencies.ts",
+      "test": {
+        "id": "SL-D11",
+        "scenario": "Candidate filters failed outputs before an intact hidden evaluator; protected denominator/capture detects the omission.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D12",
+      "concern": "A supported authentication path silently changes billing mode because an API key or credit setting overrides subscription access.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Before native launch attest actual account/login, effective configuration, absence of API-key overrides and allowed credit settings. Quota and billing attestations are separate; stale or changed billing blocks new launch. A reset or fallback cannot increase authorized paid usage.",
+      "component_ids": [
+        "S1-C03",
+        "S1-C04"
+      ],
+      "contract_refs": [
+        "07-integrations-capacity.md#5-native-subscription-execution"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/runtime/auth-attestation.ts",
+      "test": {
+        "id": "SL-D12",
+        "scenario": "Inject an API-key environment override or enabled extra credit and exhaust subscription allowance; no metered fallback occurs.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D13",
+      "concern": "A search result repeats a withdrawn provider policy, or a legal transition is applied to the wrong provision.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Bind current claims to exact primary wording, date, provision/activity and account scope. Preserve withdrawn statements historically, qualify conflicting sources and revalidate applicability even without a binary update. Unknown jurisdiction or inaccessible current evidence remains a scoped prerequisite gap.",
+      "component_ids": [
+        "S1-C05",
+        "S1-C07"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/context/source-validity.ts",
+      "test": {
+        "id": "SL-D13",
+        "scenario": "A search snippet repeats a withdrawn policy or wrong legal commencement date; inspect the correct primary scope before reliance.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D14",
+      "concern": "An owner loses capacity while refunds, legal holds, complaints and recurring service obligations continue.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Real absence continuity needs accepted alternate standing, competence, independent access, funds and rehearsed performance before loss. Continue due refunds, holds, complaints and service under valid mandates; stop unsupported new promises. A recovery file cannot substitute for unavailable people.",
+      "component_ids": [
+        "S1-C07",
+        "S1-C08"
+      ],
+      "contract_refs": [
+        "04-human-operation.md#collaboration-absence-succession-and-departure"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/company/continuity.ts",
+      "test": {
+        "id": "SL-D14",
+        "scenario": "Remove the owner during a month of refunds and reporting; actually perform through an accepted alternate or record the specific failure.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    },
+    {
+      "id": "D15",
+      "concern": "A benchmark caption claims superiority that its own table values contradict.",
+      "epistemic_type": "Design proposal applying selected S1 contracts",
+      "answer": "Preserve both caption and table as source claims with exact metrics, populations and versions; recompute comparison from applicable underlying values and retain unresolved disagreement. No architecture benefit is established by promotional wording that its own data fails to support.",
+      "component_ids": [
+        "S1-C05",
+        "S1-C06"
+      ],
+      "contract_refs": [
+        "06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction"
+      ],
+      "evidence_refs": [
+        "../02-architecture-selection.md",
+        "../reviews/G-acceptance-protocol.md"
+      ],
+      "decision_ref": "12-scope-lifecycle-traceability.md#scope-decision",
+      "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+      "owner": "Orchestrator for integration; named component mandates during operation",
+      "implementation_location": "system/packages/evidence/source-checks.ts",
+      "test": {
+        "id": "SL-D15",
+        "scenario": "A caption claims universal superiority while one table task is worse; retain task-specific results and reject the universal claim.",
+        "ordinary_control": "Also perform the nearest authorized useful path with actual admissible prerequisites; refusal alone cannot pass.",
+        "status": "unexecuted"
+      },
+      "coverage_status": "Requires further evidence",
+      "implementation_status": "planned-not-existing"
+    }
+  ]
+}

@@ -13,13 +13,22 @@
       48
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/62",
+    "component": [
+      "S1-C04",
+      "S1-C08"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/integrations/reconciliation.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L08-reliability.md"
+    ]
   },
   {
     "id": "D02",
@@ -36,13 +45,23 @@
       31
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/63",
+    "component": [
+      "S1-C04",
+      "S1-C05",
+      "S1-C08"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/authority/recovery.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L08-reliability.md"
+    ]
   },
   {
     "id": "D03",
@@ -59,13 +78,22 @@
       43
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/64",
+    "component": [
+      "S1-C04",
+      "S1-C06"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/evidence/judgments.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L06-evaluation.md"
+    ]
   },
   {
     "id": "D04",
@@ -81,13 +109,21 @@
       24
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/65",
+    "component": [
+      "S1-C04"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/authority/reservations.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L07-security.md"
+    ]
   },
   {
     "id": "D05",
@@ -104,13 +140,21 @@
       48
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/66",
+    "component": [
+      "S1-C06"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/evidence/accounts.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L06-evaluation.md"
+    ]
   },
   {
     "id": "D06",
@@ -127,13 +171,22 @@
       51
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/67",
+    "component": [
+      "S1-C07",
+      "S1-C04"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/company/decision-packets.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L09-human.md"
+    ]
   },
   {
     "id": "D07",
@@ -149,13 +202,22 @@
       53
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/68",
+    "component": [
+      "S1-C07",
+      "S1-C08"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/company/closure.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L02-operations.md"
+    ]
   },
   {
     "id": "D08",
@@ -172,13 +234,22 @@
       41
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/69",
+    "component": [
+      "S1-C04",
+      "S1-C06"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/improvement/migrations.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L02-operations.md"
+    ]
   },
   {
     "id": "D09",
@@ -196,13 +267,22 @@
       45
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/70",
+    "component": [
+      "S1-C01",
+      "S1-C05"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/context/manifests.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L05-memory.md"
+    ]
   },
   {
     "id": "D10",
@@ -219,13 +299,22 @@
       50
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/71",
+    "component": [
+      "S1-C03",
+      "S1-C06"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/runtime/qualification.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L04-engineering.md"
+    ]
   },
   {
     "id": "D11",
@@ -244,13 +333,22 @@
       49
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/72",
+    "component": [
+      "S1-C06",
+      "S1-C04"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/evidence/dependencies.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L12-improvement.md"
+    ]
   },
   {
     "id": "D12",
@@ -267,13 +365,22 @@
       36
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/73",
+    "component": [
+      "S1-C03",
+      "S1-C04"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/runtime/auth-attestation.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L10-economics.md"
+    ]
   },
   {
     "id": "D13",
@@ -292,13 +399,23 @@
       44
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/74",
+    "component": [
+      "S1-C05",
+      "S1-C07"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/context/source-validity.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L10-economics.md",
+      "research/L11-governance.md"
+    ]
   },
   {
     "id": "D14",
@@ -318,13 +435,22 @@
       53
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/75",
+    "component": [
+      "S1-C07",
+      "S1-C08"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/company/continuity.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L11-governance.md"
+    ]
   },
   {
     "id": "D15",
@@ -341,12 +467,21 @@
       49
     ],
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "decision": null,
-    "remaining_uncertainty": "Concrete contract and discriminating test required after candidate comparison",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/76",
+    "component": [
+      "S1-C05",
+      "S1-C06"
+    ],
+    "decision": "SL-D01",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null,
-    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain."
+    "implementation_location": "system/packages/evidence/source-checks.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L12-improvement.md"
+    ]
   }
 ]

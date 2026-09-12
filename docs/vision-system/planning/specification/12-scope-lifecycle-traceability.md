@@ -1,0 +1,39 @@
+# Scope, lifecycle and discovered-case traceability
+
+SL-1.0 applies the selected S1 architecture to the 62 supplemental source concerns and 15 discovered failure cases. Status: authored for independent complete-plan review; every runtime, actual operating and business outcome remains unproved. The [machine catalog](scope-lifecycle-contracts.json) preserves each concern, substantive answer, component, contract, uncertainty, planned module and discriminating ordinary/adverse test. It is part of the complete plan, not an expansion into a separate system.
+
+## Scope decision
+
+SL-D01: distinguish the system's complete coordination and performance contracts from the actual permission and capacity to conduct a particular business activity. Apply [03's company procedures](03-company-capabilities.md) and [07's actual fulfillment routes](07-integrations-capacity.md) across the source's full lifecycle. Preserve nonsoftware performance as actual accepted human, professional, supplier or service work. A document about a service cannot satisfy that service's acceptance predicate.
+
+The original sector map is an opportunity map, not verified law. Its broad OPEN/LICENCE distinction is superseded by actual activity, principal, location, audience, data, product and consequence determinations. The 35 individual sector rows specify the distinctive facts and real performance to check, and a concrete false-success test. They do not assign universal licensing rules, operate any business, or claim to implement every possible industry-specific machine. FormationReadiness, ProfessionalRequest/ProfessionalDetermination, actual InteractionDetermination, DeliveryCapacity, grants and exact domain judgments carry these facts. A new tool, actuator, clinical process or specialist provider requires an admitted extension before the associated promise. Preparation and legitimate unrelated service continue while that admission remains open.
+
+This decision preserves the ambition: the system must be able to create, direct, operate, improve, pause, transfer and close complex projects, including physical and professional work. It cannot create a license, actual human capacity or safe physical performance by naming an agent. Human service is an implemented responsibility, engagement, materials/access, performance, evidence, remedy and continuity route, with real acceptance and cost. It is not a placeholder that makes a missing capability count as delivered.
+
+For example, a physical subscription service requires actual supplier capacity, inventory, shipping, entitled recurring payment, beneficiary receipt and cancellation/remedy. The software coordinates and verifies those steps through admitted routes; a shipping request is not delivery. A research product instead requires permitted sources, applicable claims, coherent denominators and a supported answer. Both share authority/evidence/recovery contracts while retaining different success predicates.
+
+## Vision and consequences
+
+The ten VISION rows apply the core invariants: original intent and legitimate values; truthful account including omissions; responsibility for unobserved work; consequence-bounded authority; authentic owner practice and finite attention; actual nondelegable commitments; honest attempt/closure costs; and architecture falsifiers. Cheap attempts, sustained competence and favorable all-in economics remain hypotheses to measure, not guaranteed benefits.
+
+The seven CONSEQUENCE-SECTOR rows preserve issues that could disappear behind a technical architecture: enjoyment, isolation, identity and difficult decisions; actual liability, insurance and cross-border standing; truthful representation and public correction; owner absence and succession; coordination and quality drift; adversarial reach and credentials; and market effects, displaced work and imposed verification burden. Owner-reported strain is handled as consented information and a real availability constraint, without covert health inference. Market-wide benefits or harms remain empirically uncertain; private efficiency cannot establish social benefit. Actual governance decides the relevant tradeoff within legitimate authority, informed by affected people and evidence.
+
+No founder is asked to supply a system architecture. Operating facts that belong to actual people remain separate: personal ends, legitimate mandates, time and exposure limits, accepted professionals/custodians, account standing and actual funding. Current-session repository work and research already authorized by the directive continue. Installing or exercising a safe local component does not require a fresh routine approval merely because the future product has its own admission policy. Additional spend, outward contacts, consequential deployment and other ungranted effects still require the applicable concrete authorization.
+
+## Lifecycle and useful progress
+
+All ten source lifecycle stages have explicit routes: decide, validate, build, first contact, early customers, steady operation, growth, maintenance, wind-down and transfer of learning. The rows reference all relevant CAP procedures, not a permanent department roster. Each test contains both an actual failure discriminator and an ordinary permitted path; a system that only blocks action cannot pass.
+
+The stage model permits bounded first-venture discovery with unknown demand. Pre-sale capacity is verified against actual people, materials, access, timing and continuity without inventing an earlier sale. Launch joins independently admitted exact child requirements. Later delivery and settlement require their own native/customer evidence. Steady operation and long-tail maintenance continue to owe work after development ends; closure waits for actual disposition and retains residual custody where needed.
+
+## Discovered cross-field tests
+
+D01–D15 make interactions testable: expired idempotency, restored stale authority, correct outcomes with unauthorized process, aggregate exposure, misleading rationales, competence versus ownership, residual duties, semantic/denominator drift, poisoned summaries, provider changes, compromised capture, billing fallback, stale policy applicability, loss of owner capacity and conflicting benchmark caption/table claims. They preserve the research lane attribution in the original [discovered register](../../coverage/discovered.json). Their precise system mechanisms live in 01–08 and the consolidated schemas; this catalog adds no second grant, acceptance, deletion or recovery authority.
+
+The observed historical examples motivate tests; the new scenarios are design fixtures, not claims that every threat occurred here. A synthetic clinical or shipping fixture never proves actual clinical competence or physical delivery. Tests requiring native accounts, real people or external effects retain their operating prerequisites and cannot be passed with an invented success record.
+
+## Validation and review boundary
+
+The catalog's ID set is exactly the preserved 62 plus 15 concerns. Every row has a unique test identifier, answer, explicit uncertainty, local contract links, ownership and planned implementation. JSON and local-link checks establish trace integrity, not substantive acceptance. Sector statuses explicitly record the better framing; the remaining root coverage statuses stay pending evidence while the complete package is reviewed. No component is declared implemented by this trace.
+
+Independent G review must inspect these answers alongside the 566 source-question answers, the component and schema contracts, source/evidence maintenance, economics and full build plan. It may find that a proposed route cannot fulfill the promised work, that human labor is infeasible, or that a supposedly reusable procedure hides a missing foundational contract. Such findings reopen the affected design before dependent construction or operation.

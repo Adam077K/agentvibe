@@ -5,13 +5,21 @@
     "source_part": 1,
     "concern": "responsibility for unobserved work",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/0",
+    "component": [
+      "S1-C01",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/evidence/accounts.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-02",
@@ -19,13 +27,21 @@
     "source_part": 1,
     "concern": "preserving intent across handovers",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/1",
+    "component": [
+      "S1-C01",
+      "S1-C05",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/work/handoff.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-03",
@@ -33,13 +49,21 @@
     "source_part": 1,
     "concern": "truthful account including negative space",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/2",
+    "component": [
+      "S1-C05",
+      "S1-C06",
+      "S1-C09"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/evidence/accounts.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-04",
@@ -47,13 +71,21 @@
     "source_part": 1,
     "concern": "cheap reversible attempts and responsible closure",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/3",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-05",
@@ -61,13 +93,19 @@
     "source_part": 1,
     "concern": "consequence-bounded autonomy",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/4",
+    "component": [
+      "S1-C04"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/authority/grants.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-06",
@@ -75,13 +113,20 @@
     "source_part": 1,
     "concern": "owner competence",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/5",
+    "component": [
+      "S1-C07",
+      "S1-C09"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/participation.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-07",
@@ -89,13 +134,20 @@
     "source_part": 1,
     "concern": "attention limit and declining work",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/6",
+    "component": [
+      "S1-C02",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/participation.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-08",
@@ -103,13 +155,20 @@
     "source_part": 1,
     "concern": "concentrated accountability and unpleasant decisions",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/7",
+    "component": [
+      "S1-C01",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/responsibility.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-09",
@@ -117,13 +176,20 @@
     "source_part": 1,
     "concern": "nondelegable wanting and promises, relationships and taste",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/8",
+    "component": [
+      "S1-C01",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/direction/intent.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "VISION-10",
@@ -131,503 +197,825 @@
     "source_part": 1,
     "concern": "failure if checking scales with output, no net value, or owner cannot explain business",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/9",
+    "component": [
+      "S1-C01",
+      "S1-C06"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/evals/whole-company/comparison.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-01",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "developer tools",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/10",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-02",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "consumer apps",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/11",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-03",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "business software",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/12",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-04",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "data products and analysis",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/13",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-05",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "APIs and infrastructure",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/14",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-06",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "games and interactive",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/15",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-07",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "research and synthesis",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/16",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-08",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "education and courseware",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/17",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-09",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "publishing, writing and media",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/18",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-10",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "consulting and advisory",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/19",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-11",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "design services",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/20",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-12",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "marketing and content services",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/21",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-13",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "recruiting",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/22",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-14",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "bookkeeping",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/23",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-15",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "translation and localization",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/24",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-16",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "customer support services",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/25",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-17",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "digital goods",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/26",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-18",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "print-on-demand and dropship",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/27",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-19",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "marketplaces",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/28",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-20",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "subscription boxes",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/29",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-21",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "wholesale",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/30",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-22",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "physical retail",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/31",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-23",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "finance: lending, advice, brokerage and payments",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/32",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-24",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "insurance",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/33",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-25",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "health and clinical",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/34",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-26",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "legal services",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/35",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-27",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "pharmaceutical, food and safety-critical",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/36",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-28",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "children products and services",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/37",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-29",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "employment and livelihoods",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/38",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-30",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "manufacturing",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/39",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-31",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "logistics",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/40",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-32",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "construction and trades",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/41",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-33",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "hospitality",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/42",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-34",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "agriculture",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/43",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "OPERATING-SECTOR-35",
     "source": "inputs/THE-VISION-AND-THE-FIELDS.md",
     "source_part": 3,
     "concern": "energy and utilities",
-    "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Source operating-sector labels are proposals and require jurisdiction/activity-specific verification; inclusion does not authorize operation",
+    "status": "Superseded by a better framing",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/44",
+    "component": [
+      "S1-C01",
+      "S1-C03",
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Historical OPEN/LICENCE sector labels are not legal findings. Actual activity, principal, location, professional determinations, accepted performer, rights, fees and any new endpoint are unknown operating inputs. No unqualified automated physical/professional act is admitted.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "CONSEQUENCE-SECTOR-01",
@@ -635,13 +1023,20 @@
     "source_part": 3,
     "concern": "owner competence, attention, enjoyment, isolation, identity, difficult decisions and burnout",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/45",
+    "component": [
+      "S1-C07",
+      "S1-C09"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/participation.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "CONSEQUENCE-SECTOR-02",
@@ -649,13 +1044,20 @@
     "source_part": 3,
     "concern": "standing, liability, disclosure, diligence, insurance, contract capacity, consumer protection and cross-border exposure",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/46",
+    "component": [
+      "S1-C04",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/activity-admission.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "CONSEQUENCE-SECTOR-03",
@@ -663,13 +1065,20 @@
     "source_part": 3,
     "concern": "customer trust, truthful disclosure, public mistakes, reputation and authenticity",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/47",
+    "component": [
+      "S1-C03",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/communication.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "CONSEQUENCE-SECTOR-04",
@@ -677,13 +1086,20 @@
     "source_part": 3,
     "concern": "owner illness, succession, sale, vendor portability and retirement",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/48",
+    "component": [
+      "S1-C07",
+      "S1-C08"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/continuity.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "CONSEQUENCE-SECTOR-05",
@@ -691,13 +1107,20 @@
     "source_part": 3,
     "concern": "coordination overhead, quality drift, proxy optimization, unexplainable decisions and sprawl",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/49",
+    "component": [
+      "S1-C02",
+      "S1-C06"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/evals/whole-company/comparison.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "CONSEQUENCE-SECTOR-06",
@@ -705,13 +1128,20 @@
     "source_part": 3,
     "concern": "adversarial content, unattended credentials, impersonation and compromised-run scope",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/50",
+    "component": [
+      "S1-C04",
+      "S1-C08"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/authority/containment.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "CONSEQUENCE-SECTOR-07",
@@ -719,13 +1149,21 @@
     "source_part": 3,
     "concern": "competition, price effects, displacement, verification externalities and automated markets",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/51",
+    "component": [
+      "S1-C01",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/governance.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-01",
@@ -733,13 +1171,23 @@
     "source_part": 3,
     "concern": "deciding what to try",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/52",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-02",
@@ -747,13 +1195,23 @@
     "source_part": 3,
     "concern": "validating before building",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/53",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-03",
@@ -761,13 +1219,23 @@
     "source_part": 3,
     "concern": "building",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/54",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-04",
@@ -775,13 +1243,23 @@
     "source_part": 3,
     "concern": "first contact with strangers",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/55",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-05",
@@ -789,13 +1267,23 @@
     "source_part": 3,
     "concern": "early customers",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/56",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-06",
@@ -803,13 +1291,23 @@
     "source_part": 3,
     "concern": "steady operation",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/57",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-07",
@@ -817,13 +1315,23 @@
     "source_part": 3,
     "concern": "growth",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/58",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-08",
@@ -831,13 +1339,23 @@
     "source_part": 3,
     "concern": "maintenance and long tail",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/59",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-09",
@@ -845,13 +1363,23 @@
     "source_part": 3,
     "concern": "winding down",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/60",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   },
   {
     "id": "LIFECYCLE-STAGE-10",
@@ -859,12 +1387,22 @@
     "source_part": 3,
     "concern": "postmortem making next attempt cheaper",
     "status": "Requires further evidence",
-    "answer_location": null,
-    "component": null,
-    "evidence": [],
-    "decision": null,
-    "uncertainty": "Research and design pending",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/61",
+    "component": [
+      "S1-C01",
+      "S1-C02",
+      "S1-C03",
+      "S1-C06",
+      "S1-C07"
+    ],
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md"
+    ],
+    "decision": "SL-D01",
+    "uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
     "owner": "orchestrator",
-    "implementation_location": null
+    "implementation_location": "system/packages/company/lifecycle.ts",
+    "implementation_status": "planned-not-existing"
   }
 ]
