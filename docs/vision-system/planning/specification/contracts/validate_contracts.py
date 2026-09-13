@@ -1920,4 +1920,43 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
               "floor": POSITIVE_FIXTURE_FLOOR}))
     FIXTURES_PASSED = POSITIVE_RUN["passed_as_required"]
 
-print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"negative_fixtures_declared":NEGATIVE_FIXTURES_DECLARED,"negative_fixture_floor":NEGATIVE_FIXTURE_FLOOR,"positive_fixtures_passed":FIXTURES_PASSED,"positive_fixtures_declared":POSITIVE_FIXTURES_DECLARED,"positive_fixture_floor":POSITIVE_FIXTURE_FLOOR,"limits":"Offline schema/ref/AST/source-inventory/registry checks plus paired negative and positive fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))
+# --- RC4-07: THE VERDICT MUST CARRY ITS OWN INSTRUMENT. -----------------------
+#
+# Probe 5b of the fourth recheck replaced the whole CONJUNCT_WALK block and its three
+# floors with a literal, in the copy of this file the scratch tree runs. Exit 0, 288,606
+# checks -- exactly 3 below the null control, which is the three floors -- and the verdict
+# printed `"conjunct_walk": {"DELETED": ...}`. Nothing in this package reads this file's
+# own text, and the asymmetry is the point: this file asserts three strings in
+# run_negative_fixtures.py precisely so a rename there cannot silently disarm a branch it
+# takes, and no assertion ran in the other direction.
+#
+# Checked HERE, on the object about to be printed, and deliberately NOT inside the block
+# it is about: a check that sits inside what it measures is removed by the same edit. The
+# census is offered as evidence that the closed table did its work -- it is evidence only
+# while it is there, and the verdict is where a reader looks for it. This does not make the
+# file self-verifying and does not pretend to: anyone editing the checker is editing the
+# checker. It makes ONE deletion cost more than three checks and a plausible-looking pass.
+CENSUS_KEYS = {"predicate_positions", "value_positions", "slots_classified", "refused",
+               "under_quantifier", "under_disjunction", "under_negation", "operators"}
+VERDICT = {"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"negative_fixtures_declared":NEGATIVE_FIXTURES_DECLARED,"negative_fixture_floor":NEGATIVE_FIXTURE_FLOOR,"positive_fixtures_passed":FIXTURES_PASSED,"positive_fixtures_declared":POSITIVE_FIXTURES_DECLARED,"positive_fixture_floor":POSITIVE_FIXTURE_FLOOR,"limits":"Offline schema/ref/AST/source-inventory/registry checks plus paired negative and positive fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."}
+_census = VERDICT.get("conjunct_walk")
+checked(isinstance(_census, dict) and set(_census) == CENSUS_KEYS,
+        ("THE VERDICT DOES NOT CARRY THE DEMAND WALK'S CENSUS: every `demanded` in this "
+         "file means whatever that walk decided, and the census is the only thing in the "
+         "verdict that says how far it reached. A verdict printed without it is a pass "
+         "whose coverage a reader would have to reconstruct with a mutation (RC4-07)",
+         {"present": sorted(_census) if isinstance(_census, dict) else type(_census).__name__,
+          "required": sorted(CENSUS_KEYS)}))
+checked(isinstance(_census["slots_classified"], int) and _census["slots_classified"] > 0,
+        ("THE DEMAND WALK CLASSIFIED NO ARGUMENT SLOT AT ALL: the closed table is only "
+         "closed over what it was asked about, and a walk that asked nothing leaves every "
+         "pin and the whole of RC-03 asserting nothing -- quietly (RC4-07). The floor of "
+         "8,000 above is the live budget; this is the floor under the FIELD, so removing "
+         "the counter is not cheaper than emptying it",
+         {"slots_classified": _census["slots_classified"]}))
+checked(isinstance(_census["operators"], list) and _census["operators"],
+        ("THE DEMAND WALK MET NO OPERATOR: `operators` is the census field that would have "
+         "shown RC3-01 as an absence -- `forall` was missing from it -- so an empty or "
+         "absent set is the one reading a reviewer must never be given silently (RC4-07)",
+         _census["operators"]))
+print(json.dumps(VERDICT, indent=2))
