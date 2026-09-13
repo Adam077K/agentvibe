@@ -60377,13 +60377,15 @@
               "type": "array",
               "items": {
                 "$ref": "values.schema.json#/$defs/JsonPointer"
-              }
+              },
+              "uniqueItems": true
             },
             "delivered_read_set": {
               "type": "array",
               "items": {
                 "$ref": "values.schema.json#/$defs/JsonPointer"
-              }
+              },
+              "uniqueItems": true
             },
             "derived_trust_level": {
               "$ref": "values.schema.json#/$defs/string"
@@ -202347,7 +202349,8 @@
               "type": "array",
               "items": {
                 "$ref": "values.schema.json#/$defs/string"
-              }
+              },
+              "uniqueItems": true
             },
             "gated_class_ids": {
               "type": "array",
@@ -202424,7 +202427,8 @@
               "type": "array",
               "items": {
                 "$ref": "values.schema.json#/$defs/string"
-              }
+              },
+              "uniqueItems": true
             },
             "release_ref": {
               "type": "object",

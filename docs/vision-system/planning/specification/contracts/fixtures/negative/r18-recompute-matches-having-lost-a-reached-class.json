@@ -1,0 +1,16 @@
+{
+  "id": "r18-recompute-matches-having-lost-a-reached-class",
+  "repair": "R18",
+  "finding": "F6D-03; reviews/F2-06-D-authority-buildability-adversarial.md; AT-M4-02",
+  "case": "A release-time recomputation reports `matched` having dropped a class the admission-time derivation reached.",
+  "paired_benign_fixture": "fixtures/positive/r18-recompute-matches-having-lost-a-reached-class-benign.json",
+  "why": "reached_class_ids = [C2, C3] against recomputed_class_ids = [C3, C3]: the containment holds, the counts are 2 and 2, the record reaches `matched` and the release proceeds without C2's human requirement on an outward disclosure. That is AT-M4-02's harm arriving through the recompute path, and `parked_on_mismatch` -- the phase whose row reads \"it never resolves downward\" -- is not entered. The mutation removes the duplicate-free requirement on the recomputed side, which is what makes the count comparison mean set size.",
+  "expect_failure_contains": "'guard.derivation.recompute_matches', 'unique'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.derivation.recompute_matches/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

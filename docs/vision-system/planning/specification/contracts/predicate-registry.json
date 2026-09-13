@@ -382267,6 +382267,32 @@
               "pointer": "/payload/reached_class_ids"
             }
           }
+        },
+        {
+          "op": "unique",
+          "items": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/recomputed_class_ids"
+          }
+        },
+        {
+          "op": "unique",
+          "items": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/reached_class_ids"
+          }
         }
       ]
     },
@@ -382462,6 +382488,32 @@
               },
               "pointer": "/payload/delivered_read_set"
             }
+          }
+        },
+        {
+          "op": "unique",
+          "items": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/declared_read_set"
+          }
+        },
+        {
+          "op": "unique",
+          "items": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/delivered_read_set"
           }
         }
       ]
