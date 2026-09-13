@@ -642,58 +642,233 @@ PIN_KEYS = {"predicate_id", "kind", "findings", "decisions", "why", "require"}
 PIN_BINDING_KEYS = {"field_path", "states_exactly", "optional"}
 
 
-def polarised_nodes(node, negated=False, disjoined=False):
-    """Every `op` node of a body, with the two facts about its CONTEXT that a containment
-    check needs: whether it sits beneath a `not`, and whether it sits beneath a disjunction.
+# --- WHERE A CONJUNCT IS DEMANDED. The table is DERIVED; the unrecognised is REFUSED. ---
+#
+# RC3-01 and RC3-02 are one defect with two faces, and the face is not the operator name.
+# This walker used to decide whether a position DEMANDS its conjunct by matching three
+# hard-coded names -- `all`, `any`, `not` -- and to descend into every other key of every
+# node regardless of what that key is for. Two consequences, both measured at exit 0 with
+# pinned-conjuncts.json and the `requires` prose untouched:
+#
+#   RC3-01  The three pinned conjuncts of criterion.SalesAgreement.performed.v1, moved
+#           verbatim inside `forall(items=path(/payload/obligation_refs), bind, ...)`,
+#           each reported negated=False disjoined=False -- DEMANDED -- by a walker that
+#           had never heard of `forall`. records.schema.json declares `obligation_refs`
+#           an array with no `minItems`, so `[]` is schema-valid and the quantifier is
+#           vacuous: the sale reaches `performed` naming no Fulfillment, with nothing
+#           `delivered` and no Obligation discharged. G2-01's counterexample, restored,
+#           at 269,708 checks with 33 of 33 negative fixtures still rejecting.
+#   RC3-02  The same conjuncts buried in `present`'s `value` -- a `JsonValue` slot, not a
+#           predicate position at all -- were also reported DEMANDED, because the walk
+#           visited every dict value it could reach.
+#
+# So the demanding positions are read off primitive-registry.json at check time and the
+# table is CLOSED: an operator it does not declare, or a slot of a declared operator it
+# does not classify, fails this file naming both rather than being walked as if it were
+# `all`. That is the rule this file already applies to operator nodes -- `set(node) ==
+# {"op", *args}` -- and to pin row keys -- "Declare what is read and REFUSE the rest".
+# The walker was the one place that did not, and a hard-coded triple is how the FOURTH
+# boolean-child primitive got through. The fifth cannot.
+#
+# `argument_positions` in primitive-registry.json is the declaration. Five roles:
+#
+#   value       NOT a predicate position. A conjunct here is not evaluated as a conjunct
+#               of the body, so a pinned op found here is NOT PRESENT (RC3-02) rather
+#               than demanded. Value content underneath is still read -- a `path` pointer
+#               inside a demanded `eq` is demanded -- which is why the walk continues
+#               into it and marks what it finds.
+#   demanded    `all`: the child's truth is the parent's.
+#   disjoined   `any`: contained, not demanded. A pin row may opt in (`disjoined: true`).
+#   negated     `not`: demanded, with polarity flipped.
+#   quantified  `forall`: demanded only if something outside the quantifier forces its
+#               collection to be non-empty, and nothing in this corpus does. Treated as
+#               NON-DEMANDING unconditionally -- the conservative reading, and it costs
+#               nothing today: zero `forall` nodes exist (guard_distinctness.py lists it
+#               under `primitives_used_by_no_predicate`). No pinned row needs an opt-in
+#               either: measured, 0 of 44 rows match under a quantifier, so no
+#               `quantified: true` key exists to be set by mistake.
+DEMAND_ROLES = {"demanded", "disjoined", "negated", "quantified"}
+POSITION_ROLES = DEMAND_ROLES | {"value"}
+BOOLEAN_ARGUMENT_TYPES = ("boolean", "boolean[]")
+for _name, _primitive in PRIMITIVES.items():
+    _positions = _primitive.get("argument_positions")
+    checked(isinstance(_positions, dict),
+            ("a primitive declares no `argument_positions`, so nothing can say whether a "
+             "conjunct written inside it is DEMANDED by the body or merely contained by "
+             "it, and this walker refuses to guess (RC3-01)", _name, _primitive["args"]))
+    checked(set(_positions) == set(_primitive["args"]),
+            ("a primitive's `argument_positions` do not classify exactly its arguments: "
+             "an unclassified slot is a place a conjunct can hide", _name,
+             sorted(set(_positions) ^ set(_primitive["args"]))))
+    for _argument, _role in _positions.items():
+        checked(_role in POSITION_ROLES,
+                ("a primitive declares an argument position this walker does not know",
+                 _name, _argument, _role, sorted(POSITION_ROLES)))
+        # The declaration cannot lie about the type it describes, and this cross-check is
+        # what makes it a DERIVATION rather than a second hand-kept list. A `boolean`
+        # argument is a place a conjunct nests; declaring one `value` would hide exactly
+        # the class RC3-01 came from, and declaring a JsonValue slot a predicate position
+        # would walk straight into the one RC3-02 came from.
+        checked((_primitive["argument_types"][_argument] in BOOLEAN_ARGUMENT_TYPES)
+                == (_role in DEMAND_ROLES),
+                ("a primitive's argument position contradicts its argument type: every "
+                 "`boolean`/`boolean[]` argument is a predicate position with a declared "
+                 "demand, and every other argument is `value`",
+                 _name, _argument, _primitive["argument_types"][_argument], _role))
 
-    Polarity is the half a containment check forgets. `not(native_correlated delivered)`
-    CONTAINS `native_correlated(result: delivered)`, so a pin that only asked whether the
-    op appears would accept the inversion of the requirement it exists to hold.
+from collections import namedtuple  # noqa: E402
 
-    RC2-02 is that sentence one operator over, and it was found the same way -- by running a
-    mutation, not by reading this function. Disjoining each of the three pinned conjuncts of
-    `criterion.SalesAgreement.performed.v1` with `present(/payload/agreed_terms)`, a field
-    records.schema.json already requires of every SalesAgreement, left every pin matching,
-    pinned-conjuncts.json untouched, and this file at exit 0 with 31 of 31 negative fixtures
-    still rejecting -- over a criterion that no longer required the agreement to name its
-    Fulfillment, that Fulfillment to be `delivered`, or any Obligation to be discharged. A
-    node inside an `any` is CONTAINED by the body exactly as one in the top-level `all` is.
-    It is not DEMANDED by it, and every `why` in the pin file is written as a demand.
+# One walked position: the node, and the four facts about its CONTEXT a containment check
+# needs. `quantifiers` is a tuple rather than a flag so the message can NAME the quantifier
+# and the collection it ranges over -- "inside a forall" sends a reader looking;
+# "forall(/payload/obligation_refs)" sends them to the field that admits `[]`.
+Positioned = namedtuple("Positioned", "node negated disjoined quantifiers in_value")
 
-    Disjunction is read THROUGH the negation rather than beside it: `not(any(A, B))` demands
-    `not A`, and `not(all(A, B))` demands neither, so which operator branches depends on the
-    parity of the `not`s above it. No node in the committed corpus sits that way -- 2,169
-    `all` and 13 `any`, none beneath a `not` -- so that half is untested here and is written
-    correctly anyway, because a rule that is right by accident stops being right silently.
+# An instrument reports its own coverage. A demand walk that quietly stopped walking would
+# leave every pin MISSING, which is loud -- and would leave RC-03's phase rule asserting
+# nothing at all, which is silent. Asserted against floors below the RC-03 loop.
+WALK_CENSUS = {"predicate_positions": 0, "value_positions": 0, "slots_classified": 0,
+               "refused": 0, "under_quantifier": 0, "under_disjunction": 0,
+               "under_negation": 0, "operators": set()}
+
+
+def refuse(condition, detail):
+    """A refusal the census counts. `refused` is 0 on any tree this file passes -- the
+    point is that it is REPORTED, so a reader can see the closed table did its work
+    rather than trusting that it would have."""
+    if not condition:
+        WALK_CENSUS["refused"] += 1
+    checked(condition, detail)
+
+
+def walk_nodes(value):
+    """Every dict anywhere inside a value, in any position. Structural, not semantic."""
+    return (n for n in walk(value) if isinstance(n, dict))
+
+
+def pointers_in(value):
+    """Every `path` pointer anywhere inside a node, in ANY position.
+
+    Deliberately not the demand walk. Containment of a POINTER is a question about the
+    whole value: a `contains_pointers` row asks whether an `eq` compares the field its
+    finding named, and that field read lives in `eq`'s `left` -- a JsonValue slot. Four
+    live pin rows depend on reaching into value slots this way, so narrowing THIS to
+    predicate positions would break the rows RC3-02's narrowing exists to protect.
     """
-    found = []
-    if isinstance(node, dict):
-        if "op" in node:
-            found.append((node, negated, disjoined))
-        operator = node.get("op")
-        inner = negated != (operator == "not")
-        branching = (operator == "any") != negated and operator in ("any", "all")
-        for key, value in node.items():
-            if key != "op":
-                found.extend(polarised_nodes(value, inner, disjoined or branching))
-    elif isinstance(node, list):
-        for value in node:
-            found.extend(polarised_nodes(value, negated, disjoined))
-    return found
-
-
-def pointers_in(node):
-    return {n["pointer"] for n, _, _ in polarised_nodes(node)
+    return {n["pointer"] for n in walk_nodes(value)
             if n.get("op") == "path" and isinstance(n.get("pointer"), str)}
 
 
-def pin_row_matches(node, row, disjoined=False):
-    # RC2-02. A match inside an `any` says the body MENTIONS this requirement in one branch,
-    # which is not what any `why` in the pin file claims. A row whose requirement really is
-    # conditional says so with `disjoined: true` and names the branch in `disjoined_why`;
-    # every other row means what it says, so unconditional is the default.
-    if disjoined and not row.get("disjoined", False):
-        return False
+def quantifier_note(node, positions):
+    """`forall(/payload/obligation_refs)` -- the collection whose emptiness makes the
+    quantifier vacuous. Read off the node's VALUE slots only: pointers inside the
+    quantified child are what the conjunct reads, not what it ranges over."""
+    pointers = sorted({pointer for argument, role in positions.items() if role == "value"
+                       for pointer in pointers_in(node[argument])})
+    return "%s(%s)" % (node["op"], ", ".join(pointers) or "no literal path")
+
+
+def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
+                    in_value=False):
+    """Every `op` node of a body, with the CONTEXT that decides whether the body's truth
+    depends on it: beneath a `not`, beneath a disjunction, beneath a quantifier, or inside
+    an argument that is not a predicate position at all.
+
+    Polarity is the half a containment check forgets first. `not(native_correlated
+    delivered)` CONTAINS `native_correlated(result: delivered)`, so a pin that only asked
+    whether the op appears would accept the inversion of the requirement it exists to hold.
+    RC2-02 was that sentence one operator over -- a conjunct disjoined with a trivially
+    true alternative -- and RC3-01 was it one operator further, under a `forall` over a
+    collection the record schema permits to be empty. Each was found by running a
+    mutation, never by reading this function, which is why the operator set is no longer
+    written here at all.
+
+    Disjunction is read THROUGH the negation rather than beside it: `not(any(A, B))`
+    demands `not A`, and `not(all(A, B))` demands neither, so which role branches depends
+    on the parity of the `not`s above it. No node in the committed corpus sits that way --
+    2,169 `all` and 13 `any`, none beneath a `not` -- so that half is untested here and is
+    written correctly anyway, because a rule that is right by accident stops being right
+    silently.
+
+    `in_value` is STICKY. Once the walk enters a JsonValue slot, every predicate position
+    below it is a predicate position of something being read as a value, and nothing under
+    it is a conjunct of this body (RC3-02).
+    """
+    found = []
+    if isinstance(node, list):
+        for value in node:
+            found.extend(polarised_nodes(value, owner, negated, disjoined, quantifiers,
+                                         in_value))
+        return found
+    if not isinstance(node, dict):
+        return found
+    if "op" not in node:
+        # A container the AST puts between operators: {"arg": ...}, {"context": ...}, a
+        # `related_phases` binding, a `call`'s argument map. It carries the context it
+        # sits in and creates none of its own.
+        for value in node.values():
+            found.extend(polarised_nodes(value, owner, negated, disjoined, quantifiers,
+                                         in_value))
+        return found
+    operator = node["op"]
+    # ast_check refuses an undefined operator in any predicate body before this runs, so
+    # this refusal is a backstop rather than the live control -- stated plainly, because a
+    # comment claiming otherwise is how a control nobody exercises reads as one that works.
+    refuse(operator in PRIMITIVES,
+           ("a body uses an operator the demand table does not declare, so whether the "
+            "conjuncts under it are DEMANDED cannot be decided, and this walker refuses "
+            "rather than treating it as `all` (RC3-01)", owner, operator))
+    primitive = PRIMITIVES[operator]
+    positions = primitive["argument_positions"]
+    WALK_CENSUS["operators"].add(operator)
+    if in_value:
+        WALK_CENSUS["value_positions"] += 1
+    else:
+        WALK_CENSUS["predicate_positions"] += 1
+        # The converse of RC3-02, and free: an independent sweep of all 2,276 predicate
+        # bodies found 0 of 12,684 predicate positions holding a value-returning operator
+        # (and 0 of 45 value positions holding a boolean one, which is the other
+        # direction). A `path` where a conjunct belongs is a body whose truth depends on
+        # a JsonValue.
+        refuse(primitive["result_type"].startswith("boolean"),
+               ("an operator that returns a value sits in a predicate position, where the "
+                "body's truth is supposed to depend on it", owner, operator,
+                primitive["result_type"]))
+    if quantifiers:
+        WALK_CENSUS["under_quantifier"] += 1
+    if disjoined:
+        WALK_CENSUS["under_disjunction"] += 1
+    if negated:
+        WALK_CENSUS["under_negation"] += 1
+    found.append(Positioned(node, negated, disjoined, quantifiers, in_value))
+    for key, value in node.items():
+        if key == "op":
+            continue
+        WALK_CENSUS["slots_classified"] += 1
+        role = positions.get(key)
+        refuse(role is not None,
+               ("an operator node carries a slot the demand table does not classify, so "
+                "a conjunct written there would be walked with no declared demand",
+                owner, operator, key, sorted(positions)))
+        if in_value or role == "value":
+            child = (negated, disjoined, quantifiers, True)
+        elif role == "negated":
+            child = (not negated, disjoined, quantifiers, False)
+        elif role == "quantified":
+            child = (negated, disjoined,
+                     quantifiers + (quantifier_note(node, positions),), False)
+        else:
+            child = (negated, disjoined or ((role == "disjoined") != negated),
+                     quantifiers, False)
+        found.extend(polarised_nodes(value, owner, *child))
+    return found
+
+
+def pin_row_matches(node, row):
+    """SHAPE only: does this node say what the row describes. Whether the body DEMANDS it
+    is a question about the node's POSITION, decided once beside the pin loop below rather
+    than here -- RC2-02 answered it here, and RC3-01/RC3-02 then needed two more context
+    facts that a boolean parameter could not carry without becoming three."""
     if set(row.get("field_paths_include", [])) - set(node.get("field_paths") or []):
         return False
     for wanted in row.get("bindings", []):
@@ -745,7 +920,7 @@ for pin in PINNED["pins"]:
             ("a pinned predicate no longer exists", predicate_id, pin["why"]))
     checked(bool(pin["findings"]) and bool(pin["why"].strip()),
             ("a pin states no finding or no reason", predicate_id))
-    nodes = polarised_nodes(PREDICATES[predicate_id]["body"])
+    nodes = polarised_nodes(PREDICATES[predicate_id]["body"], predicate_id)
     for row in pin["require"]:
         # Declare what is read and REFUSE the rest: a constraint key this checker does
         # not know would otherwise be a pin that reads as enforcement and checks nothing.
@@ -780,17 +955,40 @@ for pin in PINNED["pins"]:
                  "and this op returns a value", predicate_id, row["op"]))
         wanted_negated = bool(row.get("negated", False))
         # Two questions, not one, because they have two different answers and a reader who
-        # is told the wrong one looks in the wrong place. CONTAINED: does the body carry
-        # this conjunct anywhere at all. DEMANDED: does it carry it where the body's truth
-        # depends on it. Probe 9 of G-02-recheck-02 is the whole difference -- contained,
-        # not demanded, at exit 0.
-        contained = [(node, negated, disjoined) for node, negated, disjoined in nodes
-                     if node.get("op") == row["op"]
-                     and (negated == wanted_negated or not boolean_op)
-                     and pin_row_matches(node, row)]
-        demanded = [entry for entry in contained
-                    if pin_row_matches(entry[0], row, entry[2])]
-        checked(demanded or not contained,
+        # FOUR questions, not one, because they have four different answers and a reader
+        # told the wrong one looks in the wrong place. CONTAINED: does the body carry this
+        # conjunct anywhere at all. POSITIONED: does it carry it where a conjunct is
+        # evaluated, rather than inside a value another operator reads (RC3-02).
+        # QUANTIFIED: does the body's truth depend on it, or only on a collection nothing
+        # requires to be non-empty (RC3-01). DEMANDED: is what is left actually required.
+        # Probes 4 and 4b of G-02-recheck-03 are the difference between the first three --
+        # every one of them contained, none of them demanded, all of them at exit 0.
+        contained = [entry for entry in nodes
+                     if entry.node.get("op") == row["op"]
+                     and (entry.negated == wanted_negated or not boolean_op)
+                     and pin_row_matches(entry.node, row)]
+        # A value op is SUPPOSED to live in a value slot -- `path` reads a field inside an
+        # `eq`, and one live pin row pins exactly that -- so the position rule applies to
+        # boolean ops, which are the only ops a body's truth can depend on.
+        positioned = [entry for entry in contained
+                      if not (boolean_op and entry.in_value)]
+        quantified = [entry for entry in positioned if entry.quantifiers]
+        demanded = [entry for entry in positioned
+                    if not entry.quantifiers
+                    and (not entry.disjoined or row.get("disjoined", False))]
+        checked(demanded or not quantified,
+                ("PINNED CONJUNCT ONLY UNDER A QUANTIFIER: the registry still MENTIONS what "
+                 "this finding required, inside a quantifier over a collection nothing "
+                 "forces to be non-empty, and so no longer DEMANDS it",
+                 predicate_id, row["op"], row["why"],
+                 {"findings": pin["findings"], "decisions": pin["decisions"],
+                  "quantifiers": sorted({note for entry in quantified
+                                         for note in entry.quantifiers}),
+                  "note": "a `forall` over a field records.schema.json permits to be `[]` "
+                          "is vacuously true, so a conjunct moved inside it is required of "
+                          "nothing (RC3-01). Demand the collection non-empty on the same "
+                          "path, or state the requirement outside the quantifier."}))
+        checked(demanded or not positioned,
                 ("PINNED CONJUNCT ONLY UNDER A DISJUNCTION: the registry still MENTIONS what "
                  "this finding required, inside one branch of an `any`, and so no longer "
                  "DEMANDS it", predicate_id, row["op"], row["why"],
@@ -800,6 +998,18 @@ for pin in PINNED["pins"]:
                           "nothing (RC2-02). If this requirement really is conditional, "
                           "set `disjoined: true` on the row and name the branch in "
                           "`disjoined_why`; four rows do."}))
+        checked(demanded or not contained,
+                ("PINNED CONJUNCT IN A NON-PREDICATE POSITION: the registry carries this op "
+                 "inside an argument that is not a predicate position, where it is a value "
+                 "the enclosing operator reads rather than a conjunct the body's truth can "
+                 "depend on -- so as a requirement it is NOT PRESENT",
+                 predicate_id, row["op"], row["why"],
+                 {"findings": pin["findings"], "decisions": pin["decisions"],
+                  "positions": sorted({entry.node.get("op") for entry in contained}),
+                  "note": "`present(value: <the conjunct>)` type-checks and asserts "
+                          "nothing about it (RC3-02). primitive-registry.json declares "
+                          "which arguments are predicate positions in "
+                          "`argument_positions`; only those carry a demand."}))
         checked(bool(demanded),
                 ("PINNED CONJUNCT MISSING: the registry no longer says what this finding "
                  "required", predicate_id, row["op"], row["why"],
@@ -913,32 +1123,46 @@ PROSE_PATH = re.compile(r"`(/[A-Za-z0-9_./\-]+)`|(?<![`\w])(/payload/[a-z_]+)")
 PROSE_TOKEN = re.compile(r"`([a-z][a-z_\-]*)`")
 
 
-def stated_paths_and_states(body):
+def stated_paths_and_states(body, owner):
     """What the body DEMANDS -- not what it mentions.
 
     RC2-02's blind spot, second site, and it is why RC-03 was silent on the same mutation
     the pins were silent on: this walked every node regardless of context, so a
-    `related_phases` binding moved inside an `any` still counted as a promise kept. It now
-    reads the same walker the pins do and skips whatever sits under a disjunction, so the
-    two halves of RC-03 and the pin table answer to one definition of "demanded" rather
-    than to two that can drift.
+    `related_phases` binding moved inside an `any` still counted as a promise kept. It
+    reads the same walker the pins do -- the SAME declaration table, not a copy of it --
+    so the two halves of RC-03 and the pin table answer to one definition of "demanded"
+    rather than to two that can drift.
+
+    That sharing is why RC3-01 disabled BOTH controls with one mutation, and it is kept
+    anyway: one definition that is wrong somewhere is repairable, and two definitions that
+    disagree are the defect this package names in four other places. The repair goes into
+    the definition.
 
     Measured on the committed corpus before changing it, because a narrowing that fails
     nothing may be a narrowing that does nothing: 774 criteria examined, the same 0
-    failures either way. The 13 `any` nodes in the registry sit in bodies whose `requires`
-    sentence names nothing that only they carry -- so this buys no live assertion today and
-    closes the route probe 9 took.
+    failures under the disjunction rule, the quantifier rule and the value-slot rule
+    alike. The 13 `any` nodes sit in bodies whose `requires` sentence names nothing only
+    they carry, there are zero `forall` nodes, and zero boolean ops in value slots -- so
+    all three buy no live assertion today and close the three routes probes 9, 4 and 4b
+    took. The negative fixtures are what keep them from being narrowings that do nothing.
     """
     paths, states = set(), set()
-    for node, _negated, disjoined in polarised_nodes(body):
-        if disjoined:
+    for entry in polarised_nodes(body, owner):
+        if entry.disjoined or entry.quantifiers:
             continue
-        paths.update(node.get("field_paths") or [])
-        for binding in node.get("bindings") or []:
-            paths.add(binding["field_path"])
-            states.update(binding["states"])
-        if node.get("op") == "path" and isinstance(node.get("pointer"), str):
-            paths.add(node["pointer"])
+        if not entry.in_value:
+            # RC3-02: `field_paths` and `bindings` belong to boolean ops, and one inside a
+            # JsonValue slot is read as a value, not evaluated. Its bindings promise
+            # nothing, so counting them would let `requires` name a phase that no conjunct
+            # binds -- which is the whole of RC-03.
+            paths.update(entry.node.get("field_paths") or [])
+            for binding in entry.node.get("bindings") or []:
+                paths.add(binding["field_path"])
+                states.update(binding["states"])
+        # A `path` read is a VALUE op and lives in a value slot by construction; the field
+        # it names is demanded exactly when the predicate reading it is.
+        if entry.node.get("op") == "path" and isinstance(entry.node.get("pointer"), str):
+            paths.add(entry.node["pointer"])
     return paths, states
 
 
@@ -951,7 +1175,7 @@ for name, predicate in PREDICATES.items():
     if not sentence or record_name not in RECORDS:
         continue
     requires_examined += 1
-    body_paths, body_states = stated_paths_and_states(predicate["body"])
+    body_paths, body_states = stated_paths_and_states(predicate["body"], name)
     own_phases = set(RECORDS[record_name]["lifecycle"]["phases"])
     related_phases = set()
     for relation in RECORDS[record_name]["relations"]:
@@ -979,6 +1203,35 @@ for name, predicate in PREDICATES.items():
 checked(requires_examined >= 700,
         ("RC-03 examined almost no criteria; the rule cannot pass vacuously",
          requires_examined))
+
+# --- THE WALKER'S OWN COVERAGE, AS A NUMBER. -----------------------------------
+# Every rule above that says "demanded" means whatever this walk decided, so the walk's
+# reach is the reach of the pin table and of RC-03 together. RC3-01 got through a walker
+# that was RUNNING, reporting three conjuncts as demanded and saying nothing about the one
+# operator it did not know -- so a future reviewer should be able to read the coverage off
+# the verdict rather than reconstruct it with a mutation. Four facts, and the set of
+# operators is the one that would have shown RC3-01 as an absence: `forall` is not in it.
+#
+# The floors are LITERALS, well under the measured values, for the reason the pin floors
+# are: a floor derived from the walk it measures is satisfied by a walk that stopped.
+# Measured on the committed corpus: 4,282 predicate positions, 48 value positions, 9,882
+# slots classified against the table, 34 distinct operators, 0 refused, 0 under a
+# quantifier. The walk covers the 25 pinned bodies and the 774 criteria RC-03 examines,
+# not all 2,276 predicates -- which is why these numbers are a third of the whole-registry
+# sweep quoted in the walker above, and the two are not the same measurement.
+CONJUNCT_WALK = {key: (sorted(value) if isinstance(value, set) else value)
+                 for key, value in WALK_CENSUS.items()}
+checked(WALK_CENSUS["predicate_positions"] >= 3500,
+        ("the demand walk covered almost no predicate positions; every 'demanded' above "
+         "is a claim about what this walk reached, and a walk that reached nothing leaves "
+         "RC-03's phase rule asserting nothing AT ALL -- quietly, unlike the pins",
+         {"predicate_positions": WALK_CENSUS["predicate_positions"], "floor": 3500}))
+checked(WALK_CENSUS["slots_classified"] >= 8000,
+        ("the demand walk classified almost no argument slots against the table; the "
+         "closed table is only closed over what it is asked about",
+         {"slots_classified": WALK_CENSUS["slots_classified"], "floor": 8000}))
+checked(len(WALK_CENSUS["operators"]) >= 20,
+        ("the demand walk met almost no distinct operators", sorted(WALK_CENSUS["operators"])))
 
 
 # --- Negative control. --------------------------------------------------------
@@ -1080,4 +1333,4 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
              {"declared": len(declared_fixtures),
               "rejected": FIXTURES_RUN["passed_as_required"]}))
 
-print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"limits":"Offline schema/ref/AST/source-inventory/registry checks plus negative fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))
+print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"limits":"Offline schema/ref/AST/source-inventory/registry checks plus negative fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))
