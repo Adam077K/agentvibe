@@ -5,7 +5,16 @@
   "phase": "F-complete-system-specification",
   "status": "active",
   "base_commit": "b2cabad",
-  "branch": "ceo-3-1789160853",
+  "branch": "ceo-2-1789160976",
+  "resumption": {
+    "date": "2026-09-13",
+    "from_branch": "ceo-3-1789160853",
+    "from_head": "c71c05e",
+    "cause": "Previous run lost execution capacity (usage limit) mid-Phase-F with three dispatches live",
+    "method": "Fast-forward merge of ceo-3-1789160853 onto ceo-2-1789160976; every lane worktree under the old root scanned for uncommitted or unmerged work",
+    "recovered": "phase-f-canonical lane held 38 MB / 1.2 M lines of UNCOMMITTED canonical contract registries plus its validator; committed verbatim as cb4bf52 after the validator reproduced 207205 passing checks at the new path",
+    "directive_verbatim": "inputs/DIRECTIVE.md — the founder's full directive text was not in the package before resumption; directive-contract.json declared it authoritative but did not contain it"
+  },
   "architecture_version": "S1.0 logical specification anchor",
   "planning_accepted": false,
   "implementation_started": false,
@@ -54,34 +63,44 @@
     "XSR01 independently closed atd199316; recheck source1c54e006 archived. Actual interview/pilot/provider/professional/owner evidence and runtime remain unexecuted.",
     "F-coverage-components-01 at2407bc1 archivedce05f49: reviewer read643substantive answers,9×19components and24families; no new foundational blocker. Does not close focusedXSR02/03 or pendingcanonical11/FI12.",
     "Integrated early CS1 prose 95616bc and XSR-02 repair dd17e17. Root read complete 11 proposal and all 54 shared verification cases/159 observations; all 394 joins resolve and 268 original answer bodies are unchanged. Full canonical registry and independent review remain pending.",
-    "Integrated XSR-03 route repair a66f2ae; root read all 11 route objects and changed 03 prose. Selected contracts and unmet operating prerequisites agree at the inspected boundary; independent recheck pending."
+    "Integrated XSR-03 route repair a66f2ae; root read all 11 route objects and changed 03 prose. Selected contracts and unmet operating prerequisites agree at the inspected boundary; independent recheck pending.",
+    "RESUMED 2026-09-13 on ceo-2-1789160976 at c71c05e. Scanned all 49 lane worktrees of the interrupted run: 48 clean, one (phase-f-canonical) dirty with an untracked contracts/ directory. Recovered and committed as cb4bf52.",
+    "Recovered canonical contract set validated at the new path: 207205 checks, 173 records, 184 values, 104 commands, 2252 predicates, 1295 edges, 373 source work edges, 46 required subjects. Orchestrator independently computed 1295 distinct predicate_ids, 0 unregistered, 1295 distinct predicate bodies among edge guards — FI-11's shared-guard defect does not reproduce. This is an orchestrator inspection, not independent acceptance.",
+    "Founder directive preserved verbatim at inputs/DIRECTIVE.md; directive-contract.json remains the structured extraction and is subordinate to it."
   ],
   "active_work": [
     {
-      "agent": "repair_company_foundations",
-      "scope": "Complete canonical machine types, commands, predicates and legal edges; amend affected 01–10 contracts under the frozen early CS1 proposal 9f8922a. Independent FI-12 review is active.",
-      "base": "3ff24a1"
+      "agent": "review-canonical (reviewer, read-only with shell)",
+      "scope": "Independent conformance review of the recovered contracts/ set against FI-10, FI-11, FI-12 at frozen subject cb4bf52. Must run the author's validator itself and name what it does not check; must test guard distinctness in meaning, not bytes; must trace FI-12's recursion risk end to end.",
+      "subject": "cb4bf52",
+      "dispatched": "2026-09-13"
     },
     {
-      "agent": "attack_technical",
-      "scope": "Finish concrete Postmark ingress, event identity, terms and metadata amendment. XSR-02/03 repairs are integrated and root-inspected; independent rechecks remain pending."
+      "agent": "review-xsr (reviewer, read-only with shell)",
+      "scope": "Independent recheck of XSR-02 (discrimination of the 268 verification cases, not coverage) and XSR-03 (whether the 11 routes name an actual performer with unavailable-state behavior, or a category).",
+      "subject": "cb4bf52",
+      "dispatched": "2026-09-13"
     },
     {
-      "agent": "attack_architecture_evidence",
-      "scope": "Independent read-only FI-12 review of frozen early CS1 prose 9f8922a, against existing exact subject, current authority, evidence, recovery and bootstrap boundaries. Full registry is explicitly forthcoming."
+      "agent": "build-technical-amendment (builder)",
+      "scope": "Finish the interrupted attack_technical lane: concrete Postmark ingress and positive permitted mail path, event identity and event-specific deduplication, dated provider terms with invalidators, permitted outbound metadata. Must conform to T-R3. Must not send mail or create accounts.",
+      "worktree": ".worktrees/technical-amendment",
+      "branch": "docs/vision-technical-amendment",
+      "base": "cb4bf52",
+      "dispatched": "2026-09-13"
     },
     {
       "agent": "orchestrator",
-      "scope": "Source and coverage navigation maintenance, schema integration and independent FI12/fullG review routing; then accepted plan and full build."
+      "scope": "Integrate the three returns; then freeze the Phase G subject and dispatch the architecture-neutral complete-plan review across all twelve protocol dimensions with separate judgments; then accepted plan and full build."
     }
   ],
   "next_actions": [
-    "Receive independent FI-12 judgment; integrate XSR-03 and Postmark amendments, then independently recheck those and the XSR-02 verification cases.",
-    "Receive bounded company/component/coverage reviews; resolve actual incompatibilities without treating locator counts as acceptance",
-    "Concretize Postmark terms, origin authentication and event-specific deduplication with positive permitted mail path; inspect narrow source follow-up and preserve actual-account unknowns",
-    "Integrate full canonical schema/predicate catalog and affected exact-revision/LifecycleStatus amendments; independently review FI10/11/12 and all required/added subjects",
-    "Run independent architecture-neutral complete-plan reviews, resolve foundational gaps, commit accepted full package and present navigable planning report before implementation",
-    "Build complete accepted design in dependency order with security, tests, evaluations, integration, recovery and operability"
+    "Receive review-canonical: if FI-10/11/12 close at specification level, mark 8.11 authored; if a (d)-class missing decision is found, repair before Phase G",
+    "Receive review-xsr: close or reopen XSR-02/XSR-03 in registers/review-findings.json with the reviewer's computed evidence, not the author's",
+    "Receive build-technical-amendment: read its diff, run any checks it names, merge into the root, record source claims in research/integration-claims.json",
+    "Freeze the Phase G subject SHA. Dispatch the complete-plan review per planning/reviews/G-acceptance-protocol.md: twelve dimensions, separate judgments, no aggregate score, whole-company scenario portfolio, negative controls, EAS-R1 comparisons. Reviewers must not read the producer's self-assessment.",
+    "Resolve any foundational blocker Phase G names; preserve dissent; record the scoped planning disposition; commit the accepted package; present the navigable planning report to the founder per directive §15",
+    "Only then: B00 gate → build B01…B11 in dependency order, each stage with security, tests, evaluations, integration, recoverable state"
   ],
   "dependencies": [
     {
@@ -126,6 +145,8 @@
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
     "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md",
     "specification_findings": "registers/specification-findings.json; FI01–12 including current schema/predicate and immutable subject/acceptance revision discovery",
+    "canonical_contracts": "planning/specification/contracts/ — 14 JSON registries/schemas plus validate_contracts.py (run it: `python3 validate_contracts.py` from that directory; needs jsonschema + referencing). Recovered at cb4bf52; validator passes; independent review dispatched, not yet returned",
+    "directive_verbatim": "inputs/DIRECTIVE.md — authoritative text; directive-contract.json is the structured extraction and defers to it",
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
     "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance",
     "integration_review": "planning/reviews/F-integration-01…04, F-cross-scope-01…02 and F-coverage-components-01; bounded dispositions and different detections retained, no fullG/runtime",
@@ -155,7 +176,9 @@
     "Conceptual closure of original attacks depends on faithfully implementing amended contracts and surviving declared fault roots; no runtime guarantees established",
     "EAS-R1: comparator can erase inquiry-right treatment or reward C2 by definition; separate own-rights conformance, business outcomes and representation control",
     "Technical R1–R3: dynamic scope/alias/participant migration, independently durable status after lost acknowledgments and delayed first transport must be specified precisely",
-    "Accumulated institutional maintenance, disclosure review, independent administration, professional continuity and owner attention may defeat operating economics"
+    "Accumulated institutional maintenance, disclosure review, independent administration, professional continuity and owner attention may defeat operating economics",
+    "Lane worktrees can hold UNCOMMITTED work when capacity is lost; the 2026-09-12 cutoff left 38 MB of canonical contracts untracked in phase-f-canonical. On every resumption, scan every lane worktree with `git status --porcelain` before assuming state.json is the complete record. Authoring lanes should commit at each checkpoint, not at task close.",
+    "`git worktree add` still fails under the armed sandbox (re-measured 2026-09-13: refused on .claude/commands/** and .mcp.json); the orchestrator must create lane worktrees itself with the sandbox escalated for that one command, then hand the path to the agent"
   ],
   "implementation_substrate_proposals": {
     "status": "Integrated Phase F proposals, partial independent source/integration inspection; no full planning acceptance or runtime verification",
