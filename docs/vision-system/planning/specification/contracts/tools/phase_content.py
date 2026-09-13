@@ -2604,6 +2604,87 @@ RECORD_OVERRIDES = {
          ("fi",), AR],
         hard=["rp", "fi", "nfp"]),
 
+    # -- GR-02: the other parked records, decided per record rather than in bulk.
+    #
+    # R-K left seven records with a `parked` phase and no closure account, and said so
+    # rather than closing it. The discriminator used here is MECHANICAL and checkable in
+    # record-registry.json, which is why it can be stated rather than argued: does the
+    # record's OWN payload carry a `Ref<Obligation>[]` field? Where it does, parking the
+    # record parks duties that belong to it, the kernel's account is what says what
+    # becomes of them, and the field is added. Where it does not, the duties reachable
+    # from the record belong to other records that each have their own parking guard, and
+    # a second account here would duplicate an answer rather than give one. Case carries
+    # `obligation_refs` and was decided the same way, so this extends one rule instead of
+    # inventing a second.
+    #
+    # Four qualify: Mission `residual_obligation_refs`, Project `closure_duty_refs`,
+    # WorkflowRun and WorkOrder `unfinished_obligation_refs`. Goal, KnowledgeQuestion and
+    # Opportunity do not, and their dispositions are recorded in the CONTRADICTIONS entry
+    # below -- not here, because "we decided this needs nothing" is not a criterion.
+    #
+    # Only Mission declares a review date, so only Mission can demand BOTH halves. On the
+    # other three the `nfp` names the account alone: demanding a `/payload/review_at` that
+    # the record does not declare is refused by compose(), correctly.
+    ("Mission", "parked"): spec(
+        "An AUTHORIZED reason, and BOTH halves of the kernel's disjunction: the next "
+        "review date and the closure account that says what becomes of the mission's "
+        "residual obligations if that review never happens. Every surviving duty keeps a "
+        "named accepted custodian. No obligation disappears, and parking never discharges "
+        "external standing.",
+        ["k-case-park", "k11-transfer", "c-pause"],
+        [("nf", ["duty", "custodian", "successor"]),
+         ("nfp", ["/payload/review_at", "/payload/parking_closure_account_ref"]),
+         ("rp", [("custodian", ["accepted"], False),
+                 ("duty", ["potential", "recognized", "performing"], True)]),
+         ("fi",), AR],
+        hard=["rp", "fi", "nfp"]),
+
+    ("Project", "parked"): spec(
+        "An AUTHORIZED reason and the closure account that says what becomes of the "
+        "project's closure duties if nobody returns to it. Every surviving duty keeps a "
+        "named accepted custodian. The record declares NO review date, so the account is "
+        "the only half of the kernel's disjunction that can be demanded here, and it is "
+        "demanded rather than left to the reader. No obligation disappears, and parking "
+        "never discharges external standing.",
+        ["k-case-park", "k11-transfer", "c-pause"],
+        [("nf", ["duty", "custodian", "successor"]),
+         ("nfp", ["/payload/parking_closure_account_ref"]),
+         ("rp", [("custodian", ["accepted"], False),
+                 ("duty", ["potential", "recognized", "performing"], True)]),
+         ("fi",), AR],
+        hard=["rp", "fi", "nfp"]),
+
+    ("WorkflowRun", "parked"): spec(
+        "An AUTHORIZED reason and the closure account that says what becomes of the run's "
+        "unfinished obligations if nobody resumes it. Every surviving duty keeps a named "
+        "accepted custodian. The record declares NO review date, so the account is the "
+        "only half of the kernel's disjunction that can be demanded here. A parked run is "
+        "not a finished one: no obligation disappears, and parking never discharges "
+        "external standing.",
+        ["k-case-park", "k11-transfer", "c-pause"],
+        [("nf", ["duty", "custodian", "successor"]),
+         ("nfp", ["/payload/parking_closure_account_ref"]),
+         ("rp", [("custodian", ["accepted"], False),
+                 ("duty", ["potential", "recognized", "performing"], True)]),
+         ("fi",), AR],
+        hard=["rp", "fi", "nfp"]),
+
+    ("WorkOrder", "parked"): spec(
+        "An AUTHORIZED reason and the closure account that says what becomes of the "
+        "order's duties and unfinished obligations if it is never resumed. Every "
+        "surviving duty keeps a named accepted custodian. The record declares NO review "
+        "date, so the account is the only half of the kernel's disjunction that can be "
+        "demanded here. Parking an order does not release its lease, its reservations or "
+        "the entitlement behind it: no obligation disappears, and parking never "
+        "discharges external standing.",
+        ["k-case-park", "k11-transfer", "c-pause"],
+        [("nf", ["duty", "custodian", "successor"]),
+         ("nfp", ["/payload/parking_closure_account_ref"]),
+         ("rp", [("custodian", ["accepted"], False),
+                 ("duty", ["potential", "recognized", "performing"], True)]),
+         ("fi",), AR],
+        hard=["rp", "fi", "nfp"]),
+
     ("DeliveryCapacity", "verified"): spec(
         "verified requires actual performer acknowledgment, applicable access/materials, "
         "window, resources and continuity evidence; not compute availability.",
@@ -2821,12 +2902,92 @@ CONTRADICTIONS = [
              "closure account, so a reader does not take this sentence as the whole rule."],
         ],
         "scope_note": (
-            "The mechanism is on Case, the record the contradiction named. Seven other "
-            "records declare a `parked` phase -- Goal, Mission, Project, WorkflowRun, "
-            "KnowledgeQuestion, Opportunity, WorkOrder -- and none gains a closure-account "
-            "field here. Adding one to eight records on the authority of a contradiction "
-            "raised about one of them would be a bigger decision than the one recorded, "
-            "and it is not made. That is a KNOWN residue, stated rather than closed."),
+            "SUPERSEDED 2026-09-13 by GR-02, and kept verbatim because what was deferred "
+            "is the useful part: \"The mechanism is on Case, the record the contradiction "
+            "named. Seven other records declare a `parked` phase -- Goal, Mission, "
+            "Project, WorkflowRun, KnowledgeQuestion, Opportunity, WorkOrder -- and none "
+            "gains a closure-account field here. Adding one to eight records on the "
+            "authority of a contradiction raised about one of them would be a bigger "
+            "decision than the one recorded, and it is not made. That is a KNOWN residue, "
+            "stated rather than closed.\" The residue is closed now, per record rather "
+            "than in bulk, and `parked_record_disposition` below is the answer for all "
+            "eight."),
+        "parked_record_disposition": {
+            "decided": "2026-09-13, GR-02",
+            "discriminator": (
+                "Does the record's OWN payload declare a `Ref<Obligation>[]` field? This "
+                "is mechanical and checkable in record-registry.json, which is why it can "
+                "be stated rather than argued. Where it does, parking the record parks "
+                "duties belonging to that record, the kernel's closure account is what "
+                "says what becomes of them when the review never happens, and the field "
+                "is added and required by the parked criterion. Where it does not, every "
+                "duty reachable from the record belongs to some OTHER record that has its "
+                "own parking or closure guard, and a second account here would duplicate "
+                "an answer rather than supply one. Case carries `obligation_refs` and was "
+                "decided this way by R-K, so GR-02 extends one rule rather than inventing "
+                "a second."),
+            "field_added": {
+                "Mission": (
+                    "ADDED. Payload carries `residual_obligation_refs: Ref<Obligation>[]` "
+                    "-- obligations that are residual to the mission itself. Mission also "
+                    "declares `review_at`, so it is the only one of the four where "
+                    "`criterion.Mission.parked.v1` can demand BOTH halves of the kernel's "
+                    "disjunction, and it does."),
+                "Project": (
+                    "ADDED. Payload carries `closure_duty_refs: Ref<Obligation>[]`, and a "
+                    "parked project is exactly the state in which those duties stop being "
+                    "worked while remaining owed. No `review_at` on the record, so "
+                    "`criterion.Project.parked.v1` demands the account half only."),
+                "WorkflowRun": (
+                    "ADDED. Payload carries `unfinished_obligation_refs: "
+                    "Ref<Obligation>[]`. A run parked mid-execution holds a "
+                    "`continuation_ref` and its unfinished obligations; without an account "
+                    "those obligations have no disposition if the run is never resumed. No "
+                    "`review_at`, so the account half only."),
+                "WorkOrder": (
+                    "ADDED. Payload carries both `duty_refs: Ref<Obligation>[]` and "
+                    "`unfinished_obligation_refs: Ref<Obligation>[]`, plus a `lease` and "
+                    "`reservation_refs`. It is the strongest case of the four: parking an "
+                    "order suspends the work while the entitlement behind it survives. No "
+                    "`review_at`, so the account half only."),
+            },
+            "no_account_needed": {
+                "Goal": (
+                    "NO ACCOUNT. Goal's payload declares no obligation field at all; its "
+                    "duties are carried by the Cases in `case_refs`, and each Case's own "
+                    "`criterion.Case.parked.v1` already demands an account for them. The "
+                    "corpus says the same thing directly -- 03-company-capabilities.md: "
+                    "\"At review time an untouched goal is reaffirmed with evidence, "
+                    "narrowed, parked with a reopening trigger or abandoned with duty "
+                    "disposition\" -- duty disposition happens at ABANDONMENT, parking "
+                    "takes a reopening trigger, and `reopen_predicate` and `review_at` are "
+                    "both REQUIRED fields on the record. The review half is already "
+                    "structurally present; the account half would answer a question the "
+                    "Cases answer."),
+                "KnowledgeQuestion": (
+                    "NO ACCOUNT. No obligation field; `affected_refs` point at records "
+                    "that carry their own duties. A parked question owes nobody anything "
+                    "-- the kernel's own Case row names this case exactly: \"Parking "
+                    "discretionary inquiry may retain unknown truth.\" Retained unknown "
+                    "truth is not a surviving duty, and the review half is already on the "
+                    "record as required `next_check_at` beside a required `stop_predicate`."),
+                "Opportunity": (
+                    "NO ACCOUNT. No obligation field and nothing owed to anyone: an "
+                    "Opportunity is pre-commitment, and 03-company-capabilities.md states "
+                    "the limit as a rule -- `Opportunity.advanced` must not be mistaken "
+                    "for \"Proven demand, a validated market or authority to sell. "
+                    "Advancing an idea never implies authority to sell.\" An idea that "
+                    "cannot create an entitlement cannot leave one behind when it is "
+                    "parked. The review half is on the record as a required "
+                    "`reopen_condition`."),
+            },
+            "what_would_reopen_this": (
+                "Any of the three gaining a `Ref<Obligation>[]` payload field, or a guard "
+                "elsewhere that lets a duty be owned by a Goal, KnowledgeQuestion or "
+                "Opportunity directly rather than through a Case. The discriminator is "
+                "re-checkable against record-registry.json at any time, which is the "
+                "point of choosing a mechanical one."),
+        },
     },
 ]
 
