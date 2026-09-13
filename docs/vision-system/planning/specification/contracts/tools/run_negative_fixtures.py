@@ -251,6 +251,16 @@ def execute_fixture(fixture, base):
                 os.symlink(sibling, Path(scratch) / sibling.name)
         for source in sorted(ROOT.glob("*.json")):
             os.symlink(source, directory / source.name)
+        # RC4-03. The two fixture MANIFESTs, and NOT the fixtures themselves. The suite
+        # does not run inside a fixture's tree -- CONTRACTS_FIXTURE_RUN=1 skips it, or this
+        # would recurse -- but the FLOOR is a property of the manifest alone rather than of
+        # the tree, so validate_contracts.py checks it outside that guard and a fixture can
+        # therefore express it. Symlinks, so an unpatched fixture measures the real
+        # declaration; apply_patch materialises the file it writes through.
+        for kind in ("negative", "positive"):
+            (directory / "fixtures" / kind).mkdir(parents=True)
+            os.symlink(ROOT / "fixtures" / kind / "MANIFEST.json",
+                       directory / "fixtures" / kind / "MANIFEST.json")
         shutil.copy2(ROOT / "validate_contracts.py", directory / "validate_contracts.py")
         # The validator imports the one shared path grammar from tools/; without this
         # every fixture "fails" on ModuleNotFoundError, which is a failure for the
@@ -424,7 +434,14 @@ def main(verbose: bool) -> int:
         print("fixtures/negative/MANIFEST.json is missing; it declares how many fixtures "
               "must run, and without it a suite that lost 26 of 27 reports a pass (RC-04)")
         return 1
-    declared = json.loads(MANIFEST.read_text(encoding="utf-8"))["fixtures"]
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    declared = manifest["fixtures"]
+    # RC4-03: the declared count is a denominator and it needs a FLOOR, because a fixture
+    # struck from the tree and from the manifest in one edit leaves the two agreeing with
+    # each other. The floor is stated here, stated again as a literal in
+    # validate_contracts.py, and the two are compared there. Mirrors the positive runner,
+    # which has had this since R16 and is where the shape is from.
+    floor = manifest["floor"]
     if len(declared) != len(set(declared)):
         print("MANIFEST.json declares a fixture id twice; the declared count would then "
               "be met by fewer fixtures than it names")
@@ -436,17 +453,19 @@ def main(verbose: bool) -> int:
     present = [identifier for identifier, _, _ in fixtures]
     absent = sorted(set(declared) - set(present))
     undeclared = sorted(set(present) - set(declared))
-    if absent or undeclared:
-        # Both directions, and both of them matter. A declared fixture that is gone is a
+    if absent or undeclared or len(declared) < floor:
+        # Three directions, and each of them matters. A declared fixture that is gone is a
         # control someone deleted; a fixture present and undeclared is a control the
-        # denominator does not know about, so deleting it later would be silent.
+        # denominator does not know about, so deleting it later would be silent; and a
+        # declared count below the floor is both of them done in one edit (RC4-03).
         print(REPORT_MARKER)
         print(json.dumps({
             "check": "negative fixture count ratchet (RC-04)",
-            "declared": len(declared), "present": len(present),
+            "declared": len(declared), "present": len(present), "floor": floor,
             "declared_but_absent": absent, "present_but_undeclared": undeclared,
             "note": "every fixture is declared in fixtures/negative/MANIFEST.json; adding "
-                    "or removing one is an edit to that file as well as to the tree",
+                    "or removing one is an edit to that file as well as to the tree, and "
+                    "the declared count may not fall below the floor",
         }, indent=2))
         return 1
     failures = []

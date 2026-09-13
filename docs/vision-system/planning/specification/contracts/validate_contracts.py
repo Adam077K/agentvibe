@@ -1551,6 +1551,70 @@ checked(version_rows >= 14,
          "empty population passes vacuously", version_rows))
 
 
+# --- RC4-03: THE FIXTURE SUITE'S FLOORS. LITERALS, AND CHECKED IN EVERY RUN. ---
+#
+# RC-04 gave the negative suite a DECLARED denominator, so a fixture deleted from the tree
+# alone fails. It did not give it a FLOOR, so a fixture deleted from the tree AND the
+# manifest passes -- one hand writes both and the pair agrees with itself. The fourth
+# recheck measured it: 34 of 36 fixtures moved out of `fixtures/negative/` and removed from
+# MANIFEST.json in one edit, full run, exit 0 at 50.6 s, `checks: 288620` -- byte-identical
+# to the baseline and to every `conjunct_walk` field. The only number that moved was
+# `negative_fixtures_rejected: 36 -> 2`, and nothing compared it to anything. That matters
+# most here of all places, because the control that catches RC4-01 IS a fixture.
+#
+# This is the argument pinned-conjuncts.json's own floors are written from, applied to the
+# other table: literal floors of 25/44/6 exist because "an author could satisfy [the
+# coverage check] by moving all 25 pins into `unpinnable` one reason at a time". Replace
+# "pins" with "fixtures" and "unpinnable" with "MANIFEST.json" and the sentence is
+# unchanged.
+#
+# RAISE THESE WHENEVER FIXTURES ARE ADDED. Never lower one without writing the reason in
+# this comment; a floor that drifts down with the suite is the denominator again.
+#   negative: 53 at the fourth recheck, 56 now -- +3 for RC4-01's table flip, RC4-02's
+#             self-declared demanding primitive, and this floor's own fixture.
+#   positive: 17, one benign case per adverse case of selection-record section 12.5.
+#             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
+#             cases of that section, so the pairing rule that sets 17 does not reach them.
+NEGATIVE_FIXTURE_FLOOR = 56
+POSITIVE_FIXTURE_FLOOR = 17
+# Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
+# recheck said one could not -- "it is a property of the tree the runner is invoked in" --
+# and that is true of the RATCHET, which compares the tree to the manifest and needs both.
+# It is not true of the FLOOR, which is a property of the manifest alone. The scratch tree
+# each fixture runs in now carries the two MANIFEST.json files as symlinks for exactly this
+# reason, and r17-manifest-shrunk-below-floor patches one of them.
+for _kind, _floor in (("negative", NEGATIVE_FIXTURE_FLOOR), ("positive", POSITIVE_FIXTURE_FLOOR)):
+    _manifest_path = ROOT / "fixtures" / _kind / "MANIFEST.json"
+    checked(_manifest_path.exists(),
+            ("a fixture manifest is missing; it declares how many controls must run, and "
+             "without it a suite that lost all but one of them reports a pass (RC-04)",
+             str(_manifest_path)))
+    _manifest = json.loads(_manifest_path.read_text(encoding="utf-8"))
+    # The floor is a LITERAL here AND in the manifest, and the two are compared. A ratchet
+    # whose budget is read only from the file it measures moves when that file moves, which
+    # is the defect the pin floors are written as literals to avoid.
+    checked(_manifest.get("floor") == _floor,
+            ("a fixture manifest's declared floor differs from the literal in "
+             "validate_contracts.py; one of the two was edited alone, and the whole point "
+             "of keeping both is that lowering a floor takes two edits a reviewer sees",
+             _kind, {"manifest_floor": _manifest.get("floor"), "validator_floor": _floor}))
+    checked(bool(str(_manifest.get("floor_why", "")).strip()),
+            ("a fixture manifest declares a floor with no reason", _kind))
+    checked(len(_manifest["fixtures"]) >= _floor,
+            ("THE FIXTURE SUITE HAS SHRUNK BELOW ITS FLOOR: fixtures removed from the tree "
+             "AND from MANIFEST.json in one edit leave the declared count agreeing with "
+             "itself, and the verdict byte-identical except for one integer nothing "
+             "compares (RC4-03). The control that catches a mutation of the demand table "
+             "is itself a fixture",
+             _kind, {"declared": len(_manifest["fixtures"]), "floor": _floor,
+                     "note": "raising a floor is an edit to MANIFEST.json and to "
+                             "validate_contracts.py; lowering one is that plus a written "
+                             "reason in the constant's comment."}))
+NEGATIVE_FIXTURES_DECLARED = len(json.loads(
+    (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text(encoding="utf-8"))["fixtures"])
+POSITIVE_FIXTURES_DECLARED = len(json.loads(
+    (ROOT / "fixtures" / "positive" / "MANIFEST.json").read_text(encoding="utf-8"))["fixtures"])
+
 # --- Negative control. --------------------------------------------------------
 # Everything above passing proves nothing on its own: this file returned
 # {"status":"passed"} on the tree an independent review then found seven defects in.
@@ -1756,15 +1820,18 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
             ("a declared benign fixture did not pass",
              {"declared": len(declared_positive["fixtures"]),
               "passed": POSITIVE_RUN["passed_as_required"]}))
-    # The floor is a LITERAL here as well as in the manifest, and the two are compared.
-    # A ratchet whose budget is read only from the file it measures moves when that file
-    # moves, which is the defect the pin floors above are written as literals to avoid.
-    checked(len(declared_positive["fixtures"]) >= 17 and declared_positive["floor"] == 17,
+    # The floor itself is checked above, outside this guard, beside the negative one --
+    # RC4-03 gave the two suites one rule and one place, because the argument for a literal
+    # floor beside a hand-written denominator is the same argument in both directions. This
+    # line is what remains of it here: the pairing rule that SETS 17 is about this suite in
+    # particular, so it is stated where the benign run is judged.
+    checked(len(declared_positive["fixtures"]) >= POSITIVE_FIXTURE_FLOOR,
             ("the benign suite has shrunk below one paired case per adverse case of "
              "selection-record section 12.5; a pairing rule with fewer benign cases than "
              "adverse ones reports one number of the two it requires",
              {"declared": len(declared_positive["fixtures"]),
-              "manifest_floor": declared_positive["floor"], "floor": 17}))
+              "manifest_floor": declared_positive["floor"],
+              "floor": POSITIVE_FIXTURE_FLOOR}))
     FIXTURES_PASSED = POSITIVE_RUN["passed_as_required"]
 
-print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"positive_fixtures_passed":FIXTURES_PASSED,"limits":"Offline schema/ref/AST/source-inventory/registry checks plus paired negative and positive fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))
+print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"negative_fixtures_declared":NEGATIVE_FIXTURES_DECLARED,"negative_fixture_floor":NEGATIVE_FIXTURE_FLOOR,"positive_fixtures_passed":FIXTURES_PASSED,"positive_fixtures_declared":POSITIVE_FIXTURES_DECLARED,"positive_fixture_floor":POSITIVE_FIXTURE_FLOOR,"limits":"Offline schema/ref/AST/source-inventory/registry checks plus paired negative and positive fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))

@@ -1,0 +1,18 @@
+{
+  "id": "r17-manifest-shrunk-below-floor",
+  "repair": "RC4-03",
+  "finding": "RC4-03 (planning/reviews/G-02-recheck-04.md, probe 8b)",
+  "why": "The negative suite had a DECLARED denominator and no FLOOR. RC-04 built the denominator so that a fixture deleted from the tree alone fails; it could not catch a fixture deleted from the tree AND from fixtures/negative/MANIFEST.json in one edit, because one hand writes both and the pair then agrees with itself. The fourth recheck measured the cost: 34 of 36 fixtures moved out of the directory and struck from the manifest together, full run at exit 0 in 50.6 s, `checks: 288620` -- byte-identical to the baseline and to every `conjunct_walk` field -- with `negative_fixtures_rejected: 2`, a number nothing compared to anything. That is the argument pinned-conjuncts.json's literal floors of 25/44/6 are written from, applied to the other table: replace \"pins\" with \"fixtures\" and \"unpinnable\" with \"MANIFEST.json\" and the sentence is unchanged. It matters here more than anywhere else, because the one control that catches a mutation of the demand table (RC4-01) is itself a fixture in this list. This fixture strikes all but two ids from the manifest. The recheck judged that a fixture could not express this at all -- \"it is a property of the tree the runner is invoked in\" -- and that is true of the RATCHET, which compares tree to manifest and needs both; it is not true of the FLOOR, which is a property of the manifest alone, so validate_contracts.py checks it outside the fixture-run guard and the scratch tree carries the two manifests as symlinks. If this fixture ever passes validation again, the suite can be emptied one reviewed-looking edit at a time.",
+  "expect_failure_contains": "THE FIXTURE SUITE HAS SHRUNK BELOW ITS FLOOR",
+  "patch": [
+    {
+      "file": "fixtures/negative/MANIFEST.json",
+      "pointer": "/fixtures",
+      "op": "replace",
+      "value": [
+        "r1-edge-does-not-call-its-criterion",
+        "r2-acceptance-chain-loses-its-root"
+      ]
+    }
+  ]
+}
