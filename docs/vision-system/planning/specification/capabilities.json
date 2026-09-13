@@ -693,6 +693,8 @@
         "direction",
         "internal-record"
       ],
+      "declared_floor": "C1",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Preserve exact statement and scope; classify purpose, constraint, fact and taste separately.",
         "Return the interpreted beneficiary, exclusions and examples for accountable endorsement.",
@@ -789,6 +791,8 @@
         "financial",
         "attention"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Compare ventures by their stage-specific evidence and obligations.",
         "Reserve existing service and closure before exploratory allocation.",
@@ -874,6 +878,8 @@
       "consequence_classes": [
         "internal-analysis"
       ],
+      "declared_floor": "C0",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Cluster observed unmet needs without treating repeated sources as corroboration.",
         "State the beneficiary, current alternative, rival explanation and cheapest discriminating observation.",
@@ -962,6 +968,8 @@
         "personal-data",
         "financial"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Define sampling frame, consent or other applicable basis, recruitment and stopping criteria.",
         "Obtain authorized real interviews/observations; retain original language and withdrawal restrictions.",
@@ -1048,6 +1056,8 @@
         "external-query",
         "knowledge"
       ],
+      "declared_floor": "C2",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Bound market and competitor claims by segment, time and geography without inferring domicile.",
         "Read primary sources and relevant contrary evidence; record prices/features as dated observations.",
@@ -1142,6 +1152,8 @@
         "direction",
         "opportunity-cost"
       ],
+      "declared_floor": "C1",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Compare build, buy, partner, defer and abandon against actual alternatives.",
         "Separate a false market hypothesis from poor execution using discriminating evidence.",
@@ -1230,6 +1242,8 @@
         "internal-artifact",
         "customer-promise"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Translate customer outcome into requirements and excluded promises.",
         "Define purchase, onboarding, normal use, failure, support and cancellation acceptance checks.",
@@ -1315,6 +1329,8 @@
         "internal-artifact",
         "personal-data"
       ],
+      "declared_floor": "C2",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Produce inspectable alternatives for the complete journey.",
         "Render and inspect interaction, content, failure and accessibility behavior.",
@@ -1403,6 +1419,8 @@
         "identity",
         "public-claims"
       ],
+      "declared_floor": "C5",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Identify audience expectations and desired representation without inventing founder values.",
         "Create voice rules, first-contact and ongoing-relationship tone examples, and asset alternatives.",
@@ -1491,6 +1509,8 @@
         "deployment",
         "security"
       ],
+      "declared_floor": "C4",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Implement specified behavior in isolated source/artifact workspace.",
         "Run required tests, substantive review and integration checks against acceptance criteria.",
@@ -1581,6 +1601,8 @@
         "acceptance",
         "evidence"
       ],
+      "declared_floor": "C1",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Obtain criteria and independent source/destination evidence rather than producer summary alone.",
         "Evaluate utility, process, permission and missing evidence using negative controls.",
@@ -1684,6 +1706,8 @@
         "financial",
         "customer-promise"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Verify actual delivery, support, remedies, rights, funding and continuity against the offered service.",
         "Resolve the admitted launch acceptance manifest against exact Offer/ProductSpec/artifact/delivery/support subject versions; require a complete one-to-one requirement-ID join to current accepted child judgments before the release proposal.",
@@ -1779,6 +1803,8 @@
         "public-claims",
         "disclosure"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Create useful audience-specific content and variants from approved claims.",
         "Inspect accuracy, voice, rights, accessibility and disclosure including metadata/attachments.",
@@ -1873,6 +1899,8 @@
         "publication",
         "financial"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Choose authorized earned or paid channel using audience evidence and an experiment hypothesis.",
         "Resolve recipients and current permissions; schedule exact accepted assets without stale-copy bypass.",
@@ -1973,6 +2001,8 @@
         "financial",
         "relationship"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Qualify actual need and preserve objections/alternatives without counting interest as revenue.",
         "Agree exact permitted terms and record acceptance before customer duties are acknowledged.",
@@ -2069,6 +2099,8 @@
         "disclosure",
         "customer-promise"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Retrieve relevant authorized original exchanges and current relationship restrictions.",
         "Draft factual response or route human-sensitive dialogue; identify any new promise.",
@@ -2162,6 +2194,8 @@
         "financial",
         "customer-service"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Acknowledge actual problem and locate sold promise, affected scope and update deadline.",
         "Diagnose against real product/service evidence; perform repair, completion or authorized remedy.",
@@ -2253,6 +2287,8 @@
         "financial",
         "customer-terms"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Classify available demand as actual supported observation or honest unknown; compare provisional price and alternatives with observed/estimated/unknown delivery, support, refund and closure costs.",
         "Model recurring and failed-attempt contributions by cohort, preserving unknown costs and owner time separately.",
@@ -2346,6 +2382,8 @@
         "financial",
         "allocation"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Reconcile observed balances, commitments, unknown effects and restricted reserves without treating forecast revenue as cash.",
         "Prepare separate operating, exploration, service and closure resource views.",
@@ -2433,6 +2471,8 @@
         "financial-record",
         "reporting"
       ],
+      "declared_floor": "C2",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Match invoice/order/receipt and bank evidence; preserve unmatched amounts and classifications.",
         "Build balanced journal proposal with source links and applicable treatment; obtain required review.",
@@ -2522,6 +2562,8 @@
         "legal",
         "reporting"
       ],
+      "declared_floor": "C4",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Identify actual activity/entity/location/contract nexus and exact question without sector shortcuts.",
         "Obtain acknowledged engagement and substantive professional deliverable with conditions, expiry and contrary facts.",
@@ -2612,6 +2654,8 @@
         "disclosure",
         "deletion"
       ],
+      "declared_floor": "C4",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Inventory people, purposes, fields, recipients and retention before processing.",
         "For a rights request, scope identity checks and action; apply authorized correction/access/restriction/erasure through current validity boundary.",
@@ -2703,6 +2747,8 @@
         "availability",
         "credential"
       ],
+      "declared_floor": "C4",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Compare effective access and new persistent routes with approved graph.",
         "Contain compromised scope through independent recovery identity and find descendants.",
@@ -2798,6 +2844,8 @@
         "contract",
         "disclosure"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Compare internal production and suppliers including inspection, switching, evidence access and continuity costs.",
         "Verify real capability, dependency concentration, terms and authorized fee/duration; obtain actual accepted engagement.",
@@ -2892,6 +2940,8 @@
         "contract",
         "disclosure"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Assess mutual value and relevant incentives/dependencies with original discussions.",
         "Negotiate exact scope, attribution, performance, conflicts and exit through authorized humans.",
@@ -2989,6 +3039,8 @@
         "personal-data",
         "financial"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Define capacity, competence, availability and evaluation criteria before receiving candidate evidence.",
         "Collect proportionate evidence and actual assessment; record reasons, accommodations and candidate effort without hidden scoring.",
@@ -3085,6 +3137,8 @@
         "authority",
         "collaboration"
       ],
+      "declared_floor": "C5",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Verify identity and accepted scope; supply purpose-filtered onboarding packet and nonreopenable constraints.",
         "Exercise necessary access and understanding; acknowledge responsibility transfer with unresolved duties and deadlines.",
@@ -3175,6 +3229,8 @@
         "evidence",
         "decision-support"
       ],
+      "declared_floor": "C1",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Resolve exact source versions and cohort membership using approved mappings.",
         "Compute numerator, denominator, exclusions, missing intervals and uncertainty in native units.",
@@ -3271,6 +3327,8 @@
         "contact",
         "allocation"
       ],
+      "declared_floor": "C2",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Predeclare question, control/treatment, sample, exposure, resources and stop/analysis rules.",
         "Execute bounded observations or interventions, retaining failed attempts and departures from protocol.",
@@ -3370,6 +3428,8 @@
         "physical",
         "disclosure"
       ],
+      "declared_floor": "C4",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Confirm exact sold version and contact/access requirements; complete onboarding and verify usable access.",
         "Perform actual digital, human or physical service and record partial progress/receipt.",
@@ -3467,6 +3527,8 @@
         "availability",
         "remedy"
       ],
+      "declared_floor": "C4",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Receive and assess observations without promoting allegation into stop authority.",
         "Name commander and next communications; enact bounded protection while preserving valid due service.",
@@ -3553,6 +3615,8 @@
         "knowledge",
         "personal-data"
       ],
+      "declared_floor": "C2",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Capture source/version/epistemic type and record competing claims or missing evidence.",
         "Publish scoped derivative through loader lineage and atomic validity checks; retrieve only for authorized purpose.",
@@ -3644,6 +3708,8 @@
         "authority",
         "governance"
       ],
+      "declared_floor": "C5",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Identify actual principal, decision domain, affected parties and current rules.",
         "Obtain required competent inputs and legitimate endorsement; preserve dissent, constraints and reopening grounds.",
@@ -3733,6 +3799,8 @@
         "internal-analysis",
         "improvement"
       ],
+      "declared_floor": "C1",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Compare successful/failed outcomes with expectations, omissions and burden.",
         "State causal alternatives and a transferable change hypothesis with counterexamples.",
@@ -3833,6 +3901,8 @@
         "financial",
         "attention"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Measure accepted outcomes, queue age, source gaps and labor at defined load waves.",
         "Exercise service/closure reserves and shared owner/provider failure before increasing dependent promises.",
@@ -3927,6 +3997,8 @@
         "authority",
         "continuity"
       ],
+      "declared_floor": "C5",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Record reason, scope, carrying cost and current obligations.",
         "Withdraw incompatible new-work authority and verify ongoing operations, renewals and support coverage.",
@@ -4017,6 +4089,8 @@
         "credential",
         "continuity"
       ],
+      "declared_floor": "C5",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Contain affected egress; query C08 for a fresh nonce-bound signed RecoveryFrontier response and validate current membership/generation, completeness, keys and restrictions. Capture the response as attributed historical evidence only.",
         "Reconstruct potential duties and unknown effects; reconcile external state and continuation inputs.",
@@ -4111,6 +4185,8 @@
         "direction",
         "customer-promise"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Preserve old reasoning and identify genuinely changed purpose versus corrected factual assumption.",
         "Classify dependent new work as retained, changed or abandoned; inventory actual surviving promises.",
@@ -4217,6 +4293,8 @@
         "legal",
         "personal-data"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Stop admissions and reconcile every observed promise, contract, account, worker/supplier duty and unknown effect.",
         "Perform refunds, service completion, notices, exports, access removal, cancellations and actual professional filings as required.",
@@ -4312,6 +4390,8 @@
         "financial",
         "readiness"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Determine actual activity, location, counterparties and applicable formation/transaction requirements.",
         "Obtain authorized registrations/accounts/rights/arrangements and verify issued results, access and constraints.",
@@ -4400,6 +4480,8 @@
         "authority",
         "disclosure"
       ],
+      "declared_floor": "C5",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Inventory original purpose, constraints, active service, disputes, effects, records and deadlines.",
         "Provide purpose-limited package and exercise successor access and unfamiliar duty handling.",
@@ -4497,6 +4579,8 @@
         "remedy",
         "personal-data"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Acknowledge issue and locate duty without unnecessary identity burden; set actual applicable progress deadlines.",
         "Assess original evidence with alternate when custodian/conflict is disputed; issue reasons and available competent escalation.",
@@ -4595,6 +4679,8 @@
         "competence",
         "personal-data"
       ],
+      "declared_floor": "C2",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Reserve declared attention and independently select fixed ordinary/adverse original evidence with visible omissions.",
         "Use before-advice explanation/taste/recovery encounters and delayed unfamiliar transfer cases.",
@@ -4688,6 +4774,8 @@
         "evidence",
         "disclosure"
       ],
+      "declared_floor": "C2",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Collect authorized authoritative positions and native source watermarks with expected-feed inventory.",
         "Assemble attempts, outcomes, changed intent, stale/failed/skipped/omitted work, uncertainty and costs.",
@@ -4785,6 +4873,8 @@
         "financial",
         "disclosure"
       ],
+      "declared_floor": "C3",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Attest effective permitted route, identity, data recipients and available local execution boundary.",
         "Observe separate money/allowance/slots/attention and reserve protected due/review work.",
@@ -4884,6 +4974,8 @@
         "deployment",
         "authority"
       ],
+      "declared_floor": "C5",
+      "declared_floor_source": "class-mapping-table.json",
       "happy_path": [
         "Test exact proposed diff against old behavior, fresh adverse cases, full outcome/process and cost measures.",
         "Verify protected transitive dependencies and compatible rollback including in-flight work/schema/derived data.",

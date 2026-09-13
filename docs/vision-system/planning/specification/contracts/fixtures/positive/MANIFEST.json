@@ -6,7 +6,7 @@
     "tools/run_positive_fixtures.py: declared-but-absent and present-but-undeclared both fail, and a fixture that does NOT pass validation fails",
     "validate_contracts.py: the positive run's own count must equal this one, every declared fixture must have passed, and the declared count must not fall below the floor"
   ],
-  "floor": 26,
+  "floor": 27,
   "floor_why": "A literal, for the reason every other floor in this package is a literal: a count derived from the directory it measures is satisfied by the empty directory. Seventeen is one benign case per adverse case of selection-record section 12.5, and dropping one would drop the pairing rule for that row. Lowering this number is a decision and should read like one.",
   "fixtures": [
     "r16-01-derivation-gates-only-the-higher-class-benign",
@@ -26,6 +26,7 @@
     "r16-15-model-to-model-return-delivers-prose-benign",
     "r16-16-model-value-selects-the-acceptance-strength-benign",
     "r16-17-triage-refuses-a-genuine-job-on-unfamiliar-wording-benign",
+    "r18-capability-floor-has-no-source-benign",
     "r18-control-object-changed-without-authorization-benign",
     "r18-declared-grant-resolves-to-nothing-benign",
     "r18-effect-identity-triple-unconstrained-benign",

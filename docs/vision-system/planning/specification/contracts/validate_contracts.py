@@ -1352,6 +1352,83 @@ for _name, _primitive in PRIMITIVES.items():
 # RC3-01 and RC3-02 one layer out -- so the same `polarised_nodes` walk that decides a pin
 # row decides this, rather than a `predicate_id in json.dumps(body)` that would accept all
 # four.
+# --- F6A-06: THE DECLARED FLOOR HAS A SOURCE, AND THE SOURCE IS A CHECKED TABLE. ---
+#
+# `ConsequenceDerivation.declared_floor_ref` is REQUIRED, and 05 section 11 says the class
+# set is computed from four inputs including "the owning capability contract's declared
+# floor, and from nothing else". capabilities.json had NO floor field of any name, ZERO
+# occurrences of any C0-C5 token, and a 53-term free-text vocabulary that nothing mapped
+# onto the six classes. The mapping table was named three times across two chapters and did
+# not exist -- so an implementer populating that required field for CAP-17 (who accepts a
+# refund), CAP-22 (a privacy request from a non-customer) or CAP-24 (who signs a supplier
+# commitment) had no rule, and two implementers mapping 53 terms onto six classes
+# differently decide WHO MAY ACT differently.
+#
+# class-mapping-table.json is that table and is hand-authored, one reason per term. These
+# checks are what make it a contract rather than a document: every term is mapped, every
+# mapping is used, and every capability's floor is the maximum of its own terms rather than
+# a number someone typed.
+#
+# The `max` here is a FLOOR over a design-time vocabulary and is NOT the total rank 02
+# section 4 refuses. That prohibition is about collapsing a REACHED SET at evaluation time
+# and applying one row, which drops C2's human requirement on an action that is both C2 and
+# C3 (AT-M4-02). This produces one of the four INPUTS to the derivation; the derivation's
+# output is still a set and every member's gates still apply.
+MAPPING = FILES["class-mapping-table.json"]
+CAPABILITIES = json.loads((ROOT.parent / "capabilities.json").read_text(encoding="utf-8"))
+CLASS_IDS = ["C0", "C1", "C2", "C3", "C4", "C5"]
+checked(list(MAPPING["classes"]) == CLASS_IDS,
+        ("the mapping table's class set is not the six routing classes of 02 section 4; a "
+         "seventh class is refused there by name", list(MAPPING["classes"])))
+declared_terms = {term for capability in CAPABILITIES["capabilities"]
+                  for term in capability["consequence_classes"]}
+checked(declared_terms == set(MAPPING["mappings"]),
+        ("A CAPABILITY DECLARES A CONSEQUENCE TERM THE MAPPING TABLE DOES NOT MAP, or the "
+         "table maps a term no capability uses. An unmapped term is a capability whose floor "
+         "cannot be computed, which is the state every one of the 53 was in (F6A-06)",
+         {"declared, unmapped": sorted(declared_terms - set(MAPPING["mappings"])),
+          "mapped, undeclared": sorted(set(MAPPING["mappings"]) - declared_terms)}))
+for _term, _entry in MAPPING["mappings"].items():
+    checked(set(_entry) == {"class", "reason"}, ("mapping entry shape", _term, sorted(_entry)))
+    checked(_entry["class"] in CLASS_IDS, ("a term maps to no routing class", _term))
+    checked(_entry["reason"].strip(),
+            ("a term is mapped with no reason. The mapping decides who may act and a row "
+             "nobody can evaluate is a row nobody can argue with", _term))
+for _capability in CAPABILITIES["capabilities"]:
+    _computed = max(MAPPING["mappings"][term]["class"]
+                    for term in _capability["consequence_classes"])
+    checked(_capability.get("declared_floor") == _computed,
+            ("A CAPABILITY'S DECLARED FLOOR IS NOT WHAT ITS OWN TERMS MAP TO. The floor is "
+             "derived from the table or it is a number someone typed, and a typed number is "
+             "the thing this repair replaced (F6A-06)",
+             _capability["id"],
+             {"declared": _capability.get("declared_floor"), "from the table": _computed,
+              "terms": _capability["consequence_classes"]}))
+    checked(_capability.get("declared_floor_source") == "class-mapping-table.json",
+            ("a capability declares a floor and does not name where it came from",
+             _capability["id"]))
+# And the one place the chapters state a floor in prose, checked against the table rather
+# than trusted: 05 section 11, "It is therefore floored by the capability: CAP-13, CAP-14,
+# CAP-15 and CAP-16 floor at the economic/contractual class."
+for _promise_capability in ("CAP-13", "CAP-14", "CAP-15", "CAP-16"):
+    _row = next(c for c in CAPABILITIES["capabilities"] if c["id"] == _promise_capability)
+    checked(_row["declared_floor"] == "C3",
+            ("05 section 11 states that this capability floors at the economic/contractual "
+             "class and the mapping table computes something else. One of the two is wrong "
+             "and the prose cannot be the thing that gives way silently (F6A-06, MD-21)",
+             _promise_capability, _row["declared_floor"]))
+# The floor a derivation points at is a ConsequenceClassDefinition, and that record's
+# class_id is drawn from the same six -- which is what makes `declared_floor_ref` resolve to
+# this table's output rather than to an unrelated vocabulary.
+checked(RECORDS["ConsequenceDerivation"]["fields"]["payload"]["fields"]
+        ["declared_floor_ref"]["type"] == "Ref<ConsequenceClassDefinition>",
+        "the derivation's declared floor no longer points at a class definition")
+checked(set(SCHEMAS["records.schema.json"]["$defs"]["ConsequenceClassDefinition"]
+            ["properties"]["payload"]["properties"]["class_id"]["enum"]) == set(CLASS_IDS),
+        ("the class definition's own class_id is not the six this table maps onto, so a "
+         "capability's floor and the record its derivation points at would be drawn from "
+         "two different vocabularies (F6A-06)"))
+
 # --- F6D-11 / F6C-08: A BUSINESS IDENTITY THAT IS A NATURAL KEY SAYS SO, AND IS CHECKED. --
 #
 # `EffectIdentity`'s registry identity is the surrogate `(company_id, record_id, revision)`
@@ -1833,8 +1910,8 @@ checked(version_rows >= 14,
 #   positive: 17, one benign case per adverse case of selection-record section 12.5.
 #             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
 #             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 65
-POSITIVE_FIXTURE_FLOOR = 26
+NEGATIVE_FIXTURE_FLOOR = 66
+POSITIVE_FIXTURE_FLOOR = 27
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
