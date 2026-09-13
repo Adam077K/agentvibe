@@ -23,7 +23,9 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent
+_OVERRIDE = [a for a in sys.argv[1:] if not a.startswith("-")]
+ROOT = Path(_OVERRIDE[0]) if _OVERRIDE and Path(_OVERRIDE[0]).is_dir() \
+    else Path(__file__).resolve().parent.parent
 
 RECORDS = json.loads((ROOT / "record-registry.json").read_text())
 PREDICATES = json.loads((ROOT / "predicate-registry.json").read_text())

@@ -87,7 +87,11 @@ def main(dry_run: bool) -> int:
     for criterion_id in sorted(criteria_used):
         criterion = predicates[criterion_id]
         children = criterion["body"]["predicates"]
-        if any(child.get("op") == "accepted_for" for child in children):
+        # Search the WHOLE body, not just the top level. R2 moves `accepted_for`
+        # inside a genesis disjunct; a top-level-only test does not see it there and
+        # re-adds an unconditional copy OUTSIDE the disjunct, which silently undoes
+        # R2's grounding while every other number still looks right.
+        if any(node["op"] == "accepted_for" for node in op_nodes(criterion["body"])):
             continue
         acceptance = {
             "op": "accepted_for",
@@ -150,6 +154,10 @@ def main(dry_run: bool) -> int:
         "judgment_refs": JUDGMENT,
         "decision_refs": DECISION,
         "continuation_ref": CONTINUATION,
+        # R2's genesis branch: an edge into a chain record must be able to carry the
+        # signed root authorization, or the out-of-band path is unreachable from it.
+        "bootstrap_authorization": "BootstrapAuthorization",
+        "bootstrap_records": "BootstrapCandidate[]",
     }
     removed = Counter()
     for _, edge in edges:

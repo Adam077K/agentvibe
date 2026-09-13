@@ -51,7 +51,28 @@ def ref_schema(record_type: str):
     }
 
 
-def type_schema(declared: str):
+def business_record_types():
+    """Non-intrinsic business record types, derived from `intrinsic: true` in the
+    record registry -- never hand-listed. This is the CCR-03 exclusion set."""
+    records = load("record-registry.json")
+    return [name for name, record in sorted(records.items())
+            if not record["lifecycle"].get("intrinsic")]
+
+
+def any_ref_schema(record_types):
+    return {
+        "type": "object",
+        "properties": {
+            "record_id": dict(UUID_REF),
+            "record_type": {"type": "string", "enum": list(record_types)},
+            "revision": dict(REVISION_REF),
+        },
+        "required": ["record_id", "record_type", "revision"],
+        "additionalProperties": False,
+    }
+
+
+def type_schema(declared: str, record_enum=None):
     """Schema for one entry of `argument_types`, in the shape the registry already uses."""
     optional = declared.endswith("?")
     base = declared[:-1] if optional else declared
@@ -59,16 +80,24 @@ def type_schema(declared: str):
     if array:
         base = base[:-2]
     if base.startswith("Ref<") and base.endswith(">"):
-        inner = ref_schema(base[4:-1])
+        target = base[4:-1]
+        inner = any_ref_schema(record_enum) if target == "Record" else ref_schema(target)
+        if target == "Record" and record_enum is None:
+            raise ValueError("Ref<Record> needs an explicit record_type enum")
+    elif base[:1].isupper() or base == "string":
+        # A named value type resolves straight to values.schema.json, which is how
+        # every non-Ref argument in the committed registry already declares itself.
+        inner = {"$ref": f"values.schema.json#/$defs/{base}"}
     else:
         raise ValueError(f"no schema shape known for argument type {declared!r}")
     return {"type": "array", "items": inner} if array else inner
 
 
-def argument_schema(argument_types: dict):
+def argument_schema(argument_types: dict, record_enum=None):
     return {
         "type": "object",
-        "properties": {name: type_schema(declared) for name, declared in argument_types.items()},
+        "properties": {name: type_schema(declared, record_enum)
+                       for name, declared in argument_types.items()},
         "required": [name for name, declared in argument_types.items() if not declared.endswith("?")],
         "additionalProperties": False,
     }

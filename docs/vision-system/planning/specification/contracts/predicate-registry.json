@@ -25927,7 +25927,9 @@
     "argument_types": {
       "subject_ref": "Ref<EvaluatorProfile>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -25943,40 +25945,65 @@
           ]
         },
         {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
+          "op": "any",
+          "predicates": [
             {
-              "field_path": "/payload/calibration_refs",
-              "states": [
-                "accepted"
-              ],
-              "optional": false
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.EvaluatorProfile.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/calibration_refs",
+                      "states": [
+                        "accepted"
+                      ],
+                      "optional": false
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.EvaluatorProfile.admitted.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.EvaluatorProfile.admitted.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
             }
           ]
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.EvaluatorProfile.admitted.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.EvaluatorProfile.admitted.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
         }
       ]
     },
@@ -26062,12 +26089,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -52732,7 +52770,9 @@
     "argument_types": {
       "subject_ref": "Ref<Principal>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -52747,25 +52787,50 @@
           ]
         },
         {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.Principal.verified.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.Principal.verified.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
+          "op": "any",
+          "predicates": [
+            {
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.Principal.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.Principal.verified.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.Principal.verified.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -52851,12 +52916,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -53224,7 +53300,9 @@
     "argument_types": {
       "subject_ref": "Ref<IdentityBinding>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -53240,40 +53318,65 @@
           ]
         },
         {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
+          "op": "any",
+          "predicates": [
             {
-              "field_path": "/payload/principal_ref",
-              "states": [
-                "verified"
-              ],
-              "optional": false
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.IdentityBinding.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/principal_ref",
+                      "states": [
+                        "verified"
+                      ],
+                      "optional": false
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.IdentityBinding.active.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.IdentityBinding.active.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
             }
           ]
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.IdentityBinding.active.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.IdentityBinding.active.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
         }
       ]
     },
@@ -53359,12 +53462,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -54359,7 +54473,9 @@
     "argument_types": {
       "subject_ref": "Ref<Mandate>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -54377,47 +54493,72 @@
           ]
         },
         {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
+          "op": "any",
+          "predicates": [
             {
-              "field_path": "/payload/issuer_assignment_ref",
-              "states": [
-                "accepted"
-              ],
-              "optional": false
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.Mandate.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
             },
             {
-              "field_path": "/payload/holder_identity_ref",
-              "states": [
-                "active"
-              ],
-              "optional": false
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/issuer_assignment_ref",
+                      "states": [
+                        "accepted"
+                      ],
+                      "optional": false
+                    },
+                    {
+                      "field_path": "/payload/holder_identity_ref",
+                      "states": [
+                        "active"
+                      ],
+                      "optional": false
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.Mandate.accepted.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.Mandate.accepted.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
             }
           ]
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.Mandate.accepted.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.Mandate.accepted.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
         }
       ]
     },
@@ -54503,12 +54644,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -63370,7 +63522,9 @@
     "argument_types": {
       "subject_ref": "Ref<EvidenceBaseVersion>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -63385,21 +63539,6 @@
             "/payload/dependency_digests",
             "/payload/evaluator_profile_ref",
             "/payload/closure_snapshot_ref"
-          ]
-        },
-        {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
-            {
-              "field_path": "/payload/evaluator_profile_ref",
-              "states": [
-                "admitted"
-              ],
-              "optional": false
-            }
           ]
         },
         {
@@ -63419,25 +63558,65 @@
           }
         },
         {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.EvidenceBaseVersion.admitted.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.EvidenceBaseVersion.admitted.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
+          "op": "any",
+          "predicates": [
+            {
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.EvidenceBaseVersion.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/evaluator_profile_ref",
+                      "states": [
+                        "admitted"
+                      ],
+                      "optional": false
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.EvidenceBaseVersion.admitted.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.EvidenceBaseVersion.admitted.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -63523,12 +63702,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -63896,7 +64086,9 @@
     "argument_types": {
       "subject_ref": "Ref<EvidenceJudgment>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -63915,54 +64107,79 @@
           ]
         },
         {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
+          "op": "any",
+          "predicates": [
             {
-              "field_path": "/payload/evidence_base_ref",
-              "states": [
-                "admitted"
-              ],
-              "optional": false
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.EvidenceJudgment.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
             },
             {
-              "field_path": "/payload/deciding_assignment_ref",
-              "states": [
-                "accepted"
-              ],
-              "optional": false
-            },
-            {
-              "field_path": "/payload/deciding_mandate_ref",
-              "states": [
-                "accepted"
-              ],
-              "optional": false
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/evidence_base_ref",
+                      "states": [
+                        "admitted"
+                      ],
+                      "optional": false
+                    },
+                    {
+                      "field_path": "/payload/deciding_assignment_ref",
+                      "states": [
+                        "accepted"
+                      ],
+                      "optional": false
+                    },
+                    {
+                      "field_path": "/payload/deciding_mandate_ref",
+                      "states": [
+                        "accepted"
+                      ],
+                      "optional": false
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.EvidenceJudgment.accepted.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.EvidenceJudgment.accepted.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
             }
           ]
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.EvidenceJudgment.accepted.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.EvidenceJudgment.accepted.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
         }
       ]
     },
@@ -64048,12 +64265,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -65887,7 +66115,9 @@
     "argument_types": {
       "subject_ref": "Ref<ResponsibilityAssignment>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -65905,55 +66135,80 @@
           ]
         },
         {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
+          "op": "any",
+          "predicates": [
             {
-              "field_path": "/payload/custodian_identity_ref",
-              "states": [
-                "active"
-              ],
-              "optional": false
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.ResponsibilityAssignment.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
             },
             {
-              "field_path": "/payload/mandate_ref",
-              "states": [
-                "accepted"
-              ],
-              "optional": false
-            },
-            {
-              "field_path": "/payload/continuity_ref",
-              "states": [
-                "accepted",
-                "active"
-              ],
-              "optional": false
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/custodian_identity_ref",
+                      "states": [
+                        "active"
+                      ],
+                      "optional": false
+                    },
+                    {
+                      "field_path": "/payload/mandate_ref",
+                      "states": [
+                        "accepted"
+                      ],
+                      "optional": false
+                    },
+                    {
+                      "field_path": "/payload/continuity_ref",
+                      "states": [
+                        "accepted",
+                        "active"
+                      ],
+                      "optional": false
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.ResponsibilityAssignment.accepted.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.ResponsibilityAssignment.accepted.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
             }
           ]
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.ResponsibilityAssignment.accepted.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.ResponsibilityAssignment.accepted.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
         }
       ]
     },
@@ -66039,12 +66294,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -101098,7 +101364,9 @@
     "argument_types": {
       "subject_ref": "Ref<ContinuityArrangement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -101116,40 +101384,65 @@
           ]
         },
         {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
+          "op": "any",
+          "predicates": [
             {
-              "field_path": "/payload/exercise_judgment_ref",
-              "states": [
-                "accepted"
-              ],
-              "optional": true
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.ContinuityArrangement.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/exercise_judgment_ref",
+                      "states": [
+                        "accepted"
+                      ],
+                      "optional": true
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.ContinuityArrangement.accepted.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.ContinuityArrangement.accepted.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
             }
           ]
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.ContinuityArrangement.accepted.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.ContinuityArrangement.accepted.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
         }
       ]
     },
@@ -101235,12 +101528,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -101250,7 +101554,9 @@
     "argument_types": {
       "subject_ref": "Ref<ContinuityArrangement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -101268,40 +101574,65 @@
           ]
         },
         {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
+          "op": "any",
+          "predicates": [
             {
-              "field_path": "/payload/exercise_judgment_ref",
-              "states": [
-                "accepted"
-              ],
-              "optional": true
+              "op": "call",
+              "predicate_id": "evidence.bootstrap.ContinuityArrangement.v1",
+              "arguments": {
+                "subject_ref": {
+                  "arg": "subject_ref"
+                },
+                "authorization": {
+                  "arg": "bootstrap_authorization"
+                },
+                "records": {
+                  "arg": "bootstrap_records"
+                }
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "related_phases",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "bindings": [
+                    {
+                      "field_path": "/payload/exercise_judgment_ref",
+                      "states": [
+                        "accepted"
+                      ],
+                      "optional": true
+                    }
+                  ]
+                },
+                {
+                  "op": "accepted_for",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.ContinuityArrangement.active.v1",
+                  "judgment_refs": {
+                    "arg": "judgment_refs"
+                  }
+                },
+                {
+                  "op": "attested_result",
+                  "subject_ref": {
+                    "arg": "subject_ref"
+                  },
+                  "predicate_id": "criterion.ContinuityArrangement.active.v1",
+                  "predicate_version": "1.0",
+                  "observation_refs": {
+                    "arg": "observation_refs"
+                  }
+                }
+              ]
             }
           ]
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.ContinuityArrangement.active.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
-        },
-        {
-          "op": "attested_result",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.ContinuityArrangement.active.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
         }
       ]
     },
@@ -101387,12 +101718,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -174839,7 +175181,9 @@
     "argument_types": {
       "subject_ref": "Ref<EvaluatorProfile>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -174882,6 +175226,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -174969,12 +175319,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -236558,7 +236919,9 @@
     "argument_types": {
       "subject_ref": "Ref<Principal>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -236601,6 +236964,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -236688,12 +237057,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -237447,7 +237827,9 @@
     "argument_types": {
       "subject_ref": "Ref<Principal>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -237490,6 +237872,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -237577,12 +237965,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -237778,7 +238177,9 @@
     "argument_types": {
       "subject_ref": "Ref<IdentityBinding>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -237831,6 +238232,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -237918,12 +238325,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -238521,7 +238939,9 @@
     "argument_types": {
       "subject_ref": "Ref<IdentityBinding>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -238574,6 +238994,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -238661,12 +239087,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -240287,7 +240724,9 @@
       "subject_ref": "Ref<Mandate>",
       "observation_refs": "Ref<Observation>[]",
       "judgment_refs": "Ref<EvidenceJudgment>[]",
-      "decision_refs": "Ref<DecisionRecord>[]"
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -240343,6 +240782,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -240456,13 +240901,24 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
         "judgment_refs",
-        "decision_refs"
+        "decision_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -241031,7 +241487,9 @@
       "subject_ref": "Ref<Mandate>",
       "observation_refs": "Ref<Observation>[]",
       "judgment_refs": "Ref<EvidenceJudgment>[]",
-      "decision_refs": "Ref<DecisionRecord>[]"
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -241087,6 +241545,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -241200,13 +241664,24 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
         "judgment_refs",
-        "decision_refs"
+        "decision_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -261066,7 +261541,9 @@
     "argument_types": {
       "subject_ref": "Ref<EvidenceBaseVersion>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -261109,6 +261586,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -261196,12 +261679,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -261955,7 +262449,9 @@
     "argument_types": {
       "subject_ref": "Ref<EvidenceJudgment>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -262005,6 +262501,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -262092,12 +262594,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -262597,7 +263110,9 @@
     "argument_types": {
       "subject_ref": "Ref<EvidenceJudgment>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -262647,6 +263162,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -262734,12 +263255,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -266270,7 +266802,9 @@
       "subject_ref": "Ref<ResponsibilityAssignment>",
       "observation_refs": "Ref<Observation>[]",
       "judgment_refs": "Ref<EvidenceJudgment>[]",
-      "decision_refs": "Ref<DecisionRecord>[]"
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -266326,6 +266860,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -266439,13 +266979,24 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
         "judgment_refs",
-        "decision_refs"
+        "decision_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -267193,7 +267744,9 @@
       "subject_ref": "Ref<ResponsibilityAssignment>",
       "observation_refs": "Ref<Observation>[]",
       "judgment_refs": "Ref<EvidenceJudgment>[]",
-      "decision_refs": "Ref<DecisionRecord>[]"
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -267249,6 +267802,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -267362,13 +267921,24 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
         "judgment_refs",
-        "decision_refs"
+        "decision_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -334468,7 +335038,9 @@
     "argument_types": {
       "subject_ref": "Ref<ContinuityArrangement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -334511,6 +335083,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -334598,12 +335176,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -334799,7 +335388,9 @@
     "argument_types": {
       "subject_ref": "Ref<ContinuityArrangement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -334842,6 +335433,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -334929,12 +335526,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -336280,7 +336888,9 @@
     "argument_types": {
       "subject_ref": "Ref<ContinuityArrangement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "bootstrap_authorization": "BootstrapAuthorization",
+      "bootstrap_records": "BootstrapCandidate[]"
     },
     "body": {
       "op": "all",
@@ -336323,6 +336933,12 @@
             },
             "judgment_refs": {
               "arg": "judgment_refs"
+            },
+            "bootstrap_authorization": {
+              "arg": "bootstrap_authorization"
+            },
+            "bootstrap_records": {
+              "arg": "bootstrap_records"
             }
           }
         }
@@ -336410,12 +337026,23 @@
             ],
             "additionalProperties": false
           }
+        },
+        "bootstrap_authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "bootstrap_records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "bootstrap_authorization",
+        "bootstrap_records"
       ],
       "additionalProperties": false
     }
@@ -355203,6 +355830,550 @@
       },
       "required": [
         "command"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.ContinuityArrangement.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<ContinuityArrangement>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "ContinuityArrangement is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "ContinuityArrangement"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.EvaluatorProfile.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<EvaluatorProfile>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "EvaluatorProfile is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "EvaluatorProfile"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.EvidenceBaseVersion.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<EvidenceBaseVersion>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "EvidenceBaseVersion is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "EvidenceBaseVersion"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.EvidenceJudgment.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<EvidenceJudgment>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "EvidenceJudgment is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "EvidenceJudgment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.IdentityBinding.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<IdentityBinding>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "IdentityBinding is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "IdentityBinding"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.Mandate.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Mandate>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "Mandate is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Mandate"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.Principal.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Principal>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "Principal is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Principal"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "evidence.bootstrap.ResponsibilityAssignment.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<ResponsibilityAssignment>",
+      "authorization": "BootstrapAuthorization",
+      "records": "BootstrapCandidate[]"
+    },
+    "body": {
+      "op": "bootstrap_roots",
+      "subject_ref": {
+        "arg": "subject_ref"
+      },
+      "authorization": {
+        "arg": "authorization"
+      },
+      "records": {
+        "arg": "records"
+      }
+    },
+    "meaning": "ResponsibilityAssignment is admitted as a member of the signed genesis group. The actual founder and root custodian authenticated this exact bounded preparatory namespace and its initial records; acceptance here derives from that recorded human act and from no predicate. The identities of those humans are a deployment prerequisite and are not supplied by any contract in this directory.",
+    "owner_component": "S1-C01",
+    "source": "11-schemas-state-contracts.md#bootstrap-and-competent-acceptance",
+    "failure": "false or unresolved denies the genesis path; the derived acceptance path remains available and an ungrounded chain must deny rather than assume",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "ResponsibilityAssignment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "authorization": {
+          "$ref": "values.schema.json#/$defs/BootstrapAuthorization"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "values.schema.json#/$defs/BootstrapCandidate"
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "authorization",
+        "records"
       ],
       "additionalProperties": false
     }
