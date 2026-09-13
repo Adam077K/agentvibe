@@ -1,0 +1,11 @@
+{
+  "SendClaim": {
+    "clauses": [
+      "creation only authority.attempt.claim with current release and exact attempt index/request digest",
+      "unique operation/attempt and one-use gateway boot ledger; generation, identity, grant, scope and prerequisite epochs match",
+      "first-send deadline finite and no later than release/grant window; actual bytes bounded",
+      "post-commit SendAuthorizationBundle requires independent exact receipt and fresh restrictions; no local-primary proof"
+    ],
+    "reason": "SendClaim is an intrinsic record with `transitions: []`, so no edge guard can carry a control_contract node naming it. These clauses describe intent and enforce nothing; they are kept here so that is visible."
+  }
+}

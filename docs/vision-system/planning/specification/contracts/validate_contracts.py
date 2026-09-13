@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Offline specification checks. This is not a production predicate/authority runtime."""
 from __future__ import annotations
-import copy
-import hashlib
 import json
-import re
+import os
+import sys
 from pathlib import Path
 from decimal import Decimal
 from urllib.parse import urldefrag
@@ -12,6 +11,16 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT / "tools"))
+import destination_paths  # noqa: E402  one implementation of the path grammar, shared
+import derive_inventory  # noqa: E402  one implementation of the inventory derivation
+# Anchor the derivation at THIS validator's directory. derive_inventory resolves its
+# own __file__, and tools/ may be a symlink -- under which the validator would
+# cheerfully derive from the real registries while claiming to check the tree in
+# front of it. That is a validator reporting on a file it is not reading.
+derive_inventory.CONTRACTS = ROOT
+derive_inventory.SOURCES = ROOT.parent
+import acceptance_chain  # noqa: E402  the FI-12 chain walk, shared with the repair tools
 COUNT = 0
 
 def checked(condition, detail):
@@ -86,6 +95,17 @@ for file, schema in SCHEMAS.items():
                 key = key.replace("~1", "/").replace("~0", "~")
                 checked(key in target, ("schema pointer", file, node["$ref"], key))
                 target = target[key]
+# CCR-07: the inventory is DERIVED, not authored beside the thing it checks. At
+# a7b2c5c `source_fields` was a byte-for-byte copy of source-field-mappings.json --
+# a tautology wearing the costume of a coverage test.
+inventory_drift = derive_inventory.differences(INVENTORY)
+checked(not inventory_drift, ("coverage inventory differs from its derivation", inventory_drift))
+# And the claim that derivation makes real: every declared source field is mapped
+# exactly once. 864 derived, 864 mapped, zero either way.
+mapped_sources = [m["source"] for m in FILES["source-field-mappings.json"]["mappings"]]
+checked(sorted(mapped_sources) == INVENTORY["source_fields"],
+        ("source fields and mappings disagree",
+         sorted(set(INVENTORY["source_fields"]) ^ set(mapped_sources))[:10]))
 checked(set(RECORDS) == set(INVENTORY["canonical_records"]), "record coverage")
 checked(set(COMMANDS) == set(INVENTORY["canonical_commands"]), "command coverage")
 checked(set(PREDICATES) == set(INVENTORY["canonical_predicates"]), "predicate coverage")
@@ -111,6 +131,13 @@ for name, record in RECORDS.items():
         checked(edge["from"] in phases and edge["to"] in phases, ("phase edge", edge))
         checked(edge["predicate_id"] in PREDICATES, ("edge predicate", edge))
         checked(bool(edge["allowed_command_ids"]), ("unrouted edge", edge))
+        # CCR-04: non-emptiness is not membership. 26 edges routed to
+        # kernel.projection.recompute, which was in no registry, and a route to a
+        # command that does not exist reads exactly like a route to one that does.
+        for routed_command in edge["allowed_command_ids"]:
+            checked(routed_command in COMMANDS, ("unregistered routed command", edge["edge_id"], routed_command))
+            checked(name in COMMANDS[routed_command]["target_types"],
+                    ("command does not target this record", edge["edge_id"], routed_command, name))
         checked(edge["mutates"].startswith("LifecycleStatus") or record["lifecycle"]["projection"],
                 ("unexpected business mutation", edge))
     for relation in record["relations"]:
@@ -121,8 +148,109 @@ for name, command in COMMANDS.items():
     checked(set(command["target_types"]) <= set(RECORDS), ("command target", name))
     checked(name in SCHEMAS["commands.schema.json"]["$defs"], ("command schema", name))
 checked(set(INVENTORY["source_work_commands"]) <= set(COMMANDS), "source command coverage")
+
+# CCR-06: invariants.json, control-contracts.json and endpoints.json were loaded
+# above and referenced by no check below, so nothing failed when they were
+# contradicted -- which is exactly how CCR-03 survived. They bind here.
+#
+# REGISTERED_CHECKS is the closed set an invariant clause may name. A clause naming
+# a check that is not in it fails, so "enforced_by" cannot drift into decoration.
+REGISTERED_CHECKS = {
+    "lifecycle-status-subject-enum",
+    "record-envelope-version-and-no-state-field",
+    "time-window-declares-two-utc-bounds",
+    "command-result-accepted-requires-receipt",
+}
+INVARIANTS = FILES["invariants.json"]
+CONTROLS = FILES["control-contracts.json"]
+ENDPOINTS = FILES["endpoints.json"]
+claimed_checks = set()
+for subject, clauses in INVARIANTS.items():
+    for clause in clauses:
+        checked(isinstance(clause, dict) and set(clause) == {"clause", "enforced_by"},
+                ("invariant clause shape", subject, clause))
+        checked(isinstance(clause["clause"], str) and clause["clause"].strip(),
+                ("empty invariant clause", subject))
+        if clause["enforced_by"] is not None:
+            checked(clause["enforced_by"] in REGISTERED_CHECKS,
+                    ("invariant names an unregistered check", subject, clause["enforced_by"]))
+            claimed_checks.add(clause["enforced_by"])
+# And the converse: a registered check nobody claims is a check that drifted loose.
+checked(claimed_checks == REGISTERED_CHECKS,
+        ("registered checks not claimed by any invariant", sorted(REGISTERED_CHECKS - claimed_checks)))
+
+# record-envelope-version-and-no-state-field
+def payload_properties(record_name):
+    payload = SCHEMAS["records.schema.json"]["$defs"][record_name]["properties"].get("payload", {})
+    names = set(payload.get("properties", {}))
+    for branch in payload.get("oneOf", []):
+        names |= set(branch.get("properties", {}))
+    return names
+for name in RECORDS:
+    definition = SCHEMAS["records.schema.json"]["$defs"][name]
+    checked(definition["properties"].get("schema_version", {}).get("const") == "2.0",
+            ("record envelope schema_version", name))
+    # FI-12's whole design: state lives in LifecycleStatus, never in business bytes.
+    checked("state" not in payload_properties(name), ("payload declares a state field", name))
+
+# time-window-declares-two-utc-bounds
+time_window = SCHEMAS["values.schema.json"]["$defs"]["TimeWindow"]["properties"]
+for bound in ("starts_at", "ends_at"):
+    checked(time_window[bound].get("$ref", "").endswith("/UTC"), ("TimeWindow bound", bound))
+
+# command-result-accepted-requires-receipt
+command_result = SCHEMAS["values.schema.json"]["$defs"]["CommandResult"]
+checked("durability_receipt_ref" in json.dumps(command_result),
+        "CommandResult must be able to carry an independent durability receipt")
+
+# control-contracts.json binds through the control_contract primitive.
+def ops_in(body, found):
+    if isinstance(body, dict):
+        if "op" in body:
+            found.add(body["op"])
+        for value in body.values():
+            ops_in(value, found)
+    elif isinstance(body, list):
+        for value in body:
+            ops_in(value, found)
+    return found
+control_users = set()
+for name, record in RECORDS.items():
+    for edge in record["lifecycle"]["transitions"]:
+        if "control_contract" in ops_in(PREDICATES[edge["predicate_id"]]["body"], set()):
+            control_users.add(name)
+checked(control_users == set(CONTROLS),
+        ("control-contracts.json must name exactly the records whose guards invoke it",
+         sorted(control_users ^ set(CONTROLS))))
+for name, clauses in CONTROLS.items():
+    checked(bool(clauses) and all(isinstance(c, str) and c.strip() for c in clauses),
+            ("empty control contract", name))
+
+# endpoints.json binds: every named request/response resolves, every owner exists.
+components = {record["owner_component"] for record in RECORDS.values()}
+for endpoint in ENDPOINTS:
+    checked(endpoint["owner"] in components, ("endpoint owner component", endpoint["path"]))
+    for role in ("request", "response"):
+        named = endpoint[role]
+        target = named[4:-1] if named.startswith("Ref<") and named.endswith(">") else named
+        checked(target == "Record" or any(target in schema["$defs"] for schema in SCHEMAS.values()),
+                ("endpoint names an undefined type", endpoint["path"], role, named))
 # The AST has no opaque eval/code/prompt escape. World-facing primitives have typed named contracts.
 call_graph = {name: set() for name in PREDICATES}
+
+def ref_target(declared):
+    """Record type named by a Ref<X>, Ref<X>[] or Ref<X>? argument declaration."""
+    if not isinstance(declared, str):
+        return None
+    base = declared[:-1] if declared.endswith("?") else declared
+    base = base[:-2] if base.endswith("[]") else base
+    return base[4:-1] if base.startswith("Ref<") and base.endswith(">") else None
+
+def admitted_record_types(schema):
+    """The record_type enum a primitive parameter admits, or None if it constrains none."""
+    if schema.get("type") == "array":
+        schema = schema.get("items", {})
+    return schema.get("properties", {}).get("record_type", {}).get("enum")
 
 def ast_check(node, env, predicate_name):
     if isinstance(node, list):
@@ -150,6 +278,27 @@ def ast_check(node, env, predicate_name):
             checked(set(node["arguments"]) == set(PREDICATES[target]["argument_types"]),
                     ("predicate call args", target))
             call_graph[predicate_name].add(target)
+        # CCR-03: a primitive's record_type enum is enforcement, not documentation.
+        # Before this, judgment_matches(subject_ref = Ref<LifecycleStatus>) validated --
+        # a status accepted by a judgment about that status -- because nothing ever
+        # compared an argument's declared type against the enum the primitive names.
+        parameter_schemas = PRIMITIVES[operator].get("argument_schema", {}).get("properties", {})
+        for parameter, value in node.items():
+            if parameter == "op" or parameter not in parameter_schemas:
+                continue
+            if not (isinstance(value, dict) and set(value) == {"arg"}):
+                continue
+            wanted = admitted_record_types(parameter_schemas[parameter])
+            declared = PREDICATES[predicate_name]["argument_types"].get(value["arg"])
+            if wanted is None or ref_target(declared) is None:
+                continue
+            # Compare enum to enum, so a generic Ref<Record> argument is checked by
+            # what its own argument_schema admits rather than by the word "Record".
+            offered = admitted_record_types(
+                PREDICATES[predicate_name]["argument_schema"]["properties"][value["arg"]])
+            checked(offered is not None and set(offered) <= set(wanted),
+                    ("primitive argument record type", predicate_name, operator, parameter,
+                     sorted(set(offered or []) - set(wanted))))
         for key, value in node.items():
             if key not in ("op", "predicate_id"):
                 ast_check(value, env, predicate_name)
@@ -171,20 +320,50 @@ def visit(name):
     done.add(name)
 for name in call_graph:
     visit(name)
+
+def transitively_read(predicate_name, seen=frozenset()):
+    """Argument names a predicate actually reads, following calls into callees."""
+    if predicate_name in seen:
+        return set()
+    seen = seen | {predicate_name}
+    body = PREDICATES[predicate_name]["body"]
+    def arg_names(node):
+        found = set()
+        for item in walk(node):
+            if isinstance(item, dict) and set(item) == {"arg"}:
+                found.add(item["arg"])
+        return found
+    found = arg_names(body)
+    for node in walk(body):
+        if isinstance(node, dict) and node.get("op") == "call":
+            inner = transitively_read(node["predicate_id"], seen)
+            for parameter, passed in node["arguments"].items():
+                if parameter in inner:
+                    found |= arg_names(passed)
+    return found
 # Source field inventory must be unique and cover every source question catalog record field.
 source_fields = FILES["source-field-mappings.json"]["mappings"]
 checked(len({x["source"] for x in source_fields}) == len(source_fields), "unique source field mapping")
 for mapping in source_fields:
     checked(mapping["canonical_record"] in RECORDS, ("mapped canonical record", mapping))
-    checked(bool(mapping["destination"]), ("missing mapped field", mapping))
+    # CCR-05: truthiness is not resolution. A destination naming a field that does
+    # not exist, or carrying a whole sentence, passed `bool(...)` exactly as a real
+    # one did. The grammar has one implementation, in tools/destination_paths.py.
+    # Prose first, because a sentence and a typo both fail resolution and only one
+    # of them has an obvious remedy; the message should say which.
+    checked(" " not in mapping["destination"],
+            ("destination carries prose; put it in `note`", mapping["source"],
+             mapping["destination"]))
+    unresolved = destination_paths.resolve(SCHEMAS, mapping["canonical_record"],
+                                           mapping["destination"])
+    checked(unresolved is None,
+            ("unresolvable destination", mapping["source"], mapping["destination"], unresolved))
 
-# Pure synthetic cases. These helpers specify focal contracts; they are deliberately not a runtime.
+# Schema shape cases, positive AND negative. These read values.schema.json, so an
+# edit to it moves them -- unlike the synthetic domain models deleted below.
 U1 = "01800000-0000-7000-8000-000000000001"
-U2 = "01800000-0000-7000-8000-000000000002"
 def ref(kind, revision="1", rid=U1):
     return {"record_id": rid, "record_type": kind, "revision": revision}
-def key(value):
-    return (value["record_type"], value["record_id"], value["revision"])
 for valid in ("0", "1", "18446744073709551615"):
     shape_case("values.schema.json", "UInt64", valid, True)
 for invalid in ("01", "-1", 1, "1.0"):
@@ -201,126 +380,105 @@ shape_case("values.schema.json", "BudgetBinding", ref("Budget"), False)
 shape_case("values.schema.json", "MoneyKnowledge", {"knowledge":"unknown","reason":"no receipts yet","evidence_refs":[],"responsible_assignment":ref("ResponsibilityAssignment")}, True)
 shape_case("values.schema.json", "MoneyKnowledge", {"knowledge":"unknown","reason":"unobserved","amount":{"currency":"USD","minor_units":"0","exponent":2},"evidence_refs":[],"responsible_assignment":ref("ResponsibilityAssignment")}, False)
 shape_case("values.schema.json", "CommandResult", {"command_id":U1,"outcome":"accepted","result_refs":[],"event_ids":[],"reason_codes":[],"retry":"never","status_url":"/v1/commands/x","obligation_refs":[]}, True)
-# Shape permits response union; semantic accepted guard below requires independent proof.
-def command_accepted(result, independently_verified):
-    return result.get("outcome") == "accepted" and bool(result.get("committed_position")) and key(result.get("durability_receipt_ref", ref("DurabilityReceipt", "0"))) in independently_verified
-pending = {"outcome":"accepted","committed_position":{"registry_generation":"1","sequence":"3","transaction_hash":"a"*64}}
-checked(not command_accepted(pending, set()), "local commit is not independently durable")
-pending["durability_receipt_ref"] = ref("DurabilityReceipt")
-checked(not command_accepted(pending, set()), "receipt-shaped caller input is not witness verification")
-checked(command_accepted(pending, {key(ref("DurabilityReceipt"))}), "exact independently verified receipt can support generic accepted")
+# --- FI-11 and FI-12, read off the registries. -------------------------------
+#
+# What stood here was an author-written 33-line `FocalStore`, plus synthetic models
+# of launch readiness, pre-sale capacity, pricing, recovery freshness and deletion.
+# F-canonical-01 measured what they cost: they read ZERO bytes of any registry, so
+# not one of them could fail for any edit to the contracts. A validator's evidence
+# block that cannot respond to the artifact is decoration.
+#
+# Every check below reads the committed registries instead. The FI-12 design they
+# enforce is the accepted one: `mutates: "LifecycleStatus only; exact immutable
+# business subject retained"`, with LifecycleStatus carrying no lifecycle of itself.
 
-class FocalStore:
-    """Synthetic ordered-head model for the FI-12 join; no I/O, signing or real-world truth."""
-    def __init__(self):
-        self.business_heads = {}
-        self.content = {}
-        self.status = {}
-        self.restrictions = set()
-        self.judgments = {}
-    def record(self, subject, payload):
-        identity = subject["record_type"], subject["record_id"]
-        self.business_heads[identity] = copy.deepcopy(subject)
-        self.content[key(subject)] = copy.deepcopy(payload)
-        self.status[key(subject)] = {"phase":"proposed","status_revision":1,"links":{}}
-    def current(self, subject):
-        return self.business_heads.get((subject["record_type"],subject["record_id"])) == subject
-    def judge(self, jref, subject, predicate, outcome, closure_current=True, scope="product", criteria="config1"):
-        checked(key(subject) in self.content, "future subject cannot be judged")
-        self.judgments[key(jref)] = {"subject":copy.deepcopy(subject),"predicate":copy.deepcopy(predicate),"phase":outcome,"closure":closure_current,"scope":scope,"criteria":criteria}
-    def exact_judgment(self, jref, subject, predicate, scope="product", criteria="config1"):
-        j = self.judgments.get(key(jref))
-        return bool(j and self.current(subject) and key(subject) not in self.restrictions and j["subject"] == subject and j["predicate"] == predicate and j["phase"] == "accepted" and j["closure"] and j["scope"] == scope and j["criteria"] == criteria)
-    def accept(self, subject, expected_status_revision, jref, predicate):
-        status = self.status.get(key(subject))
-        if not status or status["status_revision"] != expected_status_revision or not self.exact_judgment(jref,subject,predicate):
-            return "conflict_or_denied"
-        status.update(phase="validated",status_revision=expected_status_revision+1,links={"acceptance":jref})
-        return "accepted"
-    def edit(self, subject, payload, expected_status_revision):
-        if not self.current(subject) or self.status[key(subject)]["status_revision"] != expected_status_revision:
-            return None
-        successor = {**subject,"revision":str(int(subject["revision"])+1)}
-        self.record(successor,payload)
-        return successor
-store=FocalStore();product=ref("ProductSpec");judgment=ref("EvidenceJudgment")
-predicate={"predicate_id":"criterion.ProductSpec.validated.v1","version":"1.0","arguments":{"subject_ref":product,"observation_refs":[]}}
-store.record(product,{"requirement":"real usable delivery"})
-original=copy.deepcopy(store.content[key(product)])
-store.judge(judgment,product,predicate,"accepted")
-checked(store.accept(product,1,judgment,predicate)=="accepted", "ordinary immutable-subject acceptance")
-checked(store.content[key(product)]==original and store.current(product), "acceptance changes status only")
-checked(store.accept(product,1,judgment,predicate)=="conflict_or_denied", "status CAS prevents replay")
-new=store.edit(product,{"requirement":"changed delivery"},2)
-checked(new and store.status[key(new)]["phase"]=="proposed", "content edit initializes fresh unaccepted revision")
-checked(not store.exact_judgment(judgment,new,predicate), "old exact judgment cannot accept changed subject")
-checked(store.accept(product,2,judgment,predicate)=="conflict_or_denied", "old accepted projection cannot restore old head")
-# Edit-first race.
-race=FocalStore();race.record(product,original);race.judge(judgment,product,predicate,"accepted")
-checked(bool(race.edit(product,{"requirement":"raced"},1)), "edit can win head CAS")
-checked(race.accept(product,1,judgment,predicate)=="conflict_or_denied", "edit-first rejects stale acceptance")
-# Inconclusive/contested/unknown closure and wrong args cannot accept a subject.
-for outcome, closure in [("proposed",True),("inconclusive",True),("contested",True),("rejected",True),("accepted",False)]:
-    s=FocalStore();s.record(product,original);s.judge(judgment,product,predicate,outcome,closure)
-    checked(s.accept(product,1,judgment,predicate)=="conflict_or_denied", ("no false acceptance",outcome,closure))
-s=FocalStore();s.record(product,original);s.judge(judgment,product,{**predicate,"arguments":{"subject_ref":product,"observation_refs":[ref("Observation")]}},"accepted")
-checked(not s.exact_judgment(judgment,product,predicate), "same predicate ID with different arguments fails")
-s=FocalStore();s.record(product,original);s.judge(judgment,product,predicate,"accepted");s.restrictions.add(key(product))
-checked(not s.exact_judgment(judgment,product,predicate), "live restriction defeats stale accepted cache")
-# Exact launch child bijection uses distinct subjects and predicates; no self-support.
-def launch_children(requirements, bindings, launch_ref, valid_child):
-    required={r["id"]:r for r in requirements}
-    if len(required)!=len(requirements) or len(bindings)!=len(required) or len({b["id"] for b in bindings})!=len(bindings):
-        return False
-    for binding in bindings:
-        r=required.get(binding["id"])
-        if not r or binding["subject"]==launch_ref or r["subject"]!=binding["subject"] or r["predicate"]!=binding["predicate"] or not valid_child(binding):
-            return False
-    return True
-launch=ref("LaunchReadiness")
-requirements=[{"id":"product","subject":product,"predicate":"product.usable"},{"id":"delivery","subject":ref("DeliveryCapacity"),"predicate":"capacity.actual"},{"id":"support","subject":ref("DeliveryCapacity",rid=U2),"predicate":"support.actual"}]
-checked(launch_children(requirements,copy.deepcopy(requirements),launch,lambda _:True),"distinct launch child subjects work")
-for broken in [requirements[:-1],requirements+[requirements[0]],[requirements[0],requirements[0],requirements[2]],[{**requirements[0],"predicate":"uncertainty.report"},*requirements[1:]],[{**requirements[0],"subject":launch},*requirements[1:]]]:
-    checked(not launch_children(requirements,broken,launch,lambda _:True),"missing/duplicate/wrong/self child fails")
-checked(not launch_children(requirements,requirements,launch,lambda b:b["id"]!="delivery"),"stale child fails whole launch")
-# Real-world facts below are synthetic boundary inputs, not evidence those facts exist.
-def pre_sale_capacity(check):
-    return all(check[k] for k in ("performer_accepted","competence","access","materials","window","reservations","continuity"))
-capacity={k:True for k in ("performer_accepted","competence","access","materials","window","reservations","continuity")}
-checked(pre_sale_capacity(capacity),"pre-sale verification needs no customer agreement")
-checked(not pre_sale_capacity({**capacity,"continuity":False}),"unavailable continuity not a performed service")
-def price_acceptance(scope,demand,grant=False,capacity=False):
-    return scope=="internal_provisional" or (scope=="bounded_validation" and grant and capacity) or (scope in ("demand_supported_offer","scale_recommendation") and demand and capacity)
-checked(price_acceptance("internal_provisional",False),"honest unknown-demand preparation works")
-checked(not price_acceptance("scale_recommendation",False,True,True),"unknown demand cannot become scale evidence")
-checked(price_acceptance("bounded_validation",False,True,True),"authorized bounded validation path works")
-# Fresh recovery and first-send windows are not satisfied by old signed-looking data.
-def frontier_ok(reply,nonce,current_membership,verified_signature):
-    return verified_signature and reply.get("query_nonce")==nonce and reply.get("membership")==current_membership and reply.get("complete") is True
-checked(not frontier_ok({"query_nonce":"old","membership":"m1","complete":True},"new","m1",True),"old frontier evidence is not fresh recovery authority")
-checked(frontier_ok({"query_nonce":"new","membership":"m1","complete":True},"new","m1",True),"current verified frontier can be used")
-def first_send(claim, now, boot, used, receipt_verified, restriction_current):
-    return now<claim["deadline"] and boot==claim["boot"] and not used and receipt_verified and restriction_current
-claim={"deadline":100,"boot":"b1"}
-checked(first_send(claim,99,"b1",False,True,True),"bounded first-send positive case")
-for parameters in [(100,"b1",False,True,True),(99,"b0",False,True,True),(99,"b1",True,True,True),(99,"b1",False,False,True),(99,"b1",False,True,False)]:
-    checked(not first_send(claim,*parameters),"late/wrong-boot/duplicate/unwitnessed/restricted first send fails")
-# Protected type/size alone never licenses a plaintext copy or complete deletion.
-def deletion_complete(copies):
-    return all(c["purged"] or (c["authorized_retention"] and c["status"]=="residual") for c in copies) and all(c["status"]!="residual" for c in copies)
-checked(not deletion_complete([{"purged":False,"authorized_retention":False,"status":"unknown_offline"}]),"late/offline unknown copy keeps deletion incomplete")
-checked(not deletion_complete([{"purged":False,"authorized_retention":True,"status":"residual"}]),"lawful retention is residual, not complete erasure")
-checked(deletion_complete([{"purged":True,"authorized_retention":False,"status":"verified"}]),"actual all-copy purge can close scope")
-# Canonical lexemes and own-proof exclusion: these checks do not implement the production serializer.
-def no_own_proof(body):
-    forbidden={"transaction_hash","committed_position","durability_receipt_ref","signature"}
-    return not forbidden.intersection(body)
-checked(no_own_proof({"sequence":"1","predecessor_transaction_hash":"a"*64}),"GroupBody may name predecessor, not its own proof")
-checked(not no_own_proof({"sequence":"1","transaction_hash":"a"*64}),"own future group hash rejected")
+checked(RECORDS["LifecycleStatus"]["lifecycle"]["intrinsic"] is True,
+        "FI-12: LifecycleStatus is intrinsic")
+checked(RECORDS["LifecycleStatus"]["lifecycle"]["transitions"] == [],
+        "FI-12: LifecycleStatus has no lifecycle of its own")
+
+ACCEPTED_MUTATES = "LifecycleStatus only; exact immutable business subject retained"
+for name, record in RECORDS.items():
+    for edge in record["lifecycle"]["transitions"]:
+        if not record["lifecycle"]["projection"]:
+            checked(edge["mutates"] == ACCEPTED_MUTATES, ("FI-12 mutates shape", edge["edge_id"]))
+        guard = PREDICATES[edge["predicate_id"]]
+        nodes = [n for n in walk(guard["body"]) if isinstance(n, dict) and "op" in n]
+        ops = {n["op"] for n in nodes}
+        # The judged business bytes do not move when the status does.
+        checked("subject_unchanged" in ops, ("FI-12: guard omits subject_unchanged", edge["edge_id"]))
+        # The guard must restate THIS transition, not some other one. The restatement
+        # is tautological -- F-canonical-01 said so and was right -- but an unchecked
+        # tautology is worse than a checked one: it can be wrong and nothing notices.
+        status_edges = [n for n in nodes if n["op"] == "status_edge"]
+        checked(len(status_edges) == 1, ("FI-12: one status_edge per guard", edge["edge_id"]))
+        checked(status_edges[0]["from_state"] == edge["from"]
+                and status_edges[0]["to_state"] == edge["to"],
+                ("FI-12: guard states a different transition than its edge", edge["edge_id"]))
+        # FI-11 / CCR-01: the edge evaluates its own criterion, passing exactly the
+        # arguments that criterion declares.
+        calls = [n for n in nodes if n["op"] == "call"]
+        checked(any(n["predicate_id"] == edge["criterion_id"] for n in calls),
+                ("FI-11: edge does not call its criterion_id", edge["edge_id"]))
+        # FI-11: no argument is declared and left unread, transitively.
+        checked(set(guard["argument_types"]) == transitively_read(edge["predicate_id"]),
+                ("FI-11: declared arguments that nothing reads", edge["edge_id"],
+                 sorted(set(guard["argument_types"]) - transitively_read(edge["predicate_id"]))))
+
+# FI-12: a criterion's acceptance and attestation bind to THAT criterion by id and
+# version. A judgment accepted for one criterion cannot license another transition.
+for name, predicate in PREDICATES.items():
+    if not name.startswith("criterion."):
+        continue
+    for node in walk(predicate["body"]):
+        if isinstance(node, dict) and node.get("op") in ("accepted_for", "attested_result"):
+            checked(node["predicate_id"] == name,
+                    ("FI-12: criterion evidence names another predicate", name, node["predicate_id"]))
+
+# FI-12 constraint 6 / CCR-02: the acceptance chain terminates at a recorded human
+# root in finitely many steps. One implementation, in tools/acceptance_chain.py.
+acceptance_chain.RECORDS = RECORDS
+acceptance_chain.PREDICATES = PREDICATES
+grounded, chain_state = acceptance_chain.walk()
+checked(grounded, ("FI-12: mandate acceptance chain does not terminate at a bootstrap root",
+                   sorted(n for n, v in chain_state.items() if v != "grounded")))
+checked(any("bootstrap_roots" in json.dumps(p["body"]) for p in PREDICATES.values()),
+        "FI-12: bootstrap_roots is invoked by at least one predicate")
+
+# GroupBody may name its predecessor, never its own future proof. Read off the
+# schema rather than off a helper written three lines above the assertion.
+group_body = SCHEMAS["values.schema.json"]["$defs"]["GroupBody"].get("properties", {})
+for forbidden_field in ("transaction_hash", "committed_position", "durability_receipt_ref",
+                        "signature"):
+    checked(forbidden_field not in group_body, ("GroupBody carries its own proof", forbidden_field))
+
 try:
     json.loads('{"same":1,"same":2}',object_pairs_hook=unique_object)
     checked(False,"duplicate keys must be rejected")
 except ValueError:
     checked(True,"duplicate keys rejected before canonicalization")
 checked(Decimal("0.1")+Decimal("0.2")==Decimal("0.3"),"exact decimal resource arithmetic")
-print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"limits":"Offline schema/ref/AST/source-inventory checks and synthetic focal contracts. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed."},indent=2))
+
+# --- Negative control. --------------------------------------------------------
+# Everything above passing proves nothing on its own: this file returned
+# {"status":"passed"} on the tree an independent review then found seven defects in.
+# Each repair ships a counterexample that MUST be rejected, and a fixture that
+# passes fails the build here.
+#
+# CONTRACTS_FIXTURE_RUN is set by the runner in each scratch tree. Without it this
+# stage would recurse: the validator runs the fixtures, each of which runs the
+# validator, forever.
+FIXTURES_RUN = None
+if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
+    import subprocess
+    completed = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "run_negative_fixtures.py")],
+        capture_output=True, text=True,
+        env={**os.environ, "CONTRACTS_FIXTURE_RUN": "1"})
+    checked(completed.returncode == 0,
+            ("a negative fixture was not rejected; the check it names is gone",
+             completed.stdout[-2000:] + completed.stderr[-2000:]))
+    FIXTURES_RUN = json.loads(completed.stdout[completed.stdout.rindex("{"):])
+    checked(FIXTURES_RUN["fixtures"] > 0, "refusing a vacuous pass with zero negative fixtures")
+
+print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"limits":"Offline schema/ref/AST/source-inventory/registry checks plus negative fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))

@@ -3,7 +3,10 @@
   "$id": "https://agentvibe.invalid/spec/v2/values.schema.json",
   "$defs": {
     "string": {
-      "type": "string"
+      "type": "string",
+      "maxLength": 8192,
+      "pattern": "^[^\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]*$",
+      "description": "Bounded UTF-8 text with no C0/C7 control characters except tab, newline and carriage return. The bound exists because 907 references resolved to an unconstrained {\"type\": \"string\"}; the exact ceiling is a storage and denial-of-service decision and is flagged for the founder, not derived."
     },
     "boolean": {
       "type": "boolean"

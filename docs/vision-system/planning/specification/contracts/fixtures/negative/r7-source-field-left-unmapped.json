@@ -1,0 +1,14 @@
+{
+  "id": "r7-source-field-left-unmapped",
+  "repair": "R7",
+  "finding": "CCR-07",
+  "why": "source_fields was a byte copy of the mappings, so `every source field is mapped` could not fail. It is now derived from capabilities.json and work-knowledge-contracts.json independently, and this fixture drops one mapping.",
+  "expect_failure_contains": "source fields and mappings disagree",
+  "patch": [
+    {
+      "file": "source-field-mappings.json",
+      "pointer": "/mappings/0",
+      "op": "remove"
+    }
+  ]
+}

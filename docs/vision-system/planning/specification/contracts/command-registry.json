@@ -4030,5 +4030,39 @@
       ]
     },
     "planned_module": "system/packages/evidence"
+  },
+  "kernel.projection.recompute": {
+    "owner_component": "S1-C02",
+    "payload": {
+      "record_ref": "Ref<Record>",
+      "recompute_basis_refs": "Ref<DomainEvent>[]",
+      "read_position": "Position",
+      "reason_ref": "Ref<ReasonRecord>"
+    },
+    "source": "11-schemas-state-contracts.md#registration-and-transition-routing",
+    "read_only": false,
+    "schema_ref": "commands.schema.json#/$defs/kernel.projection.recompute",
+    "guard_predicate_id": "command.kernel.projection.recompute.v1",
+    "guard_version": "1.0",
+    "transaction_contract": {
+      "isolation": "serializable, <=3 serialization retries, no external I/O while holding locks",
+      "idempotency": "command_id with exact canonical request digest; a recompute at a different read_position is a different command, not a retry",
+      "cas": "projection lifecycle head plus every source head named in recompute_basis_refs at the stated read_position",
+      "commit": "one complete GroupBody without own future hash/proof; post-commit R independent durability before accepted",
+      "external_effect": "none; a projection recompute produces no world effect",
+      "on_failure": "typed reason, original result on retry, duties/holds retained",
+      "discriminator_checks": [
+        "record_type is a record whose lifecycle declares projection: true",
+        "target state belongs to exact registered subject type",
+        "recomputed business bytes equal prior business bytes outside the projected view",
+        "predicate IDs/version/argument schemas admitted; unregistered arbitrary predicates fail"
+      ]
+    },
+    "planned_module": "system/apps/witness",
+    "target_types": [
+      "AccessGraph",
+      "OperationStatus",
+      "OperatorProjection"
+    ]
   }
 }

@@ -43821,6 +43821,378 @@
           "$ref": "#/$defs/worker.report"
         }
       ]
+    },
+    "kernel.projection.recompute": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "$ref": "values.schema.json#/$defs/UUID"
+        },
+        "type": {
+          "const": "kernel.projection.recompute"
+        },
+        "schema_version": {
+          "const": "2.0"
+        },
+        "company_id": {
+          "$ref": "values.schema.json#/$defs/UUID"
+        },
+        "principal_id": {
+          "$ref": "values.schema.json#/$defs/UUID"
+        },
+        "expected_revisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "AccessDescendant",
+                  "AccessGraph",
+                  "AccessPolicy",
+                  "Account",
+                  "AccountReconstruction",
+                  "AdapterProfile",
+                  "AgentInstance",
+                  "AgentTemplate",
+                  "ArtifactVersion",
+                  "AttemptReport",
+                  "BackupPolicy",
+                  "BillingProfile",
+                  "Blocker",
+                  "BrandGuide",
+                  "BuildArtifact",
+                  "BusinessAccount",
+                  "Campaign",
+                  "CandidateAssessment",
+                  "CapacityObservation",
+                  "CapacityStudy",
+                  "Case",
+                  "CasePool",
+                  "CashPosition",
+                  "CausalEpisode",
+                  "ChangeWatch",
+                  "Claim",
+                  "ClosurePlan",
+                  "Commitment",
+                  "ConfigurationVersion",
+                  "ConflictClaim",
+                  "ConsequenceClassDefinition",
+                  "Constraint",
+                  "ContentAsset",
+                  "ContextManifest",
+                  "ContextTransformation",
+                  "Continuation",
+                  "ContinuityArrangement",
+                  "ContradictionSet",
+                  "Conversation",
+                  "DecisionChallenge",
+                  "DecisionPacket",
+                  "DecisionRecord",
+                  "Defect",
+                  "Delegation",
+                  "DeletionReceipt",
+                  "DeletionScope",
+                  "DeliveryCapacity",
+                  "DependencyClosure",
+                  "Deployment",
+                  "DisclosureContract",
+                  "DomainAssessment",
+                  "DomainAuthorityBinding",
+                  "DomainEvent",
+                  "DurabilityReceipt",
+                  "Economics",
+                  "EvaluationCase",
+                  "EvaluationPlan",
+                  "EvaluationRun",
+                  "EvaluationTrial",
+                  "EvaluatorProfile",
+                  "EvidenceBaseVersion",
+                  "EvidenceJudgment",
+                  "ExecutionCapacity",
+                  "ExecutionSelection",
+                  "ExperienceArtifact",
+                  "Experiment",
+                  "ExternalAttempt",
+                  "FailureRecord",
+                  "ForgetRequest",
+                  "FormationReadiness",
+                  "Fulfillment",
+                  "GenerationSeal",
+                  "Goal",
+                  "Grant",
+                  "GrievanceCase",
+                  "HandoffAcceptance",
+                  "HumanResponse",
+                  "IdentityBinding",
+                  "ImprovementProposal",
+                  "Incident",
+                  "IndexSnapshot",
+                  "InstructionBundle",
+                  "IntegrationConnection",
+                  "IntegrationInvocation",
+                  "IntegrationObservation",
+                  "IntentVersion",
+                  "InteractionDetermination",
+                  "InterventionRequest",
+                  "JournalBatch",
+                  "KeyManifest",
+                  "KnowledgeEntry",
+                  "KnowledgeQuestion",
+                  "LaunchReadiness",
+                  "LearningProposal",
+                  "LifecycleStatus",
+                  "Mandate",
+                  "MarketBrief",
+                  "MessageAcknowledgment",
+                  "MetricDefinition",
+                  "MetricSeries",
+                  "MigrationPlan",
+                  "Mission",
+                  "Obligation",
+                  "Observation",
+                  "ObservationSet",
+                  "Offer",
+                  "OperationIntent",
+                  "OperationStatus",
+                  "OperationalAdmission",
+                  "OperatorProjection",
+                  "Opportunity",
+                  "ParameterAuthority",
+                  "ParticipationEncounter",
+                  "ParticipationPlan",
+                  "Partnership",
+                  "PausePlan",
+                  "PivotPlan",
+                  "PrerequisiteSnapshot",
+                  "PriceProposal",
+                  "Principal",
+                  "Principle",
+                  "ProcessingUse",
+                  "ProductSpec",
+                  "ProfessionalDetermination",
+                  "ProfessionalRequest",
+                  "Project",
+                  "ProtectedChange",
+                  "ReasonRecord",
+                  "ReasoningPlan",
+                  "RecoveryEnvelope",
+                  "RecoveryPacket",
+                  "RegistryMembership",
+                  "Release",
+                  "ReleaseManifest",
+                  "ResearchPlan",
+                  "Reservation",
+                  "ResourceAccount",
+                  "ResponseDecision",
+                  "ResponsibilityAssignment",
+                  "RetentionPolicy",
+                  "RetrievalAttempt",
+                  "RetrievalProfile",
+                  "RetryContract",
+                  "Review",
+                  "RollbackPlan",
+                  "RolloutPlan",
+                  "RuntimeProfile",
+                  "SalesAgreement",
+                  "Schedule",
+                  "ScheduleOccurrence",
+                  "ScopeRegistry",
+                  "SecurityCase",
+                  "SemanticMappingVersion",
+                  "SendClaim",
+                  "SkillSelection",
+                  "SkillVersion",
+                  "SourceCursor",
+                  "SourceRecord",
+                  "StepExecution",
+                  "SummaryLoss",
+                  "SupplierEngagement",
+                  "SupportCase",
+                  "Suppression",
+                  "TransferPlan",
+                  "ValidityEpoch",
+                  "Venture",
+                  "WorkDependency",
+                  "WorkMessage",
+                  "WorkOrder",
+                  "WorkflowDefinition",
+                  "WorkflowRun",
+                  "WorkspaceAssignment",
+                  "Workstream"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "causal_episode_id": {
+          "$ref": "values.schema.json#/$defs/UUID"
+        },
+        "authority_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Mandate",
+                  "Grant"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "context_manifest_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "ContextManifest"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "record_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "AccessGraph",
+                    "OperationStatus",
+                    "OperatorProjection"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
+            },
+            "recompute_basis_refs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "record_id": {
+                    "$ref": "values.schema.json#/$defs/UUID"
+                  },
+                  "record_type": {
+                    "type": "string",
+                    "enum": [
+                      "DomainEvent"
+                    ]
+                  },
+                  "revision": {
+                    "$ref": "values.schema.json#/$defs/Revision"
+                  }
+                },
+                "required": [
+                  "record_id",
+                  "record_type",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "read_position": {
+              "$ref": "values.schema.json#/$defs/Position"
+            },
+            "reason_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ReasonRecord"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "record_ref",
+            "recompute_basis_refs",
+            "read_position",
+            "reason_ref"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "command_id",
+        "type",
+        "schema_version",
+        "company_id",
+        "principal_id",
+        "expected_revisions",
+        "causal_episode_id",
+        "authority_refs",
+        "payload"
+      ],
+      "additionalProperties": false
     }
   }
 }

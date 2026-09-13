@@ -1,0 +1,97 @@
+{
+  "id": "r3-lifecycle-status-as-judgment-subject",
+  "repair": "R3",
+  "finding": "CCR-03 / FI-12 constraint 2",
+  "why": "F-canonical-01's exact counterexample: a judgment_matches node whose subject_ref is a Ref<LifecycleStatus> -- a status accepted by a judgment about that status. It validated at cb4bf52 because every subject-taking primitive's record_type enum listed all 173 records and nothing compared an argument's declared type against it.",
+  "expect_failure_contains": "primitive argument record type",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/fixture.lifecycle_status_subject.v1",
+      "op": "add",
+      "value": {
+        "version": "1.0",
+        "argument_types": {
+          "subject_ref": "Ref<LifecycleStatus>",
+          "judgment_refs": "Ref<EvidenceJudgment>[]"
+        },
+        "body": {
+          "op": "judgment_matches",
+          "judgment_ref": {
+            "arg": "judgment_refs"
+          },
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "fixture.lifecycle_status_subject.v1",
+          "predicate_version": "1.0"
+        },
+        "meaning": "NEGATIVE FIXTURE. Must not validate.",
+        "owner_component": "S1-C02",
+        "source": "fixtures/negative/r3-lifecycle-status-as-judgment-subject.json",
+        "failure": "this predicate exists to be rejected",
+        "implementation_status": "negative fixture; never part of the contract",
+        "argument_schema": {
+          "type": "object",
+          "properties": {
+            "subject_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "LifecycleStatus"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
+            },
+            "judgment_refs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "record_id": {
+                    "$ref": "values.schema.json#/$defs/UUID"
+                  },
+                  "record_type": {
+                    "type": "string",
+                    "enum": [
+                      "EvidenceJudgment"
+                    ]
+                  },
+                  "revision": {
+                    "$ref": "values.schema.json#/$defs/Revision"
+                  }
+                },
+                "required": [
+                  "record_id",
+                  "record_type",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "subject_ref",
+            "judgment_refs"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "rederive_inventory": true
+}

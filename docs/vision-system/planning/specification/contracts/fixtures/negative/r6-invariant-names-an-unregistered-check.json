@@ -1,0 +1,15 @@
+{
+  "id": "r6-invariant-names-an-unregistered-check",
+  "repair": "R6",
+  "finding": "CCR-06",
+  "why": "invariants.json was prose that bound nothing; each clause now declares the check that enforces it, or null. If naming a check were free, `enforced_by` would become decoration and the file would be back where it started. This fixture names a check that does not exist.",
+  "expect_failure_contains": "invariant names an unregistered check",
+  "patch": [
+    {
+      "file": "invariants.json",
+      "pointer": "/Money/0/enforced_by",
+      "op": "replace",
+      "value": "currency-catalog-is-current"
+    }
+  ]
+}
