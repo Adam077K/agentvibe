@@ -1,0 +1,16 @@
+{
+  "id": "r16-13-refusal-with-no-named-failed-predicate",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 13; 05-work-agents-skills.md section 9",
+  "case": "A refusal with no named failed predicate.",
+  "paired_benign_fixture": "fixtures/positive/r16-13-refusal-with-no-named-failed-predicate-benign.json",
+  "why": "Section 12.5 row 13. Silence is not refusal, and neither is a required field set to the empty string: `nonempty_fields` asks that the path be present, and the emptiness test is what stops a refusal satisfying it with nothing in it. The mutation deletes that test and leaves presence demanded.",
+  "expect_failure_contains": "'guard.admission.refusal_names_failed_predicate', 'neq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.admission.refusal_names_failed_predicate/body/predicates/2",
+      "op": "remove"
+    }
+  ]
+}

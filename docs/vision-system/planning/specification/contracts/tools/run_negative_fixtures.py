@@ -199,7 +199,17 @@ def regenerate(directory):
         capture_output=True, text=True)
 
 
-def run_fixture(fixture, base, verbose):
+def execute_fixture(fixture, base):
+    """Build the scratch tree, apply the fixture, run the validator in it.
+
+    Returns (returncode, output). `returncode is None` means the fixture never reached
+    the validator -- its regeneration step failed -- and `output` is the reason.
+
+    Split out of run_fixture() so tools/run_positive_fixtures.py can judge the SAME
+    execution the other way round. Two implementations of "build a scratch tree and run
+    the validator in it" would disagree exactly when it mattered, and the tree layout
+    below is where four separate failures-for-the-wrong-reason have already been found.
+    """
     with tempfile.TemporaryDirectory() as scratch:
         # Mirror the real layout: <scratch>/planning/specification/contracts/, beside
         # the source documents the inventory derivation reads from ROOT.parent and the
@@ -257,9 +267,9 @@ def run_fixture(fixture, base, verbose):
         if fixture.get("regenerate_from_derivation"):
             authored = regenerate(directory)
             if authored.returncode != 0:
-                return False, ("the fixture's regeneration step failed, so the mutation "
-                               "never reached the validator:\n"
-                               + (authored.stdout + authored.stderr)[-900:])
+                return None, ("the fixture's regeneration step failed, so the mutation "
+                              "never reached the validator:\n"
+                              + (authored.stdout + authored.stderr)[-900:])
         if fixture.get("rederive_from_registries"):
             # A fixture that adds or removes a registry entry would otherwise trip a
             # DERIVATION check first and never reach the check it names: R7's inventory
@@ -281,8 +291,15 @@ def run_fixture(fixture, base, verbose):
             # validator start the whole fixture suite again, and the real failure
             # gets buried inside a nested transcript of itself.
             env={**os.environ, "CONTRACTS_FIXTURE_RUN": "1"})
-    output = completed.stdout + completed.stderr
-    if completed.returncode == 0:
+    return completed.returncode, completed.stdout + completed.stderr
+
+
+def run_fixture(fixture, base, verbose):
+    """A negative fixture passes when the validator REJECTED it, for the stated reason."""
+    code, output = execute_fixture(fixture, base)
+    if code is None:
+        return False, output
+    if code == 0:
         return False, "fixture PASSED validation; the check that should reject it is absent"
     wanted = fixture["expect_failure_contains"]
     if wanted not in output:

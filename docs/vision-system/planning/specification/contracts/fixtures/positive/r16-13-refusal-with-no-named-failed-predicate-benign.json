@@ -1,0 +1,29 @@
+{
+  "id": "r16-13-refusal-with-no-named-failed-predicate-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 13, benign column; 05-work-agents-skills.md section 9",
+  "case": "A refusal naming its predicate, accepted as a terminal state.",
+  "paired_adverse_fixture": "fixtures/negative/r16-13-refusal-with-no-named-failed-predicate.json",
+  "why": "A refusal is a TERMINAL STATE of the admission record, not an error: naming its predicate and its acceptance owner is what makes it one, and demanding the owner must not prevent the refusal being recorded.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.admission.refusal_names_failed_predicate/body/predicates/4",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/acceptance_owner_ref"
+        }
+      }
+    }
+  ]
+}

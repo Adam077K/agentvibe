@@ -1,0 +1,29 @@
+{
+  "id": "r16-06-probe-skills-grant-reaches-the-enforcement-point-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 6, benign column; 05-work-agents-skills.md section 9",
+  "case": "A legitimate skill whose procedure loads and whose grants come from the work order, which must not be blocked.",
+  "paired_adverse_fixture": "fixtures/negative/r16-06-probe-skills-grant-reaches-the-enforcement-point.json",
+  "why": "The ordinary admitted skill still names a procedure. Requiring it must not block the skill -- the control is on the PROBE's grant arriving, not on skills loading.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.launcher.stripping_positive_control/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "nonempty",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/procedure_ref"
+        }
+      }
+    }
+  ]
+}

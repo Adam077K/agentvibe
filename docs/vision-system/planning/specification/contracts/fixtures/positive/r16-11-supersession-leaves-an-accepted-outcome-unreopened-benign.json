@@ -1,0 +1,29 @@
+{
+  "id": "r16-11-supersession-leaves-an-accepted-outcome-unreopened-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 11, benign column; 05-work-agents-skills.md section 9",
+  "case": "A supersession with an EMPTY closure, which must not reopen anything.",
+  "paired_adverse_fixture": "fixtures/negative/r16-11-supersession-leaves-an-accepted-outcome-unreopened.json",
+  "why": "The `present` rows rather than `nonempty` rows exist for exactly this case: an empty closure is a computed result and not an absence, and the subset of two empty lists holds. Demanding the successor epoch must not turn the empty-closure supersession into a finding.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.supersession.walks_derived_closure/body/predicates/4",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/successor_epoch"
+        }
+      }
+    }
+  ]
+}

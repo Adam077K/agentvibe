@@ -1,0 +1,29 @@
+{
+  "id": "r16-03-producing-path-amends-the-criteria-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 3, benign column; 05-work-agents-skills.md section 9",
+  "case": "Criteria amended by the capability owner through a versioned revision before the producing step starts.",
+  "paired_adverse_fixture": "fixtures/negative/r16-03-producing-path-amends-the-criteria.json",
+  "why": "A legitimate amendment is a versioned revision by the owner, so the interval still names a criteria ref. Demanding one must not flag it. The authorship rule bites on WHO, not on WHETHER the criteria changed.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.criteria.author_not_in_producing_path/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/criteria_ref"
+        }
+      }
+    }
+  ]
+}

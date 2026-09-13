@@ -1,0 +1,16 @@
+{
+  "id": "r16-06-probe-skills-grant-reaches-the-enforcement-point",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 6; 05-work-agents-skills.md section 9",
+  "case": "A probe skill declaring a tool grant, whose ARRIVAL at the enforcement point is a failure -- the positive control on grant REMOVAL.",
+  "paired_benign_fixture": "fixtures/positive/r16-06-probe-skills-grant-reaches-the-enforcement-point-benign.json",
+  "why": "Section 12.5 row 6 and AS-X-02: three candidates gave grant DELIVERY a positive control and none gave removal one. The mutation deletes the reading the control exists to demand, leaving the probe and its result recorded and nothing asserting what the result must be. A stripper that has never been observed to strip is a stripper nobody has seen work.",
+  "expect_failure_contains": "'guard.launcher.stripping_positive_control', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.launcher.stripping_positive_control/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

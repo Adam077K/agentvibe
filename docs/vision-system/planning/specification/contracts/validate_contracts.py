@@ -1333,6 +1333,7 @@ checked(version_rows >= 14,
 # stage would recurse: the validator runs the fixtures, each of which runs the
 # validator, forever.
 FIXTURES_RUN = None
+FIXTURES_PASSED = None
 if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
     import subprocess
     # RC2-01, asked BEFORE the suite runs because it is a question about the TREE rather
@@ -1465,4 +1466,77 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
              {"declared": len(declared_fixtures),
               "rejected": FIXTURES_RUN["passed_as_required"]}))
 
-print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"limits":"Offline schema/ref/AST/source-inventory/registry checks plus negative fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))
+    # --- Positive control. The other half of the pairing rule. ------------------
+    #
+    # Everything above proves this file can say NO. It cannot distinguish a checker that
+    # refuses the seventeen adverse cases from one that refuses everything, and a checker
+    # that refuses everything passes every adverse row -- so an adverse count read on its
+    # own is not a detection rate. The acceptance protocol's pairing rule and X17's
+    # false-exclusion requirement say it plainly: BOTH NUMBERS ARE REPORTED OR NEITHER IS.
+    #
+    # Each benign fixture is the registry edit its paired adverse case's benign column
+    # implies, and this file fails when one of them is REJECTED.
+    for component in (ROOT / "fixtures" / "positive",):
+        checked(not component.is_symlink(),
+                ("a positive-fixture directory is a symlink, so the benign count and the "
+                 "MANIFEST.json declaring it both describe a tree other than this one",
+                 str(component)))
+    POSITIVE_RATCHET = "positive fixture count ratchet (R16)"
+    POSITIVE_MARKER = "--- positive fixture report (JSON follows) ---"
+    positive_source = (ROOT / "tools" / "run_positive_fixtures.py").read_text(encoding="utf-8")
+    for declared_constant in (POSITIVE_RATCHET, POSITIVE_MARKER,
+                              'FAILURE_RECORD_KEYS = ("id", "reason")'):
+        checked(declared_constant in positive_source,
+                ("a constant this file branches on is not in the positive runner that "
+                 "prints it, so the branch below is one nothing takes", declared_constant))
+    positive = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "run_positive_fixtures.py")],
+        capture_output=True, text=True,
+        env={**os.environ, "CONTRACTS_FIXTURE_RUN": "1"})
+    positive_at = positive.stdout.rfind(POSITIVE_MARKER)
+    try:
+        positive_said = (None if positive_at < 0 else
+                         json.loads(positive.stdout[positive_at + len(POSITIVE_MARKER):]))
+    except ValueError:
+        positive_said = None
+    positive_ratchet = (positive_said if isinstance(positive_said, dict)
+                        and positive_said.get("check") == POSITIVE_RATCHET else None)
+    checked(positive_ratchet is None,
+            ("the tree and fixtures/positive/MANIFEST.json disagree about which benign "
+             "fixtures exist, or the declared count fell below its floor, and NO benign "
+             "fixture was run", positive_ratchet))
+    positive_detail = ({"falsely_excluded": positive_said["falsely_excluded"],
+                        "fixtures": positive_said.get("fixtures")}
+                       if isinstance(positive_said, dict)
+                       and positive_said.get("falsely_excluded")
+                       else {"falsely_excluded": None,
+                             "why_no_list": "the positive runner reported no per-fixture "
+                                            "result; it refused before running one, or died",
+                             "runner_tail": positive.stdout[-2000:] + positive.stderr[-2000:]})
+    checked(positive.returncode == 0,
+            ("A BENIGN FIXTURE WAS REJECTED. This is a FALSE EXCLUSION: the control "
+             "refuses more than the adverse case it was written for, so the adverse count "
+             "above cannot be read as a detection rate", positive_detail))
+    POSITIVE_RUN = positive_said
+    declared_positive = json.loads(
+        (ROOT / "fixtures" / "positive" / "MANIFEST.json").read_text())
+    checked(POSITIVE_RUN["fixtures"] == len(declared_positive["fixtures"]),
+            ("positive fixture count differs from fixtures/positive/MANIFEST.json",
+             {"declared": len(declared_positive["fixtures"]),
+              "ran": POSITIVE_RUN["fixtures"]}))
+    checked(POSITIVE_RUN["passed_as_required"] == len(declared_positive["fixtures"]),
+            ("a declared benign fixture did not pass",
+             {"declared": len(declared_positive["fixtures"]),
+              "passed": POSITIVE_RUN["passed_as_required"]}))
+    # The floor is a LITERAL here as well as in the manifest, and the two are compared.
+    # A ratchet whose budget is read only from the file it measures moves when that file
+    # moves, which is the defect the pin floors above are written as literals to avoid.
+    checked(len(declared_positive["fixtures"]) >= 17 and declared_positive["floor"] == 17,
+            ("the benign suite has shrunk below one paired case per adverse case of "
+             "selection-record section 12.5; a pairing rule with fewer benign cases than "
+             "adverse ones reports one number of the two it requires",
+             {"declared": len(declared_positive["fixtures"]),
+              "manifest_floor": declared_positive["floor"], "floor": 17}))
+    FIXTURES_PASSED = POSITIVE_RUN["passed_as_required"]
+
+print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"positive_fixtures_passed":FIXTURES_PASSED,"limits":"Offline schema/ref/AST/source-inventory/registry checks plus paired negative and positive fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))

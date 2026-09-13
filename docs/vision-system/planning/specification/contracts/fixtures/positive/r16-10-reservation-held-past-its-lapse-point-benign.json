@@ -1,0 +1,29 @@
+{
+  "id": "r16-10-reservation-held-past-its-lapse-point-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 10, benign column; 05-work-agents-skills.md section 9",
+  "case": "A reservation consumed within the window, which must not be released early.",
+  "paired_adverse_fixture": "fixtures/negative/r16-10-reservation-held-past-its-lapse-point.json",
+  "why": "A lane consumed inside its window still names its holder. Demanding the holder reference must not release it early -- the lapse rule binds at the lapse point and nowhere before it.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.reservation.lapse_independent_of_consent/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/holder_ref"
+        }
+      }
+    }
+  ]
+}

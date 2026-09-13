@@ -1,0 +1,29 @@
+{
+  "id": "r16-04-trial-interest-declares-a-writer-key-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 4, benign column; 05-work-agents-skills.md section 9",
+  "case": "A trial interest writing into a kind whose writer is already any activation.",
+  "paired_adverse_fixture": "fixtures/negative/r16-04-trial-interest-declares-a-writer-key.json",
+  "why": "That interest declares no writer key and does carry a version. Requiring the version must not flag it -- the prohibition is on SELF-DECLARED keys, not on writing.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.interest.writer_keys_not_self_declared/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "nonempty",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/interest_version"
+        }
+      }
+    }
+  ]
+}

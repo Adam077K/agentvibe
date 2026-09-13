@@ -1,0 +1,29 @@
+{
+  "id": "r16-09-protected-lane-holder-refuses-a-shed-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 9, benign column; 05-work-agents-skills.md section 9",
+  "case": "A holder returning a stated minimum, which must be recorded as EVIDENCE and must not block.",
+  "paired_adverse_fixture": "fixtures/negative/r16-09-protected-lane-holder-refuses-a-shed.json",
+  "why": "Returning a minimum is what a holder is for. Requiring the minimum to be recorded must not block the suspension -- the refusal is of a VETO, not of an answer, and this pair is what keeps those two apart.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.holder.no_veto/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "nonempty",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/stated_minimum"
+        }
+      }
+    }
+  ]
+}

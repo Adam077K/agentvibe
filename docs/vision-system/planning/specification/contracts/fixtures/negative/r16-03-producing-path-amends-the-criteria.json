@@ -1,0 +1,16 @@
+{
+  "id": "r16-03-producing-path-amends-the-criteria",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 3; 05-work-agents-skills.md section 9",
+  "case": "Acceptance criteria amended by the producing path between admission and submission.",
+  "paired_benign_fixture": "fixtures/positive/r16-03-producing-path-amends-the-criteria-benign.json",
+  "why": "Section 12.5 row 3 and AS-X-01, resolved by R-D11/AD-018: this closes the fourth unblinded channel into the checker, which no research lane named and one review found. The mutation deletes the membership test, leaving the criteria author and the producing path both NAMED on the record and nothing comparing them -- which is exactly the shape the finding describes, a field that reads as a control.",
+  "expect_failure_contains": "'guard.criteria.author_not_in_producing_path', 'in'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.criteria.author_not_in_producing_path/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "r16-12-admitted-into-a-duty-class-with-no-staffed-holder-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 12, benign column; 05-work-agents-skills.md section 9",
+  "case": "Work admitted in a class whose role is filled.",
+  "paired_adverse_fixture": "fixtures/negative/r16-12-admitted-into-a-duty-class-with-no-staffed-holder.json",
+  "why": "The ordinary admission records one of the three admissible typing outcomes. Demanding it must not stop work being admitted into a class whose holder is staffed.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.admission.acceptance_role_staffed/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/typing_outcome"
+        }
+      }
+    }
+  ]
+}

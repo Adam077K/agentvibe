@@ -1,0 +1,16 @@
+{
+  "id": "r16-10-reservation-held-past-its-lapse-point",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 10; 05-work-agents-skills.md section 9",
+  "case": "A reservation unconsumed at the lapse point, held past it.",
+  "paired_benign_fixture": "fixtures/positive/r16-10-reservation-held-past-its-lapse-point-benign.json",
+  "why": "Section 12.5 row 10, R-X24 and AD-022: a reserve under a non-rolling allowance is waste rather than thrift. The mutation deletes the independence-of-consent conjunct, leaving the lapse point declared and the lapsed quantity recorded -- an accounting of a lapse that cannot happen without the holder agreeing to it.",
+  "expect_failure_contains": "'guard.reservation.lapse_independent_of_consent', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.reservation.lapse_independent_of_consent/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}
