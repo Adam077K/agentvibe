@@ -956,7 +956,6 @@ for pin in PINNED["pins"]:
                 ("`negated` on a pinned value op: polarity is a property of a predicate, "
                  "and this op returns a value", predicate_id, row["op"]))
         wanted_negated = bool(row.get("negated", False))
-        # Two questions, not one, because they have two different answers and a reader who
         # FOUR questions, not one, because they have four different answers and a reader
         # told the wrong one looks in the wrong place. CONTAINED: does the body carry this
         # conjunct anywhere at all. POSITIONED: does it carry it where a conjunct is
@@ -1211,8 +1210,8 @@ checked(requires_examined >= 700,
 # reach is the reach of the pin table and of RC-03 together. RC3-01 got through a walker
 # that was RUNNING, reporting three conjuncts as demanded and saying nothing about the one
 # operator it did not know -- so a future reviewer should be able to read the coverage off
-# the verdict rather than reconstruct it with a mutation. Four facts, and the set of
-# operators is the one that would have shown RC3-01 as an absence: `forall` is not in it.
+# the verdict rather than reconstruct it with a mutation. Eight numbers and one set, and
+# the SET is the one that would have shown RC3-01 as an absence: `forall` is not in it.
 #
 # The floors are LITERALS, well under the measured values, for the reason the pin floors
 # are: a floor derived from the walk it measures is satisfied by a walk that stopped.
