@@ -381,3 +381,11 @@ All sources below were checked on 2026-09-12. They support listed primitives, no
 | [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785.html) | Canonical JSON representation; hashing it cannot establish source truth, complete lineage or storage durability |
 
 Remaining obligations are independent specification review, generated executable schemas/validators consistent with these contracts, meaningful implementation tests, actual infrastructure/admin/performer admission, and full-company comparative evidence. A versioned paragraph is not a passed invariant.
+
+## 14. Registered lifecycle phases named only in the registry
+
+**SPECIFICATION.** The phase below is registered for a record this chapter owns in [the record registry](contracts/record-registry.json) and was named in no chapter of this specification before 2026-09-13. A state that exists in the machine and nowhere in the prose is a state two implementers define differently. This section states what must be true to be in it and what it must not be mistaken for. It adds no phase, no edge and no predicate; the registry remains the authority for which transitions exist.
+
+| Record · phase | What must be true to be in it | What it must not be mistaken for |
+|---|---|---|
+| `Commitment.ended_with_residuals` | Forward performance under the exact terms has legitimately ended, and at least one beneficiary right, unresolved performance or unknown effect survives that ending, each with a named owner | `ended`, or a discharge. Ending a label does not erase beneficiary rights or unresolved performance. It is also not `superseded`, which says a later commitment replaced this one rather than that this one stopped |

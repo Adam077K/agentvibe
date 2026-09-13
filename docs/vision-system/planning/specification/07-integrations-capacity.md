@@ -306,3 +306,11 @@ enforced as a unique constraint in the ingress inbox, with these four rules.
 | [Postmark admission details](../../research/reviews/2026-09-12-postmark-admission-inspection.md), 2026-09-12 | The narrow inspection carrying the above claims and the design follow-up this section discharges | Subsequent inspection of the same provider sources by the planning orchestrator — not independent corroboration, not legal advice, not account admission and not a runtime result |
 
 All five provider sources inherit SC-POLICY-1 through the IC-S04, IC-S30 and IC-S31 groups of [integration-claims.json](../../research/integration-claims.json): provider-primary and commercially interested, publication dates unknown except the terms' effective date, no independent corroboration, latest scheduled recheck 2026-10-12, and earlier revalidation before any dependency locking or operational admission. Nothing in this section has been implemented, connected, sent, received or tested.
+
+## 10. Registered lifecycle phases named only in the registry
+
+**SPECIFICATION.** The phase below is registered for a record this chapter owns in [the record registry](contracts/record-registry.json) and was named in no chapter of this specification before 2026-09-13. A state that exists in the machine and nowhere in the prose is a state two implementers define differently. It adds no phase, no edge and no predicate; the registry remains the authority for which transitions exist.
+
+| Record · phase | What must be true to be in it | What it must not be mistaken for |
+|---|---|---|
+| `Suppression.lifted` | A competent current authority, holding actual evidence, removed the recipient/purpose/channel restriction | An expiry, an absence from a provider's own suppression list, or the recipient's later re-consent standing alone. Company `Suppression` records are authoritative and permanent within their scope (9.2): they never lapse by time and are never removed because the provider's list no longer carries the address |

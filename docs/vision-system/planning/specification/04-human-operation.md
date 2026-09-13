@@ -135,3 +135,11 @@ Conformance cases include: stale phone approving changed terms; duplicate respon
 | F51-Q01–10 | Actual identity/mandates, scoped onboarding and evidence access, specialist versus founder authority, accepted handoff, shared decision rules, departure and capable succession |
 
 S1’s complete-specification gate still requires the other tracks, unified schemas, actual runtime/deployment choices and independent Phase G review. These contracts are not a completed interface, a tested competence intervention, a verified authentication boundary or an established continuity arrangement.
+
+## Registered lifecycle phases named only in the registry
+
+**SPECIFICATION.** The phase below is registered for a record this chapter owns in [the record registry](contracts/record-registry.json) and was named in no chapter of this specification before 2026-09-13. A state that exists in the machine and nowhere in the prose is a state two implementers define differently. It adds no phase, no edge and no predicate; the registry remains the authority for which transitions exist.
+
+| Record · phase | What must be true to be in it | What it must not be mistaken for |
+|---|---|---|
+| `InterventionRequest.routed` | A requested pause, cancel, contain, revoke or resume has reached the authority competent to act on it, and that authority has not yet answered | Proof that the external effect stopped. A visible pending request is not an effect; routing neither creates nor extends authority, and the operator surface must show it as requested rather than as done |
