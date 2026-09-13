@@ -718,11 +718,19 @@ for _name, _primitive in PRIMITIVES.items():
 
 from collections import namedtuple  # noqa: E402
 
-# One walked position: the node, and the four facts about its CONTEXT a containment check
+# One walked position: the node, and the five facts about its CONTEXT a containment check
 # needs. `quantifiers` is a tuple rather than a flag so the message can NAME the quantifier
 # and the collection it ranges over -- "inside a forall" sends a reader looking;
 # "forall(/payload/obligation_refs)" sends them to the field that admits `[]`.
-Positioned = namedtuple("Positioned", "node negated disjoined quantifiers in_value where")
+#
+# `ancestors` is RC4-02's field and it is a tuple of OPERATOR NAMES, outermost first: every
+# operator this node sits inside through a slot the table calls a predicate position. The
+# other four fields say what the TABLE decided about this position; `ancestors` says which
+# operators the table was asked about, so a rule may refuse an operator the table approved.
+# Value-slot descent stops it growing -- `eq.left` is not a demand-bearing ancestry, and
+# four live pin rows reach a `path` through exactly that slot.
+Positioned = namedtuple("Positioned",
+                        "node negated disjoined quantifiers in_value where ancestors")
 
 # An instrument reports its own coverage. A demand walk that quietly stopped walking would
 # leave every pin MISSING, which is loud -- and would leave RC-03's phase rule asserting
@@ -769,7 +777,7 @@ def quantifier_note(node, positions):
 
 
 def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
-                    in_value=False, where="body"):
+                    in_value=False, where="body", ancestors=()):
     """Every `op` node of a body, with the CONTEXT that decides whether the body's truth
     depends on it: beneath a `not`, beneath a disjunction, beneath a quantifier, or inside
     an argument that is not a predicate position at all.
@@ -799,7 +807,7 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
     if isinstance(node, list):
         for value in node:
             found.extend(polarised_nodes(value, owner, negated, disjoined, quantifiers,
-                                         in_value, where))
+                                         in_value, where, ancestors))
         return found
     if not isinstance(node, dict):
         return found
@@ -809,7 +817,7 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
         # sits in and creates none of its own.
         for value in node.values():
             found.extend(polarised_nodes(value, owner, negated, disjoined, quantifiers,
-                                         in_value, where))
+                                         in_value, where, ancestors))
         return found
     operator = node["op"]
     # ast_check refuses an undefined operator in any predicate body before this runs, so
@@ -841,7 +849,8 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
         WALK_CENSUS["under_disjunction"] += 1
     if negated:
         WALK_CENSUS["under_negation"] += 1
-    found.append(Positioned(node, negated, disjoined, quantifiers, in_value, where))
+    found.append(Positioned(node, negated, disjoined, quantifiers, in_value, where,
+                            ancestors))
     for key, value in node.items():
         if key == "op":
             continue
@@ -852,6 +861,13 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
                 "a conjunct written there would be walked with no declared demand",
                 owner, operator, key, sorted(positions)))
         slot = "%s.%s" % (operator, key)
+        # RC4-02. The ancestry grows exactly where the table says a conjunct NESTS -- a
+        # predicate position of an operator, entered from outside a value slot. That is
+        # the ancestry a demand rule is entitled to reason about, and it is the one the
+        # admissible-ancestor rule beside the pin loop refuses over. It deliberately does
+        # NOT grow through a value slot: `eq.left` holds a field read, not a conjunct, and
+        # four live pin rows match a `path` reached that way.
+        nested = () if (in_value or role == "value") else (operator,)
         if in_value or role == "value":
             child = (negated, disjoined, quantifiers, True, slot)
         elif role == "negated":
@@ -862,7 +878,7 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
         else:
             child = (negated, disjoined or ((role == "disjoined") != negated),
                      quantifiers, False, slot)
-        found.extend(polarised_nodes(value, owner, *child))
+        found.extend(polarised_nodes(value, owner, *child, ancestors + nested))
     return found
 
 
@@ -885,6 +901,109 @@ def pin_row_matches(node, row):
         if key in row and node.get(key) != row[key]:
             return False
     return True
+
+
+# --- RC4-02: WHICH OPERATORS A PINNED CONJUNCT MAY SIT INSIDE. HAND-WRITTEN. ----
+#
+# The structural rule, and it is the one sentence to keep: A REGISTRY MAY CLASSIFY
+# POSITIONS; ONLY THE PIN MAY SAY WHAT SATISFIES ONE.
+#
+# RC3-01's repair took the demand definition out of a hard-coded triple here and put it in
+# primitive-registry.json. That closed the table against an operator declaring NOTHING and
+# opened it to one declaring the WRONG thing, and the fourth recheck measured the price:
+# `every_linked_obligation`, registered with `argument_types.predicate: "boolean"` and
+# `argument_positions.predicate: "demanded"`, wrapping the three pinned conjuncts of
+# criterion.SalesAgreement.performed.v1 -- exit 0, 288,665 checks, 36 of 36 negative
+# fixtures still rejecting, over a registry that requires none of AD-013. The walker's own
+# sentence, "a hard-coded triple is how the FOURTH boolean-child primitive got through; the
+# fifth cannot", was false: the fifth gets through by declaring itself demanding.
+#
+# So the demand table still decides WHERE a conjunct nests -- that half is derived and must
+# stay derived, or an unregistered operator is walked as if it were `all` again -- and this
+# hand-written set decides WHICH of those nestings a pin may be satisfied through. The two
+# authors are different by construction: tools/author_phase_content.py writes
+# primitive-registry.json and can neither read nor write pinned-conjuncts.json.
+#
+# Membership is by NAME, not by role, and that is the whole point. A rule phrased over
+# roles ("any operator whose slot is `demanded`") reads the same file the attack edits.
+ADMISSIBLE = PINNED["admissible_ancestors"]
+ADMISSIBLE_KEYS = {"registry_role", "admits", "why"}
+# Declare what is read and REFUSE the rest, at the CONDITION rather than at the value: an
+# `admits` string this file does not evaluate would be a condition that reads as a
+# restriction and restricts nothing, which is the RC4 class one layer up.
+ADMITS_CONDITIONS = {"always", "row_polarity", "row_disjoined"}
+checked(isinstance(ADMISSIBLE, dict) and ADMISSIBLE,
+        "pinned-conjuncts.json declares no `admissible_ancestors`; an empty set would "
+        "refuse every pin rather than passing vacuously, but it is still not a table")
+for _operator, _entry in ADMISSIBLE.items():
+    checked(set(_entry) == ADMISSIBLE_KEYS,
+            ("admissible ancestor shape", _operator, sorted(set(_entry) ^ ADMISSIBLE_KEYS)))
+    checked(_entry["admits"] in ADMITS_CONDITIONS,
+            ("an admissible ancestor names a condition this file does not evaluate, so the "
+             "restriction it reads as is one nothing applies", _operator, _entry["admits"],
+             sorted(ADMITS_CONDITIONS)))
+    checked(_entry["why"].strip(), ("an admissible ancestor states no reason", _operator))
+    checked(_operator in PRIMITIVES,
+            ("pinned-conjuncts.json admits an operator the registry does not define",
+             _operator))
+    # The hand-written name and the derived role must agree about the SAME operator. They
+    # are two files with two authors, which is the design; two files with two authors that
+    # never meet is how a hand-written table goes stale beside a registry that moved.
+    checked(_entry["registry_role"] in set(PRIMITIVES[_operator]["argument_positions"].values()),
+            ("an admissible ancestor claims a role primitive-registry.json no longer gives "
+             "that operator anywhere, so this table and the demand table describe different "
+             "things", _operator, _entry["registry_role"],
+             sorted(set(PRIMITIVES[_operator]["argument_positions"].values()))))
+
+
+def inadmissible_ancestor(entry, row, boolean_op):
+    """The first ancestor operator this row may NOT be satisfied through, or None.
+
+    Deliberately NOT folded into pin_row_matches(): that function is SHAPE only by
+    contract -- RC3-01 and RC3-02 moved context out of it precisely because a third
+    context fact could not ride along as a boolean parameter, and putting one back would
+    undo that. Position is decided beside the pin loop, where the other three position
+    questions are decided, and this is the fourth.
+
+    `entry.ancestors` is every operator the node sits inside through a slot the registry
+    calls a predicate position, outermost first. An operator absent from ADMISSIBLE is
+    refused REGARDLESS of what `argument_positions` says about it -- that is RC4-02 -- and
+    an operator present is refused when its declared condition does not hold of this row.
+
+    Which half is the live control, stated rather than implied: MEMBERSHIP is. Both named
+    conditions -- `row_polarity` and `row_disjoined` -- are backstops over filters that
+    already shaped the set this runs on, so neither can fail on a tree the checks above it
+    passed. They are evaluated anyway and they are declared in pinned-conjuncts.json
+    anyway, because the alternative is a table whose conditions are prose, and a condition
+    nothing evaluates is what RC4 is about.
+    """
+    for operator in entry.ancestors:
+        rule = ADMISSIBLE.get(operator)
+        if rule is None:
+            return operator
+        condition = rule["admits"]
+        if condition == "always":
+            continue
+        if condition == "row_polarity":
+            # A backstop over the containment filter, which compared these two before this
+            # ran; for a pinned value op polarity is not a question and the filter says so.
+            if not boolean_op or entry.negated == bool(row.get("negated", False)):
+                continue
+            return operator
+        if condition == "row_disjoined":
+            # `not entry.disjoined` is not slack: `not(any(A, B))` DEMANDS `not A`, so the
+            # parity of the `not`s above the `any` decides whether this ancestor disjoins
+            # anything, and the walker already computed that into `entry.disjoined`. A rule
+            # that read only the row would refuse a conjunct the body genuinely demands.
+            if row.get("disjoined", False) or not entry.disjoined:
+                continue
+            return operator
+        # Unreachable while ADMITS_CONDITIONS is enforced above, and it raises rather than
+        # falling through to "admissible": a condition nobody evaluates must not read as a
+        # permission granted.
+        raise AssertionError(("an admissible-ancestor condition reached the walker "
+                              "unevaluated", operator, condition))
+    return None
 
 
 # A floor, and it is a LITERAL for the same reason the sibling-collision budget is: a
@@ -977,6 +1096,25 @@ for pin in PINNED["pins"]:
         demanded = [entry for entry in positioned
                     if not entry.quantifiers
                     and (not entry.disjoined or row.get("disjoined", False))]
+        # RC4-02, and it is the FIFTH question. It is asked over `demanded` -- the entries
+        # that WOULD satisfy this row -- and it is checked AFTER the three below, and both
+        # of those are the result of running the suite rather than reading it.
+        #
+        # Over `demanded` rather than `positioned`, because a quantified copy sitting
+        # beside a demanded one is not a defect: `all(X, forall(items, bind, X))` is
+        # satisfied by the demanded copy, and refusing it would be a false refusal over a
+        # body that requires what the pin asks. Over `demanded`, the question is exactly
+        # "is every entry that satisfies this row satisfied through admitted ancestry".
+        #
+        # AFTER the three, because ordering it first made it steal their sentences: the
+        # vacuous-`forall` fixture and the disjoined-with-a-tautology fixture both failed
+        # FOR THE WRONG REASON, naming an inadmissible ancestor where the reader needed
+        # "ONLY UNDER A QUANTIFIER" and "ONLY UNDER A DISJUNCTION". The runner caught it,
+        # which is what it is for. A specific message beats a general one wherever both are
+        # true, and this one is the general case of all three.
+        foreign = [(entry, inadmissible_ancestor(entry, row, boolean_op))
+                   for entry in demanded]
+        foreign = [(entry, operator) for entry, operator in foreign if operator is not None]
         checked(demanded or not quantified,
                 ("PINNED CONJUNCT ONLY UNDER A QUANTIFIER: the registry still MENTIONS what "
                  "this finding required, inside a quantifier over a collection nothing "
@@ -1011,6 +1149,24 @@ for pin in PINNED["pins"]:
                           "nothing about it (RC3-02). primitive-registry.json declares "
                           "which arguments are predicate positions in "
                           "`argument_positions`; only those carry a demand."}))
+        checked(not foreign,
+                ("PINNED CONJUNCT UNDER AN OPERATOR THE PIN TABLE DOES NOT ADMIT: the "
+                 "registry carries this conjunct inside an operator that primitive-"
+                 "registry.json classifies as a predicate position and pinned-conjuncts.json "
+                 "does not admit, so whether the body DEMANDS it is decided by the same "
+                 "author who wrote the demand table",
+                 predicate_id, row["op"], row["why"],
+                 {"findings": pin["findings"], "decisions": pin["decisions"],
+                  "ancestor_operator": sorted({operator for _entry, operator in foreign}),
+                  "ancestor_chains": sorted({entry.ancestors for entry, _op in foreign}),
+                  "admissible_ancestors": sorted(ADMISSIBLE),
+                  "note": "a primitive registered with `argument_positions.<child>: "
+                          "\"demanded\"` wraps a pinned conjunct and every pin still passes "
+                          "(RC4-02). A REGISTRY MAY CLASSIFY POSITIONS; ONLY THE PIN MAY SAY "
+                          "WHAT SATISFIES ONE. If this operator really demands its child "
+                          "unconditionally, add it to pinned-conjuncts.json#/"
+                          "admissible_ancestors BY HAND, with the reason -- and re-pin "
+                          "`argument_positions_digest` in the same edit."}))
         checked(bool(demanded),
                 ("PINNED CONJUNCT MISSING: the registry no longer says what this finding "
                  "required", predicate_id, row["op"], row["why"],
@@ -1018,6 +1174,70 @@ for pin in PINNED["pins"]:
                   "note": "pinned-conjuncts.json is hand-written and is NOT derived from "
                           "tools/phase_content.py; regenerating the registry cannot "
                           "satisfy this check, only stating the requirement can"}))
+
+# --- RC4-01: THE DEMAND TABLE IS PINNED TO A HAND-WRITTEN DIGEST. ---------------
+#
+# ORDER MATTERS HERE AND IT WAS CHOSEN, not inherited. This block sits AFTER the pin loop
+# on purpose, and the two negative fixtures are what the choice is for. A mutation that
+# registers a demanding primitive AND USES IT changes the digest and wraps a pin, so both
+# controls fire; the reader should be told the concrete thing -- which conjunct is now
+# satisfied through which operator -- and not merely that a table moved
+# (r17-self-declared-demanding-primitive-wraps-a-pin). A mutation that edits the table and
+# does not yet use it trips nothing in the pin loop, because no pinned conjunct sits under
+# the operator it re-classified, and this is the only thing that refuses it
+# (r17-registry-flips-forall-to-demanded). Placed the other way round, the ancestor rule
+# above would be a control no fixture reaches.
+#
+# The recheck's measurement is the whole argument: `/forall/argument_positions/predicate`
+# from "quantified" to "demanded" -- one string, in a file written by the derivation tools
+# and asserted by nothing -- and the vacuous-`forall` body validated at 288,646 checks with
+# every pin satisfied and `under_quantifier: 0`, because the census reads the same table.
+# `grep -n 'sha256\|hashlib\|digest' validate_contracts.py` returned nothing at the time.
+import hashlib  # noqa: E402
+ARGUMENT_POSITIONS = {name: primitive["argument_positions"]
+                      for name, primitive in sorted(PRIMITIVES.items())}
+ARGUMENT_POSITIONS_DIGEST = hashlib.sha256(
+    json.dumps(ARGUMENT_POSITIONS, sort_keys=True, separators=(",", ":")).encode("utf-8")
+).hexdigest()
+checked(ARGUMENT_POSITIONS_DIGEST == PINNED["argument_positions_digest"],
+        ("THE DEMAND TABLE MOVED: primitive-registry.json's `argument_positions` map no "
+         "longer hashes to the digest pinned by hand in pinned-conjuncts.json. That map is "
+         "the whole demand vocabulary of this package -- four strings across 57 primitives "
+         "-- it is written by the derivation tools, and before RC4-01 nothing in the tree "
+         "asserted a byte of it",
+         {"primitive-registry.json": ARGUMENT_POSITIONS_DIGEST,
+          "pinned-conjuncts.json": PINNED["argument_positions_digest"],
+          "primitives": len(ARGUMENT_POSITIONS),
+          "note": "RE-PIN DELIBERATELY. Decide what the edit does to the demand rule, then "
+                  "write the new digest into pinned-conjuncts.json#/"
+                  "argument_positions_digest in the same commit as the registry edit, so "
+                  "the two are one line apart in one diff. Recompute it with the command "
+                  "in #/argument_positions_digest_why. Re-pinning is not the whole job: an "
+                  "operator that now declares a DEMANDING role must also be admitted by "
+                  "hand in #/admissible_ancestors, or no pinned conjunct may be satisfied "
+                  "through it."}))
+# And what a deliberate re-pin must then survive. Reachable only AFTER someone re-pins the
+# digest -- the check above fires first on any table edit -- so no negative fixture
+# expresses it, and that is stated rather than implied: a fixture would have to carry a
+# hand-computed digest of its own mutated registry and would rot on the next primitive
+# added. This is the second half of RC4-01's required contract and it is what turns RC4-02
+# into a refusal at the DECLARATION rather than at the first body that uses it.
+for _name, _primitive in PRIMITIVES.items():
+    _demanding = sorted(argument for argument, role
+                        in _primitive["argument_positions"].items()
+                        if role in ("demanded", "disjoined", "negated"))
+    checked(not _demanding or _name in ADMISSIBLE,
+            ("A PRIMITIVE DECLARES ITS OWN CHILD DEMANDING AND THE PIN TABLE DOES NOT "
+             "ADMIT IT: primitive-registry.json is written by the derivation's author, so "
+             "an operator that classifies its own predicate child `demanded` would decide, "
+             "unilaterally, that a pinned conjunct written inside it is required (RC4-02)",
+             _name, _demanding,
+             {"admissible_ancestors": sorted(ADMISSIBLE),
+              "note": "either give this operator a hand-written entry in pinned-"
+                      "conjuncts.json#/admissible_ancestors with its reason and its "
+                      "condition, or declare the argument `quantified` -- which is "
+                      "non-demanding, and is the conservative reading for any operator "
+                      "whose child may be evaluated zero times."}))
 
 # A conjunct pin holds a guard to what it demands and says nothing about whether the edge
 # EXISTS. RC-01 was that shape: every guard well formed, every criterion sourced, and no
@@ -1150,6 +1370,14 @@ def stated_paths_and_states(body, owner):
     paths, states = set(), set()
     for entry in polarised_nodes(body, owner):
         if entry.disjoined or entry.quantifiers:
+            continue
+        # RC4-02, the same rule the pin loop applies, on the same walk. There is no row
+        # here, so the condition is membership alone: a node sitting inside an operator
+        # pinned-conjuncts.json does not admit says nothing this sentence may rely on.
+        # Measured before adding it -- every ancestor chain the committed corpus reaches
+        # this line with is drawn from `('all',)`, `('all','not')` and `('all','all')` --
+        # so it refuses nothing today and closes the route a misdeclared primitive opens.
+        if any(operator not in ADMISSIBLE for operator in entry.ancestors):
             continue
         if not entry.in_value:
             # RC3-02: `field_paths` and `bindings` belong to boolean ops, and one inside a
