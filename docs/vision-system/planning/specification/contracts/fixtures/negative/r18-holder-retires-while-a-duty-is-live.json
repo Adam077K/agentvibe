@@ -1,0 +1,16 @@
+{
+  "id": "r18-holder-retires-while-a-duty-is-live",
+  "repair": "R18",
+  "finding": "F6C-16; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A standing holder retires while a duty it carries is still live.",
+  "paired_benign_fixture": "fixtures/positive/r18-holder-retires-while-a-duty-is-live-benign.json",
+  "why": "05 section 12: retirement is refused while any duty the holder carries is live, and the successor that inherits the address is named. With the live-duty comparison gone, only the successor is demanded -- so the address survives and the duties on the retiring holder do not, which is the outside party losing the party they were reachable through. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.holder.not_retired_while_duty_live` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.holder.not_retired_while_duty_live', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.holder.not_retired_while_duty_live/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

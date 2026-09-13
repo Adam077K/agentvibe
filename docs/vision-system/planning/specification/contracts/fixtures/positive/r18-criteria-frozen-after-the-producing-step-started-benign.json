@@ -1,0 +1,29 @@
+{
+  "id": "r18-criteria-frozen-after-the-producing-step-started-benign",
+  "repair": "R18",
+  "finding": "F6C-16, AD-018, AS-X-01; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "Criteria frozen strictly before the producing step started, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-criteria-frozen-after-the-producing-step-started.json",
+  "why": "This is the ordinary sequence and the one the mechanism exists to require. The patch also demands the criteria ref itself be present as a value, a restatement in the same shape, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.criteria.frozen_before_producing_step/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/criteria_frozen_at"
+        }
+      }
+    }
+  ]
+}

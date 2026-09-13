@@ -1,0 +1,25 @@
+{
+  "id": "r18-standing-interest-writes-outside-proposed-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-L3; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A standing interest whose only write target is `proposed`, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-standing-interest-writes-outside-proposed.json",
+  "why": "Writing proposals is what a standing interest is FOR, and refusing it would leave the layer with no legitimate action at all. The patch additionally demands the admitting owner be named, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.constraint.standing_interest_writes_proposed_only/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/admitting_owner_ref"
+        ]
+      }
+    }
+  ]
+}

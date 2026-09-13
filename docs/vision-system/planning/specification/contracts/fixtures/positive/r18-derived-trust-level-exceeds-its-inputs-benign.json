@@ -1,0 +1,29 @@
+{
+  "id": "r18-derived-trust-level-exceeds-its-inputs-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-X13, AX-M2-04; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A derived item whose trust level equals the minimum of its inputs, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-derived-trust-level-exceeds-its-inputs.json",
+  "why": "Deriving at the floor is the ordinary case and is what the rule permits. The patch also demands the per-item list be present as a value, a restatement in the same shape, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.trust.derived_is_floor_of_inputs/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/item_trust_levels"
+        }
+      }
+    }
+  ]
+}

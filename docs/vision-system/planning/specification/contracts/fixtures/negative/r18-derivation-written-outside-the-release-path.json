@@ -1,0 +1,16 @@
+{
+  "id": "r18-derivation-written-outside-the-release-path",
+  "repair": "R18",
+  "finding": "F6C-16; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "The consequence derivation is written by a component other than the release path.",
+  "paired_benign_fixture": "fixtures/positive/r18-derivation-written-outside-the-release-path-benign.json",
+  "why": "05 section 11: the derivation is append-only and written only inside the release path. With the writer comparison gone, any component may write the record that decides which classes an action reached -- so the object that gates the release is authored outside the gate. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.derivation.writer_is_release_path` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.derivation.writer_is_release_path', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.derivation.writer_is_release_path/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

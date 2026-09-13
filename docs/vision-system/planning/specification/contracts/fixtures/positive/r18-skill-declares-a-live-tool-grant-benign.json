@@ -1,0 +1,25 @@
+{
+  "id": "r18-skill-declares-a-live-tool-grant-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-X15; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A skill whose declared grant is inert and whose tool set comes from the work order, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-skill-declares-a-live-tool-grant.json",
+  "why": "A legitimate skill declares what it would want and receives what the work order grants; that is the case the mechanism admits. The patch additionally demands the content hash be named, which the re-check at use reads, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.skill.declared_grant_inert/body/predicates/4",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/content_hash"
+        ]
+      }
+    }
+  ]
+}

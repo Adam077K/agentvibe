@@ -1,0 +1,29 @@
+{
+  "id": "r18-no-total-rank-benign",
+  "repair": "R18",
+  "finding": "F6C-16, benign column for guard.class.no_total_rank; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md",
+  "case": "A derivation that declares no ordering over a duplicate-free reached set, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r16-01-derivation-gates-only-the-higher-class.json",
+  "why": "`guard.class.no_total_rank` closes the contested (d) AT-M4-02 and had an adverse fixture and no benign one, so the control could not be read as a detection rate on the one guard whose failure mode is the most expensive in the package. The benign case is the ordinary derivation: `class_ordering` is `none`, the reached set has no repeated class id, and it must pass. The patch hardens the same guard by also demanding the gated set be duplicate-free, which is the identical argument one field over.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.class.no_total_rank/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "unique",
+        "items": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/gated_class_ids"
+        }
+      }
+    }
+  ]
+}

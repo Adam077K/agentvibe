@@ -1,0 +1,25 @@
+{
+  "id": "r18-holder-retires-while-a-duty-is-live-benign",
+  "repair": "R18",
+  "finding": "F6C-16; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A holder retiring with no live duty and a named successor, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-holder-retires-while-a-duty-is-live.json",
+  "why": "Retirement is a legitimate end state and the guard is on both routes to it. A holder with an empty live-duty list and a named successor is exactly the case the rule admits. The patch also demands the intake address be present, so the successor inherits something named.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.holder.not_retired_while_duty_live/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/intake_address"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "r18-cap-exhaustion-refuses-the-next-complainant-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-X17; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "An arrival admitted under a subcap that has room, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-cap-exhaustion-refuses-the-next-complainant.json",
+  "why": "The ordinary path is an arrival inside the cap, admitted, with the overflow machinery present and unused. The patch additionally demands the origin channel be named, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.intake.per_origin_subcap_preserves_intake/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/origin_channel_id"
+        ]
+      }
+    }
+  ]
+}

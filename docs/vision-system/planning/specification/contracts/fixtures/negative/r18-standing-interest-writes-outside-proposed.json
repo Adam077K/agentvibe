@@ -1,0 +1,16 @@
+{
+  "id": "r18-standing-interest-writes-outside-proposed",
+  "repair": "R18",
+  "finding": "F6C-16, R-L3; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A standing interest's write targets are recorded but unconstrained, so it writes outside `proposed`.",
+  "paired_benign_fixture": "fixtures/positive/r18-standing-interest-writes-outside-proposed-benign.json",
+  "why": "A standing interest that writes anything but a proposal stops being a proposer and becomes an actor, with no admission in between -- which is the whole reason layer 3 is allowed to run without one. With the containment gone the field is a declaration nothing reads. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.constraint.standing_interest_writes_proposed_only` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.constraint.standing_interest_writes_proposed_only', 'subset'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.constraint.standing_interest_writes_proposed_only/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

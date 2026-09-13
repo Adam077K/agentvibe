@@ -1,0 +1,16 @@
+{
+  "id": "r18-skill-declares-a-live-tool-grant",
+  "repair": "R18",
+  "finding": "F6C-16, R-X15; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A skill's declared tool grant is recorded without being inert, so frontmatter grants tools for the turn that loads it.",
+  "paired_benign_fixture": "fixtures/positive/r18-skill-declares-a-live-tool-grant-benign.json",
+  "why": "05 section 8's rule that a prose package cannot install, contact, spend or execute by being loaded is FALSE of the named runtime -- R2 F-08 and R6 F7 -- which is why the rule was made structural. With the inertness comparison gone, the field records an effect rather than requiring it to be none, and the skill-grant path is open again. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.skill.declared_grant_inert` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.skill.declared_grant_inert', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.skill.declared_grant_inert/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

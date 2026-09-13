@@ -1958,13 +1958,15 @@ checked(version_rows >= 14,
 #
 # RAISE THESE WHENEVER FIXTURES ARE ADDED. Never lower one without writing the reason in
 # this comment; a floor that drifts down with the suite is the denominator again.
-#   negative: 53 at the fourth recheck, 56 now -- +3 for RC4-01's table flip, RC4-02's
-#             self-declared demanding primitive, and this floor's own fixture.
-#   positive: 17, one benign case per adverse case of selection-record section 12.5.
-#             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
-#             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 74
-POSITIVE_FIXTURE_FLOOR = 35
+#   negative: 53 at the fourth recheck, 56 before R18, 91 now -- +35 for the Step 6 repair
+#             of the F2 layer, one adverse case per contracts finding of the four reviews
+#             plus one per guard that had no adverse fixture of its own.
+#   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
+#             adverse case of selection-record section 12.5 -- now also covers every guard,
+#             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
+#             everything passes every adverse row.
+NEGATIVE_FIXTURE_FLOOR = 91
+POSITIVE_FIXTURE_FLOOR = 52
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

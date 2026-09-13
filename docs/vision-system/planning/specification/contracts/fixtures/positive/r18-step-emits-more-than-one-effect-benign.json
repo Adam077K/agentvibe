@@ -1,0 +1,25 @@
+{
+  "id": "r18-step-emits-more-than-one-effect-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-L2, R-D19; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A step that emits exactly one effect, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-step-emits-more-than-one-effect.json",
+  "why": "One effect per effect step is the rule, not zero: refusing the single-effect step would refuse every effect the system performs. The patch additionally demands the run the step belongs to, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.effect.one_per_step/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/run_ref"
+        ]
+      }
+    }
+  ]
+}

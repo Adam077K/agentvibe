@@ -1,0 +1,16 @@
+{
+  "id": "r18-step-emits-more-than-one-effect",
+  "repair": "R18",
+  "finding": "F6C-16, R-L2, R-D19; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A step emits more than one effect, so the step stops being the idempotency unit.",
+  "paired_benign_fixture": "fixtures/positive/r18-step-emits-more-than-one-effect-benign.json",
+  "why": "Every retry story in 05 section 6 rests on the step being the unit a repeat is judged against. With the count ceiling gone, a step that emitted two effects and is retried repeats an unknown number of them, and the `EffectIdentity` machinery downstream has no unit to reconcile against. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.effect.one_per_step` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.effect.one_per_step', 'lte'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.effect.one_per_step/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

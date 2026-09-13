@@ -1,0 +1,16 @@
+{
+  "id": "r18-derived-trust-level-exceeds-its-inputs",
+  "repair": "R18",
+  "finding": "F6C-16, R-X13, AX-M2-04; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A derived item carries a trust level higher than the minimum of its inputs, which is laundering by derivation.",
+  "paired_benign_fixture": "fixtures/positive/r18-derived-trust-level-exceeds-its-inputs-benign.json",
+  "why": "R-X13: a derived item's trust level is the FLOOR of its inputs', never higher. With the equality gone the two levels are recorded side by side and nothing relates them, so an item assembled from one untrusted source and two trusted ones can be delivered at the trusted level. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.trust.derived_is_floor_of_inputs` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.trust.derived_is_floor_of_inputs', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.trust.derived_is_floor_of_inputs/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

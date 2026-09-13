@@ -1,0 +1,16 @@
+{
+  "id": "r18-approval-with-no-expiry",
+  "repair": "R18",
+  "finding": "F6C-16, R-X18, AS-M2-02; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "An approval whose expiry is not strictly after it, so a standing grant nobody renewed reads as current.",
+  "paired_benign_fixture": "fixtures/positive/r18-approval-with-no-expiry-benign.json",
+  "why": "AS-M2-02: every approval carries an expiry AND the expiry is after the approval. Presence alone is satisfied by an expiry equal to or before the approval time, which is an approval that was never live and is indistinguishable on the record from one that is. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.approval.expiry_present` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.approval.expiry_present', 'lt'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.approval.expiry_present/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

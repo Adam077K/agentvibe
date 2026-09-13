@@ -1,0 +1,16 @@
+{
+  "id": "r18-tie-break-reverts-to-weakest-sufficient",
+  "repair": "R18",
+  "finding": "F6C-16, R-X20; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "The tie-break rule is recorded but not constrained, so it reverts to weakest-sufficient.",
+  "paired_benign_fixture": "fixtures/positive/r18-tie-break-reverts-to-weakest-sufficient-benign.json",
+  "why": "R-X20 INVERTS the tie-break: when two check interests both apply, the strongest sufficient one wins. Presence alone lets the field hold any rule at all, including the one the inversion was written to replace, and nothing downstream reads it. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.check.tie_break_strongest_sufficient` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.check.tie_break_strongest_sufficient', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.check.tie_break_strongest_sufficient/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

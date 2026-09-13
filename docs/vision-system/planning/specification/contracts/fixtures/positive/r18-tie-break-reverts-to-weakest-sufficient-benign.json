@@ -1,0 +1,25 @@
+{
+  "id": "r18-tie-break-reverts-to-weakest-sufficient-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-X20; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A check interest that records the strongest-sufficient rule, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-tie-break-reverts-to-weakest-sufficient.json",
+  "why": "The ordinary case is an interest carrying exactly the rule the inversion names. The patch adds a demand that the interest version be named beside it, so a later inversion is attributable, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.check.tie_break_strongest_sufficient/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/interest_version"
+        ]
+      }
+    }
+  ]
+}

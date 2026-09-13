@@ -1,0 +1,16 @@
+{
+  "id": "r18-obligation-admitted-with-no-mode-named",
+  "repair": "R18",
+  "finding": "F6C-16, F6C-01, R-G01; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "An obligation is admitted with no production mode named at all.",
+  "paired_benign_fixture": "fixtures/positive/r18-obligation-admitted-with-no-mode-named-benign.json",
+  "why": "The payload conditional refuses `none` on an exhaustible class; this guard is what refuses SILENCE, on every class. With the demand gone the field is optional in practice again and `named explicitly on the obligation` names nothing, which is the state G-01 was in. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.obligation.production_mode_named` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.obligation.production_mode_named', 'nonempty_fields'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.obligation.production_mode_named/body/predicates/0",
+      "op": "remove"
+    }
+  ]
+}
