@@ -67,7 +67,9 @@
     "RESUMED 2026-09-13 on ceo-2-1789160976 at c71c05e. Scanned all 49 lane worktrees of the interrupted run: 48 clean, one (phase-f-canonical) dirty with an untracked contracts/ directory. Recovered and committed as cb4bf52.",
     "Recovered canonical contract set validated at the new path: 207205 checks, 173 records, 184 values, 104 commands, 2252 predicates, 1295 edges, 373 source work edges, 46 required subjects. Orchestrator independently computed 1295 distinct predicate_ids, 0 unregistered, 1295 distinct predicate bodies among edge guards — FI-11's shared-guard defect does not reproduce. This is an orchestrator inspection, not independent acceptance. *SUPERSEDED the same day by F-canonical-01: the reviewer erased string leaves and found 19 body skeletons; the guards vary only by restating their own state names. Byte distinctness was the wrong measurement. FI-11 is OPEN.*",
     "Independent canonical review archived (planning/reviews/F-canonical-01.md): FI-10 CLOSED at specification level; FI-11 and FI-12 OPEN; CCR-01..07 registered, two of them (d)-class missing decisions (criterion evaluation; bootstrap root of trust). Repair lane dispatched.",
-    "Founder directive preserved verbatim at inputs/DIRECTIVE.md; directive-contract.json remains the structured extraction and is subordinate to it."
+    "Founder directive preserved verbatim at inputs/DIRECTIVE.md; directive-contract.json remains the structured extraction and is subordinate to it.",
+    "Merged xsr-residue lane at 4e03c99: F50-Q08 and F33-Q04 gain discriminating subcases WK-V55/WK-V56; XSR-R-01 family refs derived from bindings (0 mismatches); XSR-R-02 56 distinct positive controls; XSR-R-03 R-NATIVE one selected + two candidate profiles. Root ran the lane's verifier. Author-recorded, independent recheck pending under Phase G.",
+    "Merged technical-amendment lane at c71be26: 07-integrations-capacity.md §9 outbound-mail transport boundary, event identity, terms IC-S30/31, closed disclosure object, T-R3 table, MAIL-T01…08."
   ],
   "active_work": [
     {
@@ -80,14 +82,6 @@
       "agent": "review-xsr (reviewer, read-only with shell)",
       "scope": "Independent recheck of XSR-02 (discrimination of the 268 verification cases, not coverage) and XSR-03 (whether the 11 routes name an actual performer with unavailable-state behavior, or a category).",
       "subject": "cb4bf52",
-      "dispatched": "2026-09-13"
-    },
-    {
-      "agent": "build-xsr-residue (builder)",
-      "scope": "Repair XSR-02 residue F50-Q08 and F33-Q04, and XSR-R-01..03; refresh the 268-row root projection; verify by computation.",
-      "worktree": ".worktrees/xsr-residue",
-      "branch": "docs/vision-xsr-residue",
-      "base": "78b3e57",
       "dispatched": "2026-09-13"
     },
     {
