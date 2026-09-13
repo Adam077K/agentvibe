@@ -930,7 +930,7 @@
     "severity": "low",
     "class": "a",
     "owner": "canonical contract author; independent reviewer after repair",
-    "status": "Open. Census at 755c59c (after the g1 and g-prose merges) finds 8 further contract-only records: EvaluationCase, IndexSnapshot, ExperienceArtifact, BuildArtifact, Partnership, ContinuityArrangement, Constraint, AccessGraph. Was 11 at eb6eb66; the prose lane named SecurityCase, CandidateAssessment and Defect while writing phase meanings.",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. Census at 755c59c (after the g1 and g-prose merges) finds 8 further contract-only records: EvaluationCase, IndexSnapshot, ExperienceArtifact, BuildArtifact, Partnership, ContinuityArrangement, Constraint, AccessGraph. Was 11 at eb6eb66; the prose lane named SecurityCase, CandidateAssessment and Defect while writing phase meanings.",
     "required_contract": "Each carries a justification object: a source concern whose meaning requires it, or derived_control_machinery with the owning record and obligation. Constraint and Defect are directive §8.11 subjects and can cite DIRECTIVE.md.",
     "independent_recheck": null,
     "implementation_evidence": null
@@ -944,7 +944,7 @@
     "title": "Nine specification sentences now contradicted by the guard repair need supersession notes",
     "severity": "low",
     "class": "a",
-    "status": "Open. 01-contract-kernel.md (disputed presentation; parked closure account), 02-architecture-selection.md §3 (surviving dispute), 03-company-capabilities.md (goal review; registry phase-meaning table lacks Fulfillment.delivering/delivered/failed/refunded and SalesAgreement.terminated_with_residuals; SalesAgreement.terminated wording; tie-break JSON sentence; CAP-42 routing and remedy_authorized row), 10-components-authority-traceability.md Removal rows.",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. 01-contract-kernel.md (disputed presentation; parked closure account), 02-architecture-selection.md §3 (surviving dispute), 03-company-capabilities.md (goal review; registry phase-meaning table lacks Fulfillment.delivering/delivered/failed/refunded and SalesAgreement.terminated_with_residuals; SalesAgreement.terminated wording; tie-break JSON sentence; CAP-42 routing and remedy_authorized row), 10-components-authority-traceability.md Removal rows.",
     "required_contract": "Each sentence kept verbatim under a > **Superseded 2026-09-13.** note stating what the registry now enforces and citing the predicate id."
   },
   {
@@ -956,7 +956,7 @@
     "title": "Seven other parked records lack the closure-account field Case gained",
     "severity": "low",
     "class": "a",
-    "status": "Open. Goal, Mission, Project, WorkflowRun, KnowledgeQuestion, Opportunity, WorkOrder have a parked phase whose criterion cannot require a closure account because no field exists.",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. Goal, Mission, Project, WorkflowRun, KnowledgeQuestion, Opportunity, WorkOrder have a parked phase whose criterion cannot require a closure account because no field exists.",
     "required_contract": "Add parking_closure_account_ref → ReasonRecord to each, required by its parked criterion, mirroring Case; or record why parking that record needs no closure account."
   },
   {
@@ -980,7 +980,7 @@
     "title": "Pre-existing values.schema PredicateId drift",
     "severity": "low",
     "class": "a",
-    "status": "Open. 9 registry predicates absent from the PredicateId enum, 6 enum entries with no predicate; nothing checks either. Not introduced by the repair.",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. 9 registry predicates absent from the PredicateId enum, 6 enum entries with no predicate; nothing checks either. Not introduced by the repair.",
     "required_contract": "PredicateId enum derived from predicate-registry.json by the validator; drift fails."
   },
   {
