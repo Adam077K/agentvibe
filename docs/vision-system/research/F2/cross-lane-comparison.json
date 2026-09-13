@@ -1,0 +1,1004 @@
+{
+  "date": "2026-09-13",
+  "subject": "F2 Step 2 — cross-lane comparison of eight independently formed research lanes against planning/F2/00-thesis-claims.json (TC-01…TC-42), planning/F2/00-acceptance-protocol.md, and the ten first-round axes in research/cross-lane-comparison.json",
+  "artifact": "research/F2/cross-lane-comparison.json",
+  "prose_companion": "research/F2/cross-lane-comparison.md",
+  "produced_by": "framer, Step 2. Selects nothing, recommends nothing, resolves no disagreement by preference.",
+  "standing_caveat": "No runtime exists. No lane executed an experiment. Every lane shares one model family; independence between lanes is procedural only — separate context, no sight of sibling output. Agreement between two lanes is therefore not statistically independent confirmation, and where two lanes read the SAME source the agreement is one observation with two readers, which is recorded per entry.",
+  "kind_vocabulary_used_for_this_artifact_s_own_claims": [
+    "DIRECT OBSERVATION",
+    "INFERENCE",
+    "DISAGREEMENT",
+    "UNKNOWN",
+    "DEFERRED QUESTION"
+  ],
+  "lanes": [
+    { "id": "R1", "file": "research/F2/R1-context.md", "subject": "Context engineering and shared state", "claims": ["TC-04", "TC-05", "TC-09", "TC-13", "TC-14", "TC-27", "TC-29", "TC-31", "TC-32", "TC-42"], "findings": "F-01…F-24", "source_rows": 31, "claims_emitted": 0 },
+    { "id": "R2", "file": "research/F2/R2-agent-existence.md", "subject": "When does an agent earn its existence", "claims": ["TC-01", "TC-02", "TC-03", "TC-06", "TC-07", "TC-17", "TC-23", "TC-35", "TC-36", "TC-38"], "findings": "F-01…F-21", "source_rows": 30, "claims_emitted": 0 },
+    { "id": "R3", "file": "research/F2/R3-frameworks.md", "subject": "Frameworks and harnesses as evidence", "claims": ["TC-15", "TC-16", "TC-30"], "findings": "F1…F62", "source_rows": 37, "claims_emitted": 0 },
+    { "id": "R4", "file": "research/F2/R4-authority.md", "subject": "Authority as the boundary", "claims": ["TC-08", "TC-24", "TC-25"], "findings": "F1…F14", "source_rows": 27, "claims_emitted": 0 },
+    { "id": "R5", "file": "research/F2/R5-routing.md", "subject": "Work discovery and routing", "claims": ["TC-18", "TC-19", "TC-34", "TC-40", "TC-41"], "findings": "R5-01…R5-24", "source_rows": 30, "claims_emitted": 0 },
+    { "id": "R6", "file": "research/F2/R6-skills.md", "subject": "Skills and knowledge", "claims": ["TC-10", "TC-28", "TC-33"], "findings": "F1…F12", "source_rows": 28, "claims_emitted": 0 },
+    { "id": "R7", "file": "research/F2/R7-verification.md", "subject": "Independent verification under one model family", "claims": ["TC-11", "TC-37"], "findings": "F1…F20", "source_rows": 26, "claims_emitted": 0 },
+    { "id": "R8", "file": "research/F2/R8-contrarian.md", "subject": "Contrarian: steelmen for both ends, and the thesis's own weak points", "claims": ["TC-12", "TC-20", "TC-21", "TC-22", "TC-26", "TC-39"], "findings": "A-1…A-7, B-1…B-7, W-1…W-8", "source_rows": 24, "claims_emitted": 0 }
+  ],
+  "counts": {
+    "claims_total": 42,
+    "claims_with_a_flagged_conflict": 15,
+    "agreements": 18,
+    "disagreements_preserved": 16,
+    "existing_axes_reconciled": 10,
+    "new_axes": 10,
+    "falsifier_candidates_examined": 14,
+    "falsifiers_against_a_fixed_boundary": 0,
+    "cross_lane_questions_total": 65,
+    "cross_lane_questions_answered": 10,
+    "cross_lane_questions_partially_answered": 14,
+    "cross_lane_questions_open": 41
+  },
+  "claim_matrix": [
+    {
+      "id": "TC-01",
+      "statement_short": "N-1 responsibility transfers, a material fraction lose a needed fact",
+      "kind": "already-evidenced",
+      "lane": "R2",
+      "lane_verdict": "partially supported, and mis-aimed as written",
+      "lane_findings": ["R2 F-04", "R2 F-05", "R2 F-18"],
+      "lane_detail": "Operational facts survive handoff at ~0.97–0.98; boundary markers at ~0.57–0.58 (BOUND-Handoff, 25-word budget). Vague constraint language leaked protected information in 73% of GPT and 50% of DeepSeek cases against under 15% with explicit constraints; a gold-derived typed allowlist reduced leakage to 0 of 48. The claim is true of constraints and close to false of facts, and its stated measure averages the two.",
+      "other_lanes": [
+        { "lane": "R1", "findings": ["R1 F-01", "R1 F-02", "R1 F-03", "R1 F-04", "R1 F-05"], "what": "Compaction loss in a shipping harness is deterministic, documented, and not reported to the model; the one production mechanism that reports loss reports a count and a placeholder, not an identity. FABLES finds omission is systematic and positional and that LLM raters do not catch it." },
+        { "lane": "R3", "findings": ["R3 F10", "R3 F8", "R3 F20", "R3 F21"], "what": "Broken handover named by the harness vendor with no measured number; the 12% compaction-summary constant is an illustrative widget figure and must not be cited as a compression ratio; the OpenAI SDK's default handoff transfers the ENTIRE prior conversation and the guardrails do not travel with it." }
+      ],
+      "conflict": true,
+      "conflict_note": "Two different objects are called 'handoff'. R2 measures a compressed transfer and finds constraints die; R3 documents a transfer that compresses nothing and finds the CHECKING apparatus is what fails to travel. Both are real and the loss mechanism is opposite. A claim stated over 'handoff' without naming which construct is underdetermined. Discriminator: for each transfer in a candidate, state whether the receiver gets the artifact, the full trace, or a summary, and whether the obligation-holder leaves the turn."
+    },
+    {
+      "id": "TC-02",
+      "statement_short": "ephemeral-agent-per-task consumes more scarce provider capacity",
+      "kind": "contested",
+      "lane": "R2",
+      "lane_verdict": "supported in the specified units by structure, unmeasured empirically",
+      "lane_findings": ["R2 F-01", "R2 F-02", "R2 F-18", "R2 F-19"],
+      "lane_detail": "Every published figure (15x, 10x, 3.2x) is in tokens or dollars and is non-conforming under TC-26. Re-expressed in 07 §6 units, each executor is at least one native job launch and launches are the scarce unit at CP1. The 15x figure has no published method.",
+      "other_lanes": [
+        { "lane": "R8", "findings": ["R8 W-1", "R8 W-2", "R8 W-6", "R8 B-6", "R8 §3"], "what": "At CP1 thirty executors cannot run concurrently, so they cost thirty serialised launches — an elapsed-time and handoff cost, not a token-multiplication cost. Against that, a parallel executor's prompt cache expires in five minutes against the main session's hour on a subscription, so splitting costs more allowance than the token arithmetic predicts. And there is no published absolute denominator on the Claude side, so every capacity figure this round can produce is a ratio between arms." },
+        { "lane": "R1", "findings": ["R1 F-09", "R1 rejected mechanism 8"], "what": "The 15x/90.2% pair is the source most likely to be cited against TC-26; token multipliers predict nothing about a subscription ceiling." },
+        { "lane": "R3", "findings": ["R3 F12", "R3 'do not transfer' table"], "what": "Rejects the 15x figure as a planning constant: vendor self-report on one task distribution, the folklore most often repeated without its method." }
+      ],
+      "conflict": true,
+      "conflict_note": "R2 argues the capacity penalty is structural (one executor = at least one launch); R8 argues that at CP1 the penalty is elapsed time rather than concurrent consumption, then supplies a different mechanism (cache-TTL asymmetry) by which splitting does cost more allowance. Both cannot be summarised as 'multi-agent costs Nx'. Discriminator: measure launches, quota-bucket draw and wall-clock occupancy separately at CP1, with cache-miss reprocessing instrumented."
+    },
+    {
+      "id": "TC-03",
+      "statement_short": "higher elapsed time to accepted outcome",
+      "kind": "contested",
+      "lane": "R2",
+      "lane_verdict": "unmeasurable as specified",
+      "lane_findings": ["R2 F-06", "R2 F-07", "R2 F-19"],
+      "lane_detail": "Latency's sign depends entirely on realised concurrency; CP1 caps concurrency at two non-interchangeable slots, one native and one external, and the external profile is not yet admitted. Published speedups (1.81x–2.10x, up to 90%) were obtained at concurrency this system does not admit.",
+      "other_lanes": [
+        { "lane": "R8", "findings": ["R8 W-1", "R8 §5"], "what": "Independently reaches the same CP1 conclusion and names TC-03 among the claims whose measures carry concurrency. At CP1 thirty executors cost thirty times the elapsed time and thirty handoffs." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R2 and R8 read the same specification section (07 §5–§6) in separate contexts and returned the same disposition — one source, two readers."
+    },
+    {
+      "id": "TC-04",
+      "statement_short": "splitting loses facts faster than a single context fails to use them",
+      "kind": "already-evidenced",
+      "lane": "R1",
+      "lane_verdict": "partially supported, model-generation-dependent",
+      "lane_findings": ["R1 F-04", "R1 F-05", "R1 F-06", "R1 F-07", "R1 F-11"],
+      "lane_detail": "Bounded self-managed memory loses 19 and 15 accuracy points against full context on the knowledge-update task and a bigger model does not close the gap; the failure tracks conversation length, and expanding the memory budget recovers nothing (28%→28%). The control half is also measured and is not small: ClashEval's >60% override rate is higher than any handoff loss rate located. No source measured both rates on one fixture with the decision probe TC-04 specifies.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-13", "R2 F-18"], "what": "Context loss is a cost of any context transformation, including inside a single session (39% average drop across six generation tasks when one instruction is sharded across turns). The founder's fourth cost is mis-assigned: it is owed by the single-context arm too, and is mandatory in this system because a native job caps at 360 seconds." },
+        { "lane": "R3", "findings": ["R3 F8", "R3 §10.8"], "what": "Compaction, subagent return and handoff input filters are three distinct lossy transforms in one substrate and none emits a record of what it dropped." }
+      ],
+      "conflict": true,
+      "conflict_note": "Not a conflict about observation but about attribution, and it changes the design question. R1 measures the split arm losing; R2 shows the single arm owes the same cost and cannot avoid it under the launch contract. Discriminator: run TC-04's two probes with the continuation boundary instrumented in BOTH arms, so the single-context arm is charged for its own transformations."
+    },
+    {
+      "id": "TC-05",
+      "statement_short": "agent count matters less than context quality",
+      "kind": "hypothesis",
+      "lane": "R1",
+      "lane_verdict": "supported in direction on the axis that was measured, unmeasured on the axis TC-05 names",
+      "lane_findings": ["R1 F-08", "R1 F-09"],
+      "lane_detail": "At matched reasoning budget across three model families and five multi-agent arrangements, single-agent matched or beat every variant; multi-agent became competitive only under heavy deliberate degradation of the single agent's context. The context axis measured is length and corruption, not shared-state strength, so the 2x2 TC-05 specifies has not been run.",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 F49", "R3 F50"], "what": "Reads the same primary and adds the Data Processing Inequality argument and the paper's explicit boundary condition. Also records that SECONDARY summaries of that paper drifted within months, naming the wrong model families and a configuration count the primary does not carry — a live instance of protocol §7." },
+        { "lane": "R2", "findings": ["R2 F-02", "R2 F-11"], "what": "A single agent with a strong prompt matches the best multi-agent discussion method, and discussion beats it only when there is no demonstration in the prompt; part of the 2023-24 multi-agent gain is a prompt-quality gain misattributed to structure." },
+        { "lane": "R6", "findings": ["R6 F6"], "what": "A multi-agent system compiles into an equivalent single agent trading inter-agent communication for skill selection: 53.7% fewer tokens, 49.5% lower latency, +0.7% accuracy." },
+        { "lane": "R8", "findings": ["R8 A-2", "R8 B-3"], "what": "The one published win for multiple executors is confined to research-shaped work and its own author excludes most coding work; MAST reports gains on popular benchmarks are often minimal." },
+        { "lane": "R5", "findings": ["R5-22"], "what": "The same vendor post that reports the 90.2% win also reports vague lead-agent instructions producing duplicated searches and states that token usage alone explains 80% of the variance." }
+      ],
+      "conflict": true,
+      "conflict_note": "R1 retains rather than resolves it: F-08 attributes multi-agent gains to unmatched budgets, F-09 attributes them to architecture. Five lanes touch it and none varied shared-state quality, which is the axis the claim actually names. Discriminator: the 2x2 as written — {few, many} executors x {strong, weak shared state} — which nobody has run."
+    },
+    {
+      "id": "TC-06",
+      "statement_short": "five criteria jointly sufficient and individually necessary",
+      "kind": "hypothesis",
+      "lane": "R2",
+      "lane_verdict": "refuted in both directions",
+      "lane_findings": ["R2 F-09", "R2 F-10", "R2 F-21"],
+      "lane_detail": "Not sufficient: four sixth reasons survive adversarial search — input provenance, provider/account/quota separation, consequence class, attributable identity — of which the first and third are supported by primary sources and by the directive itself. Not individually load-bearing: specialized knowledge alone yields no measured benefit over a general executor loading procedural content. The claim's own measure says one confirmed instance either way falsifies it; R2 returns two.",
+      "other_lanes": [
+        { "lane": "R6", "findings": ["R6 TC-33 verdict", "R6 F6"], "what": "Specialized knowledge is the weakest of the five and the only one no source separates from a versioned skill; the other four map onto separations a vendor names operationally." },
+        { "lane": "R7", "findings": ["R7 TC-37 verdict", "R7 §9"], "what": "Independent verification is half achievable — independence of influence yes, independence of error no for the self-consistent class — and the measured effect attaches to a separate context and a separate input set, not to a separate agent." },
+        { "lane": "R4", "findings": ["R4 F5", "R4 F1"], "what": "Distinct tools or permissions is the strongest criterion in principle and, in this runtime, executor separation does not by itself separate credentials, environment, sandbox configuration or process." }
+      ],
+      "conflict": false,
+      "conflict_note": "No lane conflict. Three lanes weaken three different criteria from three different evidence bases, converging on R2's refutation without citing each other."
+    },
+    {
+      "id": "TC-07",
+      "statement_short": "genuinely independent parts pay off when split",
+      "kind": "contested",
+      "lane": "R2",
+      "lane_verdict": "supported conditionally, with the condition now named and measurable",
+      "lane_findings": ["R2 F-06", "R2 F-07"],
+      "lane_detail": "Cohesion-aware partitioning on 2,828 real coding tasks gained 11.3 and 14.0 pass-rate points with 1.81x and 2.10x speedup and 28–35% cost reduction when tightly coupled files go to the same agent; poor partitioning degrades both speed and quality on high-dependency projects. Parallel work is a property of a PARTITION, not of a job.",
+      "other_lanes": [
+        { "lane": "R1", "findings": ["R1 F-17"], "what": "On a parallelisable task, independent parallelisation produced 21 vulnerabilities over 6.5M tokens while a coordinating swarm produced 266 over 27M tokens, with only 12 in common — a result that reads as a win for coordination and as a resource confound at once." },
+        { "lane": "R8", "findings": ["R8 competing interpretation 2"], "what": "The likeliest reconciliation is task shape: research-like work parallelises, construction-like work does not, and the vendor source says so itself. R8 declines to call that settled." }
+      ],
+      "conflict": true,
+      "conflict_note": "The same evidence supports 'splitting pays' and 'splitting pays only at more resource'. Discriminator, from the claim's own measure: charge integration and merge work to the parallel arm, and run BOTH a known-independent split and a known-semantic-conflict split. A design that wins the first and loses the second has not won."
+    },
+    {
+      "id": "TC-08",
+      "statement_short": "one executor holding the union increases realised blast radius",
+      "kind": "hypothesis",
+      "lane": "R4",
+      "lane_verdict": "remains a hypothesis; premise strengthened, claim unmeasured, and the instruction-based arm has direct evidence against it",
+      "lane_findings": ["R4 F8", "R4 F5", "R4 F9"],
+      "lane_detail": "Prompt-level controls provide only limited mitigation under transient failures, and general safety alignment does not transfer to least-privilege tool choice — so the clause 'even when the executor is instructed to use each permission only for its own part' is weak by two independent routes, one measured and one architectural. Nobody runs the union-versus-split comparison TC-08 specifies. Four CVE records show confused deputy at production scale, all carrying scope-changed vectors.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-08"], "what": "In this harness the subagent boundary attenuates authority and the skill boundary does not: allowed-tools grants and does not restrict, and a skill can grant itself broad tool access." },
+        { "lane": "R6", "findings": ["R6 F7", "R6 FC-6"], "what": "The same mechanism from the skills side, plus 202 injection-task pairs with up to 80% attack success including data exfiltration and destructive action, and a third path — uncontrolled skill self-evolution silently stripping safety constraints." },
+        { "lane": "R1", "findings": ["R1 F-10"], "what": "A poisoning attack carrying no instruction, no override and no role manipulation passed a four-stage write-path screen entirely: 0 of 360 refused." }
+      ],
+      "conflict": false,
+      "conflict_note": "No lane conflict. R4 adds one competing consideration the measure must absorb: splitting can move blast radius from 'one holder has three permissions' to 'three holders share a poisoned channel' and score better on the stated metric while being no safer. Its remedy is to record whether each release was reached through an inter-executor message."
+    },
+    {
+      "id": "TC-09",
+      "statement_short": "executor isolation prevents disclosure a filtered single context does not",
+      "kind": "hypothesis",
+      "lane": "R1",
+      "lane_verdict": "partially supported and refuted as stated",
+      "lane_findings": ["R1 F-14", "R1 F-15", "R1 F-16"],
+      "lane_detail": "Multi-agent topologies reduce appropriateness violations by 20–50 percentage points, and the residual stays above 75%; frontier-model violation rates run 15.8–50.9% and the source states model scaling does not fix it. The most consequential sub-finding is adverse to the narrow thesis: hybrid memory raised visibility violations from a 36–47% band to a 63–90% band, and prompt-level defences were weakest in memory (28–29%) against channels (up to 50%).",
+      "other_lanes": [
+        { "lane": "R4", "findings": ["R4 F5", "R4 §5"], "what": "In this runtime executor separation does not by itself separate credentials, environment, sandbox configuration or process. Whatever executor separation buys here, it is not what the word suggests." },
+        { "lane": "R2", "findings": ["R2 F-12", "R2 §8 negative control 4"], "what": "Bounded per-agent context helps (Chain-of-Agents, sequential not parallel) — evidence for isolated context and none for parallel work. And 'isolated context' must be split into isolation-for-attention and isolation-for-confidentiality before negative control 4 can be applied, because only the second is exercised by any fixture in the frozen set." }
+      ],
+      "conflict": true,
+      "conflict_note": "R1 measures topology helping at the information-flow layer; R4 measures separation buying nothing at the process and credential layer. Not contradictory — different layers — and the round must not let one stand for the other. Discriminator: run the seeded private-term canary under (a) loader filter plus one context, (b) separated executors sharing process and environment, (c) separated executors with scrubbed environments and separate credentials, counting disclosures per destination."
+    },
+    {
+      "id": "TC-10",
+      "statement_short": "dedicated specialist beats general executor loading a tested skill",
+      "kind": "contested",
+      "lane": "R6",
+      "lane_verdict": "still contested, and the contest has narrowed; the strong form of specialist is poorly supported and the weak form is untested",
+      "lane_findings": ["R6 F4", "R6 F5", "R6 F6", "R6 F10"],
+      "lane_detail": "Against a specialist defined by role, persona or encoded SOP: no improvement from 162 personas across 4 families on 2,410 questions, and best-persona selection no better than random. For the general+skill arm: curated skills lift pass rate 33.9%→50.5%, but 16 of 84 tasks regress (worst −39.3pp) and 307 skill-induced failures are attributed, of which the functional ones are caused by SEEMINGLY RELEVANT skills rather than obviously irrelevant ones. The discriminating fixture — the stale borrowed skill whose example omits a cancellation duty — has been run by nobody.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-10"], "what": "Reads the same persona study and adds ChatDev's ablation (removing roles costs 44% of Quality) with the reconciliation that procedural content carries the benefit and the job title carries none — explicitly an inference, not a measured decomposition, and flagged as the cleanest experiment nobody has run. R2 marks the ChatDev transfer expired (GPT-3.5 era)." },
+        { "lane": "R3", "findings": ["R3 F34", "R3 F62"], "what": "MetaGPT's roles are human job titles AND carry enforced routing, so it is evidence on both sides; and this repository's 21-to-7 collapse is evidence about ONE harness whose roles were authored by a model and never measured against an alternative at matched executor count." }
+      ],
+      "conflict": true,
+      "conflict_note": "A source-level disagreement retained by both lanes: personas do not help (EMNLP 2024) versus removing roles costs 44% of quality (ChatDev). Reconcilable only if the label and its procedural content are separated, which no study does. Discriminator: R2 G-4 — decompose 'role' into label and procedural content and measure each."
+    },
+    {
+      "id": "TC-11",
+      "statement_short": "a separate verifier detects what self-check misses, at a rate that justifies it",
+      "kind": "contested",
+      "lane": "R7",
+      "lane_verdict": "first clause supported, second clause unresolved and unresolvable from any located source",
+      "lane_findings": ["R7 F9", "R7 F10", "R7 F19"],
+      "lane_detail": "Cross-context review 28.6% F1 against 24.6% same-session self-review (p=0.008) and 23.8% for a context-carrying subagent (p=0.004); reviewing twice in the same session did not beat reviewing once (p=0.11), so the gain is separation and not compute. But the best arm missed roughly 71% of injected defects, the study is single-author N=30, and a planted-defect rate is an upper bound on a capability rather than an estimate of a real-defect rate. The joint false-acceptance rate the claim's own measure demands has never been published.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-14"], "what": "Self-correction without external feedback fails and sometimes degrades; evaluators show self-recognition correlated with self-preference; and where a verifier has a non-zero false-positive rate, resampling imposes an accuracy ceiling regardless of compute budget, with optimal attempt counts often fewer than ten. The binding quantity is the verifier's false-positive rate, not its separateness." },
+        { "lane": "R3", "findings": ["R3 §9 F-4"], "what": "None of the surveyed review arrangements establishes statistically independent errors between producer and checker." },
+        { "lane": "R8", "findings": ["R8 §7 rejected mechanisms"], "what": "'More executors give independent verification' is refused: a second executor of the same family is a second sample." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R2 and R7 share two primary sources and reach the same conclusion independently; R2 adds the resampling-ceiling result, which R7 does not carry, and which converts 'run more checkers' into a bounded strategy."
+    },
+    {
+      "id": "TC-12",
+      "statement_short": "persistent agents without shared state are worse than shared-truth coordination",
+      "kind": "hypothesis",
+      "lane": "R8",
+      "lane_verdict": "not measurable as written; the defect is methodological, not a capacity limit",
+      "lane_findings": ["R8 TC-12 verdict", "R8 A-7"],
+      "lane_detail": "The claim moves two variables at once — persistence and state location — so no result can attribute a difference to either. It needs a 2x2: persistent/ephemeral x shared-record/own-context. 'The same capabilities' is also not holdable constant, because capabilities in the persistent arm include accumulated state, which is the treatment. Its fixture (F-6) is not concurrency-bound, so it CAN run at CP1 once decomposed. No source found measuring whether persistent model identity improves accepted outcomes.",
+      "other_lanes": [
+        { "lane": "R1", "findings": ["R1 F-17"], "what": "Measures a second cause of contradictory action that shared state does not fix: 18 of 30 agents chose the same branch name through correlated reasoning with no shared state at all, and in hidden-profile tasks agents fail to surface private information contradicting group consensus — the failure a single shared view would amplify." },
+        { "lane": "R7", "findings": ["R7 F2", "R7 failure case 'preference leakage through shared state'"], "what": "A canonical record written by the producer and read by the checker carries the producer's framing without carrying the producer's rationale, so shared state is a leakage channel that defeats provenance separation while every provenance check passes." },
+        { "lane": "R5", "findings": ["R5-01", "R5-02"], "what": "The arrangement is the 1986 blackboard model, whose own author states no control component is specified and that adding a monitor gives it broad executive power that violates the opportunism the shared record existed to enable." }
+      ],
+      "conflict": false,
+      "conflict_note": "No lane conflict. Three lanes independently supply mechanisms adverse to the shared-state arm that TC-12's framing treats as the favoured one."
+    },
+    {
+      "id": "TC-13",
+      "statement_short": "one authoritative view produces fewer contradictory and duplicated actions",
+      "kind": "hypothesis",
+      "lane": "R1",
+      "lane_verdict": "partially supported, with a measured counter-mechanism the claim does not anticipate",
+      "lane_findings": ["R1 F-17", "R1 F-18", "R1 F-19"],
+      "lane_detail": "Supported for divergence-caused contradiction by MAST's inter-agent misalignment category and, as folklore, by Cognition. Counter-evidenced by correlated behaviour: the branch-name collision, a job queue receiving 2.4 million requests and accepting 117, and hidden-profile suppression. The claim attributes one cause to a phenomenon that has at least two, and the unnamed cause is the one with current-generation measurement behind it.",
+      "other_lanes": [
+        { "lane": "R8", "findings": ["R8 W-3"], "what": "A larger authoritative view delivered to every executor makes every executor measurably worse: performance grows increasingly unreliable as input length grows, holding task complexity constant, and even a single distractor reduces performance. The requirement therefore cannot mean one store read by everyone; it must mean one AUTHORITY over each field with delivery narrowed per attempt, and the thesis does not distinguish those." },
+        { "lane": "R5", "findings": ["R5-23", "R5-02"], "what": "In the one system designed for genuinely unforeseen work, the next-action view has a named author, a different named approver, an explicit validity window and a mandatory transfer briefing — and its source warns the view and the record must not be the same object." },
+        { "lane": "R3", "findings": ["R3 competing interpretation 1"], "what": "Isolation versus continuity are two coherent designs optimising against different failure modes — context exhaustion versus conflicting implicit decisions — and nothing in the evidence resolves which." }
+      ],
+      "conflict": true,
+      "conflict_note": "Four lanes converge that 'one shared view read by everyone' is the wrong reading, and two preserve the opposite practitioner position (share full traces). Discriminator, named by R8: how much load-bearing content survives narrowing, measured with the SummaryLoss instrument, against how much accuracy is lost by carrying it all. Nobody has measured either side."
+    },
+    {
+      "id": "TC-14",
+      "statement_short": "the five constituents are together sufficient as the shared source of truth",
+      "kind": "assumption",
+      "lane": "R1",
+      "lane_verdict": "refuted as stated, by coverage argument with measured consequence",
+      "lane_findings": ["R1 F-14", "R1 F-15", "R1 F-16", "R1 TC-14 verdict"],
+      "lane_detail": "At least one constituent outside the five is load-bearing and its absence is the dominant measured failure in the lane: authorization and recipient scope — who may see and receive a given fact. Three further candidates carry evidence rather than preference: temporal validity, explicit contradiction state rather than a resolved winner, and surviving obligations that outlive their case.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-04", "R2 F-05"], "what": "Boundary metadata is a distinct class from operational facts, dies preferentially in transfer, and travels safely only as typed machine-actionable constraints. A fifth missing constituent in the same shape." },
+        { "lane": "R4", "findings": ["R4 F3", "R4 F4"], "what": "Grants, identity/grant/scope epochs and consequence class are separately owned state re-read live at the effect; a consequence class computed from something the acting party can author is not a consequence class." },
+        { "lane": "R5", "findings": ["R5-13"], "what": "The most widely deployed tracker separates the state a work item is in from the reason it is finished, and makes the separation optional — so a Done item with no resolution is finished and open at once, which is (d)-class example 3 shipping." },
+        { "lane": "R6", "findings": ["R6 §9 Q1", "R6 F9"], "what": "Procedural knowledge has no freshness owner: no shipping skill format carries a version, a review date or an invalidation trigger; those live at the distribution unit or nowhere." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Four lanes independently name four different missing constituents. Collected: authorization and recipient scope, temporal validity, contradiction state, surviving obligations, typed boundary constraints, grants and epochs and consequence class, acceptance reason distinct from status, and procedure freshness."
+    },
+    {
+      "id": "TC-15",
+      "statement_short": "published frameworks decompose by human role name",
+      "kind": "already-evidenced",
+      "lane": "R3",
+      "lane_verdict": "supported as stated, and the census sharpens it into two populations the claim collapses together",
+      "lane_findings": ["R3 F31", "R3 F32", "R3 F33", "R3 F34", "R3 F35", "R3 TC-15 table"],
+      "lane_detail": "Role-name decomposition is characteristic of the AUTHORED MULTI-AGENT FRAMEWORKS (CrewAI, CAMEL prompt-only; MetaGPT partly enforced) and essentially absent from the CODING HARNESSES (Claude Code, Gemini CLI, Codex, SWE-agent), which decompose by tool grant and context boundary and leave the name free text. The population the founder describes is real and is a majority of the framework population; it is not the population his own substrate belongs to.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-10"], "what": "The same split seen from the evidence side: a label carries no measured benefit, procedural content plausibly does, and no study isolates the two." },
+        { "lane": "R6", "findings": ["R6 F6"], "what": "The vendor's own subagent-versus-skill decision rule names verbose output, tool restriction and self-containment; knowledge and role are absent from it." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R3's refinement is that 'role' means two different things across the framework population — MetaGPT's roles route real messages, CrewAI's route nothing — so TC-15 and TC-16 are both stated over a word with two referents."
+    },
+    {
+      "id": "TC-16",
+      "statement_short": "title decomposition is worse than capability decomposition",
+      "kind": "contested",
+      "lane": "R3",
+      "lane_verdict": "not established, in either direction",
+      "lane_findings": ["R3 F49", "R3 F51", "R3 F52", "R3 F34", "R3 F62"],
+      "lane_detail": "Matched-budget comparisons remove much of the reported multi-agent advantage, and expert-designed systems substantially outperform auto-generated ones — but expert-versus-generated is not title-versus-capability. No source compares a role-named decomposition against a capability-named decomposition at matched executor count and matched capacity. MetaGPT is the contrary case: title-named with real routing and competitive reported scores.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-10"], "what": "Offers the nearest available reconciliation — procedural content carries the benefit, the job title carries none — and labels it an inference a reader is entitled to reject." },
+        { "lane": "R8", "findings": ["R8 W-4"], "what": "Supplies a test TC-16 does not have: the five criteria are a partition function, and applied to a stable workload a partition function yields a stable partition. The distinguishing question is not vocabulary but whether the set of instantiated executor profiles is RECOMPUTED per work order or CONVERGES. Nothing in the package measures this. R8 also notes the package's own rule uses four reasons where the thesis uses five, an unremarked contradiction." }
+      ],
+      "conflict": true,
+      "conflict_note": "R3 returns 'not established'; R2 returns an inference that would settle it in one direction and marks it as unmeasured. The round must not let R2's inference be read as R3's verdict. Discriminator: R2 G-4's label/procedure decomposition, plus R8 W-4's profile-stability count over a month."
+    },
+    {
+      "id": "TC-17",
+      "statement_short": "work, authority, tools, skills, context are separable and exhaustive axes",
+      "kind": "assumption",
+      "lane": "R2",
+      "lane_verdict": "partially supported: separable yes, exhaustive no",
+      "lane_findings": ["R2 F-20", "R2 F-21"],
+      "lane_detail": "Coverage fails on consequence class, input provenance, provider/account and attributable identity; the package's own production-mode axis is a fifth leftover the founder's list does not contain.",
+      "other_lanes": [
+        { "lane": "R6", "findings": ["R6 F7"], "what": "A SKILL.md frontmatter line can grant tool use without permission for the invoking turn and can create an isolated forked context. In the shipping runtime the knowledge axis and the authority axis are not independently variable." },
+        { "lane": "R2", "findings": ["R2 F-08"], "what": "R2's own finding says the same thing: the skill boundary does not attenuate authority in this harness, and the specification's claim that a prose package cannot install, contact, spend or execute by being loaded is correct as intent and false as description of the named runtime." },
+        { "lane": "R4", "findings": ["R4 F4", "R4 §9 Q4"], "what": "Consequence class is a real axis only when computed from something the acting party cannot author; and low-consequence actions can compose into a high-consequence one, which no per-action class detects." }
+      ],
+      "conflict": true,
+      "conflict_note": "R2's separability verdict is in tension with R2's own F-08 and with R6 F7. The resolution is a distinction the verdict does not make: separability in the TAXONOMY versus separability in the IMPLEMENTATION. Discriminator: in the runtime that will actually be used, construct a skill carrying no tool grant and a tool grant carrying no procedure, and check whether either can be varied without touching the other."
+    },
+    {
+      "id": "TC-18",
+      "statement_short": "unanticipated kinds of work arrive often enough to be a primary requirement",
+      "kind": "hypothesis",
+      "lane": "R5",
+      "lane_verdict": "the requirement is supported, the rate is not established",
+      "lane_findings": ["R5-03", "R5-04", "R5-06", "R5-07", "R5-10", "R5-24"],
+      "lane_detail": "Every system examined that operates under real uncertainty carries a dedicated path for work its model did not anticipate — an incident category defined by being unplanned, a triage state, a discretionary-planning envelope, a dead-letter destination, an exception taxonomy whose author states handlers exist only for expected exceptions. That is convergent structural evidence the path is load-bearing and says nothing about frequency. No source measures the fraction of admitted work matching no existing capability contract; the one figure located was vendor marketing and was excluded.",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 §9 F-1"], "what": "The only surveyed admission mechanisms are description matching and dependency-gated subscription, both closed-world, and nothing in the survey refuses a job with a reason." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R5 flags the base rate as the single most valuable measurement the founder could take from his own history, and notes it decides whether any recogniser can work at all."
+    },
+    {
+      "id": "TC-19",
+      "statement_short": "new work admitted, typed, staffed and accepted with no human editing the system",
+      "kind": "hypothesis",
+      "lane": "R5",
+      "lane_verdict": "contradicted as a single claim; it must be split into four and they have different answers",
+      "lane_findings": ["R5-03", "R5-06", "R5-08", "R5-13", "R5-14", "R5-15", "R5-21", "R5-22"],
+      "lane_detail": "Admitted: supported, and no candidate should earn credit for it. Typed: partially supported and measurable, with silent mistyping as the failure. Staffed: contradicted in the strong form — nothing located staffs a genuinely novel work type without a pre-declared envelope, a pre-registered handler or a human redeploy, and the only counterexample writes a new SKILL rather than a new executor and depends on an automatic success oracle the business case lacks. Accepted: mis-stated — every system resolves an acceptance owner by a pre-declared default rule, and resolving by rule is not a human editing the system.",
+      "other_lanes": [
+        { "lane": "R6", "findings": ["R6 §8 F-1"], "what": "Skills are not an admission mechanism; the load-bearing distinction is a searched no-match against an unfinished search, because a selection surface that cannot say 'I searched and found nothing' will fabricate a match at scale." },
+        { "lane": "R3", "findings": ["R3 §9 F-1"], "what": "Closed-world routing everywhere; the router-that-admits-everything negative control has no counterexample in the field." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R5's correction is the operative one: zero edits are achievable for admission, typing and acceptance-owner assignment, and not for capability creation."
+    },
+    {
+      "id": "TC-20",
+      "statement_short": "beyond some number, more executors cost more with no compensating gain",
+      "kind": "hypothesis",
+      "lane": "R8",
+      "lane_verdict": "direction corroborated by a conflicted primary source; turning point unmeasurable at CP1",
+      "lane_findings": ["R8 W-1", "R8 W-3", "R8 TC-20 verdict"],
+      "lane_detail": "Vendor states linear token scaling with team size, diminishing returns beyond a point, and recommends 3–5 teammates; context quality degrading with input length is measured across 18 models. The claim's sweep of 1, 3, 7, 15, 30 measures SERIALISATION rather than coordination overhead at one native plus one external job, and the two have different shapes.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-15"], "what": "A primary-source disagreement R8 does not carry: one paper shows performance under Vote and Filter-Vote rising then falling with the number of LM calls; another reports performance scaling with the number of agents instantiated. Compatible only if the turning point sits beyond the second paper's sweep. Neither located it for agentic work." },
+        { "lane": "R1", "findings": ["R1 F-08"], "what": "At matched budget the agent-count main effect is at or below zero across three model families and five arrangements." },
+        { "lane": "R6", "findings": ["R6 F3"], "what": "The same shape in a different quantity: selection accuracy against library size is a phase transition, not a slope, with a fitted half-accuracy capacity near 84–92 items." }
+      ],
+      "conflict": true,
+      "conflict_note": "A turning point is predicted by one primary source and denied by another (R2 F-15), and the sweep that would locate it is forbidden by the package's own concurrency policy (R8). Discriminator is blocked, and the block is itself a decision — see axis X14."
+    },
+    {
+      "id": "TC-21",
+      "statement_short": "one undifferentiated executor cannot deliver whole-company scope safely and affordably",
+      "kind": "assumption",
+      "lane": "R8",
+      "lane_verdict": "the safety clause is entailed by the frozen boundaries and must not be scored as an empirical result; the cost clause is unknown",
+      "lane_findings": ["R8 TC-21 verdict", "R8 §8"],
+      "lane_detail": "F-3 requires attenuation on delegation and a record of which identity performed which effect; a single executor holding the union cannot exhibit attenuation because there is nothing to attenuate from. F-4 requires an acceptor with no stake. So the safety half is true by definitions already frozen, at any demand level, and no experiment is needed or possible. The claim's stated fixture tests only the entailed half. R8 recommends the round split the claim.",
+      "other_lanes": [
+        { "lane": "R4", "findings": ["R4 F5"], "what": "The undifferentiated executor is what the runtime ships by default: total tool inheritance unless a file says otherwise, no call-time attenuation, escalated permission modes propagating downward with the child's stricter setting discarded, and sandboxed Bash inheriting the parent environment including credentials." },
+        { "lane": "R1", "findings": ["R1 F-14", "R1 F-15"], "what": "Single-agent appropriateness violations above 77% on every backbone tested, and frontier violation rates of 15.8–50.9%." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. The warning matters more than the verdict: a definitional truth is currently positioned where an empirical result would go."
+    },
+    {
+      "id": "TC-22",
+      "statement_short": "some multi-executor arrangement beats the best single-executor arrangement at matched capacity",
+      "kind": "contested",
+      "lane": "R8",
+      "lane_verdict": "splits — the independent-verification half is measurable at CP1 today, the parallelism half is not",
+      "lane_findings": ["R8 TC-22 verdict", "R8 A-2", "R8 B-2", "R8 B-3"],
+      "lane_detail": "F-4 needs two executors sequentially, which CP1 permits, so the known-defect control and the joint false-acceptance measurement can run now. The parallelism half needs concurrency the CapacityPlan does not admit. The evidence is in genuine conflict and stays that way: a large win on a research eval that excludes coding; minimal gains on popular benchmarks; and a position arguing the split itself manufactures the failures. All three are 2025-vintage and model-generation dependent.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-03"], "what": "The strongest 'for' datum in the round, and R8 does not carry it: on a synthetic diagnostic built with explicit decomposition and enforced context separation, an EXPERT-DESIGNED multi-agent system reached 96.5% on GPT-5 against 57.0% for the single-agent baseline. The discriminator is not agent count but whether the separation is enforced by construction or merely described in prompts." },
+        { "lane": "R3", "findings": ["R3 F51", "R3 F52"], "what": "Reads the same paper independently and extracts the same split, while warning that expert-versus-generated is not title-versus-capability and the papers do not test the contrast the founder's thesis proposes." },
+        { "lane": "R1", "findings": ["R1 F-08"], "what": "At matched budget the single agent matched or beat every multi-agent arrangement." }
+      ],
+      "conflict": true,
+      "conflict_note": "Three primary results point three ways and all three are retained. Forced consensus would be a finding against the round. Discriminator: matched-capacity comparison run separately on a research-shaped task and a construction-shaped task, each reported beside its concurrency count."
+    },
+    {
+      "id": "TC-23",
+      "statement_short": "production mode chosen by the nature of the work, never to maximise agent count",
+      "kind": "founder constraint",
+      "lane": "R2",
+      "lane_verdict": "founder constraint; a conformance rule, not falsifiable by measurement — and independently well-supported as engineering",
+      "lane_findings": ["R2 F-02", "R2 F-16"],
+      "lane_detail": "Four primary sources converge on complexity being penalised: minimal gains on popular benchmarks, architectural bloat at up to 10x cost, needless complexity and cost, and higher reasoning effort reducing accuracy in a majority of 21,730 rollouts.",
+      "other_lanes": [
+        { "lane": "R8", "findings": ["R8 B-4"], "what": "The vendor's own guidance is the same: start with simple prompts, add multi-step agentic systems only when simpler solutions fall short." },
+        { "lane": "R3", "findings": ["R3 F52", "R3 F39"], "what": "How you cut matters more than whether you cut; and a 100-line single-tool linear agent scoring >74% on SWE-bench Verified is the field's clearest instance of scaffolding outliving its reason." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict."
+    },
+    {
+      "id": "TC-24",
+      "statement_short": "a created executor holds an attenuated subset; no executor increases its own authority",
+      "kind": "founder constraint",
+      "lane": "R4",
+      "lane_verdict": "coherent, implementable, and currently false of the default configuration of the runtime this system runs on — it must be built, not assumed",
+      "lane_findings": ["R4 F2", "R4 F3", "R4 F5", "R4 F6", "R4 F7", "R4 F10"],
+      "lane_detail": "Three production families implement attenuation (AWS session policies, macaroons, Biscuit) and a 2026 draft specifies the exact predicate for this setting. The default runtime violates the second clause in four documented ways. The first clause holds against the MODEL and not against a FILE: a subagent definition may carry an mcpServers grant the main conversation lacks. The measure should be tightened by one word — refusal must be observed at the EFFECT, not at the spawn, because a file is a designation.",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 F2", "R3 F3", "R3 §7 transfer table"], "what": "Reads the same vendor documentation and reports the tool grant as SUBTRACTIVE and client-enforced in two filters, with a fixed unremovable core and a bounded delegation depth that withholds the tool rather than erroring — and lists that mechanism as transferable, solving the composite-grant question with a default answer of 'refused, not minted'." },
+        { "lane": "R3", "findings": ["R3 F59"], "what": "Direct observation no vendor document supplies: the grant NARROWS reliably and ARRIVES unreliably. One agent held 24 MCP tools on one date and zero across three independent dispatches two days later with configuration unchanged, cause unknown." },
+        { "lane": "R2", "findings": ["R2 F-08"], "what": "Subagents attenuate, skills do not — allowed-tools grants and does not restrict, and a skill can grant itself broad tool access." },
+        { "lane": "R6", "findings": ["R6 F7"], "what": "Same mechanism from the skills side, plus injected and self-evolution paths." }
+      ],
+      "conflict": true,
+      "conflict_note": "The sharpest lane-versus-lane conflict in the round. R3 reads the subagent tool model as attenuation that holds and lists it among mechanisms that transfer; R4 reads the same documentation as inheritance that is total by default and concludes the constraint is currently violated. The underlying difference is which question is being asked: R3 asks whether the CHILD can exceed the PARENT'S SET (it cannot, for inherited tools); R4 asks whether the DELEGATOR can narrow AT THE CALL (it cannot) and whether authority can arrive from a FILE the parent never held (it can). R4 names the unresolved definition that decides it — does authority belong to the conversation or to the project? Discriminators, both cheap: (1) dispatch a subagent whose definition declares an mcpServers grant the main conversation lacks and observe whether the tool is present; (2) R3 F58's probe — dispatch reviewer-readonly, whose tools omits Bash, and attempt one Bash call."
+    },
+    {
+      "id": "TC-25",
+      "statement_short": "supervision is set by consequence; a good record may not silently raise exposure",
+      "kind": "founder constraint",
+      "lane": "R4",
+      "lane_verdict": "no counterexample found in the literature; and the runtime supplies a concrete anti-pattern this system must not copy",
+      "lane_findings": ["R4 F4", "R4 TC-25 verdict", "R4 failure case 8"],
+      "lane_detail": "The field's direction is the opposite of record-based expansion, and a good posture in one dimension predicts nothing in another. The anti-pattern: answering a permission prompt with 'yes, and don't ask again' writes a repository-wide allow rule with no expiry and no review date. Strictly this does not violate the constraint, because a person chose it; operationally it is a monotone ratchet driven by prompt fatigue. The measure needs a second arm that holds the executor fixed and varies the APPROVAL history.",
+      "other_lanes": [
+        { "lane": "R8", "findings": ["R8 §8 A-fails-when"], "what": "A persistent evaluated identity makes the same ratchet more tempting, because more attaches to the name." },
+        { "lane": "R5", "findings": ["R5-12"], "what": "The routing analogue: an escalation ladder converts unowned work into owned-but-unacted work and then stops making noise; assigned and silent is not resolved." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R4 F4's separate point is load-bearing and unopposed: a consequence class attaches only when computed from something the acting party cannot author, which rules out tool self-description and command-text matching."
+    },
+    {
+      "id": "TC-26",
+      "statement_short": "economics measured in allowance, quota buckets, concurrency and attention; no silent metered fallback",
+      "kind": "founder constraint",
+      "lane": "R8",
+      "lane_verdict": "conforming as a unit system, unenforced as a constraint, and missing its denominator",
+      "lane_findings": ["R8 W-5", "R8 W-6", "R8 W-7", "R8 TC-26 verdict"],
+      "lane_detail": "(a) The unit system is correct. (b) The no-fallback rule has no mechanism: both providers surface a purchase-credits path at the exact moment of exhaustion, and one prompts the user to raise or remove a spend limit without leaving the CLI. Whether that path is disabled is an observable ACCOUNT SETTING, not a property of any architecture, and nothing in the package observes it. (c) The Claude-side allowance is no longer published in absolute units, so capacity per accepted outcome can only be reported as a ratio between arms. Withdrawn 2025 figures are circulating as fresh independent measurement.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-01", "R2 rejected mechanism 1"], "what": "Token-multiple arithmetic rejected as a capacity model before any evidence, and the headline figure is also methodless." },
+        { "lane": "R3", "findings": ["R3 §10.7"], "what": "Every economic figure in the whole framework survey is a token count; no surveyed system models a reset window, a weekly cap or a concurrency ceiling, and one vendor prohibits building a product on subscription authentication. Negative control §4.7 has no counterexample in the field." },
+        { "lane": "R6", "findings": ["R6 §5 unknown 4", "R6 §9 Q6"], "what": "No source reports selection cost in subscription-capacity units; the conversion R6 needs is owned by nobody." },
+        { "lane": "R1", "findings": ["R1 rejected mechanism 8"], "what": "Token count rejected as the capacity or cost model." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Four lanes converge that the unit system has no external precedent and no published denominator. The constraint's enforcement gap is an account-observation problem, not an architecture problem."
+    },
+    {
+      "id": "TC-27",
+      "statement_short": "each significant run records what was loaded, omitted, summarised and possibly lost",
+      "kind": "founder constraint",
+      "lane": "R1",
+      "lane_verdict": "supported as a requirement, unprecedented in practice, and partially unachievable through today's provider surface",
+      "lane_findings": ["R1 F-01", "R1 F-02", "R1 F-03", "R1 F-21", "R1 F-22"],
+      "lane_detail": "Neither the tool protocol nor the observability conventions carry version, trust, omission, summarisation or loss; the one production mechanism that reports loss reports a count and a placeholder, not an identity, and the edit happens server-side AFTER the loader recorded its inputs. The rule that the server records actual delivered inputs is satisfiable for the loader's own server and not across the provider boundary. The available remedy is narrow: read the applied-edits field from each response and reconcile it against the manifest, treating an unaccounted edit as a defect. External obligation noted: high-risk-system logging is a legal requirement whose scope nobody here owns.",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 §10.8", "R3 §9 F-5"], "what": "Three lossy transforms in one substrate and none records what it dropped; the manifest-without-omissions negative control is not hypothetical — it is what every surveyed system currently emits." },
+        { "lane": "R2", "findings": ["R2 F-04", "R2 §8 F-5"], "what": "The manifest's most important field is which CONSTRAINTS were dropped, which 'what was omitted' does not obviously cover." },
+        { "lane": "R6", "findings": ["R6 §9 Q2", "R6 §9 Q3"], "what": "Skill selection is itself an unmanifested context assembly with omissions, and the projection from a full skill package to its selectable description is an unspecified lossy transformation." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Four lanes, four different substrates, one absence."
+    },
+    {
+      "id": "TC-28",
+      "statement_short": "selection quality and cost must not worsen as the skill library grows",
+      "kind": "founder constraint",
+      "lane": "R6",
+      "lane_verdict": "the constraint is correct, unmet by default in every published system, and the package's specified mechanism is the one measured as costly at scale",
+      "lane_findings": ["R6 F2", "R6 F3", "R6 F4", "R6 F10", "R6 F11"],
+      "lane_detail": "Degradation is measured, not hypothesised: above 90% accuracy below roughly 20–30 candidates, about 20% at 200, fitted half-accuracy capacity 83.5–91.8. The dominant variable is CONFUSABILITY, not count — one near-duplicate per skill costs 7–30 points, two cost 17–63. Hierarchical routing recovers 72–85% against flat 45–63%. A necessary-but-insufficient finding: a library can pass every selection test and still degrade outcomes, because the measured functional failures come from correctly selected, plausibly relevant skills. Set-compatibility of the returned set reaches only 33.27% where pairwise Hit@1 reaches 75.39%.",
+      "other_lanes": [
+        { "lane": "R5", "findings": ["R5-18"], "what": "Independently located the vendor's own threshold claim — tool-selection ability degrades past 30–50 available tools — and labelled it a source claim, not a measurement, because no task distribution, sample or method is published. The vendor band and the academic capacity fit land in the same region from unrelated sources." },
+        { "lane": "R3", "findings": ["R3 F7"], "what": "The vendor documents a truncation cap and an observability command and states no selection-degradation curve and no measurement of retrieval quality against library size." }
+      ],
+      "conflict": true,
+      "conflict_note": "R6 F2 preserves a direct vendor-versus-academic disagreement and declines to resolve it: metadata-only discovery is either the design that makes large libraries affordable (vendor, measuring context tokens at a 100+ skill regime) or the choice that costs 37–44 points of routing accuracy (academic, measuring routing accuracy at roughly 80,000 skills with heavy overlap). They measure different quantities at library sizes 600x apart. Discriminator: the crossover library size for a Claude-family model over a real SKILL.md corpus, which nobody has published."
+    },
+    {
+      "id": "TC-29",
+      "statement_short": "the system deliberately returns selected work and decisions to the founder, by design",
+      "kind": "founder constraint",
+      "lane": "R1",
+      "lane_verdict": "supported as a requirement, dose unknown, and the specified measurement has been run by nobody",
+      "lane_findings": ["R1 TC-29 verdict", "R1 F-25 (R1-S29)"],
+      "lane_detail": "A survey of 319 knowledge workers over 936 real use cases found higher confidence in the tool associated with less critical thinking, and higher self-confidence with more — self-report, not a performance test. The delayed unfamiliar-transfer test the measure specifies is unexecuted in the literature. Class (c): an empirical hypothesis needing a protocol, baseline, unit, stopping rule and owner, not a (d)-class blocker.",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 §9 founder competence", "R3 §10.9"], "what": "Nothing in the whole framework survey addresses it. Not one system measures whether its human operator can still judge the work. Unknown across the entire field." },
+        { "lane": "R7", "findings": ["R7 F15", "R7 §9"], "what": "A new angle nobody else supplies: the human anchor is itself an instrument with a measured error rate. Any-two evaluator agreement 5–65%, severity agreement 20–28%, Spearman 0.23–0.31, and not one problem unanimously judged severe across two studies. The founder's value here is that his errors are UNCORRELATED with the family's, so his week of absence costs the system its only cross-family error source. Nothing in the package states an expected human error rate or requires it to be measured." },
+        { "lane": "R8", "findings": ["R8 A-6"], "what": "W11 rejects a roster of digital employees by name while W12 needs the structure a founder can most easily hold; these pull in opposite directions." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Three lanes state the same absence from three source sets, each as an observed absence in its own corpus rather than as evidence of absence."
+    },
+    {
+      "id": "TC-30",
+      "statement_short": "no executor exists because a human company has that department",
+      "kind": "founder constraint",
+      "lane": "R3",
+      "lane_verdict": "supported as a founder constraint, with the enforcement predicate named and the decorative-declaration loophole identified as the live risk",
+      "lane_findings": ["R3 F60", "R3 F61", "R3 F59", "R3 TC-30 verdict"],
+      "lane_detail": "The constraint forbids a REASON, not a shape. It is mechanisable, because two harnesses make the justifying difference a declared, client-enforced field, so the check can be written as 'name the enforced field that differs' rather than as a prose review. The failure to guard is not the department name but the decorative field: one harness deleted 44 capability declarations no configuration backed and 16 budget blocks nothing read. A roster that passes by declaring a capability nothing enforces satisfies the negative control in form and fails it in substance.",
+      "other_lanes": [
+        { "lane": "R8", "findings": ["R8 W-4"], "what": "The complementary test: count distinct instantiated executor profiles over a month. If they converge to a small stable set, the system has a roster it discovered rather than declared." },
+        { "lane": "R2", "findings": ["R2 F-20"], "what": "The prior question — which unit is being justified — because a criterion applied to the wrong unit returns undecidable, and undecidable reads as satisfied." },
+        { "lane": "R4", "findings": ["R4 F1"], "what": "A boundary is real only if the thing checked at the moment of the effect is the thing that was granted; a capability declared in a file and never re-checked is a job title with a different noun." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Four lanes converge on one predicate: the declared difference must bind at the effect, and something must observe that it did."
+    },
+    {
+      "id": "TC-31",
+      "statement_short": "what one shared source of truth means — store, schema, authority, or contract",
+      "kind": "unknown",
+      "lane": "R1",
+      "lane_verdict": "unresolved, as the claim itself states, with one reading now carrying an existence proof and a price tag",
+      "lane_findings": ["R1 F-23", "R1 UNKNOWN block"],
+      "lane_detail": "One authority over many native stores is implementable at extreme scale for a single fact class, at the cost of a dedicated global service, a bespoke consistency mechanism and years of operation — evidence for that reading at FACT-CLASS granularity and against it at COMPANY granularity. R1 could not evidence the industry vocabulary's own ambiguity to this round's standard and records that as a gap rather than asserting it.",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 F24", "R3 F25", "R3 F42", "R3 F44"], "what": "Two mechanisms R1's claim needs: a state write as an appended event, so the audit trail and the state are one artifact that cannot disagree; and single-writer concurrency keyed per entity, the only mechanism in the survey that answers 'no writer authority on shared state' structurally rather than by convention." },
+        { "lane": "R8", "findings": ["R8 W-3"], "what": "The package contradicts the thesis wording in three places and a measurement contradicts it in a fourth; one store read by everyone makes every reader worse." },
+        { "lane": "R5", "findings": ["R5-01"], "what": "The phrase names a 1986 architecture that deliberately leaves the locus of control unspecified." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R3 supplies the writer-authority mechanism R1 flagged as unowned in its own open questions — a direct cross-lane answer."
+    },
+    {
+      "id": "TC-32",
+      "statement_short": "the thesis makes context engineering central and supplies no measure",
+      "kind": "unknown",
+      "lane": "R1",
+      "lane_verdict": "supported, trivially on the text, and usefully on the remedy",
+      "lane_findings": ["R1 TC-32 verdict", "R1 F-05", "R1 F-04", "R1 F-11"],
+      "lane_detail": "Four candidate metrics survive the sham-change requirement: facts-present rate by recall probe; facts-used rate by decision probe; load-bearing-fact loss per transformation by deterministic exact-field comparison; and stale-fact use rate. One family fails the instrument test — any metric whose judge is a model, because no LLM rater correlated strongly with human faithfulness annotation, worst on the errors that matter. Retrieval metrics requiring a reference answer or the generated response are not manifest-completeness metrics and must not be presented as if they were.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-05"], "what": "A fifth requirement R1's list does not carry: the metric must be STRATIFIED into facts and constraints, or it averages a 0.97 and a 0.57 into a number describing neither." },
+        { "lane": "R7", "findings": ["R7 F3", "R7 M7"], "what": "Corroborates the exclusion of model judges from the instrument, and adds that any agreement figure must be reported chance-corrected, because exact-match agreement overstated discrimination by 33.8–41.2 points on the benchmark most often cited." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R2's stratification requirement should be read as an amendment to R1's metric set."
+    },
+    {
+      "id": "TC-33",
+      "statement_short": "which unit carries specialization — a skill or an agent",
+      "kind": "unknown",
+      "lane": "R6",
+      "lane_verdict": "still formally unknown, but the evidence now discriminates; specialized knowledge is the weakest of the five criteria and the only one no source separates from a skill",
+      "lane_findings": ["R6 F6", "R6 F7", "R6 F9"],
+      "lane_detail": "Supported from four directions: operationally the vendor's subagent-versus-skill rule names verbose output, tool restriction and self-containment and not knowledge; formally the survey's skill definition (condition, policy, termination, interface) is field-for-field an agent template; constructively a multi-agent system compiles into one agent plus skill selection at a net gain; negatively, role identity in a system prompt produces no measurable competence gain. What DOES separate them is a separate context window, an independent permission set and a different model. The complication cuts the other way: in this runtime a skill file can already carry two of those three.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-08", "R2 F-20"], "what": "Independently reached the same conclusion from the same two vendor pages: the substitution of general-executor-plus-skill for a specialist is sound for KNOWLEDGE and unsound for AUTHORITY in this harness. And the five criteria predicate on five different units, of which specialized knowledge predicates on a template or skill version, not on an identity." },
+        { "lane": "R3", "findings": ["R3 F34"], "what": "MetaGPT is the counter-instance where a title carries enforced routing, so a title can be a compression of a bundle and compressing it into a familiar word is not automatically a defect." }
+      ],
+      "conflict": false,
+      "conflict_note": "No lane conflict. One internal tension to carry forward: R6's verdict discriminates in favour of the skill unit while R6 F7 shows the skill unit already carries authority, so the question is partly moot in the runtime and must be closed by the launcher rather than by the taxonomy."
+    },
+    {
+      "id": "TC-34",
+      "statement_short": "who produces the next-action view, whether it binds, what happens when it is wrong",
+      "kind": "unknown",
+      "lane": "R5",
+      "lane_verdict": "the package's answer is corroborated and the thesis's phrasing is under-specified",
+      "lane_findings": ["R5-23", "R5-01", "R5-02", "R5-08"],
+      "lane_detail": "Three properties appear in every working instance: a named author and a DIFFERENT named approver; an explicit validity window, re-issued rather than edited; and exactly one component advancing the cursor. Two further constraints from the sources: waiting for better information is prohibited, and the view and the record must not be the same object, because a controller that can order the next action can override the opportunism the record exists to enable. The thesis phrase names an artifact with no author, no approver and no expiry, which is the (d)-class shape.",
+      "other_lanes": [
+        { "lane": "R1", "findings": ["R1 F-17", "R1 §8 F-6"], "what": "A next-action view everyone trusts suppresses the dissenting private fact rather than surfacing it, so a re-entry brief must carry what was omitted and what was contested, not only what was decided." },
+        { "lane": "R3", "findings": ["R3 F26", "R3 F27"], "what": "Human input as a typed node with its own checkpoint is the only surveyed mechanism that makes 'waiting for a person' an inspectable state rather than a stalled process." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict."
+    },
+    {
+      "id": "TC-35",
+      "statement_short": "is the founder's list of five criteria closed",
+      "kind": "unknown",
+      "lane": "R2",
+      "lane_verdict": "not closed; four sixth-reason candidates returned with evidence, and closure is now a founder decision packet rather than a research finding",
+      "lane_findings": ["R2 F-21"],
+      "lane_detail": "In descending strength: input provenance (an executor separated because one of them touched untrusted data, not because it needs different tools); provider, account or quota separation; consequence class; and attributable identity for the record.",
+      "other_lanes": [
+        { "lane": "R4", "findings": ["R4 F4", "R4 F9"], "what": "Supports consequence class as a real axis, with the condition that it must be computed from something the acting party cannot author; and supports attributable identity, since the runtime exposes a per-call agent identity that makes the record producible deterministically rather than reconstructed from narrative." },
+        { "lane": "R7", "findings": ["R7 §8 F-6"], "what": "Supplies a fifth candidate specific to human performers: a differently-correlated error source. The founder's value as a checker is that his errors are uncorrelated with the model family's." },
+        { "lane": "R6", "findings": ["R6 §8"], "what": "Declines to decide whether the fifth existing criterion is non-load-bearing, and routes it here." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Candidate sixth reasons now number at least five across three lanes."
+    },
+    {
+      "id": "TC-36",
+      "statement_short": "what unit must justify its existence",
+      "kind": "unknown",
+      "lane": "R2",
+      "lane_verdict": "resolved, and the resolution is that there is no single unit",
+      "lane_findings": ["R2 F-20"],
+      "lane_detail": "Parallel work predicates on a running instance and only relative to a chosen partition; distinct tools or permissions on a permission scope that may outlive any instance; isolated context on a context boundary, which is not the same object as an instance; specialized knowledge on a template or skill version; independent verification on a RELATION between two instances, a property of neither alone. A criterion evaluated against the wrong unit returns an undecidable answer, which is what negative control 4 is hunting.",
+      "other_lanes": [
+        { "lane": "R7", "findings": ["R7 §9"], "what": "The same question arriving from the evidence side: the measured verification effect attaches to a separate CONTEXT and a separate INPUT SET, which are cheaper than an agent." },
+        { "lane": "R6", "findings": ["R6 F9", "R6 TC-33"], "what": "Version, owner, provenance and deprecation are properties of the DISTRIBUTION unit in every system examined; a skill inherits them or has none." },
+        { "lane": "R4", "findings": ["R4 F1"], "what": "The unit that matters for authority is whatever is checked at the moment of the effect." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Four lanes push the unit of justification away from 'agent' and toward context boundary, permission scope, input set and distribution unit. This is the round's strongest convergence and it is the basis of new axis X11."
+    },
+    {
+      "id": "TC-37",
+      "statement_short": "is independent verification achievable when producer and verifier share a model family",
+      "kind": "unknown",
+      "lane": "R7",
+      "lane_verdict": "confirmed unresolved in general, and now decided in the NEGATIVE for one named error class; the claim should be split",
+      "lane_findings": ["R7 F1", "R7 F2", "R7 F9", "R7 F12", "R7 F13", "R7 F14"],
+      "lane_detail": "Independence of ERROR: decided negative for self-consistent errors, whose frequency is stable or rising with scale, which all four detection-method families struggle to detect, and whose only working remedy was a cross-model probe across three families. Error correlation persists across distinct architectures and providers and RISES with capability, so buying a second frontier family buys the most correlated available second opinion. Self-preference plausibly tracks familiarity over text rather than authorship, so no blinding reaches it. Independence of INFLUENCE: achievable and measurable by procedure alone, at no vendor cost. The honest sentence for F-4 is the split; a candidate that writes 'independent verification' without it is not compliant.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-14"], "what": "Same conclusion, overlapping sources, plus the resampling ceiling: where a verifier has a non-zero false-positive rate, no compute budget removes it." },
+        { "lane": "R8", "findings": ["R8 §7"], "what": "A second executor of the same family is a second sample." },
+        { "lane": "R3", "findings": ["R3 §9 F-4"], "what": "No surveyed arrangement establishes statistically independent errors between producer and checker." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. R7 preserves one unresolved decision rather than making it: buy a second family, or stop relying on model judgement for the affected decisions. The first is undercut by correlation rising with capability; the second by near-chance judging on objective correctness regardless of family."
+    },
+    {
+      "id": "TC-38",
+      "statement_short": "do the five criteria govern human, professional and external performers",
+      "kind": "unknown",
+      "lane": "R2",
+      "lane_verdict": "partially: two transfer, one changes meaning, two do not — and a sixth criterion applies only to human performers",
+      "lane_findings": ["R2 TC-38 verdict", "R2 F-09", "R2 F-14", "R2 F-21"],
+      "lane_detail": "Specialized knowledge and independent verification transfer intact. Distinct tools or permissions transfers but becomes authorization and liability, enforced by institutions rather than by an allowlist. Parallel work becomes a scheduling and payment question. Isolated context is not constructible for a person who has already read something. The human-only sixth criterion is professional standing that the act itself requires, which no capability difference can supply.",
+      "other_lanes": [
+        { "lane": "R7", "findings": ["R7 §8 F-6"], "what": "A second human-only reason with evidence behind it: a differently-correlated error source." },
+        { "lane": "R5", "findings": ["R5 §9 Q7"], "what": "Whether the terminal element of the ownership default is a person changes fixture F-6 completely." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict."
+    },
+    {
+      "id": "TC-39",
+      "statement_short": "at what scale do the thesis's costs bind",
+      "kind": "unknown",
+      "lane": "R8",
+      "lane_verdict": "confirmed unknown, unmeasurable at CP1, and circular as specified",
+      "lane_findings": ["R8 TC-39 verdict", "R8 W-6"],
+      "lane_detail": "Its measure is the sweep CP1 forbids, and raising CP1 requires a reviewed CapacityPlan revision after measured evidence — so the measurement that would establish the threshold requires first changing the parameter whose effect is being measured. Either the round accepts a staged revision as an experiment with its own stopping rule, or it records the threshold as permanently unknown in this system. The threshold is also not one number: executor count, concurrency and admitted work per period have different thresholds under a weekly bucket, and admitted work per period is the binding one and is measurable at CP1 today.",
+      "other_lanes": [
+        { "lane": "R2", "findings": ["R2 F-19", "R2 G-5"], "what": "Reached the same CP1 conclusion independently, and adds that no published measurement of coordination cost exists at concurrency 2 — every figure located assumes concurrency the policy forbids." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Two lanes, one specification section, the same disposition."
+    },
+    {
+      "id": "TC-40",
+      "statement_short": "the recogniser for unanticipated work, its evidence and failure modes",
+      "kind": "unknown",
+      "lane": "R5",
+      "lane_verdict": "supported that it is unspecified, and it is now specifiable",
+      "lane_findings": ["R5-15", "R5-16", "R5-18"],
+      "lane_detail": "The instrument is a confusion matrix over familiar, genuinely new, and familiar-in-unfamiliar-wording. The discriminating quantity is out-of-scope recall, which lags in-scope accuracy by a wide margin — 96%+ in-scope against a best 66% out-of-scope, falling to 40.3% when novel training material is reduced. Irrelevance detection is separately scored and its benchmark's class balance is the INVERSE of an operating company's, so its scores do not transfer without re-weighting. The missing third outcome is 'typed into the nearest existing kind', which must never be scored as success.",
+      "other_lanes": [
+        { "lane": "R6", "findings": ["R6 §8 F-1", "R6 F3"], "what": "Selection accuracy collapses without the model reporting difficulty, so a surface that cannot say 'I searched and found nothing' will fabricate a match at scale. The recogniser's error rate is a function of how much the company knows how to do, not only of the input." },
+        { "lane": "R3", "findings": ["R3 §9 F-1"], "what": "Closed-world routing in every surveyed system: they route to an existing definition or they do not route." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Model-generation dependence is explicit: the quoted classifier figures are 2019 and the structure transfers while the numbers do not."
+    },
+    {
+      "id": "TC-41",
+      "statement_short": "is coordination a component, a shared record, or emergent",
+      "kind": "unknown",
+      "lane": "R5",
+      "lane_verdict": "a real open decision with a named 1986 source that declines to resolve it and states the cost of each resolution",
+      "lane_findings": ["R5-01", "R5-02", "R5-22"],
+      "lane_detail": "The blackboard model specifies no control component and its author writes that the locus can be in the knowledge sources, on the blackboard, in a separate module, or in some combination — which is exactly the trichotomy the claim names. The evidence adds two things the claim lacks: the cost of the component reading is documented (broad executive power that can violate opportunistic problem solving), and the pairwise-negotiation reading has current-generation failure data (vague delegated instructions producing duplicated work).",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 F33"], "what": "A fourth reading the trichotomy does not contain: coordination as SUBSCRIPTION — agents publish structured messages to a shared pool and extract what matches their profile, with activation gated on receiving all prerequisite dependencies." },
+        { "lane": "R1", "findings": ["R1 F-17"], "what": "Measures coordination failure under no coordination at all, which none of the three readings predicts: correlated reasoning producing identical actions." }
+      ],
+      "conflict": true,
+      "conflict_note": "The trichotomy is now a quadrichotomy and no source resolves it. R5 notes that R8 and R1 both work near this question and neither names its source. Discriminator remains the claim's own: build the fixture under each reading and measure contradictory actions, duplicated effects and owner minutes."
+    },
+    {
+      "id": "TC-42",
+      "statement_short": "how a false entry is detected, corrected, and stopped from propagating",
+      "kind": "unknown",
+      "lane": "R1",
+      "lane_verdict": "supported, and it is the finding most adverse to the current position",
+      "lane_findings": ["R1 F-10", "R1 F-11", "R1 F-12", "R1 F-13"],
+      "lane_detail": "The two defences the package leans on are measured and both fail against the attack that matters. Write-path content screening refused 0 of 360 poisoned memories because the poison carried no instruction, no override and no role manipulation — while the same screen detected indirect prompt injection at 0.832 recall. Read-path provenance ranking at its shipped weight was statistically indistinguishable from no defence, and at the weight that made it effective it took accuracy from 0.8583 to 0.0417 and evidence recall to exactly 0.00%. Blast radius is measured: 1.2% of the corpus took accuracy from 0.850 to 0.300. The false entry that matters is not an injected instruction; it is a plausible wrong fact, and screening built to catch instructions does not see it. The one specified mechanism the evidence does not refute — an understanding check by a new bounded case or a direct critical-field check — is untested anywhere.",
+      "other_lanes": [
+        { "lane": "R3", "findings": ["R3 F47", "R3 F48"], "what": "The distribution-side version: tool poisoning hides instructions in descriptions the model reads and the user does not; a rug pull changes the description after approval. Approval at install time binds a name to an owner and binds nothing to the text the model will read at call time, so content-hash pinning re-checked at use is the only surveyed mitigation that survives." },
+        { "lane": "R6", "findings": ["R6 F7", "R6 FC-6"], "what": "The knowledge-artifact version: up to 80% attack success through skill files, plus uncontrolled skill self-evolution silently stripping safety constraints." },
+        { "lane": "R4", "findings": ["R4 F9"], "what": "The vulnerability-record version: four CVEs, all scope-changed, one requiring no user interaction at all." }
+      ],
+      "conflict": false,
+      "conflict_note": "No conflict. Four lanes cover four different injection surfaces. R1's poisoning result is the one nobody else has and is the sharpest, because it is the only one where the attack carries no signature at all."
+    }
+  ],
+  "agreements": [
+    { "id": "AG-01", "kind": "DIRECT OBSERVATION", "statement": "An instruction file is not enforcement, and the vendors say so in their own documentation.", "lanes": ["R1", "R3", "R4", "R6"], "findings": ["R1 F-20", "R3 F4", "R3 F16", "R4 F6", "R4 F12", "R6 F7"], "corroboration": "mixed — R1 and R3 both read the same vendor memory page (one source, two readers); R4's permissions page, R6's skills page, R3's community-format and Gemini CLI pages are independent sources", "why_it_matters": "Negative control §4.2 — a canonical document nobody is forced to read — is not a hypothetical to guard against. It is the documented default of three shipping ecosystems, each of which then built a SEPARATE enforcement layer beside it. That separation, not the file, is the transferable finding." },
+    { "id": "AG-02", "kind": "DIRECT OBSERVATION", "statement": "No substrate in the surveyed field emits a record of what a lossy transform dropped.", "lanes": ["R1", "R3", "R6"], "findings": ["R1 F-02", "R1 F-21", "R3 F8", "R3 §10.8", "R6 §9 Q2"], "corroboration": "different sources — R1 from the tool protocol and observability registries, R3 from three transforms in one harness, R6 from the skill selection surface", "why_it_matters": "The context-manifest requirement is unprecedented rather than merely unimplemented, and the provider-side half may not be satisfiable at all." },
+    { "id": "AG-03", "kind": "INFERENCE", "statement": "A separate invocation is not independence; the binding quantity is correlated error and the verifier's false-positive rate.", "lanes": ["R2", "R3", "R7", "R8"], "findings": ["R2 F-14", "R3 §9 F-4", "R7 F12", "R7 F13", "R7 TC-37", "R8 §7"], "corroboration": "mixed — R2 and R7 share two primary sources; R3 and R8 reach it from unrelated material", "why_it_matters": "Fixture F-4's whole design rests on this, and it converts 'add a checker' from a structural claim into a measurable one." },
+    { "id": "AG-04", "kind": "DIRECT OBSERVATION", "statement": "Matched-budget comparison removes much of the reported multi-agent advantage.", "lanes": ["R1", "R2", "R3"], "findings": ["R1 F-08", "R2 F-02", "R3 F49", "R3 F51"], "corroboration": "both — R1 and R3 read the SAME matched-budget primary and agree on its model families and its stated boundary condition; R2's independent-evaluation source is a different paper pointing the same way", "why_it_matters": "It removes the presumption that a larger structure needs no defence, and it names the conditions under which decomposition does win: degraded single-agent context utilisation, or more compute spent." },
+    { "id": "AG-05", "kind": "DIRECT OBSERVATION", "statement": "How you decompose dominates whether you decompose: expert-designed multi-agent systems beat auto-generated ones decisively, at the same cost class.", "lanes": ["R2", "R3"], "findings": ["R2 F-03", "R3 F51", "R3 F52"], "corroboration": "one source, two readers — both lanes independently opened the same 2026 preprint and extracted the same internal split, one calling it the most decision-relevant result it found and the other the finding that most directly touches the thesis", "why_it_matters": "It is the closest thing in the literature to the founder's distinction AND it is not that distinction: expert-versus-generated is not title-versus-capability. R3 states the limit explicitly." },
+    { "id": "AG-06", "kind": "DIRECT OBSERVATION", "statement": "Selection over a growing catalogue degrades, and semantic confusability rather than count is the driver.", "lanes": ["R3", "R5", "R6"], "findings": ["R3 F7", "R5-18", "R6 F2", "R6 F3", "R6 F10"], "corroboration": "different sources — R5 found a vendor threshold claim (30–50 tools, no method published), R6 found three academic groups across skills, tool registries and shortlists (half-accuracy capacity fitted at 83.5–91.8), R3 found the vendor publishing no curve at all. The vendor band and the academic fit land in the same region from unrelated evidence.", "why_it_matters": "The founder constraint names a measured effect rather than a worry, and the adversarial-near-duplicate clause of the specified sweep is the load-bearing half, not decoration." },
+    { "id": "AG-07", "kind": "DIRECT OBSERVATION", "statement": "In the runtime this system plans to use, a knowledge artifact can carry a tool grant, so the knowledge unit is already an authority unit.", "lanes": ["R2", "R4", "R6"], "findings": ["R2 F-08", "R4 F5", "R6 F7", "R6 FC-6"], "corroboration": "mixed — R2 and R6 read the same vendor skills page independently and quote the same two sentences; R4's finding is a different instance of the same class, authority arriving from an agent-definition file the delegating conversation never held", "why_it_matters": "The specification's rule that a prose package cannot install, contact, spend or execute by being loaded is correct as design intent and false as a description of one named runtime. The gap must be closed by the launcher, not assumed." },
+    { "id": "AG-08", "kind": "INFERENCE", "statement": "The model cannot be the disclosure or release boundary; the boundary has to sit outside it.", "lanes": ["R1", "R4", "R6"], "findings": ["R1 F-14", "R1 F-15", "R1 F-16", "R4 F4", "R4 F6", "R4 F12", "R6 F12"], "corroboration": "different sources and different layers — R1 measures information-flow violation rates of 15.8–50.9% on frontier models, R4 quotes vendors stating their own mechanisms are not boundaries, R6 measures 48% accuracy at resolving instruction-hierarchy conflicts", "why_it_matters": "This constrains where a fixed boundary may be implemented without reopening it. Three lanes say so in their own words and none treats it as a reopening." },
+    { "id": "AG-09", "kind": "DIRECT OBSERVATION", "statement": "Transfer loses constraints preferentially, and the loss is not exclusive to multi-agent designs.", "lanes": ["R1", "R2", "R3"], "findings": ["R1 F-01", "R1 F-04", "R2 F-04", "R2 F-05", "R2 F-13", "R2 F-18", "R3 F10"], "corroboration": "different sources", "why_it_matters": "R2's stratified measurement (facts ~0.97, boundary markers ~0.57) is unique to R2 and changes the instrument: an unstratified handoff-loss probe will return a number describing neither class." },
+    { "id": "AG-10", "kind": "UNKNOWN", "statement": "Nothing in any lane's source set measures whether a system's human operator remains competent.", "lanes": ["R1", "R3", "R7"], "findings": ["R1 TC-29", "R3 §9 founder competence", "R7 §9"], "corroboration": "different source sets; each lane states it as an observed absence in its own corpus, not as evidence of absence", "why_it_matters": "It is the one dimension of the directive with no external evidence base at all, and R7 adds that the human anchor's own error rate is equally unmeasured." },
+    { "id": "AG-11", "kind": "DIRECT OBSERVATION", "statement": "Durable-execution engines guarantee the control flow and not the external effect.", "lanes": ["R3", "R5", "R8"], "findings": ["R3 F40", "R3 F41", "R3 F42", "R3 F43", "R3 F44", "R5-08", "R8 B-1"], "corroboration": "partly shared — three lanes read the same vendor's documentation on different pages, and R3 additionally surveys three other engines", "why_it_matters": "A candidate's recovery story must be about EFFECTS, because the control-flow half is a solved commodity; and the ambiguous-completion case survives in all four engines." },
+    { "id": "AG-12", "kind": "DIRECT OBSERVATION", "statement": "Refusal must be a recorded terminal state of the same record, and a catch-all must name what it cannot catch.", "lanes": ["R3", "R5", "R6"], "findings": ["R5-09", "R5-14", "R3 §9 F-1", "R6 §8 F-1"], "corroboration": "different sources", "why_it_matters": "A spurious job declined by silence is indistinguishable from a lost one, and negative control §4.9 has no counterexample anywhere in the surveyed field." },
+    { "id": "AG-13", "kind": "DIRECT OBSERVATION", "statement": "The package's own concurrency policy makes several thesis cost claims unmeasurable as specified.", "lanes": ["R2", "R8"], "findings": ["R2 F-19", "R2 G-5", "R8 TC-20", "R8 TC-39", "R8 §5"], "corroboration": "one source, two readers — both lanes read the same specification sections in separate contexts and returned the same disposition for TC-03, TC-20, TC-22's parallelism half and TC-39", "why_it_matters": "This is the round's strongest same-source agreement and it is about the package rather than the literature. It converts four claim verdicts into a single upstream decision: is the concurrency pin a provider constraint or a policy?" },
+    { "id": "AG-14", "kind": "DIRECT OBSERVATION", "statement": "The most-circulated multi-agent cost multiple is a vendor self-report with no published method, and token multiples are the wrong unit here regardless.", "lanes": ["R1", "R2", "R3", "R5", "R8"], "findings": ["R1 rejected mechanism 8", "R2 F-01", "R3 F12", "R5-22", "R8 W-1", "R8 W-7"], "corroboration": "one source, five readers — all five lanes independently located the same vendor post, all five flagged it as conflicted, and none upgraded it by repetition", "why_it_matters": "Five independent flags on one number is the clearest evidence in the round that the lanes applied the evidence rules rather than reciting them. R8 additionally traces a withdrawn 2025 vendor figure now circulating as fresh independent measurement." },
+    { "id": "AG-15", "kind": "INFERENCE", "statement": "Every adverse control needs its paired clean case, because the default behaviour of a neutrally framed checker is to flag almost everything.", "lanes": ["R1", "R6", "R7"], "findings": ["R1 F-10", "R1 useful mechanism 9", "R6 F8", "R7 F8", "R7 M4"], "corroboration": "different sources — R1 from a defence that took evidence recall to exactly 0.00%, R7 from 68.4–96.8% false-positive rates on already-patched files under neutral framing, R6 from a shipping evaluation tool that excludes graders which cannot fail in the baseline arm", "why_it_matters": "It is the least obvious agreement in the round and it bears directly on fixture F-4, whose adverse variation as frozen does not require the paired clean case that negative control §4.3 does." },
+    { "id": "AG-16", "kind": "DIRECT OBSERVATION", "statement": "A declared capability is not a delivered capability, and nothing routinely observes the difference.", "lanes": ["R3", "R4", "R6"], "findings": ["R3 F57", "R3 F59", "R3 F60", "R4 F1", "R6 §5 unknown 5"], "corroboration": "different sources; R3 F59 is a direct observation no other lane or vendor document supplies", "why_it_matters": "If a permission can be silently absent, a task that quietly does less looks identical to a task that was correctly scoped — and a skill can be loaded and ignored with every selection metric reporting success." },
+    { "id": "AG-17", "kind": "DIRECT OBSERVATION", "statement": "Duplicated and contradictory action has a cause the thesis does not name: correlated behaviour between identical models.", "lanes": ["R1", "R3", "R5"], "findings": ["R1 F-17", "R3 §8 items 5–7", "R5-22"], "corroboration": "mixed — R3 and R5 read the same vendor post on duplicated subagent work; R1's branch-name and job-queue measurements come from a different, later publication", "why_it_matters": "A single authoritative next-action view does not fix it and the hidden-profile result suggests it worsens the related failure. R1 names the measurement of this under a shared-state arrangement as the single most valuable experiment in its report." },
+    { "id": "AG-18", "kind": "DIRECT OBSERVATION", "statement": "No system in the surveyed field has an acceptance-owner concept; every one terminates on producer-declared completion.", "lanes": ["R3", "R5", "R7"], "findings": ["R3 §9 evidence and acceptance", "R3 §10.1", "R5-13", "R7 §8 F-1"], "corroboration": "different sources", "why_it_matters": "The acceptance boundary is the one part of the specification that cannot be imported from any surveyed system, and the interval between 'declared done' and 'accepted' has no owner in any of them while it exists in every business obligation." }
+  ],
+  "disagreements": [
+    {
+      "id": "D-01",
+      "topic": "Does the subagent boundary attenuate authority or inherit it?",
+      "position_a": { "lanes": ["R3"], "findings": ["R3 F2", "R3 F3", "R3 §7"], "claim": "The tool grant is SUBTRACTIVE and client-enforced in two filters, with a fixed unremovable core and a bounded delegation depth that withholds the tool at the limit rather than erroring. Listed as a mechanism that transfers, answering the composite-grant question with 'refused, not minted'." },
+      "position_b": { "lanes": ["R4"], "findings": ["R4 F5", "R4 TC-24"], "claim": "Tool inheritance is TOTAL unless a file says otherwise; the delegator cannot attenuate at the call; escalated permission modes propagate downward and the child's stricter setting is discarded; sandboxed Bash inherits the parent environment including credentials. The second clause of the governing directive is failing in the default configuration." },
+      "underlying_difference": "Two different questions, not two readings of one answer. R3 asks whether the CHILD can exceed the PARENT'S SET; R4 asks whether the DELEGATOR can narrow AT THE CALL, and whether authority can arrive from a FILE the parent never held. R4 names the definitional question that decides it: does authority belong to the conversation or to the project?",
+      "discriminator": "Two cheap probes. (1) Dispatch a subagent whose definition declares an MCP grant the main conversation lacks, and observe whether the tool is present at the effect. (2) R3 F58's own probe: dispatch the read-only reviewer, whose tool list omits the shell, and attempt one shell call — a refusal settles it for this runtime and version.",
+      "status": "preserved; not resolvable from documentation"
+    },
+    {
+      "id": "D-02",
+      "topic": "Does isolation by executor buy confidentiality that a permission-filtered loader does not?",
+      "position_a": { "lanes": ["R1"], "findings": ["R1 F-15"], "claim": "Multi-agent topologies reduce appropriateness violations by 20–50 percentage points against a single agent." },
+      "position_b": { "lanes": ["R4", "R1"], "findings": ["R4 F5", "R4 §5", "R1 F-14", "R1 F-15 residual"], "claim": "Executor separation separates no credentials, no environment, no sandbox configuration and no process in this runtime; and the residual violation rate stays above 75% with the bottleneck attributed to model judgement rather than topology." },
+      "underlying_difference": "Three layers wear one word. Isolation for ATTENTION (generation-dependent, shrinking), isolation for CONFIDENTIALITY at the information-flow layer (topology helps, partially), and isolation at the PROCESS and CREDENTIAL layer (absent by default). R2 §8 names the first split and says only the second is exercised by any fixture in the frozen set.",
+      "discriminator": "Seeded private-term canary run under three arms at matched utility: loader filter with one context; separated executors sharing process and environment; separated executors with scrubbed environments and separate credentials. Count disclosures at every destination, and count false exclusions in the same session.",
+      "status": "preserved"
+    },
+    {
+      "id": "D-03",
+      "topic": "Share everything, or narrow every delivery?",
+      "position_a": { "lanes": ["R1", "R8", "R3"], "findings": ["R1 F-19", "R8 B-2", "R3 F54", "R3 competing interpretation 1"], "claim": "Share context and share full agent traces, not just individual messages; actions carry implicit decisions and conflicting decisions carry bad results." },
+      "position_b": { "lanes": ["R1", "R8"], "findings": ["R1 F-06", "R1 F-07", "R8 W-3"], "claim": "Performance grows increasingly unreliable as input length grows with task complexity held constant, and even a single distractor reduces it. A larger authoritative view delivered to every executor makes every executor measurably worse." },
+      "underlying_difference": "The two positions optimise against different failure modes — conflicting implicit decisions versus context exhaustion — and both are coherent. The first is a practitioner position with a testable mechanism and no published measurement; the second is a measurement from a publisher that sells retrieval. R8 also notes the founder's requirement cannot then mean one store read by everyone; it must mean one AUTHORITY per field with delivery narrowed per attempt, and the thesis does not distinguish those designs.",
+      "discriminator": "The quantity neither side has measured: how much load-bearing content survives narrowing, against how much accuracy is lost by carrying it all. The package's own summary-loss instrument could measure the first.",
+      "status": "preserved; three lanes independently refused to resolve it"
+    },
+    {
+      "id": "D-04",
+      "topic": "Is there a turning point in executor count?",
+      "position_a": { "lanes": ["R2"], "findings": ["R2 F-15"], "claim": "Performance under vote and filter-vote aggregation first increases then decreases with the number of calls, because more calls help easy queries and hurt hard ones in the same dataset." },
+      "position_b": { "lanes": ["R2"], "findings": ["R2 F-15"], "claim": "Sampling and voting scales with the number of agents instantiated." },
+      "underlying_difference": "Two primary sources, compatible only if the turning point sits beyond the second's sweep. Neither located it for agentic work. R8 adds vendor statements of diminishing returns and a 3–5 recommendation, which is direction and not a location.",
+      "discriminator": "The sweep the claim specifies (1, 3, 7, 15, 30 at fixed total capacity) — which R8 finds is forbidden by the package's concurrency policy, so the discriminator is blocked upstream. See axis X14.",
+      "status": "preserved and blocked"
+    },
+    {
+      "id": "D-05",
+      "topic": "Is the reported multi-agent gain architecture or resource?",
+      "position_a": { "lanes": ["R1", "R8", "R5"], "findings": ["R1 F-09", "R8 A-2", "R5-22"], "claim": "A 90.2% improvement over a single agent on an internal research evaluation, at roughly 15x the tokens of chat." },
+      "position_b": { "lanes": ["R1", "R2", "R3"], "findings": ["R1 F-08", "R2 F-02", "R2 F-11", "R3 F49"], "claim": "At matched budget the advantage disappears; the same vendor's own variance decomposition attributes 80% of variance to token usage." },
+      "underlying_difference": "Budget matching, plus task shape. The vendor source itself excludes most coding work and names the unsuitable class. R8's reconciliation — research-like work parallelises, construction-like work does not — is an inference it declines to call settled.",
+      "discriminator": "Matched-capacity comparison run separately on a research-shaped task and a construction-shaped task, each reported beside its realised concurrency count.",
+      "status": "preserved by three lanes"
+    },
+    {
+      "id": "D-06",
+      "topic": "Does the simple baseline minimise scarce subscription capacity?",
+      "position_a": { "lanes": ["protocol §6"], "findings": ["acceptance protocol §6(ii)"], "claim": "B0 is granted 'the lowest plausible consumption of scarce subscription capacity' among its legitimate strengths." },
+      "position_b": { "lanes": ["R8", "R2"], "findings": ["R8 B-6", "R2 F-18"], "claim": "Four documented mechanisms make one long session consume more allowance than its activity suggests — the full conversation is resent with every request, a break longer than the cache lifetime reprocesses the whole context, compaction is itself a large request, and idle check-ins send full context. Separately, a native job caps at a 360-second window, so a six-hour single context cannot run at all." },
+      "underlying_difference": "B0 minimises LAUNCHES. It does not minimise the WEEKLY BUCKET, and the weekly bucket is what binds. R2 removes a different strength on a different ground drawn from the package's own launch contract rather than from a vendor page.",
+      "discriminator": "Instrument the four mechanisms and measure B0's weekly-bucket draw against a continuation-based arm at matched accepted outcomes. Note the standing limit: there is no published absolute denominator, so the result can only be a ratio.",
+      "status": "preserved; neither lane amended the frozen protocol and both said so"
+    },
+    {
+      "id": "D-07",
+      "topic": "Is metadata-only skill discovery adequate?",
+      "position_a": { "lanes": ["R6"], "findings": ["R6 F2"], "claim": "Vendor: three-level progressive disclosure means many skills can be installed without context penalty; the regime designed for is around 100 skills." },
+      "position_b": { "lanes": ["R6"], "findings": ["R6 F2"], "claim": "Academic: hiding the skill body costs 37–44 points of routing accuracy on a roughly 80,000-skill overlapping registry, and body-distilled descriptions remain 7–21 points short." },
+      "underlying_difference": "Different quantities at library sizes roughly 600x apart — context tokens versus routing accuracy. R6 states they locate a crossover rather than contradict each other, and that the crossover is unknown.",
+      "discriminator": "Selection accuracy over a REAL skill corpus at 10, 100 and 1000 with adversarial near-duplicates, on a current model. Nobody has published it, and negative control §4.10 constrains who may author the near-duplicates.",
+      "status": "preserved; R6 explicitly declines to resolve"
+    },
+    {
+      "id": "D-08",
+      "topic": "Do seeded defects estimate real-defect detection?",
+      "position_a": { "lanes": ["R7"], "findings": ["R7 F19"], "claim": "Mutant detection correlates with real fault detection independently of coverage, and hand-seeded faults are not a good substitute while mutants are. (R7 could not open the primary; quotation is via a citing paper and a search summary.)" },
+      "position_b": { "lanes": ["R7"], "findings": ["R7 F19"], "claim": "All correlations between mutation scores and real fault detection are weak once test-suite size is controlled; mutants guide improvement, they do not estimate detection." },
+      "underlying_difference": "The two measure different dependent variables, which the later paper's own introduction notes. The later study is larger and controls the confound; R7 declines to conclude from that alone.",
+      "discriminator": "None needed for the operative use: under BOTH readings the control detects an always-pass checker and does not license a published detection rate.",
+      "status": "preserved per DIRECTIVE §6; practical consequence identical either way"
+    },
+    {
+      "id": "D-09",
+      "topic": "Grade the outcome or the path?",
+      "position_a": { "lanes": ["R7"], "findings": ["R7 F20"], "claim": "Vendor guidance: step-checking is too rigid and brittle, so grade what the agent produced, not the path it took." },
+      "position_b": { "lanes": ["R7"], "findings": ["R7 F20", "R7 M1"], "claim": "Wrong for this system: a benchmark comparing final state acknowledges that a passing episode can omit a required user confirmation. In a system whose fixed boundaries include who may release an external effect, a grader that scores only the product cannot see a skipped authorisation." },
+      "underlying_difference": "The vendor guidance is calibrated to coding agents where the product is the whole obligation. Here the path contains the obligation.",
+      "discriminator": "Plant a skipped-authorisation defect in an artifact whose final state is correct, and see whether the grader is capable of failing it.",
+      "status": "R7 contradicts the vendor deliberately and says which is conflicted"
+    },
+    {
+      "id": "D-10",
+      "topic": "Is delegation depth a policy, a resource limit or a safety property?",
+      "position_a": { "lanes": ["R3"], "findings": ["R3 F3", "R3 F18"], "claim": "One vendor permits three layers below the main conversation and withholds the delegation tool at the limit, so work completes rather than failing. Depth is a configuration value." },
+      "position_b": { "lanes": ["R3"], "findings": ["R3 F18"], "claim": "Another vendor forbids subagent recursion absolutely, even with wildcard tool access. Depth is an invariant." },
+      "underlying_difference": "Two vendors, one decision, opposite answers, both deliberate, same year. The evidence establishes only that delegation depth is a design choice with a named owner — which is exactly what the protocol requires of a candidate.",
+      "discriminator": "R3's own question: the answer decides who may change the ceiling and whether changing it is a self-modification requiring review. R4 sharpens it — in this runtime spawning costs no permission check at all, so the ceiling needs an owner AND a checkpoint.",
+      "status": "preserved"
+    },
+    {
+      "id": "D-11",
+      "topic": "What should happen to work nothing can currently handle?",
+      "position_a": { "lanes": ["R5"], "findings": ["R5-08", "R5 competing interpretations"], "claim": "Park indefinitely and wait for a human to deploy a handler; state is not lost and the task retries after redeploy." },
+      "position_b": { "lanes": ["R5"], "findings": ["R5-14"], "claim": "Refuse with a recorded reason, as a terminal state of the same record." },
+      "position_c": { "lanes": ["R5"], "findings": ["R5-03", "R5-12"], "claim": "Assign by default to the next supervisory position and escalate on a timer." },
+      "underlying_difference": "Each has a different failure: an obligation with a deadline rots in the first, a real duty is declined in the second, and the third ends assigned and silent after a bounded number of repeats.",
+      "discriminator": "Run F-1's spurious job and a genuine-deadline variant under each disposition and count rotted obligations against wrongly declined duties. R5's own reading is that the right choice is almost certainly per consequence class rather than global.",
+      "status": "preserved; three sources genuinely disagree"
+    },
+    {
+      "id": "D-12",
+      "topic": "Is re-routing a defect?",
+      "position_a": { "lanes": ["R5"], "findings": ["R5-20"], "claim": "In ticket routing, any assignment to someone who cannot resolve the ticket is inefficient." },
+      "position_b": { "lanes": ["R5"], "findings": ["R5-20"], "claim": "Reassignments are useful for determining the best person to fix a bug, contrary to the popular opinion that they are always harmful; the harmful shape is cycles at the end of a sequence." },
+      "underlying_difference": "One treats re-routing as waste, the other as the diagnostic path by which the right owner is found.",
+      "discriminator": "Measure end-of-sequence cycles separately from reassignment count. A design that minimises re-routing may be suppressing diagnosis.",
+      "status": "preserved"
+    },
+    {
+      "id": "D-13",
+      "topic": "Buy a second model family, or stop relying on model judgement for the affected decisions?",
+      "position_a": { "lanes": ["R7"], "findings": ["R7 F14", "R7 F13"], "claim": "A panel of smaller judges from DISJOINT families beats a single large judge, with less intra-model bias, at over seven times lower cost; and the only working remedy for self-consistent errors was a cross-model probe." },
+      "position_b": { "lanes": ["R7"], "findings": ["R7 F12", "R7 F5"], "claim": "Error correlation persists across distinct architectures and providers and RISES with capability, so the strongest second opinion is the most correlated one; and on objectively checkable correctness, strong judges perform slightly better than random regardless of family." },
+      "underlying_difference": "Whether the residual after buying diversity is small enough to matter. The first position's cited mechanism is family disjointness, which a same-family panel has removed by construction.",
+      "discriminator": "Joint false acceptance measured on a controlled planted-defect set, same-family pair against cross-family pair. R7 searched and found no published comparison of exactly this.",
+      "status": "preserved; R7 states it is a decision and declines to make it"
+    },
+    {
+      "id": "D-14",
+      "topic": "Are the founder's five axes separable in practice?",
+      "position_a": { "lanes": ["R2"], "findings": ["R2 TC-17 verdict"], "claim": "Separable yes — each axis can vary alone; only exhaustiveness fails." },
+      "position_b": { "lanes": ["R6", "R2"], "findings": ["R6 F7", "R2 F-08"], "claim": "In the shipping runtime a knowledge artifact carries a tool grant and can fork an isolated context, so the skills axis and the authority and context axes are not independently variable." },
+      "underlying_difference": "Separability in the TAXONOMY versus separability in the IMPLEMENTATION. R2's verdict is about the first and R2's own F-08 is about the second.",
+      "discriminator": "In the runtime that will actually be used, construct a skill carrying no tool grant and a tool grant carrying no procedure, and check whether either can be varied without touching the other.",
+      "status": "preserved; the tension is internal to R2 as well as across lanes"
+    },
+    {
+      "id": "D-15",
+      "topic": "Is the coordination question a trichotomy or a quadrichotomy?",
+      "position_a": { "lanes": ["R5"], "findings": ["R5-01"], "claim": "Three loci, named at the source in 1986: in the knowledge sources, on the blackboard, in a separate module, or a combination." },
+      "position_b": { "lanes": ["R3"], "findings": ["R3 F33"], "claim": "A fourth working arrangement exists and is neither: coordination by SUBSCRIPTION — structured messages published to a shared pool, extracted by role-specific interests, with activation gated on receiving all prerequisite dependencies." },
+      "underlying_difference": "Subscription is a control locus distributed across the readers rather than held by a module or by the record, and it is the one reading with a shipped implementation and reported scores.",
+      "discriminator": "Build the fixture under each reading and measure contradictory actions, duplicated external effects and owner minutes, per the claim's own measure — now with four arms rather than three.",
+      "status": "new; surfaced by putting two lanes side by side"
+    },
+    {
+      "id": "D-16",
+      "topic": "A number in this repository's own decision record cannot be traced to its cited primary",
+      "position_a": { "lanes": ["R7"], "findings": ["R7 F16"], "claim": "The decision record and two sections of an internal design document state evaluator agreement of 5–17% and per-evaluator detection of 18–60%, attributed to a 2003 review." },
+      "position_b": { "lanes": ["R7"], "findings": ["R7 F16", "R7 F15"], "claim": "The primary states 5–65% any-two agreement and per-evaluator detection of 59% and 45%; a third section of the same internal document states the traceable 5–65% version with 'verified' beside it. R7 searched the primary for both disputed ranges and found neither." },
+      "underlying_difference": "R7 does not assert the figures are wrong — they may derive from an internal sweep it did not locate — only that they cannot be traced from the repository's own citation, which makes them folklore under the evidence rules. The direction is primary-verified and unaffected: low pairwise agreement, largely distinct finding subsets, union far exceeding any single evaluator.",
+      "discriminator": "Locate the internal sweep that produced them, or re-derive from the primary and correct the record. Note that the unverifiable version is what propagated into the brief R7 itself was given.",
+      "status": "open, and it is a measurement-integrity finding against this round's own inputs"
+    }
+  ],
+  "axes": [
+    {
+      "id": "X01", "topic": "Intent and obligations", "round": "F2 update", "movement": "moved — an instrument now exists where there was none",
+      "account": "The first round distinguished purpose, instructions and continuing promises and left implementation open. F2 supplies a measurement: constraints and obligations survive transfer at roughly 0.57 while operational facts survive at roughly 0.97, and typed machine-actionable constraints reduced leakage to 0 of 48 where vague language leaked in 73% of cases [R2 F-04, R2 F-05]. Two further constituents were named as missing from any obligation record: surviving obligations that outlive their case and explicit contradiction state [R1 TC-14], and a reason-finished field separate from the status field, which shipped software makes optional [R5-13].",
+      "lanes": ["R1", "R2", "R5"], "findings": ["R2 F-04", "R2 F-05", "R1 TC-14", "R5-13"],
+      "discriminating_question": "For each of the 46 capabilities, which carry constraints that would not survive a 25-word compression, and do those constraints travel as types or as prose?",
+      "status": "agreement on need; implementation open; now with a measurable survival rate", "decision": null
+    },
+    {
+      "id": "X02", "topic": "Production and institutional boundaries", "round": "F2 update", "movement": "barely moved, and the evidence base itself was found to be narrow",
+      "account": "Make-versus-buy remains open. Two additions. A criterion that applies only to human performers was identified — professional standing that the act itself requires, which no capability difference can supply [R2 TC-38] — and a second, that a human is a differently-correlated error source [R7 §8 F-6]. Separately, every system in the framework survey is a software-construction or generic-orchestration system whose benchmarks measure repository issues, desktop tasks and multi-hop reasoning, so no evidence bears on customs disputes, refunds, supplier commitments or wind-down [R3 §9]. The narrowing risk named in W11 is a risk of importing the EVIDENCE BASE, not only the vocabulary.",
+      "lanes": ["R2", "R3", "R7"], "findings": ["R2 TC-38", "R7 §8 F-6", "R3 §9"],
+      "discriminating_question": "Which responsibilities must be owned internally, and which of them does the round have any relevant evidence about at all?",
+      "status": "unresolved trade-off; evidence-base narrowness newly recorded", "decision": null
+    },
+    {
+      "id": "X03", "topic": "Coordination", "round": "F2 update — this round owns this axis", "movement": "moved substantially",
+      "account": "Three changes. First, the arrangement the thesis describes is a named 1970s–80s architecture whose own author states no control component is specified and that the locus may sit in the knowledge sources, on the record, in a separate module, or in a combination — so the open question in the thesis is the hole the original model left, unclosed for forty years [R5-01]. Second, the cost of the explicit-coordinator reading is documented at the source: a monitor gains broad executive power that can violate the opportunism the shared record existed to enable [R5-02]. Third, a counter-mechanism was measured that none of the readings predicts: correlated reasoning produced 18 of 30 agents choosing one branch name with no shared state at all, and hidden-profile suppression means a shared consensus makes the related failure worse [R1 F-17]. A fourth locus was surfaced by comparison — coordination by subscription [R3 F33].",
+      "lanes": ["R1", "R3", "R5", "R8"], "findings": ["R5-01", "R5-02", "R1 F-17", "R3 F33", "R8 W-3"],
+      "discriminating_question": "Under each of the four loci, how many contradictory actions, duplicated external effects and owner minutes occur — and does a shared authoritative view raise or lower duplicated external effects?",
+      "status": "foundational alternatives retained, now four rather than three, with one cost priced and one counter-mechanism measured", "decision": null
+    },
+    {
+      "id": "X04", "topic": "Knowledge structures", "round": "F2 update", "movement": "moved — two relied-upon defences are now measured and both fail against the attack that matters",
+      "account": "Write-path content screening refused 0 of 360 poisoned memories carrying no instruction, while detecting indirect prompt injection at 0.832 recall; read-path provenance ranking at its shipped weight was statistically indistinguishable from no defence and at its effective weight took evidence recall to exactly 0.00% [R1 F-10]. A retrieved wrong fact overrides correct prior knowledge over 60% of the time [R1 F-11]. One reading of a single source of truth has a production existence proof for exactly one fact class, at the price of a dedicated global service and a bespoke consistency mechanism [R1 F-23]. Two structural mechanisms arrived from the framework survey: a state write as an appended event, so state and audit trail are one artifact, and single-writer concurrency keyed per entity [R3 F24, R3 F25, R3 F42].",
+      "lanes": ["R1", "R3", "R6", "R8"], "findings": ["R1 F-10", "R1 F-11", "R1 F-13", "R1 F-23", "R1 F-24", "R3 F24", "R3 F25", "R3 F42", "R8 W-3"],
+      "discriminating_question": "How is a plausible wrong fact — one carrying no attack signature — detected, and what is the blast radius and time-to-detection when it is not?",
+      "status": "empirical and semantic disagreement retained; the package's two named defences are now evidenced against", "decision": null
+    },
+    {
+      "id": "X05", "topic": "Evidence versus truth", "round": "F2 update", "movement": "moved — the distinctions now carry magnitudes, and one internal figure was corrected",
+      "account": "Exact-match judge agreement overstates chance-corrected agreement by 33.8–41.2 points on the benchmark most often cited, putting the familiar 80% figure at a moderate kappa [R7 F3]. Test-retest reliability above 0.95 coexists with substantial position bias — reproducible and invalid at once [R7 F4]. On objectively checkable correctness, strong judges perform slightly better than random [R7 F5]. Withholding producer framing moves the DECISION THRESHOLD and not the DISCRIMINATION, because the same judges flag 68.4–96.8% of already-patched files under neutral framing [R7 F8]. The best procedurally independent reviewer measured reaches 28.6% F1 [R7 F9]. Human evaluators agree with each other 5–65% and on severity 20–28% [R7 F15]. One repository figure was found untraceable from its own citation [R7 F16].",
+      "lanes": ["R7", "R2", "R6"], "findings": ["R7 F3", "R7 F4", "R7 F5", "R7 F8", "R7 F9", "R7 F15", "R7 F16", "R2 F-14", "R6 F8"],
+      "discriminating_question": "What is the joint false-acceptance rate of a same-family producer/checker pair on a controlled planted-defect set, with a paired clean case run in the same session?",
+      "status": "agreement on distinctions; completeness unproven; magnitudes now attached and unflattering", "decision": null
+    },
+    {
+      "id": "X06", "topic": "Authority and recovery", "round": "F2 update", "movement": "moved — the invariant is unchanged and the enforcement options are now named, with one buildable path and one measured delivery failure",
+      "account": "Attenuation is solved and shipped in three production families, all putting it in the credential or the call rather than in the holder [R4 F2]; it buys narrowing and not revocation, and revocation requires a live re-read at the enforcement point at the moment of the effect [R4 F3]. The default runtime inherits authority in four documented ways [R4 F5]. A deterministic per-agent attenuation path exists today, outside the model, via a pre-tool hook carrying the caller's identity plus a deny-first non-overridable precedence [R4 F7]. Four vulnerability records show confused deputy at production scale, all scope-changed [R4 F9]. No standardised mechanism verifies that a delegation chain narrows [R4 F10]. From the framework side: an approval interrupt can re-run its node from the top and duplicate the effect it was approving [R3 F29, R3 F30], and a grant was observed to narrow reliably and arrive unreliably [R3 F59].",
+      "lanes": ["R4", "R3", "R2", "R6"], "findings": ["R4 F2", "R4 F3", "R4 F5", "R4 F7", "R4 F9", "R4 F10", "R3 F29", "R3 F30", "R3 F59", "R2 F-08", "R6 F7"],
+      "discriminating_question": "Does this system have a credential at the boundary at all — and if not, must the constraint be enforced by mediation rather than by delegation, which is a different architecture?",
+      "status": "agreement on the invariant; enforcement options open; the default configuration currently violates it", "decision": null
+    },
+    {
+      "id": "X07", "topic": "Owner competence and attention", "round": "F2 update — this round owns this axis", "movement": "left where it was, with two new constraints and no validation",
+      "account": "No founder-specific dose is validated and none became validated. The specified transfer test is unexecuted in the literature [R1 TC-29]; nothing in the entire framework survey measures whether a system's human operator can still judge the work [R3 §9]; and the human anchor is itself an instrument with a measured error rate, which nothing in the package states or requires to be measured [R7 F15, R7 §9]. Two constraints are new: the founder's value as a checker is that his errors are uncorrelated with the model family's, so a week of his absence removes the system's only cross-family error source [R7 §8 F-6]; and the structure that is easiest for a founder to hold is the one W11 rejects by name, which is a criterion tension rather than a defect [R8 A-6].",
+      "lanes": ["R1", "R3", "R7", "R8"], "findings": ["R1 TC-29", "R3 §9", "R7 F15", "R7 §9", "R8 A-6"],
+      "discriminating_question": "What dose of returned work preserves competence, what is the founder's own expected error rate, and what does the system decline to accept during his absence for that reason?",
+      "status": "unresolved human-factors hypothesis, unchanged", "decision": null
+    },
+    {
+      "id": "X08", "topic": "Economics and scope", "round": "F2 update", "movement": "moved substantially, and the central reading inverted",
+      "account": "Under subscription capacity, architecture does not change what the company spends; it changes the date on which work stops [R8 §3]. Unused allowance is destroyed rather than banked, so a conservative reservation is waste rather than thrift [R8 §3]. There is no published absolute denominator on the provider side, so every capacity finding this round can produce is a ratio between arms [R8 W-6]. A parallel executor's prompt cache expires far sooner than the main session's, so splitting costs more allowance than token arithmetic predicts [R8 W-2]; at the current concurrency pin, thirty executors cost thirty serialised launches rather than thirty concurrent windows [R8 W-1]. The no-silent-metered-fallback rule has no mechanism and the fallback is one setting away at both providers [R8 W-5]. From the specification side, a native job caps at a 360-second window, so continuation is mandatory in every arm [R2 F-18].",
+      "lanes": ["R8", "R2", "R3", "R6"], "findings": ["R8 W-1", "R8 W-2", "R8 W-5", "R8 W-6", "R8 B-6", "R8 B-7", "R8 §3", "R2 F-18", "R2 F-19", "R3 §10.7", "R6 §5 unknown 4"],
+      "discriminating_question": "If a provider doubled or halved the allowance overnight, would any decision in this round change? If none would, the capacity argument was never load-bearing.",
+      "status": "unresolved feasibility trade-off, now stated in the right units with the denominator missing", "decision": null
+    },
+    {
+      "id": "X09", "topic": "Records and deletion", "round": "F2 update", "movement": "barely moved; two new instances of the same tension",
+      "account": "A peer work projection is a derivative of another venture's work that may outlive the grant that justified it, and erasure does not propagate to derivatives by default [R1 §9.5, R1 §9.7]. High-risk-system event logging is a legal obligation whose scope for these ventures nobody in the round owns, which closes any future argument that the manifest can be dropped on cost grounds without checking scope first [R1 F-22]. A skill retired out from under an accepted run breaks that run's pinned references, and no retirement rule names a citation check [R6 §9 Q5].",
+      "lanes": ["R1", "R6"], "findings": ["R1 F-22", "R1 §9.5", "R1 §9.7", "R6 §9 Q5"],
+      "discriminating_question": "When a grant is revoked or a record erased, what happens to every derivative already written — projections, summaries, pinned skill versions and accepted runs that cite them?",
+      "status": "design tension preserved", "decision": null
+    },
+    {
+      "id": "X10", "topic": "Improvement and simplification", "round": "F2 update — this round owns this axis", "movement": "moved — a removal test now has a named exemplar",
+      "account": "The research group that established that agent-computer interface design measurably changes behaviour now ships a hundred-line successor that deletes the interface engineering, keeps one tool and a linear history, and scores competitively — so a scaffold's contribution is a function of the model generation that motivated it and must be re-ablated when the model changes [R3 F38, R3 F39]. Which harness mechanisms carry a removal test remains unanswered, and a mechanism with no removal criterion is a permanent tax that W9 makes a failure condition [R3 §10.6]. On libraries, corpus quality rather than retrieval is the limiting factor, and compact curated content beat comprehensive documentation by nearly four times [R6 F5, R6 F4]. Determinism is the only lever that reduces subscription consumption without reducing work, and it belongs to every position [R8 B-7].",
+      "lanes": ["R3", "R6", "R8"], "findings": ["R3 F38", "R3 F39", "R3 §10.6", "R6 F4", "R6 F5", "R6 F10", "R8 B-7"],
+      "discriminating_question": "For each mechanism a candidate proposes, what evidence would cause its removal, and who re-runs that test when the model generation changes?",
+      "status": "agreement on tests; change allocation open; one exemplar of a scaffold correctly removed", "decision": null
+    },
+    {
+      "id": "X11", "topic": "The unit of justification for an executor", "round": "F2 new",
+      "account": "The five criteria do not share a unit. Parallel work predicates on a running instance and only relative to a chosen partition; distinct tools or permissions on a permission scope that may outlive any instance; isolated context on a context boundary; specialized knowledge on a template or skill version; independent verification on a relation between two instances, a property of neither alone [R2 F-20]. The measured verification effect attaches to a separate CONTEXT and a separate INPUT SET, which are cheaper than an agent [R7 §9]. Version, owner, provenance and deprecation are properties of the DISTRIBUTION unit in every system examined [R6 F9]. And for authority the unit is whatever is checked at the moment of the effect [R4 F1]. A criterion applied to the wrong unit returns undecidable, and undecidable reads as satisfied.",
+      "lanes": ["R2", "R4", "R6", "R7"], "findings": ["R2 F-20", "R2 TC-36", "R4 F1", "R6 F9", "R7 §9"],
+      "discriminating_question": "Applied to each candidate unit — template, instance, standing role, context boundary, permission scope, distribution unit, input set — which of the five criteria returns a decidable answer, and which returns undecidable?",
+      "decision": null
+    },
+    {
+      "id": "X12", "topic": "Handoff versus consultation", "round": "F2 new",
+      "account": "A major vendor implements both and states they are not interchangeable: a handoff is used when routing is part of the work and the specialist should own the remainder of the turn; agents-as-tools when a specialist should help with a bounded subtask without taking over [R2 F-17]. Combined with measured constraint loss, a handoff is the construct that discards boundary metadata because it transfers OWNERSHIP OF THE TURN through a compressed artifact, while consultation keeps the obligation-holder in place [R2 F-17, R2 F-04]. A second vendor's default handoff does the opposite — it transfers the entire prior conversation and leaves the guardrails behind, scoped to the first and last agent only [R3 F20, R3 F21]. And the system hands off to ITSELF on every job longer than the launch window [R2 F-18].",
+      "lanes": ["R2", "R3"], "findings": ["R2 F-17", "R2 F-18", "R2 §9 Q2", "R3 F20", "R3 F21"],
+      "discriminating_question": "For each transfer a candidate defines: does the obligation-holder leave the turn, what typed constraints travel, and is a continuation across a launch boundary held to the same discipline as an inter-agent handoff?",
+      "decision": null
+    },
+    {
+      "id": "X13", "topic": "Boundary metadata versus operational facts", "round": "F2 new",
+      "account": "They are separate classes with different survival rates under the same transformation — roughly 0.97 against roughly 0.57 — so any single aggregate loss figure describes neither [R2 F-04, R2 F-05]. Compaction's documented loss shape is early material, middle material and material the summariser cannot see is load-bearing, which is the shape of an exclusion, a rejected alternative and a promised remedy [R1 F-01, R1 INFERENCE from F-01 to F-05]. The same class appears in procedural knowledge as the stale skill whose example omits a duty, and nothing in any skill format checks a duty [R6 FC-5].",
+      "lanes": ["R1", "R2", "R6"], "findings": ["R2 F-04", "R2 F-05", "R1 F-01", "R6 FC-5"],
+      "discriminating_question": "Measured separately, what fraction of constraints survives each transformation in the system — and which of the 46 capabilities carry constraints that would not survive the compression the system actually performs?",
+      "decision": null
+    },
+    {
+      "id": "X14", "topic": "The concurrency pin as containment versus as a demand on the round", "round": "F2 new",
+      "account": "The current concurrency policy is one native job plus one external job, and the external profile is not yet admitted [R2 F-19]. That makes TC-03, TC-20 and TC-39 unmeasurable as specified, and the parallelism half of TC-22 with them [R8 §5, R2 TC-03]. Raising it requires a reviewed plan revision after measured evidence, so the measurement that would set the threshold requires first changing the parameter being measured [R8 TC-39]. And no inspected page establishes any account-level concurrency entitlement, so the pin may be a self-imposed policy rather than a provider constraint [R8 §6 unknowns, R8 §10 Q7].",
+      "lanes": ["R2", "R8"], "findings": ["R2 F-19", "R2 G-5", "R8 TC-20", "R8 TC-39", "R8 §10 Q7"],
+      "discriminating_question": "Is the pin a provider constraint or a policy? If policy, who owns a bounded capacity trial with a stopping rule; if a provider constraint, which thesis claims are permanently unmeasurable in this system and does the round say so in those words?",
+      "decision": null
+    },
+    {
+      "id": "X15", "topic": "The simple baseline's granted strengths are not purchasable as written", "round": "F2 new",
+      "account": "The protocol grants B0 the lowest plausible consumption of scarce subscription capacity; four documented provider mechanisms contradict that clause [R8 B-6]. The protocol's B0 is 'one long-context session'; the package's own launch contract caps a native job at a 360-second window, so a long single context cannot run and continuation is mandatory in every arm [R2 F-18]. B0 has no verification independence of any kind by construction, and the checker it would be compared against measures 28.6% F1, so B0 plus deterministic scripts plus human acceptance is not obviously worse than B0 plus a same-family checker [R7 §8]. Neither lane amended the frozen protocol, and both said so explicitly.",
+      "lanes": ["R2", "R7", "R8"], "findings": ["R8 B-6", "R2 F-18", "R7 §8", "R8 §10 Q8"],
+      "discriminating_question": "At what added mechanism has the simple baseline rebuilt the case-admission authority and stopped being the simple baseline — and what is its real weekly-bucket draw once the four provider mechanisms are instrumented?",
+      "decision": null
+    },
+    {
+      "id": "X16", "topic": "Declared capability versus delivered capability", "round": "F2 new",
+      "account": "One grant delivered 24 tools on one date and zero across three independent dispatches two days later with configuration unchanged, cause unknown; attenuation held, delivery did not [R3 F59]. One harness deleted 44 capability declarations no configuration backed and 16 budget blocks nothing read, and three of four workflow files are invoked by nothing [R3 F60]. A lint rule in the same harness records its own limit in its source: it checks the DECLARATION, not the BINDING [R3 F57]. And a capability declared in a file and never re-checked at the effect is a job title with a different noun [R4 F1]. This round supplies its own instance: seven of eight lanes reported the claim-registration tool absent from their sessions while the roster declares the grant.",
+      "lanes": ["R3", "R4", "R6"], "findings": ["R3 F57", "R3 F59", "R3 F60", "R4 F1", "R6 §5 unknown 5"],
+      "discriminating_question": "Can a grant be observed to have ARRIVED, as distinct from having been declared — and what does a task that silently did less look like from the outside?",
+      "decision": null
+    },
+    {
+      "id": "X17", "topic": "Who measures false exclusion", "round": "F2 new",
+      "account": "Every privacy and filtering source located measures leakage and none measures correct work refused because the loader filtered too hard; the extreme case is a defence that took evidence recall to exactly 0.00% while becoming statistically effective [R1 §9.1, R1 F-10]. The same asymmetry appears in verification: the neutrally framed judges that 'detect' at 97.2% also flag 96.8% of already-fixed files, so detection without a paired clean case is a constant rather than a measurement [R7 F8, R7 M4]. A shipping evaluation tool encodes the discipline by excluding graders that cannot fail in the baseline arm [R6 F8].",
+      "lanes": ["R1", "R6", "R7"], "findings": ["R1 §9.1", "R1 F-10", "R6 F8", "R7 F8", "R7 M4"],
+      "discriminating_question": "For every filtering, trust and refusal mechanism the system proposes, what is the rate of correct work refused, measured in the same session as the adverse case?",
+      "decision": null
+    },
+    {
+      "id": "X18", "topic": "The interval between declared done and accepted", "round": "F2 new",
+      "account": "Every surveyed system terminates at producer-declared completion — a returned summary, a graph reaching its end, a workflow returning — so the interval between that moment and acceptance exists in none of them and exists in every business obligation [R3 §10.1, R3 §9]. Shipped issue trackers permit a work item to be Done with no resolution, so finished and open are simultaneously true in one product [R5-13]. And for a job nobody anticipated there is no fixed pool and no regression case, so the acceptance owner must be a human or a deterministic predicate rather than a model checker at its highest-variance point [R7 §8 F-1].",
+      "lanes": ["R3", "R5", "R7"], "findings": ["R3 §10.1", "R5-13", "R7 §8 F-1"],
+      "discriminating_question": "Who is accountable for a piece of work between producer-declared completion and acceptance, what is that state called, and can it be queried?",
+      "decision": null
+    },
+    {
+      "id": "X19", "topic": "The founder as an instrument with an unmeasured error rate", "round": "F2 new",
+      "account": "Human evaluators agree with each other 5–65% of the time, agree on severity 20–28%, and in two studies not a single problem was unanimously judged severe [R7 F15]. Nothing in the package states an expected human error rate or requires it to be measured, while every design eventually routes to human acceptance [R7 §9]. The founder's distinct value is that his errors are uncorrelated with the model family's, which is also why his absence is expensive in a specific way the queue rule must name [R7 §8 F-6].",
+      "lanes": ["R7", "R1"], "findings": ["R7 F15", "R7 §9", "R7 §8 F-6", "R1 TC-29"],
+      "discriminating_question": "What is the expected error rate of the human acceptance step, who measures it, and with what uncertainty is it reported beside the model instruments it is meant to anchor?",
+      "decision": null
+    },
+    {
+      "id": "X20", "topic": "The metered-path affordance as an account property", "round": "F2 new",
+      "account": "A founder constraint forbids silent fallback to a metered path. Both providers surface a purchase-credits path at the exact moment of exhaustion, and one prompts to raise or remove a spend limit without leaving the tool; enabling credits also shortens the prompt-cache lifetime [R8 W-5]. Whether the path is disabled is an observable account setting, not a property of any architecture, and nothing in the package observes it [R8 TC-26(b)].",
+      "lanes": ["R8"], "findings": ["R8 W-5", "R8 TC-26", "R8 §10 Q5"],
+      "discriminating_question": "Who observes the account setting, how often, and what record is made when it changes?",
+      "decision": null
+    }
+  ],
+  "decision": null
+}

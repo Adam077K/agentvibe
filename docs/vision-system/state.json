@@ -76,24 +76,25 @@
     "Merged phase-content lane: FI-11 content half authored by derivation with citations (AD-012). Root verified: 0 sibling collisions with state literals erased, 5 all-strings-erased all declared as gaps, 327 skeletons, 18/18 negative fixtures rejected, 267079 checks; orchestrator's fabricated-quote mutation makes the validator exit 1. 67 gaps and 2 prose contradictions registered in contracts/phase-content-gaps.json, none filled with invented text.",
     "Merged guard-repair eaf5ada (AD-013/014 implemented; Fulfillment domain lifecycle; distinctness ratchet with declared budget 5; criterion-content drift oracle; G4-01/02/03/04/08 guards; G2-07 custody-on-removal; two prose contradictions resolved). Root verified 268836 checks, 27/27 fixtures, distinctness exit 0, direct checks on the two (d) repairs. GR-01..04 registered. Planning report merged with disposition PENDING.",
     "Independent recheck archived (planning/reviews/G-02-recheck-01.md) at f27c22e: G2-01 and G2-02 CLOSED at specification level — no (d) remains in any of the twelve dimensions; both carry (a) residue. G2-05 closed for delivery, (a) for refund/failure. G2-06 stays (a) OPEN: the content oracle pins to an author-controlled derivation file (RC-02) and the fixture suite has no count ratchet (RC-04). RC-01 is a real break the repair introduced. RC-01..08 registered.",
-    "Merged ratchet-pin lane (7 commits): pinned-conjuncts.json (25 pins / 44 requirements / 6 transitions), fixture MANIFEST (31), RC-01 in-flight failure and refund reachability, RC-03 requires-vs-conjuncts with 17 named waivers, RC-05/06/08. Root validator run: 31/31 fixtures rejected, 1311 edges. RP-01 registered."
+    "Merged ratchet-pin lane (7 commits): pinned-conjuncts.json (25 pins / 44 requirements / 6 transitions), fixture MANIFEST (31), RC-01 in-flight failure and refund reachability, RC-03 requires-vs-conjuncts with 17 named waivers, RC-05/06/08. Root validator run: 31/31 fixtures rejected, 1311 edges. RP-01 registered.",
+    "G-02-recheck-02 archived (planning/reviews/G-02-recheck-02.md, subject 3579cc2): RC-01, RC-03..RC-08 CLOSED at specification level; RC-02 OPEN (a) — a disjunction sibling of the one-hunk attack passes at exit 0 with pins untouched (RC2-02); RC2-01 (b), RC2-03 (b), RC2-04 (c) registered. Repair lane dispatched."
   ],
   "active_work": [
     {
-      "agent": "reviewer (recheck-02)",
-      "scope": "G-02-recheck-02 at frozen 3579cc2",
-      "status": "running; interim report shows a new leak finding on the pin (containment, not demand)"
+      "agent": "framer (f2-cross-lane)",
+      "scope": "Step 2 cross-lane comparison",
+      "status": "running"
     },
     {
-      "agent": "framer (f2-cross-lane)",
-      "scope": "Step 2 cross-lane comparison research/F2/cross-lane-comparison.{json,md}",
+      "agent": "builder (rc2-repair)",
+      "scope": "RC2-01..04 in planning/specification/contracts/ only",
       "status": "dispatched 2026-09-13"
     }
   ],
   "next_actions": [
-    "Verify and commit Step 2 cross-lane comparison; then Step 3: >=4 candidate work/agent models (framer, partitioned by file under planning/F2/candidates/)",
-    "Archive recheck-02 as planning/reviews/G-02-recheck-02.md; update RC-01..08 and register new RC2-* findings",
-    "Planning disposition deferred until the F2 round completes",
+    "Verify and commit Step 2; then Step 3: >=4 candidate work/agent models",
+    "Verify rc2-repair return (validator exit 0, new fixtures rejected, probe-9 hunk now refused); narrow independent recheck G-02-recheck-03 after",
+    "Planning disposition deferred until the F2 round completes and RC2-02 is rechecked",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
@@ -193,7 +194,7 @@
     "instruction": "Founder: do not start building yet. Hold after the planning disposition. B00 may be marked only as the disposition record; B01 is NOT to be dispatched until the founder lifts this hold explicitly.",
     "lifted": false
   },
-  "phase_g_disposition_status": "NOT YET RECORDED. No missing foundational decision remains (directive §10's last condition is met). The orchestrator is withholding the written disposition until RC-01 (break), RC-02 and RC-04 (ratchet holes) are repaired and narrowly rechecked, because a package whose defining defect is reintroducible in one hunk with every control green should not carry the word accepted. Founder hold on building is in force regardless.",
+  "phase_g_disposition_status": "NOT YET RECORDED. RC-01/03..08 independently closed 2026-09-13 (G-02-recheck-02); RC-02 remains OPEN (a) via RC2-02 (pin satisfied from inside a disjunction). Written disposition withheld until RC2-02 is repaired and narrowly rechecked, and until the F2 round completes. Founder hold on building in force regardless.",
   "founder_reopen": {
     "date": "2026-09-13",
     "input": "inputs/FOUNDER-THESIS-2026-09-13-agents.md",
