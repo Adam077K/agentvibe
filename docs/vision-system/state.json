@@ -81,23 +81,53 @@
   "active_work": [
     {
       "agent": "reviewer (recheck-02)",
-      "scope": "G-02-recheck-02: RC-02 attack replay, pin positive control, fixture-deletion control, RC-01..08 at frozen 3579cc2 on a git-archive copy",
-      "status": "dispatched 2026-09-13"
+      "scope": "G-02-recheck-02 at frozen 3579cc2",
+      "status": "running"
     },
     {
-      "agent": "framer (f0-claims-ledger)",
-      "scope": "Step 0 artifacts 1-2: planning/F2/00-thesis-claims.{md,json}, planning/F2/00-position-ledger.md",
-      "status": "dispatched 2026-09-13"
+      "agent": "sourcer (R1)",
+      "scope": "context engineering and shared state",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
     },
     {
-      "agent": "framer (f0-protocol)",
-      "scope": "Step 0 artifact 3: planning/F2/00-acceptance-protocol.md, formed blind to artifacts 1-2",
-      "status": "dispatched 2026-09-13"
+      "agent": "sourcer (R2)",
+      "scope": "when an agent earns its existence",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
+    },
+    {
+      "agent": "sourcer (R3)",
+      "scope": "frameworks and harnesses as evidence",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
+    },
+    {
+      "agent": "sourcer (R4)",
+      "scope": "authority as the boundary",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
+    },
+    {
+      "agent": "sourcer (R5)",
+      "scope": "work discovery and routing incl. unanticipated jobs",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
+    },
+    {
+      "agent": "sourcer (R6)",
+      "scope": "skills and knowledge",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
+    },
+    {
+      "agent": "sourcer (R7)",
+      "scope": "independent verification under one model family",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
+    },
+    {
+      "agent": "sourcer (R8)",
+      "scope": "contrarian: chartered persistent agents vs zero agents",
+      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
     }
   ],
   "next_actions": [
-    "Archive recheck-02 verbatim as planning/reviews/G-02-recheck-02.md; update RC-01..08 in registers/review-findings.json from its findings",
-    "Commit Step 0 artifacts; freeze protocol; then dispatch the eight Step 1 sourcer lanes R1..R8 (blind, partitioned by file under research/F2/)",
+    "Archive R1..R8 returns verbatim under research/F2/ with provenance headers; then Step 2 cross-lane comparison",
+    "Archive recheck-02 as planning/reviews/G-02-recheck-02.md; update RC-01..08",
     "Planning disposition deferred until the F2 round completes",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
