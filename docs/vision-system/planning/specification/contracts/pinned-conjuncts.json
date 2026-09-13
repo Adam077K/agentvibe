@@ -1875,6 +1875,39 @@
           "why": "and the rule names the out-of-band corroborant, so a promotion sourced from the investigating path has no route through this guard"
         }
       ]
+    },
+    {
+      "predicate_id": "guard.grant.declared_resolves_to_live_grant",
+      "kind": "guard",
+      "findings": [
+        "F6D-06"
+      ],
+      "decisions": [
+        "R-L2"
+      ],
+      "why": "A declared grant is RESOLVED at admission, not recorded. The two rows are the two halves of that: the list is on the record, and every ref in it currently stands at `active` in the Grant registry -- which IS the grant policy, because a second grant-policy record would be a second authority over one question. Arrival is a different fact from scope: `grant_arrival_attested` on the lease edge attests that a grant arrived, never that it was the right one, and this is the half that checks scope.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/declared_grants"
+          ],
+          "why": "the declaration is present and not empty; an empty list would satisfy any resolution rule vacuously, which is how the field read as enforcement while nothing read it"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/declared_grants",
+              "states_exactly": [
+                "active"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and every ref in it resolves to a Grant standing at `active`. `optional: false` is the load-bearing half -- with it optional, a declaration that resolves to nothing passes, which is the state the field was in."
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -2189,6 +2222,15 @@
         "F6D-04"
       ],
       "why": "The reconciliation route. Deleted, an effect identity can be claimed and never observed, so the detection of an already-released effect before a business action repeats -- 05 section 6's stop rule -- has no terminal state to reach."
+    },
+    {
+      "record": "WorkflowDefinition",
+      "from": "draft",
+      "to": "admitted",
+      "findings": [
+        "F6D-06"
+      ],
+      "why": "This edge is where `guard.grant.declared_resolves_to_live_grant` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
     }
   ],
   "requires_waivers_why": "RC-03. `requires` and `conjuncts` are independent fields of one spec and nothing compared them, so a criterion could state one requirement and demand another -- which is what the weakened derivation produced: the sentence still promised delivery over a body that had stopped asking for it. Measured before any waiver: 774 criteria examined, 0 failing the field-path rule, 17 failing the phase-name rule, every one of the 17 a phase-kind synonym for the criterion's OWN phase. Each waiver below names the exact tokens it excuses, so a new unmatched phase on a waived criterion still fails. SCOPE, stated because the rule's name promises more than the rule does (RC2-03). What is compared is a FORMATTING-DEPENDENT SUBSET of the sentence: backticked lowercase tokens (PROSE_TOKEN) and field paths that are either backticked or written literally as /payload/... (PROSE_PATH). English nouns are not compared to conjuncts, and most of what these sentences are made of is English nouns. Removing three pairs of backticks leaves a sentence promising a reader exactly the same thing and invisible to the rule -- the recheck measured that, and the run went from stopping at RC-03 in 19 seconds to passing it and failing 640 seconds later for an unrelated reason. LIVE POPULATION, re-derived on the committed corpus with the disjunction-aware walker: 774 criteria examined; 0 of them (0.0%) name a field path in `requires`, so the PATHS rule -- the half RC-03's required contract actually named -- has an applicable population of ZERO and contributes no live assertion; 19 (2.5%) name a backticked phase of a related record, 22 tokens in all; 17 of those 19 rely on a waiver below, and all 17 waivers are in use; the remaining 5 tokens across 2 criteria (criterion.SalesAgreement.performed.v1: `delivered`, `discharged`, `transferred`; criterion.GrievanceCase.remedy_authorized.v1: `held`, `partly_consumed`) are bound by a conjunct and are the whole of the rule's live force. THE NARROW SCOPE IS THE ACCEPTED LIMIT, and the alternative was measured rather than argued. Widening the phase rule to unbackticked tokens of related records' phase vocabulary produces 425 findings across 266 of the 774 criteria (34%), over 62 distinct tokens -- case-sensitive, and already excluding every token a conjunct binds or a waiver excuses. The vocabulary is ordinary English past participles used as verbs: `recorded` 104 (\"the subject's own declared identity/scope fields are recorded\"), `required` 43 (\"no judgment is required\"), `current` 37, `admitted` 34, `assigned` 30 (\"a custodian is assigned\"). A waiver list of that size is not a waiver list, it is a second corpus, and a rule that demands one teaches contributors to route around the checker. So the rule keeps its scope, the number is written down here rather than left to be rediscovered, and what is added instead is the control the live half never had: fixtures/negative/r14-requires-names-a-related-phase-no-conjunct-binds. Until it, the only RC-03 fixture exercised the half with zero population. The cure for the formatting dependency is upstream and is not a checker change. A criterion's `requires` sentence and its conjuncts are written by one author in one entry of tools/phase_content.py, so what makes the rule reach is the author backticking the phases the sentence promises. That is a CONVENTION, nothing enforces it, and this sentence exists so that nobody reads the rule's name as though something did.",
@@ -2497,6 +2539,17 @@
         "F6D-01"
       ],
       "why": "Detached, a step emits more than one effect and the step stops being the idempotency unit. Every retry story in section 6 rests on that being true."
+    },
+    {
+      "guard": "guard.grant.declared_resolves_to_live_grant",
+      "edges": [
+        "edge.StepExecution.dispatched.running.v1",
+        "edge.WorkflowDefinition.draft.admitted.v1"
+      ],
+      "findings": [
+        "F6D-06"
+      ],
+      "why": "F6D-06. Two admission edges, because both records declare the field. Detached, `declared_grants` is read by nothing again -- the string occurred in 0 predicate bodies when the review measured it -- and \"a declared grant is resolved against the grant policy at admission\" is a sentence about a resolution nobody performs. That is the decorative-declaration loophole the rule was written to close, reproduced by the rule: 44 capability declarations that nothing backed is the observed instance (R3 F57, F60)."
     },
     {
       "guard": "guard.holder.no_veto",

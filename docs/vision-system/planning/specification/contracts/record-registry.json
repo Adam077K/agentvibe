@@ -3107,10 +3107,10 @@
             "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
           },
           "declared_grants": {
-            "type": "string[]",
-            "required": false,
+            "type": "Ref<Grant>[]",
+            "required": true,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "F6D-06. Required and typed: a declared grant is resolved against the Grant registry at admission by guard.grant.declared_resolves_to_live_grant, so a declaration no configuration backs is refused rather than carried. The other five WORK-1.1 fields stay optional-at-registration and demanded at their own edge; this one cannot, because an optional grant list is the decorative declaration the rule exists to close."
           },
           "validator_ref": {
             "type": "Ref<ConfigurationVersion>",
@@ -4327,10 +4327,10 @@
             "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
           },
           "declared_grants": {
-            "type": "string[]",
-            "required": false,
+            "type": "Ref<Grant>[]",
+            "required": true,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "F6D-06. Required and typed: a declared grant is resolved against the Grant registry at admission by guard.grant.declared_resolves_to_live_grant, so a declaration no configuration backs is refused rather than carried. The other five WORK-1.1 fields stay optional-at-registration and demanded at their own edge; this one cannot, because an optional grant list is the decorative declaration the rule exists to close."
           },
           "validator_ref": {
             "type": "Ref<ConfigurationVersion>",

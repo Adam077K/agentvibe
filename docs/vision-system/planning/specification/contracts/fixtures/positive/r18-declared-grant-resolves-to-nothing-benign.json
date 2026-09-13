@@ -1,0 +1,24 @@
+{
+  "id": "r18-declared-grant-resolves-to-nothing-benign",
+  "repair": "R18",
+  "finding": "F6D-06, benign column; 05-work-agents-skills.md section 3",
+  "case": "A step whose declared grants all resolve, with the list additionally required to be duplicate-free, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-declared-grant-resolves-to-nothing.json",
+  "why": "The chapter states the benign case in as many words: a step whose declared grants all resolve must not be refused. At the registry layer that is a guard which may be hardened without the pin table objecting -- here with `unique` on the declared list, so one grant named twice cannot make a two-permission declaration look like a one-permission one. A control that refused this would be refusing the repair rather than the defect, and the adverse count beside it would not be a detection rate.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.grant.declared_resolves_to_live_grant/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "unique",
+        "items": {
+          "op": "path",
+          "value": { "op": "resolve", "ref": { "arg": "subject_ref" } },
+          "pointer": "/payload/declared_grants"
+        }
+      }
+    }
+  ]
+}

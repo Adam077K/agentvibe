@@ -3914,7 +3914,27 @@
             "declared_grants": {
               "type": "array",
               "items": {
-                "$ref": "values.schema.json#/$defs/string"
+                "type": "object",
+                "properties": {
+                  "record_id": {
+                    "$ref": "values.schema.json#/$defs/UUID"
+                  },
+                  "record_type": {
+                    "type": "string",
+                    "enum": [
+                      "Grant"
+                    ]
+                  },
+                  "revision": {
+                    "$ref": "values.schema.json#/$defs/Revision"
+                  }
+                },
+                "required": [
+                  "record_id",
+                  "record_type",
+                  "revision"
+                ],
+                "additionalProperties": false
               }
             },
             "validator_ref": {
@@ -3977,7 +3997,8 @@
             "maximum_idle",
             "acceptance_contract",
             "compatible_predecessor_refs",
-            "migration_rule"
+            "migration_rule",
+            "declared_grants"
           ],
           "additionalProperties": false
         }
@@ -5677,7 +5698,27 @@
             "declared_grants": {
               "type": "array",
               "items": {
-                "$ref": "values.schema.json#/$defs/string"
+                "type": "object",
+                "properties": {
+                  "record_id": {
+                    "$ref": "values.schema.json#/$defs/UUID"
+                  },
+                  "record_type": {
+                    "type": "string",
+                    "enum": [
+                      "Grant"
+                    ]
+                  },
+                  "revision": {
+                    "$ref": "values.schema.json#/$defs/Revision"
+                  }
+                },
+                "required": [
+                  "record_id",
+                  "record_type",
+                  "revision"
+                ],
+                "additionalProperties": false
               }
             },
             "validator_ref": {
@@ -5774,7 +5815,8 @@
             "input_refs",
             "attempt_refs",
             "output_refs",
-            "exit_evidence_refs"
+            "exit_evidence_refs",
+            "declared_grants"
           ],
           "additionalProperties": false
         }
