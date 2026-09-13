@@ -722,7 +722,7 @@ from collections import namedtuple  # noqa: E402
 # needs. `quantifiers` is a tuple rather than a flag so the message can NAME the quantifier
 # and the collection it ranges over -- "inside a forall" sends a reader looking;
 # "forall(/payload/obligation_refs)" sends them to the field that admits `[]`.
-Positioned = namedtuple("Positioned", "node negated disjoined quantifiers in_value")
+Positioned = namedtuple("Positioned", "node negated disjoined quantifiers in_value where")
 
 # An instrument reports its own coverage. A demand walk that quietly stopped walking would
 # leave every pin MISSING, which is loud -- and would leave RC-03's phase rule asserting
@@ -769,7 +769,7 @@ def quantifier_note(node, positions):
 
 
 def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
-                    in_value=False):
+                    in_value=False, where="body"):
     """Every `op` node of a body, with the CONTEXT that decides whether the body's truth
     depends on it: beneath a `not`, beneath a disjunction, beneath a quantifier, or inside
     an argument that is not a predicate position at all.
@@ -792,13 +792,14 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
 
     `in_value` is STICKY. Once the walk enters a JsonValue slot, every predicate position
     below it is a predicate position of something being read as a value, and nothing under
-    it is a conjunct of this body (RC3-02).
+    it is a conjunct of this body (RC3-02). `where` is the enclosing `operator.slot`, so a
+    refusal can say `present.value` rather than "somewhere in the body".
     """
     found = []
     if isinstance(node, list):
         for value in node:
             found.extend(polarised_nodes(value, owner, negated, disjoined, quantifiers,
-                                         in_value))
+                                         in_value, where))
         return found
     if not isinstance(node, dict):
         return found
@@ -808,7 +809,7 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
         # sits in and creates none of its own.
         for value in node.values():
             found.extend(polarised_nodes(value, owner, negated, disjoined, quantifiers,
-                                         in_value))
+                                         in_value, where))
         return found
     operator = node["op"]
     # ast_check refuses an undefined operator in any predicate body before this runs, so
@@ -840,7 +841,7 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
         WALK_CENSUS["under_disjunction"] += 1
     if negated:
         WALK_CENSUS["under_negation"] += 1
-    found.append(Positioned(node, negated, disjoined, quantifiers, in_value))
+    found.append(Positioned(node, negated, disjoined, quantifiers, in_value, where))
     for key, value in node.items():
         if key == "op":
             continue
@@ -850,16 +851,17 @@ def polarised_nodes(node, owner, negated=False, disjoined=False, quantifiers=(),
                ("an operator node carries a slot the demand table does not classify, so "
                 "a conjunct written there would be walked with no declared demand",
                 owner, operator, key, sorted(positions)))
+        slot = "%s.%s" % (operator, key)
         if in_value or role == "value":
-            child = (negated, disjoined, quantifiers, True)
+            child = (negated, disjoined, quantifiers, True, slot)
         elif role == "negated":
-            child = (not negated, disjoined, quantifiers, False)
+            child = (not negated, disjoined, quantifiers, False, slot)
         elif role == "quantified":
             child = (negated, disjoined,
-                     quantifiers + (quantifier_note(node, positions),), False)
+                     quantifiers + (quantifier_note(node, positions),), False, slot)
         else:
             child = (negated, disjoined or ((role == "disjoined") != negated),
-                     quantifiers, False)
+                     quantifiers, False, slot)
         found.extend(polarised_nodes(value, owner, *child))
     return found
 
@@ -1005,7 +1007,7 @@ for pin in PINNED["pins"]:
                  "depend on -- so as a requirement it is NOT PRESENT",
                  predicate_id, row["op"], row["why"],
                  {"findings": pin["findings"], "decisions": pin["decisions"],
-                  "positions": sorted({entry.node.get("op") for entry in contained}),
+                  "sits_in": sorted({entry.where for entry in contained}),
                   "note": "`present(value: <the conjunct>)` type-checks and asserts "
                           "nothing about it (RC3-02). primitive-registry.json declares "
                           "which arguments are predicate positions in "
