@@ -114,6 +114,14 @@ def run_fixture(fixture, verbose):
             os.symlink(prose, specification / prose.name)
         for prose in sorted(ROOT.parent.parent.glob("*.md")):
             os.symlink(prose, planning / prose.name)
+        # Three levels, because a criterion may cite the DIRECTIVE itself:
+        # `../../inputs/DIRECTIVE.md` resolves above `planning/`, and without this every
+        # fixture would fail on "derived_from names a file that does not exist" -- the
+        # wrong reason, which this runner counts as a leak. Same defect the two-level
+        # layout above was written to fix, one directory further out.
+        for sibling in sorted(ROOT.parent.parent.parent.glob("*")):
+            if sibling.is_dir() and sibling.name != "planning":
+                os.symlink(sibling, Path(scratch) / sibling.name)
         for source in sorted(ROOT.glob("*.json")):
             os.symlink(source, directory / source.name)
         shutil.copy2(ROOT / "validate_contracts.py", directory / "validate_contracts.py")

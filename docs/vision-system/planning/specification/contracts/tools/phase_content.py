@@ -401,6 +401,10 @@ CITE = {
         "the entire order. Acceptance uses the agreed criteria and counterparty "
         "acknowledgment where required; a silent customer does not acquire a new "
         "discharge meaning."),
+    "d-taste": (
+        "../../inputs/DIRECTIVE.md",
+        "The system must help the founder remain capable of ... exercising taste ... "
+        "making difficult decisions"),
     "c-onboarding-failure": (
         "03-company-capabilities.md",
         "CAP-30 then executes onboarding ... Failure creates a support/remedy duty with "
@@ -2549,6 +2553,35 @@ RECORD_OVERRIDES = {
                   ("/payload/custodian_assignment_ref", ["accepted"], False)]),
          AF, AR],
         hard=["nfp", "rpp"]),
+
+    # -- R-H / G4-08: the schema and the guard disagreed, and the guard was wrong. -
+    #
+    # `records.schema.json#/$defs/DecisionPacket` omitted `competence_requirement_ref`
+    # from `required`; `criterion.DecisionPacket.ready.v1` listed it in `nonempty_fields`,
+    # so a packet could not reach `ready` without it. Two implementers derive different
+    # packets from one contract. It is optional in BOTH now, and the guard states the case
+    # the stricter reading destroyed: DIRECTIVE.md §1.6 wants the founder exercising taste
+    # and making difficult decisions, and a pure taste decision has no competence
+    # prerequisite to name. `taste_decision` is a required flag rather than an inference,
+    # because "this is a matter of taste" is a claim someone makes, not one a guard reads
+    # off an absent field -- and an absent flag is unresolved and denies.
+    ("DecisionPacket", "ready"): spec(
+        "Every required child prerequisite resolves to a current accepted judgment on its "
+        "exact subject and predicate, the dependency graph over those children is "
+        "acyclic, and no activation or effect is claimed. AND the packet states its "
+        "competence footing exactly once: either `taste_decision` is true -- a decision "
+        "the owner makes because it is theirs to make, which has no competence "
+        "prerequisite to name and must not be blocked for lacking one -- or "
+        "`competence_requirement_ref` is present. Neither is inferred from the absence of "
+        "the other.",
+        ["s-per-edge", "c-launch", "s-no-self-support", "d-taste"],
+        [("nf", ["dependency", "evidence"]),
+         ("rp", [("dependency", ["accepted", "verified"], False)]),
+         ("ag", ["dependency"]),
+         ("either", [("eqF", "/payload/taste_decision", True),
+                     ("prF", "/payload/competence_requirement_ref")]),
+         AF, AR],
+        hard=["ag", "either"]),
 
     ("DeliveryCapacity", "verified"): spec(
         "verified requires actual performer acknowledgment, applicable access/materials, "

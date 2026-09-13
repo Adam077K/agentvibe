@@ -88173,6 +88173,9 @@
             "reversibility": {
               "$ref": "values.schema.json#/$defs/string"
             },
+            "taste_decision": {
+              "$ref": "values.schema.json#/$defs/boolean"
+            },
             "latest_decision_at": {
               "$ref": "values.schema.json#/$defs/UTC"
             },
@@ -88263,6 +88266,7 @@
             "contrary_refs",
             "unknowns",
             "reversibility",
+            "taste_decision",
             "latest_decision_at",
             "expires_at",
             "no_answer_rule_ref",
