@@ -80,45 +80,21 @@
     "G-02-recheck-02 archived (planning/reviews/G-02-recheck-02.md, subject 3579cc2): RC-01, RC-03..RC-08 CLOSED at specification level; RC-02 OPEN (a) — a disjunction sibling of the one-hunk attack passes at exit 0 with pins untouched (RC2-02); RC2-01 (b), RC2-03 (b), RC2-04 (c) registered. Repair lane dispatched.",
     "Step 2 cross-lane comparison committed (ddd7c22): 42-claim matrix (15 with conflicts), 18 agreements, 16 disagreements preserved, axes X01..X10 reconciled + X11..X20 new, 0 falsifiers against fixed boundaries (2 against protocol-granted B0 strengths), 41 of 65 cross-lane questions open. AM-01 recorded (F-4 paired clean case).",
     "RC2-01..04 repaired (d3cf3ea, 73827d8, 931a314, 7b3d388; contracts/ only): pins carry `disjoined` with any-ancestry tracking; fixtures 31→33; validator 269,697 checks exit 0 (author-recorded). Candidates M1, M2, M3, M5 committed; M4 in progress.",
-    "Step 3 complete: five materially different candidates committed under planning/F2/candidates/ (M1 capability-differentiated ephemeral, M2 chartered persistent, M3 workflow-first no agents, M4 hybrid by consequence class, M5 subscription-activated shared record), each on Phase C dimensions, six fixtures, 46-CAP binding, both comparators, (d)-self-audit, evidence ledger."
+    "Step 3 complete: five materially different candidates committed under planning/F2/candidates/ (M1 capability-differentiated ephemeral, M2 chartered persistent, M3 workflow-first no agents, M4 hybrid by consequence class, M5 subscription-activated shared record), each on Phase C dimensions, six fixtures, 46-CAP binding, both comparators, (d)-self-audit, evidence ledger.",
+    "Step 4 complete: five independent attack reviews archived verbatim under planning/F2/reviews/ (A-technical, A-company-human, A-economic-capacity, A-context-evidence, A-security-adversarial) at subject c6d62a3, indexed in findings-index.json. Per-dimension verdicts preserved; no score; dissent kept (M2 vs M3 on shedding; D-01)."
   ],
   "active_work": [
     {
       "agent": "reviewer (recheck-03)",
       "scope": "G-02-recheck-03 at 1bef187",
       "status": "running"
-    },
-    {
-      "agent": "reviewer (attack-technical)",
-      "scope": "Step 4 technical attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
-      "status": "dispatched 2026-09-13"
-    },
-    {
-      "agent": "reviewer (attack-company)",
-      "scope": "Step 4 company attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
-      "status": "dispatched 2026-09-13"
-    },
-    {
-      "agent": "reviewer (attack-economic)",
-      "scope": "Step 4 economic attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
-      "status": "dispatched 2026-09-13"
-    },
-    {
-      "agent": "reviewer (attack-context)",
-      "scope": "Step 4 context attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
-      "status": "dispatched 2026-09-13"
-    },
-    {
-      "agent": "reviewer (attack-security)",
-      "scope": "Step 4 security attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
-      "status": "dispatched 2026-09-13"
     }
   ],
   "next_actions": [
-    "Archive the five Step 4 reports verbatim under planning/F2/reviews/ with provenance; register findings; dispatch repair lanes by file partition where (a)/(b) repairs are possible; keep dissent",
+    "Step 5a: framer writes the selection record disposing of every attack finding, kept mechanisms per candidate, comparators verdict, version, founder packets, amendment brief",
+    "Step 5b: builder amends 05 and joins, contracts, coverage, decisions, package per the selection record",
     "Archive recheck-03; update RC2-*",
-    "Step 5 synthesis (framer) only after attacks are archived",
-    "Planning disposition deferred; HELD BY FOUNDER: no build stage may be dispatched"
+    "Step 6 independent review against the frozen protocol; disposition; HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
     {

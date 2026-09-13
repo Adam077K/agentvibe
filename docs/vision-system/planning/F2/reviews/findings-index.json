@@ -1,4 +1,134 @@
 {
+ "AC-ALL-01": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-ALL-01 \u00b7 class (b) \u00b7 the fixed founder-competence mechanism is cited by no candidate.**"
+ },
+ "AC-M1-01": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M1-01 \u00b7 class (d) \u00b7 a novel job that needs a new capability cannot be staffed while the founder is"
+ },
+ "AC-M1-02": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M1-02 \u00b7 class (d) \u00b7 the terminal owner of otherwise-unowned harm is an undefined party.**"
+ },
+ "AC-M1-03": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M1-03 \u00b7 class (d) \u00b7 acceptance above C2 is bound to the founder's *availability*, not to his"
+ },
+ "AC-M1-04": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M1-04 \u00b7 class (b) \u00b7 grouped binding hides four genuinely different acceptance owners in one row.**"
+ },
+ "AC-M1-05": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M1-05 \u00b7 class (b) \u00b7 the grievance custodian is standing but unfunded.**"
+ },
+ "AC-M1-06": {
+  "file": "A-company-human.md",
+  "class": "a",
+  "heading": "**AC-M1-06 \u00b7 class (a), recorded as a strength.** The profile-convergence probe (\u00a76.5) is a pre-declared"
+ },
+ "AC-M2-01": {
+  "file": "A-company-human.md",
+  "class": null,
+  "heading": "**AC-M2-01 \u00b7 negative control \u00a74 item 4 FAILED \u00b7 blocks \u00b7 `CT-MEANING` is a chartered desk that no fixture"
+ },
+ "AC-M2-02": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M2-02 \u00b7 class (b) \u00b7 no acceptance owner is named for an admitted duty that matches no charter"
+ },
+ "AC-M2-03": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M2-03 \u00b7 class (d) \u00b7 a grievance about `CT-STANDING`'s own disposition has no named independent"
+ },
+ "AC-M2-04": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M2-04 \u00b7 class (b) \u00b7 the designed return covers one of the fixed mechanism's four encounter kinds.**"
+ },
+ "AC-M2-05": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M2-05 \u00b7 class (b) \u00b7 absence-only acceptance rules are bound to the founder's availability rather than to"
+ },
+ "AC-M2-06": {
+  "file": "A-company-human.md",
+  "class": "a",
+  "heading": "**AC-M2-06 \u00b7 class (a), recorded as a strength.** Two blocking (d)s declared against itself in \u00a711, plus the"
+ },
+ "AC-M3-01": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M3-01 \u00b7 class (d) \u00b7 the grant backing an effect step on unclassified work is undefined, and the two"
+ },
+ "AC-M3-02": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M3-02 \u00b7 class (d) \u00b7 the founder-attention load is the design's central cost and is counted nowhere.**"
+ },
+ "AC-M3-03": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M3-03 \u00b7 class (b) \u00b7 the grievance route has no disputed-custodian predicate.**"
+ },
+ "AC-M3-04": {
+  "file": "A-company-human.md",
+  "class": "a",
+  "heading": "**AC-M3-04 \u00b7 class (a), recorded as a strength.** \u00a711 is the **only** self-audit in the round that walks all"
+ },
+ "AC-M4-01": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M4-01 \u00b7 class (d) \u00b7 a person is the acceptor on 37 of 46 capabilities and on every action in 26 of them,"
+ },
+ "AC-M4-02": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M4-02 \u00b7 class (d) \u00b7 H9 is the founder, every holder must carry an alternate, and H9's alternate is"
+ },
+ "AC-M4-03": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M4-03 \u00b7 class (d) \u00b7 CAP-43's holder, subject and acceptor are the same party, which M4's own \u00a72.3"
+ },
+ "AC-M4-04": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M4-04 \u00b7 class (b) \u00b7 the competence instrument is triggered by absence rather than scheduled.**"
+ },
+ "AC-M4-05": {
+  "file": "A-company-human.md",
+  "class": "a",
+  "heading": "**AC-M4-05 \u00b7 class (a), recorded as a strength.** The closure interlock \u2014 *\"CAP-39 cannot complete until H3's"
+ },
+ "AC-M5-01": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M5-01 \u00b7 class (b) \u00b7 the \u00a78 table excludes the standing interests by its own column rule, applies the"
+ },
+ "AC-M5-02": {
+  "file": "A-company-human.md",
+  "class": "d",
+  "heading": "**AC-M5-02 \u00b7 class (d) \u00b7 twelve acceptance-owner roles are named with no record that makes any of them exist,"
+ },
+ "AC-M5-03": {
+  "file": "A-company-human.md",
+  "class": "b",
+  "heading": "**AC-M5-03 \u00b7 class (b) \u00b7 the grievance route states the implicated-custodian case and supplies no mechanism"
+ },
+ "AC-M5-04": {
+  "file": "A-company-human.md",
+  "class": "a",
+  "heading": "**AC-M5-04 \u00b7 class (a), recorded as a strength.** \u00a711's first open (d) \u2014 *\"The terminal standing custodian is"
+ },
  "AE-M1-01": {
   "file": "A-economic-capacity.md",
   "class": "b",
@@ -142,7 +272,7 @@
  "AS-M2-01": {
   "file": "A-security-adversarial.md",
   "class": "b",
-  "heading": "#### AS-M2-01 \u00b7 (b) \u00b7 The published reachability route is an attacker-reachable write path into a capped store, and volume is the unaddresse"
+  "heading": "#### AS-M2-01 \u00b7 (b) \u00b7 The published reachability route is an attacker-reachable write path into a capped store, and volume is the unaddressed axis"
  },
  "AS-M2-02": {
   "file": "A-security-adversarial.md",
@@ -162,7 +292,7 @@
  "AS-M3-02": {
   "file": "A-security-adversarial.md",
   "class": "b",
-  "heading": "#### AS-M3-02 \u00b7 (b) \u00b7 The unclassified custodian may authorise effects one at a time, with no stated ceiling, on evidence assembled from unt"
+  "heading": "#### AS-M3-02 \u00b7 (b) \u00b7 The unclassified custodian may authorise effects one at a time, with no stated ceiling, on evidence assembled from untrusted input"
  },
  "AS-M3-03": {
   "file": "A-security-adversarial.md",
@@ -207,7 +337,7 @@
  "AS-M5-02": {
   "file": "A-security-adversarial.md",
   "class": "d",
-  "heading": "#### AS-M5-02 \u00b7 (d) \u00b7 A self-admitted trial interest declares `writer_keys`, and nothing says they must be disjoint from the existing sole-w"
+  "heading": "#### AS-M5-02 \u00b7 (d) \u00b7 A self-admitted trial interest declares `writer_keys`, and nothing says they must be disjoint from the existing sole-writer assignments"
  },
  "AS-M5-03": {
   "file": "A-security-adversarial.md",
