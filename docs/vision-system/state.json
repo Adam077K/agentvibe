@@ -83,29 +83,24 @@
     "Step 3 complete: five materially different candidates committed under planning/F2/candidates/ (M1 capability-differentiated ephemeral, M2 chartered persistent, M3 workflow-first no agents, M4 hybrid by consequence class, M5 subscription-activated shared record), each on Phase C dimensions, six fixtures, 46-CAP binding, both comparators, (d)-self-audit, evidence ledger.",
     "Step 4 complete: five independent attack reviews archived verbatim under planning/F2/reviews/ (A-technical, A-company-human, A-economic-capacity, A-context-evidence, A-security-adversarial) at subject c6d62a3, indexed in findings-index.json. Per-dimension verdicts preserved; no score; dissent kept (M2 vs M3 on shedding; D-01).",
     "G-02-recheck-03 archived (subject 1bef187): RC2-01/03/04 CLOSED; RC2-02 OPEN (a) — RC3-01 forall is a non-demanding context (exit 0 leak), RC3-02 JsonValue slots walked, RC3-03 truncated diagnostic. Root cause named: hardcoded operator names instead of registry-derived demanding positions. Repair lane dispatched.",
-    "Step 5a complete: attack consolidation (4cd34b8) and selection record (715cda2) — five-layer synthesis at S1.1 (consequence class > declared procedure > standing interest > existence record > standing holder; lower layer governs), 111/111 findings disposed, 24 missing decisions (13 decided, 4 with founder parameter, 6 founder packets), 11 design proposals without evidence, dissent preserved."
+    "Step 5a complete: attack consolidation (4cd34b8) and selection record (715cda2) — five-layer synthesis at S1.1 (consequence class > declared procedure > standing interest > existence record > standing holder; lower layer governs), 111/111 findings disposed, 24 missing decisions (13 decided, 4 with founder parameter, 6 founder packets), 11 design proposals without evidence, dissent preserved.",
+    "Step 5b chapters (609a852..8c72253) and registers (bf8785d..bfd4a93) landed; all five verifiers exit 0. RC3-01..03 repaired at the root cause (cfccbc8..a41bf73): registry-derived demanding positions, unknown operators refused, 36 fixtures, 288,620 checks (author-recorded)."
   ],
   "active_work": [
     {
-      "agent": "builder (rc3-repair)",
-      "scope": "RC3-01..03 root cause in contracts/",
-      "status": "running"
-    },
-    {
-      "agent": "builder (b5-chapters)",
-      "scope": "Step 5b prose: 05 rewrite + joins 01/02/04/06/07/08/11 + 02-architecture-selection E1.2",
+      "agent": "builder (b5-contracts)",
+      "scope": "Step 5b contracts: 15 records, changed records, 30 guards, 17 paired fixtures; capabilities.json version reconciliation",
       "status": "dispatched"
     },
     {
-      "agent": "builder (b5-registers)",
-      "scope": "Step 5b registers: AD-015..022, Q-016..021, coverage/questions.json F02-F06 + joins, coverage/package.json rows",
+      "agent": "reviewer (recheck-04)",
+      "scope": "G-02-recheck-04 at frozen a41bf73",
       "status": "dispatched"
     }
   ],
   "next_actions": [
-    "When rc3-repair returns: dispatch b5-contracts (records, changed records, guards, 17 paired fixtures per selection §12.3-12.5) and recheck-04",
-    "Verify b5-chapters and b5-registers; run all vision verifiers at root",
-    "Step 6: independent reviewers (wrote nothing in Steps 1-5) against the frozen protocol; disposition; PLANNING-REPORT + README + founder page; session file",
+    "Verify b5-contracts; archive recheck-04; then Step 6 reviewers",
+    "Step 6: independent reviewers (wrote nothing in Steps 1-5) per frozen protocol; disposition; PLANNING-REPORT + README + founder page; session file",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
