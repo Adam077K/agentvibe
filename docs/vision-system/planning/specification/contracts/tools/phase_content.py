@@ -2492,18 +2492,31 @@ RECORD_OVERRIDES = {
          ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
          ("nc", "delivered"), AF, AR],
         hard=["nfp", "rpp", "nc"]),
+    # RC-01: `not(native_correlated delivered)` USED TO BE A CONJUNCT HERE, and it made
+    # this criterion contradict the only edge that could reach it. `failed` was entered
+    # solely from `delivered`, which is entered only by an edge REQUIRING
+    # `native_correlated(result: "delivered")` -- so the phase demanded the absence of the
+    # correlation its own inbound route had just established, and a delivery that failed
+    # in flight had no transition at all. The absence of correlation is a property of the
+    # ROUTE, not of the phase: it is required by `edge.Fulfillment.delivering.failed.v1`,
+    # the in-flight edge, and it is deliberately NOT required by the edge from `delivered`,
+    # where a delivery was correlated and later failed anyway. One criterion cannot assert
+    # both, and the layer that can tell the two routes apart is the guard.
     ("Fulfillment", "failed"): spec(
-        "The delivery did not happen and the failure is owned rather than closed: the "
+        "The delivery did not complete and the failure is owned rather than closed: the "
         "service window and the receipts actually obtained are recorded, the remaining "
-        "obligations survive on the record, and no observation correlates a delivery. "
-        "Failure creates a support/remedy duty with an update deadline; it does not "
-        "discharge the order, and it is not a route to `delivered` by another name.",
+        "obligations survive on the record, and a currently accepted performer still "
+        "carries them. Failure creates a support/remedy duty with an update deadline; it "
+        "does not discharge the order. Whether any observation correlates a delivery is "
+        "decided by the inbound edge rather than here -- a failure in flight requires "
+        "that none does, and a failure after delivery cannot, because the route it took "
+        "required exactly that correlation.",
         ["c-onboarding-failure", "arch3-outcome"],
         [("nfp", ["/payload/remaining_duties", "/payload/receipts",
                   "/payload/service_window"]),
          ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
-         ("not", ("nc", "delivered")), AR],
-        hard=["nfp", "not"]),
+         AR],
+        hard=["nfp", "rpp"]),
 
     # -- R-A / AD-013: what evidence constitutes performance of a sale. -----------
     #

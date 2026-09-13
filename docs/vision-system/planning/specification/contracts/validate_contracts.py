@@ -589,57 +589,6 @@ except ValueError:
     checked(True,"duplicate keys rejected before canonicalization")
 checked(Decimal("0.1")+Decimal("0.2")==Decimal("0.3"),"exact decimal resource arithmetic")
 
-# --- Edge guards a Phase G finding requires to READ something. -----------------
-#
-# Criterion CONTENT has an oracle two blocks below: it is derived, so a hand edit is a
-# failing build. Edge guards have none -- they are authored by hand, and each evidence op
-# a repair put on one is a sentence nothing would notice the removal of. That is the
-# G2-06 defect at the other layer, and the cure is the same one round 9 used on the CI
-# parser: declare what must be read, and refuse the rest.
-#
-# Each row names the FINDING as well as the op, because a message saying `neq` is missing
-# tells a reader what is absent and not why anyone wanted it.
-REQUIRED_GUARD_OPS = {
-    "edge.GrievanceCase.received.triaged.v1": [
-        ("path", "G4-01: `disputed_custodian` is required on GrievanceCase and was read "
-                 "by 0 of 2255 predicates; a guard must READ it"),
-        ("neq", "G4-01: where the custodian is the one complained about, the escalation "
-                "assignment must DIFFER from the custodian assignment"),
-    ],
-    "edge.ResponsibilityAssignment.proposed.accepted.v1": [
-        ("present", "G4-04: `custody_basis` records which branch of the ordered resolver "
-                    "produced this assignment"),
-        ("eq", "G4-04: a recorded overlap must carry custody_basis = "
-               "provisional_overlap_resolution"),
-        ("neq", "G4-04: ... and a tie_break_reason that is not `no_overlap`; without this "
-                "comparison the enums record a value nothing reads"),
-    ],
-    "edge.ProtectedChange.staged.activated.v1": [
-        ("component_custody_transferred",
-         "G2-07: all 173 records carry `owner_component` and no predicate read it; "
-         "removal of a component must require an accepted successor owner"),
-    ],
-    "edge.Fulfillment.delivering.delivered.v1": [
-        ("transition_basis", "G2-05/AD-013: delivery needs an authenticated attributable "
-                             "delivery event"),
-        ("native_correlated", "G2-05/AD-013: ... natively correlated against the delivery "
-                              "adapter, never against the payment"),
-    ],
-}
-for from_state in ("proposed", "accepted", "partially-performed", "disputed"):
-    REQUIRED_GUARD_OPS[f"edge.SalesAgreement.{from_state}.terminated.v1"] = [
-        ("due_preserved", "G2-02/AD-014: terminating a sales agreement is a closure event "
-                          "and must compute the transitive due set")]
-    REQUIRED_GUARD_OPS[f"edge.SalesAgreement.{from_state}.terminated_with_residuals.v1"] = [
-        ("due_preserved", "G2-02/AD-014: the residuals state exists to hold a non-empty "
-                          "due set with an accepted custodian for each")]
-for required_guard, required_rows in REQUIRED_GUARD_OPS.items():
-    checked(required_guard in PREDICATES, ("a required guard no longer exists", required_guard))
-    guard_ops = ops_in(PREDICATES[required_guard]["body"], set())
-    for required_op, finding in required_rows:
-        checked(required_op in guard_ops,
-                ("required guard op removed", required_guard, required_op, finding))
-
 # --- The two oracles that can fail on CONTENT rather than on shape. ------------
 #
 # Both are run as subprocesses with THIS directory passed explicitly, because `tools/` is
@@ -658,6 +607,270 @@ for oracle_argv, oracle_name in (
     oracle = subprocess.run(oracle_argv, capture_output=True, text=True)
     checked(oracle.returncode == 0,
             (oracle_name, oracle.stdout[-2500:] + oracle.stderr[-2500:]))
+
+# ORDER MATTERS, and it was measured rather than reasoned about. These checks sit
+# AFTER the two oracles on purpose: a HAND edit of a criterion drifts from the
+# derivation and the drift oracle is the check that should name it, while a
+# WEAKENED derivation regenerates cleanly and only these pins can. Placed before the
+# oracles, the pins fired first and three fixtures that exist to prove the drift
+# oracle still works -- r10-criterion-field-paths-erased, -repointed, and
+# -demands-less-than-its-predecessor -- were rejected for the wrong reason, which the
+# runner reports as a leak. It found this; reading the file did not.
+# --- PINNED CONJUNCTS: what a Phase G finding requires the registry to SAY. ----
+#
+# RC-02, and it is the reason this block reads a JSON file rather than carrying its own
+# literal table. Criterion CONTENT has an oracle below -- `author_phase_content.py --check`
+# -- and that oracle compares predicate-registry.json to tools/phase_content.py. A HAND
+# edit of a criterion is therefore a failing build, and a DERIVATION edit is invisible:
+# the recheck replaced one spec in phase_content.py, regenerated, and put the entire G2-01
+# defect back at exit 0 with 27 of 27 negative fixtures still rejecting. A checker that
+# compares an artifact to a source the same author controls is not a checker.
+#
+# pinned-conjuncts.json is written by hand, is generated by nothing, and is read by
+# nothing that writes the registry. These checks compare the LIVE predicate registry to it
+# directly. Structural containment only -- a body may say more than is pinned, never less.
+#
+# This block also absorbs what was REQUIRED_GUARD_OPS, a literal dict of the same kind of
+# assertion about edge guards, so there is ONE pinned table rather than two that drift.
+# Its four generated SalesAgreement pairs missed the fifth closure edge,
+# `terminated_with_residuals -> terminated`; the nine are listed one by one in the file.
+PINNED = FILES["pinned-conjuncts.json"]
+PIN_VALUE_KEYS = ("result", "right", "event_kind", "target_state", "pointer")
+PIN_ROW_KEYS = {"op", "why", "negated", "field_paths_include", "bindings",
+                "contains_pointers", *PIN_VALUE_KEYS}
+PIN_KEYS = {"predicate_id", "kind", "findings", "decisions", "why", "require"}
+PIN_BINDING_KEYS = {"field_path", "states_exactly", "optional"}
+
+
+def polarised_nodes(node, negated=False):
+    """Every `op` node of a body, paired with whether it sits beneath a `not`.
+
+    Polarity is the half a containment check forgets. `not(native_correlated delivered)`
+    CONTAINS `native_correlated(result: delivered)`, so a pin that only asked whether the
+    op appears would accept the inversion of the requirement it exists to hold.
+    """
+    found = []
+    if isinstance(node, dict):
+        if "op" in node:
+            found.append((node, negated))
+        inner = negated != (node.get("op") == "not")
+        for key, value in node.items():
+            if key != "op":
+                found.extend(polarised_nodes(value, inner))
+    elif isinstance(node, list):
+        for value in node:
+            found.extend(polarised_nodes(value, negated))
+    return found
+
+
+def pointers_in(node):
+    return {n["pointer"] for n, _ in polarised_nodes(node)
+            if n.get("op") == "path" and isinstance(n.get("pointer"), str)}
+
+
+def pin_row_matches(node, row):
+    if set(row.get("field_paths_include", [])) - set(node.get("field_paths") or []):
+        return False
+    for wanted in row.get("bindings", []):
+        if not any(binding.get("field_path") == wanted["field_path"]
+                   and sorted(binding.get("states") or []) == sorted(wanted["states_exactly"])
+                   and bool(binding.get("optional")) == bool(wanted["optional"])
+                   for binding in node.get("bindings") or []):
+            return False
+    if set(row.get("contains_pointers", [])) - pointers_in(node):
+        return False
+    for key in PIN_VALUE_KEYS:
+        if key in row and node.get(key) != row[key]:
+            return False
+    return True
+
+
+# A floor, and it is a LITERAL for the same reason the sibling-collision budget is: a
+# count derived from the file it measures is satisfied by the empty file. The coverage
+# check below forces every registered finding to be pinned or excused, which an author
+# could satisfy by moving all 25 pins into `unpinnable` one reason at a time; this is what
+# stops that being quiet. Lowering these numbers is a decision, and it should read like one.
+checked(len(PINNED["pins"]) >= 25 and len(PINNED["pinned_transitions"]) >= 6,
+        ("the pinned table has shrunk; a pin table with no pins passes vacuously",
+         {"pins": len(PINNED["pins"]), "floor": 25,
+          "pinned_transitions": len(PINNED["pinned_transitions"]), "transition_floor": 6}))
+checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= 44,
+        ("the pinned table kept its pins and lost its requirements",
+         sum(len(pin["require"]) for pin in PINNED["pins"])))
+
+pinned_predicates = set()
+for pin in PINNED["pins"]:
+    checked(set(pin) == PIN_KEYS, ("pin shape", pin.get("predicate_id"), sorted(set(pin) ^ PIN_KEYS)))
+    predicate_id = pin["predicate_id"]
+    checked(predicate_id not in pinned_predicates, ("predicate pinned twice", predicate_id))
+    pinned_predicates.add(predicate_id)
+    checked(predicate_id in PREDICATES,
+            ("a pinned predicate no longer exists", predicate_id, pin["why"]))
+    checked(bool(pin["findings"]) and bool(pin["why"].strip()),
+            ("a pin states no finding or no reason", predicate_id))
+    nodes = polarised_nodes(PREDICATES[predicate_id]["body"])
+    for row in pin["require"]:
+        # Declare what is read and REFUSE the rest: a constraint key this checker does
+        # not know would otherwise be a pin that reads as enforcement and checks nothing.
+        checked(set(row) <= PIN_ROW_KEYS,
+                ("unknown key in a pinned requirement", predicate_id, sorted(set(row) - PIN_ROW_KEYS)))
+        checked("op" in row and row.get("why", "").strip(),
+                ("a pinned requirement states no op or no reason", predicate_id, row))
+        for binding in row.get("bindings", []):
+            checked(set(binding) == PIN_BINDING_KEYS,
+                    ("pinned binding shape", predicate_id, sorted(set(binding) ^ PIN_BINDING_KEYS)))
+        # Polarity is a property of a PREDICATE. `path` and `resolve` return a JsonValue,
+        # and asking whether a field read sits beneath a `not` is a category error -- the
+        # `disputed_custodian` read that G4-01 requires lives inside `not(eq(...))` and is
+        # exactly as present there. The result type decides, read off the primitive
+        # registry rather than from a list kept here, and a `negated` row on a value op is
+        # refused rather than quietly ignored.
+        checked(row["op"] in PRIMITIVES, ("a pinned op is not a registered primitive",
+                                          predicate_id, row["op"]))
+        boolean_op = PRIMITIVES[row["op"]]["result_type"].startswith("boolean")
+        checked(boolean_op or "negated" not in row,
+                ("`negated` on a pinned value op: polarity is a property of a predicate, "
+                 "and this op returns a value", predicate_id, row["op"]))
+        wanted_negated = bool(row.get("negated", False))
+        checked(any(node.get("op") == row["op"]
+                    and (negated == wanted_negated or not boolean_op)
+                    and pin_row_matches(node, row)
+                    for node, negated in nodes),
+                ("PINNED CONJUNCT MISSING: the registry no longer says what this finding "
+                 "required", predicate_id, row["op"], row["why"],
+                 {"findings": pin["findings"], "decisions": pin["decisions"],
+                  "note": "pinned-conjuncts.json is hand-written and is NOT derived from "
+                          "tools/phase_content.py; regenerating the registry cannot "
+                          "satisfy this check, only stating the requirement can"}))
+
+# A conjunct pin holds a guard to what it demands and says nothing about whether the edge
+# EXISTS. RC-01 was that shape: every guard well formed, every criterion sourced, and no
+# transition at all for a delivery that fails in flight. Deleting a transition is a
+# one-line edit to record-registry.json, and nothing here would have noticed it.
+PIN_TRANSITION_KEYS = {"record", "from", "to", "findings", "why"}
+for row in PINNED["pinned_transitions"]:
+    checked(set(row) == PIN_TRANSITION_KEYS,
+            ("pinned transition shape", row, sorted(set(row) ^ PIN_TRANSITION_KEYS)))
+    checked(row["record"] in RECORDS, ("a pinned transition names no such record", row))
+    checked(bool(row["findings"]) and row["why"].strip(),
+            ("a pinned transition states no finding or no reason", row))
+    checked(any(edge["from"] == row["from"] and edge["to"] == row["to"]
+                for edge in RECORDS[row["record"]]["lifecycle"]["transitions"]),
+            ("PINNED TRANSITION MISSING: a route a finding required no longer exists",
+             f"{row['record']}:{row['from']}->{row['to']}", row["why"],
+             {"findings": row["findings"]}))
+
+# Coverage: a finding the register knows about is pinned here, or is declared unpinnable
+# WITH A REASON. Derived from registers/review-findings.json at check time, so a finding
+# added to the register tomorrow cannot be silently unpinned today.
+import re  # noqa: E402
+REGISTER = ROOT.parents[2] / "registers" / "review-findings.json"
+FINDING_ID = re.compile(r"\b(?:G\d-\d{2}[a-z]?|RC-\d{2})\b")
+register_findings = set(FINDING_ID.findall(REGISTER.read_text(encoding="utf-8")))
+checked(len(register_findings) >= 8,
+        ("the finding sweep of review-findings.json returned almost nothing; a coverage "
+         "check with an empty required set passes vacuously", sorted(register_findings)))
+unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
+for finding, why in unpinnable.items():
+    checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
+covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
+    | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
+checked(register_findings <= covered | set(unpinnable),
+        ("a registered finding is neither pinned nor declared unpinnable",
+         sorted(register_findings - covered - set(unpinnable)),
+         "add a pin to pinned-conjuncts.json, or an `unpinnable` entry saying why no "
+         "conjunct can carry it"))
+# Rule 3 at the pin layer: every finding id these pins cite RESOLVES to a document that
+# names it. A pin citing a finding nobody can find is a pin justified by nothing.
+for finding in sorted(covered | set(unpinnable)):
+    if finding in register_findings:
+        continue
+    source = PINNED["finding_sources"].get(finding)
+    checked(source is not None,
+            ("a pin cites a finding that is in no register and names no source", finding))
+    document = ROOT.parents[2] / source
+    checked(document.exists(), ("finding_sources names a file that does not exist", finding, source))
+    checked(finding in document.read_text(encoding="utf-8"),
+            ("finding_sources names a file that does not mention this finding", finding, source))
+
+# --- RC-03: a criterion's `requires` sentence and its conjuncts must agree. ----
+#
+# They are independent fields of one spec and nothing compared them, so a criterion could
+# state one requirement and demand another -- which is exactly what the recheck's weakened
+# derivation produced: `requires` still read "that Fulfillment is currently `delivered`"
+# over a body demanding none of it. Two halves of one statement, disagreeing, with every
+# control green.
+#
+# Two rules, both mechanical:
+#   PATHS  -- every field path the sentence names is named by some conjunct.
+#   PHASES -- every phase name the sentence backticks that belongs to a RELATED record and
+#             not to the subject's own lifecycle is bound by some `related_phases` state.
+# The phase rule is narrowed to related records on purpose: a criterion's own phase is what
+# the sentence is ABOUT, and a rule that flagged it would fire on the noun in every
+# sentence. Waivers live in pinned-conjuncts.json, name the exact tokens they excuse, and
+# so cannot cover the next one.
+REQUIRES_WAIVERS = {entry["criterion"]: entry for entry in PINNED["requires_waivers"]}
+for entry in PINNED["requires_waivers"]:
+    checked(set(entry) == {"criterion", "phases", "why"}, ("requires waiver shape", entry))
+    checked(entry["why"].strip() and entry["criterion"] in PREDICATES,
+            ("a requires waiver with no reason, or for no such criterion", entry["criterion"]))
+
+PROSE_PATH = re.compile(r"`(/[A-Za-z0-9_./\-]+)`|(?<![`\w])(/payload/[a-z_]+)")
+PROSE_TOKEN = re.compile(r"`([a-z][a-z_\-]*)`")
+
+
+def stated_paths_and_states(body):
+    paths, states = set(), set()
+    for node in walk(body):
+        if not isinstance(node, dict):
+            continue
+        paths.update(node.get("field_paths") or [])
+        for binding in node.get("bindings") or []:
+            paths.add(binding["field_path"])
+            states.update(binding["states"])
+        if node.get("op") == "path" and isinstance(node.get("pointer"), str):
+            paths.add(node["pointer"])
+    return paths, states
+
+
+requires_examined = 0
+for name, predicate in PREDICATES.items():
+    if not name.startswith("criterion.") or predicate.get("content_gap_id"):
+        continue
+    sentence = predicate.get("requires")
+    record_name = name.split(".")[1]
+    if not sentence or record_name not in RECORDS:
+        continue
+    requires_examined += 1
+    body_paths, body_states = stated_paths_and_states(predicate["body"])
+    own_phases = set(RECORDS[record_name]["lifecycle"]["phases"])
+    related_phases = set()
+    for relation in RECORDS[record_name]["relations"]:
+        for target in relation["targets"]:
+            related_phases.update(RECORDS[target]["lifecycle"]["phases"])
+    for match in PROSE_PATH.finditer(sentence):
+        stated = match.group(1) or match.group(2)
+        # Prefix either way: a sentence may name `/payload/external_burden_account` where
+        # the conjunct reaches inside it, and naming the leaf is not naming less.
+        checked(any(stated == known or known.startswith(stated + "/")
+                    or stated.startswith(known + "/") for known in body_paths),
+                ("RC-03: `requires` names a field path no conjunct demands", name, stated,
+                 sorted(body_paths)))
+    waived = set(REQUIRES_WAIVERS.get(name, {}).get("phases", []))
+    for token in PROSE_TOKEN.findall(sentence):
+        if token not in related_phases or token in own_phases or token in body_states:
+            continue
+        checked(token in waived,
+                ("RC-03: `requires` names a related record's phase that no conjunct binds",
+                 name, token,
+                 "bind it in `related_phases`, or waive it by name in "
+                 "pinned-conjuncts.json#/requires_waivers"))
+# An instrument reports its denominator before its verdict: a narrowing that quietly
+# examined six criteria would pass exactly as loudly as one that examined all of them.
+checked(requires_examined >= 700,
+        ("RC-03 examined almost no criteria; the rule cannot pass vacuously",
+         requires_examined))
+
 
 # --- Negative control. --------------------------------------------------------
 # Everything above passing proves nothing on its own: this file returned
@@ -680,5 +893,19 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
              completed.stdout[-2000:] + completed.stderr[-2000:]))
     FIXTURES_RUN = json.loads(completed.stdout[completed.stdout.rindex("{"):])
     checked(FIXTURES_RUN["fixtures"] > 0, "refusing a vacuous pass with zero negative fixtures")
+    # RC-04: `> 0` is not a count. With 1 of 27 fixtures present this block reported
+    # `negative_fixtures_rejected: 1` and exited 0 -- the suite lost 96% of its coverage
+    # and the verdict did not move. The denominator is DECLARED, in the tree, and read
+    # here rather than taken from the runner's own tally, so a runner that miscounts and
+    # a tree that lost a fixture are two different failures with two different messages.
+    declared_fixtures = json.loads(
+        (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text())["fixtures"]
+    checked(FIXTURES_RUN["fixtures"] == len(declared_fixtures),
+            ("negative fixture count differs from fixtures/negative/MANIFEST.json",
+             {"declared": len(declared_fixtures), "ran": FIXTURES_RUN["fixtures"]}))
+    checked(FIXTURES_RUN["passed_as_required"] == len(declared_fixtures),
+            ("a declared negative fixture was not rejected",
+             {"declared": len(declared_fixtures),
+              "rejected": FIXTURES_RUN["passed_as_required"]}))
 
 print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"limits":"Offline schema/ref/AST/source-inventory/registry checks plus negative fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))

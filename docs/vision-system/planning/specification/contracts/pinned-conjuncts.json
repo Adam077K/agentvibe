@@ -1,0 +1,868 @@
+{
+  "schema_version": "1.0",
+  "kind": "pinned conjuncts: hand-written assertions about the LIVE registries",
+  "why": "RC-02. The criterion-content oracle compares predicate-registry.json to tools/phase_content.py and fails on any difference -- which makes a HAND edit of a criterion a failing build, and makes a DERIVATION edit invisible. The recheck measured it: one hunk replacing the ('SalesAgreement','performed') spec, then `python3 tools/author_phase_content.py`, and the whole G2-01 defect is back at exit 0, 268,829 checks, with all 27 negative fixtures still rejecting. A checker that compares an artifact to a source the same author controls is not a checker. Every assertion below is written BY HAND against the live registry and is never generated from anything: author_phase_content.py does not read this file and cannot write it, so regenerating the registry from a weakened derivation now fails HERE, naming the conjunct that went missing.",
+  "how_to_read": {
+    "pin": "one predicate id, the findings and decisions that put each requirement there, and the `require` rows that must hold of its body in the committed predicate-registry.json",
+    "matching": "a row matches when SOME node of the body carries that `op` and satisfies every constraint on the row. Structural containment only: a body may carry more than is pinned, never less.",
+    "negated": "false (the default) requires a matching node that is NOT beneath a `not`; true requires one that IS. Without this, wrapping a pinned conjunct in `not` would satisfy a containment check while inverting the requirement.",
+    "states_exactly": "the binding's `states` list must equal this set. A superset is a weakening -- `['delivered','proposed']` admits the exact counterexample AD-013 was decided to refuse -- and a subset is a different requirement than the one recorded.",
+    "closed_key_set": "validate_contracts.py declares the constraint keys it reads and REFUSES any other key in a row. A pin whose constraint the checker silently ignored would be the same defect one layer up: a control that reads as enforcement while nothing checks it."
+  },
+  "checked_by": [
+    "validate_contracts.py: each pin against predicate-registry.json directly, with no import of tools/phase_content.py",
+    "validate_contracts.py: coverage -- every finding id swept out of registers/review-findings.json is pinned here or declared in `unpinnable` with a reason",
+    "fixtures/negative/r13-derivation-weakened-then-regenerated: patches tools/phase_content.py, regenerates with author_phase_content.py, and must be REJECTED by these pins"
+  ],
+  "finding_sources": {
+    "G1-06b": "planning/reviews/G-01-completeness-vision-coverage.md",
+    "G2-01": "planning/reviews/G-02-coherence-buildability-changeability.md",
+    "G2-02": "planning/reviews/G-02-coherence-buildability-changeability.md",
+    "G2-05": "planning/reviews/G-02-coherence-buildability-changeability.md",
+    "G2-06": "planning/reviews/G-02-coherence-buildability-changeability.md",
+    "G2-07": "planning/reviews/G-02-coherence-buildability-changeability.md",
+    "G4-01": "planning/reviews/G-04-traceability-alternatives-feasibility-responsibility.md",
+    "G4-02": "planning/reviews/G-04-traceability-alternatives-feasibility-responsibility.md",
+    "G4-03": "planning/reviews/G-04-traceability-alternatives-feasibility-responsibility.md",
+    "G4-04": "planning/reviews/G-04-traceability-alternatives-feasibility-responsibility.md",
+    "G4-08": "planning/reviews/G-04-traceability-alternatives-feasibility-responsibility.md",
+    "RC-01": "planning/reviews/G-02-recheck-01.md",
+    "RC-02": "planning/reviews/G-02-recheck-01.md",
+    "RC-03": "planning/reviews/G-02-recheck-01.md",
+    "RC-04": "planning/reviews/G-02-recheck-01.md",
+    "RC-05": "planning/reviews/G-02-recheck-01.md",
+    "RC-06": "planning/reviews/G-02-recheck-01.md",
+    "RC-07": "planning/reviews/G-02-recheck-01.md",
+    "RC-08": "planning/reviews/G-02-recheck-01.md"
+  },
+  "unpinnable": [
+    {
+      "finding": "G1-06b",
+      "why": "A coverage finding about what the specification chapters SAY, closed by prose in the residue lane. No predicate expresses it, so a conjunct pin would be a pin on something else wearing its id."
+    },
+    {
+      "finding": "RC-02",
+      "why": "This file IS the repair for RC-02. Pinning a conjunct 'for RC-02' would be circular; what enforces it is the coverage check below plus fixtures/negative/r13-derivation-weakened-then-regenerated."
+    },
+    {
+      "finding": "RC-03",
+      "why": "A check on the relation between a criterion's `requires` sentence and its conjuncts, which is a property of every criterion rather than of any one predicate. Implemented in validate_contracts.py as the requires/conjuncts agreement check."
+    },
+    {
+      "finding": "RC-04",
+      "why": "A property of the negative-fixture suite, not of the registry. Implemented as fixtures/negative/MANIFEST.json and the count ratchet in tools/run_negative_fixtures.py."
+    },
+    {
+      "finding": "RC-05",
+      "why": "A property of how the runner resolves its own root. Implemented as the symlink refusal in tools/run_negative_fixtures.py."
+    },
+    {
+      "finding": "RC-07",
+      "why": "A prose gap: `terminated_with_residuals` appears in no specification chapter. The phase-meaning row in chapter 03 closes it; no conjunct can."
+    }
+  ],
+  "pins": [
+    {
+      "predicate_id": "criterion.SalesAgreement.performed.v1",
+      "kind": "criterion",
+      "findings": [
+        "G2-01",
+        "RC-02"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "The original (d): `performed` demanded byte-identical field_paths to `accepted`, the agreement had no relation to a Fulfillment, and the only native object reachable was the payment -- so a buyer could pay, the Fulfillment stay `proposed`, every Obligation stay `recognized`, and the sale reach `performed` with nothing objecting. AD-013 decides it: delivery, not payment. These three rows ARE that decision, and the recheck's one-hunk weakening removed all three at once.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/fulfillment_ref",
+            "/payload/obligation_refs"
+          ],
+          "why": "the agreement must NAME its own Fulfillment and its obligations; without these two paths the phases below bind to nothing"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/fulfillment_ref",
+              "states_exactly": [
+                "delivered"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/obligation_refs",
+              "states_exactly": [
+                "discharged",
+                "transferred"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "AD-013: that Fulfillment is currently `delivered` and every linked Obligation is `discharged` or `transferred`. `optional: true` on either would readmit the counterexample with the field simply absent."
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013: the correlated native object is the DELIVERY. `result: \"performed\"` is what it said before the repair and correlates the sale to the charge."
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+      "kind": "criterion",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02: terminating a sale asserted no closure. `terminated_with_residuals` is the state that exists to hold a non-empty due set with an accepted custodian, so a criterion that stopped requiring the duties or the custodian would make the split between the two terminal states decorative.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/obligation_refs",
+            "/owner_assignment_ref"
+          ],
+          "why": "residuals means surviving duties AND a named owner for them"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/owner_assignment_ref",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "AD-014: the custodian of the residuals has ACCEPTED. A proposed assignment is a nominee, not a custodian."
+        },
+        {
+          "op": "fresh_interval",
+          "why": "the residual window is bounded in time; without it a sale sits in residuals indefinitely and the state becomes a parking lot"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.Fulfillment.delivered.v1",
+      "kind": "criterion",
+      "findings": [
+        "G2-05"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "G2-05: delivery must be established by an independently observed result correlated to the delivery adapter's own native object, never by the payment.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/receipts",
+            "/payload/delivery_steps"
+          ],
+          "why": "the receipts the milestones require, and the milestones themselves"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/performer_assignment",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "a currently accepted performer delivered it"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013: correlation against the delivery. A settled charge is evidence about money and says nothing about whether the service arrived."
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.GrievanceCase.triaged.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-01"
+      ],
+      "decisions": [],
+      "why": "G4-01: `disputed_custodian` is required on GrievanceCase and was read by 0 of 2,255 predicates. The criterion carries the two refs the guard's `neq` compares; erase them here and the comparison one layer up compares absent fields.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/custodian_assignment_ref",
+            "/payload/independent_escalation_assignment_ref"
+          ],
+          "why": "both sides of the conflict-of-interest comparison must be recorded at triage"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/custodian_assignment_ref",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "the custodian has accepted the case"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.GrievanceCase.remedy_authorized.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-02"
+      ],
+      "decisions": [],
+      "why": "G4-02: `remedy_reservation_refs` was required in the payload and used by 0 predicates, and this criterion carried `nonempty_fields: []` -- so a remedy could be authorized with no reservation at all, which is what made CAP-42's funded remedy prose.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/remedy_reservation_refs"
+          ],
+          "why": "an empty reservation list is the exact shape the finding names"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/remedy_reservation_refs",
+              "states_exactly": [
+                "held",
+                "partly_consumed"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "the funding is ACTUALLY RESERVED: every entry resolves to a live Reservation. A released or expired reservation funds nothing."
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.Economics.validated.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-03"
+      ],
+      "decisions": [],
+      "why": "G4-03: `external_burden_observations` is required and is an ARRAY, so the protocol's required case -- a profitable venture shifting work onto customers, applicants or contractors -- validated with `[]`. The repair makes the empty case say so explicitly and own it.",
+      "require": [
+        {
+          "op": "any",
+          "contains_pointers": [
+            "/payload/external_burden_observations",
+            "/payload/external_burden_account/finding",
+            "/payload/external_burden_account/responsible_assignment"
+          ],
+          "why": "either burden was observed, or the account states `none_observed` with a reason, a window and a responsible assignment. Deleting the second disjunct restores the silent `[]`; deleting the first makes observation unrecordable."
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/observed_cost",
+            "/payload/outstanding_cost"
+          ],
+          "why": "the money halves the burden account sits beside"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.DecisionPacket.ready.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-08"
+      ],
+      "decisions": [],
+      "why": "G4-08: the schema omitted `competence_requirement_ref` from `required` while this criterion demanded it, so two implementers derive different packets from one contract -- and the stricter reading destroyed the case DIRECTIVE.md §1.6 most wants preserved, a pure taste decision with no competence prerequisite to name.",
+      "require": [
+        {
+          "op": "any",
+          "contains_pointers": [
+            "/payload/taste_decision",
+            "/payload/competence_requirement_ref"
+          ],
+          "why": "the packet states its competence footing EXACTLY ONCE, as a disjunction. Collapsing it either way is the finding: demand the ref and taste decisions cannot reach `ready`; demand neither and nothing states the footing."
+        },
+        {
+          "op": "acyclic_record_graph",
+          "why": "the dependency graph over the children is acyclic -- a packet that is its own prerequisite is `ready` under any evidence rule"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.Fulfillment.delivering.delivered.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-05"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "G2-05/AD-013 at the guard layer: an authenticated attributable delivery event AND native correlation. Each is one line nothing would notice the removal of.",
+      "require": [
+        {
+          "op": "transition_basis",
+          "event_kind": "record.delivered",
+          "why": "delivery needs an authenticated attributable delivery event, and it must be THAT event kind"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "... natively correlated against the delivery adapter, never against the payment"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.Fulfillment.failed.v1",
+      "kind": "criterion",
+      "findings": [
+        "RC-01"
+      ],
+      "decisions": [],
+      "why": "RC-01 removed `not(native_correlated delivered)` from this criterion because it contradicted the only edge that could reach the phase. A conjunct removed for a stated reason is one removal away from the next one having no reason at all, so what REMAINS is pinned: the failure is owned, not merely declared.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/remaining_duties",
+            "/payload/receipts",
+            "/payload/service_window"
+          ],
+          "why": "the obligations survive on the record, and the receipts actually obtained and the window are recorded -- a failure that recorded none of these would be a closure wearing the word failure"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/performer_assignment",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "CAP-30: failure creates a support/remedy duty, and a duty with no accepted performer is unowned"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.Fulfillment.delivering.failed.v1",
+      "kind": "guard",
+      "findings": [
+        "RC-01"
+      ],
+      "decisions": [],
+      "why": "The in-flight failure route RC-01 added, and the layer that CAN say what the criterion could not: this edge, unlike the one from `delivered`, asserts that no observation correlates a delivery.",
+      "require": [
+        {
+          "op": "transition_basis",
+          "event_kind": "record.delivery_failed",
+          "why": "an authenticated attributable failure event; without it a delivery can be declared failed by assertion"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "negated": true,
+          "why": "NEGATED on purpose: a failure in flight requires that NO observation correlates a delivery. If this ever appears positively here the route says the opposite of what it exists to say, and a containment check blind to polarity would accept it."
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.accepted.performed.v1",
+      "kind": "guard",
+      "findings": [
+        "RC-06"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "RC-06: the three *->performed edges were the only SalesAgreement forward edges with no authenticated-event requirement, and each correlated the sale to `performed` -- its own payment -- which is the reading AD-013 refused one layer below.",
+      "require": [
+        {
+          "op": "transition_basis",
+          "event_kind": "record.performed",
+          "why": "performance needs an authenticated attributable event, as every closure edge already required"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013 at the guard layer: the correlated native object is the DELIVERY, never the charge"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.partially-performed.performed.v1",
+      "kind": "guard",
+      "findings": [
+        "RC-06"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "RC-06, second of the three *->performed edges.",
+      "require": [
+        {
+          "op": "transition_basis",
+          "event_kind": "record.performed",
+          "why": "performance needs an authenticated attributable event"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013: correlate to the delivery, not to the payment"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.disputed.performed.v1",
+      "kind": "guard",
+      "findings": [
+        "RC-06"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "RC-06, third of the three *->performed edges -- and the one that matters most, because it is the route out of a dispute.",
+      "require": [
+        {
+          "op": "transition_basis",
+          "event_kind": "record.performed",
+          "why": "performance needs an authenticated attributable event"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013: correlate to the delivery, not to the payment"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.GrievanceCase.received.triaged.v1",
+      "kind": "guard",
+      "findings": [
+        "G4-01"
+      ],
+      "decisions": [],
+      "why": "G4-01's counterexample: the implicated custodian named in both fields, `disputed_custodian: true`, and every guard from `received` to `closed` passes. The cure is a guard that READS the flag and COMPARES the two refs.",
+      "require": [
+        {
+          "op": "path",
+          "pointer": "/payload/disputed_custodian",
+          "why": "the required field that 0 of 2,255 predicates read"
+        },
+        {
+          "op": "neq",
+          "contains_pointers": [
+            "/payload/independent_escalation_assignment_ref",
+            "/payload/custodian_assignment_ref"
+          ],
+          "why": "where the custodian is the one complained about, the escalation assignment must DIFFER from the custodian assignment -- and the comparison must be between those two refs, not between either of them and something else"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.ResponsibilityAssignment.proposed.accepted.v1",
+      "kind": "guard",
+      "findings": [
+        "G4-04"
+      ],
+      "decisions": [],
+      "why": "G4-04: `custody_basis` and `custody_tie_break_reason` are enums the records carry and nothing compared, so a provisional overlap resolution was indistinguishable from a clean assignment.",
+      "require": [
+        {
+          "op": "present",
+          "contains_pointers": [
+            "/payload/custody_basis"
+          ],
+          "why": "which branch of the ordered resolver produced this assignment is recorded"
+        },
+        {
+          "op": "eq",
+          "right": "provisional_overlap_resolution",
+          "contains_pointers": [
+            "/payload/custody_basis"
+          ],
+          "why": "a recorded overlap must carry custody_basis = provisional_overlap_resolution"
+        },
+        {
+          "op": "neq",
+          "right": "no_overlap",
+          "contains_pointers": [
+            "/payload/custody_tie_break_reason"
+          ],
+          "why": "... and a tie_break_reason that is not `no_overlap`; without this comparison the enums record a value nothing reads"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.ProtectedChange.staged.activated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-07"
+      ],
+      "decisions": [],
+      "why": "G2-07: all 173 records carry `owner_component` and no predicate read it, so a component could be removed with its records left unowned.",
+      "require": [
+        {
+          "op": "component_custody_transferred",
+          "why": "removal of a component must require an accepted successor owner for the records it holds"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.proposed.terminated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: terminating a sales agreement is a closure event and must compute the transitive due set.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated",
+          "why": "closure requires discharged/not_arisen/transferred; `due_preserved`'s semantics branch on target_state, so the state named here is the discriminator between the two terminal routes"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.accepted.terminated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: terminating a sales agreement is a closure event and must compute the transitive due set.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated",
+          "why": "closure requires discharged/not_arisen/transferred for every reachable duty"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.partially-performed.terminated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: terminating a sales agreement is a closure event and must compute the transitive due set.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated",
+          "why": "closure requires discharged/not_arisen/transferred for every reachable duty"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.disputed.terminated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: this is the edge the original counterexample took -- terminate from `disputed` with three `recognized` Obligations and an open SupportCase.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated",
+          "why": "the conjunct that refuses that counterexample, by name"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.terminated_with_residuals.terminated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02",
+        "RC-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "The FIFTH closure edge. The recheck found it carrying `due_preserved` and absent from the pinning loop, which covered only the four states that terminate directly -- so the one edge that closes a sale OUT of residuals could lose its due set with every control green. Listing the nine closure edges explicitly rather than generating four is why this one is here.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated",
+          "why": "leaving residuals for closure is exactly where the surviving duties must be discharged, not dropped"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.proposed.terminated_with_residuals.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated_with_residuals",
+          "why": "the residual branch retains the exact unresolved inventory; target_state is what selects that reading"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.accepted.terminated_with_residuals.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated_with_residuals",
+          "why": "the residual branch retains the exact unresolved inventory"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.partially-performed.terminated_with_residuals.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated_with_residuals",
+          "why": "the residual branch retains the exact unresolved inventory"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.disputed.terminated_with_residuals.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: this is the route the refused counterexample is told to take instead, so it is the one that must actually hold the duties it inherits.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated_with_residuals",
+          "why": "the available route must preserve what the refused route would have dropped"
+        }
+      ]
+    }
+  ],
+  "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.",
+  "pinned_transitions": [
+    {
+      "record": "Fulfillment",
+      "from": "delivering",
+      "to": "failed",
+      "findings": [
+        "RC-01"
+      ],
+      "why": "A delivery that fails IN FLIGHT. Without this edge `delivering` exits only to `delivered` or `superseded`, so the only route to `failed` runs through a delivery that was correlated -- which is the contradiction RC-01 names."
+    },
+    {
+      "record": "Fulfillment",
+      "from": "failed",
+      "to": "refunded",
+      "findings": [
+        "RC-01"
+      ],
+      "why": "Refunding an undelivered sale -- the commonest refund there is -- was unrepresentable while `refunded` had one inbound edge, from `delivered`."
+    },
+    {
+      "record": "Fulfillment",
+      "from": "delivered",
+      "to": "refunded",
+      "findings": [
+        "RC-01"
+      ],
+      "why": "The other half of the same requirement: `refunded` is reachable from BOTH, and a repair that added one route by deleting the other would satisfy a looser reading of the finding."
+    },
+    {
+      "record": "Fulfillment",
+      "from": "validated",
+      "to": "delivering",
+      "findings": [
+        "RC-08"
+      ],
+      "why": "RC-08: without it the generic validation branch and the delivery branch are disjoint, so a validated Fulfillment can only be delivered by a route that skipped validation."
+    },
+    {
+      "record": "Fulfillment",
+      "from": "delivering",
+      "to": "delivered",
+      "findings": [
+        "G2-05"
+      ],
+      "why": "The edge AD-013's delivery evidence hangs on. Its conjuncts are pinned above; this pins that there is an edge for them to be conjuncts OF."
+    },
+    {
+      "record": "SalesAgreement",
+      "from": "terminated_with_residuals",
+      "to": "terminated",
+      "findings": [
+        "G2-02"
+      ],
+      "why": "The route OUT of residuals. Without it `terminated_with_residuals` is a terminal state that keeps its duties forever, which is a different contract from the one AD-014 decided."
+    }
+  ],
+  "requires_waivers_why": "RC-03. `requires` and `conjuncts` are independent fields of one spec and nothing compared them, so a criterion could state one requirement and demand another -- which is what the weakened derivation produced: the sentence still promised delivery over a body that had stopped asking for it. Measured before any waiver: 774 criteria examined, 0 failing the field-path rule, 17 failing the phase-name rule, every one of the 17 a phase-kind synonym for the criterion's OWN phase. Each waiver below names the exact tokens it excuses, so a new unmatched phase on a waived criterion still fails.",
+  "requires_waivers": [
+    {
+      "criterion": "criterion.AgentTemplate.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while AgentTemplate spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.BuildArtifact.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while BuildArtifact spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.CasePool.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while CasePool spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.ConfigurationVersion.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while ConfigurationVersion spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.ContentAsset.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while ContentAsset spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.DecisionPacket.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while DecisionPacket spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.Defect.verified_repaired.v1",
+      "phases": [
+        "repaired"
+      ],
+      "why": "The sentence names `repaired`, which is the PHASE-KIND entry this content was authored from, while Defect spells the same phase `verified_repaired`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.Deployment.effect_unknown.v1",
+      "phases": [
+        "unknown_effect"
+      ],
+      "why": "The sentence names `unknown_effect`, which is the PHASE-KIND entry this content was authored from, while Deployment spells the same phase `effect_unknown`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.EvaluationPlan.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while EvaluationPlan spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.EvaluatorProfile.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while EvaluatorProfile spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.ForgetRequest.verified_with_limits.v1",
+      "phases": [
+        "verified"
+      ],
+      "why": "The sentence names `verified`, which is the PHASE-KIND entry this content was authored from, while ForgetRequest spells the same phase `verified_with_limits`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.InstructionBundle.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while InstructionBundle spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.JournalBatch.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while JournalBatch spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.Offer.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while Offer spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.RetrievalProfile.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while RetrievalProfile spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.SkillVersion.draft.v1",
+      "phases": [
+        "proposed"
+      ],
+      "why": "The sentence names `proposed`, which is the PHASE-KIND entry this content was authored from, while SkillVersion spells the same phase `draft`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    },
+    {
+      "criterion": "criterion.WorkOrder.report_submitted.v1",
+      "phases": [
+        "reported"
+      ],
+      "why": "The sentence names `reported`, which is the PHASE-KIND entry this content was authored from, while WorkOrder spells the same phase `report_submitted`. So the token is a second name for the criterion's own phase and not a requirement about a related record -- there is nothing for a `related_phases` binding to hold. A reviewer can dispute this, and the dispute has a cure: make the kind-level prose in tools/phase_content.py say the record's own phase name. That is 17 sentences across the corpus and it was out of scope here; what is NOT in dispute is that the body demands what the sentence demands."
+    }
+  ]
+}

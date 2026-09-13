@@ -3,7 +3,7 @@
   "repair": "R-C",
   "finding": "G2-05",
   "why": "`native_correlated` is removed from delivering->delivered, leaving the authenticated event and no binding to the delivery adapter's own native object. That is the `Fulfillment:proposed->validated` shape the reviewer found: 'the service was delivered' requiring no native correlation at all.",
-  "expect_failure_contains": "required guard op removed",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
   "patch": [
     {
       "file": "predicate-registry.json",
@@ -69,5 +69,6 @@
         ]
       }
     }
-  ]
+  ],
+  "note_rc02": "Message updated with the control: `REQUIRED_GUARD_OPS` was a literal table in validate_contracts.py and is now a row of contracts/pinned-conjuncts.json, so ONE pinned table covers guards and criterion content instead of two that drift. The mutation and what refuses it are unchanged; only the name of the refusing check moved."
 }
