@@ -50579,6 +50579,29 @@
             "review_at": {
               "$ref": "values.schema.json#/$defs/UTC"
             },
+            "parking_closure_account_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ReasonRecord"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
+            },
             "successor_case_ref": {
               "type": "object",
               "properties": {

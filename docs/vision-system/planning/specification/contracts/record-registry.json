@@ -39194,6 +39194,7 @@
           "checkpoint_ref": "Ref<Continuation>?",
           "work_order_refs": "Ref<WorkOrder>[]",
           "review_at": "UTC",
+          "parking_closure_account_ref": "Ref<ReasonRecord>?",
           "successor_case_ref": "Ref<Case>?"
         },
         "required_fields": [
@@ -39890,6 +39891,13 @@
         "field_path": "/payload/successor_case_ref",
         "targets": [
           "Case"
+        ],
+        "cardinality": "optional_one"
+      },
+      {
+        "field_path": "/payload/parking_closure_account_ref",
+        "targets": [
+          "ReasonRecord"
         ],
         "cardinality": "optional_one"
       }

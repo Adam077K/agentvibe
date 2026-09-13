@@ -2121,8 +2121,23 @@
           "Obligations distinguish reported performance from legitimate discharge, transfer and surviving dispute."
         ]
       ],
-      "resolution": "neither encoded; both phases keep their own kind-level content and no record-specific disambiguation is invented.",
-      "applies_to_criteria": []
+      "status": "resolved_by_decision",
+      "resolution": "RESOLVED AS MECHANISM (R-K, 2026-09-13). `contested` is the PERSISTED state and `disputed` is a PROJECTION of it: a presentation may call a contested judgment \"disputed\" and must never persist a second verdict. The registry already agrees and nothing had to be removed to make it so -- EvidenceJudgment declares proposed, accepted, rejected, inconclusive, contested, stale and withdrawn, and has never declared a `disputed` phase. 02-architecture-selection.md's \"surviving dispute\" is about a DIFFERENT SUBJECT: an Obligation that remains contested after the Case carrying it closes. That is a duty surviving a closure, not a second state of a judgment, and the two passages were never about the same thing. Every `disputed` phase that does exist in the registry -- Case, Obligation, SalesAgreement, Commitment -- is a dispute about work, a duty or an agreement; none is a dispute about a judgment. `criterion.EvidenceJudgment.contested.v1` carries the content and no criterion encodes a second verdict. The kind-level `disputed` spec stays, because the records that use it are the ones this decision says may legitimately have one. SUPERSEDED READING: \"neither encoded; both phases keep their own kind-level content and no record-specific disambiguation is invented.\"",
+      "applies_to_criteria": [
+        "criterion.EvidenceJudgment.contested.v1"
+      ],
+      "prose_supersession_needed": [
+        [
+          "01-contract-kernel.md",
+          "EvidenceJudgment stores one canonical state. Presentation may call contested \"disputed\"; it must not persist a second disputed verdict.",
+          "Now enforced rather than asserted; the sentence stands and should say so."
+        ],
+        [
+          "../02-architecture-selection.md",
+          "Obligations distinguish reported performance from legitimate discharge, transfer and surviving dispute.",
+          "Needs a note that \"surviving dispute\" means a CONTESTED OBLIGATION surviving case closure, not a second judgment state -- which is the reading that made this look like a contradiction."
+        ]
+      ]
     },
     {
       "id": "gap-contradiction-parked-review-vs-closure",
@@ -2143,8 +2158,24 @@
           "At review time an untouched goal is reaffirmed with evidence, narrowed, parked with a reopening trigger or abandoned with duty disposition."
         ]
       ],
-      "resolution": "the shared half is encoded (authorized reason, surviving duty ownership, a bounded interval); the review-versus-closure choice is not.",
-      "applies_to_criteria": []
+      "status": "resolved_by_decision",
+      "resolution": "RESOLVED AS MECHANISM (R-K, 2026-09-13). Parking records BOTH. The kernel's `or` is read as a CONJUNCTION, because its two halves answer different questions: the review date says when someone looks again, the closure account says what becomes of the surviving duties if nobody does. A guard cannot check `or` without knowing which field carries which, and the cheapest correct reading of an ambiguous `or` in a duty-preserving contract is the one that preserves more -- the looser reading lets a park with a date and no account pass, and that park is how a duty goes quiet. Case gains `/payload/parking_closure_account_ref` -> ReasonRecord, OPTIONAL on the record and REQUIRED by `criterion.Case.parked.v1` beside `/payload/review_at`. Optional on the record because a field every Case must carry merely to be registered is not what parking needs; required by the criterion because that is where parking happens. Same shape AD-013 gives `fulfillment_ref`. 03-company-capabilities.md is NOT contradicted by this: it names one of the two halves and the kernel names both, which is an incompleteness rather than a disagreement. SUPERSEDED READING: \"the shared half is encoded (authorized reason, surviving duty ownership, a bounded interval); the review-versus-closure choice is not.\"",
+      "applies_to_criteria": [
+        "criterion.Case.parked.v1"
+      ],
+      "prose_supersession_needed": [
+        [
+          "01-contract-kernel.md",
+          "proposed/admitted/active/waiting-for-evidence → parked or abandoned: authorized reason, next review/closure account, cancellation and surviving duty ownership",
+          "Needs a note that `next review/closure account` is read as BOTH, and that the guard now demands both."
+        ],
+        [
+          "03-company-capabilities.md",
+          "At review time an untouched goal is reaffirmed with evidence, narrowed, parked with a reopening trigger or abandoned with duty disposition.",
+          "Names the review half only. Needs a note that parking a Case also records a closure account, so a reader does not take this sentence as the whole rule."
+        ]
+      ],
+      "scope_note": "The mechanism is on Case, the record the contradiction named. Seven other records declare a `parked` phase -- Goal, Mission, Project, WorkflowRun, KnowledgeQuestion, Opportunity, WorkOrder -- and none gains a closure-account field here. Adding one to eight records on the authority of a contradiction raised about one of them would be a bigger decision than the one recorded, and it is not made. That is a KNOWN residue, stated rather than closed."
     }
   ],
   "conjuncts_dropped_for_absent_fields": {
