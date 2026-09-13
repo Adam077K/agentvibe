@@ -70,9 +70,36 @@ def apply_patch(directory, patch):
                           encoding="utf-8")
 
 
+def rederive_inventory(directory):
+    """Recompute coverage-inventory.json inside the scratch tree, the same way
+    tools/derive_inventory.py does for the real one. Run as a subprocess so the
+    module's ROOT resolves to the scratch copy, not to the committed directory."""
+    script = (
+        "import sys, json, pathlib;"
+        "sys.path.insert(0, 'tools');"
+        "import derive_inventory as d;"
+        "here = pathlib.Path('.').resolve();"
+        "d.CONTRACTS = here;"
+        "d.SOURCES = here.parent;"
+        "c = json.loads(pathlib.Path('coverage-inventory.json').read_text());"
+        "pathlib.Path('coverage-inventory.json').write_text("
+        "json.dumps(d.derive(c), indent=2, ensure_ascii=False) + '\\n')"
+    )
+    (directory / "coverage-inventory.json").unlink()
+    shutil.copy2(ROOT / "coverage-inventory.json", directory / "coverage-inventory.json")
+    subprocess.run([sys.executable, "-c", script], cwd=directory, check=True,
+                   capture_output=True, text=True)
+
+
 def run_fixture(fixture, verbose):
     with tempfile.TemporaryDirectory() as scratch:
-        directory = Path(scratch)
+        # Mirror the real layout: <scratch>/contracts/ beside the source documents the
+        # inventory derivation reads from ROOT.parent. A flat scratch dir would make
+        # the validator derive against sources that are not there.
+        directory = Path(scratch) / "contracts"
+        directory.mkdir()
+        for source_document in ("capabilities.json", "work-knowledge-contracts.json"):
+            os.symlink(ROOT.parent / source_document, Path(scratch) / source_document)
         for source in sorted(ROOT.glob("*.json")):
             os.symlink(source, directory / source.name)
         shutil.copy2(ROOT / "validate_contracts.py", directory / "validate_contracts.py")
@@ -81,6 +108,13 @@ def run_fixture(fixture, verbose):
         # wrong reason -- and this runner counts that as a leak, correctly.
         os.symlink(ROOT / "tools", directory / "tools")
         apply_patch(directory, fixture["patch"])
+        if fixture.get("rederive_inventory"):
+            # A fixture that adds or removes a registry entry would otherwise trip
+            # R7's inventory-drift check first and never reach the check it names.
+            # Re-deriving keeps each fixture pointed at ITS OWN check -- a fixture
+            # that fails for the wrong reason proves nothing, and this runner
+            # already treats that as a leak.
+            rederive_inventory(directory)
         completed = subprocess.run(
             [sys.executable, "validate_contracts.py"], cwd=directory,
             capture_output=True, text=True)

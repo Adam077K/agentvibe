@@ -91,12 +91,7 @@
           "additionalProperties": false
         }
       }
-    },
-    {
-      "file": "coverage-inventory.json",
-      "pointer": "/canonical_predicates/0",
-      "op": "add",
-      "value": "fixture.lifecycle_status_subject.v1"
     }
-  ]
+  ],
+  "rederive_inventory": true
 }

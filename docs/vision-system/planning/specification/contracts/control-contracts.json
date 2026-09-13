@@ -45,12 +45,6 @@
     "immutable release payload contains TransactionKey only, never its own Position/hash/receipt",
     "restriction/expiry prevent new transport after contracted window; cannot erase issued claim or effect"
   ],
-  "SendClaim": [
-    "creation only authority.attempt.claim with current release and exact attempt index/request digest",
-    "unique operation/attempt and one-use gateway boot ledger; generation, identity, grant, scope and prerequisite epochs match",
-    "first-send deadline finite and no later than release/grant window; actual bytes bounded",
-    "post-commit SendAuthorizationBundle requires independent exact receipt and fresh restrictions; no local-primary proof"
-  ],
   "ExternalAttempt": [
     "prepared attempt binds actual operation/release/request and unique index",
     "claim requires witnessed current SendClaim; transport_armed only admitted gateway boot/time profile",

@@ -1,0 +1,15 @@
+{
+  "id": "r7-inventory-drifts-from-its-derivation",
+  "repair": "R7",
+  "finding": "CCR-07",
+  "why": "The coverage checks compared the registries to an inventory authored in the same run. Dropping a record from canonical_records used to be caught only because the registry and the inventory were hand-kept in step; now the inventory is recomputed from the registries and the sources, so any hand edit to it fails.",
+  "expect_failure_contains": "coverage inventory differs from its derivation",
+  "patch": [
+    {
+      "file": "coverage-inventory.json",
+      "pointer": "/source_work_records/0",
+      "op": "replace",
+      "value": "ARecordTheSourceDoesNotDeclare"
+    }
+  ]
+}

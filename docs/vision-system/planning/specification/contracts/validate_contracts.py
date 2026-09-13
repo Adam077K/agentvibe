@@ -15,6 +15,13 @@ from referencing import Registry, Resource
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "tools"))
 import destination_paths  # noqa: E402  one implementation of the path grammar, shared
+import derive_inventory  # noqa: E402  one implementation of the inventory derivation
+# Anchor the derivation at THIS validator's directory. derive_inventory resolves its
+# own __file__, and tools/ may be a symlink -- under which the validator would
+# cheerfully derive from the real registries while claiming to check the tree in
+# front of it. That is a validator reporting on a file it is not reading.
+derive_inventory.CONTRACTS = ROOT
+derive_inventory.SOURCES = ROOT.parent
 COUNT = 0
 
 def checked(condition, detail):
@@ -89,6 +96,17 @@ for file, schema in SCHEMAS.items():
                 key = key.replace("~1", "/").replace("~0", "~")
                 checked(key in target, ("schema pointer", file, node["$ref"], key))
                 target = target[key]
+# CCR-07: the inventory is DERIVED, not authored beside the thing it checks. At
+# a7b2c5c `source_fields` was a byte-for-byte copy of source-field-mappings.json --
+# a tautology wearing the costume of a coverage test.
+inventory_drift = derive_inventory.differences(INVENTORY)
+checked(not inventory_drift, ("coverage inventory differs from its derivation", inventory_drift))
+# And the claim that derivation makes real: every declared source field is mapped
+# exactly once. 864 derived, 864 mapped, zero either way.
+mapped_sources = [m["source"] for m in FILES["source-field-mappings.json"]["mappings"]]
+checked(sorted(mapped_sources) == INVENTORY["source_fields"],
+        ("source fields and mappings disagree",
+         sorted(set(INVENTORY["source_fields"]) ^ set(mapped_sources))[:10]))
 checked(set(RECORDS) == set(INVENTORY["canonical_records"]), "record coverage")
 checked(set(COMMANDS) == set(INVENTORY["canonical_commands"]), "command coverage")
 checked(set(PREDICATES) == set(INVENTORY["canonical_predicates"]), "predicate coverage")
@@ -131,6 +149,93 @@ for name, command in COMMANDS.items():
     checked(set(command["target_types"]) <= set(RECORDS), ("command target", name))
     checked(name in SCHEMAS["commands.schema.json"]["$defs"], ("command schema", name))
 checked(set(INVENTORY["source_work_commands"]) <= set(COMMANDS), "source command coverage")
+
+# CCR-06: invariants.json, control-contracts.json and endpoints.json were loaded
+# above and referenced by no check below, so nothing failed when they were
+# contradicted -- which is exactly how CCR-03 survived. They bind here.
+#
+# REGISTERED_CHECKS is the closed set an invariant clause may name. A clause naming
+# a check that is not in it fails, so "enforced_by" cannot drift into decoration.
+REGISTERED_CHECKS = {
+    "lifecycle-status-subject-enum",
+    "record-envelope-version-and-no-state-field",
+    "time-window-declares-two-utc-bounds",
+    "command-result-accepted-requires-receipt",
+}
+INVARIANTS = FILES["invariants.json"]
+CONTROLS = FILES["control-contracts.json"]
+ENDPOINTS = FILES["endpoints.json"]
+claimed_checks = set()
+for subject, clauses in INVARIANTS.items():
+    for clause in clauses:
+        checked(isinstance(clause, dict) and set(clause) == {"clause", "enforced_by"},
+                ("invariant clause shape", subject, clause))
+        checked(isinstance(clause["clause"], str) and clause["clause"].strip(),
+                ("empty invariant clause", subject))
+        if clause["enforced_by"] is not None:
+            checked(clause["enforced_by"] in REGISTERED_CHECKS,
+                    ("invariant names an unregistered check", subject, clause["enforced_by"]))
+            claimed_checks.add(clause["enforced_by"])
+# And the converse: a registered check nobody claims is a check that drifted loose.
+checked(claimed_checks == REGISTERED_CHECKS,
+        ("registered checks not claimed by any invariant", sorted(REGISTERED_CHECKS - claimed_checks)))
+
+# record-envelope-version-and-no-state-field
+def payload_properties(record_name):
+    payload = SCHEMAS["records.schema.json"]["$defs"][record_name]["properties"].get("payload", {})
+    names = set(payload.get("properties", {}))
+    for branch in payload.get("oneOf", []):
+        names |= set(branch.get("properties", {}))
+    return names
+for name in RECORDS:
+    definition = SCHEMAS["records.schema.json"]["$defs"][name]
+    checked(definition["properties"].get("schema_version", {}).get("const") == "2.0",
+            ("record envelope schema_version", name))
+    # FI-12's whole design: state lives in LifecycleStatus, never in business bytes.
+    checked("state" not in payload_properties(name), ("payload declares a state field", name))
+
+# time-window-declares-two-utc-bounds
+time_window = SCHEMAS["values.schema.json"]["$defs"]["TimeWindow"]["properties"]
+for bound in ("starts_at", "ends_at"):
+    checked(time_window[bound].get("$ref", "").endswith("/UTC"), ("TimeWindow bound", bound))
+
+# command-result-accepted-requires-receipt
+command_result = SCHEMAS["values.schema.json"]["$defs"]["CommandResult"]
+checked("durability_receipt_ref" in json.dumps(command_result),
+        "CommandResult must be able to carry an independent durability receipt")
+
+# control-contracts.json binds through the control_contract primitive.
+def ops_in(body, found):
+    if isinstance(body, dict):
+        if "op" in body:
+            found.add(body["op"])
+        for value in body.values():
+            ops_in(value, found)
+    elif isinstance(body, list):
+        for value in body:
+            ops_in(value, found)
+    return found
+control_users = set()
+for name, record in RECORDS.items():
+    for edge in record["lifecycle"]["transitions"]:
+        if "control_contract" in ops_in(PREDICATES[edge["predicate_id"]]["body"], set()):
+            control_users.add(name)
+checked(control_users == set(CONTROLS),
+        ("control-contracts.json must name exactly the records whose guards invoke it",
+         sorted(control_users ^ set(CONTROLS))))
+for name, clauses in CONTROLS.items():
+    checked(bool(clauses) and all(isinstance(c, str) and c.strip() for c in clauses),
+            ("empty control contract", name))
+
+# endpoints.json binds: every named request/response resolves, every owner exists.
+components = {record["owner_component"] for record in RECORDS.values()}
+for endpoint in ENDPOINTS:
+    checked(endpoint["owner"] in components, ("endpoint owner component", endpoint["path"]))
+    for role in ("request", "response"):
+        named = endpoint[role]
+        target = named[4:-1] if named.startswith("Ref<") and named.endswith(">") else named
+        checked(target == "Record" or any(target in schema["$defs"] for schema in SCHEMAS.values()),
+                ("endpoint names an undefined type", endpoint["path"], role, named))
 # The AST has no opaque eval/code/prompt escape. World-facing primitives have typed named contracts.
 call_graph = {name: set() for name in PREDICATES}
 
