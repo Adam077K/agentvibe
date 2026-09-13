@@ -1297,10 +1297,19 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
     # it. A branch on a string the other side has renamed is a branch nothing takes, and
     # it fails by falling back to exactly the wrong message this check exists to stop.
     FIXTURE_RATCHET = "negative fixture count ratchet (RC-04)"
-    checked(FIXTURE_RATCHET in
-            (ROOT / "tools" / "run_negative_fixtures.py").read_text(encoding="utf-8"),
+    runner_source = (ROOT / "tools" / "run_negative_fixtures.py").read_text(encoding="utf-8")
+    checked(FIXTURE_RATCHET in runner_source,
             ("the ratchet headline this file branches on is not in the runner that prints "
              "it", FIXTURE_RATCHET))
+    # RC3-03, and asserted for exactly the reason above: the leak detail below reads a
+    # STRUCTURED per-fixture reason out of the runner, and a runner that stopped emitting
+    # one would leave this file attaching nothing at all -- which is worse than the blind
+    # tail it replaces, because it would be silent rather than truncated.
+    LEAK_RECORD = 'LEAK_RECORD_KEYS = ("id", "reason")'
+    checked(LEAK_RECORD in runner_source,
+            ("the runner no longer declares a per-fixture leak reason, so the detail this "
+             "file attaches when a fixture leaks would name the fixture and not the "
+             "reason (RC3-03)", LEAK_RECORD))
     try:
         runner_said = json.loads(completed.stdout[completed.stdout.rindex("{"):])
     except ValueError:
@@ -1315,9 +1324,31 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
              "fixtures exist (RC-04), and NO fixture was run: a declared fixture that is "
              "absent is a control someone deleted, and one present but undeclared is a "
              "control the denominator does not know about", ratchet))
+    # RC3-03. This detail used to be `completed.stdout[-2000:]` -- a blind tail of a
+    # transcript carrying one line per fixture. With 33 fixtures the FIRST fixture's
+    # `[FAIL] ... failed for the wrong reason; expected ...` line falls outside 2,000
+    # characters and is gone: measured by the recheck on its probe 7c, `failed for the
+    # wrong reason` occurred ZERO times in this file's entire output while the headline
+    # said the fixture "was not rejected". It WAS rejected, by a different check, and the
+    # sentence that would have corrected that is the one the slice threw away. That is the
+    # same defect RC2-04 was written to fix -- a message naming the wrong control -- one
+    # layer down. The runner has carried the reason per fixture all along; this reads it
+    # rather than slicing bytes, so the detail cannot depend on where a fixture sorts.
+    if isinstance(runner_said, dict) and runner_said.get("leaked"):
+        leak_detail = {"leaked": runner_said["leaked"],
+                       "fixtures": runner_said.get("fixtures"),
+                       "passed_as_required": runner_said.get("passed_as_required")}
+    else:
+        # The runner exited non-zero without naming a fixture, so there is no per-fixture
+        # reason to read: it refused before running one, or it died. Its own sentence is
+        # the only thing there is, and it is the LAST thing printed rather than the first.
+        leak_detail = {"leaked": None,
+                       "why_no_leak_list": "the runner reported no per-fixture result; it "
+                                           "refused before running a fixture, or died",
+                       "runner_tail": completed.stdout[-2000:] + completed.stderr[-2000:]}
     checked(completed.returncode == 0,
             ("a negative fixture was not rejected; the check it names is gone",
-             completed.stdout[-2000:] + completed.stderr[-2000:]))
+             leak_detail))
     FIXTURES_RUN = runner_said
     checked(FIXTURES_RUN["fixtures"] > 0, "refusing a vacuous pass with zero negative fixtures")
     # RC-04: `> 0` is not a count. With 1 of 27 fixtures present this block reported

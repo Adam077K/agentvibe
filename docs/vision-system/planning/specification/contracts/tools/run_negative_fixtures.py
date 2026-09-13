@@ -292,6 +292,20 @@ def run_fixture(fixture, base, verbose):
     return True, "rejected as required"
 
 
+# RC3-03. A leak entry carries the REASON, not just the id, and the caller reads the
+# structured list instead of slicing a transcript. validate_contracts.py used to attach
+# `stdout[-2000:]` to its generic wrapper -- one line per fixture, so with 33 fixtures the
+# FIRST fixture's `failed for the wrong reason; expected ...` line fell outside the tail
+# and was gone. Measured by the recheck on its probe 7c: `failed for the wrong reason`
+# occurred ZERO times in the validator's entire output, while the headline said the fixture
+# "was not rejected" -- it WAS rejected, by a different check, and the sentence that would
+# have corrected that is the one the slice threw away. The reason existed here the whole
+# time. This constant is what the validator asserts still exists, for the same reason it
+# asserts FIXTURE_RATCHET does: a reader on the other side of a rename gets the wrong
+# message rather than an error.
+LEAK_RECORD_KEYS = ("id", "reason")
+
+
 def discover():
     """Every fixture in the tree, as (id, document, base), by the one discovery rule.
 
@@ -406,14 +420,15 @@ def main(verbose: bool) -> int:
     failures = []
     for identifier, fixture, base in fixtures:
         if fixture["id"] != identifier:
-            print(f"  [FAIL] {identifier}: fixture declares id {fixture['id']!r}; the "
-                  "manifest names fixtures by file, so the two must agree")
-            failures.append(identifier)
+            mismatch = (f"fixture declares id {fixture['id']!r}; the manifest names "
+                        "fixtures by file, so the two must agree")
+            print(f"  [FAIL] {identifier}: {mismatch}")
+            failures.append({"id": identifier, "reason": mismatch})
             continue
         ok, detail = run_fixture(fixture, base, verbose)
         print(f"  [{'ok' if ok else 'FAIL'}] {fixture['repair']} {fixture['id']}: {detail}")
         if not ok:
-            failures.append(fixture["id"])
+            failures.append({"id": fixture["id"], "reason": detail})
     print(json.dumps({"fixtures": len(fixtures), "declared": len(declared),
                       "passed_as_required": len(fixtures) - len(failures),
                       "leaked": failures}, indent=2))
