@@ -533,5 +533,260 @@
     "if_no_answer": "Plan stays at C; the disposition is recorded against the current package; a later charter layer becomes a versioned ChangeProposal (S1.1) rather than a reopening.",
     "recommendation": "A, specified as a layer with a removal trigger, so the roster is a choice with a measured cost rather than an assumption.",
     "founder_statement_2": "2026-09-13: reopened as a thesis to be researched and challenged — see the input file; not a decision."
+  },
+  {
+    "id": "Q-016",
+    "kind": "Deferred question",
+    "question": "Who is the terminal owner of an unowned duty or harm, and does that party exist as a record?",
+    "status": "Open",
+    "owner": "founder",
+    "evidence": "Universal ownership and no ownership are one state [R5-11]. The national incident system defaults responsibility upward until delegated [R5-03]; this package defaults instead to the narrowest sufficient mandate, which leaves a residue with no holder. The subscription-activated candidate declared this gap against itself and routed it; the capability-differentiated candidate carried the same hole silently. The company/human review states the disposition in its own words: the resolution is a staffing decision and belongs to the founder.",
+    "source_refs": [
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "planning/F2/05-selection-record.md#35-from-m2--standing-accountability-layer-5",
+      "planning/F2/reviews/A-company-human.md",
+      "research/F2/R5-routing.md"
+    ],
+    "packet": {
+      "decision_required": "Name the standing human role that holds custody of a harm or duty when no mandate covers it, and state its consequence ceiling, its alternate and its expiry. Or decide that no fourth tier exists and that the designated maintenance/discovery custodian is terminal.",
+      "why_this_owner": "It is a staffing decision and a delegation of authority — the company/human review's own words: the resolution is a staffing decision and belongs to the founder. DIRECTIVE §3: risk tolerance and information only the founder holds.",
+      "latest_responsible_time": "Before the first admitted work order in a class whose harm no existing mandate covers. It does not block the amendment or the builder: the ordered custody resolver is specified with its terminal slot marked unfilled.",
+      "options": [
+        "(a) Name a person with a consequence ceiling, an alternate and an expiry",
+        "(b) Engage a professional or service as the terminal element",
+        "(c) Delete the fourth tier and make the designated maintenance/discovery custodian terminal",
+        "(d) Declare the founder the terminal element, as an explicit exception"
+      ],
+      "consequences": [
+        "(a) and (b) cost money and a real acceptance act by a party who is not the founder",
+        "(c) puts legal-class harm on a custodian whose mandate does not cover it, which is the gap the capability-differentiated candidate carried silently",
+        "(d) is honest and makes every unowned harm an interrupt on one person"
+      ],
+      "uncertainty": "Whether a harm class with no covering mandate actually arises at these ventures' scale is unmeasured, and it is downstream of the arrival rate of genuinely novel work, which nobody has counted (U-1, the cheapest measurement in the round).",
+      "reversibility": "High as software, low as a relationship. Naming a party is reversible; telling an outside party who to contact is not.",
+      "recommendation": "(d) now, (a) or (b) before the first venture carries an outward obligation. The exception is honest, costs nothing, and makes the load visible. Pretending a role exists is the failure mode this packet exists to prevent.",
+      "if_no_answer": "Admission stops in every class whose harm no existing mandate covers. That is a visible, recorded narrowing, not a silent gap.",
+      "unrelated_work_continues": true
+    },
+    "overlaps": [
+      "Q-003 — the competent grievance recipient is one named occupant of the terminal tier this packet defines. Answering Q-003 does not answer this packet, which asks what holds a harm that no mandate covers at all.",
+      "Q-004 — the alternate recipient when a complaint names the custodian is the same ordered-resolver question one tier down.",
+      "Q-011 — a funded remedy reserve is the funding half of the custody this packet staffs; closure inventories the reserve alongside the custodian or records the funding gap as a surviving duty (R-X08)."
+    ],
+    "origin": "F2 Step 5a-ii selection record §6.5, MD-01",
+    "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
+    "asked": null
+  },
+  {
+    "id": "Q-017",
+    "kind": "Deferred question",
+    "question": "Which standing roles are staffed by a person other than the founder before work is admitted in that class, and what happens in a class where none is?",
+    "status": "Open",
+    "owner": "founder",
+    "evidence": "AC-M3-02, AC-M4-01, AC-M5-02 and AE-M4-05 — four reviews, four candidates, one gap. The staffing-precondition mechanism exists in one candidate and was not applied to that candidate's own acceptance table. The load is counted: a person is the acceptor on 37 of 46 capabilities in the consequence-class candidate and on every action in the 26 that floor at the economic/contractual class or above; in the workflow-first candidate 19 of 46 name the founder and 13 more an unspecified human, with every outward artifact needing a human acceptance.",
+    "source_refs": [
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules",
+      "planning/F2/05-selection-record.md#73-the-founder-acceptance-load-and-what-the-synthesis-does-about-it",
+      "planning/F2/reviews/A-company-human.md",
+      "planning/F2/reviews/A-economic-capacity.md"
+    ],
+    "packet": {
+      "decision_required": "For each acceptance-owner role the capability binding names, state whether it is filled by a non-founder, by the founder as a declared exception, or by nobody — and confirm the consequence of \"nobody\", which the design sets as: admission in that duty class stops.",
+      "why_this_owner": "Staffing and money. DIRECTIVE §3: irreversible commitment and information only the founder holds.",
+      "latest_responsible_time": "Before work is admitted in any affected class. It does not block the builder: the precondition is specified and the slots are declared unfilled.",
+      "options": [
+        "(a) Fill the named roles with real people or engaged services",
+        "(b) Declare the founder the holder of record for all of them, as a stated exception with the parking behaviour named",
+        "(c) Fill a subset and let the rest stop admission in their classes",
+        "(d) Reduce the number of roles by re-running the three-part conjunction test more strictly"
+      ],
+      "consequences": [
+        "The figure is the whole of this packet's weight and is carried rather than summarised: a person is the acceptor on 37 of 46 capabilities in the consequence-class candidate and on every action in the 26 that floor at the economic/contractual class or above; 19 of 46 name the founder in the workflow-first candidate and 13 more an unspecified human",
+        "The synthesis does not reduce that load — it makes it visible before work is admitted rather than after it is owed",
+        "Acceptance at the economic/contractual class and above is unsampleable, so no sampling rule thins it; the per-week count is what this packet carries once the capability binding is rebuilt per capability",
+        "(d) is the only option that lowers the count, and it lowers it by removing holders rather than by removing duties"
+      ],
+      "uncertainty": "The per-week decision count cannot be computed until the capability binding is rebuilt per capability, which is work the amendment does. The holder-hours-per-period figure is owed under R-X09 and has no denominator today.",
+      "reversibility": "High as software. Low once an outside party has been told who to contact.",
+      "recommendation": "(b) plus (c): declare the founder the holder of record with the parking behaviour stated, and fill one role — the grievance and rights holder — with a real party first, because it is the only one an outsider reaches by name and the only one whose route is a published promise.",
+      "if_no_answer": "Admission stops in every duty class whose acceptance role is unfilled. In a one-person company that is most of the economic/contractual classes, and the company runs at the reversible-internal classes only.",
+      "unrelated_work_continues": true
+    },
+    "overlaps": [
+      "Q-002, Q-003, Q-004, Q-005, Q-006 and Q-012 each ask who fills ONE role — the fault-domain custodian, the grievance recipient, its alternate, the independent assessor, the continuity custodian, the successor. This packet does not re-ask any of them: it asks the roster-level question they share, which is which roles must be filled BEFORE admission in their class and what happens in a class where none is.",
+      "Q-011 — the funded capacity reserved for remedy, grievance handling and responsible closure is the money half of staffing those same roles.",
+      "Q-016 — the terminal tier is one row of the same table; it is separate because it is the row that exists only when no other mandate covers the harm."
+    ],
+    "origin": "F2 Step 5a-ii selection record §6.5, MD-02",
+    "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
+    "asked": null
+  },
+  {
+    "id": "Q-018",
+    "kind": "Deferred question",
+    "question": "Who may approve creation of a new capability, and what happens during a founder absence?",
+    "status": "Open",
+    "owner": "founder",
+    "evidence": "Nothing located staffs a genuinely novel work kind without a pre-declared envelope, a pre-registered handler, or a human redeploy [R5-06, R5-08, R5-14]. The one counterexample writes a new skill and depends on an automatic success oracle that a business case does not supply [R5-21]. Every candidate in the round conceded that creating a capability for genuinely novel work requires a human approver; the differences were only in what may proceed while approval is pending, which R-G11 settles by effect class.",
+    "source_refs": [
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules",
+      "research/F2/R5-routing.md",
+      "planning/F2/reviews/A-company-human.md"
+    ],
+    "packet": {
+      "decision_required": "Name a standing approver for capability creation, with a consequence ceiling and an expiry — or confirm that outward-acting capability creation parks during an absence.",
+      "why_this_owner": "Delegation of authority with a consequence ceiling, and risk tolerance. DIRECTIVE §3.",
+      "latest_responsible_time": "Before the first declared absence.",
+      "options": [
+        "(a) A named standing approver with a consequence ceiling and an expiry",
+        "(b) Outward-acting capability creation parks; read-only and internal-artifact capabilities proceed on the expiring bounded trial the design already admits",
+        "(c) A professional or service holds the approval for a named class"
+      ],
+      "consequences": [
+        "(b) is what the design does with no answer, and it is not a failure state: every candidate in the round conceded that genuinely novel work needs a human approver",
+        "(a) buys throughput and creates a party who can grow a mandate",
+        "(c) converts the approval into a contract and a fee, and introduces the provider as a party the record must name"
+      ],
+      "uncertainty": "The arrival rate of genuinely novel work is unmeasured and it is the cheapest measurement in the round [MG-06, U-1]. At one novel job in two hundred this decision barely matters; at one in five it is the throughput ceiling.",
+      "reversibility": "High. An approver's mandate is a record with an expiry.",
+      "recommendation": "(b), and run the arrival-rate count first. It needs no software and it is the input this decision actually turns on: count admitted work over a past operating window against the existing capability list and record each item's disposition.",
+      "if_no_answer": "Outward-acting capability creation parks during absences; read-only and internal-artifact trials continue under the standing mandate.",
+      "unrelated_work_continues": true
+    },
+    "overlaps": [
+      "Q-005 — the independent assessor with write authority over protected-change acceptance is a different seat: this packet asks who may approve a NEW capability, not who accepts a protected change to an existing one. Both may be the same person; the design does not require it.",
+      "Q-010 — the ParticipationPlan fixes the availability windows this packet's absence branch runs inside, and does not name the approver."
+    ],
+    "origin": "F2 Step 5a-ii selection record §6.5, MD-03",
+    "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
+    "asked": null
+  },
+  {
+    "id": "Q-019",
+    "kind": "Deferred question",
+    "question": "Who accepts the assessment of the founder's own competence?",
+    "status": "Open",
+    "owner": "founder",
+    "evidence": "04-human-operation.md already fixes the opposite arrangement to the bare founder-accepts reading — a competent assessor states the exact factual proposition and its limits, and the owner may contest it or request a second assessment — and one candidate's own prohibition, that a holder may never decide the matter it is the subject of, forbids self-acceptance. Nothing in any lane's source set measures whether a system's operator remains competent [AG-10], and human evaluators agree with each other 5-65% [R7 F15].",
+    "source_refs": [
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules",
+      "planning/specification/04-human-operation.md#attention-and-practiced-competence",
+      "research/F2/R7-verification.md"
+    ],
+    "packet": {
+      "decision_required": "Name the competent assessor, outside the founder, for the owner-attention-and-competence capability.",
+      "why_this_owner": "Naming an assessor is staffing and it is personal. The MECHANISM is already fixed and inherited from 04-human-operation.md by name — the participation plan, the encounter, the domain assessment, the authority matrix, the decision packet and the grievance case — so only the occupant is open.",
+      "latest_responsible_time": "Before the first competence cycle runs.",
+      "options": [
+        "(a) A named person",
+        "(b) An engaged professional",
+        "(c) A deterministic instrument plus a named contestation route, with no human assessor",
+        "(d) Declare the capability unperformed and record it as such"
+      ],
+      "consequences": [
+        "(d) is honest and leaves the fixed mechanism unexercised",
+        "(c) narrows what can be assessed to what a computation can decide, which for domain competence is little",
+        "(a) and (b) cost money or a relationship, and put a second party inside the founder's own cycle"
+      ],
+      "uncertainty": "The assessor's own error rate is unmeasured, as is every human anchor's [X19, U-9]. The delayed unfamiliar-transfer test that would measure it is blocked behind this decision.",
+      "reversibility": "High.",
+      "recommendation": "(d) until a venture carries an outward obligation, then (b). Recording the capability as unperformed is truthful; recording it as passed because the founder accepted his own assessment is the failure 04-human-operation.md already refuses.",
+      "if_no_answer": "The competence cycle runs; the assessment is recorded as unperformed, never as passed.",
+      "unrelated_work_continues": true
+    },
+    "overlaps": [
+      "Q-010 — the ParticipationPlan's permitted assessment data and sampling policy are the inputs this assessor would read; adopting the plan does not name the assessor.",
+      "Q-005 — the independent assessor for protected-change acceptance assesses CHANGES, not the owner. The competence assessment is the one seat the owner may not occupy for himself."
+    ],
+    "origin": "F2 Step 5a-ii selection record §6.5, MD-04",
+    "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
+    "asked": null
+  },
+  {
+    "id": "Q-020",
+    "kind": "Deferred question",
+    "question": "May anything halt or reverse a capacity shed in the moment, and who decides when a protected-lane holder refuses?",
+    "status": "Open",
+    "owner": "founder",
+    "evidence": "This is an unresolved disagreement in the round and the evidence does not settle it (dissent F-1). Two candidates ask the holder and two apply a pre-endorsed order; the consolidation's words are that these are opposite and individually correct positions, and neither is refuted. Two live blocking findings fail in OPPOSITE directions from the one question: nothing can halt a shed, and nothing can override a refusal. The design already decides the second half — a holder's stated minimum is evidence, never consent.",
+    "source_refs": [
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "planning/F2/05-selection-record.md#9-dissent-preserved",
+      "planning/F2/05-selection-record.md#102-the-order-and-why",
+      "planning/F2/reviews/A-economic-capacity.md",
+      "planning/specification/07-integrations-capacity.md#6-capacity-money-and-scheduling"
+    ],
+    "packet": {
+      "decision_required": "Name the party who may halt or reverse a capacity shed inside the shedding window, and state how long a protected-lane holder's refusal may stand.",
+      "why_this_owner": "Who holds authority under pressure is a delegation of authority. DIRECTIVE §3.",
+      "latest_responsible_time": "Before any CapacityPlan revision that raises the concurrency pin. NOT URGENT: shedding at the pressure threshold cannot occur at the current pin, so this decision sits behind a cheaper prerequisite — reading the account entitlement (R-G04), which costs one inspection.",
+      "options": [
+        "(a) Nobody may halt; the pre-endorsed order executes and is reviewed after",
+        "(b) A named party may halt inside the window, with its own reserved capacity",
+        "(c) The founder may halt, and during an absence nobody may"
+      ],
+      "consequences": [
+        "(a) is fast and auditable and cannot notice that this particular shed is catastrophic, which the workflow-first candidate concedes in its own words",
+        "(b) costs reserved capacity that the lapse rule then prices as waste when unused",
+        "(c) makes the founder a single point of availability at exactly the moment of pressure"
+      ],
+      "uncertainty": "Whether a shed at the pressure threshold has time for a negotiation round has never been measured. That is the discriminating test and it is unrun.",
+      "reversibility": "High as software. A shed that strands a due obligation is not reversible.",
+      "recommendation": "(a) with a named after-the-fact reverser, until the negotiation-time question is measured. The nearest instrument is cheap: run one shed decision twice on a tabletop, once asking named holders and once applying the class reservations with no holder, and count founder reversals and breached minimums. It runs at the current pin, because it is a decision procedure and not a capacity experiment.",
+      "if_no_answer": "No shed can be halted. Since no shed can occur at the current pin, nothing happens.",
+      "unrelated_work_continues": true
+    },
+    "overlaps": [
+      "Q-021 — the lane sizes, minimums and lapse point are the parameters this authority would act on; they are the same capacity decision seen from the other side and are blocked behind the same account inspection.",
+      "Q-011 — the funded capacity reserved for remedy, grievance handling and responsible closure names the protected lanes that may never be shed, and does not say who may halt a shed of the others."
+    ],
+    "origin": "F2 Step 5a-ii selection record §6.5, MD-07",
+    "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
+    "asked": null
+  },
+  {
+    "id": "Q-021",
+    "kind": "Deferred question",
+    "question": "What is the size of each reserved lane, its stated minimum and its lapse point?",
+    "status": "Open",
+    "owner": "founder",
+    "evidence": "The session window resets on schedule whether consumed or not [R8 §3], so a reserve under a non-rolling allowance is waste rather than thrift — the one correct costing of a reservation anywhere in the round. No published denominator exists, so every figure this round can produce is a ratio between arms, and \"this design consumes 40% of the allowance\" is not a sentence anyone here can write [R8 W-6, MG-03].",
+    "source_refs": [
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules",
+      "research/F2/R8-contrarian.md",
+      "planning/specification/07-integrations-capacity.md#6-capacity-money-and-scheduling"
+    ],
+    "packet": {
+      "decision_required": "Per lane: its share of the observed allowance, its stated minimum, and the point before the reset window at which unconsumed reservation releases to the pool.",
+      "why_this_owner": "These decide what the company gives up under pressure, which is its meaning rather than an engineering parameter. DIRECTIVE §3: risk tolerance.",
+      "latest_responsible_time": "Before the first shed negotiation. NOT URGENT, for the same reason as the shed-authority packet: no shed can occur at the current concurrency pin, and the cheaper prerequisite is reading the account entitlement (R-G04).",
+      "options": [
+        "Any set of shares. The design fixes only the structure: shares are expressed as FRACTIONS of the observed allowance and never as absolute quantities, because no published denominator exists",
+        "The protected due-service and grievance reserves may never be shed, whatever the shares are",
+        "The lapse point is time-triggered and independent of any holder's consent, whatever its value"
+      ],
+      "consequences": [
+        "Generous reserves are destroyed unconsumed at the reset — a reserve under a non-rolling allowance is waste, not thrift",
+        "Tight reserves breach minimums under pressure, and the breach is what the founder is alerted to",
+        "There is no setting that avoids both, which is why the structure rather than the numbers is what the design fixes"
+      ],
+      "uncertainty": "Total. The quantity that would make this arithmetic is the one the provider stopped publishing, so only ratios between arms are computable.",
+      "reversibility": "High. Shares are data.",
+      "recommendation": "Adopt 07-integrations-capacity.md §6's existing class shares unchanged as the starting values, set the lapse point at 20% of the window remaining, and treat both as measurements to revise rather than as decisions. The structure is what matters; the numbers are placeholders and must be labelled as such.",
+      "if_no_answer": "No shed negotiation can run. Since none can occur at the current pin, nothing happens.",
+      "unrelated_work_continues": true
+    },
+    "overlaps": [
+      "Q-020 — who may halt a shed is the authority half of this same capacity decision, and both are blocked behind the same account inspection.",
+      "Q-011 — the funded capacity reserved for remedy, grievance handling and responsible closure fixes which lanes are protected; this packet sizes them.",
+      "Q-013 — the authorized continuing infrastructure and operating spend is the money denominator; this packet is about the subscription allowance, which the specification keeps separate from money."
+    ],
+    "origin": "F2 Step 5a-ii selection record §6.5, MD-08",
+    "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
+    "asked": null
   }
 ]
