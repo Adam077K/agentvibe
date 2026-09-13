@@ -238,7 +238,7 @@
       "question": "Where does new information arrive from?",
       "track": "S03",
       "status": "specified; independent review, implementation and operating evidence pending",
-      "decision": "New information enters through authorized search/fetch, Fastmail JMAP, Cloudflare staged forms, signed provider webhooks, source statements or authenticated human performance. Each begins as untrusted sourced observation or potential duty; none is automatically an instruction or accepted business fact.",
+      "decision": "New information enters through authorized search/fetch, Fastmail JMAP, Cloudflare staged forms, authenticated provider webhooks, source statements or authenticated human performance. Each begins as untrusted sourced observation or potential duty; none is automatically an instruction or accepted business fact. Webhook authentication is per provider and is never assumed: it is a signature where the provider offers one, and for outbound mail it is the weaker per-connection credential plus current IP-allowlist contract of section 9, because that provider publishes no signatures.",
       "contract": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
       "evidence": [
         "../02-architecture-selection.md",
@@ -247,9 +247,10 @@
         "../reviews/G-acceptance-protocol.md",
         "../../research/L10-economics.md",
         "../../research/implementation/N01-native-execution.md",
-        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+        "07-integrations-capacity.md#9-outbound-mail-transport-event-identity-and-disclosure"
       ],
-      "uncertainty": "Actual sources, accounts and intake staffing need admission.",
+      "uncertainty": "Actual sources, accounts and intake staffing need admission. Origin authentication for the mail provider is a shared-secret claim, not a signature; a leaked credential or stale allowlist still forges an accepted event, so no inbound event alone produces a consequential effect.",
       "owner": "S1-C03 execution with S1-C04 authority and S1-C07 actual standing",
       "implementation_location": "system/packages/integrations/ingress",
       "falsifying_test": "An inbound e-mail grants permission or a staged form claims witnessed acceptance."
@@ -304,7 +305,7 @@
       "question": "How does it avoid reacting twice to the same thing?",
       "track": "S03",
       "status": "specified; independent review, implementation and operating evidence pending",
-      "decision": "Deduplicate provider events by connection/account/event ID and commands by command identity. JMAP native IDs plus Message-ID/content correlation distinguish duplicate delivery from a new message; business conflict identities prevent cross-tool duplicate payment or promise even when event IDs differ.",
+      "decision": "Deduplicate provider events by connection/account/event ID and commands by command identity. JMAP native IDs plus Message-ID/content correlation distinguish duplicate delivery from a new message; business conflict identities prevent cross-tool duplicate payment or promise even when event IDs differ. For outbound-mail provider events the identity is the closed tuple (company, connection, provider server, record_type, event_occurrence_key) of section 9.4: record_type is inside the identity so a delivery, a later bounce and a later complaint for one message stay three distinct effects, the occurrence key uses only fields whose invariance under provider redelivery was established at admission, same-identity different-content events become contested rather than dropped, and a record type with no bindable stable identity is admitted only in reconcile-only mode. A lost acknowledgement or a lost deduplication index never authorizes a resend: redelivery is deduplicated, and a lost send acknowledgement stays unknown_effect with an owned reconciliation duty.",
       "contract": "07-integrations-capacity.md#2-invocation-capture-and-truthful-outcomes",
       "evidence": [
         "../02-architecture-selection.md",
@@ -313,12 +314,13 @@
         "../reviews/G-acceptance-protocol.md",
         "../../research/L10-economics.md",
         "../../research/implementation/N01-native-execution.md",
-        "07-integrations-capacity.md#3-selected-fulfillment-adapters"
+        "07-integrations-capacity.md#3-selected-fulfillment-adapters",
+        "07-integrations-capacity.md#9-outbound-mail-transport-event-identity-and-disclosure"
       ],
       "uncertainty": "Provider identity semantics differ and require profile tests.",
       "owner": "S1-C03 execution with S1-C04 authority and S1-C07 actual standing",
       "implementation_location": "system/packages/integrations/dedup",
-      "falsifying_test": "Two reordered webhook IDs create two fulfillments for one payment."
+      "falsifying_test": "Two reordered webhook IDs create two fulfillments for one payment; or a redelivered delivery webhook creates a second business effect; or a later bounce for an already-delivered message is collapsed into the delivery event."
     },
     {
       "id": "F10-Q05",
