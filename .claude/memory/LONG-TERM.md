@@ -82,3 +82,15 @@
 - **The session memory directory is unwritable from an agent turn.** `~/.claude/projects/.../memory/` is
   refused by both the hook and the sandbox (probed 2026-08-24). Cross-session facts go here and in
   `DECISIONS.md`, which is the repo's own mechanism anyway.
+
+## 2026-09-13 — Long subagent returns: extract from the transcript, do not chunk
+
+- **Subagent returns truncate at ~4,000 chars, and a drain of several replies drops everything over
+  16,000.** Chunked resends over SendMessage worked for two streams and collapsed at eight. **The
+  complete final text is on disk**: `~/.claude/projects/<project-slug>/<session-id>/subagents/
+  agent-a<name>-<hash>.jsonl`, largest `assistant` text block — verified verbatim against received
+  chunks, 8 of 8 (F2 round, R1..R8, 44k–78k chars each). For `sourcer`/`reviewer-readonly` (no
+  Write) plan the extraction up front; brief write-capable engines to write the report to a path.
+- **`mcp__claim-append__append_claim` was absent from every sourcer session this round** despite
+  `sourcer.md` declaring `mcpServers: [claim-append]`; all eight lanes reported it and registered
+  nothing. Check the grant reaches a dispatched agent before relying on it.
