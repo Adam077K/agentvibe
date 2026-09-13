@@ -157,13 +157,14 @@
         "improvement",
         "component contracts"
       ],
-      "answer_scope": "Nine logical responsibilities retain control, information, evidence, authority and failure flows; nineteen attributes each; custom primitive and deployment costs explicit.",
+      "answer_scope": "Nine logical responsibilities retain control, information, evidence, authority and failure flows; nineteen attributes each; custom primitive and deployment costs explicit. S1.1 re-specifies the work, agents, authority, skills, context, shared-state and routing layer inside those same boundaries and responsibilities, as five layers with a fixed precedence in which the lower-numbered governs: consequence class, declared procedure, standing interest, existence record, standing accountability.",
       "locations": [
         "planning/02-architecture-selection.md",
         "planning/specification/01-contract-kernel.md",
         "planning/specification/02-authority-recovery.md",
         "planning/specification/08-improvement-implementation.md",
-        "planning/specification/10-components-authority-traceability.md"
+        "planning/specification/10-components-authority-traceability.md",
+        "planning/specification/05-work-agents-skills.md"
       ],
       "status": "substance-authored-independent-complete-plan-review-pending",
       "owner": "orchestrator",
@@ -196,10 +197,11 @@
         "refusal",
         "non-agent allocation"
       ],
-      "answer_scope": "Temporary qualified procedures select deterministic, workflow, model, human and professional execution according to actual work, consequence and evidence.",
+      "answer_scope": "Consequence class decides who may act; a declared procedure decides how work runs and what each step may see. Five step kinds, a declared read set the loader delivers and records, guards as pure functions over typed outputs, the step boundary as the checkpoint, one effect per effect step, an attempt ceiling with a stated behaviour and no_progress as a terminal class with a named recipient. Temporary workers only: each exists against an ExistenceJustification naming one reason, its unit and a test that can return false, with specialized knowledge refused as a reason and attributable identity mandatory and never itself a reason. Admission computes the class before the kind, refusal is a terminal state with a named failed predicate and its own acceptance owner, and deterministic, workflow, model, human and professional execution are selected by the actual work, its consequence and its evidence.",
       "locations": [
         "planning/specification/05-work-agents-skills.md",
-        "planning/specification/work-knowledge-contracts.json"
+        "planning/specification/work-knowledge-contracts.json",
+        "planning/F2/05-selection-record.md"
       ],
       "status": "substance-authored-independent-complete-plan-review-pending",
       "owner": "orchestrator",
@@ -226,10 +228,11 @@
         "deletion",
         "human-structure justification"
       ],
-      "answer_scope": "Persistent department/persona roster not justified. Versioned templates and temporary instances have scoped creation/qualification/restriction/termination; success does not raise authority.",
+      "answer_scope": "Persistent department/persona roster still not justified, and there is now a control against one appearing: the profile-convergence probe, with the layer removed if the profile count converges to a small stable set. Versioned templates and temporary instances keep scoped creation, qualification, restriction and termination; success does not raise authority. Standing accountability is a separate layer rather than a roster: exactly one standing party for each duty that outlives the case carrying it, admitted by a three-part conjunction, holding an address and a capacity reservation, and prohibited from producing, from releasing, from deciding the matter it is the subject of and from carrying model memory. Retirement is refused while a duty it holds is live, suspension stops admission in that duty class rather than leaving work assigned and silent, and a proposed holder no frozen fixture exercises is refused on sight.",
       "locations": [
         "planning/specification/05-work-agents-skills.md",
-        "planning/specification/10-components-authority-traceability.md"
+        "planning/specification/10-components-authority-traceability.md",
+        "planning/F2/05-selection-record.md"
       ],
       "status": "substance-authored-independent-complete-plan-review-pending",
       "owner": "orchestrator",
@@ -259,10 +262,11 @@
         "relation to prompts/tools/workflows/policies/examples/code",
         "selection degradation controls"
       ],
-      "answer_scope": "Typed licensed/provenanced manifest plus procedure/examples/tests/helpers, bounded discovery/composition and library-scale selection tests.",
+      "answer_scope": "Typed licensed/provenanced manifest plus procedure, examples, tests and helpers, with bounded discovery and composition and library-scale selection tests at 10/100/1000. A skill's declared tool grant is INERT: the launcher computes the tool set from the work order's grant and strips tool-granting frontmatter, under a positive control on the stripping — a probe skill whose arrival at the enforcement point is a failure. Content-hash pinning is re-checked at use rather than at install. Specialized knowledge predicates on a skill version instead of justifying a worker, and the standing-interest catalogue inherits the same selection-degradation sweep, where near-duplicate typed predicates are statically detectable and near-duplicate prose descriptions are not.",
       "locations": [
         "planning/specification/05-work-agents-skills.md",
-        "planning/specification/work-knowledge-contracts.json"
+        "planning/specification/work-knowledge-contracts.json",
+        "planning/F2/05-selection-record.md"
       ],
       "status": "substance-authored-independent-complete-plan-review-pending",
       "owner": "orchestrator",
@@ -322,13 +326,14 @@
         "deletion",
         "audit"
       ],
-      "answer_scope": "Early CS1 prose is integrated: an explicit version 2 representation, immutable business revisions, LifecycleStatus, CAS, proof, bootstrap and migration proposal. Full machine schema, predicate and command registries and the affected-specification amendment remain active author work; no completeness claim.",
+      "answer_scope": "Early CS1 prose is integrated: an explicit version 2 representation, immutable business revisions, LifecycleStatus, CAS, proof, bootstrap and migration proposal. Full machine schema, predicate and command registries and the affected-specification amendment remain active author work; no completeness claim. The F2 amendment registers the layer's new records, phases and transitions — ConsequenceDerivation, ExistenceJustification, StandingHolder, StandingInterest, ArmedSet, AcceptanceInterval, ConstraintSet, FieldAuthority, EffectIdentity, GrantDeliveryReceipt, InstrumentCalibration, AdmissionRecord, ShedDecision, ProjectionGrant, UnmatchedPoolEntry — and the guards over them, each with a removal criterion in falsifier form. No record is renamed: new content lands as fields on existing registry records, and an alias table maps every candidate-era name to its registry name.",
       "locations": [
         "planning/specification/01-contract-kernel.md",
         "planning/specification/capabilities.json",
         "planning/specification/work-knowledge-contracts.json",
         "registers/specification-findings.json",
-        "planning/specification/11-schemas-state-contracts.md"
+        "planning/specification/11-schemas-state-contracts.md",
+        "planning/specification/05-work-agents-skills.md"
       ],
       "status": "foundational-consolidation-active",
       "owner": "orchestrator",
@@ -361,10 +366,12 @@
         "selective forgetting",
         "context manifest"
       ],
-      "answer_scope": "Originals, working/session/episodic/semantic/procedural and consented preference contexts preserve purpose, freshness, contradictions, omissions, sensitive-copy boundaries and selective forgetting.",
+      "answer_scope": "Originals and the working, session, episodic, semantic, procedural and consented-preference contexts still preserve purpose, freshness, contradictions, omissions, sensitive-copy boundaries and selective forgetting. Not one store everyone reads: one authority per field with delivery narrowed per attempt, carried by a step's declared read set, which the loader delivers and records rather than trusting the caller's claim. The manifest carries per-item trust level, the typed constraints that were dropped and the class it was assembled for; a derived entry's trust class is the floor of its inputs'; promotion is an effect with a named non-model discriminator and never the investigating activation; and a supersession walks the transitive closure of derived entries, re-deciding or flagging each reopened acceptance. The model provider is a named disclosure destination under a standing contract, discharged by the loader's class-narrowed projection.",
       "locations": [
         "planning/specification/06-knowledge-evidence-evaluation.md",
-        "planning/specification/work-knowledge-contracts.json"
+        "planning/specification/work-knowledge-contracts.json",
+        "planning/F2/05-selection-record.md",
+        "planning/specification/05-work-agents-skills.md"
       ],
       "status": "substance-authored-independent-complete-plan-review-pending",
       "owner": "orchestrator",
@@ -424,11 +431,12 @@
         "drift",
         "evaluate evaluators"
       ],
-      "answer_scope": "All evaluation levels, fixed/fresh/adverse/negative/clean controls, complete denominators, stochastic uncertainty, competent calibration, independent roots and evaluator evaluation; no aggregate success score.",
+      "answer_scope": "All evaluation levels, fixed/fresh/adverse/negative/clean controls, complete denominators, stochastic uncertainty, competent calibration, independent roots and evaluator evaluation; no aggregate success score. The F2 amendment adds who authors the acceptance criteria — the capability owner, versioned and frozen before the producing step, unamendable by the producing path — a fourth arm on the blinding fixture in which the criteria are authored by the producing path, a check that reads only fields the producer could not author with a strongest-sufficient tie-break, a verdict that resolves unresolved rather than pass when no paired clean-case refusal rate was reported, and a calibration writer excluded from every producing path whose write is a protected change.",
       "locations": [
         "planning/specification/06-knowledge-evidence-evaluation.md",
         "planning/specification/08-improvement-implementation.md",
-        "planning/reviews/G-acceptance-protocol.md"
+        "planning/reviews/G-acceptance-protocol.md",
+        "planning/specification/05-work-agents-skills.md"
       ],
       "status": "substance-authored-independent-complete-plan-review-pending",
       "owner": "orchestrator",
@@ -498,7 +506,7 @@
         "post-action verification",
         "no self-grant or silent inheritance"
       ],
-      "answer_scope": "C0–C5 consequence dimensions, actual standing and scoped grants, exact current judgments/parameters/reservations and independent witnessed release; no self-grants or ambient inheritance.",
+      "answer_scope": "C0–C5 consequence dimensions, actual standing and scoped grants, exact current judgments/parameters/reservations and independent witnessed release; no self-grants or ambient inheritance. The consequence derivation returns the SET of reached classes and every reached class's gates apply; no total rank or severity score is computed from them. The class is computed from records the acting party cannot author and recomputed at release on the frozen bytes, a mismatch parks and never resolves downward, a grant's arrival is attested at first use and an executor that did not receive it fails loudly rather than completing with less, and every approval carries an expiry.",
       "locations": [
         "planning/specification/02-authority-recovery.md",
         "planning/specification/04-human-operation.md",
@@ -640,11 +648,12 @@
         "no assumed subscription credential sharing/proxy/resale/embedding",
         "provider/execution adapters"
       ],
-      "answer_scope": "Subscription scarcity and money separate; no silent API/credit fallback. Concrete estimated AWS/VPS/S0, infrastructure/services/restores/domains and unknown actual human/professional/attention costs; customer economics separate.",
+      "answer_scope": "Subscription scarcity and money separate; no silent API/credit fallback. Concrete estimated AWS/VPS/S0, infrastructure/services/restores/domains and unknown actual human/professional/attention costs; customer economics separate. The F2 amendment adds the lapse point and the cross-class release precedence with a lapsed-unconsumed record, the exhaustion rule naming the non-model performer and the alerted party as distinct from the pressure rule, an evaluation-capacity row with its pressure-window collision behaviour, an expected-launch count per procedure version checked at run close, and the metered path's observation point, cadence, named reader and response with the cache-lifetime collapse priced as a capacity event. Reserved shares are fractions of the observed allowance and never absolute quantities, because no published denominator exists; a stated minimum is evidence rather than consent.",
       "locations": [
         "planning/specification/07-integrations-capacity.md",
         "planning/specification/integrations-capacity-build.json",
-        "research/reviews/2026-09-12-integration-economics-inspection.md"
+        "research/reviews/2026-09-12-integration-economics-inspection.md",
+        "planning/specification/05-work-agents-skills.md"
       ],
       "status": "substance-authored-independent-complete-plan-review-pending",
       "owner": "orchestrator",
