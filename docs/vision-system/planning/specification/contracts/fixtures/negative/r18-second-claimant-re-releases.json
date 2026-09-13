@@ -1,0 +1,17 @@
+{
+  "id": "r18-second-claimant-re-releases",
+  "repair": "R18",
+  "finding": "F6D-11, F6C-08; reviews/F2-06-D-authority-buildability-adversarial.md; protocol section 5 item 10",
+  "case": "A second claimant re-releases instead of inheriting the first claimant's outcome.",
+  "paired_benign_fixture": "fixtures/positive/r18-second-claimant-re-releases-benign.json",
+  "why": "The chapter answers the protocol's tenth (d)-class example -- no stated winner between concurrent attempts -- with \"a second claimant joins the first and inherits its outcome; timing decides nothing\". The mutation makes the inheritance binding optional, so a claim that names no prior outcome passes and the second claimant releases again. The sibling guard does not catch it: `allocated_at < claimed_at` and an allocating component of S1-C04 are true of each racer independently, and the criterion is true of each racer naming itself.",
+  "expect_failure_contains": "'guard.effect.second_claimant_inherits', 'related_phases'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.effect.second_claimant_inherits/body/predicates/1/bindings/0/optional",
+      "op": "replace",
+      "value": true
+    }
+  ]
+}

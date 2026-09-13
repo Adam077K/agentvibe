@@ -1,0 +1,21 @@
+{
+  "id": "r18-second-claimant-re-releases-benign",
+  "repair": "R18",
+  "finding": "F6D-11, benign column; 05-work-agents-skills.md section 6",
+  "case": "A first claimant releasing once, which must not be flagged.",
+  "paired_adverse_fixture": "fixtures/negative/r18-second-claimant-re-releases.json",
+  "why": "The chapter names both columns: the adverse case is a second claimant that re-releases and the benign case is a first claimant releasing once. At the registry layer the benign case is a guard that may be hardened without the pin objecting -- here the allocation timestamp must also be present on the record being claimed, which every legitimate first claim carries. A control that refused this would refuse the ordinary release path, and the adverse count beside it would not be a detection rate.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.effect.second_claimant_inherits/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": { "arg": "subject_ref" },
+        "field_paths": ["/payload/allocated_at", "/payload/reserved_name_range"]
+      }
+    }
+  ]
+}

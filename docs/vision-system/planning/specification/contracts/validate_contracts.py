@@ -1352,6 +1352,53 @@ for _name, _primitive in PRIMITIVES.items():
 # RC3-01 and RC3-02 one layer out -- so the same `polarised_nodes` walk that decides a pin
 # row decides this, rather than a `predicate_id in json.dumps(body)` that would accept all
 # four.
+# --- F6D-11 / F6C-08: A BUSINESS IDENTITY THAT IS A NATURAL KEY SAYS SO, AND IS CHECKED. --
+#
+# `EffectIdentity`'s registry identity is the surrogate `(company_id, record_id, revision)`
+# while 05 section 6 declares the identity as `(effect_class, counterparty, payload_digest)`
+# -- so the triple the design calls the identity was three ordinary payload fields with no
+# constraint of any kind, and the strings `natural_key`, `unique` and `uniqueness` occurred
+# NOWHERE in record-registry.json. The protocol's tenth (d)-class example is exactly the
+# choice that leaves: a unique-index conflict, a read-then-join, or two rows. The chapter
+# answers it and the contract did not carry the answer.
+#
+# `identity.natural_key` is that answer, and these checks are what stop it being another
+# declaration nothing backs. Every named field must be a payload property AND `required`: a
+# key over a field that may be absent is not a key. The surrogate `key` stays as it is -- a
+# natural key is an ADDITIONAL constraint, never a replacement for the revision identity the
+# kernel is built on.
+for _record, _body in RECORDS.items():
+    _natural = _body["identity"].get("natural_key")
+    if _natural is None:
+        checked("natural_key_rule" not in _body["identity"],
+                ("a record states a natural-key RULE and declares no natural key, which is "
+                 "an identity constraint that reads as one and constrains nothing", _record))
+        continue
+    _payload = SCHEMAS["records.schema.json"]["$defs"][_record]["properties"]["payload"]
+    checked(bool(_natural) and bool(str(_body["identity"].get("natural_key_rule", "")).strip()),
+            ("a natural key with no fields or no stated rule; 'resolve-or-create' and "
+             "'conflict' are different systems and the rule is where the choice is recorded",
+             _record))
+    for _field in _natural:
+        checked(_field in _payload.get("properties", {}),
+                ("a natural key names a payload field the schema does not have",
+                 _record, _field))
+        checked(_field in _payload.get("required", []),
+                ("A NATURAL KEY OVER AN OPTIONAL FIELD IS NOT A KEY: two records may then "
+                 "differ only by an absence and both be admitted", _record, _field))
+    checked(_body["identity"]["key"] == ["company_id", "record_id", "revision"],
+            ("a natural key replaced the surrogate identity rather than constraining it",
+             _record, _body["identity"]["key"]))
+checked(RECORDS["EffectIdentity"]["identity"].get("natural_key")
+        == ["effect_class_id", "counterparty_id", "payload_digest"],
+        ("`EffectIdentity` DOES NOT CONSTRAIN ITS BUSINESS TRIPLE. It is the one record in "
+         "the registry whose entire purpose is convergence under concurrency, and without "
+         "the constraint two concurrent allocations both validate and both release: "
+         "guard.effect.identity_allocated_before_release is true of each racer "
+         "independently, and criterion.EffectIdentity.claimed.v1 is true of each racer "
+         "naming itself (F6D-11, F6C-08)",
+         RECORDS["EffectIdentity"]["identity"].get("natural_key")))
+
 # --- F6D-07: THE PRESENCE HALF OF THE CONTROL-OBJECT RULE, WHICH LIVES IN THE SCHEMA. ---
 #
 # `guard.protected.control_object_change_authorized` carries the PHASE half -- a named
@@ -1786,8 +1833,8 @@ checked(version_rows >= 14,
 #   positive: 17, one benign case per adverse case of selection-record section 12.5.
 #             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
 #             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 63
-POSITIVE_FIXTURE_FLOOR = 24
+NEGATIVE_FIXTURE_FLOOR = 65
+POSITIVE_FIXTURE_FLOOR = 26
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

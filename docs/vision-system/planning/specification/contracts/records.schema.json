@@ -203445,12 +203445,13 @@
             }
           },
           "required": [
-            "effect_class_id",
-            "counterparty_id",
-            "payload_digest",
             "allocated_at",
-            "reserved_name_range",
-            "allocating_component_id"
+            "allocating_component_id",
+            "counterparty_id",
+            "effect_class_id",
+            "first_claimant_ref",
+            "payload_digest",
+            "reserved_name_range"
           ],
           "additionalProperties": false
         }

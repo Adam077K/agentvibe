@@ -219630,6 +219630,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.effect.second_claimant_inherits",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.EffectIdentity.claimed.v1",
           "arguments": {
             "subject_ref": {
@@ -396064,6 +396073,82 @@
               "type": "string",
               "enum": [
                 "StepExecution"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "guard.effect.second_claimant_inherits": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<EffectIdentity>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/effect_class_id",
+            "/payload/counterparty_id",
+            "/payload/payload_digest",
+            "/payload/first_claimant_ref"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/first_claimant_ref",
+              "states": [
+                "released",
+                "observed"
+              ],
+              "optional": false
+            }
+          ]
+        }
+      ]
+    },
+    "meaning": "A claim on an allocated effect identity names the operation intent that already carries the outcome, and that intent stands at `released` or `observed`. A second claimant therefore joins the first and inherits its outcome; it does not race and does not re-release. Timing decides nothing (F6D-11).",
+    "owner_component": "S1-C04",
+    "source": "05-work-agents-skills.md#6-effects-idempotency-and-failure",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "EffectIdentity"
               ]
             },
             "revision": {

@@ -1935,6 +1935,42 @@
           "why": "a named protected change stands at authorized or later. Detached or weakened to `proposed`, a floor changes on the strength of a proposal nobody decided."
         }
       ]
+    },
+    {
+      "predicate_id": "guard.effect.second_claimant_inherits",
+      "kind": "guard",
+      "findings": [
+        "F6D-11",
+        "F6C-08"
+      ],
+      "decisions": [],
+      "why": "The join, stated as a predicate. The triple is named on the record -- it is the natural key declared in `EffectIdentity.identity`, so two allocations of one triple are one allocation -- and the claim names the operation intent whose outcome it inherits, which must already stand at `released` or `observed`. `optional: false` is what makes the second row bind: with it optional, a claim naming nothing passes and the inheritance is a sentence again. What this repair does NOT add is an exclusive-factory command: the nine records that declare one name a command in a registry with its own generated schema, and three of those nine name a command the command registry does not contain at all -- a pre-existing gap, recorded here rather than widened.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/effect_class_id",
+            "/payload/counterparty_id",
+            "/payload/payload_digest",
+            "/payload/first_claimant_ref"
+          ],
+          "why": "the business triple and the first claimant are all named on the record before the claim is judged; the triple is the declared natural key and the claimant is what the inheritance points at"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/first_claimant_ref",
+              "states_exactly": [
+                "released",
+                "observed"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and the first claimant already released or was observed, so there is an outcome to inherit. A claim cannot invent one, which is the difference between joining and re-releasing."
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -2620,6 +2656,16 @@
         "F6D-01"
       ],
       "why": "Detached, a step emits more than one effect and the step stops being the idempotency unit. Every retry story in section 6 rests on that being true."
+    },
+    {
+      "guard": "guard.effect.second_claimant_inherits",
+      "edges": [
+        "edge.EffectIdentity.allocated.claimed.v1"
+      ],
+      "findings": [
+        "F6D-11"
+      ],
+      "why": "F6D-11. Detached, `allocated -> claimed` asserts only that a claim happened, and the answer 05 section 6 gives to the protocol's tenth (d)-class example -- no stated winner between concurrent attempts on one work order -- is carried by nothing. The sibling guard is sound and is credited: it constrains ONE record's internal consistency, `allocated_at < claimed_at` and an allocating component of S1-C04, both of which are true of each racer independently."
     },
     {
       "guard": "guard.grant.declared_resolves_to_live_grant",

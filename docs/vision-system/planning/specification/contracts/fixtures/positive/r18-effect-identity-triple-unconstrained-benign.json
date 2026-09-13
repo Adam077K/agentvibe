@@ -1,0 +1,23 @@
+{
+  "id": "r18-effect-identity-triple-unconstrained-benign",
+  "repair": "R18",
+  "finding": "F6C-08, benign column",
+  "case": "A record whose business identity is NOT a natural key declares none, and is not refused for it.",
+  "paired_adverse_fixture": "fixtures/negative/r18-effect-identity-triple-unconstrained.json",
+  "why": "A natural key is an additional constraint on the records that have one, not a field every record owes. Fourteen of the fifteen new records have no natural business key and declaring one for them would invent an identity the design never stated. The patch declares a natural key on `AcceptanceInterval` over two fields that are both required -- `work_order_ref` is not among them, so this is a real key over real fields -- and it must pass, which is what shows the check reads the declaration rather than demanding one everywhere.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/AcceptanceInterval/identity/natural_key",
+      "op": "add",
+      "value": ["submission_seq", "acceptance_owner_ref"]
+    },
+    {
+      "file": "record-registry.json",
+      "pointer": "/AcceptanceInterval/identity/natural_key_rule",
+      "op": "add",
+      "value": "One acceptance interval per submission per acceptance owner; a second submission is a new interval rather than a revision of the first."
+    }
+  ]
+}

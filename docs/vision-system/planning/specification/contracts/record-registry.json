@@ -79187,6 +79187,11 @@
         "record_id",
         "revision"
       ],
+      "natural_key": [
+        "origin",
+        "arrival_seq"
+      ],
+      "natural_key_rule": "05 section 2 gives the identity as origin plus arrival sequence. Two records for one arrival are two admissions of one thing, and the per-origin subcap that guard.intake.per_origin_subcap_preserves_intake protects is counted over exactly this key.",
       "record_type": "AdmissionRecord",
       "revision_rule": "strictly increasing immutable business revision; lifecycle change never increments it",
       "head_key": [
@@ -80505,6 +80510,12 @@
         "record_id",
         "revision"
       ],
+      "natural_key": [
+        "effect_class_id",
+        "counterparty_id",
+        "payload_digest"
+      ],
+      "natural_key_rule": "RESOLVE-OR-CREATE on the triple, and it is the mechanism that makes the stated winner reachable (F6D-11, F6C-08). 05 section 6 declares the identity as (effect_class, counterparty, payload_digest) and answers the protocol's tenth (d)-class example -- a second claimant joins the first and inherits its outcome; it does not race and does not re-release. Without a uniqueness constraint the registry identity is the surrogate (company_id, record_id, revision), the triple is three ordinary payload fields, and an implementer chooses between a unique-index conflict, a read-then-join and two rows -- three different systems. An allocation whose triple is already allocated RESOLVES to the existing record; it does not create a second one.",
       "record_type": "EffectIdentity",
       "revision_rule": "strictly increasing immutable business revision; lifecycle change never increments it",
       "head_key": [
@@ -80633,12 +80644,13 @@
           "observation_refs": "Ref<Observation>[]"
         },
         "required_fields": [
-          "effect_class_id",
-          "counterparty_id",
-          "payload_digest",
           "allocated_at",
-          "reserved_name_range",
-          "allocating_component_id"
+          "allocating_component_id",
+          "counterparty_id",
+          "effect_class_id",
+          "first_claimant_ref",
+          "payload_digest",
+          "reserved_name_range"
         ],
         "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
         "owner": "S1-C04",
@@ -80674,7 +80686,8 @@
           },
           "first_claimant_ref": {
             "type": "Ref<OperationIntent>",
-            "required": false
+            "required": true,
+            "note": "F6D-11. Required, not optional. `a second claimant joins the first and inherits its outcome` is a schema requirement and not a narration: the claim names the operation intent whose outcome it inherits, and guard.effect.second_claimant_inherits demands that intent already stand at `released` or `observed`."
           },
           "observation_refs": {
             "type": "Ref<Observation>[]",
@@ -81155,6 +81168,11 @@
         "record_id",
         "revision"
       ],
+      "natural_key": [
+        "field_path",
+        "epoch"
+      ],
+      "natural_key_rule": "08 section 1's table names a writer-key assignment as `(field_path, epoch)`. Two FieldAuthority records for one field path in one epoch are two answers to \"who may write this field\", which is the question the record exists to have exactly one answer to.",
       "record_type": "FieldAuthority",
       "revision_rule": "strictly increasing immutable business revision; lifecycle change never increments it",
       "head_key": [
