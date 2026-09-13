@@ -92,7 +92,7 @@
     "Receive recheck-coherence. If G2-01/G2-02 are no longer (d): record the scoped planning disposition (eleven dimensions sufficient per G-01/03/04; coherence re-judged per the recheck), replace the PENDING block in planning/PLANNING-REPORT.md, update README, commit the accepted package, present it to the founder per DIRECTIVE.md §15.",
     "If still (d): repair the exact invented decision the recheck names, then recheck again. Do not narrow the finding to fit the repair.",
     "B00 gate: the disposition commit is B00's completion evidence; mark B00 done in implementation-graph.json with the SHA.",
-    "B01: system workspace, schemas/clients, canonical identities, pure command reducers, SERIALIZABLE storage, D0/D1/D2, immutable group hashing, SQL outbox — and FIRST the predicate evaluator (GR-03) so every G counterexample becomes an executable instance fixture. Tier per scripts/classify.mjs; the binding QA gate applies once code lands.",
+    "HELD BY FOUNDER (2026-09-13): B01 not to be dispatched until the hold in founder_hold is lifted. B01: system workspace, schemas/clients, canonical identities, pure command reducers, SERIALIZABLE storage, D0/D1/D2, immutable group hashing, SQL outbox — and FIRST the predicate evaluator (GR-03) so every G counterexample becomes an executable instance fixture. Tier per scripts/classify.mjs; the binding QA gate applies once code lands.",
     "Next prose pass: GR-01 nine supersession notes; GR-02 seven parked records; GR-04 PredicateId drift; G1-06b eight records."
   ],
   "dependencies": [
@@ -185,5 +185,10 @@
       "Native job windows through protected per-job tunnel; enforce observable job/wall/process/output/network bounds, record opaque provider subcalls/allowance honestly"
     ],
     "warning": "Current machine availability and local tests cannot establish independent host/admin fault domains or fund a deployment"
+  },
+  "founder_hold": {
+    "date": "2026-09-13",
+    "instruction": "Founder: do not start building yet. Hold after the planning disposition. B00 may be marked only as the disposition record; B01 is NOT to be dispatched until the founder lifts this hold explicitly.",
+    "lifted": false
   }
 }
