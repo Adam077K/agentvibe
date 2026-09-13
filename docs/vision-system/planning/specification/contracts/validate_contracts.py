@@ -874,6 +874,35 @@ for finding in sorted(covered | set(unpinnable)):
 # the sentence is ABOUT, and a rule that flagged it would fire on the noun in every
 # sentence. Waivers live in pinned-conjuncts.json, name the exact tokens they excuse, and
 # so cannot cover the next one.
+#
+# RC2-03: WHAT THIS RULE READS IS A FORMATTING-DEPENDENT SUBSET OF THE SENTENCE, and the
+# numbers belong beside the rule rather than in a review nobody re-opens. Re-derived on the
+# committed corpus with the disjunction-aware walker above:
+#
+#   774  criteria examined
+#     0  (0.0%) name a field path in `requires`  -> the PATHS rule, which is the half
+#            RC-03's required contract named, has an applicable population of ZERO here.
+#            It is not vacuous by construction -- r13-requires-promises-what-the-body-does-
+#            not-demand adds a path and it fires -- but it asserts nothing about this tree.
+#    19  (2.5%) name a backticked phase of a RELATED record, 22 tokens in all
+#    17  of those 19 rely on a waiver, and all 17 waivers are in use
+#     5  tokens across 2 criteria are bound by a conjunct: this is the rule's live force
+#
+# So PHASES carries RC-03 and PATHS carries none of it, and PHASES only sees BACKTICKED
+# tokens. The recheck switched it off with three pairs of backticks: same sentence, same
+# promise to a reader, invisible to the rule.
+#
+# Widening it was measured, not argued, and REJECTED: matching the phase vocabulary of
+# related records unbackticked produces 425 findings across 266 of the 774 criteria (34%)
+# over 62 tokens, already excluding every token a conjunct binds or a waiver excuses. They
+# are English past participles used as verbs -- `recorded` 104, `required` 43, `current`
+# 37, `admitted` 34, `assigned` 30 -- as in "the subject's own declared identity/scope
+# fields are recorded". A waiver list of that size is a second corpus, and a rule that
+# needs one teaches contributors to route around the checker. The narrow scope is recorded
+# as the accepted limit in pinned-conjuncts.json#/requires_waivers_why, with the number,
+# and the live half gets the negative control it never had:
+# fixtures/negative/r14-requires-names-a-related-phase-no-conjunct-binds. The fixture that
+# existed before it tested the half with zero population.
 REQUIRES_WAIVERS = {entry["criterion"]: entry for entry in PINNED["requires_waivers"]}
 for entry in PINNED["requires_waivers"]:
     checked(set(entry) == {"criterion", "phases", "why"}, ("requires waiver shape", entry))
