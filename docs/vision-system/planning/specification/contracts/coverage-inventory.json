@@ -3130,6 +3130,7 @@
     "closure_current",
     "command_dispatch",
     "complete_capture",
+    "component_custody_transferred",
     "content_unspecified",
     "control_contract",
     "count",

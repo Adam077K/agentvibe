@@ -6484,5 +6484,56 @@
     "result_type": "boolean",
     "failure": "unresolved: denies the dependent transition and preserves the typed reason and all surviving duties, exactly as a false criterion does",
     "planned_module": "system/packages/contracts/src/predicates/content-gap.ts"
+  },
+  "component_custody_transferred": {
+    "args": [
+      "subject_ref",
+      "scope_field"
+    ],
+    "semantics": "Resolve every component this change REMOVES from the change scope at the named field. For each, enumerate every record whose `owner_component` names it, and require that record to carry a successor `owner_component` whose responsibility assignment is currently accepted. 10-components-authority-traceability.md states the rule for every component and enforces it nowhere: 'unresolved ownership blocks complete removal'. A removed component with an unowned record is FALSE; a component whose owned set cannot be completely enumerated at the witnessed frontier is UNRESOLVED, never true -- an incomplete enumeration is exactly the condition under which a record is silently orphaned. A change whose scope removes no component is true and demands nothing.",
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<ProtectedChange>",
+      "scope_field": "JsonPointer"
+    },
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "ProtectedChange"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "scope_field": {
+          "$ref": "values.schema.json#/$defs/JsonPointer"
+        }
+      },
+      "required": [
+        "subject_ref",
+        "scope_field"
+      ],
+      "additionalProperties": false
+    },
+    "result_type": "boolean_or_unresolved",
+    "failure": "unresolved on absent, ambiguous, stale, unauthorized or invalid input; never silently coerced to true or a guessed world fact",
+    "planned_module": "system/packages/contracts/src/predicates/component-removal.ts"
   }
 }

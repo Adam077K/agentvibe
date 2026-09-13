@@ -327896,6 +327896,13 @@
           }
         },
         {
+          "op": "component_custody_transferred",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "scope_field": "/payload/affected_scope"
+        },
+        {
           "op": "call",
           "predicate_id": "criterion.ProtectedChange.activated.v1",
           "arguments": {
