@@ -84,23 +84,19 @@
     "Step 4 complete: five independent attack reviews archived verbatim under planning/F2/reviews/ (A-technical, A-company-human, A-economic-capacity, A-context-evidence, A-security-adversarial) at subject c6d62a3, indexed in findings-index.json. Per-dimension verdicts preserved; no score; dissent kept (M2 vs M3 on shedding; D-01).",
     "G-02-recheck-03 archived (subject 1bef187): RC2-01/03/04 CLOSED; RC2-02 OPEN (a) — RC3-01 forall is a non-demanding context (exit 0 leak), RC3-02 JsonValue slots walked, RC3-03 truncated diagnostic. Root cause named: hardcoded operator names instead of registry-derived demanding positions. Repair lane dispatched.",
     "Step 5a complete: attack consolidation (4cd34b8) and selection record (715cda2) — five-layer synthesis at S1.1 (consequence class > declared procedure > standing interest > existence record > standing holder; lower layer governs), 111/111 findings disposed, 24 missing decisions (13 decided, 4 with founder parameter, 6 founder packets), 11 design proposals without evidence, dissent preserved.",
-    "Step 5b chapters (609a852..8c72253) and registers (bf8785d..bfd4a93) landed; all five verifiers exit 0. RC3-01..03 repaired at the root cause (cfccbc8..a41bf73): registry-derived demanding positions, unknown operators refused, 36 fixtures, 288,620 checks (author-recorded)."
+    "Step 5b chapters (609a852..8c72253) and registers (bf8785d..bfd4a93) landed; all five verifiers exit 0. RC3-01..03 repaired at the root cause (cfccbc8..a41bf73): registry-derived demanding positions, unknown operators refused, 36 fixtures, 288,620 checks (author-recorded).",
+    "G-02-recheck-04 archived (subject a41bf73): RC3-01/02/03 CLOSED; class continues as RC4-01 (table string edit passes pins), RC4-02 (self-declared demanding primitive, exit 0), RC4-03 (no fixture floor), RC4-04..07. Fourth iteration: the lesson is that a walker may classify by a registry but a pin must state its own admissible ancestors."
   ],
   "active_work": [
     {
       "agent": "builder (b5-contracts)",
-      "scope": "Step 5b contracts: 15 records, changed records, 30 guards, 17 paired fixtures; capabilities.json version reconciliation",
-      "status": "dispatched"
-    },
-    {
-      "agent": "reviewer (recheck-04)",
-      "scope": "G-02-recheck-04 at frozen a41bf73",
-      "status": "dispatched"
+      "scope": "Step 5b contracts amendment",
+      "status": "running"
     }
   ],
   "next_actions": [
-    "Verify b5-contracts; archive recheck-04; then Step 6 reviewers",
-    "Step 6: independent reviewers (wrote nothing in Steps 1-5) per frozen protocol; disposition; PLANNING-REPORT + README + founder page; session file",
+    "When b5-contracts returns: dispatch rc4-repair (pin-side ancestor allowlist; registry hash pinned; fixture floor; RC4-04..07) then recheck-05",
+    "Step 6 reviewers after the contracts amendment and rc4 repair land",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
@@ -200,7 +196,7 @@
     "instruction": "Founder: do not start building yet. Hold after the planning disposition. B00 may be marked only as the disposition record; B01 is NOT to be dispatched until the founder lifts this hold explicitly.",
     "lifted": false
   },
-  "phase_g_disposition_status": "NOT YET RECORDED. RC-02 lineage still OPEN (a) after three rechecks (RC-02 → RC2-02 → RC3-01/02): each repair closed the named attack and a sibling context leaked. The next repair must derive demanding positions from the primitive registry and refuse the unrecognised, not add an operator. Disposition withheld until that is independently rechecked and the F2 round completes. Founder hold in force regardless.",
+  "phase_g_disposition_status": "NOT YET RECORDED. RC-02 lineage OPEN (a) after four rechecks: RC-02 → RC2-02 → RC3-01/02 → RC4-01/02. Each repair closed the named attack; the next sibling context leaked. The structural repair now required: the pin declares its own admissible ancestor operators and the registry can classify but never widen. Disposition withheld until that is independently rechecked and the F2 round completes.",
   "founder_reopen": {
     "date": "2026-09-13",
     "input": "inputs/FOUNDER-THESIS-2026-09-13-agents.md",
