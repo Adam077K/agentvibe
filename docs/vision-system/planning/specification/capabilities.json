@@ -5220,12 +5220,13 @@
         "Implement the exact typed domain procedures and deterministic validators; obtain current acceptance evidence on their actual intended outputs.",
         "Actual domain sponsors, mandates, source ownership, sensitive-field classification and retention/deletion duties must be established."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-NATIVE": {
       "name": "Constrained internal native production",
       "status": "selected-profile-unimplemented-unadmitted",
-      "implementation_boundary": "N01: Claude restricted drafting or brokered MCP; Codex exec where effective launch and context admission conform.",
+      "implementation_boundary": "N01: supplied-input Claude restricted drafting is the selected profile. Brokered MCP mediation and Codex exec are candidate profiles only, usable where and only where their own exact-profile admission conforms.",
       "substantive_path": "Authorized package -> staged output -> deterministic parsing/build/render/test -> independent acceptance.",
       "unresolved_prerequisite": "Pin and test actual binary/configuration/startup/tool inventory, all-channel isolation, clean authorized context, output capture and job-bound continuation. Actual account ownership, permitted subscription use, API-key override absence, billing/extra-credit settings, allowance observations, finite resources and accepted recovery custodian remain unestablished. Supplied-input Claude is the selected initial route; mediated/Codex eligibility requires its own successful exact-profile admission, not mere availability.",
       "implemented": false,
@@ -5233,13 +5234,11 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#5-native-subscription-execution",
-          "version": "IC1.0 / N-CLAUDE-SUPPLIED/v1; mediated and Codex profiles require separate admission"
+          "version": "IC1.0 / N-CLAUDE-SUPPLIED/v1"
         }
       ],
       "selected_route_ids": [
-        "N-CLAUDE-SUPPLIED/v1",
-        "N-CLAUDE-MEDIATED/v1",
-        "N-CODEX-SUPPLIED/v1"
+        "N-CLAUDE-SUPPLIED/v1"
       ],
       "admission_state": "not_established",
       "remaining_admission": [
@@ -5247,7 +5246,12 @@
         "Actual account ownership, permitted subscription use, API-key override absence, billing/extra-credit settings, allowance observations, finite resources and accepted recovery custodian remain unestablished.",
         "Supplied-input Claude is the selected initial route; mediated/Codex eligibility requires its own successful exact-profile admission, not mere availability."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": [
+        "N-CLAUDE-MEDIATED/v1",
+        "N-CODEX-SUPPLIED/v1"
+      ],
+      "candidate_admission": "N-CLAUDE-MEDIATED/v1 and N-CODEX-SUPPLIED/v1 are defined in 07-integrations-capacity.md#5-native-subscription-execution and are NOT selected. Each requires its own successful exact-profile admission before any use; availability is not admission, and neither may be resolved from this route by a consumer reading selected_route_ids."
     },
     "R-SOURCE": {
       "name": "Original source ingestion",
@@ -5273,7 +5277,8 @@
         "Implement each original message/form/statement source format, issuer/account binding, period coverage, parser version, deduplication and protected capture.",
         "Actual export access, source rights, counterparties, data recipients, account-specific CSV/XML/PDF mapping and gap reconciliation are unknown until established; model text is not a source statement."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-SEARCH": {
       "name": "External research discovery",
@@ -5298,7 +5303,8 @@
         "Implement current exact-query/disclosure approval, destination/IP/redirect confinement, captured dated originals, parser/lineage and bounded retries; private queries need actual destination authority.",
         "Human-supplied sources are a separately accepted performance route with actual source access and burden, not an assumed available fallback."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-CONTACT": {
       "name": "Inbound and outbound communication",
@@ -5325,7 +5331,8 @@
         "Implement source cursors, exact sender/recipient/content resolution, applicable first-send cutoff, provider-specific webhook authentication/event identity, durable ingress, unknown-send reconciliation and maintained suppression.",
         "Actual response/correction/grievance custodians, accessible alternative, accepted capacity and measured review/performer minutes are required; company authorization alone does not establish provider permission."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-PUBLISH": {
       "name": "Publication and customer deployment",
@@ -5350,7 +5357,8 @@
         "Implement exact digest/version release, observed public behavior, functional/accessibility tests, customer data export/recovery, removal and continuing-descendant accounting.",
         "Venture-specific CMS, media tooling or actuator extensions remain genuinely unselected if needed; they must be separately admitted before the dependent promise, without replacing the selected baseline."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-MONEY": {
       "name": "Actual account movement and filings",
@@ -5376,7 +5384,8 @@
         "Implement provider-specific idempotency/status/webhook/reconciliation contracts, account-specific original statement mappings and independent settlement evidence; a balanced journal is not cash or filing.",
         "Actual bank choice, jurisdiction/chart/treatment, competent accountant/filing engagement, account access, signatory, deadline, fee and received submission evidence remain operating prerequisites."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-PERSON": {
       "name": "Actual human, professional or physical work",
@@ -5399,7 +5408,8 @@
         "Actual identified willing qualified performer, lawful mandate/competence scope, conflict checks, materials/access, availability, fee reservation and accepted alternate are unestablished.",
         "Implement exact scope/acknowledgment, substantive work/native evidence, independent acceptance, missed-deadline and replacement behavior; packet delivery cannot establish performance."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-REMEDY": {
       "name": "Independent grievance and continuity route",
@@ -5425,7 +5435,8 @@
         "Implement and exercise accessible noncustomer intake, durable/staged receipt distinction, due progress and original evidence access; shared DNS/provider/admin roots remain disclosed.",
         "Actual benign unfamiliar duty and joint-failure continuity rehearsal must precede live-route claims; a URL, mailbox or named alternate alone is not meaningful redress."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-RUNTIME": {
       "name": "Kernel, evidence and recovery execution",
@@ -5466,7 +5477,8 @@
         "Implement and validate the selected kernel, work, context, evidence, authority and deployment contracts; no prose establishes protected runtime behavior.",
         "Actual infrastructure, independent administration/keys, funding, effective revocation/restore and provider/worker capacity require operational admission."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     },
     "R-OPERATOR": {
       "name": "Permission-filtered operator surfaces",
@@ -5487,7 +5499,8 @@
         "Implement and evaluate the permission-filtered account/decision/work/evidence/people/requests/capacity/continuity/terminal jobs with current identity, source freshness and exact commands.",
         "Actual human availability, consent, accessible use, identity recovery and observed attention/competence benefit remain unestablished."
       ],
-      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility."
+      "version_binding": "These are selected specification contracts, not admitted AdapterProfile identities. Operational use pins the exact current profile/executable/schema/terms version and requires its own admission; no chosen vendor or inherited label establishes account eligibility.",
+      "candidate_route_ids": []
     }
   },
   "seed_record_factories": {
@@ -18340,7 +18353,7 @@
   "fulfillment_binding_contract": {
     "version": "R-IC-1.0",
     "kind": "XSR-03 author repair, pending independent review",
-    "rule": "Resolve capability.fulfillment_route_refs to selected_contracts/selected_route_ids and the same explicit remaining_admission facts. Selection, implementation, profile admission, account standing and actual performer availability are distinct. Do not display admitted/available from selected status.",
+    "rule": "Resolve capability.fulfillment_route_refs to selected_contracts/selected_route_ids and the same explicit remaining_admission facts. `selected_route_ids` and `candidate_route_ids` are disjoint, and any profile id named in a selected_contracts.version string is exactly the selected set — two views of one selection that disagree is the XSR-03 class, and it recurred in R-NATIVE after the first repair. A candidate is defined, unselected and awaiting its own admission; it is not a selection a consumer may resolve. Selection, implementation, profile admission, account standing and actual performer availability are distinct. Do not display admitted/available from selected status.",
     "source": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
     "root_projection": "Any readiness projection must show the exact selected contract plus unmet admission facts; preserve unknown operating inputs, rather than reopening a baseline provider selection."
   }
