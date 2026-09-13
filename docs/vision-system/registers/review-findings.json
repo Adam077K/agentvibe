@@ -921,5 +921,18 @@
       "unbound_after": 7,
       "recompute": "node scripts/vision-wk-bindings.mjs verify"
     }
+  },
+  {
+    "id": "G1-06b",
+    "source": "scripts/vision-record-registry.mjs verify (g1-coverage lane census, 2026-09-13)",
+    "review_subject": "docs/vision-g1-coverage head",
+    "title": "Eleven further record types named nowhere outside contracts/ under the stricter census",
+    "severity": "low",
+    "class": "a",
+    "owner": "canonical contract author; independent reviewer after repair",
+    "status": "Open. The G1 repair justified the eleven records G1-06 named; its census over the same corpus finds eleven more: EvaluationCase, IndexSnapshot, ExperienceArtifact, BuildArtifact, SecurityCase, Partnership, CandidateAssessment, ContinuityArrangement, Constraint, Defect, AccessGraph. Not repaired in that lane; reported honestly.",
+    "required_contract": "Each carries a justification object: a source concern whose meaning requires it, or derived_control_machinery with the owning record and obligation. Constraint and Defect are directive §8.11 subjects and can cite DIRECTIVE.md.",
+    "independent_recheck": null,
+    "implementation_evidence": null
   }
 ]
