@@ -1,0 +1,53 @@
+{
+  "Money": [
+    "currency is active in the admitted dated currency catalog",
+    "minor_units is canonical signed integer, exponent matches currency catalog; no implicit FX or rescaling"
+  ],
+  "Quantity": [
+    "amount is an actual nonnegative decimal quantity, not a count of minor units",
+    "fractional digits <= scale; unit and scale agree for arithmetic; no floating point"
+  ],
+  "TimeWindow": [
+    "start < end; both UTC Z instants"
+  ],
+  "MoneyKnowledge": [
+    "observed requires nonempty actual evidence and explicit coverage; zero has minor_units=0",
+    "estimated requires a bound and assumptions; lower<=upper in same currency/exponent",
+    "unknown contains no amount and never contributes zero or available spend"
+  ],
+  "MinutesKnowledge": [
+    "observed actual timing evidence and coverage; estimated/unknown never count as verified free attention"
+  ],
+  "GroupBody": [
+    "changed refs and events match one exact transaction key; no self hash/Position/receipt/signature",
+    "protected records encrypted before body is persisted; complete before/after and BusinessResult committed together"
+  ],
+  "CommandResult": [
+    "accepted requires committed_position and independent durability_receipt_ref",
+    "durability_pending cannot dispatch; duplicate retains exact original outcome/result with current restrictions separately checked"
+  ],
+  "RecoveryFrontier": [
+    "fresh nonce/authenticated current witness query; historical capture remains evidence only"
+  ],
+  "LifecycleStatus": [
+    "subject is neither LifecycleStatus nor intrinsic/derived record",
+    "phase and links schema match exact subject type",
+    "prior status same exact subject; current subject and prior lifecycle head CAS",
+    "supporting judgment/decision/response links must satisfy the named edge, not mere schema shape"
+  ],
+  "LaunchReadiness": [
+    "unique complete requirement-child bijection; current exact predicates/arguments/criteria/owners; no self/circular support"
+  ],
+  "RecordEnvelope": [
+    "schema_version2.0; no state field",
+    "recorded_at/created_event/last_event identify immutable bytes; lifecycle event refs separate",
+    "all declared refs typed and current only where explicitly required; historical existence never authority"
+  ],
+  "NativeAncestry": [
+    "resumed context/hidden startup influence recorded or declared unknown; current tool reduction does not shrink prior disclosure"
+  ],
+  "StoredRecordImage": [
+    "routing refs may be sensitive; plaintext allowlist requires actual scoped retention/deletion copy policy",
+    "protected business AND lifecycle bytes encrypted before GroupBody/JSONB/WAL/log/index/backup copies"
+  ]
+}
