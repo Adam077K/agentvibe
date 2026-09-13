@@ -3,10 +3,117 @@
   "kind": "explicit per-phase content gaps",
   "why": "A criterion whose body uses `content_unspecified` states no requirement because no source states one. Each entry below names what the prose would have to say for that criterion to carry content. validate_contracts.py fails a `content_unspecified` body with no entry here, and fails an entry here with no such body -- so the count cannot drift in either direction.",
   "counts": {
-    "criteria_with_content": 750,
-    "criteria_content_unspecified": 77,
+    "criteria_with_content": 760,
+    "criteria_content_unspecified": 67,
     "criteria_preserved_from_repair": 10
   },
+  "grouped_findings": [
+    {
+      "phase": "superseded",
+      "records": [
+        "BrandGuide",
+        "BusinessAccount",
+        "Campaign",
+        "CapacityObservation",
+        "CapacityStudy",
+        "CashPosition",
+        "ClosurePlan",
+        "Commitment",
+        "Conversation",
+        "DecisionRecord",
+        "DeletionReceipt",
+        "Economics",
+        "ExecutionCapacity",
+        "ExperienceArtifact",
+        "Fulfillment",
+        "HandoffAcceptance",
+        "Incident",
+        "IntegrationObservation",
+        "IntentVersion",
+        "KnowledgeEntry",
+        "LaunchReadiness",
+        "MarketBrief",
+        "MetricDefinition",
+        "MetricSeries",
+        "Observation",
+        "ObservationSet",
+        "ParticipationPlan",
+        "Partnership",
+        "PausePlan",
+        "PivotPlan",
+        "ProcessingUse",
+        "ProductSpec",
+        "ProfessionalDetermination",
+        "ProfessionalRequest",
+        "RecoveryPacket",
+        "ResearchPlan",
+        "SupplierEngagement",
+        "TransferPlan",
+        "Venture"
+      ],
+      "count": 39,
+      "finding": "39 records declare a `superseded` phase and no field the stated requirement can bind to. This is one question asked 39 times, not 39 separate omissions: either those records gain the field, or the corpus states what `superseded` requires for a record that does not carry one."
+    },
+    {
+      "phase": "disputed",
+      "records": [
+        "Case",
+        "Commitment",
+        "EvaluationCase",
+        "ExternalAttempt",
+        "ForgetRequest",
+        "Principal",
+        "SalesAgreement",
+        "SourceRecord"
+      ],
+      "count": 8,
+      "finding": "8 records declare a `disputed` phase and no field the stated requirement can bind to. This is one question asked 8 times, not 8 separate omissions: either those records gain the field, or the corpus states what `disputed` requires for a record that does not carry one."
+    },
+    {
+      "phase": "resolved",
+      "records": [
+        "Blocker",
+        "ConflictClaim",
+        "DomainAssessment",
+        "FailureRecord",
+        "ReasoningPlan",
+        "SecurityCase",
+        "SupportCase"
+      ],
+      "count": 7,
+      "finding": "7 records declare a `resolved` phase and no field the stated requirement can bind to. This is one question asked 7 times, not 7 separate omissions: either those records gain the field, or the corpus states what `resolved` requires for a record that does not carry one."
+    },
+    {
+      "phase": "withdrawn",
+      "records": [
+        "BuildArtifact",
+        "ContentAsset",
+        "DecisionRecord",
+        "Offer"
+      ],
+      "count": 4,
+      "finding": "4 records declare a `withdrawn` phase and no field the stated requirement can bind to. This is one question asked 4 times, not 4 separate omissions: either those records gain the field, or the corpus states what `withdrawn` requires for a record that does not carry one."
+    },
+    {
+      "phase": "paused",
+      "records": [
+        "IntegrationConnection",
+        "Schedule",
+        "Workstream"
+      ],
+      "count": 3,
+      "finding": "3 records declare a `paused` phase and no field the stated requirement can bind to. This is one question asked 3 times, not 3 separate omissions: either those records gain the field, or the corpus states what `paused` requires for a record that does not carry one."
+    },
+    {
+      "phase": "determined",
+      "records": [
+        "DeletionScope",
+        "InteractionDetermination"
+      ],
+      "count": 2,
+      "finding": "2 records declare a `determined` phase and no field the stated requirement can bind to. This is one question asked 2 times, not 2 separate omissions: either those records gain the field, or the corpus states what `determined` requires for a record that does not carry one."
+    }
+  ],
   "gaps": [
     {
       "gap_id": "gap-AgentTemplate-eligible",
@@ -317,36 +424,6 @@
       ]
     },
     {
-      "gap_id": "gap-CausalEpisode-exhausted",
-      "record": "CausalEpisode",
-      "phase": "exhausted",
-      "criterion_id": "criterion.CausalEpisode.exhausted.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of CausalEpisode's own fields carries the evidence `exhausted` requires. The requirement IS stated -- The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it. -- and CausalEpisode declares no field it can bind to, so the criterion cannot express it. Either CausalEpisode gains that field, or the corpus states what CausalEpisode's `exhausted` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "exhausted",
-        "requires": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it.",
-        "cites": [
-          "k-manifest",
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "initiating_event_ref",
-        "class",
-        "semantic_subject_refs",
-        "allowance",
-        "resource_account_refs",
-        "reservation_refs",
-        "usage",
-        "stop_predicate",
-        "renewal_decision_refs",
-        "admitting_mandate_ref",
-        "closure_reservation_refs"
-      ]
-    },
-    {
       "gap_id": "gap-ClosurePlan-superseded",
       "record": "ClosurePlan",
       "phase": "superseded",
@@ -487,40 +564,6 @@
       ]
     },
     {
-      "gap_id": "gap-ContextManifest-exhausted",
-      "record": "ContextManifest",
-      "phase": "exhausted",
-      "criterion_id": "criterion.ContextManifest.exhausted.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of ContextManifest's own fields carries the evidence `exhausted` requires. The requirement IS stated -- The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it. -- and ContextManifest declares no field it can bind to, so the criterion cannot express it. Either ContextManifest gains that field, or the corpus states what ContextManifest's `exhausted` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "exhausted",
-        "requires": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it.",
-        "cites": [
-          "k-manifest",
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "work_order_ref",
-        "loader_identity_ref",
-        "loader_profile_ref",
-        "source_refs",
-        "blob_refs",
-        "captured_inputs",
-        "epochs",
-        "transformation_refs",
-        "destination_contract_refs",
-        "purpose_ids",
-        "native_ancestry",
-        "omissions",
-        "allocations",
-        "closure_snapshot_ref",
-        "expires_at"
-      ]
-    },
-    {
       "gap_id": "gap-Conversation-superseded",
       "record": "Conversation",
       "phase": "superseded",
@@ -545,31 +588,6 @@
         "relationship_owner",
         "restrictions",
         "promises"
-      ]
-    },
-    {
-      "gap_id": "gap-DecisionChallenge-consumed",
-      "record": "DecisionChallenge",
-      "phase": "consumed",
-      "criterion_id": "criterion.DecisionChallenge.consumed.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of DecisionChallenge's own fields carries the evidence `consumed` requires. The requirement IS stated -- Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption. -- and DecisionChallenge declares no field it can bind to, so the criterion cannot express it. Either DecisionChallenge gains that field, or the corpus states what DecisionChallenge's `consumed` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "consumed",
-        "requires": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption.",
-        "cites": [
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "packet_ref",
-        "action_digest",
-        "expected_revisions",
-        "actor_identity_ref",
-        "nonce_digest",
-        "issued_at",
-        "expires_at"
       ]
     },
     {
@@ -786,37 +804,6 @@
       ]
     },
     {
-      "gap_id": "gap-Economics-validated",
-      "record": "Economics",
-      "phase": "validated",
-      "criterion_id": "criterion.Economics.validated.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of Economics's own fields carries the evidence `validated` requires. The requirement IS stated -- A recorded domain acceptance decision against the catalog's substantive condition by the responsible acceptance role, with the validated lineage published against current epochs. A generic write is not validation. -- and Economics declares no field it can bind to, so the criterion cannot express it. Either Economics gains that field, or the corpus states what Economics's `validated` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "validated",
-        "requires": "A recorded domain acceptance decision against the catalog's substantive condition by the responsible acceptance role, with the validated lineage published against current epochs. A generic write is not validation.",
-        "cites": [
-          "c-seed",
-          "k-artifact",
-          "k08-epochs"
-        ]
-      },
-      "record_required_payload_fields": [
-        "period_start",
-        "period_end",
-        "currency",
-        "owner_minutes",
-        "external_burden_observations",
-        "allocation_rule",
-        "missing_costs",
-        "observed_revenue",
-        "observed_cost",
-        "outstanding_cost",
-        "closure_reserve"
-      ]
-    },
-    {
       "gap_id": "gap-EvaluationCase-disputed",
       "record": "EvaluationCase",
       "phase": "disputed",
@@ -894,36 +881,6 @@
         "accessibility_results",
         "user_observations",
         "open_defects"
-      ]
-    },
-    {
-      "gap_id": "gap-Experiment-running",
-      "record": "Experiment",
-      "phase": "running",
-      "criterion_id": "criterion.Experiment.running.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of Experiment's own fields carries the evidence `running` requires. The requirement IS stated -- Execution is live under a current lease inside its declared window, and the resource reservation covering it is still held. -- and Experiment declares no field it can bind to, so the criterion cannot express it. Either Experiment gains that field, or the corpus states what Experiment's `running` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "running",
-        "requires": "Execution is live under a current lease inside its declared window, and the resource reservation covering it is still held.",
-        "cites": [
-          "k-workorder",
-          "w-run-states",
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "hypothesis",
-        "control",
-        "treatment",
-        "assignment_method",
-        "outcome_definition",
-        "resource_limits",
-        "stopping_rule",
-        "protocol_version",
-        "result_refs",
-        "reservation_refs"
       ]
     },
     {
@@ -1255,54 +1212,6 @@
         "review_at",
         "expires_at",
         "reopen_predicates"
-      ]
-    },
-    {
-      "gap_id": "gap-JournalBatch-balanced",
-      "record": "JournalBatch",
-      "phase": "balanced",
-      "criterion_id": "criterion.JournalBatch.balanced.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of JournalBatch's own fields carries the evidence `balanced` requires. The requirement IS stated -- Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations. -- and JournalBatch declares no field it can bind to, so the criterion cannot express it. Either JournalBatch gains that field, or the corpus states what JournalBatch's `balanced` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "balanced",
-        "requires": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations.",
-        "cites": [
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "ledger_authority",
-        "accounting_period",
-        "entries",
-        "source_documents",
-        "treatment_refs",
-        "reconciliations"
-      ]
-    },
-    {
-      "gap_id": "gap-JournalBatch-posted",
-      "record": "JournalBatch",
-      "phase": "posted",
-      "criterion_id": "criterion.JournalBatch.posted.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of JournalBatch's own fields carries the evidence `posted` requires. The requirement IS stated -- The entry is posted and its batch balances per currency and ledger against its original sources; a balanced journal establishes nothing about compliance. -- and JournalBatch declares no field it can bind to, so the criterion cannot express it. Either JournalBatch gains that field, or the corpus states what JournalBatch's `posted` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "posted",
-        "requires": "The entry is posted and its batch balances per currency and ledger against its original sources; a balanced journal establishes nothing about compliance.",
-        "cites": [
-          "c-seed"
-        ]
-      },
-      "record_required_payload_fields": [
-        "ledger_authority",
-        "accounting_period",
-        "entries",
-        "source_documents",
-        "treatment_refs",
-        "reconciliations"
       ]
     },
     {
@@ -1863,58 +1772,6 @@
       ]
     },
     {
-      "gap_id": "gap-Reservation-consumed",
-      "record": "Reservation",
-      "phase": "consumed",
-      "criterion_id": "criterion.Reservation.consumed.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of Reservation's own fields carries the evidence `consumed` requires. The requirement IS stated -- Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption. -- and Reservation declares no field it can bind to, so the criterion cannot express it. Either Reservation gains that field, or the corpus states what Reservation's `consumed` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "consumed",
-        "requires": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption.",
-        "cites": [
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "operation_or_work_ref",
-        "causal_episode_id",
-        "account_ref",
-        "maximum_quantity",
-        "reserved_quantity",
-        "consumed_quantity",
-        "uncertain_quantity",
-        "authority_ref"
-      ]
-    },
-    {
-      "gap_id": "gap-Reservation-partly_consumed",
-      "record": "Reservation",
-      "phase": "partly_consumed",
-      "criterion_id": "criterion.Reservation.partly_consumed.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of Reservation's own fields carries the evidence `partly_consumed` requires. The requirement IS stated -- Part of the reservation is consumed and the remainder is still held; the invariant holds across both. -- and Reservation declares no field it can bind to, so the criterion cannot express it. Either Reservation gains that field, or the corpus states what Reservation's `partly_consumed` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "partly_consumed",
-        "requires": "Part of the reservation is consumed and the remainder is still held; the invariant holds across both.",
-        "cites": [
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "operation_or_work_ref",
-        "causal_episode_id",
-        "account_ref",
-        "maximum_quantity",
-        "reserved_quantity",
-        "consumed_quantity",
-        "uncertain_quantity",
-        "authority_ref"
-      ]
-    },
-    {
       "gap_id": "gap-SalesAgreement-disputed",
       "record": "SalesAgreement",
       "phase": "disputed",
@@ -1996,31 +1853,6 @@
         "response_ref",
         "containment_checks",
         "residual_paths"
-      ]
-    },
-    {
-      "gap_id": "gap-SkillSelection-budget_exhausted",
-      "record": "SkillSelection",
-      "phase": "budget_exhausted",
-      "criterion_id": "criterion.SkillSelection.budget_exhausted.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of SkillSelection's own fields carries the evidence `budget_exhausted` requires. The requirement IS stated -- As `exhausted`, and the unknown metered consumption still holds the maximum authorized remainder until reconciled. -- and SkillSelection declares no field it can bind to, so the criterion cannot express it. Either SkillSelection gains that field, or the corpus states what SkillSelection's `budget_exhausted` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "budget_exhausted",
-        "requires": "As `exhausted`, and the unknown metered consumption still holds the maximum authorized remainder until reconciled.",
-        "cites": [
-          "a-reservation"
-        ]
-      },
-      "record_required_payload_fields": [
-        "work_order_ref",
-        "eligible_candidate_refs",
-        "selected_refs",
-        "eligibility_reasons",
-        "selection_cost",
-        "rejected_reasons",
-        "omissions"
       ]
     },
     {
@@ -2298,7 +2130,12 @@
     },
     "FailureRecord": {
       "retry_admitted": [
-        "s1"
+        "s1:resource_equation(not defined for FailureRecord)"
+      ]
+    },
+    "SkillSelection": {
+      "budget_exhausted": [
+        "s1:resource_equation(not defined for SkillSelection)"
       ]
     },
     "ContradictionSet": {
@@ -2306,12 +2143,24 @@
         "nf"
       ]
     },
+    "Economics": {
+      "validated": [
+        "s1:resource_equation(not defined for Economics)"
+      ]
+    },
     "CashPosition": {
       "validated": [
-        "s1"
+        "s1:resource_equation(not defined for CashPosition)"
       ]
     },
     "JournalBatch": {
+      "balanced": [
+        "nf",
+        "s1:resource_equation(not defined for JournalBatch)"
+      ],
+      "posted": [
+        "s1:resource_equation(not defined for JournalBatch)"
+      ],
       "corrected": [
         "rp"
       ]
@@ -2321,9 +2170,25 @@
         "rp"
       ]
     },
+    "Experiment": {
+      "running": [
+        "s1:resource_equation(not defined for Experiment)"
+      ]
+    },
     "IdentityBinding": {
       "suspended": [
         "rp"
+      ]
+    },
+    "CausalEpisode": {
+      "exhausted": [
+        "s1:resource_equation(not defined for CausalEpisode)"
+      ]
+    },
+    "ContextManifest": {
+      "exhausted": [
+        "nf",
+        "s1:resource_equation(not defined for ContextManifest)"
       ]
     },
     "ValidityEpoch": {
@@ -2333,54 +2198,65 @@
     },
     "GrievanceCase": {
       "remedy_authorized": [
-        "s1"
+        "s1:resource_equation(not defined for GrievanceCase)"
       ]
     },
     "Reservation": {
       "held": [
-        "s1"
+        "s1:resource_equation(not defined for Reservation)"
+      ],
+      "partly_consumed": [
+        "s1:resource_equation(not defined for Reservation)"
+      ],
+      "consumed": [
+        "s1:resource_equation(not defined for Reservation)"
       ],
       "uncertain": [
-        "s1"
+        "s1:resource_equation(not defined for Reservation)"
       ]
     },
     "OperationIntent": {
       "held": [
-        "s1"
+        "s1:resource_equation(not defined for OperationIntent)"
       ],
       "reconciled": [
-        "s1"
+        "s1:resource_equation(not defined for OperationIntent)"
       ],
       "cancelled_before_release": [
-        "s1"
+        "s1:resource_equation(not defined for OperationIntent)"
       ]
     },
     "ConflictClaim": {
       "held": [
-        "s1"
+        "s1:resource_equation(not defined for ConflictClaim)"
       ],
       "uncertain": [
-        "s1"
+        "s1:resource_equation(not defined for ConflictClaim)"
       ]
     },
     "Release": {
       "reconciled": [
-        "s1"
+        "s1:resource_equation(not defined for Release)"
       ]
     },
     "ExternalAttempt": {
       "claimed": [
-        "s1"
+        "s1:resource_equation(not defined for ExternalAttempt)"
       ]
     },
     "RollbackPlan": {
       "reconciled": [
-        "s1"
+        "s1:resource_equation(not defined for RollbackPlan)"
       ]
     },
     "IntegrationInvocation": {
       "refused": [
         "nf"
+      ]
+    },
+    "DecisionChallenge": {
+      "consumed": [
+        "s1:resource_equation(not defined for DecisionChallenge)"
       ]
     }
   },

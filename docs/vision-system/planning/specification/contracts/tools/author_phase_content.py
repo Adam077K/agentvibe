@@ -280,6 +280,7 @@ def main():
             "criteria_content_unspecified": unspecified,
             "criteria_preserved_from_repair": preserved,
         },
+        "grouped_findings": _grouped_findings(gaps),
         "gaps": sorted(gaps, key=lambda g: g["gap_id"]),
         "residual_sibling_collisions": _residual_collisions(records, predicates),
         "contradictions": pc.CONTRADICTIONS,
@@ -370,6 +371,33 @@ def _gap_entry(gap_id, record, phase, reason, records_schema):
                      "phase in a state list without saying what entering it requires"}),
         "record_required_payload_fields": pc.payload_required(records_schema, record),
     }
+
+
+def _grouped_findings(gaps):
+    """The gaps read as findings rather than as a list of 67 items.
+
+    39 of them are one thing said 39 times, and a reader who sees 67 rows sees 67
+    small omissions instead of the four real ones underneath.
+    """
+    by_phase = {}
+    for gap in gaps:
+        by_phase.setdefault(gap["phase"], []).append(gap["record"])
+    findings = []
+    for phase, records in sorted(by_phase.items(), key=lambda kv: (-len(kv[1]), kv[0])):
+        if len(records) < 2:
+            continue
+        findings.append({
+            "phase": phase,
+            "records": sorted(records),
+            "count": len(records),
+            "finding": (
+                "%d records declare a `%s` phase and no field the stated requirement "
+                "can bind to. This is one question asked %d times, not %d separate "
+                "omissions: either those records gain the field, or the corpus states "
+                "what `%s` requires for a record that does not carry one."
+                % (len(records), phase, len(records), len(records), phase)),
+        })
+    return findings
 
 
 def _residual_collisions(records, predicates):

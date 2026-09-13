@@ -2548,6 +2548,14 @@ _COMPILED = {role: [re.compile(p) for p in pats] for role, pats in ROLES.items()
 # a gap, when the requirement depends on it) rather than written and caught later.
 PRIMITIVES = {}
 
+# Distinct from None. None means "this record carries no evidence of that kind", which
+# is a content gap when the requirement depends on it. NOT_APPLICABLE means "the
+# primitive that expresses this is defined for a different record" -- `resource_equation`
+# is ResourceAccount's, `price_scope` is PriceProposal's -- which is a limit of the
+# primitive, not an absence in the source. The requirement's other conjuncts still
+# hold, so it is dropped even where it was marked hard, and the drop is reported.
+NOT_APPLICABLE = object()
+
 
 def set_primitives(registry):
     PRIMITIVES.clear()
@@ -2614,7 +2622,7 @@ def build_conjunct(item, record, criterion_id, required_fields):
     """One conjunct node, or None when its evidence does not exist on this record."""
     kind = item[0]
     if kind == "s1" and not primitive_admits(item[1], record):
-        return None
+        return NOT_APPLICABLE
     if kind == "nf":
         paths = []
         for role in item[1]:
@@ -2670,8 +2678,8 @@ def build_conjunct(item, record, criterion_id, required_fields):
         return {"op": "unique", "items": {"arg": item[1]}}
     if kind == "not":
         inner = build_conjunct(item[1], record, criterion_id, required_fields)
-        if inner is None:
-            return None
+        if inner is None or inner is NOT_APPLICABLE:
+            return inner
         return {"op": "not", "predicate": inner}
     raise ValueError("unknown conjunct kind: " + kind)
 
@@ -2696,6 +2704,9 @@ def compose(record, phase, criterion_id, records_schema, declared_args,
     predicates, dropped = [], []
     for item in entry["conjuncts"]:
         node = build_conjunct(item, record, criterion_id, required_fields)
+        if node is NOT_APPLICABLE:
+            dropped.append("%s:%s(not defined for %s)" % (item[0], item[1], record))
+            continue
         if node is None:
             if item[0] in entry["hard"]:
                 return None, None, (

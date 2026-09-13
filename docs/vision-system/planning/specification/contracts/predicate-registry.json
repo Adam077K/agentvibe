@@ -20423,11 +20423,25 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-SkillSelection-budget_exhausted"
+          "field_paths": [
+            "/payload/selection_cost",
+            "/payload/omissions"
+          ]
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "fresh_interval",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "start_path": "/effective_from",
+            "end_path": "/effective_until"
+          }
         },
         {
           "op": "attested_result",
@@ -20452,7 +20466,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-SkillSelection-budget_exhausted. Phase assessed: budget_exhausted.",
+    "meaning": "As `exhausted`, and the unknown metered consumption still holds the maximum authorized remainder until reconciled. Phase assessed: budget_exhausted.",
     "owner_component": "S1-C02",
     "source": "work-knowledge-contracts.json#/records/SkillSelection",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -20544,8 +20558,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-SkillSelection-budget_exhausted",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `budget_exhausted` on SkillSelection. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "As `exhausted`, and the unknown metered consumption still holds the maximum authorized remainder until reconciled.",
+    "derived_from": [
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.SkillSelection.invalidated.v1": {
     "version": "1.0",
@@ -44791,21 +44810,23 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Economics-validated"
+          "field_paths": [
+            "/payload/currency",
+            "/payload/owner_minutes",
+            "/payload/observed_cost",
+            "/payload/outstanding_cost",
+            "/provenance_refs",
+            "/payload/missing_costs"
+          ]
         },
         {
-          "op": "attested_result",
+          "op": "complete_capture",
           "subject_ref": {
             "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.Economics.validated.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
           }
         },
         {
@@ -44817,10 +44838,21 @@
           "judgment_refs": {
             "arg": "judgment_refs"
           }
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Economics.validated.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Economics-validated. Phase assessed: validated.",
+    "meaning": "observed_revenue and observed_cost allow observed or unknown, never estimated presented as actual; any unknown input makes the corresponding aggregate incomplete, so a known subtotal plus missing categories is reported instead of a complete total. Phase assessed: validated.",
     "owner_component": "S1-C04",
     "source": "capabilities.json#/record_types/Economics",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -44912,8 +44944,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Economics-validated",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `validated` on Economics. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "observed_revenue and observed_cost allow observed or unknown, never estimated presented as actual; any unknown input makes the corresponding aggregate incomplete, so a known subtotal plus missing categories is reported instead of a complete total.",
+    "derived_from": [
+      {
+        "file": "capabilities.json",
+        "anchor_or_quote": "#/domain_validators"
+      },
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Price acceptance distinguishes `provisional_hypothesis` from `demand_supported`. With unknown demand, CAP-18 can complete an honest internal provisional price and, under a specific current grant, a `test-authorized` bounded validation offer; it cannot label that price demand-supported or justify scaling."
+      }
+    ]
   },
   "criterion.Economics.superseded.v1": {
     "version": "1.0",
@@ -45916,13 +45957,6 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "gap_id": "gap-JournalBatch-balanced"
-        },
-        {
           "op": "attested_result",
           "subject_ref": {
             "arg": "subject_ref"
@@ -45945,7 +45979,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-JournalBatch-balanced. Phase assessed: balanced.",
+    "meaning": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations. Phase assessed: balanced.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/JournalBatch",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -46037,8 +46071,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-JournalBatch-balanced",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `balanced` on JournalBatch. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations.",
+    "derived_from": [
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.JournalBatch.reviewed.v1": {
     "version": "1.0",
@@ -46213,11 +46252,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-JournalBatch-posted"
+          "field_paths": [
+            "/provenance_refs"
+          ]
         },
         {
           "op": "attested_result",
@@ -46242,7 +46283,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-JournalBatch-posted. Phase assessed: posted.",
+    "meaning": "The entry is posted and its batch balances per currency and ledger against its original sources; a balanced journal establishes nothing about compliance. Phase assessed: posted.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/JournalBatch",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -46334,8 +46375,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-JournalBatch-posted",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `posted` on JournalBatch. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "The entry is posted and its batch balances per currency and ledger against its original sources; a balanced journal establishes nothing about compliance.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      }
+    ]
   },
   "criterion.JournalBatch.corrected.v1": {
     "version": "1.0",
@@ -52303,11 +52349,37 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Experiment-running"
+          "field_paths": [
+            "/payload/reservation_refs"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/reservation_refs",
+              "states": [
+                "admitted",
+                "active"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
+          "op": "fresh_interval",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "start_path": "/effective_from",
+          "end_path": "/effective_until"
         },
         {
           "op": "attested_result",
@@ -52332,7 +52404,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Experiment-running. Phase assessed: running.",
+    "meaning": "running requires exact controlling Case and current resource/grant admission; registered protocol alone cannot cause external work. Phase assessed: running.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/Experiment",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -52424,8 +52496,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Experiment-running",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `running` on Experiment. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "running requires exact controlling Case and current resource/grant admission; registered protocol alone cannot cause external work.",
+    "derived_from": [
+      {
+        "file": "capabilities.json",
+        "anchor_or_quote": "#/domain_validators"
+      },
+      {
+        "file": "08-improvement-implementation.md",
+        "anchor_or_quote": "Before a stochastic trial, freeze a task-stratified baseline, exact candidate, random assignment, common inputs and permitted context, resources, competent judges, critical failure predicates and outcome thresholds. ... Report every run, timeout, refusal, invalid output, retry, cost and missing observation."
+      }
+    ]
   },
   "criterion.Experiment.stopped.v1": {
     "version": "1.0",
@@ -68307,11 +68388,25 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-CausalEpisode-exhausted"
+          "field_paths": [
+            "/payload/allowance",
+            "/payload/usage"
+          ]
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "fresh_interval",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "start_path": "/effective_from",
+            "end_path": "/effective_until"
+          }
         },
         {
           "op": "attested_result",
@@ -68336,7 +68431,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-CausalEpisode-exhausted. Phase assessed: exhausted.",
+    "meaning": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it. Phase assessed: exhausted.",
     "owner_component": "S1-C02",
     "source": "01-contract-kernel.md#9-scheduling-bounds-and-useful-progress",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -68428,8 +68523,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-CausalEpisode-exhausted",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `exhausted` on CausalEpisode. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it.",
+    "derived_from": [
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "ContextManifest | captured → admitted → closed; captured/admitted → invalidated; admitted → exhausted | New source, session continuation or disclosure destination requires a new/extended manifest before reading"
+      },
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.CausalEpisode.closing.v1": {
     "version": "1.0",
@@ -75018,11 +75122,15 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "gap_id": "gap-ContextManifest-exhausted"
+          "op": "not",
+          "predicate": {
+            "op": "fresh_interval",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "start_path": "/effective_from",
+            "end_path": "/payload/expires_at"
+          }
         },
         {
           "op": "attested_result",
@@ -75047,7 +75155,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-ContextManifest-exhausted. Phase assessed: exhausted.",
+    "meaning": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it. Phase assessed: exhausted.",
     "owner_component": "S1-C05",
     "source": "06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -75139,8 +75247,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-ContextManifest-exhausted",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `exhausted` on ContextManifest. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it.",
+    "derived_from": [
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "ContextManifest | captured → admitted → closed; captured/admitted → invalidated; admitted → exhausted | New source, session continuation or disclosure destination requires a new/extended manifest before reading"
+      },
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.ValidityEpoch.current.v1": {
     "version": "1.0",
@@ -86400,11 +86517,27 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Reservation-partly_consumed"
+          "field_paths": [
+            "/payload/maximum_quantity",
+            "/payload/reserved_quantity",
+            "/payload/consumed_quantity",
+            "/payload/uncertain_quantity",
+            "/provenance_refs"
+          ]
+        },
+        {
+          "op": "native_correlated",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "result": "observed_applied"
         },
         {
           "op": "attested_result",
@@ -86429,7 +86562,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Reservation-partly_consumed. Phase assessed: partly_consumed.",
+    "meaning": "Part of the reservation is consumed and the remainder is still held; the invariant holds across both. Phase assessed: partly_consumed.",
     "owner_component": "S1-C04",
     "source": "02-authority-recovery.md#5-reservations-exact-operation-identity-and-prerequisites",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -86521,8 +86654,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Reservation-partly_consumed",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `partly_consumed` on Reservation. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "Part of the reservation is consumed and the remainder is still held; the invariant holds across both.",
+    "derived_from": [
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.Reservation.consumed.v1": {
     "version": "1.0",
@@ -86535,11 +86673,27 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Reservation-consumed"
+          "field_paths": [
+            "/payload/maximum_quantity",
+            "/payload/reserved_quantity",
+            "/payload/consumed_quantity",
+            "/payload/uncertain_quantity",
+            "/provenance_refs"
+          ]
+        },
+        {
+          "op": "native_correlated",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "result": "observed_applied"
         },
         {
           "op": "attested_result",
@@ -86564,7 +86718,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Reservation-consumed. Phase assessed: consumed.",
+    "meaning": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption. Phase assessed: consumed.",
     "owner_component": "S1-C04",
     "source": "02-authority-recovery.md#5-reservations-exact-operation-identity-and-prerequisites",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -86656,8 +86810,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Reservation-consumed",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `consumed` on Reservation. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption.",
+    "derived_from": [
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.Reservation.released.v1": {
     "version": "1.0",
@@ -118577,11 +118736,23 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-DecisionChallenge-consumed"
+          "field_paths": [
+            "/provenance_refs"
+          ]
+        },
+        {
+          "op": "native_correlated",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "result": "observed_applied"
         },
         {
           "op": "attested_result",
@@ -118606,7 +118777,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-DecisionChallenge-consumed. Phase assessed: consumed.",
+    "meaning": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption. Phase assessed: consumed.",
     "owner_component": "S1-C04",
     "source": "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -118698,8 +118869,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-DecisionChallenge-consumed",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `consumed` on DecisionChallenge. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption.",
+    "derived_from": [
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.DecisionChallenge.expired.v1": {
     "version": "1.0",
