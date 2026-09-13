@@ -85,18 +85,40 @@
     "G-02-recheck-03 archived (subject 1bef187): RC2-01/03/04 CLOSED; RC2-02 OPEN (a) — RC3-01 forall is a non-demanding context (exit 0 leak), RC3-02 JsonValue slots walked, RC3-03 truncated diagnostic. Root cause named: hardcoded operator names instead of registry-derived demanding positions. Repair lane dispatched.",
     "Step 5a complete: attack consolidation (4cd34b8) and selection record (715cda2) — five-layer synthesis at S1.1 (consequence class > declared procedure > standing interest > existence record > standing holder; lower layer governs), 111/111 findings disposed, 24 missing decisions (13 decided, 4 with founder parameter, 6 founder packets), 11 design proposals without evidence, dissent preserved.",
     "Step 5b chapters (609a852..8c72253) and registers (bf8785d..bfd4a93) landed; all five verifiers exit 0. RC3-01..03 repaired at the root cause (cfccbc8..a41bf73): registry-derived demanding positions, unknown operators refused, 36 fixtures, 288,620 checks (author-recorded).",
-    "G-02-recheck-04 archived (subject a41bf73): RC3-01/02/03 CLOSED; class continues as RC4-01 (table string edit passes pins), RC4-02 (self-declared demanding primitive, exit 0), RC4-03 (no fixture floor), RC4-04..07. Fourth iteration: the lesson is that a walker may classify by a registry but a pin must state its own admissible ancestors."
+    "G-02-recheck-04 archived (subject a41bf73): RC3-01/02/03 CLOSED; class continues as RC4-01 (table string edit passes pins), RC4-02 (self-declared demanding primitive, exit 0), RC4-03 (no fixture floor), RC4-04..07. Fourth iteration: the lesson is that a walker may classify by a registry but a pin must state its own admissible ancestors.",
+    "Step 5b complete at 8f6c2c2: chapters (WORK-1.1, E1.2, seven joins), registers (AD-015..022, Q-016..021, 135 question rows, 9 package rows), contracts (15 records 173->188, 7 changed, 30 guards, 57 pins/119 rows, 17 adverse + 17 benign fixtures, aliases 26, capabilities.json version check); validator 299,177 checks exit 0, 53/53 negative, 17/17 positive; all verifiers exit 0. Author-recorded."
   ],
   "active_work": [
     {
-      "agent": "builder (b5-contracts)",
-      "scope": "Step 5b contracts amendment",
-      "status": "running"
+      "agent": "builder (rc4-repair)",
+      "scope": "RC4-01..07 in contracts/ (pin-side ancestor allowlist, registry hash pinned, fixture floor)",
+      "status": "dispatched 2026-09-14"
+    },
+    {
+      "agent": "reviewer (s6-A)",
+      "scope": "Step 6 review at frozen 8f6c2c2: W1 W2 W11 W15",
+      "status": "dispatched 2026-09-14"
+    },
+    {
+      "agent": "reviewer (s6-B)",
+      "scope": "Step 6 review at frozen 8f6c2c2: W3 W5 W12 W14",
+      "status": "dispatched 2026-09-14"
+    },
+    {
+      "agent": "reviewer (s6-C)",
+      "scope": "Step 6 review at frozen 8f6c2c2: W4 W7 W9 W13",
+      "status": "dispatched 2026-09-14"
+    },
+    {
+      "agent": "reviewer (s6-D)",
+      "scope": "Step 6 review at frozen 8f6c2c2: W6 W8 W10",
+      "status": "dispatched 2026-09-14"
     }
   ],
   "next_actions": [
-    "When b5-contracts returns: dispatch rc4-repair (pin-side ancestor allowlist; registry hash pinned; fixture floor; RC4-04..07) then recheck-05",
-    "Step 6 reviewers after the contracts amendment and rc4 repair land",
+    "Archive four Step 6 reviews verbatim under planning/reviews/F2-*.md; register findings; repair (a)/(b) where repairable; (d) blocks",
+    "recheck-05 on rc4-repair",
+    "Whole-package scoped planning disposition; replace PENDING block in PLANNING-REPORT.md; README; founder page; session file; plain-language note",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
