@@ -81,13 +81,19 @@
     "Step 2 cross-lane comparison committed (ddd7c22): 42-claim matrix (15 with conflicts), 18 agreements, 16 disagreements preserved, axes X01..X10 reconciled + X11..X20 new, 0 falsifiers against fixed boundaries (2 against protocol-granted B0 strengths), 41 of 65 cross-lane questions open. AM-01 recorded (F-4 paired clean case).",
     "RC2-01..04 repaired (d3cf3ea, 73827d8, 931a314, 7b3d388; contracts/ only): pins carry `disjoined` with any-ancestry tracking; fixtures 31→33; validator 269,697 checks exit 0 (author-recorded). Candidates M1, M2, M3, M5 committed; M4 in progress.",
     "Step 3 complete: five materially different candidates committed under planning/F2/candidates/ (M1 capability-differentiated ephemeral, M2 chartered persistent, M3 workflow-first no agents, M4 hybrid by consequence class, M5 subscription-activated shared record), each on Phase C dimensions, six fixtures, 46-CAP binding, both comparators, (d)-self-audit, evidence ledger.",
-    "Step 4 complete: five independent attack reviews archived verbatim under planning/F2/reviews/ (A-technical, A-company-human, A-economic-capacity, A-context-evidence, A-security-adversarial) at subject c6d62a3, indexed in findings-index.json. Per-dimension verdicts preserved; no score; dissent kept (M2 vs M3 on shedding; D-01)."
+    "Step 4 complete: five independent attack reviews archived verbatim under planning/F2/reviews/ (A-technical, A-company-human, A-economic-capacity, A-context-evidence, A-security-adversarial) at subject c6d62a3, indexed in findings-index.json. Per-dimension verdicts preserved; no score; dissent kept (M2 vs M3 on shedding; D-01).",
+    "G-02-recheck-03 archived (subject 1bef187): RC2-01/03/04 CLOSED; RC2-02 OPEN (a) — RC3-01 forall is a non-demanding context (exit 0 leak), RC3-02 JsonValue slots walked, RC3-03 truncated diagnostic. Root cause named: hardcoded operator names instead of registry-derived demanding positions. Repair lane dispatched."
   ],
   "active_work": [
     {
-      "agent": "reviewer (recheck-03)",
-      "scope": "G-02-recheck-03 at 1bef187",
+      "agent": "framer (f5-selection)",
+      "scope": "Step 5a-ii selection record",
       "status": "running"
+    },
+    {
+      "agent": "builder (rc3-repair)",
+      "scope": "RC3-01..03 in contracts/ only",
+      "status": "dispatched 2026-09-13"
     }
   ],
   "next_actions": [
@@ -193,7 +199,7 @@
     "instruction": "Founder: do not start building yet. Hold after the planning disposition. B00 may be marked only as the disposition record; B01 is NOT to be dispatched until the founder lifts this hold explicitly.",
     "lifted": false
   },
-  "phase_g_disposition_status": "NOT YET RECORDED. RC-01/03..08 independently closed 2026-09-13 (G-02-recheck-02); RC-02 remains OPEN (a) via RC2-02 (pin satisfied from inside a disjunction). Written disposition withheld until RC2-02 is repaired and narrowly rechecked, and until the F2 round completes. Founder hold on building in force regardless.",
+  "phase_g_disposition_status": "NOT YET RECORDED. RC-02 lineage still OPEN (a) after three rechecks (RC-02 → RC2-02 → RC3-01/02): each repair closed the named attack and a sibling context leaked. The next repair must derive demanding positions from the primitive registry and refuse the unrecognised, not add an operator. Disposition withheld until that is independently rechecked and the F2 round completes. Founder hold in force regardless.",
   "founder_reopen": {
     "date": "2026-09-13",
     "input": "inputs/FOUNDER-THESIS-2026-09-13-agents.md",

@@ -1116,10 +1116,10 @@
     "class": "a",
     "severity": "medium",
     "owner": "contracts repair lane; independent recheck after",
-    "status": "Repaired on ceo-4-1789314685 (author-recorded; builder rc2-repair), validator 269,697 checks, 33/33 fixtures rejected, distinctness exit 0. d3cf3ea: require rows carry `disjoined` (default false); polarised_nodes tracks `any` ancestry; match under `any` refused unless the row opts in; four intentional rows opt in with a named branch, ceiling 4; fixture r14-pinned-conjunct-disjoined-with-a-tautology; RC-03 walker given the same any-awareness. Pending narrow independent recheck (G-02-recheck-03).",
+    "status": "OPEN (class a) after G-02-recheck-03 (subject 1bef187). Every stated element shipped: `disjoined` key, any-ancestry, ceiling 4, r14 fixture, refusal message names disjunction. The contract it serves is not met: RC3-01 shows `forall` is a further non-demanding context; RC3-02 shows a JsonValue slot is walked as if demanding. See RC3-01/02.",
     "issue": "polarised_nodes (validate_contracts.py:645-663) tracks only `not` ancestry; pin_row_matches (671-685) accepts a node inside an `any` as containment. One hunk in tools/phase_content.py disjoining each of the three pinned conjuncts of criterion.SalesAgreement.performed.v1 with present(/payload/agreed_terms) regenerates and validates at exit 0 with pins, fixtures and prose untouched; the criterion then demands nothing about delivery. 11 of 842 criteria carry an `any`; 4 of 44 live require rows (two on edge.GrievanceCase.received.triaged.v1, two on edge.ResponsibilityAssignment.proposed.accepted.v1) are today satisfied only under a disjunction, intentionally. RC-03's stated_paths_and_states (822-833) has the same blind spot.",
     "required_contract": "Each `require` row states whether the conjunct must be demanded unconditionally or may sit under a disjunction (default unconditional), in the same shape as the existing `negated` key; polarised_nodes tracks `any` ancestry alongside `not`; a match under `any` is refused unless the row opts in; the four intentional rows opt in with a reason; a negative fixture carrying probe 9's hunk expects a message naming disjunction; apply the same to RC-03's walker or record in writing that it is containment-only by choice.",
-    "independent_recheck": null,
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
     "implementation_evidence": null
   },
   {
@@ -1130,10 +1130,10 @@
     "class": "b",
     "severity": "low",
     "owner": "contracts repair lane; independent recheck after",
-    "status": "Repaired on ceo-4-1789314685 (author-recorded; builder rc2-repair), validator 269,697 checks, 33/33 fixtures rejected, distinctness exit 0. d3cf3ea..7b3d388 (73827d8): symlink guard extended to fixtures/negative in runner and validator; --self-test builds both trees. Pending narrow independent recheck (G-02-recheck-03).",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). runner and validator both refuse a symlinked fixtures/negative; --self-test fails when the guard is reverted and takes the validator with it.",
     "issue": "RC-05's guard covers tools/ and tools/.. only. fixtures/negative symlinked to a directory holding one fixture and a manifest declaring one: runner reports fixtures 1, declared 1, exit 0 — RC-04's original reading reproduced.",
     "required_contract": "Extend the RC-05 symlink guard to FIXTURES (fixtures/negative must be a real directory) in the same loop, so one guard covers every path the runner derives a count from.",
-    "independent_recheck": null,
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
     "implementation_evidence": null
   },
   {
@@ -1144,10 +1144,10 @@
     "class": "b",
     "severity": "low",
     "owner": "contracts repair lane; independent recheck after",
-    "status": "Repaired on ceo-4-1789314685 (author-recorded; builder rc2-repair), validator 269,697 checks, 33/33 fixtures rejected, distinctness exit 0. 931a314: widening measured (425 findings / 266 criteria / 62 tokens, all English participles) and refused; narrow scope recorded with numbers in pinned-conjuncts.json and beside the rule; fixture r14-requires-names-a-related-phase-no-conjunct-binds. Pending narrow independent recheck (G-02-recheck-03).",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). all seven recorded scope numbers reproduce under the reviewer's own sweep (774 / 0 / 19 / 22 / 17 / 17-of-17 / 5-across-2).",
     "issue": "PROSE_TOKEN requires backticks; removing three pairs from the requires sentence leaves it identical to a reader and invisible to the check (probe 10: 19 s stop became 662 s pass-through to the fixture stage). Corpus sweep: 0 of 774 criteria carry a field path in requires prose; 19 carry a related-record phase token, 17 waived.",
     "required_contract": "State the rule's real scope (backticked tokens and literal /payload/ paths; live population 2 unwaived criteria) in pinned-conjuncts.json#/requires_waivers_why, then either widen it to the unbackticked phase vocabulary with a waiver list for false positives, or record the narrow scope as the accepted limit with its number.",
-    "independent_recheck": null,
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
     "implementation_evidence": null
   },
   {
@@ -1158,9 +1158,51 @@
     "class": "c",
     "severity": "low",
     "owner": "contracts repair lane",
-    "status": "Repaired on ceo-4-1789314685 (author-recorded; builder rc2-repair), validator 269,697 checks, 33/33 fixtures rejected, distinctness exit 0. 7b3d388: ratchet payload branched before the generic wrapper; drift assertion on the runner headline. Pending narrow independent recheck (G-02-recheck-03).",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). a count mismatch now reports under the ratchet headline; a genuinely leaking fixture still gets the generic wrapper.",
     "issue": "When the runner exits non-zero the generic wrapper at validate_contracts.py:891 fires before the dedicated ratchet comparison at :903, so a manifest mismatch surfaces as 'a negative fixture was not rejected; the check it names is gone' with the correct JSON only as detail.",
     "required_contract": "Branch on the runner payload before asserting: if it carries check = 'negative fixture count ratchet (RC-04)', raise the ratchet message.",
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC3-01",
+    "source": "planning/reviews/G-02-recheck-03.md",
+    "review_subject": "1bef187",
+    "title": "`forall` is a non-demanding context the pin walker does not track; three pinned conjuncts moved inside a vacuous forall validate at exit 0",
+    "class": "a",
+    "severity": "medium",
+    "owner": "contracts repair lane; independent recheck after",
+    "status": "Open; from planning/reviews/G-02-recheck-03.md",
+    "issue": "Four primitives take a boolean child (all, any, not, forall); polarised_nodes handles three. Moving the three pinned conjuncts of criterion.SalesAgreement.performed.v1 verbatim inside forall(items=path(/payload/obligation_refs)) — a field records.schema.json requires with no minItems, so [] is valid — regenerates and validates at exit 0, 269,708 checks, 33/33 fixtures, pin file and requires prose untouched; the walker reports all three negated=False disjoined=False. RC-03 shares the walker and is blind too.",
+    "required_contract": "Derive demanding positions from primitive-registry.json (each primitive declares which child slots are demanding, and under what condition — e.g. forall is demanding only when the collection is demanded non-empty) and refuse any operator or slot the table does not recognise, the rule the same file applies at lines ~290 and ~752; negative fixture carrying the forall hunk expecting a message naming the quantifier; apply to RC-03's walker.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC3-02",
+    "source": "planning/reviews/G-02-recheck-03.md",
+    "review_subject": "1bef187",
+    "title": "A conjunct buried in a JsonValue slot (e.g. present's `value`) is walked as if demanded",
+    "class": "a",
+    "severity": "medium",
+    "owner": "contracts repair lane; independent recheck after",
+    "status": "Open; from planning/reviews/G-02-recheck-03.md",
+    "issue": "The walker reaches every dict value, so a pinned op placed inside a value slot that is data, not a predicate position, satisfies the pin; registry-level exit 0 on that arm.",
+    "required_contract": "Same root cause as RC3-01: walk only the predicate positions the primitive registry declares; never descend into value slots; fixture for the buried-op form.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC3-03",
+    "source": "planning/reviews/G-02-recheck-03.md",
+    "review_subject": "1bef187",
+    "title": "The leak wrapper attaches a blind stdout[-2000:] so the first fixture's 'failed for the wrong reason' line is truncated out",
+    "class": "c",
+    "severity": "low",
+    "owner": "contracts repair lane",
+    "status": "Open; from planning/reviews/G-02-recheck-03.md",
+    "issue": "Measured: 0 occurrences of the diagnostic line survive the truncation on a multi-fixture leak.",
+    "required_contract": "Attach the runner's structured payload (leaked list with reasons) rather than a byte-sliced stdout tail.",
     "independent_recheck": null,
     "implementation_evidence": null
   }
