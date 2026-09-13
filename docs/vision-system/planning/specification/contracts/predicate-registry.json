@@ -82638,10 +82638,11 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/standing",
+            "/payload/remedy_reservation_refs",
+            "/payload/response_decision_refs",
+            "/payload/requested_remedy",
             "/payload/decision_due_at",
-            "/payload/obligation_refs",
-            "/payload/residual_obligation_refs"
+            "/payload/custodian_assignment_ref"
           ]
         },
         {
@@ -82651,13 +82652,31 @@
           },
           "bindings": [
             {
-              "field_path": "/payload/standing",
+              "field_path": "/payload/remedy_reservation_refs",
+              "states": [
+                "held",
+                "partly_consumed"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/custodian_assignment_ref",
               "states": [
                 "accepted"
               ],
               "optional": false
             }
           ]
+        },
+        {
+          "op": "accepted_for",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.GrievanceCase.remedy_authorized.v1",
+          "judgment_refs": {
+            "arg": "judgment_refs"
+          }
         },
         {
           "op": "attested_result",
@@ -82669,20 +82688,10 @@
           "observation_refs": {
             "arg": "observation_refs"
           }
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.GrievanceCase.remedy_authorized.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
         }
       ]
     },
-    "meaning": "Remedy authority and its funded resources exist for this exact entitlement before performance starts. Phase assessed: remedy_authorized.",
+    "meaning": "A competent authority has decided a specific remedy and its funding is ACTUALLY RESERVED: every `remedy_reservation_refs` entry resolves to a Reservation currently `held` or `partly_consumed`, and the list is not empty. A performer and a due date exist, and the deciding response decision is recorded. An authorization with no live reservation is an unowned promise, not this phase, and an empty reservation list is the shape that made CAP-42's funded remedy prose. Phase assessed: remedy_authorized.",
     "owner_component": "S1-C07",
     "source": "../candidates/company-foundation-repairs-v1.md",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -82774,8 +82783,12 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "Remedy authority and its funded resources exist for this exact entitlement before performance starts.",
+    "requires": "A competent authority has decided a specific remedy and its funding is ACTUALLY RESERVED: every `remedy_reservation_refs` entry resolves to a Reservation currently `held` or `partly_consumed`, and the list is not empty. A performer and a due date exist, and the deciding response decision is recorded. An authorization with no live reservation is an unowned promise, not this phase, and an empty reservation list is the shape that made CAP-42's funded remedy prose.",
     "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "A competent authority has decided a specific remedy, its funding is **actually reserved**, and a performer and due date exist"
+      },
       {
         "file": "03-company-capabilities.md",
         "anchor_or_quote": "CAP-42 provides noncustomer-inclusive intake without unnecessary product access, proportionate identity checks, reasons, deadlines, actual competent escalation and funded remedy. ... After product closure the reachable intake and competent residual custodian continue as long as required duties remain."
@@ -294194,6 +294207,51 @@
           "command": {
             "context": "command_name"
           }
+        },
+        {
+          "op": "any",
+          "predicates": [
+            {
+              "op": "not",
+              "predicate": {
+                "op": "eq",
+                "left": {
+                  "op": "path",
+                  "value": {
+                    "op": "resolve",
+                    "ref": {
+                      "arg": "subject_ref"
+                    }
+                  },
+                  "pointer": "/payload/disputed_custodian"
+                },
+                "right": true
+              }
+            },
+            {
+              "op": "neq",
+              "left": {
+                "op": "path",
+                "value": {
+                  "op": "resolve",
+                  "ref": {
+                    "arg": "subject_ref"
+                  }
+                },
+                "pointer": "/payload/independent_escalation_assignment_ref"
+              },
+              "right": {
+                "op": "path",
+                "value": {
+                  "op": "resolve",
+                  "ref": {
+                    "arg": "subject_ref"
+                  }
+                },
+                "pointer": "/payload/custodian_assignment_ref"
+              }
+            }
+          ]
         },
         {
           "op": "call",

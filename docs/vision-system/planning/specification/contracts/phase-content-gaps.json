@@ -2221,11 +2221,6 @@
         "nf"
       ]
     },
-    "GrievanceCase": {
-      "remedy_authorized": [
-        "s1:resource_equation(not defined for GrievanceCase)"
-      ]
-    },
     "Reservation": {
       "held": [
         "s1:resource_equation(not defined for Reservation)"

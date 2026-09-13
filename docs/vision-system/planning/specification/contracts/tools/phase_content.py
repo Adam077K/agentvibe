@@ -2520,6 +2520,31 @@ RECORD_OVERRIDES = {
          ("nc", "delivered"), AF, AR],
         hard=["nfp", "rpp", "nc"]),
 
+    # -- R-F / G4-02: CAP-42's "funded remedy" was prose. -------------------------
+    #
+    # `remedy_reservation_refs` is required in the payload and was read by 0 predicates;
+    # `criterion.GrievanceCase.remedy_authorized.v1` carried `nonempty_fields: []` for the
+    # funding half, so a remedy could be authorized with no reservation at all. The
+    # kind-level `remedy_authorized` spec reaches for `resource_equation`, which CCR-03
+    # restricted to ResourceAccount, so on GrievanceCase it drops out entirely -- which is
+    # exactly why this record needs its own entry naming its own funding field.
+    ("GrievanceCase", "remedy_authorized"): spec(
+        "A competent authority has decided a specific remedy and its funding is ACTUALLY "
+        "RESERVED: every `remedy_reservation_refs` entry resolves to a Reservation "
+        "currently `held` or `partly_consumed`, and the list is not empty. A performer "
+        "and a due date exist, and the deciding response decision is recorded. An "
+        "authorization with no live reservation is an unowned promise, not this phase, "
+        "and an empty reservation list is the shape that made CAP-42's funded remedy "
+        "prose.",
+        ["c-grievance-remedy", "c-grievance"],
+        [("nfp", ["/payload/remedy_reservation_refs", "/payload/response_decision_refs",
+                  "/payload/requested_remedy", "/payload/decision_due_at",
+                  "/payload/custodian_assignment_ref"]),
+         ("rpp", [("/payload/remedy_reservation_refs", ["held", "partly_consumed"], False),
+                  ("/payload/custodian_assignment_ref", ["accepted"], False)]),
+         AF, AR],
+        hard=["nfp", "rpp"]),
+
     ("DeliveryCapacity", "verified"): spec(
         "verified requires actual performer acknowledgment, applicable access/materials, "
         "window, resources and continuity evidence; not compute availability.",
