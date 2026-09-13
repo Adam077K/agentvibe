@@ -214,3 +214,36 @@ verify-by-execution non-optional rather than a virtue.
 **Owner:** ceo · **Founder decisions:** 7 working lanes · pre-authorise A/B/C · assign a lane to PR #77
 **Affects:** `CLAUDE.md`, `README.md`, `AGENTS.md`, `.claude/commands/*`, `scripts/check-registration.mjs`,
 `scripts/run-gate.mjs`, `scripts/pre-tool-use.test.mjs`, and the still-open `design-screen.md` dispatch gap
+
+## 2026-08-11 — Claim ledger replaces the diff gate as the enforcement spine
+
+**Context:** The system must serve any venture work, not only code. A measured diagnostic found ~1,736 stated imperative rules against 1 mechanism that can block, and 16 verified fabrications. The obvious fix — a merge gate bound to a commit SHA with CI executing compilers — gates diffs, and most venture work (pricing, market sizing, positioning, GTM) has no diff.
+**Options considered:** Diff gate only (gates the recoverable class, leaves the unrecoverable class ungated) / Two gates in two homes (two classifiers will disagree during an incident) / Decision as the durable unit (loses per-claim blast radius) / Artifact + per-task criteria (criteria die with the task, so nothing can go stale) / Nothing durable (cannot answer "what do we believe and why").
+**Decision:** The **claim** is the durable unit. Claims live inside the artifact they support; a generated index compiles them. Three resolvers — `source`, `command`, `judge`. Expiry via `valid_until` with a forced Refresh / Deprecate / Waive disposition.
+**Rationale:** Every domain ultimately asserts things, so claim verification is domain-general where diff gating is not. It catches the exact failure class that produced all 16 fabrications, makes staleness computable, and gives blast radius free via `supports:`.
+**Reversibility:** hard-to-reverse
+**Owner:** ceo
+**Affects:** every engine, the QA classifier, all four memory files (which become generated views), CI, Mission Control
+**See:** [ADR-001](../../docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md)
+
+## 2026-08-12 — The reader engine becomes a script, and the roster drops to six
+
+**Context:** Phase 6 opened with a stop-condition-7 clock running: `.claude/agents/reader.md` was created in
+Phase 4b and nothing invoked it. Reading it against the decision to wire it revealed the file specified an
+agent that never judges anything — its return contract (`status · window · expired · expiring_soon ·
+lapsed_waivers · silent_resolvers`) is six deterministic queries, and its own anti-patterns forbid the single
+judgement in scope: *"DO NOT record a disposition; that is a decision, and decisions have owners."*
+**Options considered:** Wire the agent into a scheduled CI job (needs an API key and per-run billing outside
+the subscription, and yields a non-deterministic report no test can pin) / Script the sweep and keep the agent
+to interpret it (real but speculative value, and the trigger would be prose rather than mechanical, so §0
+stays half-satisfied) / Script it and delete the agent / Record it as unconsumed and defer.
+**Decision:** `node scripts/ledger.mjs sweep`, and `.claude/agents/reader.md` is deleted. Roster is six
+engines. The sweep runs on a schedule ([ledger-sweep.yml](../../.github/workflows/ledger-sweep.yml)) and at
+session start, where the same hook also injects the lens and playbook files.
+**Rationale:** Deletion is the strongest answer to the new §0 gate criterion — the unconsumed mechanism is
+removed rather than pretended-consumed. Deterministic, keyless, testable, and it makes the roster smaller,
+which is the whole thesis of Phase 4. Verified safe first: no `reader.md` exists in `~/.claude/agents/`, so
+unlike the eleven shimmed names, deleting this one actually removes it.
+**Reversibility:** hard-to-reverse (git history holds the file; the roster count is referenced in four docs)
+**Owner:** ceo
+**Affects:** every engine consumer, schema-lint's ENGINES registry, AGENTS.md, README counts, the claim ledger

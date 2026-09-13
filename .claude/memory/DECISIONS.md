@@ -57,39 +57,16 @@ having run none. Required checks govern the PR route only.
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-12 — The reader engine becomes a script, and the roster drops to six
-
-**Context:** Phase 6 opened with a stop-condition-7 clock running: `.claude/agents/reader.md` was created in
-Phase 4b and nothing invoked it. Reading it against the decision to wire it revealed the file specified an
-agent that never judges anything — its return contract (`status · window · expired · expiring_soon ·
-lapsed_waivers · silent_resolvers`) is six deterministic queries, and its own anti-patterns forbid the single
-judgement in scope: *"DO NOT record a disposition; that is a decision, and decisions have owners."*
-**Options considered:** Wire the agent into a scheduled CI job (needs an API key and per-run billing outside
-the subscription, and yields a non-deterministic report no test can pin) / Script the sweep and keep the agent
-to interpret it (real but speculative value, and the trigger would be prose rather than mechanical, so §0
-stays half-satisfied) / Script it and delete the agent / Record it as unconsumed and defer.
-**Decision:** `node scripts/ledger.mjs sweep`, and `.claude/agents/reader.md` is deleted. Roster is six
-engines. The sweep runs on a schedule ([ledger-sweep.yml](../../.github/workflows/ledger-sweep.yml)) and at
-session start, where the same hook also injects the lens and playbook files.
-**Rationale:** Deletion is the strongest answer to the new §0 gate criterion — the unconsumed mechanism is
-removed rather than pretended-consumed. Deterministic, keyless, testable, and it makes the roster smaller,
-which is the whole thesis of Phase 4. Verified safe first: no `reader.md` exists in `~/.claude/agents/`, so
-unlike the eleven shimmed names, deleting this one actually removes it.
-**Reversibility:** hard-to-reverse (git history holds the file; the roster count is referenced in four docs)
-**Owner:** ceo
-**Affects:** every engine consumer, schema-lint's ENGINES registry, AGENTS.md, README counts, the claim ledger
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). F2 round breadcrumb needs ~1.8KB; both entries are superseded by later ones and their bodies are in the archive*
+***Cited in prose by 8 location(s)**, which the heading above keeps resolvable: `.claude/memory/LONG-TERM.md:19` (date), `docs/03-system-design/AGENT-SYSTEM-REBUILD.md:317` (date), `docs/08-agents_work/2026-08-13-rethink-board.md:19` (date), `docs/08-agents_work/2026-08-13-rethink-board.md:53` (date), `docs/08-agents_work/2026-08-13-rethink-board.md:82` (date), `docs/08-agents_work/sessions/2026-08-13-ceo-corpus-correction.md:10` (date), and 2 more.*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-12 — Three Phase 6 gate criteria amended, each by a measurement
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 6 is complete; the amended criteria are now the operative status quo.*
 ## 2026-08-11 — Claim ledger replaces the diff gate as the enforcement spine
-
-**Context:** The system must serve any venture work, not only code. A measured diagnostic found ~1,736 stated imperative rules against 1 mechanism that can block, and 16 verified fabrications. The obvious fix — a merge gate bound to a commit SHA with CI executing compilers — gates diffs, and most venture work (pricing, market sizing, positioning, GTM) has no diff.
-**Options considered:** Diff gate only (gates the recoverable class, leaves the unrecoverable class ungated) / Two gates in two homes (two classifiers will disagree during an incident) / Decision as the durable unit (loses per-claim blast radius) / Artifact + per-task criteria (criteria die with the task, so nothing can go stale) / Nothing durable (cannot answer "what do we believe and why").
-**Decision:** The **claim** is the durable unit. Claims live inside the artifact they support; a generated index compiles them. Three resolvers — `source`, `command`, `judge`. Expiry via `valid_until` with a forced Refresh / Deprecate / Waive disposition.
-**Rationale:** Every domain ultimately asserts things, so claim verification is domain-general where diff gating is not. It catches the exact failure class that produced all 16 fabrications, makes staleness computable, and gives blast radius free via `supports:`.
-**Reversibility:** hard-to-reverse
-**Owner:** ceo
-**Affects:** every engine, the QA classifier, all four memory files (which become generated views), CI, Mission Control
-**See:** [ADR-001](../../docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md)
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). F2 round breadcrumb needs ~1.8KB; both entries are superseded by later ones and their bodies are in the archive*
+***Cited in prose by 4 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/IMPLEMENTATION-PLAN.md:243` (date), `docs/06-codebase/2026-08-11-FLEET-BASELINE.md:128` (date), `docs/08-agents_work/sessions/2026-08-16-builder-false-spawn-constraint.md:9` (date), `docs/08-agents_work/sessions/2026-08-25-builder-memory-eviction.md:55` (title-phrase).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — "Subagents cannot spawn subagents" is false; delete the dispatch-packet layer
 
@@ -422,3 +399,26 @@ conformance binds by being a test and by nothing else**; the lens and playbook a
 **Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29**
 **Affects:** `.claude/lenses.yml`, `.claude/review-lenses.yml`, `.claude/playbooks/design-pass.yml`,
 `scripts/build-tokens.mjs`, `scripts/design-probe.mjs`, `design/`, every future design dispatch
+
+## 2026-09-14 — F2 round: the agents/work layer re-specified as five layers (S1.1); the pin lesson
+
+**Decision (founder-reopened layer, run per `docs/vision-system/planning/HANDOFF-F2-agents-work-layer.md`).**
+Eight blind research lanes, five materially different candidates, five independent attacks (111 findings,
+28 (d)), then a synthesis: **consequence class decides who may act; a declared procedure decides how work
+runs and what each step sees; a typed standing interest decides when work is due; an existence record
+decides whether a worker may exist; exactly one standing party holds each duty that outlives its case —
+lower layer governs.** Zero falsifiers against the six fixed boundaries, so **S1.1**, not S2.0. No
+persistent roster; specialized knowledge is a skill version, never a reason for an agent; attributable
+identity is mandatory and never a reason. Six founder packets (Q-016…Q-021). Record:
+`docs/vision-system/planning/F2/05-selection-record.md`.
+
+**Two mechanisms learned the hard way, recorded for every future session.** (1) Long subagent returns
+truncate at ~4k chars and a drain over 16k is dropped; the full text is in the subagent transcript on disk
+(LONG-TERM.md has the path). (2) **A registry may classify; only the pin may say what satisfies it.** Four
+rechecks of one defect (RC-02 → RC2-02 → RC3-01/02 → RC4-01/02): a hand-written pin was defeated in turn by
+`any`, by `forall`, by a value slot, then by editing the primitive table the walker trusted. Each repair
+closed the named attack and the next sibling leaked. The structural fix is a pin-side allowlist of
+admissible ancestors plus a pinned digest of the table.
+
+**Reversibility:** reversible — planning only; founder hold on building in force. **Owner:** orchestrator
+`ceo-4-1789314685` · **Affects:** `docs/vision-system/**`, every future dispatch that expects a long return
