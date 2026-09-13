@@ -69,7 +69,8 @@
     "Independent canonical review archived (planning/reviews/F-canonical-01.md): FI-10 CLOSED at specification level; FI-11 and FI-12 OPEN; CCR-01..07 registered, two of them (d)-class missing decisions (criterion evaluation; bootstrap root of trust). Repair lane dispatched.",
     "Founder directive preserved verbatim at inputs/DIRECTIVE.md; directive-contract.json remains the structured extraction and is subordinate to it.",
     "Merged xsr-residue lane at 4e03c99: F50-Q08 and F33-Q04 gain discriminating subcases WK-V55/WK-V56; XSR-R-01 family refs derived from bindings (0 mismatches); XSR-R-02 56 distinct positive controls; XSR-R-03 R-NATIVE one selected + two candidate profiles. Root ran the lane's verifier. Author-recorded, independent recheck pending under Phase G.",
-    "Merged technical-amendment lane at c71be26: 07-integrations-capacity.md §9 outbound-mail transport boundary, event identity, terms IC-S30/31, closed disclosure object, T-R3 table, MAIL-T01…08."
+    "Merged technical-amendment lane at c71be26: 07-integrations-capacity.md §9 outbound-mail transport boundary, event identity, terms IC-S30/31, closed disclosure object, T-R3 table, MAIL-T01…08.",
+    "Merged canonical-repair lane at 1be959c (R1–R8). Validator 252513 checks, 13/13 negative fixtures rejected. FI-11 mechanism closed (every edge calls its criterion, all declared args read, 0 sibling collisions with state literals erased) but CONTENT half open: 210 sibling collisions and 92 skeletons when all strings are erased. FI-12 constraints 2 and 6 repaired at mechanism level; founder/root-custodian identity is an admission check. CCR-01..07 repaired, all pending independent review."
   ],
   "active_work": [
     {
@@ -85,25 +86,15 @@
       "dispatched": "2026-09-13"
     },
     {
-      "agent": "build-canonical-repair (builder)",
-      "scope": "Repair FI-11, FI-12 and CCR-01..07 in contracts/: edge guards must call and read their criterion (R1); ground the mandate regress at a bootstrap root, mechanism decided, human identity left as admission check (R2); restrict subject enums to non-intrinsic records (R3); command membership (R4); resolvable destinations (R5); prose files bind or move (R6); derived coverage inventory (R7); validator gains negative fixtures and loses its stub-only FI-12 block (R8). Commit per milestone.",
-      "worktree": ".worktrees/canonical-repair",
-      "branch": "docs/vision-canonical-repair",
-      "base": "a7b2c5c",
-      "dispatched": "2026-09-13"
-    },
-    {
       "agent": "orchestrator",
       "scope": "Integrate the three returns; then freeze the Phase G subject and dispatch the architecture-neutral complete-plan review across all twelve protocol dimensions with separate judgments; then accepted plan and full build."
     }
   ],
   "next_actions": [
-    "Receive review-canonical: if FI-10/11/12 close at specification level, mark 8.11 authored; if a (d)-class missing decision is found, repair before Phase G",
-    "Receive review-xsr: close or reopen XSR-02/XSR-03 in registers/review-findings.json with the reviewer's computed evidence, not the author's",
-    "Receive build-technical-amendment: read its diff, run any checks it names, merge into the root, record source claims in research/integration-claims.json",
-    "Freeze the Phase G subject SHA. Dispatch the complete-plan review per planning/reviews/G-acceptance-protocol.md: twelve dimensions, separate judgments, no aggregate score, whole-company scenario portfolio, negative controls, EAS-R1 comparisons. Reviewers must not read the producer's self-assessment.",
-    "Resolve any foundational blocker Phase G names; preserve dissent; record the scoped planning disposition; commit the accepted package; present the navigable planning report to the founder per directive §15",
-    "Only then: B00 gate → build B01…B11 in dependency order, each stage with security, tests, evaluations, integration, recoverable state"
+    "Freeze the Phase G subject at the commit that records this state. Dispatch the architecture-neutral complete-plan review per planning/reviews/G-acceptance-protocol.md: twelve dimensions split across four independent reviewers, separate judgments per dimension, no aggregate score, the eight whole-company scenarios, negative controls, EAS-R1's four comparisons. Reviewers receive subject and protocol only — never the producers' self-assessments.",
+    "Reviewers must explicitly judge whether FI-11's content residue (210 collisions all-strings-erased) is (d) a missing decision, (a) concrete authoring work, or (c) acceptable with a protocol.",
+    "Integrate the four G reports verbatim; classify every finding; repair (a)-class blockers; escalate any genuine founder decision as a §3 packet without pausing unrelated work; record the scoped planning disposition",
+    "Commit the accepted package; present the §15 navigable planning report to the founder; then B00 gate → build B01…B11"
   ],
   "dependencies": [
     {
@@ -148,7 +139,7 @@
     "specification_work": "planning/package-work-map.json; all 53 source fields and 24 package groups assigned to authoring tracks",
     "native_execution_feasibility": "research/implementation/N01-native-execution.md; research/reviews/2026-09-12-native-controls.md",
     "specification_findings": "registers/specification-findings.json; FI01–12 including current schema/predicate and immutable subject/acceptance revision discovery",
-    "canonical_contracts": "planning/specification/contracts/ — 14 JSON registries/schemas plus validate_contracts.py (run it: `python3 validate_contracts.py` from that directory; needs jsonschema + referencing). Recovered at cb4bf52; validator passes; independent review dispatched, not yet returned",
+    "canonical_contracts": "planning/specification/contracts/ — registries, schemas, validate_contracts.py (252513 checks at 1be959c), fixtures/negative/ (13, all must be rejected), tools/ (guard_distinctness.py is the FI-11 oracle). FI-11 content half OPEN; independent recheck pending under Phase G.",
     "directive_verbatim": "inputs/DIRECTIVE.md — authoritative text; directive-contract.json is the structured extraction and defers to it",
     "acceptance_protocol": "planning/reviews/G-acceptance-protocol.md; frozen preparation, not acceptance",
     "substrate_source_audit": "research/reviews/2026-09-12-substrate-controls.md; independent source audit without Phase F drafts, not runtime or whole-plan acceptance",
