@@ -629,10 +629,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -667,10 +671,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -710,10 +718,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -748,10 +760,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D03"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D03",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -786,10 +802,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -824,10 +844,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D02",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -862,10 +886,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -906,10 +934,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -944,10 +976,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -987,10 +1023,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -1030,10 +1070,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -1073,10 +1117,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D03"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D03",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -1111,10 +1159,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -1154,10 +1206,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D11"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D11",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -1197,10 +1253,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -1235,10 +1295,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D11"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D11",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -1273,10 +1337,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1311,10 +1379,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1349,10 +1421,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1387,10 +1463,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1425,10 +1505,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1463,10 +1547,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1501,10 +1589,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1546,10 +1638,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1584,10 +1680,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1622,10 +1722,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1660,10 +1764,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1698,10 +1806,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1736,10 +1848,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1774,10 +1890,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1812,10 +1932,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1850,10 +1974,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1895,10 +2023,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1940,10 +2072,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#34-from-m1--whether-a-worker-may-exist-at-all-layer-4"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -1978,10 +2114,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2016,10 +2156,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2059,10 +2203,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2097,10 +2245,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2135,10 +2287,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2178,10 +2334,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2216,10 +2376,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2254,10 +2418,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2292,10 +2460,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2330,10 +2502,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2368,10 +2544,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2406,10 +2586,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2451,10 +2635,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2489,10 +2677,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2534,10 +2726,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2572,10 +2768,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2610,10 +2810,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D04",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C03",
@@ -2654,10 +2858,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2699,10 +2907,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2742,10 +2954,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2786,10 +3002,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2824,10 +3044,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2869,10 +3093,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D06",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2912,10 +3140,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2950,10 +3182,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -2994,10 +3230,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -3037,10 +3277,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -3075,10 +3319,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -3113,10 +3361,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -3151,10 +3403,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#2-intent-scopes-dependencies-and-admission"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -3189,10 +3445,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3227,10 +3487,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3265,10 +3529,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3309,10 +3577,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3352,10 +3624,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3390,10 +3666,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3428,10 +3708,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3472,10 +3756,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3510,10 +3798,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3553,10 +3845,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3591,10 +3887,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3635,10 +3935,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D10",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3679,10 +3983,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3717,10 +4025,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -3755,10 +4067,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D09",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#32-from-m3--the-execution-structure-layer-2"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C05",
@@ -5650,10 +5966,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5694,10 +6013,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5739,10 +6061,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5777,10 +6102,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5815,10 +6143,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5860,10 +6191,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5905,10 +6239,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5943,10 +6280,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -5981,10 +6321,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -6019,10 +6362,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -6057,10 +6403,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D05",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -6541,10 +6890,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6586,10 +6939,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6631,10 +6988,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6675,10 +7036,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6713,10 +7078,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6757,10 +7126,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6795,10 +7168,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6839,10 +7216,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6882,10 +7263,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6925,10 +7310,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -6970,10 +7359,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -7008,10 +7401,14 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L05",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L06",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-G",
+      "planning/specification/05-work-agents-skills.md#3-workflow-run-and-step-execution",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D12",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#63-the-as-x-01--ax-w5-tension-resolved"
     ],
     "uncertainty": "Chosen knowledge/evaluation contract is unimplemented. Corpus-specific recall/use, evaluator calibration and joint errors, actual source rights/capacity, economic benefit and longitudinal owner effects require the specified evidence; no universal threshold or empirical winner is inferred.",
     "owner": "S1-C06",
@@ -7447,7 +7844,13 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities",
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "registers/open-questions.json#Q-017"
     ],
     "decision": "planning/specification/components-authority.json#/questions/12/decision",
     "uncertainty": "Actual authority domains and external accounts need accepted setup evidence.",
@@ -7482,7 +7885,13 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities",
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "registers/open-questions.json#Q-017"
     ],
     "decision": "planning/specification/components-authority.json#/questions/13/decision",
     "uncertainty": "No actual IdP/CA/account identity or recovery process is admitted yet.",
@@ -7517,7 +7926,11 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities"
     ],
     "decision": "planning/specification/components-authority.json#/questions/14/decision",
     "uncertainty": "Actual provider scopes and worker isolation need empirical admission.",
@@ -7552,7 +7965,11 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities"
     ],
     "decision": "planning/specification/components-authority.json#/questions/15/decision",
     "uncertainty": "Business identity/parameter semantics require domain-specific validators.",
@@ -7587,7 +8004,11 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities"
     ],
     "decision": "planning/specification/components-authority.json#/questions/16/decision",
     "uncertainty": "Software key custody and actual administrator recovery are untested trusted roots.",
@@ -7622,7 +8043,13 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities",
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "registers/open-questions.json#Q-017"
     ],
     "decision": "planning/specification/components-authority.json#/questions/17/decision",
     "uncertainty": "Exact startup/all-channel and credential-descendant containment remains an admission test.",
@@ -7657,7 +8084,11 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities"
     ],
     "decision": "planning/specification/components-authority.json#/questions/18/decision",
     "uncertainty": "Provider revocation latency and hidden descendants may remain unknown.",
@@ -7692,7 +8123,11 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities"
     ],
     "decision": "planning/specification/components-authority.json#/questions/19/decision",
     "uncertainty": "Alternate account/provider/professional capacity may also be unavailable.",
@@ -7727,7 +8162,11 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities"
     ],
     "decision": "planning/specification/components-authority.json#/questions/20/decision",
     "uncertainty": "Actual privilege separation is unimplemented and requires direct boundary tests.",
@@ -7762,7 +8201,13 @@
       "planning/specification/01-contract-kernel.md",
       "planning/specification/02-authority-recovery.md",
       "research/substrate-claims.json",
-      "planning/reviews/G-acceptance-protocol.md"
+      "planning/reviews/G-acceptance-protocol.md",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#31-from-m4--the-routing-axis-layer-1",
+      "planning/specification/05-work-agents-skills.md#11-consequence-class-and-the-layer-contract",
+      "planning/specification/05-work-agents-skills.md#1-boundary-identity-and-responsibilities",
+      "planning/F2/05-selection-record.md#65-founder-packets--6",
+      "registers/open-questions.json#Q-016"
     ],
     "decision": "planning/specification/components-authority.json#/questions/21/decision",
     "uncertainty": "Applicable law and actual qualified maintainer are not established by this plan.",
@@ -8392,10 +8837,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8430,10 +8878,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8468,10 +8919,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8511,10 +8965,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8549,10 +9006,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8593,10 +9053,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8637,10 +9100,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8675,10 +9141,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8720,10 +9189,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8763,10 +9235,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8801,10 +9276,13 @@
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-KERNEL",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-COMPANY",
       "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L04",
-      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08"
+      "planning/specification/work-knowledge-contracts.json#/evidence_sources/E-L08",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps"
     ],
     "decision": [
-      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07"
+      "planning/specification/work-knowledge-contracts.json#/decisions/WK-D07",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#33-from-m5--when-work-becomes-due-layer-3"
     ],
     "uncertainty": "Chosen procedure remains unimplemented. Workload-specific usefulness, selection/coordination cost, actual performer capacity and runtime admission require the stated tests; no existing operating grant is inferred.",
     "owner": "S1-C02",
@@ -8852,10 +9330,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C02; S1-C03; S1-C04; S1-C09",
@@ -8887,10 +9369,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C02; S1-C04",
@@ -8923,10 +9409,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C01; S1-C03; S1-C04",
@@ -8960,10 +9450,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C01; S1-C02; S1-C04; S1-C07",
@@ -8996,10 +9490,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C02; S1-C04; S1-C07",
@@ -9031,10 +9529,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C03; S1-C04",
@@ -9067,10 +9569,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C03; S1-C06; S1-C09",
@@ -9103,10 +9609,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C02; S1-C07; S1-C09",
@@ -9140,10 +9650,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C01; S1-C02; S1-C03; S1-C06",
@@ -9176,10 +9690,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C03; S1-C04; S1-C06",
@@ -9211,10 +9729,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C02; S1-C03",
@@ -9248,10 +9770,14 @@
       "research/L10-economics.md",
       "planning/02-architecture-selection.md",
       "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
-      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target"
+      "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
+      "planning/specification/05-work-agents-skills.md#6-concurrency-failure-retry-and-stop"
     ],
     "decision": [
-      "planning/specification/09-company-human-traceability.md#economics-and-allocation"
+      "planning/specification/09-company-human-traceability.md#economics-and-allocation",
+      "planning/F2/05-selection-record.md#1-decision",
+      "planning/F2/05-selection-record.md#51-the-synthesized-rules"
     ],
     "uncertainty": "Amounts, workload, provider eligibility, credits, tax/FX, professional/admin/owner labor and actual caps remain observed, estimated or unknown distinctly; price worksheets do not establish affordability.",
     "owner": "S1-C01; S1-C02; S1-C03; S1-C07",
