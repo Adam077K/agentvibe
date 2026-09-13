@@ -136,7 +136,53 @@ def rederive_inventory(directory):
                    capture_output=True, text=True)
 
 
-def run_fixture(fixture, verbose):
+# Everything tools/author_phase_content.py writes. A fixture that REGENERATES must
+# materialise these first: they are symlinks in the scratch tree, and writing through a
+# symlink would rewrite the committed registry from inside a negative fixture.
+AUTHORED = ("predicate-registry.json", "phase-content-gaps.json",
+            "primitive-registry.json", "coverage-inventory.json")
+
+
+def materialise(directory, names):
+    for name in names:
+        target = directory / name
+        if target.is_symlink():
+            target.unlink()
+            shutil.copy2(ROOT / name, target)
+
+
+def apply_tools_patch(directory, base, steps):
+    """Replace a named block of a tools/ module with a hunk shipped by the fixture.
+
+    RC-02 is the reason this exists. The criterion-content oracle compares the registry
+    to tools/phase_content.py, so the mutation that matters is not a mutation of the
+    REGISTRY at all -- it is one hunk of the derivation, regenerated. A fixture suite that
+    can only patch JSON cannot express the defect its own oracle is blind to.
+    """
+    for step in steps:
+        target = directory / step["file"]
+        text = target.read_text(encoding="utf-8")
+        start = text.find(step["block_start"])
+        if start < 0:
+            raise ValueError("tools_patch anchor not found: %r in %s"
+                             % (step["block_start"], step["file"]))
+        end = text.find(step["block_end"], start + len(step["block_start"]))
+        if end < 0:
+            raise ValueError("tools_patch end anchor not found: %r in %s"
+                             % (step["block_end"], step["file"]))
+        replacement = (base / step["replacement"]).read_text(encoding="utf-8")
+        target.write_text(text[:start] + replacement + text[end:], encoding="utf-8")
+
+
+def regenerate(directory):
+    """Run the authoring tool inside the scratch tree, exactly as an author would."""
+    materialise(directory, AUTHORED)
+    return subprocess.run(
+        [sys.executable, "tools/author_phase_content.py", "."], cwd=directory,
+        capture_output=True, text=True)
+
+
+def run_fixture(fixture, base, verbose):
     with tempfile.TemporaryDirectory() as scratch:
         # Mirror the real layout: <scratch>/planning/specification/contracts/, beside
         # the source documents the inventory derivation reads from ROOT.parent and the
@@ -159,6 +205,15 @@ def run_fixture(fixture, verbose):
             os.symlink(prose, specification / prose.name)
         for prose in sorted(ROOT.parent.parent.glob("*.md")):
             os.symlink(prose, planning / prose.name)
+        # And planning's own subdirectories, `reviews/` above all: pinned-conjuncts.json
+        # cites the review that states each finding, and the validator READS those files to
+        # check the citation resolves. Without this the check fires inside every fixture
+        # that gets far enough to reach it -- `finding_sources names a file that does not
+        # exist` -- which is a failure for the wrong reason, and this runner counts that as
+        # a leak. Found by the positive control for r13, not by reading.
+        for child in sorted(ROOT.parent.parent.glob("*")):
+            if child.is_dir() and child.name != "specification":
+                os.symlink(child, planning / child.name)
         # Three levels, because a criterion may cite the DIRECTIVE itself:
         # `../../inputs/DIRECTIVE.md` resolves above `planning/`, and without this every
         # fixture would fail on "derived_from names a file that does not exist" -- the
@@ -173,8 +228,21 @@ def run_fixture(fixture, verbose):
         # The validator imports the one shared path grammar from tools/; without this
         # every fixture "fails" on ModuleNotFoundError, which is a failure for the
         # wrong reason -- and this runner counts that as a leak, correctly.
-        os.symlink(ROOT / "tools", directory / "tools")
+        #
+        # A fixture that patches tools/ gets a COPY instead: a symlinked directory cannot
+        # hold a mutation, and a patch written through it would edit the real tools.
+        if fixture.get("tools_patch"):
+            shutil.copytree(ROOT / "tools", directory / "tools")
+            apply_tools_patch(directory, base, fixture["tools_patch"])
+        else:
+            os.symlink(ROOT / "tools", directory / "tools")
         apply_patch(directory, fixture["patch"])
+        if fixture.get("regenerate_from_derivation"):
+            authored = regenerate(directory)
+            if authored.returncode != 0:
+                return False, ("the fixture's regeneration step failed, so the mutation "
+                               "never reached the validator:\n"
+                               + (authored.stdout + authored.stderr)[-900:])
         if fixture.get("rederive_from_registries"):
             # A fixture that adds or removes a registry entry would otherwise trip a
             # DERIVATION check first and never reach the check it names: R7's inventory
@@ -208,7 +276,12 @@ def run_fixture(fixture, verbose):
 
 
 def discover():
-    """Every fixture in the tree, as (id, document), by the one discovery rule.
+    """Every fixture in the tree, as (id, document, base), by the one discovery rule.
+
+    Two shapes: `<id>.json`, and `<id>/fixture.json` for a fixture that ships files
+    alongside its declaration -- a patched hunk of a tools/ module, which is what RC-02
+    needs and what a single JSON file cannot carry readably. `base` is the directory a
+    fixture's own auxiliary files are read from.
 
     `MANIFEST.json` is the declaration, not a fixture, and is excluded by name here so
     that the count it declares is never satisfied by itself.
@@ -217,8 +290,11 @@ def discover():
     for path in sorted(FIXTURES.glob("*.json")):
         if path.name == MANIFEST.name:
             continue
-        found.append((path.stem, json.loads(path.read_text(encoding="utf-8"))))
-    return found
+        found.append((path.stem, json.loads(path.read_text(encoding="utf-8")), FIXTURES))
+    for path in sorted(FIXTURES.glob("*/fixture.json")):
+        found.append((path.parent.name, json.loads(path.read_text(encoding="utf-8")),
+                      path.parent))
+    return sorted(found, key=lambda entry: entry[0])
 
 
 def main(verbose: bool) -> int:
@@ -239,7 +315,7 @@ def main(verbose: bool) -> int:
     if not fixtures:
         print("fixtures/negative is empty; refusing to report a vacuous pass")
         return 1
-    present = [identifier for identifier, _ in fixtures]
+    present = [identifier for identifier, _, _ in fixtures]
     absent = sorted(set(declared) - set(present))
     undeclared = sorted(set(present) - set(declared))
     if absent or undeclared:
@@ -255,13 +331,13 @@ def main(verbose: bool) -> int:
         }, indent=2))
         return 1
     failures = []
-    for identifier, fixture in fixtures:
+    for identifier, fixture, base in fixtures:
         if fixture["id"] != identifier:
             print(f"  [FAIL] {identifier}: fixture declares id {fixture['id']!r}; the "
                   "manifest names fixtures by file, so the two must agree")
             failures.append(identifier)
             continue
-        ok, detail = run_fixture(fixture, verbose)
+        ok, detail = run_fixture(fixture, base, verbose)
         print(f"  [{'ok' if ok else 'FAIL'}] {fixture['repair']} {fixture['id']}: {detail}")
         if not ok:
             failures.append(fixture["id"])

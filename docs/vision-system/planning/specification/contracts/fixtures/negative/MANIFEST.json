@@ -19,6 +19,8 @@
     "r11-overlap-tie-break-recorded-but-unread",
     "r11-sale-terminates-without-computing-its-due-set",
     "r12-predicate-id-enum-drifts-from-the-registry",
+    "r13-delivery-fails-in-flight-with-no-transition",
+    "r13-derivation-weakened-then-regenerated",
     "r2-acceptance-chain-loses-its-root",
     "r3-lifecycle-status-as-judgment-subject",
     "r4-edge-routes-to-an-unregistered-command",
@@ -35,5 +37,9 @@
     "r9-criterion-content-with-no-source",
     "r9-gap-marker-with-no-registered-gap",
     "r9-sibling-criteria-share-a-shape-undeclared"
-  ]
+  ],
+  "shapes": {
+    "<id>.json": "a JSON patch over the registries",
+    "<id>/fixture.json": "a fixture that ships files beside its declaration -- a patched hunk of a tools/ module, which is what RC-02 needs"
+  }
 }

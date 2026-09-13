@@ -3,7 +3,7 @@
   "repair": "R-I",
   "finding": "G4-04",
   "why": "`neq(custody_tie_break_reason, \"no_overlap\")` becomes `eq`, so an assignment with contesting mandates is required to claim there was no overlap. The enum is still recorded, still typed and still populated -- which is exactly the state G4-04 found and called decoration.",
-  "expect_failure_contains": "required guard op removed",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
   "patch": [
     {
       "file": "predicate-registry.json",
@@ -142,5 +142,6 @@
         ]
       }
     }
-  ]
+  ],
+  "note_rc02": "Message updated with the control: `REQUIRED_GUARD_OPS` was a literal table in validate_contracts.py and is now a row of contracts/pinned-conjuncts.json, so ONE pinned table covers guards and criterion content instead of two that drift. The mutation and what refuses it are unchanged; only the name of the refusing check moved."
 }

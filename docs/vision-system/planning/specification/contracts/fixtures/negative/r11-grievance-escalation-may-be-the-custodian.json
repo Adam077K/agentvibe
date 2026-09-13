@@ -3,7 +3,7 @@
   "repair": "R-E",
   "finding": "G4-01",
   "why": "`neq` becomes `eq` in the triage guard, which does not delete the check -- it INVERTS it, so the guard now requires the escalation route to BE the custodian being complained about. Chosen over deleting the conjunct because a deletion leaves a guard that demands nothing and an inversion leaves one that demands the wrong thing, and the second is the failure that survives review.",
-  "expect_failure_contains": "required guard op removed",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
   "patch": [
     {
       "file": "predicate-registry.json",
@@ -114,5 +114,6 @@
         ]
       }
     }
-  ]
+  ],
+  "note_rc02": "Message updated with the control: `REQUIRED_GUARD_OPS` was a literal table in validate_contracts.py and is now a row of contracts/pinned-conjuncts.json, so ONE pinned table covers guards and criterion content instead of two that drift. The mutation and what refuses it are unchanged; only the name of the refusing check moved."
 }

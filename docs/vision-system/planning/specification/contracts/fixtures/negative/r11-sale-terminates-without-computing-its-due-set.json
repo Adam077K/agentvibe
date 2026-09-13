@@ -3,7 +3,7 @@
   "repair": "R-B",
   "finding": "G2-02",
   "why": "`due_preserved` is removed from accepted->terminated and `continuation_ref` with it, so the edge is back to transition_basis only -- the state AD-014 was written about. The argument is dropped in the same patch deliberately: leaving it declared would trip FI-11's unread-argument check first, and a fixture that fails for the wrong reason proves nothing.",
-  "expect_failure_contains": "required guard op removed",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
   "patch": [
     {
       "file": "predicate-registry.json",
@@ -80,5 +80,6 @@
         "decision_refs": "Ref<DecisionRecord>[]"
       }
     }
-  ]
+  ],
+  "note_rc02": "Message updated with the control: `REQUIRED_GUARD_OPS` was a literal table in validate_contracts.py and is now a row of contracts/pinned-conjuncts.json, so ONE pinned table covers guards and criterion content instead of two that drift. The mutation and what refuses it are unchanged; only the name of the refusing check moved."
 }

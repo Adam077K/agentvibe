@@ -1,0 +1,14 @@
+{
+  "id": "r13-delivery-fails-in-flight-with-no-transition",
+  "repair": "RC-02",
+  "finding": "RC-01 (planning/reviews/G-02-recheck-01.md)",
+  "why": "RC-01's defect was not a malformed guard -- every guard was well formed, every criterion was sourced, and a delivery that failed IN FLIGHT simply had nowhere to go: `delivering` exited only to `delivered` or `superseded`. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed, because phase reachability is not checked and a phase with fewer ways in has no fewer conjuncts. This fixture deletes `Fulfillment:delivering->failed` and requires the pinned-transition table to refuse it. The pointer is an INDEX, so it also fails loudly if the transition list is reordered -- which is the second reason not to reorder it.",
+  "expect_failure_contains": "PINNED TRANSITION MISSING",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/Fulfillment/lifecycle/transitions/14",
+      "op": "remove"
+    }
+  ]
+}

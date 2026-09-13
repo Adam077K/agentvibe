@@ -1,0 +1,18 @@
+{
+  "id": "r13-derivation-weakened-then-regenerated",
+  "repair": "RC-02",
+  "finding": "RC-02 (planning/reviews/G-02-recheck-01.md)",
+  "why": "The criterion-content oracle compares predicate-registry.json to tools/phase_content.py, a file the author controls, so the mutation that defeats it is not a mutation of the registry at all. The recheck replaced ONE spec entry in the derivation, ran author_phase_content.py, and measured exit 0 with 268,829 checks and 27 of 27 negative fixtures still rejecting -- with the whole G2-01 defect back: no fulfillment_ref, no `delivered` binding, no obligation states, correlation on `performed`. This fixture performs exactly that, and requires the validator to reject it. What rejects it is contracts/pinned-conjuncts.json, which is hand-written and which author_phase_content.py neither reads nor writes: regenerating cannot satisfy a pin, only stating the requirement can.",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
+  "patch": [],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"SalesAgreement\", \"performed\"): spec(",
+      "block_end": "    # -- R-F / G4-02:",
+      "replacement": "weakened-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "note": "A positive control is built in and is not optional: if the regeneration step fails, the runner reports FAIL rather than counting the fixture as rejected, because a mutation that never reached the validator proves nothing. And if this fixture ever fails for a reason OTHER than the pin -- the runner checks the message -- the pin has been replaced by something weaker that happens to also refuse."
+}
