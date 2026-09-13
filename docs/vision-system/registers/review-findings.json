@@ -782,7 +782,7 @@
     "title": "Question verification references do not exercise distinctive exit/reopening claims",
     "severity": "medium",
     "owner": "orchestrator integration; isolated author and independent reviewer",
-    "status": "Independent recheck at cb4bf52: PARTIALLY CLOSED with named residue. 394/394 joins resolve, 0 answers unbound, both original exemplars (F08-Q10→WK-V30, F50-Q06→WK-V53) directly answered; 22 of 24 sampled cases discriminate. Residue: F50-Q08 (no permanent adversarial persona) has no discriminating case; F33-Q04 (standing instruction vs request) does not vary content placement. Repair pending.",
+    "status": "Independent recheck at cb4bf52: PARTIALLY CLOSED with named residue (394/394 joins resolve, 0 answers unbound, both original exemplars answered, 22 of 24 sampled cases discriminate). Both named residue items are now AUTHOR-REPAIRED on docs/vision-xsr-residue: F50-Q08 binds new subcase WK-V55 (challenge supply without a standing adversary) and F33-Q04 binds new subcase WK-V56 (allocation between standing instruction and WorkOrder). Each new subcase varies the one thing the reviewer showed the old stimulus held fixed, so the reviewer's non-conforming implementation produces a different observation. Repaired on paper only: every subcase is still specified-unexecuted and no runtime test exists. Independent review of the repair pending.",
     "required_contract": "Semantic question→contract→verification reconciliation; precise vendor-exit and equivalent-reopening subcases plus other affected joins, not test-family labels alone.",
     "resolution": {
       "source_commit": "5349c3f089ac6652d194db52e4d956e336468001",
@@ -800,7 +800,17 @@
       ],
       "computed": "394 bindings, 0 broken; 152/159 assertions used, max reuse 8; 268/268 root rows match source"
     },
-    "implementation_evidence": null
+    "implementation_evidence": null,
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "residue_closed": [
+        "F50-Q08 -> WK-V55-A1, WK-V55-A2",
+        "F33-Q04 -> WK-V56-A1, WK-V56-A2"
+      ],
+      "computed": "56 subcases, 163 assertions, 398 bindings, 0 broken, 0 answers unbound, 0 root projection divergences",
+      "recompute": "node scripts/vision-wk-bindings.mjs verify",
+      "independent_review": "not performed; the repair author is not the reviewer and shares a model family with both"
+    }
   },
   {
     "id": "XSR-03",
@@ -837,8 +847,16 @@
     "id": "XSR-R-01",
     "title": "Bindings cite a subcase whose family_ref is absent from the answer's declared verification_family_refs",
     "severity": "medium",
-    "status": "Open. 88 of 394 bindings (22%) point at the wrong planned test module; e.g. F50-Q06 declares WK-T04/05/06 but binds WK-V53 in WK-T03.",
-    "required_contract": "Every binding's subcase family must appear in its answer's verification_family_refs, or the declared families must be corrected; a planned test module must be the one that actually exercises the answer."
+    "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. All 88 bindings were examined against their question text: in every one the BINDING was the semantically right subcase and the DECLARED FAMILY was the stale artifact — verification_family_refs held a coarse three-family block assigned by source field (work answers WK-T01/02/03, knowledge answers WK-T04/05/06(+07)), not the module that exercises the answer. The declared field is therefore derived from the bindings now: exactly the families of the subcases the answer binds. 268 of 268 answers were corrected (the 88-binding metric and the stricter set-equality metric are both 0). No family was added to any answer that does not bind it.",
+    "required_contract": "Every binding's subcase family must appear in its answer's verification_family_refs, or the declared families must be corrected; a planned test module must be the one that actually exercises the answer.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "decision": "binding right, declaration wrong, in all 88",
+      "bindings_outside_declared_before": 88,
+      "bindings_outside_declared_after": 0,
+      "answers_corrected": 268,
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
   },
   {
     "source": "planning/reviews/F-cross-scope-03.md",
@@ -849,8 +867,17 @@
     "id": "XSR-R-02",
     "title": "procedure, positive_control and execution_boundary are one identical string across all 54 subcases",
     "severity": "low",
-    "status": "Open. 54 distinct stimuli share one procedure/positive-control/boundary text; a positive control that is the same for every case does not calibrate any case.",
-    "required_contract": "Per-subcase positive control and execution boundary that would be observably wrong for a different subcase, or an explicit statement of why one shared control is sufficient for a named group."
+    "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. positive_control and execution_boundary are now per subcase: 56 distinct strings each, every one naming its own stimulus's ordinary authorized counterpart and the specific observation that must come out of it, so applying one to a different subcase observes the wrong thing or nothing. procedure remains ONE shared text and now says so: shared_control_groups declares SCG-REGISTRATION-PROCEDURE over all 56 with the reason that procedure states a registration discipline identical in every case, and records that the other two fields are covered by no group. Undeclared sharing is now a failure (C1/C2) rather than a default.",
+    "required_contract": "Per-subcase positive control and execution boundary that would be observably wrong for a different subcase, or an explicit statement of why one shared control is sufficient for a named group.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "distinct_positive_control": 56,
+      "distinct_execution_boundary": 56,
+      "shared_groups": [
+        "SCG-REGISTRATION-PROCEDURE (procedure, all 56, reason recorded)"
+      ],
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
   },
   {
     "source": "planning/reviews/F-cross-scope-03.md",
@@ -861,8 +888,20 @@
     "id": "XSR-R-03",
     "title": "R-NATIVE selected_route_ids lists three profiles while its version string selects one",
     "severity": "low",
-    "status": "Open. Two views of one selection disagree — the XSR-03 class recurring in the one route the repair did not reach. selected_route_ids: N-CLAUDE-SUPPLIED/v1, N-CLAUDE-MEDIATED/v1, N-CODEX-SUPPLIED/v1; selected_contracts.version: \"N-CLAUDE-SUPPLIED/v1; mediated and Codex profiles require separate admission.\"",
-    "required_contract": "One selected profile in selected_route_ids with the other two as candidate_route_ids awaiting admission, or the version string widened to match; consumers of either field must derive the same set."
+    "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. R-NATIVE.selected_route_ids is [N-CLAUDE-SUPPLIED/v1]; N-CLAUDE-MEDIATED/v1 and N-CODEX-SUPPLIED/v1 moved to a new candidate_route_ids field with a candidate_admission sentence saying they are defined, unselected and each awaiting its own exact-profile admission. The version string is now IC1.0 / N-CLAUDE-SUPPLIED/v1 and names no unselected profile, so both views derive the same set. capabilities.json had no prior candidate convention; candidate_route_ids is added to all 11 routes (empty where none) so a consumer never reads undefined. implementation_boundary was rewritten to name the selection rather than list all three. 07-integrations-capacity.md, which DEFINES the three profiles, is unchanged - another lane owns it, and defining a profile is not selecting it.",
+    "required_contract": "One selected profile in selected_route_ids with the other two as candidate_route_ids awaiting admission, or the version string widened to match; consumers of either field must derive the same set.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "selected": [
+        "N-CLAUDE-SUPPLIED/v1"
+      ],
+      "candidates": [
+        "N-CLAUDE-MEDIATED/v1",
+        "N-CODEX-SUPPLIED/v1"
+      ],
+      "enforced_by": "vision-wk-bindings.mjs verify check R1: selected and candidate sets disjoint, and any profile id named in a selected_contracts.version string equals the selected set",
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
   },
   {
     "source": "planning/reviews/F-cross-scope-03.md",
@@ -873,7 +912,14 @@
     "id": "XSR-R-04",
     "title": "Seven assertions bound by no answer",
     "severity": "informational",
-    "status": "Open. WK-V04-A3, V09-A3, V20-A3, V23-A3, V26-A2, V33-A3, V43-A1 are defined and unused.",
-    "required_contract": "Bind each to the answer it verifies, or remove it with a reason; an unused assertion is either a missed join or dead weight."
+    "status": "STILL OPEN, deliberately untouched. The XSR-02/R-01/R-02/R-03 repairs bound none of the seven: WK-V04-A3, WK-V09-A3, WK-V20-A3, WK-V23-A3, WK-V26-A2, WK-V33-A3 and WK-V43-A1 are still defined and unused, and the count is still 7 after the repair (the four assertions added with WK-V55/WK-V56 are all bound). Each of the seven would need a judgement about which answer it verifies, which is a new authoring decision rather than a consequence of these repairs. Reported by the same command that computes the rest.",
+    "required_contract": "Bind each to the answer it verifies, or remove it with a reason; an unused assertion is either a missed join or dead weight.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "action": "none - no repair naturally bound one",
+      "unbound_before": 7,
+      "unbound_after": 7,
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
   }
 ]
