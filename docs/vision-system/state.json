@@ -5,7 +5,7 @@
   "phase": "F2-agents-work-layer-rethink (planning disposition deferred)",
   "status": "active",
   "base_commit": "b2cabad",
-  "branch": "ceo-2-1789160976",
+  "branch": "ceo-4-1789314685",
   "resumption": {
     "date": "2026-09-13",
     "from_branch": "ceo-3-1789160853",
@@ -80,13 +80,24 @@
   ],
   "active_work": [
     {
-      "agent": "next team (fresh session)",
-      "scope": "Steps 0–6 per planning/HANDOFF-F2-agents-work-layer.md",
-      "status": "not started"
+      "agent": "reviewer (recheck-02)",
+      "scope": "G-02-recheck-02: RC-02 attack replay, pin positive control, fixture-deletion control, RC-01..08 at frozen 3579cc2 on a git-archive copy",
+      "status": "dispatched 2026-09-13"
+    },
+    {
+      "agent": "framer (f0-claims-ledger)",
+      "scope": "Step 0 artifacts 1-2: planning/F2/00-thesis-claims.{md,json}, planning/F2/00-position-ledger.md",
+      "status": "dispatched 2026-09-13"
+    },
+    {
+      "agent": "framer (f0-protocol)",
+      "scope": "Step 0 artifact 3: planning/F2/00-acceptance-protocol.md, formed blind to artifacts 1-2",
+      "status": "dispatched 2026-09-13"
     }
   ],
   "next_actions": [
-    "Next team: read HANDOFF-F2-agents-work-layer.md; first action is the narrow recheck G-02-recheck-02 (ratchet-pin is merged); then Step 0",
+    "Archive recheck-02 verbatim as planning/reviews/G-02-recheck-02.md; update RC-01..08 in registers/review-findings.json from its findings",
+    "Commit Step 0 artifacts; freeze protocol; then dispatch the eight Step 1 sourcer lanes R1..R8 (blind, partitioned by file under research/F2/)",
     "Planning disposition deferred until the F2 round completes",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
@@ -192,7 +203,15 @@
     "input": "inputs/FOUNDER-THESIS-2026-09-13-agents.md",
     "scope_open": "work, agents, routing, layers, authority, tools, skills, context engineering, shared state, tasks, task states — families 8.7 8.8 8.9 8.12 and their joins into 8.6 8.11 8.14 8.21; specification 05 and the parts of 01/02/04/06/07/08/11 they bind",
     "scope_fixed_unless_evidence": "the consequence/release boundary, evidence and acceptance, recovery, human responsibility and founder-competence mechanisms, the whole-company lifecycle scope — each reopenable only by a lane returning a specific falsifier",
-    "status": "run structure being proposed to the founder; no lane dispatched yet"
+    "status": "F2 round started 2026-09-13 on ceo-4-1789314685; Step 0 and the owed recheck dispatched in parallel"
   },
-  "handoff": "planning/HANDOFF-F2-agents-work-layer.md — the next team runs Steps 0–6 of the agents/work-layer rethink from this document plus the directive"
+  "handoff": "planning/HANDOFF-F2-agents-work-layer.md — the next team runs Steps 0–6 of the agents/work-layer rethink from this document plus the directive",
+  "resumption_f2": {
+    "date": "2026-09-13",
+    "from_branch": "ceo-2-1789160976",
+    "from_head": "3579cc2",
+    "method": "fast-forward merge of ceo-2-1789160976 (3579cc2) onto ceo-4-1789314685, which was at main b2cabad; 219 commits",
+    "scan": "46 docs/vision-* lane worktrees under the ceo-2 root scanned with git status --porcelain: 0 dirty; each branch shows 1-4 commits not in HEAD, consistent with the recorded archive-by-copy pattern, not lost work",
+    "executor": "orchestrator session ceo-4-1789314685"
+  }
 }
