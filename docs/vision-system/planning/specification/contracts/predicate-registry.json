@@ -378130,19 +378130,6 @@
           ]
         },
         {
-          "op": "not",
-          "predicate": {
-            "op": "native_correlated",
-            "subject_ref": {
-              "arg": "subject_ref"
-            },
-            "observation_refs": {
-              "arg": "observation_refs"
-            },
-            "result": "delivered"
-          }
-        },
-        {
           "op": "attested_result",
           "subject_ref": {
             "arg": "subject_ref"
@@ -378155,7 +378142,7 @@
         }
       ]
     },
-    "meaning": "The delivery did not happen and the failure is owned rather than closed: the service window and the receipts actually obtained are recorded, the remaining obligations survive on the record, and no observation correlates a delivery. Failure creates a support/remedy duty with an update deadline; it does not discharge the order, and it is not a route to `delivered` by another name. Phase assessed: failed.",
+    "meaning": "The delivery did not complete and the failure is owned rather than closed: the service window and the receipts actually obtained are recorded, the remaining obligations survive on the record, and a currently accepted performer still carries them. Failure creates a support/remedy duty with an update deadline; it does not discharge the order. Whether any observation correlates a delivery is decided by the inbound edge rather than here -- a failure in flight requires that none does, and a failure after delivery cannot, because the route it took required exactly that correlation. Phase assessed: failed.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/Fulfillment",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -378220,7 +378207,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "The delivery did not happen and the failure is owned rather than closed: the service window and the receipts actually obtained are recorded, the remaining obligations survive on the record, and no observation correlates a delivery. Failure creates a support/remedy duty with an update deadline; it does not discharge the order, and it is not a route to `delivered` by another name.",
+    "requires": "The delivery did not complete and the failure is owned rather than closed: the service window and the receipts actually obtained are recorded, the remaining obligations survive on the record, and a currently accepted performer still carries them. Failure creates a support/remedy duty with an update deadline; it does not discharge the order. Whether any observation correlates a delivery is decided by the inbound edge rather than here -- a failure in flight requires that none does, and a failure after delivery cannot, because the route it took required exactly that correlation.",
     "derived_from": [
       {
         "file": "03-company-capabilities.md",
@@ -381202,6 +381189,360 @@
             "revision"
           ],
           "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.delivering.failed.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "delivering",
+          "to_state": "failed"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.delivery_failed",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "native_correlated",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "result": "delivered"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.failed.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: delivering → failed; RC-01. A delivery that fails IN FLIGHT had no transition: `delivering` exited only to `delivered` or `superseded`, so the only route to `failed` ran through a delivery that had been correlated. This edge requires an authenticated attributable failure event AND that no observation correlates a delivery -- the conjunct that used to sit in criterion.Fulfillment.failed.v1, where it contradicted the only inbound edge. CAP-30: “Failure creates a support/remedy duty with an update deadline.”",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.failed.refunded.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "failed",
+          "to_state": "refunded"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.refunded",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.refunded.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: failed → refunded; RC-01. `refunded` had exactly one inbound edge, from `delivered`, which made a refund of an UNDELIVERED sale unrepresentable -- the commonest refund there is. Content for `refunded` remains the registered gap gap-Fulfillment-refunded: the corpus says what a refund IS and says it about the SupportCase that performs it, never what a Fulfillment record in `refunded` shows.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [

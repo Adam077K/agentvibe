@@ -32037,6 +32037,34 @@
           "allowed_command_ids": [
             "kernel.record.transition"
           ]
+        },
+        {
+          "edge_id": "Fulfillment:delivering->failed",
+          "from": "delivering",
+          "to": "failed",
+          "predicate_id": "edge.Fulfillment.delivering.failed.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.failed.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:failed->refunded",
+          "from": "failed",
+          "to": "refunded",
+          "predicate_id": "edge.Fulfillment.failed.refunded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.refunded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
         }
       ],
       "state_preserving_update": "No in-place business or status-link mutation and no generic same-phase annotation. New observations/reasons are separate facts; a changed disposition follows a registered edge (including reopening where defined). Business edits use record.revise and a new initial lifecycle. Immutable single-phase facts have no update edge."
