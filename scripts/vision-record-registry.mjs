@@ -15,6 +15,19 @@
  *          from another record's obligation. "It exists" is not a justification and F1 refuses
  *          a justification that does not resolve.
  *
+ *   G1-06b Eight FURTHER record types under the stricter census: EvaluationCase, IndexSnapshot,
+ *          ExperienceArtifact, BuildArtifact, Partnership, ContinuityArrangement, Constraint and
+ *          AccessGraph. Same repair, same table, same two shapes — a justification is a
+ *          justification whichever census found the record. They carry
+ *          `repair_state: 'G1-06b repaired, …'` so that which pass justified which record stays
+ *          readable; F1 and F2 do not distinguish them, and nothing in the check does.
+ *
+ *          Note what this repair does NOT do: it cannot move the O1 census count. O1 asks
+ *          whether the corpus NAMES the record, a justification lives inside contracts/, and
+ *          adding one to a record the 566 questions never mention leaves the corpus unchanged.
+ *          The count that reaches zero is `orphans without a justification`, which is the
+ *          answerable question; O1's own total stays where it is and should.
+ *
  *   G1-07  ScopeRegistry's source_contract anchor did not resolve: it carried a doubled hyphen
  *          where the heading's em dash sits, and GitHub's slug collapses the run of whitespace
  *          around it to one. 1 of 173 failed; the other 172 resolved. Repair: the anchor is
@@ -187,15 +200,138 @@ const JUSTIFICATIONS = {
       'tolerance". F16-Q01 (on what basis permission is granted — person, task, risk, reversibility) ' +
       'rests on the same definitions.',
   },
+
+  // ── G1-06b: the eight the stricter census added. ────────────────────────────────────────
+  EvaluationCase: {
+    source_concern: 'F47-Q03',
+    source_concern_text: 'How is a proposed change evaluated before it is accepted?',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'A change cannot be evaluated against a judgement made after seeing it. EvaluationCase is the ' +
+      'predeclared case with its expected outcome AND expected process, its label provenance adjudicated ' +
+      'independently, and a `synthetic` flag that is a declaration rather than an inference — its own ' +
+      'invariant is that synthetic fixtures cannot establish actual market benefit. Two discovered ' +
+      'failures are what the record blocks: D08, a benchmark change that erases distinctions without ' +
+      'changing a displayed success state, and D11, an improvement candidate that changes evidence ' +
+      'capture while its hidden evaluator remains intact. Both need the cases to be admitted BEFORE the ' +
+      'candidate, and a record with `draft → labeled → admitted` phases is what makes "before" checkable.',
+  },
+  IndexSnapshot: {
+    source_concern: 'F44-Q09',
+    source_concern_text:
+      'How is a large body of material kept searchable as it grows, and who notices when search stops working?',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'The second half of the question is the one that needs a record: noticing that search stopped ' +
+      'working requires a snapshot that states its own source watermark, its indexed sources and its ' +
+      'OMISSIONS, plus `complete` and `incomplete` as distinct phases. An index that cannot say what it ' +
+      'failed to index answers a query with silence and reads exactly like an index that found nothing. ' +
+      'The permission class and the ephemeral-generation rule carry the other half of F44-Q07, and D13 ' +
+      '(a search result repeating a withdrawn provider policy) is the failure a stale watermark produces.',
+  },
+  ExperienceArtifact: {
+    source_concern: 'F25-Q01',
+    source_concern_text:
+      'Deciding what to build and for whom · designing how it looks and feels · building it · testing it · ' +
+      'running it once it exists · … does each of these need its own worker, or is it a way of working ' +
+      'that any worker can adopt?',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'F25-Q01 names "designing how it looks and feels" as work the company does, and the record exists ' +
+      'to keep that work from collapsing into an opinion. It holds the journey steps the prototype must ' +
+      'actually complete, the accessibility results, and — separately — `user_observations` and ' +
+      '`taste_decision`. The separation is the point and it is VISION-09\'s: taste is nondelegable, so a ' +
+      'taste decision may be recorded as one and may never be presented as an observation of a user. ' +
+      'Its invariant refuses a prototype that cannot complete the specified journey, which is what stops ' +
+      '`validated` from meaning "someone liked the mockup".',
+  },
+  BuildArtifact: {
+    source_concern: 'F14-Q05',
+    source_concern_text: 'What cannot ship without review, and what can?',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'The question is only answerable if "reviewed" and "released" are distinct states of a thing, ' +
+      'rather than adjectives someone applies. BuildArtifact carries `draft → reviewed → released → ' +
+      'withdrawn` over an exact source revision and environment, with its test refs and its maintenance ' +
+      'procedure attached, and its invariant makes release require an actual reconciled deployment ' +
+      'operation — so a release is a reconciled effect and not a status someone set. Without the record, ' +
+      '"this shipped" and "someone said this shipped" are the same assertion.',
+  },
+  Partnership: {
+    source_concern: 'F51-Q01',
+    source_concern_text:
+      'What changes when a second person is involved — a partner, a contractor, someone hired?',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'What changes is that outcomes stop being the owner\'s alone, and the record is where that is ' +
+      'written down instead of assumed: distinct contributions both parties actually agreed to, explicit ' +
+      'opportunity attribution, a named relationship owner, shared dependencies and — the load-bearing ' +
+      'field — `exit_duties` with continuing ownership. A partnership that ends without a record of who ' +
+      'owes what afterwards is precisely the case F51-Q01 asks about, and the ResponsibilityAssignment ' +
+      'machinery cannot answer it, because it assigns duties INSIDE the company and both parties here ' +
+      'are outside one another\'s.',
+  },
+  ContinuityArrangement: {
+    source_concern: 'CONSEQUENCE-SECTOR-04',
+    source_concern_text: 'owner illness, succession, sale, vendor portability and retirement',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'Every item in that concern is one event: the person the company depends on stops being available. ' +
+      'An arrangement that is only a named alternate is a promise, so the record demands the evidence ' +
+      'separately — independent access, competence, funded reservations, a reachable channel and an ' +
+      'EXERCISE judgment that the ability was actually demonstrated inside the duty window. It declares ' +
+      '`unavailable` as a phase of its own and carries `joint_failure_roots`, because the case that ' +
+      'defeats a naive arrangement is the owner and the provider failing for the same reason. Nothing ' +
+      'else in the registry holds the alternate\'s readiness as a checked fact rather than a plan.',
+  },
+  Constraint: {
+    source_concern: 'F01-Q16',
+    source_concern_text: 'What is off-limits entirely, and who wrote that list?',
+    directive_subject: 'Constraint (§8.11)',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'Both halves of F01-Q16 need a record. "What is off-limits" is the `predicate` over an explicit ' +
+      '`scope`; "who wrote that list" is the `issuer_mandate_ref` and the named `amendment_authority_ref`, ' +
+      'and its invariant states the rule that matters — a constraint cannot be changed by whoever finds ' +
+      'it inconvenient, and never "inferred from easier implementation". `effective_interval` keeps a ' +
+      'withdrawn constraint from silently governing old work, and `superseded` is a phase rather than a ' +
+      'deletion. Directive §8.11 names Constraint as a required schema subject, which says a schema must ' +
+      'exist; F01-Q16 is what says what it must do.',
+  },
+  AccessGraph: {
+    derived_control_machinery: true,
+    derived_from_record: 'DeletionScope',
+    obligation:
+      'Continuing restriction must cover late derivatives, offline rejoin and physical copies, and ' +
+      'unknown copies must remain EXPLICIT residuals rather than absent ones. That obligation cannot be ' +
+      'discharged without an enumeration of the descendant surface at a witnessed source frontier, with ' +
+      'what it failed to reach declared on its face.',
+    repair_state: 'G1-06b repaired, pending independent recheck',
+    why:
+      'It is a derived-projection record, not a business fact: nothing is decided by creating one, and it ' +
+      'is the same shape as DependencyClosure for the same reason. Its invariant — actual enumeration ' +
+      'proves the declared descendant surface, and incomplete or unknown access paths stay explicit — is ' +
+      'a property of the enumeration rather than of any duty a person holds, which is why no source ' +
+      'concern names it directly. The nearest concerns it serves are F16-Q07, "how is access revoked ' +
+      'quickly", and F02-Q11, "how is work stopped in the middle, and what is left behind": both are ' +
+      'answerable only if the leftovers can be named, and `incomplete` is a phase precisely so that an ' +
+      'unfinished enumeration cannot be read as an empty one.',
+  },
 };
 
 /** What the registry actually carries: the justification plus its provenance. One definition,
  *  so that `verify` compares against exactly what `project --write` writes. */
-const projected = (name) => ({
-  ...JUSTIFICATIONS[name],
-  recorded_by: 'scripts/vision-record-registry.mjs',
-  repair_state: 'G1-06 repaired, pending independent recheck',
-});
+const projected = (name) => {
+  // `repair_state` is destructured OUT and re-appended last so that the eleven G1-06 entries,
+  // which declare none, keep byte-identical key order against what is already committed. Put the
+  // default first and spread over it and every one of them reads as divergent.
+  const { repair_state, ...rest } = JUSTIFICATIONS[name];
+  return {
+    ...rest,
+    recorded_by: 'scripts/vision-record-registry.mjs',
+    repair_state: repair_state || 'G1-06 repaired, pending independent recheck',
+  };
+};
 
 /** Phrases that would make a justification vacuous. F2 refuses them. */
 const VACUOUS = [/\bit exists\b/i, /\bbecause it is in the registry\b/i, /\bfor completeness\b/i, /\bTODO\b/];
@@ -329,15 +465,26 @@ function report(reg) {
   const bare = Object.keys(reg).length - anchors;
   console.log(`record types                ${Object.keys(reg).length}`);
   console.log(`source_contract with anchor ${anchors} · bare file citation ${bare}`);
-  console.log(`justifications required     ${Object.keys(JUSTIFICATIONS).length} (the records G1-06 named)`);
+  console.log(
+    `justifications required     ${Object.keys(JUSTIFICATIONS).length} ` +
+      `(G1-06's eleven + G1-06b's eight)`,
+  );
   const present = Object.keys(JUSTIFICATIONS).filter((k) => reg[k] && reg[k].justification).length;
   console.log(`justifications present      ${present}`);
   const orphans = orphanCensus(reg);
   const extra = orphans.filter((o) => !JUSTIFICATIONS[o]);
   console.log(`named nowhere outside contracts/ under this census: ${orphans.length}`);
   console.log(`  corpus: ${CENSUS_CORPUS}`);
-  console.log(`  G1-06's eleven are all in it: ${Object.keys(JUSTIFICATIONS).every((k) => orphans.includes(k))}`);
-  console.log(`  additional candidates, NOT repaired here (${extra.length}): ${extra.join(', ') || 'none'}`);
+  console.log(`  every justified record is in it: ${Object.keys(JUSTIFICATIONS).every((k) => orphans.includes(k))}`);
+  console.log(`  of those, carrying NO justification (${extra.length}): ${extra.join(', ') || 'none'}`);
+  // The census total does not move when a justification is added, and saying so here stops the
+  // next reader treating a nonzero O1 as unfinished work. O1 asks whether the CORPUS names the
+  // record; a justification is written inside contracts/, which the corpus does not include.
+  console.log(
+    `  note: adding a justification cannot reduce the census total — O1 measures whether the\n` +
+      `        corpus names the record, and a justification lives in contracts/. The number that\n` +
+      `        reaches 0 is the line above it.`,
+  );
 }
 
 function verify() {
