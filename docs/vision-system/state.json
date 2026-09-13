@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "G-complete-plan-review",
+  "phase": "F2-agents-work-layer-rethink (planning disposition deferred)",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-2-1789160976",
@@ -186,5 +186,12 @@
     "instruction": "Founder: do not start building yet. Hold after the planning disposition. B00 may be marked only as the disposition record; B01 is NOT to be dispatched until the founder lifts this hold explicitly.",
     "lifted": false
   },
-  "phase_g_disposition_status": "NOT YET RECORDED. No missing foundational decision remains (directive §10's last condition is met). The orchestrator is withholding the written disposition until RC-01 (break), RC-02 and RC-04 (ratchet holes) are repaired and narrowly rechecked, because a package whose defining defect is reintroducible in one hunk with every control green should not carry the word accepted. Founder hold on building is in force regardless."
+  "phase_g_disposition_status": "NOT YET RECORDED. No missing foundational decision remains (directive §10's last condition is met). The orchestrator is withholding the written disposition until RC-01 (break), RC-02 and RC-04 (ratchet holes) are repaired and narrowly rechecked, because a package whose defining defect is reintroducible in one hunk with every control green should not carry the word accepted. Founder hold on building is in force regardless.",
+  "founder_reopen": {
+    "date": "2026-09-13",
+    "input": "inputs/FOUNDER-THESIS-2026-09-13-agents.md",
+    "scope_open": "work, agents, routing, layers, authority, tools, skills, context engineering, shared state, tasks, task states — families 8.7 8.8 8.9 8.12 and their joins into 8.6 8.11 8.14 8.21; specification 05 and the parts of 01/02/04/06/07/08/11 they bind",
+    "scope_fixed_unless_evidence": "the consequence/release boundary, evidence and acceptance, recovery, human responsibility and founder-competence mechanisms, the whole-company lifecycle scope — each reopenable only by a lane returning a specific falsifier",
+    "status": "run structure being proposed to the founder; no lane dispatched yet"
+  }
 }

@@ -518,7 +518,7 @@
     "id": "Q-015",
     "kind": "Founder clarification and pending decision",
     "date": "2026-09-13",
-    "status": "Open — founder signalled intent; decision packet offered, not yet answered",
+    "status": "SUPERSEDED by founder input 2026-09-13 (inputs/FOUNDER-THESIS-2026-09-13-agents.md): the founder chose none of A/B/C and instead reopened the whole work/agents/authority/skills/context/state layer for a research-and-design round in which the roster question is one output, not the input. Disposition of the planning package is deferred until that round completes.",
     "decision": "Whether the system carries a chartered persistent-agent layer (named agents with standing charters: role, responsibilities, authority ceiling, memory scope, reserved capacity, evaluation, suspension/retirement) on top of the selected S1.0 control — and, separately, whether such charters carry independent inquiry rights (the C2 question in 02-architecture-selection.md §2/§9).",
     "founder_statement": "2026-09-13: \"I am accepting the agent system and agent charter and all of that. It wasn't my intention to cancel it straight away.\" Recorded verbatim as intent; not yet recorded as a decision because the two sub-choices above have different costs.",
     "why_founder": "Directive §1.2/§8.8 set the default; the founder owns the vision and may amend the default. This is identity and taste, not a technical unknown.",
@@ -531,6 +531,7 @@
     "consequences": "A: ~10–15% of the specification amended (05, 8.8, records for Agent/Role/Charter lifecycles, capacity reservation, per-agent evaluation, 04 surfaces); the nine-component core, consequence/release boundaries and sponsor rule unchanged; standing context and capacity cost rise; department-silo risk returns and is mitigated only by the sponsor rule. B: adds the C2 institutional labor the selection deferred (reserved assessor capacity, continuity, appeal). C: no change.",
     "unrelated_work_continues": true,
     "if_no_answer": "Plan stays at C; the disposition is recorded against the current package; a later charter layer becomes a versioned ChangeProposal (S1.1) rather than a reopening.",
-    "recommendation": "A, specified as a layer with a removal trigger, so the roster is a choice with a measured cost rather than an assumption."
+    "recommendation": "A, specified as a layer with a removal trigger, so the roster is a choice with a measured cost rather than an assumption.",
+    "founder_statement_2": "2026-09-13: reopened as a thesis to be researched and challenged — see the input file; not a decision."
   }
 ]
