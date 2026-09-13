@@ -4176,9 +4176,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -4229,9 +4227,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -4287,9 +4283,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -4340,9 +4334,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -4393,8 +4385,6 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -4446,8 +4436,6 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -4500,8 +4488,6 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -4558,8 +4544,6 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -4611,9 +4595,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -4669,9 +4651,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -4727,9 +4707,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -4785,9 +4763,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -4838,9 +4814,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -4896,9 +4870,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -4954,9 +4926,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -5007,9 +4977,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5056,9 +5024,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5105,8 +5071,6 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -5154,9 +5118,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5203,9 +5165,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -5252,9 +5212,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5301,9 +5259,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5351,9 +5307,8 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
         "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -5405,9 +5360,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5454,9 +5407,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5503,9 +5454,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -5552,9 +5501,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -5601,9 +5548,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -5650,8 +5595,6 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -5699,9 +5642,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -5748,9 +5689,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -5799,7 +5738,6 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -5854,7 +5792,6 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -5907,9 +5844,7 @@
         "work-knowledge-contracts.json#/records/ExecutionSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -5956,8 +5891,6 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6005,8 +5938,6 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6059,8 +5990,6 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6108,9 +6037,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -6157,9 +6084,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -6211,9 +6136,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -6260,9 +6183,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -6309,9 +6230,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -6358,8 +6277,6 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6407,8 +6324,6 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6456,8 +6371,6 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6507,8 +6420,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -6560,9 +6472,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -6611,8 +6521,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -6664,8 +6573,6 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6713,9 +6620,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -6763,9 +6668,7 @@
         "work-knowledge-contracts.json#/records/FailureRecord"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -6819,7 +6722,6 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6872,9 +6774,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -6927,8 +6827,6 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -6981,8 +6879,6 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -7032,8 +6928,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7085,9 +6980,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -7139,9 +7032,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -7189,9 +7080,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -7243,9 +7132,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -7297,9 +7184,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -7346,9 +7231,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7395,9 +7278,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -7444,9 +7325,7 @@
         "work-knowledge-contracts.json#/records/MessageAcknowledgment"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -7495,10 +7374,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7547,10 +7423,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7600,10 +7473,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7657,9 +7527,6 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
         "WK-T07"
       ],
       "verification_bindings": [
@@ -7714,10 +7581,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7766,10 +7630,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7819,10 +7680,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7876,10 +7734,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7928,10 +7783,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -7985,10 +7837,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -8038,10 +7887,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -8096,10 +7942,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8153,10 +7996,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8205,10 +8045,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8258,10 +8095,7 @@
         "work-knowledge-contracts.json#/records/ForgetRequest"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8317,9 +8151,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -8375,9 +8207,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -8431,10 +8261,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8485,9 +8312,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -8541,10 +8366,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8598,10 +8420,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8652,9 +8471,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -8708,10 +8525,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8760,10 +8574,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8813,10 +8624,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -8870,10 +8678,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -8922,10 +8727,7 @@
         "work-knowledge-contracts.json#/records/ContradictionSet"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -8977,9 +8779,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -9026,9 +8826,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -9075,9 +8873,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -9129,8 +8925,6 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -9178,8 +8972,6 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -9228,9 +9020,8 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T03",
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -9282,8 +9073,6 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -9332,9 +9121,8 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T03",
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -9386,9 +9174,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -9440,9 +9226,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -9499,9 +9283,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -9549,9 +9331,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -9604,9 +9384,8 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
         "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -9658,9 +9437,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -9707,9 +9484,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -9758,8 +9533,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -9812,9 +9586,8 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
         "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -9866,9 +9639,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -9915,9 +9686,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -9964,9 +9733,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -10013,9 +9780,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -10062,9 +9827,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -10120,9 +9883,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -10173,9 +9934,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -10226,9 +9985,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10279,9 +10036,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10332,9 +10087,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -10385,9 +10138,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -10439,9 +10190,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10499,8 +10248,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10556,9 +10304,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -10614,9 +10360,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10672,9 +10416,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10724,9 +10466,8 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T01",
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10782,8 +10523,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10838,9 +10578,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10894,9 +10632,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -10946,9 +10682,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11002,9 +10736,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11054,9 +10786,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11110,9 +10840,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11166,9 +10894,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11223,7 +10949,6 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -11279,9 +11004,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11330,9 +11053,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11377,8 +11098,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11424,8 +11143,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11471,8 +11188,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11523,8 +11238,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11571,8 +11284,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11624,8 +11335,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11676,8 +11385,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11725,7 +11432,6 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11776,9 +11482,7 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -11828,8 +11532,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -11876,7 +11578,6 @@
         "work-knowledge-contracts.json#/records/ScheduleOccurrence"
       ],
       "verification_family_refs": [
-        "WK-T01",
         "WK-T02",
         "WK-T03"
       ],
@@ -11932,9 +11633,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -11983,9 +11682,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12034,9 +11731,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12085,9 +11780,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12136,9 +11829,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12187,9 +11878,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12239,7 +11928,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -12295,9 +11983,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12346,9 +12032,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12398,9 +12082,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12451,9 +12133,8 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T03",
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -12504,9 +12185,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -12556,9 +12235,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12659,9 +12336,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12706,9 +12381,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -12754,9 +12427,8 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T03",
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -12807,9 +12479,8 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05",
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -12859,9 +12530,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -12907,9 +12576,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -12959,9 +12626,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -13008,8 +12673,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -13059,9 +12723,7 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -13106,8 +12768,6 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -13153,8 +12813,6 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -13200,8 +12858,6 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -13247,8 +12903,6 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -13294,8 +12948,6 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -13342,9 +12994,8 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T03",
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -13394,8 +13045,6 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -13443,8 +13092,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -13495,7 +13143,6 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
         "WK-T02",
         "WK-T03"
       ],
@@ -13548,9 +13195,8 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T03",
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -13600,9 +13246,7 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -13647,9 +13291,7 @@
         "work-knowledge-contracts.json#/records/SkillSelection"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -13696,9 +13338,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -13745,9 +13385,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -13796,8 +13434,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -13849,9 +13486,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -13899,8 +13534,6 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -13954,9 +13587,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14008,9 +13639,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -14057,9 +13686,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -14107,9 +13734,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -14161,9 +13786,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14210,9 +13833,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14264,9 +13885,7 @@
         "work-knowledge-contracts.json#/records/StepExecution"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -14313,9 +13932,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14363,9 +13980,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14417,9 +14032,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14468,8 +14081,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T06"
       ],
       "verification_bindings": [
         {
@@ -14521,9 +14133,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14570,9 +14180,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14620,9 +14228,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14674,9 +14280,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14723,9 +14327,7 @@
         "work-knowledge-contracts.json#/records/Project"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T01"
       ],
       "verification_bindings": [
         {
@@ -14770,8 +14372,6 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -14817,8 +14417,6 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -14864,8 +14462,6 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -14911,9 +14507,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -14963,9 +14557,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -15017,8 +14609,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -15068,9 +14659,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T02"
       ],
       "verification_bindings": [
         {
@@ -15120,8 +14709,6 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -15169,7 +14756,6 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
         "WK-T03"
       ],
       "verification_bindings": [
@@ -15222,8 +14808,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -15277,8 +14862,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -15328,9 +14911,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -15380,9 +14961,7 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -15436,8 +15015,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -15487,8 +15064,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -15538,8 +15113,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -15595,7 +15168,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -15652,9 +15224,8 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T01",
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -15708,8 +15279,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -15765,7 +15334,6 @@
         "work-knowledge-contracts.json#/records/EvaluatorProfile"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -15824,9 +15392,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -15881,10 +15447,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -15934,10 +15497,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -15987,10 +15547,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16042,9 +15599,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -16101,9 +15656,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -16158,10 +15711,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16212,10 +15762,8 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T03",
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16270,10 +15818,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16324,10 +15869,7 @@
         "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06",
-        "WK-T07"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16381,9 +15923,7 @@
         "work-knowledge-contracts.json#/records/SummaryLoss"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16437,9 +15977,7 @@
         "work-knowledge-contracts.json#/records/SummaryLoss"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16488,9 +16026,7 @@
         "work-knowledge-contracts.json#/records/SummaryLoss"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16539,9 +16075,7 @@
         "work-knowledge-contracts.json#/records/SummaryLoss"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16590,9 +16124,7 @@
         "work-knowledge-contracts.json#/records/SummaryLoss"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16642,9 +16174,7 @@
         "work-knowledge-contracts.json#/records/SummaryLoss"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16698,9 +16228,7 @@
         "work-knowledge-contracts.json#/records/SummaryLoss"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16751,8 +16279,7 @@
       ],
       "verification_family_refs": [
         "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -16804,8 +16331,6 @@
         "01-contract-kernel.md#4-intent-knowledge-rationale-and-events"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -16855,7 +16380,6 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -16909,7 +16433,6 @@
         "01-contract-kernel.md#4-intent-knowledge-rationale-and-events"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -16963,8 +16486,6 @@
         "01-contract-kernel.md#4-intent-knowledge-rationale-and-events"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -17013,9 +16534,8 @@
         "01-contract-kernel.md#4-intent-knowledge-rationale-and-events"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T01",
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -17068,7 +16588,6 @@
         "01-contract-kernel.md#4-intent-knowledge-rationale-and-events"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -17122,8 +16641,6 @@
         "01-contract-kernel.md#4-intent-knowledge-rationale-and-events"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -17172,7 +16689,6 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -17226,9 +16742,7 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -17280,8 +16794,6 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -17335,7 +16847,6 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -17389,9 +16900,7 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -17444,9 +16953,7 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -17498,8 +17005,6 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -17547,9 +17052,7 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -17597,7 +17100,6 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -17652,7 +17154,6 @@
         "work-knowledge-contracts.json#/records/EvaluationTrial"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -17709,9 +17210,8 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T03",
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -17766,8 +17266,7 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
+        "WK-T03",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -17822,9 +17321,7 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T03"
       ],
       "verification_bindings": [
         {
@@ -17875,8 +17372,7 @@
       ],
       "verification_family_refs": [
         "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -17931,7 +17427,6 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
         "WK-T05",
         "WK-T06"
       ],
@@ -17987,9 +17482,7 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T03"
       ],
       "verification_bindings": [
         {
@@ -18044,9 +17537,8 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T02",
+        "WK-T03"
       ],
       "verification_bindings": [
         {
@@ -18166,8 +17658,6 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
         "WK-T06"
       ],
       "verification_bindings": [
@@ -18223,9 +17713,8 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T03",
+        "WK-T04"
       ],
       "verification_bindings": [
         {
@@ -20091,11 +19580,12 @@
   "verification_binding_contract": {
     "version": "WK-V-1.0",
     "kind": "Author repair of XSR-02; not independent closure or executed evidence",
-    "rule": "Every question verification_binding identifies an explicit expected observation within a shared contrasting subcase. verification_family_refs retain the original broad portfolio grouping only and are not evidence that each distinctive question claim is exercised. No test file per source question is required.",
+    "rule": "Every question verification_binding identifies an explicit expected observation within a shared contrasting subcase. `verification_family_refs` is DERIVED: it is exactly the set of families of the subcases the answer binds, so the declared planned test module is the one that actually exercises the answer. It is no longer the broad portfolio grouping — under that reading 88 of 394 bindings cited a family the answer did not declare (XSR-R-01), and a reader following the declaration reached the wrong module. `verification_refs` is likewise exactly the distinct subcases bound. No test file per source question is required.",
     "coverage": "All 268 unchanged source question IDs and texts receive operative subcase/assertion joins. This structural check does not independently establish semantic completeness.",
     "independent_review": "Required on the authored mappings and observations before closing XSR-02.",
     "root_projection_refresh": "For every one of these 268 question_id rows, copy verification_refs and verification_bindings into the root coverage projection, preserving source text/IDs, answer_location and pending/unimplemented status.",
-    "controls": "Each subcase carries its own `positive_control` and `execution_boundary`, naming the ordinary authorized counterpart of its own stimulus and what its own stimulus cannot establish from fixtures (XSR-R-02). `procedure` remains one shared text and says so in `shared_control_groups`; sharing that is not declared there is a failure, not a default."
+    "controls": "Each subcase carries its own `positive_control` and `execution_boundary`, naming the ordinary authorized counterpart of its own stimulus and what its own stimulus cannot establish from fixtures (XSR-R-02). `procedure` remains one shared text and says so in `shared_control_groups`; sharing that is not declared there is a failure, not a default.",
+    "recomputation": "node scripts/vision-wk-bindings.mjs verify recomputes every number in this contract from the file itself; `project --write` rebuilds the root projection. Do not quote counts from prose — 268 rows is past what anyone keeps in step by hand, which is how they drifted."
   },
   "shared_control_groups": [
     {
