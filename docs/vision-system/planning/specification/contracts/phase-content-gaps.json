@@ -1,0 +1,3084 @@
+{
+  "schema_version": "1.0",
+  "kind": "explicit per-phase content gaps",
+  "why": "A criterion whose body uses `content_unspecified` states no requirement because no source states one. Each entry below names what the prose would have to say for that criterion to carry content. validate_contracts.py fails a `content_unspecified` body with no entry here, and fails an entry here with no such body -- so the count cannot drift in either direction.",
+  "counts": {
+    "criteria_with_content": 723,
+    "criteria_content_unspecified": 104,
+    "criteria_preserved_from_repair": 10
+  },
+  "gaps": [
+    {
+      "gap_id": "gap-AccessDescendant-discovered",
+      "record": "AccessDescendant",
+      "phase": "discovered",
+      "criterion_id": "criterion.AccessDescendant.discovered.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `discovered` requires -- for AccessDescendant or for any record carrying that phase. The corpus names `discovered` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "discharged"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "origin_operation_ref",
+        "principal_id",
+        "connection_ref",
+        "kind",
+        "native_identity",
+        "created_at",
+        "scope",
+        "purpose_ids",
+        "discovery_source_ref",
+        "containment_method_ref",
+        "last_verified_at",
+        "residual_authority",
+        "owner_assignment_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-AccessGraph-building",
+      "record": "AccessGraph",
+      "phase": "building",
+      "criterion_id": "criterion.AccessGraph.building.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `building` requires -- for AccessGraph or for any record carrying that phase. The corpus names `building` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "root_operation_refs",
+        "descendant_refs",
+        "source_position",
+        "source_watermarks",
+        "enumeration_evidence_refs",
+        "omissions"
+      ]
+    },
+    {
+      "gap_id": "gap-Account-asserted",
+      "record": "Account",
+      "phase": "asserted",
+      "criterion_id": "criterion.Account.asserted.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `asserted` requires -- for Account or for any record carrying that phase. The corpus names `asserted` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "assessing"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "principal_ref",
+        "account_kind",
+        "provider_identity_ref",
+        "native_account_id",
+        "identity_evidence_refs",
+        "currency_codes",
+        "standing_refs",
+        "custodian_assignment_ref",
+        "authority_binding_refs",
+        "closing_duty_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-AgentTemplate-eligible",
+      "record": "AgentTemplate",
+      "phase": "eligible",
+      "criterion_id": "criterion.AgentTemplate.eligible.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of AgentTemplate's own fields carries the evidence `eligible` requires. The requirement IS stated -- Eligibility is scoped: the exact purpose, destination and version constraints resolve, and the scope's own authority is current. Eligibility is not a score. -- and AgentTemplate declares no field it can bind to, so the criterion cannot express it. Either AgentTemplate gains that field, or the corpus states what AgentTemplate's `eligible` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "eligible",
+        "requires": "Eligibility is scoped: the exact purpose, destination and version constraints resolve, and the scope's own authority is current. Eligibility is not a score.",
+        "cites": [
+          "w-trust-scope",
+          "e-independence"
+        ]
+      },
+      "record_required_payload_fields": [
+        "capability_ids",
+        "instruction_ref",
+        "skill_refs",
+        "input_ports",
+        "output_ports",
+        "eligible_runtime_refs",
+        "tool_requirements",
+        "context_requirements",
+        "bounds",
+        "self_checks",
+        "known_limits",
+        "evaluation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-BillingProfile-unverified",
+      "record": "BillingProfile",
+      "phase": "unverified",
+      "criterion_id": "criterion.BillingProfile.unverified.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `unverified` requires -- for BillingProfile or for any record carrying that phase. The corpus names `unverified` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "principal_ref",
+        "account_ref",
+        "currency",
+        "charge_mode",
+        "rate_observation_refs",
+        "plan_name",
+        "credit_observation_refs",
+        "auto_reload_observation_ref",
+        "allowed_paid_actions",
+        "maximum_exposure",
+        "freshness_duration",
+        "custodian_assignment_ref",
+        "valid_until"
+      ]
+    },
+    {
+      "gap_id": "gap-Blocker-accepted_limit",
+      "record": "Blocker",
+      "phase": "accepted_limit",
+      "criterion_id": "criterion.Blocker.accepted_limit.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Blocker's own fields carries the evidence `accepted_limit` requires. The requirement IS stated -- A limit is accepted with authority: the affected work is parked or narrowed AND duty ownership is preserved. -- and Blocker declares no field it can bind to, so the criterion cannot express it. Either Blocker gains that field, or the corpus states what Blocker's `accepted_limit` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "accepted_limit",
+        "requires": "A limit is accepted with authority: the affected work is parked or narrowed AND duty ownership is preserved.",
+        "cites": [
+          "w-blocker"
+        ]
+      },
+      "record_required_payload_fields": [
+        "affected_work_refs",
+        "dependency_ref",
+        "unknowns",
+        "resolution_predicate",
+        "provider_assignment_ref",
+        "next_check_at",
+        "due_impact",
+        "evidence_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-Blocker-resolved",
+      "record": "Blocker",
+      "phase": "resolved",
+      "criterion_id": "criterion.Blocker.resolved.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Blocker's own fields carries the evidence `resolved` requires. The requirement IS stated -- A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains. -- and Blocker declares no field it can bind to, so the criterion cannot express it. Either Blocker gains that field, or the corpus states what Blocker's `resolved` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "resolved",
+        "requires": "A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains.",
+        "cites": [
+          "k-case-dispute",
+          "k-obl-dispute",
+          "e-contradiction"
+        ]
+      },
+      "record_required_payload_fields": [
+        "affected_work_refs",
+        "dependency_ref",
+        "unknowns",
+        "resolution_predicate",
+        "provider_assignment_ref",
+        "next_check_at",
+        "due_impact",
+        "evidence_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-BrandGuide-superseded",
+      "record": "BrandGuide",
+      "phase": "superseded",
+      "criterion_id": "criterion.BrandGuide.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of BrandGuide's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and BrandGuide declares no field it can bind to, so the criterion cannot express it. Either BrandGuide gains that field, or the corpus states what BrandGuide's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "audience",
+        "identity_intent",
+        "voice_rules",
+        "tone_examples",
+        "asset_rights",
+        "claim_refs",
+        "owner_taste_decision",
+        "review_at"
+      ]
+    },
+    {
+      "gap_id": "gap-BuildArtifact-withdrawn",
+      "record": "BuildArtifact",
+      "phase": "withdrawn",
+      "criterion_id": "criterion.BuildArtifact.withdrawn.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of BuildArtifact's own fields carries the evidence `withdrawn` requires. The requirement IS stated -- Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current. -- and BuildArtifact declares no field it can bind to, so the criterion cannot express it. Either BuildArtifact gains that field, or the corpus states what BuildArtifact's `withdrawn` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "withdrawn",
+        "requires": "Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current.",
+        "cites": [
+          "k-judgment-stale",
+          "k-supersede"
+        ]
+      },
+      "record_required_payload_fields": [
+        "spec_ref",
+        "artifact_refs",
+        "source_revision",
+        "environment_ref",
+        "test_refs",
+        "maintenance_procedure"
+      ]
+    },
+    {
+      "gap_id": "gap-BusinessAccount-superseded",
+      "record": "BusinessAccount",
+      "phase": "superseded",
+      "criterion_id": "criterion.BusinessAccount.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of BusinessAccount's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and BusinessAccount declares no field it can bind to, so the criterion cannot express it. Either BusinessAccount gains that field, or the corpus states what BusinessAccount's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "as_of_position",
+        "source_watermarks",
+        "decisions",
+        "attempts",
+        "obligations",
+        "negative_evidence",
+        "omission_manifest",
+        "cost_ref",
+        "causal_limits"
+      ]
+    },
+    {
+      "gap_id": "gap-Campaign-superseded",
+      "record": "Campaign",
+      "phase": "superseded",
+      "criterion_id": "criterion.Campaign.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Campaign's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Campaign declares no field it can bind to, so the criterion cannot express it. Either Campaign gains that field, or the corpus states what Campaign's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "offer_ref",
+        "channel",
+        "recipient_selector",
+        "content_refs",
+        "contact_allocation",
+        "schedule",
+        "hypothesis",
+        "measure_definition",
+        "stop_rule"
+      ]
+    },
+    {
+      "gap_id": "gap-CandidateAssessment-invited",
+      "record": "CandidateAssessment",
+      "phase": "invited",
+      "criterion_id": "criterion.CandidateAssessment.invited.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `invited` requires -- for CandidateAssessment or for any record carrying that phase. The corpus names `invited` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "capacity_need",
+        "candidate_ref",
+        "evaluation_criteria",
+        "work_samples",
+        "assessor",
+        "reasons",
+        "candidate_burden",
+        "challenge_route"
+      ]
+    },
+    {
+      "gap_id": "gap-CapacityObservation-superseded",
+      "record": "CapacityObservation",
+      "phase": "superseded",
+      "criterion_id": "criterion.CapacityObservation.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of CapacityObservation's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and CapacityObservation declares no field it can bind to, so the criterion cannot express it. Either CapacityObservation gains that field, or the corpus states what CapacityObservation's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "subject_ref",
+        "source_ref",
+        "interval",
+        "measure",
+        "unit",
+        "measurement",
+        "freshness_until",
+        "capture_digest"
+      ]
+    },
+    {
+      "gap_id": "gap-CapacityStudy-superseded",
+      "record": "CapacityStudy",
+      "phase": "superseded",
+      "criterion_id": "criterion.CapacityStudy.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of CapacityStudy's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and CapacityStudy declares no field it can bind to, so the criterion cannot express it. Either CapacityStudy gains that field, or the corpus states what CapacityStudy's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "demand_waves",
+        "fulfilled_outcomes",
+        "maintenance_minutes",
+        "owner_minutes",
+        "continuity_ref",
+        "foregone_work",
+        "admission_recommendation"
+      ]
+    },
+    {
+      "gap_id": "gap-Case-disputed",
+      "record": "Case",
+      "phase": "disputed",
+      "criterion_id": "criterion.Case.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Case's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and Case declares no field it can bind to, so the criterion cannot express it. Either Case gains that field, or the corpus states what Case's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "outcome_ref",
+        "intent_ref",
+        "mandate_ref",
+        "sponsor_assignment_ref",
+        "obligation_refs",
+        "dependency_refs",
+        "acceptance_contract_ref",
+        "causal_episode_id",
+        "work_order_refs",
+        "review_at"
+      ]
+    },
+    {
+      "gap_id": "gap-CashPosition-superseded",
+      "record": "CashPosition",
+      "phase": "superseded",
+      "criterion_id": "criterion.CashPosition.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of CashPosition's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and CashPosition declares no field it can bind to, so the criterion cannot express it. Either CashPosition gains that field, or the corpus states what CashPosition's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "account_refs",
+        "source_statements",
+        "outstanding_holds",
+        "restricted_reserves",
+        "forecast_assumptions",
+        "unmatched_movements",
+        "balance_observations",
+        "coverage_gaps"
+      ]
+    },
+    {
+      "gap_id": "gap-CausalEpisode-allocated",
+      "record": "CausalEpisode",
+      "phase": "allocated",
+      "criterion_id": "criterion.CausalEpisode.allocated.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `allocated` requires -- for CausalEpisode or for any record carrying that phase. The corpus names `allocated` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "initiating_event_ref",
+        "class",
+        "semantic_subject_refs",
+        "allowance",
+        "resource_account_refs",
+        "reservation_refs",
+        "usage",
+        "stop_predicate",
+        "renewal_decision_refs",
+        "admitting_mandate_ref",
+        "closure_reservation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-CausalEpisode-exhausted",
+      "record": "CausalEpisode",
+      "phase": "exhausted",
+      "criterion_id": "criterion.CausalEpisode.exhausted.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of CausalEpisode's own fields carries the evidence `exhausted` requires. The requirement IS stated -- The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it. -- and CausalEpisode declares no field it can bind to, so the criterion cannot express it. Either CausalEpisode gains that field, or the corpus states what CausalEpisode's `exhausted` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "exhausted",
+        "requires": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it.",
+        "cites": [
+          "k-manifest",
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "initiating_event_ref",
+        "class",
+        "semantic_subject_refs",
+        "allowance",
+        "resource_account_refs",
+        "reservation_refs",
+        "usage",
+        "stop_predicate",
+        "renewal_decision_refs",
+        "admitting_mandate_ref",
+        "closure_reservation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-Claim-unassessed",
+      "record": "Claim",
+      "phase": "unassessed",
+      "criterion_id": "criterion.Claim.unassessed.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `unassessed` requires -- for Claim or for any record carrying that phase. The corpus names `unassessed` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "proposition",
+        "subject_refs",
+        "scope",
+        "supporting_refs",
+        "opposing_refs",
+        "uncertainty",
+        "validity_predicates",
+        "assessor_assignment_ref",
+        "review_at",
+        "retracted",
+        "kind"
+      ]
+    },
+    {
+      "gap_id": "gap-ClosurePlan-superseded",
+      "record": "ClosurePlan",
+      "phase": "superseded",
+      "criterion_id": "criterion.ClosurePlan.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ClosurePlan's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ClosurePlan declares no field it can bind to, so the criterion cannot express it. Either ClosurePlan gains that field, or the corpus states what ClosurePlan's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "venture_ref",
+        "duty_inventory",
+        "funding_ref",
+        "dispositions",
+        "renewal_receipts",
+        "data_actions",
+        "grievance_custodian"
+      ]
+    },
+    {
+      "gap_id": "gap-Commitment-disputed",
+      "record": "Commitment",
+      "phase": "disputed",
+      "criterion_id": "criterion.Commitment.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Commitment's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and Commitment declares no field it can bind to, so the criterion cannot express it. Either Commitment gains that field, or the corpus states what Commitment's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "promisor_ref",
+        "beneficiary_refs",
+        "exact_terms_ref",
+        "standing_refs",
+        "counterparty_act_refs",
+        "obligation_refs",
+        "responsibility_assignment_ref",
+        "effective_interval"
+      ]
+    },
+    {
+      "gap_id": "gap-Commitment-superseded",
+      "record": "Commitment",
+      "phase": "superseded",
+      "criterion_id": "criterion.Commitment.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Commitment's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Commitment declares no field it can bind to, so the criterion cannot express it. Either Commitment gains that field, or the corpus states what Commitment's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "promisor_ref",
+        "beneficiary_refs",
+        "exact_terms_ref",
+        "standing_refs",
+        "counterparty_act_refs",
+        "obligation_refs",
+        "responsibility_assignment_ref",
+        "effective_interval"
+      ]
+    },
+    {
+      "gap_id": "gap-ConflictClaim-resolved",
+      "record": "ConflictClaim",
+      "phase": "resolved",
+      "criterion_id": "criterion.ConflictClaim.resolved.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ConflictClaim's own fields carries the evidence `resolved` requires. The requirement IS stated -- A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains. -- and ConflictClaim declares no field it can bind to, so the criterion cannot express it. Either ConflictClaim gains that field, or the corpus states what ConflictClaim's `resolved` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "resolved",
+        "requires": "A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains.",
+        "cites": [
+          "k-case-dispute",
+          "k-obl-dispute",
+          "e-contradiction"
+        ]
+      },
+      "record_required_payload_fields": [
+        "namespace",
+        "principal_id",
+        "canonical_business_keys",
+        "alias_version_ref",
+        "scope_epoch",
+        "effect_kind",
+        "exclusivity_or_quantity",
+        "native_entitlement_refs",
+        "population_or_dependency_refs",
+        "unresolved_predecessor_refs",
+        "operation_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-ContentAsset-withdrawn",
+      "record": "ContentAsset",
+      "phase": "withdrawn",
+      "criterion_id": "criterion.ContentAsset.withdrawn.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ContentAsset's own fields carries the evidence `withdrawn` requires. The requirement IS stated -- Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current. -- and ContentAsset declares no field it can bind to, so the criterion cannot express it. Either ContentAsset gains that field, or the corpus states what ContentAsset's `withdrawn` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "withdrawn",
+        "requires": "Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current.",
+        "cites": [
+          "k-judgment-stale",
+          "k-supersede"
+        ]
+      },
+      "record_required_payload_fields": [
+        "brief",
+        "audience",
+        "purpose",
+        "body_ref",
+        "claims",
+        "rights",
+        "brand_ref",
+        "disclosure_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-ContextManifest-captured",
+      "record": "ContextManifest",
+      "phase": "captured",
+      "criterion_id": "criterion.ContextManifest.captured.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `captured` requires -- for ContextManifest or for any record carrying that phase. The corpus names `captured` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "work_order_ref",
+        "loader_identity_ref",
+        "loader_profile_ref",
+        "source_refs",
+        "blob_refs",
+        "captured_inputs",
+        "epochs",
+        "transformation_refs",
+        "destination_contract_refs",
+        "purpose_ids",
+        "native_ancestry",
+        "omissions",
+        "allocations",
+        "closure_snapshot_ref",
+        "expires_at"
+      ]
+    },
+    {
+      "gap_id": "gap-ContextManifest-exhausted",
+      "record": "ContextManifest",
+      "phase": "exhausted",
+      "criterion_id": "criterion.ContextManifest.exhausted.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ContextManifest's own fields carries the evidence `exhausted` requires. The requirement IS stated -- The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it. -- and ContextManifest declares no field it can bind to, so the criterion cannot express it. Either ContextManifest gains that field, or the corpus states what ContextManifest's `exhausted` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "exhausted",
+        "requires": "The declared allowance is spent in its own unit; a provider reset, new revision or delegated child cannot refill it.",
+        "cites": [
+          "k-manifest",
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "work_order_ref",
+        "loader_identity_ref",
+        "loader_profile_ref",
+        "source_refs",
+        "blob_refs",
+        "captured_inputs",
+        "epochs",
+        "transformation_refs",
+        "destination_contract_refs",
+        "purpose_ids",
+        "native_ancestry",
+        "omissions",
+        "allocations",
+        "closure_snapshot_ref",
+        "expires_at"
+      ]
+    },
+    {
+      "gap_id": "gap-Conversation-superseded",
+      "record": "Conversation",
+      "phase": "superseded",
+      "criterion_id": "criterion.Conversation.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Conversation's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Conversation declares no field it can bind to, so the criterion cannot express it. Either Conversation gains that field, or the corpus states what Conversation's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "parties",
+        "channel",
+        "purpose",
+        "original_messages",
+        "relationship_owner",
+        "restrictions",
+        "promises"
+      ]
+    },
+    {
+      "gap_id": "gap-DecisionChallenge-consumed",
+      "record": "DecisionChallenge",
+      "phase": "consumed",
+      "criterion_id": "criterion.DecisionChallenge.consumed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of DecisionChallenge's own fields carries the evidence `consumed` requires. The requirement IS stated -- Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption. -- and DecisionChallenge declares no field it can bind to, so the criterion cannot express it. Either DecisionChallenge gains that field, or the corpus states what DecisionChallenge's `consumed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "consumed",
+        "requires": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption.",
+        "cites": [
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "packet_ref",
+        "action_digest",
+        "expected_revisions",
+        "actor_identity_ref",
+        "nonce_digest",
+        "issued_at",
+        "expires_at"
+      ]
+    },
+    {
+      "gap_id": "gap-DecisionChallenge-issued",
+      "record": "DecisionChallenge",
+      "phase": "issued",
+      "criterion_id": "criterion.DecisionChallenge.issued.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `issued` requires -- for DecisionChallenge or for any record carrying that phase. The corpus names `issued` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "packet_ref",
+        "action_digest",
+        "expected_revisions",
+        "actor_identity_ref",
+        "nonce_digest",
+        "issued_at",
+        "expires_at"
+      ]
+    },
+    {
+      "gap_id": "gap-DecisionRecord-superseded",
+      "record": "DecisionRecord",
+      "phase": "superseded",
+      "criterion_id": "criterion.DecisionRecord.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of DecisionRecord's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and DecisionRecord declares no field it can bind to, so the criterion cannot express it. Either DecisionRecord gains that field, or the corpus states what DecisionRecord's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "kind",
+        "question",
+        "options",
+        "deciding_identity_refs",
+        "mandate_refs",
+        "evidence_refs",
+        "omissions",
+        "chosen_scope",
+        "command_ids",
+        "subject_refs",
+        "human_response_refs",
+        "decision_rule_ref",
+        "valid_until"
+      ]
+    },
+    {
+      "gap_id": "gap-DecisionRecord-withdrawn",
+      "record": "DecisionRecord",
+      "phase": "withdrawn",
+      "criterion_id": "criterion.DecisionRecord.withdrawn.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of DecisionRecord's own fields carries the evidence `withdrawn` requires. The requirement IS stated -- Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current. -- and DecisionRecord declares no field it can bind to, so the criterion cannot express it. Either DecisionRecord gains that field, or the corpus states what DecisionRecord's `withdrawn` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "withdrawn",
+        "requires": "Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current.",
+        "cites": [
+          "k-judgment-stale",
+          "k-supersede"
+        ]
+      },
+      "record_required_payload_fields": [
+        "kind",
+        "question",
+        "options",
+        "deciding_identity_refs",
+        "mandate_refs",
+        "evidence_refs",
+        "omissions",
+        "chosen_scope",
+        "command_ids",
+        "subject_refs",
+        "human_response_refs",
+        "decision_rule_ref",
+        "valid_until"
+      ]
+    },
+    {
+      "gap_id": "gap-Defect-accepted_residual",
+      "record": "Defect",
+      "phase": "accepted_residual",
+      "criterion_id": "criterion.Defect.accepted_residual.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Defect's own fields carries the evidence `accepted_residual` requires. The requirement IS stated -- An owner with the standing to do so accepted a named residual defect through an explicit scoped disposition, preserving dissent and an expiry. -- and Defect declares no field it can bind to, so the criterion cannot express it. Either Defect gains that field, or the corpus states what Defect's `accepted_residual` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "accepted_residual",
+        "requires": "An owner with the standing to do so accepted a named residual defect through an explicit scoped disposition, preserving dissent and an expiry.",
+        "cites": [
+          "c-closure",
+          "e-independence"
+        ]
+      },
+      "record_required_payload_fields": [
+        "subject_ref",
+        "failed_predicate",
+        "observed_evidence_refs",
+        "scope",
+        "consequence_class_refs",
+        "owner_assignment_ref",
+        "due_at"
+      ]
+    },
+    {
+      "gap_id": "gap-DeletionReceipt-superseded",
+      "record": "DeletionReceipt",
+      "phase": "superseded",
+      "criterion_id": "criterion.DeletionReceipt.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of DeletionReceipt's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and DeletionReceipt declares no field it can bind to, so the criterion cannot express it. Either DeletionReceipt gains that field, or the corpus states what DeletionReceipt's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "deletion_scope_ref",
+        "covered_scope",
+        "copy_class",
+        "method",
+        "observation_refs",
+        "observer_assignment_ref",
+        "checked_at",
+        "limits",
+        "residual_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-DeletionScope-determined",
+      "record": "DeletionScope",
+      "phase": "determined",
+      "criterion_id": "criterion.DeletionScope.determined.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of DeletionScope's own fields carries the evidence `determined` requires. The requirement IS stated -- A competent issuer's scoped conclusion with its conditions, uncertainties and expiry; naming an endpoint does not create the competence. -- and DeletionScope declares no field it can bind to, so the criterion cannot express it. Either DeletionScope gains that field, or the corpus states what DeletionScope's `determined` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "determined",
+        "requires": "A competent issuer's scoped conclusion with its conditions, uncertainties and expiry; naming an endpoint does not create the competence.",
+        "cites": [
+          "c-seed",
+          "s-world-propositions"
+        ]
+      },
+      "record_required_payload_fields": [
+        "subject_refs",
+        "material_selector",
+        "purpose_ids",
+        "restrictions",
+        "inventory_cutoff",
+        "inventory_refs",
+        "future_copy_rule",
+        "exception_refs",
+        "response_due_at",
+        "reconcile_at",
+        "receipt_refs",
+        "unknown_copies",
+        "residual_retention_refs",
+        "restriction_epoch_ref",
+        "proof_limits"
+      ]
+    },
+    {
+      "gap_id": "gap-DeletionScope-requested",
+      "record": "DeletionScope",
+      "phase": "requested",
+      "criterion_id": "criterion.DeletionScope.requested.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `requested` requires -- for DeletionScope or for any record carrying that phase. The corpus names `requested` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "required"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "subject_refs",
+        "material_selector",
+        "purpose_ids",
+        "restrictions",
+        "inventory_cutoff",
+        "inventory_refs",
+        "future_copy_rule",
+        "exception_refs",
+        "response_due_at",
+        "reconcile_at",
+        "receipt_refs",
+        "unknown_copies",
+        "residual_retention_refs",
+        "restriction_epoch_ref",
+        "proof_limits"
+      ]
+    },
+    {
+      "gap_id": "gap-DependencyClosure-building",
+      "record": "DependencyClosure",
+      "phase": "building",
+      "criterion_id": "criterion.DependencyClosure.building.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `building` requires -- for DependencyClosure or for any record carrying that phase. The corpus names `building` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "root_refs",
+        "member_refs",
+        "edge_bindings",
+        "source_position",
+        "source_watermarks",
+        "epoch_bindings",
+        "enumeration_evidence_refs",
+        "omissions"
+      ]
+    },
+    {
+      "gap_id": "gap-DomainAssessment-resolved",
+      "record": "DomainAssessment",
+      "phase": "resolved",
+      "criterion_id": "criterion.DomainAssessment.resolved.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of DomainAssessment's own fields carries the evidence `resolved` requires. The requirement IS stated -- A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains. -- and DomainAssessment declares no field it can bind to, so the criterion cannot express it. Either DomainAssessment gains that field, or the corpus states what DomainAssessment's `resolved` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "resolved",
+        "requires": "A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains.",
+        "cites": [
+          "k-case-dispute",
+          "k-obl-dispute",
+          "e-contradiction"
+        ]
+      },
+      "record_required_payload_fields": [
+        "domain",
+        "specific_proposition_or_skill",
+        "evidence_refs",
+        "limitations",
+        "assessor_ref",
+        "response_required_for",
+        "assistance_route_ref",
+        "recheck_predicate"
+      ]
+    },
+    {
+      "gap_id": "gap-Economics-superseded",
+      "record": "Economics",
+      "phase": "superseded",
+      "criterion_id": "criterion.Economics.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Economics's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Economics declares no field it can bind to, so the criterion cannot express it. Either Economics gains that field, or the corpus states what Economics's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "period_start",
+        "period_end",
+        "currency",
+        "owner_minutes",
+        "external_burden_observations",
+        "allocation_rule",
+        "missing_costs",
+        "observed_revenue",
+        "observed_cost",
+        "outstanding_cost",
+        "closure_reserve"
+      ]
+    },
+    {
+      "gap_id": "gap-Economics-validated",
+      "record": "Economics",
+      "phase": "validated",
+      "criterion_id": "criterion.Economics.validated.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Economics's own fields carries the evidence `validated` requires. The requirement IS stated -- A recorded domain acceptance decision against the catalog's substantive condition by the responsible acceptance role, with the validated lineage published against current epochs. A generic write is not validation. -- and Economics declares no field it can bind to, so the criterion cannot express it. Either Economics gains that field, or the corpus states what Economics's `validated` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "validated",
+        "requires": "A recorded domain acceptance decision against the catalog's substantive condition by the responsible acceptance role, with the validated lineage published against current epochs. A generic write is not validation.",
+        "cites": [
+          "c-seed",
+          "k-artifact",
+          "k08-epochs"
+        ]
+      },
+      "record_required_payload_fields": [
+        "period_start",
+        "period_end",
+        "currency",
+        "owner_minutes",
+        "external_burden_observations",
+        "allocation_rule",
+        "missing_costs",
+        "observed_revenue",
+        "observed_cost",
+        "outstanding_cost",
+        "closure_reserve"
+      ]
+    },
+    {
+      "gap_id": "gap-EvaluationCase-disputed",
+      "record": "EvaluationCase",
+      "phase": "disputed",
+      "criterion_id": "criterion.EvaluationCase.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of EvaluationCase's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and EvaluationCase declares no field it can bind to, so the criterion cannot express it. Either EvaluationCase gains that field, or the corpus states what EvaluationCase's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "fixture_ref",
+        "source_refs",
+        "requirement_ids",
+        "case_kind",
+        "expected_outcome",
+        "expected_process",
+        "label_provenance_refs",
+        "synthetic",
+        "scope_limits"
+      ]
+    },
+    {
+      "gap_id": "gap-ExecutionCapacity-superseded",
+      "record": "ExecutionCapacity",
+      "phase": "superseded",
+      "criterion_id": "criterion.ExecutionCapacity.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ExecutionCapacity's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ExecutionCapacity declares no field it can bind to, so the criterion cannot express it. Either ExecutionCapacity gains that field, or the corpus states what ExecutionCapacity's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "provider_account",
+        "permitted_route",
+        "allowance_observations",
+        "reserved_work",
+        "availability_window",
+        "uncertainty"
+      ]
+    },
+    {
+      "gap_id": "gap-ExperienceArtifact-superseded",
+      "record": "ExperienceArtifact",
+      "phase": "superseded",
+      "criterion_id": "criterion.ExperienceArtifact.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ExperienceArtifact's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ExperienceArtifact declares no field it can bind to, so the criterion cannot express it. Either ExperienceArtifact gains that field, or the corpus states what ExperienceArtifact's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "spec_ref",
+        "prototype_refs",
+        "journey_steps",
+        "accessibility_results",
+        "user_observations",
+        "open_defects"
+      ]
+    },
+    {
+      "gap_id": "gap-Experiment-running",
+      "record": "Experiment",
+      "phase": "running",
+      "criterion_id": "criterion.Experiment.running.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Experiment's own fields carries the evidence `running` requires. The requirement IS stated -- Execution is live under a current lease inside its declared window, and the resource reservation covering it is still held. -- and Experiment declares no field it can bind to, so the criterion cannot express it. Either Experiment gains that field, or the corpus states what Experiment's `running` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "running",
+        "requires": "Execution is live under a current lease inside its declared window, and the resource reservation covering it is still held.",
+        "cites": [
+          "k-workorder",
+          "w-run-states",
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "hypothesis",
+        "control",
+        "treatment",
+        "assignment_method",
+        "outcome_definition",
+        "resource_limits",
+        "stopping_rule",
+        "protocol_version",
+        "result_refs",
+        "reservation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-ExternalAttempt-disputed",
+      "record": "ExternalAttempt",
+      "phase": "disputed",
+      "criterion_id": "criterion.ExternalAttempt.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ExternalAttempt's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and ExternalAttempt declares no field it can bind to, so the criterion cannot express it. Either ExternalAttempt gains that field, or the corpus states what ExternalAttempt's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "operation_ref",
+        "release_ref",
+        "attempt_index",
+        "gateway_instance_id",
+        "gateway_boot_id",
+        "request_digest",
+        "transport_observation_refs",
+        "response_capture_refs",
+        "native_observation_refs",
+        "fence_evidence_refs",
+        "deadline"
+      ]
+    },
+    {
+      "gap_id": "gap-FailureRecord-resolved",
+      "record": "FailureRecord",
+      "phase": "resolved",
+      "criterion_id": "criterion.FailureRecord.resolved.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of FailureRecord's own fields carries the evidence `resolved` requires. The requirement IS stated -- A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains. -- and FailureRecord declares no field it can bind to, so the criterion cannot express it. Either FailureRecord gains that field, or the corpus states what FailureRecord's `resolved` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "resolved",
+        "requires": "A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains.",
+        "cites": [
+          "k-case-dispute",
+          "k-obl-dispute",
+          "e-contradiction"
+        ]
+      },
+      "record_required_payload_fields": [
+        "work_order_ref",
+        "attempt_refs",
+        "error_class",
+        "fingerprint",
+        "cause_refs",
+        "unknowns",
+        "changed_condition_refs",
+        "next_discriminator"
+      ]
+    },
+    {
+      "gap_id": "gap-ForgetRequest-disputed",
+      "record": "ForgetRequest",
+      "phase": "disputed",
+      "criterion_id": "criterion.ForgetRequest.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ForgetRequest's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and ForgetRequest declares no field it can bind to, so the criterion cannot express it. Either ForgetRequest gains that field, or the corpus states what ForgetRequest's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "instruction_ref",
+        "operation",
+        "source_refs",
+        "known_derivative_refs",
+        "cutoff",
+        "verification_refs",
+        "unknown_copies",
+        "residual_duty_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-ForgetRequest-requested",
+      "record": "ForgetRequest",
+      "phase": "requested",
+      "criterion_id": "criterion.ForgetRequest.requested.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `requested` requires -- for ForgetRequest or for any record carrying that phase. The corpus names `requested` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "required"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "instruction_ref",
+        "operation",
+        "source_refs",
+        "known_derivative_refs",
+        "cutoff",
+        "verification_refs",
+        "unknown_copies",
+        "residual_duty_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-FormationReadiness-preparing",
+      "record": "FormationReadiness",
+      "phase": "preparing",
+      "criterion_id": "criterion.FormationReadiness.preparing.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `preparing` requires -- for FormationReadiness or for any record carrying that phase. The corpus names `preparing` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "prepared"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "activity_nexus",
+        "principal_ref",
+        "signatory_refs",
+        "account_refs",
+        "name_asset_rights",
+        "professional_refs",
+        "prerequisite_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-Fulfillment-superseded",
+      "record": "Fulfillment",
+      "phase": "superseded",
+      "criterion_id": "criterion.Fulfillment.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Fulfillment's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Fulfillment declares no field it can bind to, so the criterion cannot express it. Either Fulfillment gains that field, or the corpus states what Fulfillment's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "agreement_ref",
+        "delivery_steps",
+        "performer_assignment",
+        "service_window",
+        "onboarding_state",
+        "receipts",
+        "remaining_duties"
+      ]
+    },
+    {
+      "gap_id": "gap-GrievanceCase-received",
+      "record": "GrievanceCase",
+      "phase": "received",
+      "criterion_id": "criterion.GrievanceCase.received.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `received` requires -- for GrievanceCase or for any record carrying that phase. The corpus names `received` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "report_ref",
+        "standing",
+        "issue_scope",
+        "requested_remedy",
+        "obligation_refs",
+        "custodian_assignment_ref",
+        "independent_escalation_assignment_ref",
+        "disputed_custodian",
+        "evidence_refs",
+        "response_decision_refs",
+        "received_at",
+        "next_update_at",
+        "decision_due_at",
+        "latest_protective_at",
+        "reason_refs",
+        "remedy_operation_refs",
+        "remedy_reservation_refs",
+        "alternate_channel_ref",
+        "residual_obligation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-HandoffAcceptance-superseded",
+      "record": "HandoffAcceptance",
+      "phase": "superseded",
+      "criterion_id": "criterion.HandoffAcceptance.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of HandoffAcceptance's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and HandoffAcceptance declares no field it can bind to, so the criterion cannot express it. Either HandoffAcceptance gains that field, or the corpus states what HandoffAcceptance's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "assignment_ref",
+        "from_party",
+        "to_party",
+        "scope_refs",
+        "duty_refs",
+        "deadlines",
+        "access_check_refs",
+        "competence_check_refs",
+        "acknowledgment_ref",
+        "continuation_ref",
+        "exceptions",
+        "accepting_identity_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-Incident-superseded",
+      "record": "Incident",
+      "phase": "superseded",
+      "criterion_id": "criterion.Incident.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Incident's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Incident declares no field it can bind to, so the criterion cannot express it. Either Incident gains that field, or the corpus states what Incident's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "trigger_evidence",
+        "affected_duties",
+        "commander",
+        "response_ref",
+        "communication_due",
+        "recovery_criteria",
+        "timeline",
+        "residual_duties",
+        "case_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-IndexSnapshot-building",
+      "record": "IndexSnapshot",
+      "phase": "building",
+      "criterion_id": "criterion.IndexSnapshot.building.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `building` requires -- for IndexSnapshot or for any record carrying that phase. The corpus names `building` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "profile_ref",
+        "source_position",
+        "source_watermarks",
+        "indexed_source_refs",
+        "omissions",
+        "build_evidence_refs",
+        "storage_mode",
+        "classification_policy_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-IntegrationConnection-paused",
+      "record": "IntegrationConnection",
+      "phase": "paused",
+      "criterion_id": "criterion.IntegrationConnection.paused.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of IntegrationConnection's own fields carries the evidence `paused` requires. The requirement IS stated -- New-work authority is withdrawn while active support, data, payment and reporting duties are retained; resuming requires reconciling stale assumptions, not flipping the flag back. -- and IntegrationConnection declares no field it can bind to, so the criterion cannot express it. Either IntegrationConnection gains that field, or the corpus states what IntegrationConnection's `paused` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "paused",
+        "requires": "New-work authority is withdrawn while active support, data, payment and reporting duties are retained; resuming requires reconciling stale assumptions, not flipping the flag back.",
+        "cites": [
+          "c-pause",
+          "i-connection"
+        ]
+      },
+      "record_required_payload_fields": [
+        "profile_ref",
+        "principal_ref",
+        "account_ref",
+        "grant_refs",
+        "credential_generation_ref",
+        "billing_profile_ref",
+        "destination_contract_refs",
+        "capability_ids",
+        "renewal_assignment_ref",
+        "recovery_assignment_ref",
+        "standing_refs",
+        "source_cursor_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-IntegrationConnection-pending",
+      "record": "IntegrationConnection",
+      "phase": "pending",
+      "criterion_id": "criterion.IntegrationConnection.pending.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `pending` requires -- for IntegrationConnection or for any record carrying that phase. The corpus names `pending` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "profile_ref",
+        "principal_ref",
+        "account_ref",
+        "grant_refs",
+        "credential_generation_ref",
+        "billing_profile_ref",
+        "destination_contract_refs",
+        "capability_ids",
+        "renewal_assignment_ref",
+        "recovery_assignment_ref",
+        "standing_refs",
+        "source_cursor_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-IntegrationInvocation-unknown",
+      "record": "IntegrationInvocation",
+      "phase": "unknown",
+      "criterion_id": "criterion.IntegrationInvocation.unknown.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of IntegrationInvocation's own fields carries the evidence `unknown` requires. The requirement IS stated -- The enumeration is POSITIVELY recorded as incomplete and no native correlation establishes the fact. Unknown is not zero, not false and not unlimited. -- and IntegrationInvocation declares no field it can bind to, so the criterion cannot express it. Either IntegrationInvocation gains that field, or the corpus states what IntegrationInvocation's `unknown` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "unknown",
+        "requires": "The enumeration is POSITIVELY recorded as incomplete and no native correlation establishes the fact. Unknown is not zero, not false and not unlimited.",
+        "cites": [
+          "a-descendants",
+          "arch3-distinctions"
+        ]
+      },
+      "record_required_payload_fields": [
+        "connection_ref",
+        "tool_id",
+        "work_order_ref",
+        "causal_episode_ref",
+        "arguments",
+        "arguments_digest",
+        "parameter_provenance_refs",
+        "context_manifest_ref",
+        "reservation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-IntegrationObservation-superseded",
+      "record": "IntegrationObservation",
+      "phase": "superseded",
+      "criterion_id": "criterion.IntegrationObservation.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of IntegrationObservation's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and IntegrationObservation declares no field it can bind to, so the criterion cannot express it. Either IntegrationObservation gains that field, or the corpus states what IntegrationObservation's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "connection_ref",
+        "adapter_profile_ref",
+        "invocation_ref",
+        "native_object_refs",
+        "capture_ref",
+        "received_at",
+        "transport_outcome",
+        "parsed_fact_refs",
+        "omissions",
+        "schema_digest",
+        "access_descendant_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-IntentVersion-superseded",
+      "record": "IntentVersion",
+      "phase": "superseded",
+      "criterion_id": "criterion.IntentVersion.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of IntentVersion's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and IntentVersion declares no field it can bind to, so the criterion cannot express it. Either IntentVersion gains that field, or the corpus states what IntentVersion's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "original_artifact_refs",
+        "principal_ref",
+        "goal_refs",
+        "constraint_refs",
+        "value_decision_refs",
+        "original_words",
+        "beneficiary",
+        "purpose",
+        "taste_examples",
+        "rejected_alternative_refs",
+        "review_at",
+        "original_rejected_alternatives"
+      ]
+    },
+    {
+      "gap_id": "gap-InteractionDetermination-determined",
+      "record": "InteractionDetermination",
+      "phase": "determined",
+      "criterion_id": "criterion.InteractionDetermination.determined.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of InteractionDetermination's own fields carries the evidence `determined` requires. The requirement IS stated -- A competent issuer's scoped conclusion with its conditions, uncertainties and expiry; naming an endpoint does not create the competence. -- and InteractionDetermination declares no field it can bind to, so the criterion cannot express it. Either InteractionDetermination gains that field, or the corpus states what InteractionDetermination's `determined` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "determined",
+        "requires": "A competent issuer's scoped conclusion with its conditions, uncertainties and expiry; naming an endpoint does not create the competence.",
+        "cites": [
+          "c-seed",
+          "s-world-propositions"
+        ]
+      },
+      "record_required_payload_fields": [
+        "proposal_refs",
+        "principal_refs",
+        "related_entity_refs",
+        "contract_refs",
+        "account_refs",
+        "purpose_ids",
+        "population_scopes",
+        "shared_dependency_refs",
+        "known_classes",
+        "unknown_classes",
+        "restrictions",
+        "competent_assignment_ref",
+        "evidence_refs",
+        "materiality_predicate",
+        "review_at",
+        "expires_at",
+        "reopen_predicates"
+      ]
+    },
+    {
+      "gap_id": "gap-InterventionRequest-requested",
+      "record": "InterventionRequest",
+      "phase": "requested",
+      "criterion_id": "criterion.InterventionRequest.requested.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `requested` requires -- for InterventionRequest or for any record carrying that phase. The corpus names `requested` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "required"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "scope_refs",
+        "reason",
+        "requested_operation",
+        "authority_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-JournalBatch-balanced",
+      "record": "JournalBatch",
+      "phase": "balanced",
+      "criterion_id": "criterion.JournalBatch.balanced.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of JournalBatch's own fields carries the evidence `balanced` requires. The requirement IS stated -- Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations. -- and JournalBatch declares no field it can bind to, so the criterion cannot express it. Either JournalBatch gains that field, or the corpus states what JournalBatch's `balanced` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "balanced",
+        "requires": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations.",
+        "cites": [
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "ledger_authority",
+        "accounting_period",
+        "entries",
+        "source_documents",
+        "treatment_refs",
+        "reconciliations"
+      ]
+    },
+    {
+      "gap_id": "gap-JournalBatch-posted",
+      "record": "JournalBatch",
+      "phase": "posted",
+      "criterion_id": "criterion.JournalBatch.posted.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of JournalBatch's own fields carries the evidence `posted` requires. The requirement IS stated -- The entry is posted and its batch balances per currency and ledger against its original sources; a balanced journal establishes nothing about compliance. -- and JournalBatch declares no field it can bind to, so the criterion cannot express it. Either JournalBatch gains that field, or the corpus states what JournalBatch's `posted` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "posted",
+        "requires": "The entry is posted and its batch balances per currency and ledger against its original sources; a balanced journal establishes nothing about compliance.",
+        "cites": [
+          "c-seed"
+        ]
+      },
+      "record_required_payload_fields": [
+        "ledger_authority",
+        "accounting_period",
+        "entries",
+        "source_documents",
+        "treatment_refs",
+        "reconciliations"
+      ]
+    },
+    {
+      "gap_id": "gap-KnowledgeEntry-superseded",
+      "record": "KnowledgeEntry",
+      "phase": "superseded",
+      "criterion_id": "criterion.KnowledgeEntry.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of KnowledgeEntry's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and KnowledgeEntry declares no field it can bind to, so the criterion cannot express it. Either KnowledgeEntry gains that field, or the corpus states what KnowledgeEntry's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "claim_ref",
+        "originals",
+        "epistemic_type",
+        "conflicts",
+        "validity_ref",
+        "recheck_at"
+      ]
+    },
+    {
+      "gap_id": "gap-LaunchReadiness-superseded",
+      "record": "LaunchReadiness",
+      "phase": "superseded",
+      "criterion_id": "criterion.LaunchReadiness.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of LaunchReadiness's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and LaunchReadiness declares no field it can bind to, so the criterion cannot express it. Either LaunchReadiness gains that field, or the corpus states what LaunchReadiness's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "offer_ref",
+        "formation_ref",
+        "fulfillment_capacity",
+        "support_capacity",
+        "claim_and_rights_refs",
+        "continuity_ref",
+        "grant_refs",
+        "acceptance_requirements_ref",
+        "acceptance_bindings"
+      ]
+    },
+    {
+      "gap_id": "gap-MarketBrief-superseded",
+      "record": "MarketBrief",
+      "phase": "superseded",
+      "criterion_id": "criterion.MarketBrief.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of MarketBrief's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and MarketBrief declares no field it can bind to, so the criterion cannot express it. Either MarketBrief gains that field, or the corpus states what MarketBrief's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "question",
+        "market_boundary",
+        "source_versions",
+        "source_dates",
+        "competitor_observations",
+        "conflicts",
+        "unknowns",
+        "recheck_at"
+      ]
+    },
+    {
+      "gap_id": "gap-MetricDefinition-superseded",
+      "record": "MetricDefinition",
+      "phase": "superseded",
+      "criterion_id": "criterion.MetricDefinition.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of MetricDefinition's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and MetricDefinition declares no field it can bind to, so the criterion cannot express it. Either MetricDefinition gains that field, or the corpus states what MetricDefinition's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "subject",
+        "population",
+        "numerator",
+        "denominator",
+        "units",
+        "exclusions",
+        "source_contracts",
+        "transformation_version",
+        "interpretation_owner"
+      ]
+    },
+    {
+      "gap_id": "gap-MetricSeries-superseded",
+      "record": "MetricSeries",
+      "phase": "superseded",
+      "criterion_id": "criterion.MetricSeries.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of MetricSeries's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and MetricSeries declares no field it can bind to, so the criterion cannot express it. Either MetricSeries gains that field, or the corpus states what MetricSeries's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "definition_ref",
+        "period",
+        "values",
+        "raw_evidence",
+        "missing_intervals",
+        "excluded_counts",
+        "cohort_labels",
+        "uncertainty"
+      ]
+    },
+    {
+      "gap_id": "gap-Observation-superseded",
+      "record": "Observation",
+      "phase": "superseded",
+      "criterion_id": "criterion.Observation.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Observation's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Observation declares no field it can bind to, so the criterion cannot express it. Either Observation gains that field, or the corpus states what Observation's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "capture_ref",
+        "observed_interval",
+        "received_at",
+        "source_version",
+        "scope",
+        "completeness",
+        "omissions",
+        "access_provenance_refs",
+        "reported_facts",
+        "observer_identity_ref",
+        "criterion_results"
+      ]
+    },
+    {
+      "gap_id": "gap-ObservationSet-superseded",
+      "record": "ObservationSet",
+      "phase": "superseded",
+      "criterion_id": "criterion.ObservationSet.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ObservationSet's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ObservationSet declares no field it can bind to, so the criterion cannot express it. Either ObservationSet gains that field, or the corpus states what ObservationSet's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "plan_ref",
+        "originals",
+        "sample_members",
+        "missing_cohorts",
+        "withdrawal_restrictions",
+        "observed_at",
+        "interpretations"
+      ]
+    },
+    {
+      "gap_id": "gap-Offer-withdrawn",
+      "record": "Offer",
+      "phase": "withdrawn",
+      "criterion_id": "criterion.Offer.withdrawn.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Offer's own fields carries the evidence `withdrawn` requires. The requirement IS stated -- Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current. -- and Offer declares no field it can bind to, so the criterion cannot express it. Either Offer gains that field, or the corpus states what Offer's `withdrawn` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "withdrawn",
+        "requires": "Withdrawal admits only a new successor: the original stays historical with its reasons, and nothing depends on the withdrawn revision as current.",
+        "cites": [
+          "k-judgment-stale",
+          "k-supersede"
+        ]
+      },
+      "record_required_payload_fields": [
+        "spec_ref",
+        "seller",
+        "audience",
+        "versioned_terms",
+        "price_ref",
+        "delivery_definition",
+        "capacity_ref",
+        "support_policy",
+        "cancellation_remedy_rules",
+        "acceptance_rule"
+      ]
+    },
+    {
+      "gap_id": "gap-ParticipationPlan-superseded",
+      "record": "ParticipationPlan",
+      "phase": "superseded",
+      "criterion_id": "criterion.ParticipationPlan.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ParticipationPlan's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ParticipationPlan declares no field it can bind to, so the criterion cannot express it. Either ParticipationPlan gains that field, or the corpus states what ParticipationPlan's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "owner_ref",
+        "availability",
+        "decision_batch_minutes",
+        "interrupt_limit",
+        "practice_minutes",
+        "incident_reserve_minutes",
+        "sampling_policy",
+        "consent_evidence",
+        "review_at"
+      ]
+    },
+    {
+      "gap_id": "gap-Partnership-superseded",
+      "record": "Partnership",
+      "phase": "superseded",
+      "criterion_id": "criterion.Partnership.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Partnership's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Partnership declares no field it can bind to, so the criterion cannot express it. Either Partnership gains that field, or the corpus states what Partnership's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "parties",
+        "mutual_outcomes",
+        "terms",
+        "opportunity_attribution",
+        "shared_dependencies",
+        "relationship_owner",
+        "review_at",
+        "exit_duties"
+      ]
+    },
+    {
+      "gap_id": "gap-PausePlan-superseded",
+      "record": "PausePlan",
+      "phase": "superseded",
+      "criterion_id": "criterion.PausePlan.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of PausePlan's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and PausePlan declares no field it can bind to, so the criterion cannot express it. Either PausePlan gains that field, or the corpus states what PausePlan's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "venture_ref",
+        "new_work_restrictions",
+        "continuing_duties",
+        "carrying_cost_ref",
+        "renewal_actions",
+        "resume_conditions",
+        "review_at"
+      ]
+    },
+    {
+      "gap_id": "gap-PivotPlan-superseded",
+      "record": "PivotPlan",
+      "phase": "superseded",
+      "criterion_id": "criterion.PivotPlan.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of PivotPlan's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and PivotPlan declares no field it can bind to, so the criterion cannot express it. Either PivotPlan gains that field, or the corpus states what PivotPlan's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "old_intent",
+        "new_intent",
+        "changed_assumptions",
+        "abandoned_work",
+        "surviving_duties",
+        "transition_work",
+        "accepted_decision"
+      ]
+    },
+    {
+      "gap_id": "gap-PrerequisiteSnapshot-captured",
+      "record": "PrerequisiteSnapshot",
+      "phase": "captured",
+      "criterion_id": "criterion.PrerequisiteSnapshot.captured.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `captured` requires -- for PrerequisiteSnapshot or for any record carrying that phase. The corpus names `captured` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "source_refs",
+        "epochs",
+        "participant_refs",
+        "source_watermarks",
+        "definition_refs",
+        "mapping_refs",
+        "competent_decision_refs",
+        "captured_at",
+        "expiry",
+        "complete_position"
+      ]
+    },
+    {
+      "gap_id": "gap-Principal-asserted",
+      "record": "Principal",
+      "phase": "asserted",
+      "criterion_id": "criterion.Principal.asserted.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `asserted` requires -- for Principal or for any record carrying that phase. The corpus names `asserted` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "assessing"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "kind",
+        "external_identity_refs",
+        "standing_refs",
+        "jurisdiction_assertion_refs",
+        "registration_assertion_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-Principal-disputed",
+      "record": "Principal",
+      "phase": "disputed",
+      "criterion_id": "criterion.Principal.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Principal's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and Principal declares no field it can bind to, so the criterion cannot express it. Either Principal gains that field, or the corpus states what Principal's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "kind",
+        "external_identity_refs",
+        "standing_refs",
+        "jurisdiction_assertion_refs",
+        "registration_assertion_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-ProcessingUse-superseded",
+      "record": "ProcessingUse",
+      "phase": "superseded",
+      "criterion_id": "criterion.ProcessingUse.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ProcessingUse's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ProcessingUse declares no field it can bind to, so the criterion cannot express it. Either ProcessingUse gains that field, or the corpus states what ProcessingUse's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "people_categories",
+        "purpose",
+        "source_fields",
+        "recipients",
+        "basis_determination",
+        "retention_policy",
+        "disclosure_refs",
+        "rights_route"
+      ]
+    },
+    {
+      "gap_id": "gap-ProductSpec-superseded",
+      "record": "ProductSpec",
+      "phase": "superseded",
+      "criterion_id": "criterion.ProductSpec.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ProductSpec's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ProductSpec declares no field it can bind to, so the criterion cannot express it. Either ProductSpec gains that field, or the corpus states what ProductSpec's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "outcome",
+        "beneficiary_cohort",
+        "requirements",
+        "journey_checks",
+        "excluded_promises",
+        "acceptance_criteria",
+        "dependencies"
+      ]
+    },
+    {
+      "gap_id": "gap-ProfessionalDetermination-superseded",
+      "record": "ProfessionalDetermination",
+      "phase": "superseded",
+      "criterion_id": "criterion.ProfessionalDetermination.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ProfessionalDetermination's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ProfessionalDetermination declares no field it can bind to, so the criterion cannot express it. Either ProfessionalDetermination gains that field, or the corpus states what ProfessionalDetermination's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "request_ref",
+        "named_issuer",
+        "competence_scope",
+        "activity_nexus",
+        "conclusion",
+        "conditions",
+        "unknowns",
+        "applicable_until",
+        "acknowledged_duties"
+      ]
+    },
+    {
+      "gap_id": "gap-ProfessionalRequest-superseded",
+      "record": "ProfessionalRequest",
+      "phase": "superseded",
+      "criterion_id": "criterion.ProfessionalRequest.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ProfessionalRequest's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ProfessionalRequest declares no field it can bind to, so the criterion cannot express it. Either ProfessionalRequest gains that field, or the corpus states what ProfessionalRequest's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "question",
+        "activity_nexus",
+        "evidence_refs",
+        "requested_deliverable",
+        "provider_assignment",
+        "fee_authority",
+        "accept_by",
+        "due_at"
+      ]
+    },
+    {
+      "gap_id": "gap-ReasoningPlan-resolved",
+      "record": "ReasoningPlan",
+      "phase": "resolved",
+      "criterion_id": "criterion.ReasoningPlan.resolved.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ReasoningPlan's own fields carries the evidence `resolved` requires. The requirement IS stated -- A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains. -- and ReasoningPlan declares no field it can bind to, so the criterion cannot express it. Either ReasoningPlan gains that field, or the corpus states what ReasoningPlan's `resolved` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "resolved",
+        "requires": "A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains.",
+        "cites": [
+          "k-case-dispute",
+          "k-obl-dispute",
+          "e-contradiction"
+        ]
+      },
+      "record_required_payload_fields": [
+        "work_order_ref",
+        "question",
+        "known_refs",
+        "assumption_refs",
+        "rival_hypotheses",
+        "next_discriminator",
+        "stop_predicate",
+        "resource_bounds",
+        "unknown_question_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-RecoveryPacket-superseded",
+      "record": "RecoveryPacket",
+      "phase": "superseded",
+      "criterion_id": "criterion.RecoveryPacket.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of RecoveryPacket's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and RecoveryPacket declares no field it can bind to, so the criterion cannot express it. Either RecoveryPacket gains that field, or the corpus states what RecoveryPacket's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "affected_scope",
+        "unknown_effects",
+        "restriction_refs",
+        "continuation_refs",
+        "residual_scope",
+        "frontier_evidence_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-ResearchPlan-superseded",
+      "record": "ResearchPlan",
+      "phase": "superseded",
+      "criterion_id": "criterion.ResearchPlan.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of ResearchPlan's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and ResearchPlan declares no field it can bind to, so the criterion cannot express it. Either ResearchPlan gains that field, or the corpus states what ResearchPlan's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "question",
+        "population",
+        "sampling_frame",
+        "source_access",
+        "protocol",
+        "biases",
+        "stop_rule",
+        "observation_deadline"
+      ]
+    },
+    {
+      "gap_id": "gap-Reservation-consumed",
+      "record": "Reservation",
+      "phase": "consumed",
+      "criterion_id": "criterion.Reservation.consumed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Reservation's own fields carries the evidence `consumed` requires. The requirement IS stated -- Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption. -- and Reservation declares no field it can bind to, so the criterion cannot express it. Either Reservation gains that field, or the corpus states what Reservation's `consumed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "consumed",
+        "requires": "Consumption is recorded against the account's own canonical unit and the invariant still holds; uncertainty is not silently converted to consumption.",
+        "cites": [
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "operation_or_work_ref",
+        "causal_episode_id",
+        "account_ref",
+        "maximum_quantity",
+        "reserved_quantity",
+        "consumed_quantity",
+        "uncertain_quantity",
+        "authority_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-Reservation-partly_consumed",
+      "record": "Reservation",
+      "phase": "partly_consumed",
+      "criterion_id": "criterion.Reservation.partly_consumed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Reservation's own fields carries the evidence `partly_consumed` requires. The requirement IS stated -- Part of the reservation is consumed and the remainder is still held; the invariant holds across both. -- and Reservation declares no field it can bind to, so the criterion cannot express it. Either Reservation gains that field, or the corpus states what Reservation's `partly_consumed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "partly_consumed",
+        "requires": "Part of the reservation is consumed and the remainder is still held; the invariant holds across both.",
+        "cites": [
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "operation_or_work_ref",
+        "causal_episode_id",
+        "account_ref",
+        "maximum_quantity",
+        "reserved_quantity",
+        "consumed_quantity",
+        "uncertain_quantity",
+        "authority_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-Review-assigned",
+      "record": "Review",
+      "phase": "assigned",
+      "criterion_id": "criterion.Review.assigned.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `assigned` requires -- for Review or for any record carrying that phase. The corpus names `assigned` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "subject_ref",
+        "reviewer_assignment_ref",
+        "inspected_refs",
+        "observed_check_refs",
+        "findings",
+        "omissions",
+        "minutes",
+        "independence_profile_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-SalesAgreement-disputed",
+      "record": "SalesAgreement",
+      "phase": "disputed",
+      "criterion_id": "criterion.SalesAgreement.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of SalesAgreement's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and SalesAgreement declares no field it can bind to, so the criterion cannot express it. Either SalesAgreement gains that field, or the corpus states what SalesAgreement's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "offer_ref",
+        "buyer_ref",
+        "original_exchange",
+        "agreed_terms",
+        "acceptance_evidence",
+        "obligation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-SalesAgreement-interest",
+      "record": "SalesAgreement",
+      "phase": "interest",
+      "criterion_id": "criterion.SalesAgreement.interest.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `interest` requires -- for SalesAgreement or for any record carrying that phase. The corpus names `interest` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "interrupted"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "offer_ref",
+        "buyer_ref",
+        "original_exchange",
+        "agreed_terms",
+        "acceptance_evidence",
+        "obligation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-Schedule-paused",
+      "record": "Schedule",
+      "phase": "paused",
+      "criterion_id": "criterion.Schedule.paused.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Schedule's own fields carries the evidence `paused` requires. The requirement IS stated -- New-work authority is withdrawn while active support, data, payment and reporting duties are retained; resuming requires reconciling stale assumptions, not flipping the flag back. -- and Schedule declares no field it can bind to, so the criterion cannot express it. Either Schedule gains that field, or the corpus states what Schedule's `paused` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "paused",
+        "requires": "New-work authority is withdrawn while active support, data, payment and reporting duties are retained; resuming requires reconciling stale assumptions, not flipping the flag back.",
+        "cites": [
+          "c-pause",
+          "i-connection"
+        ]
+      },
+      "record_required_payload_fields": [
+        "workflow_ref",
+        "timezone",
+        "timezone_rules_version",
+        "calendar_rule",
+        "ambiguous_time_rule",
+        "nonexistent_time_rule",
+        "active_from",
+        "missed_policy",
+        "concurrency_policy",
+        "occurrence_window",
+        "latest_start_offset",
+        "mandate_ref",
+        "resource_account_refs",
+        "alternate_assignment_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-ScheduleOccurrence-planned",
+      "record": "ScheduleOccurrence",
+      "phase": "planned",
+      "criterion_id": "criterion.ScheduleOccurrence.planned.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `planned` requires -- for ScheduleOccurrence or for any record carrying that phase. The corpus names `planned` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "schedule_ref",
+        "local_occurrence_key",
+        "intended_at",
+        "latest_start_at",
+        "due_at",
+        "omitted_windows",
+        "obligation_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-SecurityCase-resolved",
+      "record": "SecurityCase",
+      "phase": "resolved",
+      "criterion_id": "criterion.SecurityCase.resolved.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of SecurityCase's own fields carries the evidence `resolved` requires. The requirement IS stated -- A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains. -- and SecurityCase declares no field it can bind to, so the criterion cannot express it. Either SecurityCase gains that field, or the corpus states what SecurityCase's `resolved` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "resolved",
+        "requires": "A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains.",
+        "cites": [
+          "k-case-dispute",
+          "k-obl-dispute",
+          "e-contradiction"
+        ]
+      },
+      "record_required_payload_fields": [
+        "affected_assets",
+        "access_graph_ref",
+        "observations",
+        "response_ref",
+        "containment_checks",
+        "residual_paths"
+      ]
+    },
+    {
+      "gap_id": "gap-SecurityCase-suspected",
+      "record": "SecurityCase",
+      "phase": "suspected",
+      "criterion_id": "criterion.SecurityCase.suspected.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `suspected` requires -- for SecurityCase or for any record carrying that phase. The corpus names `suspected` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "suspended",
+          "suspension_authorized"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "affected_assets",
+        "access_graph_ref",
+        "observations",
+        "response_ref",
+        "containment_checks",
+        "residual_paths"
+      ]
+    },
+    {
+      "gap_id": "gap-SkillSelection-budget_exhausted",
+      "record": "SkillSelection",
+      "phase": "budget_exhausted",
+      "criterion_id": "criterion.SkillSelection.budget_exhausted.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 's1' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of SkillSelection's own fields carries the evidence `budget_exhausted` requires. The requirement IS stated -- As `exhausted`, and the unknown metered consumption still holds the maximum authorized remainder until reconciled. -- and SkillSelection declares no field it can bind to, so the criterion cannot express it. Either SkillSelection gains that field, or the corpus states what SkillSelection's `budget_exhausted` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "budget_exhausted",
+        "requires": "As `exhausted`, and the unknown metered consumption still holds the maximum authorized remainder until reconciled.",
+        "cites": [
+          "a-reservation"
+        ]
+      },
+      "record_required_payload_fields": [
+        "work_order_ref",
+        "eligible_candidate_refs",
+        "selected_refs",
+        "eligibility_reasons",
+        "selection_cost",
+        "rejected_reasons",
+        "omissions"
+      ]
+    },
+    {
+      "gap_id": "gap-SourceRecord-disputed",
+      "record": "SourceRecord",
+      "phase": "disputed",
+      "criterion_id": "criterion.SourceRecord.disputed.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'ag' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of SourceRecord's own fields carries the evidence `disputed` requires. The requirement IS stated -- A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it. -- and SourceRecord declares no field it can bind to, so the criterion cannot express it. Either SourceRecord gains that field, or the corpus states what SourceRecord's `disputed` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "disputed",
+        "requires": "A new legitimate challenge with standing; the dispute is a separate flag while the substantive status is retained, and resubmission cannot delete it.",
+        "cites": [
+          "k-obl-dispute",
+          "k-case-dispute"
+        ]
+      },
+      "record_required_payload_fields": [
+        "origin",
+        "source_kind",
+        "capture_refs",
+        "received_at",
+        "version",
+        "scope",
+        "incentives",
+        "unknowns",
+        "verification_owner_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-SummaryLoss-identified",
+      "record": "SummaryLoss",
+      "phase": "identified",
+      "criterion_id": "criterion.SummaryLoss.identified.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `identified` requires -- for SummaryLoss or for any record carrying that phase. The corpus names `identified` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "transformation_ref",
+        "kind",
+        "affected_refs",
+        "description",
+        "material_for"
+      ]
+    },
+    {
+      "gap_id": "gap-SupplierEngagement-superseded",
+      "record": "SupplierEngagement",
+      "phase": "superseded",
+      "criterion_id": "criterion.SupplierEngagement.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of SupplierEngagement's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and SupplierEngagement declares no field it can bind to, so the criterion cannot express it. Either SupplierEngagement gains that field, or the corpus states what SupplierEngagement's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "need",
+        "supplier_ref",
+        "scope",
+        "terms_ref",
+        "competence_evidence",
+        "acceptance_rule",
+        "capacity_window",
+        "fee_ceiling",
+        "exit_rule",
+        "backup_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-SupportCase-received",
+      "record": "SupportCase",
+      "phase": "received",
+      "criterion_id": "criterion.SupportCase.received.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `received` requires -- for SupportCase or for any record carrying that phase. The corpus names `received` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "conversation_ref",
+        "actual_problem",
+        "next_update_at",
+        "resolution_evidence"
+      ]
+    },
+    {
+      "gap_id": "gap-SupportCase-resolved",
+      "record": "SupportCase",
+      "phase": "resolved",
+      "criterion_id": "criterion.SupportCase.resolved.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of SupportCase's own fields carries the evidence `resolved` requires. The requirement IS stated -- A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains. -- and SupportCase declares no field it can bind to, so the criterion cannot express it. Either SupportCase gains that field, or the corpus states what SupportCase's `resolved` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "resolved",
+        "requires": "A competent disposition by a currently accepted authority, the remedy evidence recorded, and the restored substantive status named. Acceptance history remains.",
+        "cites": [
+          "k-case-dispute",
+          "k-obl-dispute",
+          "e-contradiction"
+        ]
+      },
+      "record_required_payload_fields": [
+        "conversation_ref",
+        "actual_problem",
+        "next_update_at",
+        "resolution_evidence"
+      ]
+    },
+    {
+      "gap_id": "gap-Suppression-requested",
+      "record": "Suppression",
+      "phase": "requested",
+      "criterion_id": "criterion.Suppression.requested.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `requested` requires -- for Suppression or for any record carrying that phase. The corpus names `requested` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [
+          "required"
+        ],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "principal_ref",
+        "recipient_scope",
+        "purpose_ids",
+        "channel_ids",
+        "source_ref",
+        "effective_from",
+        "lift_authority_ref",
+        "evidence_refs"
+      ]
+    },
+    {
+      "gap_id": "gap-TransferPlan-superseded",
+      "record": "TransferPlan",
+      "phase": "superseded",
+      "criterion_id": "criterion.TransferPlan.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of TransferPlan's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and TransferPlan declares no field it can bind to, so the criterion cannot express it. Either TransferPlan gains that field, or the corpus states what TransferPlan's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "from_assignment",
+        "to_assignment",
+        "scope",
+        "duty_refs",
+        "restricted_exports",
+        "residual_duties"
+      ]
+    },
+    {
+      "gap_id": "gap-Venture-superseded",
+      "record": "Venture",
+      "phase": "superseded",
+      "criterion_id": "criterion.Venture.superseded.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'nf' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Venture's own fields carries the evidence `superseded` requires. The requirement IS stated -- A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships. -- and Venture declares no field it can bind to, so the criterion cannot express it. Either Venture gains that field, or the corpus states what Venture's `superseded` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "superseded",
+        "requires": "A successor revision exists and is itself live, the change reason is recorded, and the successor/predecessor links are acyclic. Superseding does not erase history or silently migrate relationships.",
+        "cites": [
+          "k-supersede",
+          "k-terminal",
+          "s-no-self-support"
+        ]
+      },
+      "record_required_payload_fields": [
+        "purpose_ref",
+        "stage",
+        "outcome_sponsor",
+        "shared_dependencies",
+        "offer_refs",
+        "review_at",
+        "closure_obligations"
+      ]
+    },
+    {
+      "gap_id": "gap-WorkMessage-created",
+      "record": "WorkMessage",
+      "phase": "created",
+      "criterion_id": "criterion.WorkMessage.created.v1",
+      "kind": "prose_silent",
+      "reason": "the prose states no evidence requirement for this phase name",
+      "what_the_prose_would_need_to_say": "What evidence a transition into `created` requires -- for WorkMessage or for any record carrying that phase. The corpus names `created` in a state list and never says what entering it demands.",
+      "nearest_related_passage": {
+        "phase_kind_entry": null,
+        "nearest_named_phases": [],
+        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
+      },
+      "record_required_payload_fields": [
+        "kind",
+        "sender_ref",
+        "recipient_ref",
+        "subject_refs",
+        "payload_ref",
+        "correlation_id",
+        "delivery_expires_at",
+        "required_action",
+        "causal_episode_ref"
+      ]
+    },
+    {
+      "gap_id": "gap-Workstream-paused",
+      "record": "Workstream",
+      "phase": "paused",
+      "criterion_id": "criterion.Workstream.paused.v1",
+      "kind": "record_has_no_field_for_the_stated_requirement",
+      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
+      "what_the_prose_would_need_to_say": "Which of Workstream's own fields carries the evidence `paused` requires. The requirement IS stated -- New-work authority is withdrawn while active support, data, payment and reporting duties are retained; resuming requires reconciling stale assumptions, not flipping the flag back. -- and Workstream declares no field it can bind to, so the criterion cannot express it. Either Workstream gains that field, or the corpus states what Workstream's `paused` requires INSTEAD of the general rule.",
+      "nearest_related_passage": {
+        "phase_kind_entry": "paused",
+        "requires": "New-work authority is withdrawn while active support, data, payment and reporting duties are retained; resuming requires reconciling stale assumptions, not flipping the flag back.",
+        "cites": [
+          "c-pause",
+          "i-connection"
+        ]
+      },
+      "record_required_payload_fields": [
+        "mandate_ref",
+        "purpose",
+        "goal_refs",
+        "case_refs",
+        "schedule_refs",
+        "continuity_assignment_ref",
+        "review_at"
+      ]
+    }
+  ],
+  "residual_sibling_collisions": [
+    {
+      "record": "DecisionRecord",
+      "from_state": "contested",
+      "to_phases": [
+        "superseded",
+        "withdrawn"
+      ],
+      "why": "both criteria are explicit gaps, so both bodies are the same `content_unspecified` conjunction; the oracle is right that they are indistinguishable and this is what a visible gap looks like",
+      "gapped_phases": [
+        "superseded",
+        "withdrawn"
+      ]
+    },
+    {
+      "record": "DecisionRecord",
+      "from_state": "decided",
+      "to_phases": [
+        "superseded",
+        "withdrawn"
+      ],
+      "why": "both criteria are explicit gaps, so both bodies are the same `content_unspecified` conjunction; the oracle is right that they are indistinguishable and this is what a visible gap looks like",
+      "gapped_phases": [
+        "superseded",
+        "withdrawn"
+      ]
+    },
+    {
+      "record": "ExternalAttempt",
+      "from_state": "response_recorded",
+      "to_phases": [
+        "reconciled_applied",
+        "reconciled_not_applied"
+      ],
+      "why": "the stated requirements differ only in a VALUE the all-strings-erased method erases -- the evidence demanded is the same in kind, and what differs is what that evidence says",
+      "gapped_phases": []
+    },
+    {
+      "record": "ExternalAttempt",
+      "from_state": "unknown_effect",
+      "to_phases": [
+        "reconciled_applied",
+        "reconciled_not_applied"
+      ],
+      "why": "the stated requirements differ only in a VALUE the all-strings-erased method erases -- the evidence demanded is the same in kind, and what differs is what that evidence says",
+      "gapped_phases": []
+    },
+    {
+      "record": "FormationReadiness",
+      "from_state": "preparing",
+      "to_phases": [
+        "conditionally-ready",
+        "ready"
+      ],
+      "why": "the stated requirements differ only in a field role this record declares no field for, so the difference drops out on this record",
+      "gapped_phases": []
+    }
+  ],
+  "contradictions": [
+    {
+      "id": "gap-contradiction-disputed-vs-contested",
+      "records": [
+        "EvidenceJudgment"
+      ],
+      "phases": [
+        "contested",
+        "disputed"
+      ],
+      "what_the_prose_would_need_to_say": "Whether `disputed` is a persisted phase or only a presentation label for `contested`. Both readings appear, and a record carrying both as separate phases needs one of them defined as something the other is not.",
+      "passages": [
+        [
+          "01-contract-kernel.md",
+          "EvidenceJudgment stores one canonical state. Presentation may call contested \"disputed\"; it must not persist a second disputed verdict."
+        ],
+        [
+          "../02-architecture-selection.md",
+          "Obligations distinguish reported performance from legitimate discharge, transfer and surviving dispute."
+        ]
+      ],
+      "resolution": "neither encoded; both phases keep their own kind-level content and no record-specific disambiguation is invented.",
+      "applies_to_criteria": []
+    },
+    {
+      "id": "gap-contradiction-parked-review-vs-closure",
+      "records": [
+        "Case"
+      ],
+      "phases": [
+        "parked"
+      ],
+      "what_the_prose_would_need_to_say": "Whether parking requires a next REVIEW date or a CLOSURE account. The kernel's transition row names both with `or`, and the company contract names only the review date; a guard cannot check `or` without knowing which field carries which.",
+      "passages": [
+        [
+          "01-contract-kernel.md",
+          "proposed/admitted/active/waiting-for-evidence → parked or abandoned: authorized reason, next review/closure account, cancellation and surviving duty ownership"
+        ],
+        [
+          "03-company-capabilities.md",
+          "At review time an untouched goal is reaffirmed with evidence, narrowed, parked with a reopening trigger or abandoned with duty disposition."
+        ]
+      ],
+      "resolution": "the shared half is encoded (authorized reason, surviving duty ownership, a bounded interval); the review-versus-closure choice is not.",
+      "applies_to_criteria": []
+    }
+  ],
+  "conjuncts_dropped_for_absent_fields": {
+    "WorkDependency": {
+      "waived-inapplicable": [
+        "rp"
+      ]
+    },
+    "FailureRecord": {
+      "retry_admitted": [
+        "s1"
+      ]
+    },
+    "ContradictionSet": {
+      "settled": [
+        "nf"
+      ]
+    },
+    "CashPosition": {
+      "validated": [
+        "s1"
+      ]
+    },
+    "JournalBatch": {
+      "corrected": [
+        "rp"
+      ]
+    },
+    "CandidateAssessment": {
+      "retained-restricted": [
+        "rp"
+      ]
+    },
+    "IdentityBinding": {
+      "suspended": [
+        "rp"
+      ]
+    },
+    "ValidityEpoch": {
+      "current": [
+        "nf"
+      ]
+    },
+    "GrievanceCase": {
+      "remedy_authorized": [
+        "s1"
+      ]
+    },
+    "Reservation": {
+      "held": [
+        "s1"
+      ],
+      "uncertain": [
+        "s1"
+      ]
+    },
+    "OperationIntent": {
+      "held": [
+        "s1"
+      ],
+      "reconciled": [
+        "s1"
+      ],
+      "cancelled_before_release": [
+        "s1"
+      ]
+    },
+    "ConflictClaim": {
+      "held": [
+        "s1"
+      ],
+      "uncertain": [
+        "s1"
+      ]
+    },
+    "Release": {
+      "reconciled": [
+        "s1"
+      ]
+    },
+    "ExternalAttempt": {
+      "claimed": [
+        "s1"
+      ]
+    },
+    "RollbackPlan": {
+      "reconciled": [
+        "s1"
+      ]
+    },
+    "IntegrationInvocation": {
+      "refused": [
+        "nf"
+      ]
+    }
+  },
+  "limits": "`due_preserved` expresses 11-schemas-state-contracts.md's 'restrictive action preserves duties' directly, and is NOT used anywhere here: its `continuation_ref` parameter takes a Ref<Continuation> and no criterion declares that argument. Changing criterion argument shapes was out of scope for this package, so restrictive phases encode the duty half through `nonempty_fields` over the record's own duty fields and `related_phases` over its custodian instead. That is weaker than the primitive, and saying so is the point."
+}

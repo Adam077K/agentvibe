@@ -82,6 +82,39 @@ def calls(body):
     return found
 
 
+BASE_OPS = {"all", "nonempty_fields", "related_phases", "accepted_for",
+            "attested_result"}
+
+
+def ops_in(node, found=None):
+    found = set() if found is None else found
+    if isinstance(node, dict):
+        if "op" in node:
+            found.add(node["op"])
+        for value in node.values():
+            ops_in(value, found)
+    elif isinstance(node, list):
+        for value in node:
+            ops_in(value, found)
+    return found
+
+
+def record_specific_conjuncts(body):
+    """Top-level conjuncts of an existing criterion that already carry content.
+
+    The canonical repair gave eleven criteria a record-specific primitive --
+    `resource_equation` on ResourceAccount, `launch_children` on LaunchReadiness,
+    `epochs_current` on ContextManifest and so on. That is real content, authored
+    against those records, and this tool would otherwise delete it to install a
+    phase-kind body. Rule 5: iterate, do not overwrite. They are carried forward and
+    the authored conjuncts are added around them.
+    """
+    if not isinstance(body, dict) or body.get("op") != "all":
+        return []
+    return [node for node in body.get("predicates", [])
+            if isinstance(node, dict) and ops_in(node) - BASE_OPS]
+
+
 def read_args(body):
     stack, found = [body], set()
     while stack:
@@ -101,18 +134,28 @@ def main():
     predicates = load("predicate-registry.json")
     primitives = load("primitive-registry.json")
     records_schema = load("records.schema.json")
+    pc.set_primitives(primitives)
 
     if "content_unspecified" not in primitives:
         primitives["content_unspecified"] = CONTENT_UNSPECIFIED
         primitives = dict(sorted(primitives.items()))
         dump("primitive-registry.json", primitives)
 
-    # criterion id -> (record, phase), taken from the edges that actually use it, so
-    # a criterion nothing routes to is not silently given content.
+    # criterion id -> (record, phase). Edges first, because an edge's `criterion_id` is
+    # the authoritative binding. Then every OTHER phase the record declares: 157
+    # criteria are named by no edge -- they are the records' initial phases, which no
+    # transition enters -- and leaving those alone would leave an asymmetry that reads
+    # like an oversight. They gain the same content; being unrouted is separate from
+    # being unstated, and `predicates_unreachable_from_any_guard` still reports them.
     used = {}
     for record, body in records.items():
         for edge in body["lifecycle"]["transitions"]:
             used.setdefault(edge["criterion_id"], (record, edge["to"]))
+    for record, body in records.items():
+        for phase in body["lifecycle"]["phases"]:
+            criterion_id = "criterion.%s.%s.v1" % (record, phase)
+            if criterion_id in predicates:
+                used.setdefault(criterion_id, (record, phase))
 
     gaps, enriched, unspecified, preserved, contradiction_hits = [], 0, 0, 0, []
     dropped_report = {}
@@ -142,16 +185,37 @@ def main():
 
         record, phase = used[criterion_id]
         declared = set(predicate["argument_types"])
+        carried = record_specific_conjuncts(predicate["body"])
         body, meta, reason = pc.compose(record, phase, criterion_id,
                                         records_schema, declared)
 
         if body is None:
+            if carried:
+                # The repair already authored record-specific content here. It stands
+                # on its own; a gap entry over it would report an absence that is not
+                # there.
+                predicate["requires"] = (
+                    "Carried from the canonical repair: this criterion already composes "
+                    "a record-specific primitive (%s). No phase-kind requirement is "
+                    "added, because the corpus states none for `%s`."
+                    % (", ".join(sorted(ops_in(predicate["body"]) - BASE_OPS)), phase))
+                preserved += 1
+                continue
             gap_id = "gap-%s-%s" % (record, phase)
             predicates[criterion_id] = _gap_predicate(predicate, criterion_id, gap_id,
                                                       declared, record, phase)
             gaps.append(_gap_entry(gap_id, record, phase, reason, records_schema))
             unspecified += 1
             continue
+
+        if carried:
+            existing = {json.dumps(n, sort_keys=True) for n in body["predicates"]}
+            for node in reversed(carried):
+                if json.dumps(node, sort_keys=True) not in existing:
+                    body["predicates"].insert(0, node)
+            meta["requires"] = (
+                meta["requires"] + " Carried from the canonical repair for this record: "
+                + ", ".join(sorted(ops_in({"predicates": carried}) - BASE_OPS)) + ".")
 
         # Every declared argument must stay read: the edge that calls this criterion
         # declares the same names, and an unread declaration fails the validator.
@@ -200,6 +264,7 @@ def main():
             "criteria_preserved_from_repair": preserved,
         },
         "gaps": sorted(gaps, key=lambda g: g["gap_id"]),
+        "residual_sibling_collisions": _residual_collisions(records, predicates),
         "contradictions": pc.CONTRADICTIONS,
         "conjuncts_dropped_for_absent_fields": dropped_report,
         "limits": (
@@ -256,17 +321,28 @@ def _gap_entry(gap_id, record, phase, reason, records_schema):
     related = sorted(
         p for p in pc.PHASE_SPECS
         if p != phase and (p.startswith(phase[:4]) or phase.startswith(p[:4])))
+    if nearest is None:
+        kind = "prose_silent"
+        needed = (
+            "What evidence a transition into `%s` requires -- for %s or for any record "
+            "carrying that phase. The corpus names `%s` in a state list and never says "
+            "what entering it demands." % (phase, record, phase))
+    else:
+        kind = "record_has_no_field_for_the_stated_requirement"
+        needed = (
+            "Which of %s's own fields carries the evidence `%s` requires. The "
+            "requirement IS stated -- %s -- and %s declares no field it can bind to, so "
+            "the criterion cannot express it. Either %s gains that field, or the "
+            "corpus states what %s's `%s` requires INSTEAD of the general rule."
+            % (record, phase, nearest["requires"], record, record, record, phase))
     return {
         "gap_id": gap_id,
         "record": record,
         "phase": phase,
         "criterion_id": "criterion.%s.%s.v1" % (record, phase),
+        "kind": kind,
         "reason": reason,
-        "what_the_prose_would_need_to_say": (
-            "What evidence a transition into `%s` requires for %s, stated so that it "
-            "differs from what the same record's other phases require -- which records, "
-            "in which lifecycle phase, and which of %s's own fields must carry it."
-            % (phase, record, record)),
+        "what_the_prose_would_need_to_say": needed,
         "nearest_related_passage": (
             {"phase_kind_entry": phase, "requires": nearest["requires"],
              "cites": nearest["cites"]}
@@ -277,6 +353,50 @@ def _gap_entry(gap_id, record, phase, reason, records_schema):
                      "phase in a state list without saying what entering it requires"}),
         "record_required_payload_fields": pc.payload_required(records_schema, record),
     }
+
+
+def _residual_collisions(records, predicates):
+    """Sibling edges whose effective guards still share a shape, with WHY.
+
+    Reported here rather than left to the oracle alone, because each of these is a
+    statement about the corpus that a reader should be able to check without running
+    anything: two phases of one record that the sources do not distinguish.
+    """
+    import skeletons
+    found = []
+    for group in skeletons.sibling_collisions(records, predicates,
+                                              skeletons.erase_all_strings):
+        record, phases = group["record"], group["to_phases"]
+        gapped = [p for p in phases
+                  if "content_gap_id" in predicates["criterion.%s.%s.v1" % (record, p)]]
+        found.append({
+                "record": record,
+                "from_state": group["from_state"],
+                "to_phases": phases,
+                "why": (
+                    "both criteria are explicit gaps, so both bodies are the same "
+                    "`content_unspecified` conjunction; the oracle is right that they "
+                    "are indistinguishable and this is what a visible gap looks like"
+                    if len(gapped) == len(phases) else
+                    "the stated requirements differ only in a VALUE the "
+                    "all-strings-erased method erases -- the evidence demanded is the "
+                    "same in kind, and what differs is what that evidence says"
+                    if _same_shape_different_value(predicates, record, phases) else
+                    "the stated requirements differ only in a field role this record "
+                    "declares no field for, so the difference drops out on this record"),
+                "gapped_phases": gapped,
+            })
+    return found
+
+
+def _same_shape_different_value(predicates, record, phases):
+    values = set()
+    for phase in phases:
+        body = predicates["criterion.%s.%s.v1" % (record, phase)]["body"]
+        for node in body.get("predicates", []):
+            if isinstance(node, dict) and node.get("op") == "native_correlated":
+                values.add(node["result"])
+    return len(values) > 1
 
 
 def _derive_inventory(committed):

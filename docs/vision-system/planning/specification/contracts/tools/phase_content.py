@@ -2338,6 +2338,41 @@ PHASE_SPECS = {
         [("nf", ["native", "uncertainty", "restriction"]),
          ("not", ("s1", "complete_capture")), ("not", ("fi",)), AR],
         hard=["not"]),
+    "validation_pending": spec(
+        "The atomic lineage and current-epoch validation is requested and its manifest "
+        "and source lineage are complete; until it passes, the bytes are not usable as "
+        "current input.",
+        ["k-artifact", "k08-epochs"],
+        [("nf", ["dependency", "evidence"]), ("s1", "complete_capture"),
+         ("not", AF), AR],
+        hard=["not"]),
+    "constrained": spec(
+        "Verification completed and the capacity is REAL but narrower than proposed: the "
+        "constraint is named and carried, not averaged into a pass.",
+        ["c-capacity"],
+        [("nf", ["custodian", "evidence", "uncertainty"]),
+         ("rp", [("custodian", ["accepted"], False)]),
+         ("s1", "delivery_ready"), AF, AR],
+        hard=["s1"]),
+    "waived-inapplicable": spec(
+        "A declared guard established that this dependency does not apply, with its "
+        "reason recorded. Current authority, data permission, required review and actual "
+        "duty-discharge predicates can never be waived this way -- which this criterion "
+        "expresses only as far as the record's own fields allow: it requires the "
+        "declared kind, the waiver reason and the waiving authority, and cannot itself "
+        "check that the waived predicate was not one of the four.",
+        ["w-dependency"],
+        [("nf", ["subject_identity", "successor", "authority"]),
+         ("rp", [("authority", ["accepted"], False)]), AF, AR],
+        hard=["nf"]),
+    "labeled": spec(
+        "Labels are attached by an identified labeller under the declared method, with "
+        "the label set and its disagreements recorded; a label is evidence, not a "
+        "verdict.",
+        ["e-independence", "b-trial"],
+        [("nf", ["evidence", "custodian", "subject_identity"]),
+         ("rp", [("custodian", ["accepted"], False)]), AR],
+        hard=["rp"]),
     "settled_dispute_placeholder": spec(
         "unused sentinel; never assigned to a phase",
         ["k-terminal"], [AR]),
@@ -2402,7 +2437,7 @@ RECORD_OVERRIDES = {
          ("rp", [("evidence", ["accepted"], False)]),
          ("s1", "price_scope"), ("nc", "observed_applied"), AF, AR],
         hard=["s1", "nc"]),
-    ("LaunchReadiness", "ready"): spec(
+    ("LaunchReadiness", "validated"): spec(
         "acceptance_bindings must contain exactly one binding for every required "
         "requirement_id, no duplicate IDs and no unapproved additions; every "
         "binding.judgment_ref must resolve to a current accepted EvidenceJudgment with "
@@ -2495,6 +2530,31 @@ CONTRADICTIONS = [
 
 _COMPILED = {role: [re.compile(p) for p in pats] for role, pats in ROLES.items()}
 
+# CCR-03's repair restricted every subject-taking primitive's `record_type` enum, and
+# four of them to a SINGLE record: `delivery_ready` to DeliveryCapacity,
+# `launch_children` to LaunchReadiness, `price_scope` to PriceProposal and
+# `resource_equation` to ResourceAccount. A criterion composing one of those on any
+# other record fails `validate_contracts.py` -- correctly. So a conjunct is checked
+# against the primitive's own enum before it is emitted, and dropped (or turned into
+# a gap, when the requirement depends on it) rather than written and caught later.
+PRIMITIVES = {}
+
+
+def set_primitives(registry):
+    PRIMITIVES.clear()
+    PRIMITIVES.update(registry)
+
+
+def primitive_admits(op, record):
+    entry = PRIMITIVES.get(op)
+    if entry is None:
+        return True
+    schema = entry.get("argument_schema", {}).get("properties", {}).get("subject_ref")
+    if not schema:
+        return True
+    enum = schema.get("properties", {}).get("record_type", {}).get("enum")
+    return enum is None or record in enum
+
 
 def payload_required(records_schema, record):
     """The record's REQUIRED payload field names, in schema order."""
@@ -2544,6 +2604,8 @@ def _subject():
 def build_conjunct(item, record, criterion_id, required_fields):
     """One conjunct node, or None when its evidence does not exist on this record."""
     kind = item[0]
+    if kind == "s1" and not primitive_admits(item[1], record):
+        return None
     if kind == "nf":
         paths = []
         for role in item[1]:
