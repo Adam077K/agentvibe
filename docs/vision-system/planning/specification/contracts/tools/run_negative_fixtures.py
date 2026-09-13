@@ -70,6 +70,30 @@ def apply_patch(directory, patch):
                           encoding="utf-8")
 
 
+def rederive_predicate_id_enum(directory):
+    """Recompute values.schema.json's PredicateId enum inside the scratch tree.
+
+    GR-04 made that enum DERIVED -- it must equal sorted(predicate-registry.json.keys())
+    and validate_contracts.py fails on any difference. So it belongs here beside the
+    inventory for exactly the same reason and it was found the same way: adding the R3
+    fixture's one predicate left the committed enum one short, the derivation check fires
+    early, and R3 was rejected saying `PredicateId enum differs` rather than
+    `primitive argument record type`. Right answer, wrong question -- which this runner
+    counts as a leak, correctly, and that is how the omission surfaced.
+
+    Anything derived from a registry must move with the registry inside the scratch tree,
+    or a fixture that touches the registry can never reach the check it names.
+    """
+    values = directory / "values.schema.json"
+    schema = json.loads(values.read_text(encoding="utf-8"))
+    predicates = json.loads((directory / "predicate-registry.json").read_text(encoding="utf-8"))
+    schema["$defs"]["PredicateId"]["enum"] = sorted(predicates)
+    if values.is_symlink():
+        values.unlink()
+    values.write_text(json.dumps(schema, indent=2, ensure_ascii=False) + "\n",
+                      encoding="utf-8")
+
+
 def rederive_inventory(directory):
     """Recompute coverage-inventory.json inside the scratch tree, the same way
     tools/derive_inventory.py does for the real one. Run as a subprocess so the
@@ -130,13 +154,19 @@ def run_fixture(fixture, verbose):
         # wrong reason -- and this runner counts that as a leak, correctly.
         os.symlink(ROOT / "tools", directory / "tools")
         apply_patch(directory, fixture["patch"])
-        if fixture.get("rederive_inventory"):
-            # A fixture that adds or removes a registry entry would otherwise trip
-            # R7's inventory-drift check first and never reach the check it names.
-            # Re-deriving keeps each fixture pointed at ITS OWN check -- a fixture
-            # that fails for the wrong reason proves nothing, and this runner
-            # already treats that as a leak.
+        if fixture.get("rederive_from_registries"):
+            # A fixture that adds or removes a registry entry would otherwise trip a
+            # DERIVATION check first and never reach the check it names: R7's inventory
+            # drift, or GR-04's PredicateId enum drift. Re-deriving keeps each fixture
+            # pointed at ITS OWN check -- a fixture that fails for the wrong reason
+            # proves nothing, and this runner already treats that as a leak.
+            #
+            # Every derived file goes in here. The key was `rederive_inventory` while
+            # the inventory was the only one; a name that says which registry changed,
+            # rather than which file happens to be derived from it today, does not have
+            # to be renamed again when the next derivation lands.
             rederive_inventory(directory)
+            rederive_predicate_id_enum(directory)
         completed = subprocess.run(
             [sys.executable, "validate_contracts.py"], cwd=directory,
             capture_output=True, text=True,

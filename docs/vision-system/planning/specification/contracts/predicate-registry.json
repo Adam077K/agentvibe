@@ -2118,6 +2118,16 @@
           ]
         },
         {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/review_at",
+            "/payload/parking_closure_account_ref"
+          ]
+        },
+        {
           "op": "related_phases",
           "subject_ref": {
             "arg": "subject_ref"
@@ -2172,7 +2182,7 @@
         }
       ]
     },
-    "meaning": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
+    "meaning": "An AUTHORIZED reason, and BOTH halves of the kernel's disjunction: the next review date and the closure account that says what becomes of the mission's residual obligations if that review never happens. Every surviving duty keeps a named accepted custodian. No obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
     "owner_component": "S1-C01",
     "source": "work-knowledge-contracts.json#/records/Mission",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -2264,7 +2274,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing.",
+    "requires": "An AUTHORIZED reason, and BOTH halves of the kernel's disjunction: the next review date and the closure account that says what becomes of the mission's residual obligations if that review never happens. Every surviving duty keeps a named accepted custodian. No obligation disappears, and parking never discharges external standing.",
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
@@ -3425,6 +3435,15 @@
           ]
         },
         {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/parking_closure_account_ref"
+          ]
+        },
+        {
           "op": "related_phases",
           "subject_ref": {
             "arg": "subject_ref"
@@ -3479,7 +3498,7 @@
         }
       ]
     },
-    "meaning": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
+    "meaning": "An AUTHORIZED reason and the closure account that says what becomes of the project's closure duties if nobody returns to it. Every surviving duty keeps a named accepted custodian. The record declares NO review date, so the account is the only half of the kernel's disjunction that can be demanded here, and it is demanded rather than left to the reader. No obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
     "owner_component": "S1-C02",
     "source": "work-knowledge-contracts.json#/records/Project",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -3571,7 +3590,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing.",
+    "requires": "An AUTHORIZED reason and the closure account that says what becomes of the project's closure duties if nobody returns to it. Every surviving duty keeps a named accepted custodian. The record declares NO review date, so the account is the only half of the kernel's disjunction that can be demanded here, and it is demanded rather than left to the reader. No obligation disappears, and parking never discharges external standing.",
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
@@ -7368,6 +7387,15 @@
           ]
         },
         {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/parking_closure_account_ref"
+          ]
+        },
+        {
           "op": "related_phases",
           "subject_ref": {
             "arg": "subject_ref"
@@ -7422,7 +7450,7 @@
         }
       ]
     },
-    "meaning": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
+    "meaning": "An AUTHORIZED reason and the closure account that says what becomes of the run's unfinished obligations if nobody resumes it. Every surviving duty keeps a named accepted custodian. The record declares NO review date, so the account is the only half of the kernel's disjunction that can be demanded here. A parked run is not a finished one: no obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
     "owner_component": "S1-C02",
     "source": "work-knowledge-contracts.json#/records/WorkflowRun",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -7514,7 +7542,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing.",
+    "requires": "An AUTHORIZED reason and the closure account that says what becomes of the run's unfinished obligations if nobody resumes it. Every surviving duty keeps a named accepted custodian. The record declares NO review date, so the account is the only half of the kernel's disjunction that can be demanded here. A parked run is not a finished one: no obligation disappears, and parking never discharges external standing.",
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
@@ -70125,6 +70153,15 @@
           ]
         },
         {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/parking_closure_account_ref"
+          ]
+        },
+        {
           "op": "related_phases",
           "subject_ref": {
             "arg": "subject_ref"
@@ -70179,7 +70216,7 @@
         }
       ]
     },
-    "meaning": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
+    "meaning": "An AUTHORIZED reason and the closure account that says what becomes of the order's duties and unfinished obligations if it is never resumed. Every surviving duty keeps a named accepted custodian. The record declares NO review date, so the account is the only half of the kernel's disjunction that can be demanded here. Parking an order does not release its lease, its reservations or the entitlement behind it: no obligation disappears, and parking never discharges external standing. Phase assessed: parked.",
     "owner_component": "S1-C02",
     "source": "01-contract-kernel.md#8-domain-production-api-and-durable-work",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -70271,7 +70308,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "An AUTHORIZED reason, a next review or closure account, and every surviving duty keeping a named accepted custodian. No obligation disappears, and parking never discharges external standing.",
+    "requires": "An AUTHORIZED reason and the closure account that says what becomes of the order's duties and unfinished obligations if it is never resumed. Every surviving duty keeps a named accepted custodian. The record declares NO review date, so the account is the only half of the kernel's disjunction that can be demanded here. Parking an order does not release its lease, its reservations or the entitlement behind it: no obligation disappears, and parking never discharges external standing.",
     "derived_from": [
       {
         "file": "01-contract-kernel.md",

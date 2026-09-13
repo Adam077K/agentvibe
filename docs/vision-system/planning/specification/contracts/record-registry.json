@@ -514,7 +514,8 @@
           "parent_mission_ref": "Ref<Mission>?",
           "case_refs": "Ref<Case>[]",
           "review_at": "UTC",
-          "residual_obligation_refs": "Ref<Obligation>[]"
+          "residual_obligation_refs": "Ref<Obligation>[]",
+          "parking_closure_account_ref": "Ref<ReasonRecord>?"
         },
         "required_fields": [
           "intent_ref",
@@ -723,6 +724,13 @@
           "Obligation"
         ],
         "cardinality": "many"
+      },
+      {
+        "field_path": "/payload/parking_closure_account_ref",
+        "targets": [
+          "ReasonRecord"
+        ],
+        "cardinality": "optional_one"
       }
     ],
     "output_lifecycle_links": {},
@@ -918,7 +926,8 @@
           "dependency_refs": "Ref<WorkDependency>[]",
           "acceptance_contract": "AcceptanceContract",
           "carrying_cost": "CostKnowledge",
-          "closure_duty_refs": "Ref<Obligation>[]"
+          "closure_duty_refs": "Ref<Obligation>[]",
+          "parking_closure_account_ref": "Ref<ReasonRecord>?"
         },
         "required_fields": [
           "goal_refs",
@@ -1312,6 +1321,13 @@
           "Obligation"
         ],
         "cardinality": "many"
+      },
+      {
+        "field_path": "/payload/parking_closure_account_ref",
+        "targets": [
+          "ReasonRecord"
+        ],
+        "cardinality": "optional_one"
       }
     ],
     "output_lifecycle_links": {},
@@ -3409,7 +3425,8 @@
           "step_refs": "Ref<StepExecution>[]",
           "current_step_ids": "string[]",
           "continuation_ref": "Ref<Continuation>?",
-          "unfinished_obligation_refs": "Ref<Obligation>[]"
+          "unfinished_obligation_refs": "Ref<Obligation>[]",
+          "parking_closure_account_ref": "Ref<ReasonRecord>?"
         },
         "required_fields": [
           "workflow_ref",
@@ -4037,6 +4054,13 @@
           "Obligation"
         ],
         "cardinality": "many"
+      },
+      {
+        "field_path": "/payload/parking_closure_account_ref",
+        "targets": [
+          "ReasonRecord"
+        ],
+        "cardinality": "optional_one"
       }
     ],
     "output_lifecycle_links": {
@@ -18398,7 +18422,14 @@
     },
     "source_contract": "work-knowledge-contracts.json#/records/EvaluationCase",
     "planned_module": "system/packages/evidence",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F47-Q03",
+      "source_concern_text": "How is a proposed change evaluated before it is accepted?",
+      "why": "A change cannot be evaluated against a judgement made after seeing it. EvaluationCase is the predeclared case with its expected outcome AND expected process, its label provenance adjudicated independently, and a `synthetic` flag that is a declaration rather than an inference — its own invariant is that synthetic fixtures cannot establish actual market benefit. Two discovered failures are what the record blocks: D08, a benchmark change that erases distinctions without changing a displayed success state, and D11, an improvement candidate that changes evidence capture while its hidden evaluator remains intact. Both need the cases to be admitted BEFORE the candidate, and a record with `draft → labeled → admitted` phases is what makes \"before\" checkable.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "EvaluationTrial": {
     "schema_version": "2.0",
@@ -20831,7 +20862,14 @@
     },
     "source_contract": "work-knowledge-contracts.json#/records/IndexSnapshot",
     "planned_module": "system/packages/context",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F44-Q09",
+      "source_concern_text": "How is a large body of material kept searchable as it grows, and who notices when search stops working?",
+      "why": "The second half of the question is the one that needs a record: noticing that search stopped working requires a snapshot that states its own source watermark, its indexed sources and its OMISSIONS, plus `complete` and `incomplete` as distinct phases. An index that cannot say what it failed to index answers a query with silence and reads exactly like an index that found nothing. The permission class and the ephemeral-generation rule carry the other half of F44-Q07, and D13 (a search result repeating a withdrawn provider policy) is the failure a stale watermark produces.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "Venture": {
     "schema_version": "2.0",
@@ -23194,7 +23232,14 @@
     },
     "source_contract": "capabilities.json#/record_types/ExperienceArtifact",
     "planned_module": "system/packages/runtime",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F25-Q01",
+      "source_concern_text": "Deciding what to build and for whom · designing how it looks and feels · building it · testing it · running it once it exists · … does each of these need its own worker, or is it a way of working that any worker can adopt?",
+      "why": "F25-Q01 names \"designing how it looks and feels\" as work the company does, and the record exists to keep that work from collapsing into an opinion. It holds the journey steps the prototype must actually complete, the accessibility results, and — separately — `user_observations` and `taste_decision`. The separation is the point and it is VISION-09's: taste is nondelegable, so a taste decision may be recorded as one and may never be presented as an observation of a user. Its invariant refuses a prototype that cannot complete the specified journey, which is what stops `validated` from meaning \"someone liked the mockup\".",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "BrandGuide": {
     "schema_version": "2.0",
@@ -23886,7 +23931,14 @@
     },
     "source_contract": "capabilities.json#/record_types/BuildArtifact",
     "planned_module": "system/packages/runtime",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F14-Q05",
+      "source_concern_text": "What cannot ship without review, and what can?",
+      "why": "The question is only answerable if \"reviewed\" and \"released\" are distinct states of a thing, rather than adjectives someone applies. BuildArtifact carries `draft → reviewed → released → withdrawn` over an exact source revision and environment, with its test refs and its maintenance procedure attached, and its invariant makes release require an actual reconciled deployment operation — so a release is a reconciled effect and not a status someone set. Without the record, \"this shipped\" and \"someone said this shipped\" are the same assertion.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "Offer": {
     "schema_version": "2.0",
@@ -30233,7 +30285,14 @@
     },
     "source_contract": "capabilities.json#/record_types/Partnership",
     "planned_module": "system/packages/company",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F51-Q01",
+      "source_concern_text": "What changes when a second person is involved — a partner, a contractor, someone hired?",
+      "why": "What changes is that outcomes stop being the owner's alone, and the record is where that is written down instead of assumed: distinct contributions both parties actually agreed to, explicit opportunity attribution, a named relationship owner, shared dependencies and — the load-bearing field — `exit_duties` with continuing ownership. A partnership that ends without a record of who owes what afterwards is precisely the case F51-Q01 asks about, and the ResponsibilityAssignment machinery cannot answer it, because it assigns duties INSIDE the company and both parties here are outside one another's.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "CandidateAssessment": {
     "schema_version": "2.0",
@@ -41258,7 +41317,8 @@
           "checkpoint_contract_ref": "Ref<ConfigurationVersion>",
           "stop_predicates": "TypedPredicate[]",
           "unfinished_obligation_refs": "Ref<Obligation>[]",
-          "report_refs": "Ref<AttemptReport>[]"
+          "report_refs": "Ref<AttemptReport>[]",
+          "parking_closure_account_ref": "Ref<ReasonRecord>?"
         },
         "required_fields": [
           "case_ref",
@@ -42054,6 +42114,13 @@
           "AttemptReport"
         ],
         "cardinality": "many"
+      },
+      {
+        "field_path": "/payload/parking_closure_account_ref",
+        "targets": [
+          "ReasonRecord"
+        ],
+        "cardinality": "optional_one"
       }
     ],
     "output_lifecycle_links": {
@@ -72793,7 +72860,14 @@
     },
     "source_contract": "03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending",
     "planned_module": "system/packages/company",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "CONSEQUENCE-SECTOR-04",
+      "source_concern_text": "owner illness, succession, sale, vendor portability and retirement",
+      "why": "Every item in that concern is one event: the person the company depends on stops being available. An arrangement that is only a named alternate is a promise, so the record demands the evidence separately — independent access, competence, funded reservations, a reachable channel and an EXERCISE judgment that the ability was actually demonstrated inside the duty window. It declares `unavailable` as a phase of its own and carries `joint_failure_roots`, because the case that defeats a naive arrangement is the owner and the provider failing for the same reason. Nothing else in the registry holds the alternate's readiness as a checked fact rather than a plan.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "Constraint": {
     "schema_version": "2.0",
@@ -73160,7 +73234,15 @@
     },
     "source_contract": "01-contract-kernel.md#31-directive-subject-bindings-and-reference-identity",
     "planned_module": "system/packages/company",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F01-Q16",
+      "source_concern_text": "What is off-limits entirely, and who wrote that list?",
+      "directive_subject": "Constraint (§8.11)",
+      "why": "Both halves of F01-Q16 need a record. \"What is off-limits\" is the `predicate` over an explicit `scope`; \"who wrote that list\" is the `issuer_mandate_ref` and the named `amendment_authority_ref`, and its invariant states the rule that matters — a constraint cannot be changed by whoever finds it inconvenient, and never \"inferred from easier implementation\". `effective_interval` keeps a withdrawn constraint from silently governing old work, and `superseded` is a phase rather than a deletion. Directive §8.11 names Constraint as a required schema subject, which says a schema must exist; F01-Q16 is what says what it must do.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "Principle": {
     "schema_version": "2.0",
@@ -77405,7 +77487,15 @@
     },
     "source_contract": "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
     "planned_module": "system/apps/witness",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "derived_control_machinery": true,
+      "derived_from_record": "DeletionScope",
+      "obligation": "Continuing restriction must cover late derivatives, offline rejoin and physical copies, and unknown copies must remain EXPLICIT residuals rather than absent ones. That obligation cannot be discharged without an enumeration of the descendant surface at a witnessed source frontier, with what it failed to reach declared on its face.",
+      "why": "It is a derived-projection record, not a business fact: nothing is decided by creating one, and it is the same shape as DependencyClosure for the same reason. Its invariant — actual enumeration proves the declared descendant surface, and incomplete or unknown access paths stay explicit — is a property of the enumeration rather than of any duty a person holds, which is why no source concern names it directly. The nearest concerns it serves are F16-Q07, \"how is access revoked quickly\", and F02-Q11, \"how is work stopped in the middle, and what is left behind\": both are answerable only if the leftovers can be named, and `incomplete` is a phase precisely so that an unfinished enumeration cannot be read as an empty one.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06b repaired, pending independent recheck"
+    }
   },
   "OperationalAdmission": {
     "schema_version": "2.0",
