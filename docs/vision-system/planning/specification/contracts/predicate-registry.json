@@ -44841,6 +44841,82 @@
           ]
         },
         {
+          "op": "any",
+          "predicates": [
+            {
+              "op": "nonempty",
+              "value": {
+                "op": "path",
+                "value": {
+                  "op": "resolve",
+                  "ref": {
+                    "arg": "subject_ref"
+                  }
+                },
+                "pointer": "/payload/external_burden_observations"
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/external_burden_account/finding"
+                  },
+                  "right": "none_observed"
+                },
+                {
+                  "op": "present",
+                  "value": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/external_burden_account/reason"
+                  }
+                },
+                {
+                  "op": "present",
+                  "value": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/external_burden_account/observation_window"
+                  }
+                },
+                {
+                  "op": "present",
+                  "value": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/external_burden_account/responsible_assignment"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
           "op": "complete_capture",
           "subject_ref": {
             "arg": "subject_ref"
@@ -44869,7 +44945,7 @@
         }
       ]
     },
-    "meaning": "observed_revenue and observed_cost allow observed or unknown, never estimated presented as actual; any unknown input makes the corresponding aggregate incomplete, so a known subtotal plus missing categories is reported instead of a complete total. Phase assessed: validated.",
+    "meaning": "observed_revenue and observed_cost allow observed or unknown, never estimated presented as actual; any unknown input makes the corresponding aggregate incomplete, so a known subtotal plus missing categories is reported instead of a complete total. AND the external burden this venture places on customers, applicants and contractors is accounted for: either the observations are nonempty, or `external_burden_account` positively finds `none_observed` and carries the reason, the observation window and the assignment answerable for it. An empty observation array on its own is the absence of evidence and establishes no absence of burden. Phase assessed: validated.",
     "owner_component": "S1-C04",
     "source": "capabilities.json#/record_types/Economics",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -44961,7 +45037,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "observed_revenue and observed_cost allow observed or unknown, never estimated presented as actual; any unknown input makes the corresponding aggregate incomplete, so a known subtotal plus missing categories is reported instead of a complete total.",
+    "requires": "observed_revenue and observed_cost allow observed or unknown, never estimated presented as actual; any unknown input makes the corresponding aggregate incomplete, so a known subtotal plus missing categories is reported instead of a complete total. AND the external burden this venture places on customers, applicants and contractors is accounted for: either the observations are nonempty, or `external_burden_account` positively finds `none_observed` and carries the reason, the observation window and the assignment answerable for it. An empty observation array on its own is the absence of evidence and establishes no absence of burden.",
     "derived_from": [
       {
         "file": "capabilities.json",
@@ -44970,6 +45046,10 @@
       {
         "file": "03-company-capabilities.md",
         "anchor_or_quote": "Price acceptance distinguishes `provisional_hypothesis` from `demand_supported`. With unknown demand, CAP-18 can complete an honest internal provisional price and, under a specific current grant, a `test-authorized` bounded validation offer; it cannot label that price demand-supported or justify scaling."
+      },
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "run an operationally successful losing case and a profitable case with excessive customer/applicant/contractor coordination. Report distinct economic, usefulness and individual-burden failures; no combined score rescues them."
       }
     ]
   },

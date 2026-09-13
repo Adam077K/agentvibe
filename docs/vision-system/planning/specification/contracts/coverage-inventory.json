@@ -3243,6 +3243,7 @@
     "EvidenceJudgmentState",
     "EvidenceRef",
     "ExecutableBinding",
+    "ExternalBurdenAccount",
     "FactValue",
     "FailureClass",
     "FaultDomainBinding",

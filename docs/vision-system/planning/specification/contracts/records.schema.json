@@ -33341,6 +33341,9 @@
                 "additionalProperties": false
               }
             },
+            "external_burden_account": {
+              "$ref": "values.schema.json#/$defs/ExternalBurdenAccount"
+            },
             "allocation_rule": {
               "$ref": "values.schema.json#/$defs/string"
             },

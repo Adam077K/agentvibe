@@ -915,6 +915,11 @@ ENVELOPE_FALLBACK = {
 #   ("not", inner)                              negation of one conjunct
 #   ("ne",  arg)                                nonempty over a declared argument
 #   ("uq",  arg)                                unique over a declared argument
+#   ("neF", path)                               nonempty over the subject's own value
+#   ("prF", path)                               present at the subject's own path
+#   ("eqF", path, literal)                      that path equals that exact literal
+#   ("either", [item, ...])                     any over built conjuncts
+#   ("every", [item, ...])                      a nested all over built conjuncts
 #
 # `nf` and `ag` need at least one role to RESOLVE on the record; `fi` needs both a
 # start and an end path. A conjunct whose roles resolve to nothing is DROPPED rather
@@ -2601,15 +2606,33 @@ RECORD_OVERRIDES = {
          ("s1", "launch_children"), ("uq", "judgment_refs"),
          ("ag", ["dependency"]), AF, AR],
         hard=["s1"]),
+    # R-G / G4-03 extends this entry. The domain_validators requirement is unchanged and
+    # still first; what is added is the external-burden half, which the criterion checked
+    # nowhere. `external_burden_observations` is a required ARRAY, and an array validates
+    # empty, so the protocol's required case -- a profitable venture shifting work onto
+    # customers, applicants or contractors -- passed with `[]`.
     ("Economics", "validated"): spec(
         "observed_revenue and observed_cost allow observed or unknown, never estimated "
         "presented as actual; any unknown input makes the corresponding aggregate "
         "incomplete, so a known subtotal plus missing categories is reported instead of a "
-        "complete total.",
-        ["c-price"],
+        "complete total. AND the external burden this venture places on customers, "
+        "applicants and contractors is accounted for: either the observations are "
+        "nonempty, or `external_burden_account` positively finds `none_observed` and "
+        "carries the reason, the observation window and the assignment answerable for it. "
+        "An empty observation array on its own is the absence of evidence and establishes "
+        "no absence of burden.",
+        ["c-price", "c-shifted-burden"],
         [("nf", ["quantity", "evidence", "uncertainty"]),
+         ("either", [("neF", "/payload/external_burden_observations"),
+                     ("every", [("eqF", "/payload/external_burden_account/finding",
+                                 "none_observed"),
+                                ("prF", "/payload/external_burden_account/reason"),
+                                ("prF", "/payload/external_burden_account/"
+                                        "observation_window"),
+                                ("prF", "/payload/external_burden_account/"
+                                        "responsible_assignment")])]),
          ("s1", "resource_equation"), ("s1", "complete_capture"), AF, AR],
-        hard=["s1"]),
+        hard=["s1", "either"]),
     ("CashPosition", "validated"): spec(
         "Each expected account has an AccountBalanceObservation or a named coverage gap; "
         "an absent reconciliation date or unknown balance cannot establish zero assets or "
@@ -2746,15 +2769,33 @@ def payload_declared(records_schema, record):
     return names
 
 
+RECORD_SPECIFIC_KINDS = ("nfp", "rpp", "neF", "prF", "eqF")
+
+
 def literal_paths(item):
-    """The field paths a `nfp`/`rpp` conjunct names, or () for any other kind."""
+    """Every field path this conjunct names, recursively; () when it names none."""
     if item[0] == "nfp":
         return tuple(item[1])
     if item[0] == "rpp":
         return tuple(path for path, _states, _optional in item[1])
+    if item[0] in ("neF", "prF", "eqF"):
+        return (item[1],)
     if item[0] == "not":
         return literal_paths(item[1])
+    if item[0] in ("either", "every"):
+        return tuple(p for inner in item[1] for p in literal_paths(inner))
     return ()
+
+
+def literal_kinds(item):
+    """Every conjunct kind this item uses, recursively."""
+    found = [item[0]]
+    if item[0] == "not":
+        found.extend(literal_kinds(item[1]))
+    if item[0] in ("either", "every"):
+        for inner in item[1]:
+            found.extend(literal_kinds(inner))
+    return found
 
 
 def payload_required(records_schema, record):
@@ -2800,6 +2841,18 @@ def interval_paths(required_fields):
 
 def _subject():
     return {"arg": "subject_ref"}
+
+
+def _subject_path(pointer):
+    """The subject's own decoded value at `pointer`.
+
+    One idiom, already in the registry: `identity.current.v1` and
+    `capture.kind.present.v1` both spell a field read as path-over-resolve. Unlike
+    `nonempty_fields` this reaches INSIDE a payload value, which is what a typed marker
+    with its own `reason` and window needs.
+    """
+    return {"op": "path", "value": {"op": "resolve", "ref": _subject()},
+            "pointer": pointer}
 
 
 def build_conjunct(item, record, criterion_id, required_fields):
@@ -2873,6 +2926,24 @@ def build_conjunct(item, record, criterion_id, required_fields):
         if inner is None or inner is NOT_APPLICABLE:
             return inner
         return {"op": "not", "predicate": inner}
+    if kind == "neF":
+        return {"op": "nonempty", "value": _subject_path(item[1])}
+    if kind == "prF":
+        return {"op": "present", "value": _subject_path(item[1])}
+    if kind == "eqF":
+        return {"op": "eq", "left": _subject_path(item[1]), "right": item[2]}
+    if kind in ("either", "every"):
+        built = []
+        for inner_item in item[1]:
+            inner = build_conjunct(inner_item, record, criterion_id, required_fields)
+            if inner is None or inner is NOT_APPLICABLE:
+                # A disjunct that does not resolve is not a disjunct that is satisfied.
+                # Dropping it would WIDEN an `any`; dropping one from an `all` narrows the
+                # requirement. Either way the stated requirement is no longer what is
+                # written, so the whole conjunct fails to resolve and its spec decides.
+                return inner
+            built.append(inner)
+        return {"op": "any" if kind == "either" else "all", "predicates": built}
     raise ValueError("unknown conjunct kind: " + kind)
 
 
@@ -2901,14 +2972,22 @@ def compose(record, phase, criterion_id, records_schema, declared_args,
         for path in literal_paths(item):
             if path in ENVELOPE_PATHS:
                 continue
-            if not path.startswith("/payload/") or path[len("/payload/"):] not in declared_paths:
+            # Only the first payload segment is checked: `eqF` and `prF` reach INSIDE a
+            # typed value (`/payload/external_burden_account/finding`), whose shape is
+            # values.schema.json's business and not this module's.
+            segments = path.split("/")
+            if len(segments) < 3 or segments[1] != "payload" \
+                    or segments[2] not in declared_paths:
                 raise ValueError(
                     "%s %s: conjunct names %r, which %s does not declare"
                     % (record, phase, path, record))
-        if item[0] in ("nfp", "rpp") and (record, phase) not in RECORD_OVERRIDES:
-            raise ValueError(
-                "%s %s: `nfp`/`rpp` name one record's fields and belong in "
-                "RECORD_OVERRIDES, not in a kind-level PHASE_SPECS entry" % (record, phase))
+        if (record, phase) not in RECORD_OVERRIDES:
+            for kind in literal_kinds(item):
+                if kind in RECORD_SPECIFIC_KINDS:
+                    raise ValueError(
+                        "%s %s: `%s` names one record's own fields and belongs in "
+                        "RECORD_OVERRIDES, not in a kind-level PHASE_SPECS entry"
+                        % (record, phase, kind))
 
     required_fields = payload_required(records_schema, record)
     predicates, dropped = [], []

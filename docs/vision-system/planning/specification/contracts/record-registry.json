@@ -27175,6 +27175,7 @@
           "currency": "Currency",
           "owner_minutes": "MinutesKnowledge",
           "external_burden_observations": "EvidenceRef[]",
+          "external_burden_account": "ExternalBurdenAccount?",
           "allocation_rule": "string",
           "missing_costs": "string[]",
           "observed_revenue": "MoneyKnowledge",
