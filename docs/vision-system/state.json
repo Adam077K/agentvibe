@@ -87,24 +87,25 @@
     "Step 5b chapters (609a852..8c72253) and registers (bf8785d..bfd4a93) landed; all five verifiers exit 0. RC3-01..03 repaired at the root cause (cfccbc8..a41bf73): registry-derived demanding positions, unknown operators refused, 36 fixtures, 288,620 checks (author-recorded).",
     "G-02-recheck-04 archived (subject a41bf73): RC3-01/02/03 CLOSED; class continues as RC4-01 (table string edit passes pins), RC4-02 (self-declared demanding primitive, exit 0), RC4-03 (no fixture floor), RC4-04..07. Fourth iteration: the lesson is that a walker may classify by a registry but a pin must state its own admissible ancestors.",
     "Step 5b complete at 8f6c2c2: chapters (WORK-1.1, E1.2, seven joins), registers (AD-015..022, Q-016..021, 135 question rows, 9 package rows), contracts (15 records 173->188, 7 changed, 30 guards, 57 pins/119 rows, 17 adverse + 17 benign fixtures, aliases 26, capabilities.json version check); validator 299,177 checks exit 0, 53/53 negative, 17/17 positive; all verifiers exit 0. Author-recorded.",
-    "Step 6 reviews archived (planning/reviews/F2-06-A..D.md) at subject 8f6c2c2: sufficient W5 W9 W11 W13; insufficient W1 W2 W3 W4 W6 W7 W8 W10 W12 W14 W15. Six (d): F6A-01 middle-band recipient, F6A-06 floor mapping absent, F6B-05 acceptance-sampling rule, F6D declared_grants/grant policy, C5 control objects unrepresented, EffectIdentity join optional. Measured headline: 30/30 new guards detachable silently; two guards wrong as written. Repair round dispatched by file partition; narrow recheck after."
+    "Step 6 reviews archived (planning/reviews/F2-06-A..D.md) at subject 8f6c2c2: sufficient W5 W9 W11 W13; insufficient W1 W2 W3 W4 W6 W7 W8 W10 W12 W14 W15. Six (d): F6A-01 middle-band recipient, F6A-06 floor mapping absent, F6B-05 acceptance-sampling rule, F6D declared_grants/grant policy, C5 control objects unrepresented, EffectIdentity join optional. Measured headline: 30/30 new guards detachable silently; two guards wrong as written. Repair round dispatched by file partition; narrow recheck after.",
+    "Step 6 prose repairs landed (22743bf..6337505; 12 commits; all verifiers 0; Q-022 added for X14). RC4-01..07 repaired (6dcbc1b..bcfd658): pin-side admissible_ancestors, pinned table digest, fixture floors 56/17, census floored; validator 299,379 exit 0 (author-recorded)."
   ],
   "active_work": [
     {
-      "agent": "builder (rc4-repair)",
-      "scope": "RC4-01..07 in contracts/",
-      "status": "running"
+      "agent": "builder (r6-contracts)",
+      "scope": "Step 6 contracts repairs per F2-06-* and the names contract",
+      "status": "dispatched 2026-09-14"
     },
     {
-      "agent": "builder (r6-chapters)",
-      "scope": "Step 6 prose repairs in 04/05/06/07 + 02-architecture-selection §9",
+      "agent": "reviewer (recheck-05)",
+      "scope": "G-02-recheck-05 at frozen bcfd658",
       "status": "dispatched 2026-09-14"
     }
   ],
   "next_actions": [
-    "When rc4-repair returns: dispatch r6-contracts (attachment pins, set-equality guards, declared_grants refs + grant policy, ProtectedChange edges, EffectIdentity uniqueness, manifest fields guard-required, ConstraintSet on Continuation/DecisionPacket/OperatorProjection, production_mode/expected_launch fields, lapse guard on all release edges, FailureRecord guards, supersession direction, type_fields copy-paste, floor mapping)",
-    "Narrow recheck of both repairs (F2-06-recheck-01) then the whole-package scoped planning disposition",
-    "PLANNING-REPORT + README + founder page + session file + plain-language note; HELD BY FOUNDER: no build stage may be dispatched"
+    "Verify r6-contracts; archive recheck-05; then a narrow recheck of the Step 6 repairs (F2-06-recheck-01) covering the six (d)s and the detachment headline",
+    "Whole-package scoped planning disposition; PLANNING-REPORT + README + founder page + session file + plain-language note",
+    "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
     {
