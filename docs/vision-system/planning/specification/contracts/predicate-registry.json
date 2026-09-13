@@ -377338,5 +377338,2153 @@
       ],
       "additionalProperties": false
     }
+  },
+  "criterion.Fulfillment.delivering.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/performer_assignment",
+            "/payload/delivery_steps",
+            "/payload/service_window",
+            "/payload/remaining_duties"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/performer_assignment",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Fulfillment.delivering.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
+        }
+      ]
+    },
+    "meaning": "The agreed service is being performed by a currently accepted performer, with the milestone steps, the service window and the obligations still outstanding all recorded. Being in delivery asserts nothing about delivery: no receipt, no counterparty acknowledgment and no independent observation is required here, and none of them would be sufficient to leave this phase either. Phase assessed: delivering.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs"
+      ],
+      "additionalProperties": false
+    },
+    "content_source": "tools/phase_content.py",
+    "requires": "The agreed service is being performed by a currently accepted performer, with the milestone steps, the service window and the obligations still outstanding all recorded. Being in delivery asserts nothing about delivery: no receipt, no counterparty acknowledgment and no independent observation is required here, and none of them would be sufficient to leave this phase either.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Fulfillment executes the actual agreed digital, human or physical service through an accepted performer. For each milestone record promised outcome, window, evidence and remaining obligations. Partial receipts do not complete the entire order. Acceptance uses the agreed criteria and counterparty acknowledgment where required; a silent customer does not acquire a new discharge meaning."
+      },
+      {
+        "file": "../02-architecture-selection.md",
+        "anchor_or_quote": "independently verify delivery against the offer"
+      }
+    ]
+  },
+  "criterion.Fulfillment.delivered.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/receipts",
+            "/payload/delivery_steps",
+            "/payload/remaining_duties"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/performer_assignment",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
+          "op": "native_correlated",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "result": "delivered"
+        },
+        {
+          "op": "accepted_for",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Fulfillment.delivered.v1",
+          "judgment_refs": {
+            "arg": "judgment_refs"
+          }
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Fulfillment.delivered.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
+        }
+      ]
+    },
+    "meaning": "Delivery is established by an independently observed result correlated to the delivery adapter's own native object, by the receipts the milestones require and by a current accepted judgment on THIS criterion. Correlation is against the delivery, never against the payment: a settled charge is evidence about money and says nothing about whether the service arrived. Partial receipts do not complete the order and a silent customer acquires no new discharge meaning. Phase assessed: delivered.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs"
+      ],
+      "additionalProperties": false
+    },
+    "content_source": "tools/phase_content.py",
+    "requires": "Delivery is established by an independently observed result correlated to the delivery adapter's own native object, by the receipts the milestones require and by a current accepted judgment on THIS criterion. Correlation is against the delivery, never against the payment: a settled charge is evidence about money and says nothing about whether the service arrived. Partial receipts do not complete the order and a silent customer acquires no new discharge meaning.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Fulfillment executes the actual agreed digital, human or physical service through an accepted performer. For each milestone record promised outcome, window, evidence and remaining obligations. Partial receipts do not complete the entire order. Acceptance uses the agreed criteria and counterparty acknowledgment where required; a silent customer does not acquire a new discharge meaning."
+      },
+      {
+        "file": "../02-architecture-selection.md",
+        "anchor_or_quote": "Delivery produces independently observed results; support can reopen the demand or claim evidence without undoing existing duties."
+      },
+      {
+        "file": "../02-architecture-selection.md",
+        "anchor_or_quote": "End-to-end acceptance belongs to its sponsor with actual counterparty/discharge rules, not the sum of completed tasks."
+      }
+    ]
+  },
+  "criterion.Fulfillment.failed.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/remaining_duties",
+            "/payload/receipts",
+            "/payload/service_window"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/performer_assignment",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "native_correlated",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "result": "delivered"
+          }
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Fulfillment.failed.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
+        }
+      ]
+    },
+    "meaning": "The delivery did not happen and the failure is owned rather than closed: the service window and the receipts actually obtained are recorded, the remaining obligations survive on the record, and no observation correlates a delivery. Failure creates a support/remedy duty with an update deadline; it does not discharge the order, and it is not a route to `delivered` by another name. Phase assessed: failed.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs"
+      ],
+      "additionalProperties": false
+    },
+    "content_source": "tools/phase_content.py",
+    "requires": "The delivery did not happen and the failure is owned rather than closed: the service window and the receipts actually obtained are recorded, the remaining obligations survive on the record, and no observation correlates a delivery. Failure creates a support/remedy duty with an update deadline; it does not discharge the order, and it is not a route to `delivered` by another name.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "CAP-30 then executes onboarding ... Failure creates a support/remedy duty with an update deadline."
+      },
+      {
+        "file": "../02-architecture-selection.md",
+        "anchor_or_quote": "an obligation survives that case; an operation can remain uncertain after both a worker and a plan stop. Accepted work cannot discharge external standing through an internal status."
+      }
+    ]
+  },
+  "criterion.Fulfillment.refunded.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "content_unspecified",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "gap_id": "gap-Fulfillment-refunded"
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Fulfillment.refunded.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
+        },
+        {
+          "op": "accepted_for",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Fulfillment.refunded.v1",
+          "judgment_refs": {
+            "arg": "judgment_refs"
+          }
+        }
+      ]
+    },
+    "meaning": "Per-phase content unspecified; see gap-Fulfillment-refunded. Phase assessed: refunded.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs"
+      ],
+      "additionalProperties": false
+    },
+    "content_source": "tools/phase_content.py",
+    "content_gap_id": "gap-Fulfillment-refunded",
+    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `refunded` on Fulfillment. See phase-content-gaps.json#/gaps for what it would have to say."
+  },
+  "edge.Fulfillment.proposed.delivering.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "proposed",
+          "to_state": "delivering"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.delivering",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.delivering.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: proposed → delivering; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.delivering.delivered.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "delivering",
+          "to_state": "delivered"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.delivered",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "native_correlated",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "result": "delivered"
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.delivered.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: delivering → delivered; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.delivered.failed.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "delivered",
+          "to_state": "failed"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "restriction.failed",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.failed.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: delivered → failed; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.delivered.refunded.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "delivered",
+          "to_state": "refunded"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.refunded",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.refunded.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: delivered → refunded; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.delivering.superseded.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "continuation_ref": "Ref<Continuation>?"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "delivering",
+          "to_state": "superseded"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "restriction.superseded",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "due_preserved",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "target_state": "superseded",
+          "continuation_ref": {
+            "arg": "continuation_ref"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.superseded.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: delivering → superseded; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "continuation_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Continuation"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.delivered.superseded.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "continuation_ref": "Ref<Continuation>?"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "delivered",
+          "to_state": "superseded"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "restriction.superseded",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "due_preserved",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "target_state": "superseded",
+          "continuation_ref": {
+            "arg": "continuation_ref"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.superseded.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: delivered → superseded; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "continuation_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Continuation"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.failed.superseded.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "continuation_ref": "Ref<Continuation>?"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "failed",
+          "to_state": "superseded"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "restriction.superseded",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "due_preserved",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "target_state": "superseded",
+          "continuation_ref": {
+            "arg": "continuation_ref"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.superseded.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: failed → superseded; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "continuation_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Continuation"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "edge.Fulfillment.refunded.superseded.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]",
+      "continuation_ref": "Ref<Continuation>?"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "refunded",
+          "to_state": "superseded"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "restriction.superseded",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "due_preserved",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "target_state": "superseded",
+          "continuation_ref": {
+            "arg": "continuation_ref"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.superseded.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: refunded → superseded; The actual performer completes contracted delivery/onboarding steps in the service window; beneficiary acceptance and remaining duties are observed, not simulated.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "continuation_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Continuation"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
   }
 }

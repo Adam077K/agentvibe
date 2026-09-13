@@ -31693,6 +31693,10 @@
       "phases": [
         "proposed",
         "validated",
+        "delivering",
+        "delivered",
+        "failed",
+        "refunded",
         "superseded",
         "restricted"
       ],
@@ -31774,6 +31778,118 @@
           "from": "restricted",
           "to": "superseded",
           "predicate_id": "edge.Fulfillment.restricted.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:proposed->delivering",
+          "from": "proposed",
+          "to": "delivering",
+          "predicate_id": "edge.Fulfillment.proposed.delivering.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.delivering.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivering->delivered",
+          "from": "delivering",
+          "to": "delivered",
+          "predicate_id": "edge.Fulfillment.delivering.delivered.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.delivered.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivered->failed",
+          "from": "delivered",
+          "to": "failed",
+          "predicate_id": "edge.Fulfillment.delivered.failed.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.failed.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivered->refunded",
+          "from": "delivered",
+          "to": "refunded",
+          "predicate_id": "edge.Fulfillment.delivered.refunded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.refunded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivering->superseded",
+          "from": "delivering",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.delivering.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivered->superseded",
+          "from": "delivered",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.delivered.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:failed->superseded",
+          "from": "failed",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.failed.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:refunded->superseded",
+          "from": "refunded",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.refunded.superseded.v1",
           "predicate_version": "1.0",
           "owner_component": "S1-C03",
           "criterion_id": "criterion.Fulfillment.superseded.v1",

@@ -115904,7 +115904,11 @@
                     "proposed",
                     "validated",
                     "superseded",
-                    "restricted"
+                    "restricted",
+                    "delivering",
+                    "delivered",
+                    "failed",
+                    "refunded"
                   ]
                 },
                 "links": {

@@ -79,6 +79,13 @@ CITE = {
         "../02-architecture-selection.md",
         "End-to-end acceptance belongs to its sponsor with actual counterparty/discharge "
         "rules, not the sum of completed tasks."),
+    "arch6-delivery": (
+        "../02-architecture-selection.md",
+        "Delivery produces independently observed results; support can reopen the demand "
+        "or claim evidence without undoing existing duties."),
+    "arch6-verify": (
+        "../02-architecture-selection.md",
+        "independently verify delivery against the offer"),
     "arch6-closure": (
         "../02-architecture-selection.md",
         "Closure requires real dispositions and continued reachable redress for "
@@ -394,6 +401,28 @@ CITE = {
         "the entire order. Acceptance uses the agreed criteria and counterparty "
         "acknowledgment where required; a silent customer does not acquire a new "
         "discharge meaning."),
+    "c-onboarding-failure": (
+        "03-company-capabilities.md",
+        "CAP-30 then executes onboarding ... Failure creates a support/remedy duty with "
+        "an update deadline."),
+    "c-sales-outcome": (
+        "03-company-capabilities.md",
+        "Sales marks its complete commercial outcome only after CAP-30 ... accepted "
+        "delivery and the specified payment conditions; agreement formation remains "
+        "separately visible before then."),
+    "c-triage-independence": (
+        "03-company-capabilities.md",
+        "A complaint about the current custodian routes outside the disputed "
+        "decision/incentive dependency."),
+    "c-grievance-remedy": (
+        "03-company-capabilities.md",
+        "A competent authority has decided a specific remedy, its funding is **actually "
+        "reserved**, and a performer and due date exist"),
+    "c-shifted-burden": (
+        "03-company-capabilities.md",
+        "run an operationally successful losing case and a profitable case with excessive "
+        "customer/applicant/contractor coordination. Report distinct economic, usefulness "
+        "and individual-burden failures; no combined score rescues them."),
     "c-closure": (
         "03-company-capabilities.md",
         "CAP-39 closure inventories accepted and potential promises, refunds, service, "
@@ -872,7 +901,9 @@ ENVELOPE_FALLBACK = {
 # --- Conjunct DSL. ---------------------------------------------------------------
 #
 #   ("nf",  [role, ...])                        nonempty_fields over those roles
+#   ("nfp", [path, ...])                        nonempty_fields over EXACTLY those paths
 #   ("rp",  [(role, [phase, ...], optional)])    related_phases, one binding per role
+#   ("rpp", [(path, [phase, ...], optional)])    related_phases over EXACTLY those paths
 #   ("af",)                                     accepted_for, naming this criterion
 #   ("ar",)                                     attested_result, naming this criterion
 #   ("nc",  result)                             native_correlated with that result
@@ -891,6 +922,16 @@ ENVELOPE_FALLBACK = {
 # here to remove, not a smaller version of a real one. A spec marked `hard` loses its
 # whole criterion to a gap when its conjunct cannot resolve, because the requirement
 # it states cannot be expressed against that record at all.
+#
+# `nfp` and `rpp` name FIELD PATHS rather than roles, and exist for one reason: a
+# recorded decision that names the exact field. AD-013 says `criterion.SalesAgreement.
+# performed.v1` must require `/payload/fulfillment_ref` -- not "whatever the dependency
+# role happens to match on SalesAgreement". Resolving that through a role would make the
+# decision depend on a regex, and widening a role to reach one field changes what every
+# other record's criteria demand. They are deliberately unavailable to PHASE_SPECS, which
+# is kind-level and must stay record-independent: `compose` refuses a `nfp`/`rpp` outside
+# RECORD_OVERRIDES, and refuses a path the record's own schema does not declare, so a
+# typo is a crash here rather than a criterion that silently checks nothing.
 
 
 def spec(requires, cites, conjuncts, hard=()):
@@ -2392,6 +2433,52 @@ PHASE_SPECS.pop("settled_dispute_placeholder")
 DOMAIN_VALIDATOR_CITE = ("capabilities.json", "#/domain_validators")
 
 RECORD_OVERRIDES = {
+
+    # -- R-C / AD-013: Fulfillment's domain lifecycle. ----------------------------
+    #
+    # `refunded` is deliberately ABSENT and becomes a registered gap. The corpus says
+    # what a refund IS (CAP-17: "authorized repair/completion/refund", conflict identity
+    # so support and sales "cannot pay it twice") and says it about the SupportCase that
+    # performs it. It nowhere says what a Fulfillment record in `refunded` must show.
+    # Inventing that sentence here is the false closure this module exists to refuse.
+    ("Fulfillment", "delivering"): spec(
+        "The agreed service is being performed by a currently accepted performer, with "
+        "the milestone steps, the service window and the obligations still outstanding "
+        "all recorded. Being in delivery asserts nothing about delivery: no receipt, no "
+        "counterparty acknowledgment and no independent observation is required here, "
+        "and none of them would be sufficient to leave this phase either.",
+        ["c-fulfillment", "arch6-verify"],
+        [("nfp", ["/payload/performer_assignment", "/payload/delivery_steps",
+                  "/payload/service_window", "/payload/remaining_duties"]),
+         ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
+         AR],
+        hard=["nfp", "rpp"]),
+    ("Fulfillment", "delivered"): spec(
+        "Delivery is established by an independently observed result correlated to the "
+        "delivery adapter's own native object, by the receipts the milestones require "
+        "and by a current accepted judgment on THIS criterion. Correlation is against "
+        "the delivery, never against the payment: a settled charge is evidence about "
+        "money and says nothing about whether the service arrived. Partial receipts do "
+        "not complete the order and a silent customer acquires no new discharge meaning.",
+        ["c-fulfillment", "arch6-delivery", "arch6-acceptance"],
+        [("nfp", ["/payload/receipts", "/payload/delivery_steps",
+                  "/payload/remaining_duties"]),
+         ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
+         ("nc", "delivered"), AF, AR],
+        hard=["nfp", "rpp", "nc"]),
+    ("Fulfillment", "failed"): spec(
+        "The delivery did not happen and the failure is owned rather than closed: the "
+        "service window and the receipts actually obtained are recorded, the remaining "
+        "obligations survive on the record, and no observation correlates a delivery. "
+        "Failure creates a support/remedy duty with an update deadline; it does not "
+        "discharge the order, and it is not a route to `delivered` by another name.",
+        ["c-onboarding-failure", "arch3-outcome"],
+        [("nfp", ["/payload/remaining_duties", "/payload/receipts",
+                  "/payload/service_window"]),
+         ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
+         ("not", ("nc", "delivered")), AR],
+        hard=["nfp", "not"]),
+
     ("DeliveryCapacity", "verified"): spec(
         "verified requires actual performer acknowledgment, applicable access/materials, "
         "window, resources and continuity evidence; not compute availability.",
@@ -2573,6 +2660,37 @@ def primitive_admits(op, record):
     return enum is None or record in enum
 
 
+ENVELOPE_PATHS = frozenset({
+    "/owner_assignment_ref", "/access_policy_ref", "/retention_policy_ref",
+    "/provenance_refs", "/effective_from", "/effective_until",
+})
+
+
+def payload_declared(records_schema, record):
+    """Every payload field the record's schema declares, required or not.
+
+    `nfp`/`rpp` may name an OPTIONAL field -- AD-013 makes `/payload/fulfillment_ref`
+    optional at registration and required to reach `performed`, which is the whole
+    point of the decision. What they may not name is a field that does not exist.
+    """
+    payload = records_schema["$defs"][record].get("properties", {}).get("payload", {})
+    names = set(payload.get("properties", {}))
+    for branch in payload.get("oneOf", []):
+        names |= set(branch.get("properties", {}))
+    return names
+
+
+def literal_paths(item):
+    """The field paths a `nfp`/`rpp` conjunct names, or () for any other kind."""
+    if item[0] == "nfp":
+        return tuple(item[1])
+    if item[0] == "rpp":
+        return tuple(path for path, _states, _optional in item[1])
+    if item[0] == "not":
+        return literal_paths(item[1])
+    return ()
+
+
 def payload_required(records_schema, record):
     """The record's REQUIRED payload field names, in schema order."""
     definition = records_schema["$defs"][record]
@@ -2632,6 +2750,14 @@ def build_conjunct(item, record, criterion_id, required_fields):
         if not paths:
             return None
         return {"op": "nonempty_fields", "subject_ref": _subject(), "field_paths": paths}
+    if kind == "nfp":
+        return {"op": "nonempty_fields", "subject_ref": _subject(),
+                "field_paths": list(item[1])}
+    if kind == "rpp":
+        return {"op": "related_phases", "subject_ref": _subject(),
+                "bindings": [{"field_path": path, "states": list(states),
+                              "optional": bool(optional)}
+                             for path, states, optional in item[1]]}
     if kind == "rp":
         bindings = []
         for role, states, optional in item[1]:
@@ -2699,6 +2825,24 @@ def compose(record, phase, criterion_id, records_schema, declared_args,
         entry = _INITIAL_PHASE_SPEC
     if entry is None:
         return None, None, "the prose states no evidence requirement for this phase name"
+
+    # A literal path is a claim about THIS record's schema, so it is checked against it
+    # before anything is emitted. Unchecked, a renamed or misspelled field would produce
+    # a `nonempty_fields` naming nothing -- a criterion that reads as a requirement and
+    # demands a field the record cannot have.
+    declared_paths = payload_declared(records_schema, record)
+    for item in entry["conjuncts"]:
+        for path in literal_paths(item):
+            if path in ENVELOPE_PATHS:
+                continue
+            if not path.startswith("/payload/") or path[len("/payload/"):] not in declared_paths:
+                raise ValueError(
+                    "%s %s: conjunct names %r, which %s does not declare"
+                    % (record, phase, path, record))
+        if item[0] in ("nfp", "rpp") and (record, phase) not in RECORD_OVERRIDES:
+            raise ValueError(
+                "%s %s: `nfp`/`rpp` name one record's fields and belong in "
+                "RECORD_OVERRIDES, not in a kind-level PHASE_SPECS entry" % (record, phase))
 
     required_fields = payload_required(records_schema, record)
     predicates, dropped = [], []
