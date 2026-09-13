@@ -1026,10 +1026,44 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
         [sys.executable, str(ROOT / "tools" / "run_negative_fixtures.py")],
         capture_output=True, text=True,
         env={**os.environ, "CONTRACTS_FIXTURE_RUN": "1"})
+    # RC2-04. The runner exits 1 for two unrelated reasons and both used to surface under
+    # the message for one of them. A COUNT MISMATCH -- a fixture deleted while
+    # MANIFEST.json still declares it, or present and undeclared -- was reported as "a
+    # negative fixture was not rejected; the check it names is gone", which sends a reader
+    # to look for a control that stopped working when what happened is that a control is
+    # missing. The dedicated comparison below cannot correct it, because it is unreachable
+    # in that case: the runner refuses BEFORE running a single fixture, so the generic
+    # wrapper fires first and the ratchet message never renders. The correct detail was
+    # attached and nothing was lost -- but the first line named the wrong failure, and
+    # this file argues in four other places that a message should name the control that
+    # actually did the refusing.
+    #
+    # The headline is declared here and asserted to still exist in the runner that prints
+    # it. A branch on a string the other side has renamed is a branch nothing takes, and
+    # it fails by falling back to exactly the wrong message this check exists to stop.
+    FIXTURE_RATCHET = "negative fixture count ratchet (RC-04)"
+    checked(FIXTURE_RATCHET in
+            (ROOT / "tools" / "run_negative_fixtures.py").read_text(encoding="utf-8"),
+            ("the ratchet headline this file branches on is not in the runner that prints "
+             "it", FIXTURE_RATCHET))
+    try:
+        runner_said = json.loads(completed.stdout[completed.stdout.rindex("{"):])
+    except ValueError:
+        # No JSON at all: the runner refused before reporting -- a symlinked tree, a
+        # missing manifest, a duplicate id. The generic check below names it, which is
+        # right, because those refusals print their own sentence.
+        runner_said = None
+    ratchet = (runner_said if isinstance(runner_said, dict)
+               and runner_said.get("check") == FIXTURE_RATCHET else None)
+    checked(ratchet is None,
+            ("the tree and fixtures/negative/MANIFEST.json disagree about which negative "
+             "fixtures exist (RC-04), and NO fixture was run: a declared fixture that is "
+             "absent is a control someone deleted, and one present but undeclared is a "
+             "control the denominator does not know about", ratchet))
     checked(completed.returncode == 0,
             ("a negative fixture was not rejected; the check it names is gone",
              completed.stdout[-2000:] + completed.stderr[-2000:]))
-    FIXTURES_RUN = json.loads(completed.stdout[completed.stdout.rindex("{"):])
+    FIXTURES_RUN = runner_said
     checked(FIXTURES_RUN["fixtures"] > 0, "refusing a vacuous pass with zero negative fixtures")
     # RC-04: `> 0` is not a count. With 1 of 27 fixtures present this block reported
     # `negative_fixtures_rejected: 1` and exited 0 -- the suite lost 96% of its coverage
