@@ -78,44 +78,25 @@
     "Independent recheck archived (planning/reviews/G-02-recheck-01.md) at f27c22e: G2-01 and G2-02 CLOSED at specification level — no (d) remains in any of the twelve dimensions; both carry (a) residue. G2-05 closed for delivery, (a) for refund/failure. G2-06 stays (a) OPEN: the content oracle pins to an author-controlled derivation file (RC-02) and the fixture suite has no count ratchet (RC-04). RC-01 is a real break the repair introduced. RC-01..08 registered.",
     "Merged ratchet-pin lane (7 commits): pinned-conjuncts.json (25 pins / 44 requirements / 6 transitions), fixture MANIFEST (31), RC-01 in-flight failure and refund reachability, RC-03 requires-vs-conjuncts with 17 named waivers, RC-05/06/08. Root validator run: 31/31 fixtures rejected, 1311 edges. RP-01 registered.",
     "G-02-recheck-02 archived (planning/reviews/G-02-recheck-02.md, subject 3579cc2): RC-01, RC-03..RC-08 CLOSED at specification level; RC-02 OPEN (a) — a disjunction sibling of the one-hunk attack passes at exit 0 with pins untouched (RC2-02); RC2-01 (b), RC2-03 (b), RC2-04 (c) registered. Repair lane dispatched.",
-    "Step 2 cross-lane comparison committed (ddd7c22): 42-claim matrix (15 with conflicts), 18 agreements, 16 disagreements preserved, axes X01..X10 reconciled + X11..X20 new, 0 falsifiers against fixed boundaries (2 against protocol-granted B0 strengths), 41 of 65 cross-lane questions open. AM-01 recorded (F-4 paired clean case)."
+    "Step 2 cross-lane comparison committed (ddd7c22): 42-claim matrix (15 with conflicts), 18 agreements, 16 disagreements preserved, axes X01..X10 reconciled + X11..X20 new, 0 falsifiers against fixed boundaries (2 against protocol-granted B0 strengths), 41 of 65 cross-lane questions open. AM-01 recorded (F-4 paired clean case).",
+    "RC2-01..04 repaired (d3cf3ea, 73827d8, 931a314, 7b3d388; contracts/ only): pins carry `disjoined` with any-ancestry tracking; fixtures 31→33; validator 269,697 checks exit 0 (author-recorded). Candidates M1, M2, M3, M5 committed; M4 in progress."
   ],
   "active_work": [
     {
-      "agent": "builder (rc2-repair)",
-      "scope": "RC2-01..04 in contracts/ only",
-      "status": "running"
-    },
-    {
-      "agent": "framer (cand-M1)",
-      "scope": "Step 3 candidate M1 at planning/F2/candidates/M1-*.md",
-      "status": "dispatched 2026-09-13, blind of siblings"
-    },
-    {
-      "agent": "framer (cand-M2)",
-      "scope": "Step 3 candidate M2 at planning/F2/candidates/M2-*.md",
-      "status": "dispatched 2026-09-13, blind of siblings"
-    },
-    {
-      "agent": "framer (cand-M3)",
-      "scope": "Step 3 candidate M3 at planning/F2/candidates/M3-*.md",
-      "status": "dispatched 2026-09-13, blind of siblings"
+      "agent": "reviewer (recheck-03)",
+      "scope": "G-02-recheck-03 at frozen 1bef187: RC2-01..04 plus a search for further non-demanding contexts",
+      "status": "dispatched 2026-09-13"
     },
     {
       "agent": "framer (cand-M4)",
-      "scope": "Step 3 candidate M4 at planning/F2/candidates/M4-*.md",
-      "status": "dispatched 2026-09-13, blind of siblings"
-    },
-    {
-      "agent": "framer (cand-M5)",
-      "scope": "Step 3 candidate M5 at planning/F2/candidates/M5-*.md",
-      "status": "dispatched 2026-09-13, blind of siblings"
+      "scope": "candidate M4",
+      "status": "running"
     }
   ],
   "next_actions": [
-    "Verify five candidates (dimensions, six fixtures, both comparators, capability binding, (d)-self-audit); commit; then Step 4 independent attacks (reviewer engine, never shown authors' self-assessments)",
-    "Verify rc2-repair; dispatch narrow recheck G-02-recheck-03",
-    "Planning disposition deferred until the F2 round completes and RC2-02 is rechecked",
+    "Verify and commit M4; then Step 4 independent attacks on M1..M5 (reviewer engine; never shown authors' self-assessments)",
+    "Archive recheck-03 as planning/reviews/G-02-recheck-03.md; update RC2-* register",
+    "Planning disposition deferred until the F2 round completes",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
