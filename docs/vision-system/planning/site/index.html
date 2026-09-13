@@ -1,0 +1,1963 @@
+<title>The Company Engine Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+
+<style>
+/* ============================================================
+   Tokens. Full light palette on bare :root; dark redefines only
+   what changes, under the two guarded selectors.
+   ============================================================ */
+:root{
+  --ground:#F5F6F3;
+  --raised:#FFFFFF;
+  --sunk:#ECEEE9;
+  --ink:#1B2026;
+  --ink-2:#4B555F;
+  --ink-3:#6E7882;
+  --accent:#0F5C6E;
+  --accent-ink:#0B4453;
+  --accent-wash:#E4EDEF;
+  --founder:#C7841A;
+  --founder-wash:#FAF0DE;
+  --founder-ink:#8A5A0C;
+  --sufficient:#2E7D4F;
+  --open:#B03A2E;
+  --pending:#7A6F5C;
+  --rule:#D3DADD;
+  --rule-2:#B4C0C5;
+  --shadow:0 1px 0 rgba(27,32,38,.04);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#14181D;
+    --raised:#1B2026;
+    --sunk:#101418;
+    --ink:#E6E9E4;
+    --ink-2:#AFB8BF;
+    --ink-3:#8B959D;
+    --accent:#5FB3C4;
+    --accent-ink:#8CCBD8;
+    --accent-wash:#1B2E34;
+    --founder:#E0A34A;
+    --founder-wash:#2E2415;
+    --founder-ink:#E8B972;
+    --sufficient:#5FAE7F;
+    --open:#E0796A;
+    --pending:#9A9384;
+    --rule:#2B343B;
+    --rule-2:#3C4851;
+    --shadow:none;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#14181D; --raised:#1B2026; --sunk:#101418;
+  --ink:#E6E9E4; --ink-2:#AFB8BF; --ink-3:#8B959D;
+  --accent:#5FB3C4; --accent-ink:#8CCBD8; --accent-wash:#1B2E34;
+  --founder:#E0A34A; --founder-wash:#2E2415; --founder-ink:#E8B972;
+  --sufficient:#5FAE7F; --open:#E0796A; --pending:#9A9384;
+  --rule:#2B343B; --rule-2:#3C4851; --shadow:none;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-size:17px;
+  line-height:1.55;
+  font-variant-numeric:tabular-nums;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4{
+  font-family:Fraunces,"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-variation-settings:"opsz" 40,"SOFT" 0,"WONK" 0;
+  font-weight:600;
+  line-height:1.18;
+  margin:0;
+  letter-spacing:-.006em;
+}
+h1{font-size:clamp(2rem,1.3rem + 2.6vw,3.1rem);font-variation-settings:"opsz" 120}
+h2{font-size:clamp(1.45rem,1.12rem + 1.2vw,2.05rem);font-variation-settings:"opsz" 72}
+h3{font-size:1.14rem;font-weight:600;font-variation-settings:"opsz" 24}
+h4{font-size:1rem;font-weight:500;font-variation-settings:"opsz" 18}
+p,ul,ol{margin:0}
+a{color:var(--accent);text-underline-offset:.18em;text-decoration-thickness:.06em}
+a:hover{color:var(--accent-ink)}
+code,.mono,.num{
+  font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-variant-numeric:tabular-nums;
+  font-size:.86em;
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+::selection{background:var(--accent-wash);color:var(--ink)}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+.page{
+  display:grid;
+  grid-template-columns:224px minmax(0,1fr);
+  gap:56px;
+  align-items:start;
+  max-width:1240px;
+  margin:0 auto;
+  padding:0 16px 96px;
+}
+main{min-width:0;display:flex;flex-direction:column;gap:56px}
+
+/* ---------- masthead ---------- */
+.masthead{padding:56px 0 36px;border-bottom:1px solid var(--rule)}
+.masthead .kicker{
+  font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:14px;
+}
+.masthead h1{max-width:16ch}
+.masthead .meta{
+  display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;
+  font-size:.78rem;color:var(--ink-2);
+}
+.masthead .meta span{white-space:nowrap}
+
+/* ---------- index ---------- */
+.index{
+  position:sticky;top:0;align-self:start;
+  max-height:100vh;overflow-y:auto;
+  padding:32px 0 32px;
+  border-right:1px solid var(--rule);
+  margin-right:-24px;padding-right:24px;
+}
+.index .idx-title{
+  font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:14px;
+}
+.index ol{list-style:none;padding:0;display:flex;flex-direction:column;gap:2px}
+.index a{
+  display:grid;grid-template-columns:1.6em 1fr;gap:4px;
+  padding:7px 8px 7px 0;border-radius:3px;
+  color:var(--ink-2);text-decoration:none;font-size:.88rem;line-height:1.3;
+}
+.index a:hover{color:var(--accent);background:var(--accent-wash)}
+.index a .n{font-family:"JetBrains Mono",monospace;font-size:.74rem;color:var(--ink-3);padding-top:.15em}
+.index a .r{
+  grid-column:2;font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);
+}
+.index a:hover .r,.index a:hover .n{color:var(--accent)}
+
+/* ---------- sections ---------- */
+section{scroll-margin-top:24px;display:flex;flex-direction:column;gap:26px}
+.sec-head{display:flex;flex-direction:column;gap:10px}
+.eyebrow{
+  font-size:.66rem;letter-spacing:.19em;text-transform:uppercase;font-weight:600;
+  display:inline-flex;align-items:center;gap:9px;
+}
+.eyebrow::before{content:"";width:22px;height:2px;background:currentColor;display:block}
+.eyebrow--plain{color:var(--accent)}
+.eyebrow--underlay{color:var(--pending)}
+.prose{max-width:65ch;display:flex;flex-direction:column;gap:18px;color:var(--ink)}
+.prose.narrow{max-width:58ch}
+.lede{font-size:1.12rem;line-height:1.5;color:var(--ink)}
+.sub{color:var(--ink-2);font-size:.95rem;max-width:72ch}
+.stack{display:flex;flex-direction:column;gap:28px}
+.stack-s{display:flex;flex-direction:column;gap:14px}
+.stack-xs{display:flex;flex-direction:column;gap:8px}
+hr.rule{border:0;border-top:1px solid var(--rule);margin:0}
+
+/* ---------- provenance line ---------- */
+.from{
+  font-family:"JetBrains Mono",monospace;font-size:.68rem;line-height:1.5;
+  color:var(--ink-3);word-break:break-word;margin-top:-14px;
+}
+.stack-s > .from,.stack-xs > .from,.det-body > .from,.hold > .from{margin-top:0}
+.from b{color:var(--ink-2);font-weight:500}
+
+/* ---------- number strip ---------- */
+.figs{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+  gap:1px;background:var(--rule);border:1px solid var(--rule);
+}
+.fig{background:var(--raised);padding:16px 14px 14px;display:flex;flex-direction:column;gap:5px}
+.fig .v{
+  font-family:"JetBrains Mono",monospace;font-size:1.5rem;font-weight:500;
+  letter-spacing:-.02em;color:var(--ink);line-height:1;
+}
+.fig .k{font-size:.82rem;color:var(--ink-2);line-height:1.3}
+.fig .s{font-family:"JetBrains Mono",monospace;font-size:.62rem;color:var(--ink-3);line-height:1.45;word-break:break-word}
+
+/* ---------- tables ---------- */
+.scrollwrap{display:flex;flex-direction:column;gap:7px;min-width:0}
+.hint{display:none}
+.scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--raised)}
+.scroll table{margin:0;border:0}
+table{
+  width:100%;border-collapse:collapse;font-size:.88rem;
+  background:var(--raised);
+}
+th,td{
+  text-align:left;vertical-align:top;padding:10px 14px;
+  border-bottom:1px solid var(--rule);
+}
+thead th{
+  font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;
+  color:var(--ink-3);background:var(--sunk);white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:0}
+td .mono{color:var(--ink-2)}
+table.compact td,table.compact th{padding:8px 12px;font-size:.84rem}
+td.nowrap,th.nowrap{white-space:nowrap}
+.w-id{width:1%;white-space:nowrap}
+
+/* ---------- state words ---------- */
+.tag{
+  display:inline-block;font-family:"JetBrains Mono",monospace;font-size:.66rem;
+  letter-spacing:.04em;padding:2px 7px;border:1px solid currentColor;border-radius:2px;
+  white-space:nowrap;
+}
+.t-suf{color:var(--sufficient)}
+.t-open{color:var(--open)}
+.t-pend{color:var(--pending)}
+.t-found{color:var(--founder-ink)}
+.t-acc{color:var(--accent)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:baseline}
+
+/* ---------- callouts ---------- */
+.note{
+  border-left:3px solid var(--rule-2);padding:2px 0 2px 16px;
+  color:var(--ink-2);font-size:.93rem;max-width:68ch;
+  display:flex;flex-direction:column;gap:10px;
+}
+.note--open{border-left-color:var(--open)}
+.note--found{border-left-color:var(--founder)}
+.note--acc{border-left-color:var(--accent)}
+.hold{
+  border:1px solid var(--founder);background:var(--founder-wash);
+  padding:18px 20px;display:flex;flex-direction:column;gap:8px;
+}
+.hold .h{
+  font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:600;color:var(--founder-ink);
+}
+.hold p{color:var(--ink);font-size:.95rem;max-width:66ch}
+
+/* ---------- founder cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.card{
+  border:1px solid var(--rule);border-top:3px solid var(--founder);
+  background:var(--raised);padding:18px 18px 16px;
+  display:flex;flex-direction:column;gap:12px;min-width:0;
+}
+.card .cid{
+  font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--founder-ink);
+  letter-spacing:.06em;
+}
+.card .cq{font-size:1rem;line-height:1.36;font-weight:600;color:var(--ink)}
+.card dl{margin:0;display:flex;flex-direction:column;gap:10px}
+.card dt{
+  font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:600;margin-bottom:3px;
+}
+.card dd{margin:0;font-size:.85rem;line-height:1.48;color:var(--ink-2)}
+.card .cont{
+  margin-top:auto;padding-top:10px;border-top:1px solid var(--rule);
+  font-size:.78rem;color:var(--sufficient);
+}
+
+/* ---------- details ---------- */
+details{border:1px solid var(--rule);background:var(--raised)}
+details + details{border-top:0}
+summary{
+  cursor:pointer;padding:11px 14px;display:flex;gap:12px;align-items:baseline;
+  font-size:.9rem;list-style:none;
+}
+summary::-webkit-details-marker{display:none}
+summary::before{
+  content:"+";font-family:"JetBrains Mono",monospace;font-size:.85rem;
+  color:var(--accent);width:.9em;flex:none;
+}
+details[open] > summary::before{content:"–"}
+details[open] > summary{border-bottom:1px solid var(--rule);background:var(--sunk)}
+summary:hover{background:var(--sunk)}
+summary .f-n{font-family:"JetBrains Mono",monospace;font-size:.74rem;color:var(--ink-3);flex:none;width:2.2em}
+summary .f-t{flex:1 1 auto;min-width:0;color:var(--ink)}
+summary .f-c{font-family:"JetBrains Mono",monospace;font-size:.74rem;color:var(--ink-3);flex:none}
+.det-body{padding:14px;display:flex;flex-direction:column;gap:10px;font-size:.88rem}
+.det-body .q{color:var(--ink);font-weight:600;line-height:1.4}
+.det-body .a{color:var(--ink-2);line-height:1.5}
+.det-body .qa-id{font-family:"JetBrains Mono",monospace;font-size:.7rem;color:var(--ink-3)}
+
+/* ---------- figure frame ---------- */
+figure{margin:0;display:flex;flex-direction:column;gap:12px}
+.diagram{
+  border:1px solid var(--rule);background:var(--raised);
+  overflow-x:auto;padding:18px;
+}
+.diagram svg{display:block;height:auto}
+figcaption{font-size:.85rem;color:var(--ink-2);max-width:68ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:.78rem;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:11px;height:11px;border-radius:2px;display:inline-block;flex:none}
+
+/* ---------- svg text ---------- */
+svg text{font-family:"Source Sans 3",-apple-system,sans-serif}
+svg .t-title{fill:var(--ink);font-size:14px;font-weight:600}
+svg .t-sub{fill:var(--ink-2);font-size:11.5px}
+svg .t-edge{fill:var(--ink-3);font-size:10.5px}
+svg .t-mono{fill:var(--ink);font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:500}
+svg .t-small{fill:var(--ink-2);font-size:10.5px}
+svg .t-cap{fill:var(--ink-3);font-size:10.5px;letter-spacing:.1em}
+svg .box{fill:var(--raised);stroke:var(--rule-2);stroke-width:1}
+svg .box-edge{fill:var(--sunk);stroke:var(--rule-2);stroke-width:1;stroke-dasharray:4 3}
+svg .flow{stroke:var(--accent);stroke-width:1.4;fill:none}
+svg .flow-soft{stroke:var(--rule-2);stroke-width:1.2;fill:none;stroke-dasharray:4 3}
+svg .cap-acc{fill:var(--accent)}
+svg .cap-found{fill:var(--founder)}
+svg .cap-pend{fill:var(--pending)}
+svg .cap-suf{fill:var(--sufficient)}
+svg .cap-open{fill:var(--open)}
+
+/* ---------- bar ---------- */
+.bar{display:flex;width:100%;height:34px;border:1px solid var(--rule);overflow:hidden}
+.bar > div{height:100%}
+.barkey{display:flex;flex-wrap:wrap;gap:10px 24px;font-size:.82rem;color:var(--ink-2)}
+.barkey span{display:inline-flex;align-items:center;gap:8px}
+.barkey b{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--ink)}
+
+/* ---------- tree ---------- */
+pre.tree{
+  margin:0;padding:18px;border:1px solid var(--rule);background:var(--raised);
+  overflow-x:auto;font-family:"JetBrains Mono",monospace;font-size:.72rem;line-height:1.62;
+  color:var(--ink-2);
+}
+
+/* ---------- lists ---------- */
+ul.ticks{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px;max-width:72ch}
+/* the marker is absolutely positioned: a grid/flex li would split every inline
+   run in the item into its own track */
+ul.ticks li{position:relative;padding-left:19px;font-size:.93rem;line-height:1.5;color:var(--ink-2)}
+ul.ticks li::before{
+  content:"";position:absolute;left:0;top:.55em;width:7px;height:7px;background:var(--rule-2);
+}
+ul.ticks li.neg::before{background:var(--open)}
+ul.ticks li.pos::before{background:var(--sufficient)}
+ul.ticks li b{color:var(--ink);font-weight:600}
+ul.plain{list-style:none;padding:0;display:flex;flex-direction:column;gap:7px;font-size:.9rem;color:var(--ink-2)}
+
+/* ---------- grid of small facts ---------- */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.pair{background:var(--raised);padding:14px;display:flex;flex-direction:column;gap:5px}
+.pair .pk{font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.pair .pv{font-size:.88rem;color:var(--ink-2);line-height:1.45}
+.pair .pv b{color:var(--ink)}
+
+/* ---------- footer ---------- */
+.foot{border-top:1px solid var(--rule);padding:28px 0 0;font-size:.8rem;color:var(--ink-3);max-width:70ch;display:flex;flex-direction:column;gap:8px}
+
+/* ---------- phone ---------- */
+@media (max-width:940px){
+  body{font-size:16px}
+  .page{grid-template-columns:minmax(0,1fr);gap:0;padding:0 16px 72px}
+  main{gap:44px}
+  .index{
+    position:sticky;top:0;z-index:20;max-height:none;overflow:visible;
+    border-right:0;border-bottom:1px solid var(--rule);
+    margin:0 -16px 36px;padding:0;
+    background:var(--ground);
+  }
+  .index .idx-title{display:none}
+  .index ol{
+    flex-direction:row;gap:0;overflow-x:auto;padding:0 16px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:thin;
+  }
+  .index li{flex:none}
+  .index a{
+    grid-template-columns:auto;gap:1px;padding:11px 13px 10px;white-space:nowrap;border-radius:0;
+    border-bottom:2px solid transparent;
+  }
+  .index a .n{display:inline}
+  .index a .r{display:none}
+  .masthead{padding:36px 0 26px}
+  .masthead .kicker{font-size:.64rem;letter-spacing:.13em}
+  /* the jump strip is sticky, so an anchor must clear it */
+  section{scroll-margin-top:80px}
+  .hint{
+    display:block;font-family:"JetBrains Mono",monospace;font-size:.62rem;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .cards{grid-template-columns:minmax(0,1fr)}
+  th,td{padding:9px 11px}
+}
+@media (max-width:420px){
+  .figs{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+@media (prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth}
+  .index a,summary{transition:background-color .12s ease,color .12s ease}
+}
+@media print{
+  .index{display:none}
+  .page{grid-template-columns:1fr}
+  details{break-inside:avoid}
+}
+</style>
+<header class="masthead wrap">
+<p class="kicker">Planning package · Phase G · prepared 13 September 2026</p>
+<h1>The Company Engine Plan</h1>
+<div class="meta">
+<span>Architecture <span class="mono">S1.0</span>, selected</span>
+<span>Planning disposition <span class="mono">PENDING</span></span>
+<span>Implementation <span class="mono">not started</span></span>
+<span>Founder hold <span class="mono">in place</span></span>
+</div>
+</header><div class="page"><nav class="index" aria-label="Contents"><p class="idx-title">Contents</p><ol><li><a href="#what"><span class="n">01</span><span>What this is</span><span class="r">PLAIN</span></a></li><li><a href="#stands"><span class="n">02</span><span>Where it stands</span><span class="r">PLAIN</span></a></li><li><a href="#architecture"><span class="n">03</span><span>The architecture</span><span class="r">UNDERLAY</span></a></li><li><a href="#sale"><span class="n">04</span><span>One sale, start to finish</span><span class="r">PLAIN</span></a></li><li><a href="#records"><span class="n">05</span><span>Records and rules</span><span class="r">UNDERLAY</span></a></li><li><a href="#agents"><span class="n">06</span><span>Agents, skills, models</span><span class="r">UNDERLAY</span></a></li><li><a href="#decisions"><span class="n">07</span><span>Decisions only you can make</span><span class="r">PLAIN</span></a></li><li><a href="#chosen"><span class="n">08</span><span>How the design was chosen</span><span class="r">UNDERLAY</span></a></li><li><a href="#build"><span class="n">09</span><span>The build plan</span><span class="r">UNDERLAY</span></a></li><li><a href="#questions"><span class="n">10</span><span>Questions and answers</span><span class="r">UNDERLAY</span></a></li><li><a href="#limits"><span class="n">11</span><span>Honest limits</span><span class="r">PLAIN</span></a></li></ol></nav><main><section id="what">
+<div class="sec-head">
+<p class="eyebrow eyebrow--plain">PLAIN</p>
+<h2>What this is</h2>
+</div>
+<div class="prose">
+<p class="lede">Deciding to run a business means taking on duties that do not switch off. Someone
+has to answer a customer who is unhappy nine months after buying. Someone has to notice that a
+promise made in March was never kept. Someone has to close the thing down properly if it fails —
+refunds finished, records handed over, the people who are owed something still able to reach a
+human being.</p>
+<p>Those duties survive every tool and every change of mind. This is a plan for something that
+carries that work for you while keeping you genuinely in charge of it — able to understand what
+was done, able to disagree with it, and able to stand behind it to a customer or a regulator
+without guessing.</p>
+<p><b>What it would do.</b> Investigate whether an opportunity is real, using actual observations
+of actual people. Design, make and offer things. Sell, take money, deliver, support what was sold.
+Keep the books, meet institutional duties, prepare what a qualified professional then acts on.
+Change direction when you do, and close down responsibly. And keep a record of what failed, what
+was skipped and what nobody knows — because an account that only contains successes is not an
+account.</p>
+<p><b>What it refuses to do.</b> It refuses to let a report about work stand in for the work: a
+summary of a delivery is not a delivery, and no internal status discharges an outside obligation.
+It refuses to invent your values, your appetite for loss, or your consent. It refuses to treat a
+good track record as licence for bigger consequences. It refuses to quietly spend money. And it
+refuses to fabricate people — a professional is not created by naming an endpoint.</p>
+<p><b>What your day would look like.</b> Not supervision. The design is built against the failure
+where every uncertainty becomes an approval request and you become a full-time reviewer. You get a
+bounded set instead: decisions only you can make, contested promises, evidence that contradicts
+what was believed, and deadlines coming due.</p>
+</div>
+<p class="from">from: <b>planning/PLANNING-REPORT.md §1</b> · <b>planning/00-executive-guide.md</b></p>
+<hr class="rule">
+<div class="stack-s">
+<h3>The honest numbers</h3>
+<p class="sub">Each is read from a file in the package. The file is named under it, so you can
+check any of them yourself.</p>
+<div class="figs"><div class="fig"><span class="v">14</span><span class="k">independent research tracks</span><span class="s">research/lanes.json</span></div><div class="fig"><span class="v">305</span><span class="k">sources indexed</span><span class="s">research/source-index.json</span></div><div class="fig"><span class="v">3 + 1</span><span class="k">alternatives and a baseline</span><span class="s">planning/02-architecture-selection.md §2</span></div><div class="fig"><span class="v">566</span><span class="k">source questions, each answered</span><span class="s">coverage/questions.json</span></div><div class="fig"><span class="v">46</span><span class="k">capabilities contracted</span><span class="s">planning/specification/capabilities.json</span></div><div class="fig"><span class="v">1,308</span><span class="k">rules for how a record may change</span><span class="s">specification/contracts/record-registry.json</span></div><div class="fig"><span class="v">12</span><span class="k">construction stages</span><span class="s">planning/implementation-graph.json</span></div><div class="fig"><span class="v">13</span><span class="k">decisions waiting for you</span><span class="s">registers/open-questions.json</span></div></div>
+<p class="from">Every figure on this page names its file. The counts of records, rules,
+predicates and checks were re-derived from the registries while this page was written and agree
+with the validator run recorded at commit <b>eaf5ada</b>.</p>
+</div>
+</section>
+<section id="stands">
+<div class="sec-head">
+<p class="eyebrow eyebrow--plain">PLAIN</p>
+<h2>Where it stands</h2>
+</div>
+<div class="pairs">
+<div class="pair"><span class="pk">Planning</span><span class="pv"><b>Complete and in final review.</b>
+Eleven of twelve review dimensions judged sufficient; one — internal coherence — judged
+insufficient and now under an independent recheck. Recorded disposition: <b>none yet</b>.</span></div>
+<div class="pair"><span class="pk">Building</span><span class="pv"><b>0 of 12 stages started.</b>
+<span class="mono">implementation_started: false</span>. Nothing has been written, bought or
+deployed.</span></div>
+<div class="pair"><span class="pk">Founder hold</span><span class="pv"><b>On, since 2026-09-13.</b>
+Your instruction: do not start building yet. It stays until you lift it explicitly.</span></div>
+</div>
+<p class="from">from: <b>state.json</b> · <b>planning/PLANNING-REPORT.md §8</b></p>
+
+<div class="stack-s">
+<h3>The twelve-quality review</h3>
+<p class="sub">Four reviewers read a frozen copy of the package under a protocol written and
+frozen <i>before</i> they saw any of it. Each held a different set of dimensions, had no write
+access, and was barred from reading the authors' own self-assessments. The four reports are
+archived word for word.</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:760px"><thead><tr><th>#</th><th>Dimension</th><th>Reviewer</th><th>Verdict</th><th>Judgment</th><th>(d)-class findings</th></tr></thead><tbody><tr><td><span class="mono">1</span></td><td>Completeness</td><td><span class="mono">G-01</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient for implementation to begin</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">2</span></td><td>Traceability</td><td><span class="mono">G-04</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient for implementation to begin</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">3</span></td><td>Internal coherence</td><td><span class="mono">G-02</span></td><td><span class="tag t-open">insufficient</span></td><td>INSUFFICIENT</td><td><span class="mono">G2-01, G2-02</span></td></tr><tr><td><span class="mono">4</span></td><td>Evidence quality</td><td><span class="mono">G-03</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient for implementation to begin</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">5</span></td><td>Alternative depth</td><td><span class="mono">G-04</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient, with G4-05 named</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">6</span></td><td>Vision preservation</td><td><span class="mono">G-01</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient for implementation to begin</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">7</span></td><td>Unknown integrity</td><td><span class="mono">G-03</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient for implementation to begin</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">8</span></td><td>Adversarial robustness</td><td><span class="mono">G-03</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient, with G3-01 severe enough that the package "may not be <i>called</i> a threat model" until it lands</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">9</span></td><td>Operational feasibility</td><td><span class="mono">G-04</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient, with G4-07 named</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">10</span></td><td>Buildability</td><td><span class="mono">G-02</span></td><td><span class="tag t-pend">split</span></td><td><b>Split</b> — sufficient to begin at B01–B03; insufficient for the money and fulfillment vertical (B04/B05) until G2-01, G2-02, G2-05 and G2-06 land</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">11</span></td><td>Responsibility</td><td><span class="mono">G-04</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient, with G4-01/02 — "fix before B06, not before B00"</td><td><span class="mono">none</span></td></tr><tr><td><span class="mono">12</span></td><td>Changeability</td><td><span class="mono">G-02</span></td><td><span class="tag t-suf">sufficient</span></td><td>Sufficient</td><td><span class="mono">none</span></td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>planning/PLANNING-REPORT.md §Phase G verdict</b> · <b>planning/reviews/G-01…G-04</b></p>
+</div>
+
+<div class="note note--open">
+<p><b>The one insufficient verdict, in plain terms.</b> Both findings are about the same record —
+the sales agreement — and both are missing <i>decisions</i>, not missing code.</p>
+<p><b>G2-01:</b> as written, a buyer could pay, the delivery record could stay untouched, and the
+sale could still be marked <span class="mono">performed</span> with nothing objecting. <b>G2-02:</b>
+"terminated" did not say whether anything was still owed afterwards.</p>
+<p>Both were decided as <span class="mono">AD-013</span> and <span class="mono">AD-014</span> and a
+repair has landed. <b>A reviewer who did not write that repair is rechecking it now</b>; no
+planning verdict is recorded until that comes back. That recheck cannot supply a second model
+family, and it cannot turn <i>specified</i> into <i>works</i>.</p>
+</div>
+<p class="from">from: <b>planning/PLANNING-REPORT.md §Phase G verdict</b> · <b>registers/decisions.json</b> · <b>state.json active_work</b></p>
+
+<div class="stack-s">
+<h3>What this package does not claim</h3>
+<p class="sub">Each row names the artifact that says so, in that artifact's own voice.</p>
+<div class="scrollwrap"><div class="scroll"><table class="" style="min-width:640px"><thead><tr><th>Not claimed</th><th>What that means</th><th>Where the package says it</th></tr></thead><tbody><tr><td><b>No runtime.</b></td><td>Nothing is built. All twelve construction stages are <span class='mono'>not-started</span> with empty completion evidence.</td><td><span class="from" style="font-size:.68rem">planning/implementation-graph.json · state.json</span></td></tr><tr><td><b>No deployment.</b></td><td>No infrastructure exists or has been purchased. B07 and B10 are unstarted.</td><td><span class="from" style="font-size:.68rem">planning/02-architecture-selection.md §10</span></td></tr><tr><td><b>No provider admission.</b></td><td>No account, allowance, eligibility or billing path has been verified with any provider.</td><td><span class="from" style="font-size:.68rem">specification/07-integrations-capacity.md §3 · registers/open-questions.json</span></td></tr><tr><td><b>No professional engagement.</b></td><td>No accountant, lawyer, assessor, custodian or successor has been engaged.</td><td><span class="from" style="font-size:.68rem">registers/open-questions.json Q-005/006/008/012</span></td></tr><tr><td><b>No business validation.</b></td><td>No customer, no sale, no demand evidence, no market test.</td><td><span class="from" style="font-size:.68rem">planning/00-executive-guide.md</span></td></tr><tr><td><b>Single model family throughout.</b></td><td>Authors and reviewers share one model family; agreement is not independent confirmation.</td><td><span class="from" style="font-size:.68rem">all four Phase G reports · state.json <span class='mono'>active_risks</span></span></td></tr><tr><td><b>No executed test of the specified behaviour.</b></td><td>Every verdict in this package concerns specified behaviour, not observed behaviour.</td><td><span class="from" style="font-size:.68rem">planning/reviews/G-02… · research/attack-coverage.json</span></td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+</div>
+</section>
+<section id="architecture">
+<div class="sec-head">
+<p class="eyebrow eyebrow--underlay">UNDERLAY</p>
+<h2>The architecture</h2>
+</div>
+<div class="prose">
+<p>The selected architecture is called <span class="mono">S1.0</span>. It puts <b>one authority in
+charge of admitting work and of the obligations that outlive it</b>, lets each business domain keep
+its own records, tools and meanings for its own work, and protects three things behind separate
+boundaries that no ordinary producer can reach: what may actually happen in the outside world,
+what counts as evidence that something happened, and how the company recovers when a machine, a
+provider or a person is lost.</p>
+<p>It decomposes into nine logical components. <b>These are responsibilities, not agents,
+services or machines</b> — the executive guide states directly that "this does not require nine
+agents, people, services or computers."</p>
+</div>
+<p class="from">from: <b>planning/02-architecture-selection.md §3</b> · <b>planning/00-executive-guide.md</b></p>
+
+<figure>
+<div class="diagram"><svg viewBox="0 0 1300 534" role="img" style="min-width:900px;width:100%" aria-label="The nine logical components: direction, admission, production, consequence and release, context and validity, evidence and acceptance, human and external responsibility, recovery and continuity, and operator surfaces.">
+
+<defs>
+ <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+         orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+ <marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+         orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--rule-2)"/></marker>
+</defs>
+
+<rect class="box" x="30" y="52" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="30" y="52" width="186" height="3"/>
+<text class="t-cap" x="44" y="74" style="font-family:'JetBrains Mono',monospace">C01</text>
+<text class="t-title" x="44" y="93">Direction and</text>
+<text class="t-title" x="44" y="110">responsibility</text>
+<text class="t-sub" x="44" y="122">Purpose, decisions, mandates,</text>
+<text class="t-sub" x="44" y="136">surviving obligations</text>
+<rect class="box" x="292" y="52" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="292" y="52" width="186" height="3"/>
+<text class="t-cap" x="306" y="74" style="font-family:'JetBrains Mono',monospace">C02</text>
+<text class="t-title" x="306" y="93">Cases and scheduling</text>
+<text class="t-sub" x="306" y="122">Admitted agenda, deadlines,</text>
+<text class="t-sub" x="306" y="136">dependencies, refusals</text>
+<rect class="box" x="554" y="52" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="554" y="52" width="186" height="3"/>
+<text class="t-cap" x="568" y="74" style="font-family:'JetBrains Mono',monospace">C03</text>
+<text class="t-title" x="568" y="93">Production</text>
+<text class="t-sub" x="568" y="122">Native records, drafts,</text>
+<text class="t-sub" x="568" y="136">attempt evidence</text>
+<rect class="box" x="816" y="52" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="816" y="52" width="186" height="3"/>
+<text class="t-cap" x="830" y="74" style="font-family:'JetBrains Mono',monospace">C04</text>
+<text class="t-title" x="830" y="93">Authority and release</text>
+<text class="t-sub" x="830" y="122">Grants, holds, the ordered</text>
+<text class="t-sub" x="830" y="136">release of real effects</text>
+<rect class="box-edge" x="1078" y="52" width="186" height="100" rx="2"/>
+<text class="t-title" x="1092" y="78">The outside world</text>
+<text class="t-sub" x="1092" y="122">Customers, providers,</text>
+<text class="t-sub" x="1092" y="136">banks, regulators</text>
+<rect class="box" x="554" y="222" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="554" y="222" width="186" height="3"/>
+<text class="t-cap" x="568" y="244" style="font-family:'JetBrains Mono',monospace">C05</text>
+<text class="t-title" x="568" y="263">Context and validity</text>
+<text class="t-sub" x="568" y="292">Lineage, restrictions,</text>
+<text class="t-sub" x="568" y="306">what may still be used</text>
+<rect class="box" x="816" y="222" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="816" y="222" width="186" height="3"/>
+<text class="t-cap" x="830" y="244" style="font-family:'JetBrains Mono',monospace">C06</text>
+<text class="t-title" x="830" y="263">Evidence and</text>
+<text class="t-title" x="830" y="280">acceptance</text>
+<text class="t-sub" x="830" y="292">Observations, judgments,</text>
+<text class="t-sub" x="830" y="306">what counts as done</text>
+<rect class="box" x="30" y="386" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="30" y="386" width="186" height="3"/>
+<text class="t-cap" x="44" y="408" style="font-family:'JetBrains Mono',monospace">C07</text>
+<text class="t-title" x="44" y="427">Human and external</text>
+<text class="t-title" x="44" y="444">responsibility</text>
+<text class="t-sub" x="44" y="456">Decision packets, grievance,</text>
+<text class="t-sub" x="44" y="470">professionals, continuity</text>
+<rect class="box" x="292" y="386" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="292" y="386" width="186" height="3"/>
+<text class="t-cap" x="306" y="408" style="font-family:'JetBrains Mono',monospace">C09</text>
+<text class="t-title" x="306" y="427">Operator surfaces</text>
+<text class="t-sub" x="306" y="456">Permission-filtered views,</text>
+<text class="t-sub" x="306" y="470">conversation and terminal</text>
+<rect class="box" x="1078" y="386" width="186" height="100" rx="2"/>
+<rect class="cap-acc" x="1078" y="386" width="186" height="3"/>
+<text class="t-cap" x="1092" y="408" style="font-family:'JetBrains Mono',monospace">C08</text>
+<text class="t-title" x="1092" y="427">Recovery and</text>
+<text class="t-title" x="1092" y="444">continuity</text>
+<text class="t-sub" x="1092" y="456">Durable frontiers, restore,</text>
+<text class="t-sub" x="1092" y="470">uncertain effects</text>
+<path class="flow" d="M216,102 H284" marker-end="url(#ah)"/>
+<text class="t-edge" x="254.0" y="92" text-anchor="middle">direction</text>
+<path class="flow" d="M478,102 H546" marker-end="url(#ah)"/>
+<text class="t-edge" x="516.0" y="92" text-anchor="middle">admitted work</text>
+<path class="flow" d="M740,102 H808" marker-end="url(#ah)"/>
+<text class="t-edge" x="778.0" y="92" text-anchor="middle">proposed effect</text>
+<path class="flow" d="M1002,102 H1070" marker-end="url(#ah)"/>
+<text class="t-edge" x="1040.0" y="92" text-anchor="middle">released effect</text>
+<path class="flow" d="M600,222 V160" marker-end="url(#ah)"/>
+<text class="t-edge" x="610" y="192">authorized context</text>
+<path class="flow" d="M700,152 V188 H900 V214" marker-end="url(#ah)"/>
+<text class="t-edge" x="706" y="172">attempt evidence</text>
+<path class="flow" d="M860,322 V356 H430 V160" marker-end="url(#ah)"/>
+<text class="t-edge" x="545" y="348" text-anchor="middle">acceptance · reopening · dispute</text>
+<path class="flow" d="M120,386 V160" marker-end="url(#ah)"/>
+<text class="t-edge" x="130" y="300">mandates · decisions · remedies</text>
+<path class="flow-soft" d="M385,152 V378" marker-end="url(#ahs)"/>
+<text class="t-edge" x="374" y="252" text-anchor="end">permission-filtered views</text>
+<path class="flow-soft" d="M1170,386 V160" marker-end="url(#ahs)"/>
+<text class="t-edge" x="1164" y="200" text-anchor="end">reconcile · restore</text>
+<text class="t-cap" x="30" y="516">HUMAN INTERFACE AND SURFACES SIT AT THE EDGE — THEY HOLD NO AUTHORITY OF THEIR OWN</text>
+</svg></div>
+<p class="hint">Wide diagram — drag sideways to read the rest</p>
+<div class="legend">
+<span><span class="sw" style="background:var(--accent)"></span>a company responsibility</span>
+<span><span class="sw" style="background:var(--sunk);border:1px dashed var(--rule-2)"></span>outside the company</span>
+<span><span class="sw" style="background:var(--accent);height:2px;border-radius:0"></span>what flows</span>
+<span><span class="sw" style="background:var(--rule-2);height:2px;border-radius:0"></span>reads and reconciles</span>
+</div>
+<figcaption>Work enters at direction, is admitted, is produced, and only then may become a real
+effect in the world. Evidence returns to admission — it does not go to the producer that made it.
+The human interface and the operator screens sit at the edge and hold no authority of their
+own.</figcaption>
+</figure>
+
+<div class="stack-s">
+<h3>The nine components</h3>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:920px"><thead><tr><th>Component</th><th>Owns</th><th>Receives → returns</th><th>Cannot</th></tr></thead><tbody><tr><td><span class="mono">C01</span><br><b>Direction and responsibility</b></td><td>Endorsed purpose, decisions, accepted mandates, actual principals, custodians, alternatives and surviving obligations</td><td>Authenticated direction and original commitments → versioned authority and responsibility references</td><td>Cannot infer new personal values or extinguish a third party's standing</td></tr><tr><td><span class="mono">C02</span><br><b>Case admission and scheduler</b></td><td>Admitted agenda, dependencies, procedure state, causal consumption, deadlines and ownership resolution</td><td>Events, deadlines, observations and requests → admitted work, parked work, or an explained refusal</td><td>Cannot mint consequence grants or invent missing competence</td></tr><tr><td><span class="mono">C03</span><br><b>Domain production interfaces</b></td><td>Native business records, artifact drafts, local execution state, semantic mappings and capability contracts</td><td>An exact work contract and scoped context → actual output, attempt evidence and unfinished duties</td><td>Cannot accept its own unsupported success</td></tr><tr><td><span class="mono">C04</span><br><b>Consequence authority and release</b></td><td>Grants, conflict holds, independent resource accounts, restriction epochs, release order and controlled egress</td><td>An exact proposed operation plus current prerequisites → a durable release or denial, and an attempt identity</td><td>No producer credentials; no permission inferred from success</td></tr><tr><td><span class="mono">C05</span><br><b>Context and validity</b></td><td>Captured input manifests, lineage, purpose and access restrictions, usable-reference state, deletion propagation</td><td>An authorized query and output staging → restricted context, or an atomically validated published derivative</td><td>Cannot use a model's selected citations as complete lineage</td></tr><tr><td><span class="mono">C06</span><br><b>Evidence and acceptance</b></td><td>Protected capture, independent observation contracts, interpretation dependencies, evaluators, accepted outcomes and disagreements</td><td>Raw observations and tested definitions → scoped judgments, with their omissions</td><td>Cannot equate delivery receipts, rationale, legality and customer satisfaction</td></tr><tr><td><span class="mono">C07</span><br><b>Human and external responsibility</b></td><td>Decision packets, grievance progress, professional and service handoffs, participation selection, accepted alternates</td><td>A required decision or duty → a competent decision or performance, or owned incapacity</td><td>Cannot create a professional by naming an endpoint</td></tr><tr><td><span class="mono">C08</span><br><b>Recovery and continuity</b></td><td>Independently durable envelopes and frontiers, accepted restore evidence, surviving restrictions, fallback access, continuity arrangements</td><td>A fault or an absence → contained state, reconciled recovery, or an explicit unresolved scope</td><td>Cannot authorize a restored writer from its own old history</td></tr><tr><td><span class="mono">C09</span><br><b>Operator surfaces</b></td><td>Disposable permission-filtered projections and an acknowledged viewing position</td><td>Authoritative state and evidence → conversation, terminal and an accessible operational account</td><td>Commands return to the appropriate authority boundary; the surface decides nothing</td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>planning/02-architecture-selection.md §3</b></p>
+</div>
+
+<div class="note note--acc">
+<p><b>The rule that decides who does a piece of work</b> is set before any roles exist:
+deterministic computation for arithmetic, validation and known predicates; durable procedures for
+waiting, schedules, routing and repetition; bounded model work for interpretation and generation;
+capable people for relationships and consequential judgment; qualified professionals and services
+for actual specialist or physical performance.</p>
+</div>
+<p class="from">from: <b>planning/02-architecture-selection.md §3</b> · <b>registers/decisions.json AD-002</b></p>
+</section>
+<section id="sale">
+<div class="sec-head">
+<p class="eyebrow eyebrow--plain">PLAIN</p>
+<h2>One sale, start to finish</h2>
+</div>
+<div class="prose">
+<p>A reviewer walked one ordinary thing — take money and fulfill the offer — step by step through
+the contracts, and at each step asked a harder question than the happy path: what if this goes
+wrong here, and does anything notice? This is that walk.</p>
+<p>Three of the steps are yours, and no software can take them. They are marked
+<span class="tag t-found">you</span>.</p>
+</div>
+<p class="from">from: <b>planning/reviews/G-02-coherence-buildability-changeability.md</b></p>
+
+<figure>
+<div class="diagram"><svg viewBox="0 0 860 800" role="img" style="min-width:640px;width:100%" aria-label="One sale from start to finish: ten steps down the page with four failure branches, each step marked by who acts — you, the system, or a specialist.">
+
+<defs>
+ <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+         orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+ <marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+         orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--rule-2)"/></marker>
+</defs>
+
+<rect class="box" x="40" y="20" width="310" height="54" rx="2"/>
+<rect class="cap-found" x="40" y="20" width="310" height="3"/>
+<text class="t-title" x="54" y="44">1. Establish the principal</text>
+<text class="t-sub" x="54" y="62">Legal form, jurisdiction, signatory, registrations</text>
+<text class="t-cap" x="338" y="44" text-anchor="end" style="font-family:'JetBrains Mono',monospace">you</text>
+<path class="flow" d="M195.0,74 V90" marker-end="url(#ah)"/>
+<rect class="box" x="40" y="98" width="310" height="54" rx="2"/>
+<rect class="cap-found" x="40" y="98" width="310" height="3"/>
+<text class="t-title" x="54" y="122">2. Make the offer available</text>
+<text class="t-sub" x="54" y="140">Needs funded remedy and a grievance recipient first</text>
+<text class="t-cap" x="338" y="122" text-anchor="end" style="font-family:'JetBrains Mono',monospace">you</text>
+<path class="flow" d="M195.0,152 V168" marker-end="url(#ah)"/>
+<rect class="box" x="40" y="176" width="310" height="54" rx="2"/>
+<rect class="cap-acc" x="40" y="176" width="310" height="3"/>
+<text class="t-title" x="54" y="200">3. Buyer accepts the exact terms</text>
+<text class="t-sub" x="54" y="218">SalesAgreement: proposed → accepted</text>
+<text class="t-cap" x="338" y="200" text-anchor="end" style="font-family:'JetBrains Mono',monospace">system</text>
+<path class="flow" d="M195.0,230 V246" marker-end="url(#ah)"/>
+<rect class="box" x="40" y="254" width="310" height="54" rx="2"/>
+<rect class="cap-acc" x="40" y="254" width="310" height="3"/>
+<text class="t-title" x="54" y="278">4. Collect the payment</text>
+<text class="t-sub" x="54" y="296">Idempotency key bound to the immutable request</text>
+<text class="t-cap" x="338" y="278" text-anchor="end" style="font-family:'JetBrains Mono',monospace">system</text>
+<path class="flow" d="M195.0,308 V324" marker-end="url(#ah)"/>
+<path class="flow-soft" d="M350,281.0 H422" marker-end="url(#ahs)"/>
+<rect class="box-edge" x="430" y="257" width="400" height="48" rx="2"/>
+<text class="t-title" x="443" y="278" style="font-size:12.5px">Ambiguous charge</text>
+<text class="t-sub" x="443" y="295" style="font-size:10.5px">Holds and claims are retained. No blind resend, no released money.</text>
+<rect class="box" x="40" y="332" width="310" height="54" rx="2"/>
+<rect class="cap-pend" x="40" y="332" width="310" height="3"/>
+<text class="t-title" x="54" y="356">5. Deliver the thing</text>
+<text class="t-sub" x="54" y="374">Fulfillment: validated → delivering → delivered</text>
+<text class="t-cap" x="338" y="356" text-anchor="end" style="font-family:'JetBrains Mono',monospace">specialist</text>
+<path class="flow" d="M195.0,386 V402" marker-end="url(#ah)"/>
+<path class="flow-soft" d="M350,359.0 H422" marker-end="url(#ahs)"/>
+<rect class="box-edge" x="430" y="335" width="400" height="48" rx="2"/>
+<text class="t-title" x="443" y="356" style="font-size:12.5px">Two requests, one entitlement</text>
+<text class="t-sub" x="443" y="373" style="font-size:10.5px">Alias-normalised keys and atomic exclusion. A second ID is not a second right.</text>
+<rect class="box" x="40" y="410" width="310" height="54" rx="2"/>
+<rect class="cap-acc" x="40" y="410" width="310" height="3"/>
+<text class="t-title" x="54" y="434">6. Mark the sale performed</text>
+<text class="t-sub" x="54" y="452">Delivered, and every obligation discharged</text>
+<text class="t-cap" x="338" y="434" text-anchor="end" style="font-family:'JetBrains Mono',monospace">system</text>
+<path class="flow" d="M195.0,464 V480" marker-end="url(#ah)"/>
+<path class="flow-soft" d="M350,437.0 H422" marker-end="url(#ahs)"/>
+<rect class="box-edge" x="430" y="413" width="400" height="48" rx="2"/>
+<text class="t-title" x="443" y="434" style="font-size:12.5px">Delivery not delivered</text>
+<text class="t-sub" x="443" y="451" style="font-size:10.5px">The sale cannot reach performed. Payment alone never gets there.</text>
+<rect class="box" x="40" y="488" width="310" height="54" rx="2"/>
+<rect class="cap-pend" x="40" y="488" width="310" height="3"/>
+<text class="t-title" x="54" y="512">7. Support what was sold</text>
+<text class="t-sub" x="54" y="530">GrievanceCase and SupportCase outlive the ticket</text>
+<text class="t-cap" x="338" y="512" text-anchor="end" style="font-family:'JetBrains Mono',monospace">specialist</text>
+<path class="flow" d="M195.0,542 V558" marker-end="url(#ah)"/>
+<rect class="box" x="40" y="566" width="310" height="54" rx="2"/>
+<rect class="cap-acc" x="40" y="566" width="310" height="3"/>
+<text class="t-title" x="54" y="590">8. Refund, if it comes to that</text>
+<text class="t-sub" x="54" y="608">Its own operation, not an undo of the first</text>
+<text class="t-cap" x="338" y="590" text-anchor="end" style="font-family:'JetBrains Mono',monospace">system</text>
+<path class="flow" d="M195.0,620 V636" marker-end="url(#ah)"/>
+<rect class="box" x="40" y="644" width="310" height="54" rx="2"/>
+<rect class="cap-pend" x="40" y="644" width="310" height="3"/>
+<text class="t-title" x="54" y="668">9. Reconcile the books</text>
+<text class="t-sub" x="54" y="686">Bank statement → journal → qualified close</text>
+<text class="t-cap" x="338" y="668" text-anchor="end" style="font-family:'JetBrains Mono',monospace">specialist</text>
+<path class="flow" d="M195.0,698 V714" marker-end="url(#ah)"/>
+<rect class="box" x="40" y="722" width="310" height="54" rx="2"/>
+<rect class="cap-found" x="40" y="722" width="310" height="3"/>
+<text class="t-title" x="54" y="746">10. Terminate the agreement</text>
+<text class="t-sub" x="54" y="764">A closure event — and duties can survive it</text>
+<text class="t-cap" x="338" y="746" text-anchor="end" style="font-family:'JetBrains Mono',monospace">you</text>
+<path class="flow-soft" d="M350,749.0 H422" marker-end="url(#ahs)"/>
+<rect class="box-edge" x="430" y="725" width="400" height="48" rx="2"/>
+<text class="t-title" x="443" y="746" style="font-size:12.5px">Duties survive termination</text>
+<text class="t-sub" x="443" y="763" style="font-size:10.5px">terminated_with_residuals holds what is still owed.</text>
+</svg></div>
+<p class="hint">Wide diagram — drag sideways to read the rest</p>
+<div class="legend">
+<span><span class="sw" style="background:var(--founder)"></span>you act — no substitute exists</span>
+<span><span class="sw" style="background:var(--accent)"></span>the system acts under a checked rule</span>
+<span><span class="sw" style="background:var(--pending)"></span>a real person or professional performs</span>
+<span><span class="sw" style="background:var(--sunk);border:1px dashed var(--rule-2)"></span>what happens when it goes wrong</span>
+</div>
+<figcaption>Ten steps and four failure branches. The branches are the point: a sale that only
+works when everything goes right is not a sale that has been designed.</figcaption>
+</figure>
+
+<div class="stack-s">
+<h3>The walkthrough, step by step</h3>
+<p class="sub">"Caught?" is the reviewer's own verdict on whether an adverse variation at that step
+would be noticed. Three read <i>repaired</i> — those are the findings that made the whole package
+insufficient on coherence, and the repair that answered them is what is under independent recheck
+right now.</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:820px"><thead><tr><th>Step</th><th>What governs it</th><th>Caught?</th><th>The reviewer's finding</th></tr></thead><tbody><tr><td><b>Establish the principal</b></td><td><span class='mono'>Principal</span> asserted → verified; <span class='mono'>FormationReadiness</span></td><td><span class="tag t-pend">partial</span></td><td>Partial — <span class='mono'>verified</span> is base-only</td></tr><tr><td><b>Accept the exact terms</b></td><td><span class='mono'>SalesAgreement: proposed → accepted</span> plus <span class='mono'>native_correlated</span></td><td><span class="tag t-suf">caught</span></td><td>Yes</td></tr><tr><td><b>Collect payment</b></td><td>Payment adapter; operation-intent control contract; idempotency bound to the immutable request</td><td><span class="tag t-suf">caught</span></td><td>Yes — the strongest point in the package</td></tr><tr><td><b>Ambiguous charge</b></td><td><span class='mono'>unknown_effect</span> retains claims and holds; <span class='mono'>proven_unsent</span> needs positive gateway evidence</td><td><span class="tag t-suf">caught</span></td><td>Yes</td></tr><tr><td><b>Deliver</b></td><td><span class='mono'>Fulfillment: proposed → validated → delivering → delivered</span></td><td><span class="tag t-acc">repaired</span></td><td>Was <b>no</b> (G2-05) — repaired: the delivery record now has its own lifecycle</td></tr><tr><td><b>Mark performed</b></td><td><span class='mono'>SalesAgreement: accepted → performed</span></td><td><span class="tag t-acc">repaired</span></td><td>Was <b>NO</b> (G2-01) — repaired: performed now requires a delivered fulfillment and discharged obligations</td></tr><tr><td><b>Support</b></td><td><span class='mono'>SupportCase: received → … → resolved</span></td><td><span class="tag t-pend">partial</span></td><td>Partial — two states were prose-unnamed (G2-03)</td></tr><tr><td><b>Two requests, one entitlement</b></td><td><span class='mono'>ConflictClaim</span>: alias-normalized keys, atomic exclusion in complete scope</td><td><span class="tag t-suf">caught</span></td><td>Yes</td></tr><tr><td><b>Separate entitlement proceeds</b></td><td>Scope overlap under current interaction classes; affirmative disjointness</td><td><span class="tag t-suf">caught</span></td><td>Yes, conservatively — defaults to block</td></tr><tr><td><b>Refund</b></td><td>Refund is its own operation; “refund acknowledgement is not settled refund”</td><td><span class="tag t-suf">caught</span></td><td>Yes</td></tr><tr><td><b>Reconcile books</b></td><td><span class='mono'>JournalBatch: draft → balanced → reviewed → posted</span></td><td><span class="tag t-pend">partial</span></td><td>Partial — closure edges carry only a transition basis</td></tr><tr><td><b>Terminate</b></td><td><span class='mono'>SalesAgreement: * → terminated</span></td><td><span class="tag t-acc">repaired</span></td><td>Was <b>NO</b> (G2-02) — repaired: all five closure edges now assert what is still owed, and <span class='mono'>terminated_with_residuals</span> exists</td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>planning/reviews/G-02… scenario table</b> · <b>specification/contracts/record-registry.json</b> · <b>registers/decisions.json AD-013/AD-014</b></p>
+</div>
+
+<div class="note note--found">
+<p><b>Where you cannot be replaced.</b> Before a single offer can be made available, three things
+must exist that only you can create: an actual legal principal to transact as, a competent person
+to receive a complaint who is not caught inside the thing being complained about, and money set
+aside to actually make a remedy. Those are questions <span class="mono">Q-007</span>,
+<span class="mono">Q-003</span> and <span class="mono">Q-011</span> below.</p>
+</div>
+</section>
+<section id="records">
+<div class="sec-head">
+<p class="eyebrow eyebrow--underlay">UNDERLAY</p>
+<h2>Records and rules</h2>
+</div>
+<div class="prose">
+<p>Everything the company knows is held as <b>records</b>. A record here is not a row that gets
+overwritten. Each business revision is immutable — it is written once and kept — and the record's
+<i>phase</i> moves separately on top of it. Superseding a record does not erase its history, and a
+lifecycle change never rewrites the business facts underneath it.</p>
+<p>A record's phases are the honest vocabulary of the business. A sale is not "open" or "closed";
+it is at interest, proposed, accepted, partially performed, performed, disputed, terminated with
+residuals, or terminated — and the difference between the last two is the whole argument about
+whether anything is still owed.</p>
+</div>
+<p class="from">from: <b>specification/contracts/record-registry.json</b> · <b>specification/01-contract-kernel.md</b></p>
+
+<div class="stack-s">
+<h3>What a record looks like</h3>
+<p class="sub">Six of the 173. The last column says where each record starts life.</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:780px"><thead><tr><th>Record · owner</th><th>Its phases</th><th>Edges</th><th>Starts at</th></tr></thead><tbody><tr><td><b>SalesAgreement</b><br><span class="mono">S1-C03</span></td><td><span class="tag t-acc">interest</span> <span class="tag t-acc">proposed</span> <span class="tag t-suf">accepted</span> <span class="tag t-acc">partially-performed</span> <span class="tag t-suf">performed</span> <span class="tag t-pend">disputed</span> <span class="tag t-pend">terminated_with_residuals</span> <span class="tag t-open">terminated</span></td><td><span class="mono">21</span></td><td><span class="mono">interest</span></td></tr><tr><td><b>Fulfillment</b><br><span class="mono">S1-C03</span></td><td><span class="tag t-acc">proposed</span> <span class="tag t-acc">validated</span> <span class="tag t-acc">delivering</span> <span class="tag t-suf">delivered</span> <span class="tag t-open">failed</span> <span class="tag t-acc">refunded</span> <span class="tag t-pend">superseded</span> <span class="tag t-open">restricted</span></td><td><span class="mono">14</span></td><td><span class="mono">proposed</span></td></tr><tr><td><b>Obligation</b><br><span class="mono">S1-C07</span></td><td><span class="tag t-acc">potential</span> <span class="tag t-acc">recognized</span> <span class="tag t-acc">performing</span> <span class="tag t-acc">performance_reported</span> <span class="tag t-acc">transfer_pending</span> <span class="tag t-suf">transferred</span> <span class="tag t-suf">discharged</span> <span class="tag t-pend">not_arisen</span></td><td><span class="mono">18</span></td><td><span class="mono">potential</span></td></tr><tr><td><b>GrievanceCase</b><br><span class="mono">S1-C07</span></td><td><span class="tag t-acc">received</span> <span class="tag t-acc">triaged</span> <span class="tag t-acc">investigating</span> <span class="tag t-acc">awaiting_evidence</span> <span class="tag t-acc">remedy_authorized</span> <span class="tag t-acc">remedy_performing</span> <span class="tag t-acc">disposition_issued</span> <span class="tag t-pend">contested</span> <span class="tag t-pend">closed_with_residuals</span> <span class="tag t-suf">closed</span></td><td><span class="mono">19</span></td><td><span class="mono">received</span></td></tr><tr><td><b>Case</b><br><span class="mono">S1-C02</span></td><td><span class="tag t-acc">proposed</span> <span class="tag t-acc">admitted</span> <span class="tag t-acc">active</span> <span class="tag t-acc">waiting-for-evidence</span> <span class="tag t-suf">accepted</span> <span class="tag t-pend">parked</span> <span class="tag t-open">abandoned</span> <span class="tag t-pend">disputed</span></td><td><span class="mono">21</span></td><td><span class="mono">proposed</span></td></tr><tr><td><b>Mandate</b><br><span class="mono">S1-C01</span></td><td><span class="tag t-acc">proposed</span> <span class="tag t-suf">accepted</span> <span class="tag t-acc">suspended</span> <span class="tag t-open">revoked</span> <span class="tag t-open">expired</span></td><td><span class="mono">7</span></td><td><span class="mono">proposed</span></td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>specification/contracts/record-registry.json</b></p>
+</div>
+
+<div class="stack-s">
+<h3>How a transition is guarded</h3>
+<p class="sub">No phase change happens because someone decided it had. Every one of the 1,308
+transitions names a predicate that must evaluate true, and that predicate is registered, versioned
+and owned. Here is the real one that decides whether a sale may be called performed — the very
+edge the reviewer broke.</p>
+<div class="pairs">
+<div class="pair"><span class="pk">1 · criterion</span><span class="pv">
+<span class="mono">criterion.SalesAgreement.performed.v1</span> — the named test that must pass. It is not a
+flag anyone can set.</span></div>
+<div class="pair"><span class="pk">2 · evidence</span><span class="pv">It reads
+4 required fields, then checks that the linked fulfillment is
+<span class="mono">delivered</span> and every linked obligation is
+<span class="mono">discharged</span> or <span class="mono">transferred</span>, then that an outside
+observation corroborates the <b>delivery</b> — not the charge.</span></div>
+<div class="pair"><span class="pk">3 · authority</span><span class="pv">Owned by
+<span class="mono">S1-C03</span>, reachable only through
+<span class="mono">kernel.record.transition</span>. It mutates
+lifecyclestatus only and nothing else.</span></div>
+<div class="pair"><span class="pk">on denial</span><span class="pv">Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.</span></div>
+</div>
+<div class="note note--acc">
+<p><b>In its own words:</b> "Performance of a sale is accepted delivery plus discharged or transferred obligations -- never payment alone. The agreement names its own Fulfillment record, that Fulfillment is currently `delivered`, and every linked Obligation is `discharged` or `transferred`. The correlated native object is the D…"</p>
+<p>The five operations it composes are
+<span class="mono">nonempty_fields · related_phases · native_correlated · accepted_for · attested_result</span>.</p>
+</div>
+<p class="from">from: <b>specification/contracts/predicate-registry.json#criterion.SalesAgreement.performed.v1</b> · <b>registers/decisions.json AD-013</b></p>
+</div>
+
+<div class="stack-s">
+<h3>The size of the machine-checked part</h3>
+<p class="sub">A validator reads all of it offline and refuses anything inconsistent. It also runs
+27 deliberately broken fixtures and fails if any of them is <i>accepted</i>. That is the part of
+this package a computer can check; it says nothing about whether the system works, because no
+system exists.</p>
+<div class="figs"><div class="fig"><span class="v">173</span><span class="k">record types</span><span class="s">record-registry.json</span></div><div class="fig"><span class="v">1,308</span><span class="k">lifecycle transitions</span><span class="s">record-registry.json</span></div><div class="fig"><span class="v">2,273</span><span class="k">predicates</span><span class="s">predicate-registry.json</span></div><div class="fig"><span class="v">185</span><span class="k">canonical values</span><span class="s">value-registry.json</span></div><div class="fig"><span class="v">105</span><span class="k">commands</span><span class="s">command-registry.json</span></div><div class="fig"><span class="v">46</span><span class="k">required subjects</span><span class="s">validate_contracts.py</span></div><div class="fig"><span class="v">27</span><span class="k">negative fixtures, all rejected</span><span class="s">contracts/fixtures/negative/</span></div><div class="fig"><span class="v">268,836</span><span class="k">checks passed</span><span class="s">validate_contracts.py @ eaf5ada</span></div></div>
+<p class="from">from: <b>specification/contracts/validate_contracts.py</b> · <b>merge commit eaf5ada</b></p>
+</div>
+</section>
+<section id="agents">
+<div class="sec-head">
+<p class="eyebrow eyebrow--underlay">UNDERLAY</p>
+<h2>Agents, skills, models</h2>
+</div>
+<div class="stack-s">
+<h3>There is no roster</h3>
+<div class="prose">
+<p>The most consequential thing about the agent model is what it refuses. <b>There is no permanent
+cast of named agents</b> — no standing "marketing agent", no "finance agent". A decision record,
+<span class="mono">AD-002</span>, settles this deliberately: work and authority are determined
+first, and a performer is chosen for each piece of work afterwards.</p>
+<p>An <span class="mono">AgentTemplate</span> is a versioned recipe — which capability contracts it
+supports, its input and output schemas, its instructions and skills, what runtime it may use, its
+bounds, its self-checks and its known limits. It is explicitly <b>not an identity with standing</b>.
+An <span class="mono">AgentInstance</span> binds that recipe to exactly one admitted work order,
+one executor identity, one runtime profile and one lease. Creating one does not add a role to the
+company.</p>
+</div>
+<div class="pairs">
+<div class="pair"><span class="pk">When one exists</span><span class="pv">Only for an admitted
+work order, under an existing mandate and allowance. Temporary by construction.</span></div>
+<div class="pair"><span class="pk">Producer vs evaluator</span><span class="pv">A producer's
+self-check is useful preparation and <b>never becomes acceptance</b>. Acceptance is a separate
+component's job.</span></div>
+<div class="pair"><span class="pk">Delegation</span><span class="pv">Default maximum depth is one
+child layer. A child can never be handed founder values, professional standing, independent
+acceptance, or the parent's responsibility.</span></div>
+<div class="pair"><span class="pk">Retries</span><span class="pv">One retry after a changed input,
+environment or method is identified. Two failures with the same cause open a blocker — they do not
+prove impossibility. Rework and abandoned output stay in the denominator.</span></div>
+<div class="pair"><span class="pk">Refusal</span><span class="pv">A worker reports
+<span class="mono">capability_mismatch</span>, <span class="mono">missing_prerequisite</span>,
+<span class="mono">no_progress</span> or <span class="mono">unresolved_question</span> with
+evidence — instead of declaring something impossible after an arbitrary number of tries.</span></div>
+<div class="pair"><span class="pk">Trust</span><span class="pv">Scoped eligibility, not a score.
+New templates start with no outward credentials. <b>Success never expands authority
+automatically.</b></span></div>
+</div>
+<p class="from">from: <b>specification/05-work-agents-skills.md §4–§6</b> · <b>registers/decisions.json AD-002</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Skills</h3>
+<div class="prose">
+<p>A skill is a unit of know-how, packaged: applicability <i>and</i> non-applicability predicates,
+typed inputs and outputs, finite steps, its dependencies and their supported versions, its
+consequence boundaries, its acceptance criteria, examples <i>and</i> counterexamples, provenance
+and licence, a test suite with known failures, a maintenance owner, a review date, and a rule for
+how it gets replaced or removed. "A prose package cannot install, contact, spend or execute by
+being loaded."</p>
+<p>Selection is bounded on purpose: at most five candidates inspected and two full skill bodies
+loaded per selection, charged to the work order. The library is never fed into context whole. A
+skill retires on dependency and obligation checks — <b>not</b> on how rarely it is used, because an
+unused emergency skill can still be necessary.</p>
+</div>
+<p class="from">from: <b>specification/05-work-agents-skills.md §8</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Which models run the work</h3>
+<p class="sub">Three native execution profiles are specified as exact launch contracts against
+pinned binaries. The rule underneath them is a founder constraint recorded as
+<span class="mono">AD-007</span>: money, provider allowance, compute and attention are counted
+separately, and <b>there is no silent fallback from a subscription to a metered API</b>.</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:780px"><thead><tr><th>Profile</th><th>Status</th><th>What it launches</th><th>Boundary</th></tr></thead><tbody><tr><td><span class="mono">N-CLAUDE-SUPPLIED/v1</span></td><td><span class="tag t-suf">selected</span></td><td>Pinned Claude artifact, launched as argv and not a shell, with no tool access at all. The structured result is parsed; anything that needs to build or run goes to a separate untrusted machine.</td><td>Primary simple path. <span class='mono'>--bare</span> is forbidden because it excludes subscription sign-in.</td></tr><tr><td><span class="mono">N-CLAUDE-MEDIATED/v1</span></td><td><span class="tag t-pend">separate</span></td><td>Same pinned artifact with an exact, admitted tool manifest only. Arbitrary code still executes only on the untrusted machine.</td><td>A separate profile, explicitly <b>not</b> assumed composable with the safe-mode one. Allow-listing tool names is not enough: the server binary, schema, certificate and identity are pinned.</td></tr><tr><td><span class="mono">N-CODEX-SUPPLIED/v1</span></td><td><span class="tag t-open">not yet admitted</span></td><td>Pinned Codex artifact, ephemeral, minimal permission profile, network disabled for code tools, no inherited API keys.</td><td>Admitted only after the exact installed capability inventory and all-channel tests. Until then the Claude supplied-input profile is the selected route.</td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<ul class="ticks">
+<li><b>An allowance is observed, never assumed.</b> Before a launch, the system records actual
+authentication status, plan identity, permitted usage, expiry, installed digest and billing
+observations. Native status alone cannot establish remaining allowance.</li>
+<li><b>A quota reset is not a new budget.</b> "Observed quota reset never renews the company
+causal budget" — a provider refilling its bucket does not entitle the work to run again.</li>
+<li><b>Stale billing evidence stops new launches.</b> Custodian-supplied billing observations
+expire after 24 hours, or immediately on a relevant plan or credit event.</li>
+<li class="neg"><b>A customer-facing AI product cannot inherit the founder's subscriptions.</b> It
+needs its own commercial route and its own economics before it is sold.</li>
+</ul>
+<p class="from">from: <b>specification/07-integrations-capacity.md §5–§6</b> · <b>research/implementation/N01-native-execution.md</b> · <b>registers/decisions.json AD-007</b></p>
+</div>
+
+<div class="stack-s">
+<h3>What it is plugged into</h3>
+<p class="sub">Seven adapters, deliberately bounded. Each names a simpler alternative it was chosen
+over, so the choice can be reversed on evidence rather than defended.</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:860px"><thead><tr><th>ID</th><th>Selected</th><th>The contract, and its honest limit</th><th>Simpler alternative</th></tr></thead><tbody><tr><td><span class="mono">IC-SEARCH</span></td><td><b>Brave Search API + authorized HTTPS fetch</b></td><td>Results are untrusted sources. Fetches pin the resolved IP set and reject loopback, private and metadata addresses.</td><td>A human supplies known URLs at no API charge</td></tr><tr><td><span class="mono">IC-MAIL-IN</span></td><td><b>Fastmail JMAP</b></td><td>60-second poll with a change cursor and a bounded rescan when the cursor breaks. Attachments quarantine.</td><td>IMAP UID polling</td></tr><tr><td><span class="mono">IC-MAIL-OUT</span></td><td><b>Postmark Basic</b></td><td>No exactly-once claim. A lost acknowledgement is unknown — never blindly resent. This provider publishes <b>no</b> webhook signatures, and the package says so rather than calling it verified.</td><td>Fastmail human send</td></tr><tr><td><span class="mono">IC-PUBLIC</span></td><td><b>Cloudflare Workers + D1, free tier</b></td><td>A stricter admitted envelope than the provider's own maxima. Fails closed. No token that can upgrade the plan.</td><td>A separate Linux public VM</td></tr><tr><td><span class="mono">IC-PAY</span></td><td><b>Stripe Checkout, Refunds, BalanceTransactions</b></td><td>Idempotency key bound to the immutable request; signed webhooks over exact raw bytes; refund modelled as its own operation.</td><td>Manual bank transfer against a real invoice</td></tr><tr><td><span class="mono">IC-BOOKS</span></td><td><b>Bank statements → hledger 1.52</b></td><td>The bank's original statement in, a generated journal validated <span class='mono'>--strict</span> out. Never executes user-supplied rules. A balanced journal is not tax compliance.</td><td>A full accounting SaaS integration</td></tr><tr><td><span class="mono">IC-HUMAN</span></td><td><b>Authenticated service portal + actual performance</b></td><td>Acceptance binds an identified person, a mandate, competence evidence, a conflict check and a fee reservation. A due service cannot be closed by a packet.</td><td>Hiring every discipline permanently</td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>specification/07-integrations-capacity.md §3</b></p>
+</div>
+
+<div class="stack-s">
+<h3>What it would cost to run</h3>
+<div class="pairs">
+<div class="pair"><span class="pk">Priced reference deployment</span><span class="pv"><b>$435.70
+per month</b> of infrastructure, built from published tariffs inspected directly, times estimated
+quantities. <b>A product of observations and estimates is an estimate, never an
+invoice.</b></span></div>
+<div class="pair"><span class="pk">A cheaper comparator</span><span class="pv"><b>€215.84 per
+month</b> on plain servers, and a manual-operation baseline at <b>€129.84</b>. The plan
+<i>requires</i> the comparison to be priced before the spend can be approved.</span></div>
+<div class="pair"><span class="pk">Metered on top</span><span class="pv">Small and bounded — search
+at $5 per 1,000 queries, mail overage at $1.80 per 1,000 — but <b>nothing at the provider caps
+it</b>. A misconfigured limit is detected at the next daily reconciliation, not prevented.</span></div>
+<div class="pair"><span class="pk">What is not priced</span><span class="pv">Your own hours, the
+labour of keeping meanings correct as things change, professional fees in a jurisdiction not yet
+chosen, and the cost of handling grievances and closing down. <b>The single largest unknown in the
+package is whether one person can afford to run this</b> — and the package says so.</span></div>
+</div>
+<p class="from">from: <b>specification/07-integrations-capacity.md §6–§7</b> · <b>planning/02-architecture-selection.md §8</b> · <b>planning/PLANNING-REPORT.md §1</b></p>
+</div>
+</section>
+<section id="decisions">
+<div class="sec-head">
+<p class="eyebrow eyebrow--plain">PLAIN</p>
+<h2>Decisions only you can make</h2>
+</div>
+<div class="prose">
+<p>Thirteen decisions are open and waiting for you. They are not a questionnaire and they are not
+the system asking permission to proceed. Each one is a thing that <b>cannot be derived, inferred
+or defaulted</b> — a named person, an accepted legal exposure, a sum of money, or your consent.</p>
+<p><b>Read the last line of each card first.</b> Every one of the thirteen says unrelated work
+continues. None of them blocks the package and none blocks construction starting. Each blocks one
+specific later thing, and the card says which.</p>
+<p>Seven of them — Q-002, Q-003, Q-004, Q-005, Q-006, Q-008 and Q-012 — ask the same underlying
+question in different clothes: <b>which actual, named, competent humans exist, and on what
+terms.</b> That is the question this plan cannot answer for itself.</p>
+</div>
+<p class="from">from: <b>registers/open-questions.json</b> · <b>planning/PLANNING-REPORT.md §5</b></p>
+<div class="cards"><article class="card">
+<span class="cid">Q-002</span>
+<p class="cq">Who is the administrator and custodian of fault domain R, and by what independent route do they authenticate?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>The decision needs a named person who is not the founder acting as administrator A, an accepted custody arrangement and, if that person is paid, money. None of those is an agent&#x27;s to supply. 02 section 2 states that the same person owning both accounts without independent accepted custody fails the claimed primary-admin-loss and owner-absence profile, so an agent choosing here would be choosing to void the architecture&#x27;s central fault claim.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before B10 operational admission, and before any operating promise that depends on recovery. B01 and B02 can build and test the witness protocol against local fixtures without it; 02 section 2 says local simulation cannot admit host or admin independence, so the need is real but not immediate.</dd></div>
+<div><dt>If you do not answer</dt><dd>B01 through B09 proceed. B10 cannot complete, so no operating promise that depends on recovery may be made. This is recorded as an unavailable operating prerequisite, not as a narrowed plan.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-003</span>
+<p class="cq">Who is the competent grievance recipient, and what makes them outside the disputed dependency?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>CAP-42 requires an actual competent person with standing to receive a complaint and reach a disposition. Competence and independence are properties of a person and their relationships, not of software; an agent cannot appoint one and cannot certify that a chosen person is outside the dependency being disputed.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first offer is made available. CAP-12 binds verified delivery and support capacity before an offer, and an offer creates the standing that a grievance attaches to. So: before B10 admission and before any sale, whichever comes first.</dd></div>
+<div><dt>If you do not answer</dt><dd>No offer may be made available. Internal construction, research and every B01 through B09 test proceed.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-004</span>
+<p class="cq">When a complaint names the custodian, who is the alternate recipient, who appoints them, and by when?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>CAP-17 routes such a complaint to an alternate and CAP-42 requires the recipient to sit outside the disputed decision and incentive dependency, but no document says who that alternate is or who has the standing to appoint them. Appointing the person who adjudicates a complaint against the founder&#x27;s own custodian is a governance act; an agent selecting one would be selecting its own reviewer.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before B10 admission and before the first offer, with Q-003. The G-03 scenario reached this step and found every other contract held, so this is the single unfilled role on that path.</dd></div>
+<div><dt>If you do not answer</dt><dd>The grievance route is admitted only for complaints that do not name the custodian, and that limitation is stated to the person rather than hidden. All other work proceeds.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-005</span>
+<p class="cq">Who is the independent assessor with write authority over protected-change acceptance, and what is their competence evidence?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>08 section 1 says that if independent competence is unavailable the protected change waits, and that the system does not invent a qualified proxy for the founder. That sentence makes the wait the founder&#x27;s to resolve: the only way out is a real person with standing, and appointing one&#x27;s own reviewer is precisely what the contract forbids the improver from doing.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first ProtectedChange is authorized, which is B08. Every stage before B08 can be built, because construction under B00&#x27;s frozen contracts is not itself a protected change.</dd></div>
+<div><dt>If you do not answer</dt><dd>Protected changes accumulate as proposed and reviewed but never authorized. The system runs and does not improve. B01 through B07 and B09 proceed.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-006</span>
+<p class="cq">Who are the primary continuity custodian and the accepted alternate for IC-HUMAN, and what are their compensation, availability window and response capacity?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>07 section 4 requires a primary custodian and an accepted alternate with independent login, recovery and MFA and an understood mandate, and states plainly that there is no assumed free lawyer, accountant, proxy founder or perpetual on-call volunteer. Two named humans, their consent and their pay: none is derivable.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the route is declared live. 07 section 4 requires an actual acknowledgement and a rehearsal of a benign request before that declaration, so the people must exist before B06&#x27;s continuity tests can mean anything, and certainly before B10.</dd></div>
+<div><dt>If you do not answer</dt><dd>The continuity route is not declared live. 07 section 4&#x27;s rehearsal cannot run, and every promise depending on continuity stays unmakeable. Other integration work proceeds.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-007</span>
+<p class="cq">What is the actual principal — legal form, jurisdiction, signatory and registrations — under which this company transacts?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>CAP-40 requires the actual principal, relevant location and activity facts, signatory, account access, name and asset rights and required registrations before transacting, and 03 asserts no universal jurisdiction, legal form, licensing threshold or setup duration. The kernel is explicit that a venture never silently creates a principal and that no service name or self-reference manufactures legal standing.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first payment, which CAP-40 states directly: the software can prepare before revenue but cannot defer a prerequisite required before the first payment. In build terms, before B10.</dd></div>
+<div><dt>If you do not answer</dt><dd>No sale, no payment, no filing and no contract. All internal construction and research proceed; 03 says no prior paying customer is required to investigate or prepare.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-008</span>
+<p class="cq">Which named professionals will supply scoped determinations, and who holds the fee authority for each?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>ProfessionalRequest requires a named provider and a fee authority, and CAP-21 requires an actual competent issuer&#x27;s scoped conclusion. 03 says explicitly that preparing or delivering the packet does not complete the requested professional work. Engaging a professional and committing fees are acts only the founder can perform.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the latest responsible start of the first determination that depends on one — a filing deadline, a contract review or a regulatory question. 03 says missing capacity invokes the accepted alternate before the latest responsible start and remains a material readiness failure when unavailable.</dd></div>
+<div><dt>If you do not answer</dt><dd>No professional determination is available. Any capability whose acceptance condition requires one stays unaccepted, and the dependent duty is recorded as a readiness failure rather than completed.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-009</span>
+<p class="cq">Does an actual mail-provider account exist for this principal, is it approved for a custom API client, and what are its allowance, eligible streams and applicable terms?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>07 section 9.2 lists these as UNKNOWN admission checks and says none may be closed by assumption, by a plausible value, or by an implementation&#x27;s behaviour standing in for the provider&#x27;s. Every one of them is resolved by holding an account: a person must open it, agree to terms on behalf of a principal, and obtain the approval. An agent cannot create an account or accept terms.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the mail profile can be admitted, which is B05, and before any message is sent to a real recipient. The outbound contract in 07 section 9 can be built and tested against fixtures without it.</dd></div>
+<div><dt>If you do not answer</dt><dd>IC-MAIL-OUT stays unadmitted. Inbound intake, the human send route and every other adapter proceed; the independent grievance mailbox that 07 section 3 requires on every receipt is a separate route.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-010</span>
+<p class="cq">Will the founder adopt a ParticipationPlan — availability windows, maximum decision-batch minutes, interrupt limit, practice allocation, incident reserve, permitted assessment data and sampling policy — and consent to the competence assessment?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>04 states that an empty plan means no asserted attention or competence capacity for dependent promises, that the interface offers understandable defaults at operating setup but silence cannot adopt them, and that the assessment runs under a consented human protocol the owner may decline. Consent to be measured is not something any agent may supply, infer or default.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first promise whose feasibility depends on the founder&#x27;s attention — which is the first offer, so before B10. B06&#x27;s human flows can be built and tested against a fixture plan.</dd></div>
+<div><dt>If you do not answer</dt><dd>No dependent promise may assert attention or competence capacity. Internal construction is unaffected; 04 says an empty plan does not prevent software development or force a questionnaire now.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-011</span>
+<p class="cq">What funded capacity is reserved for remedy, grievance handling and responsible closure, and from what account?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>CAP-42 requires funded remedy and CAP-39 requires closure with actual custodian, funding and review dates; G-03&#x27;s scenario records funded remedy capacity and closure funding as admission inputs. Money is the founder&#x27;s to commit, and 01 section 9 is explicit that numeric reserves and actual performer calendars are mandatory operating inputs and not fictional capacity the specification may supply.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first offer, with Q-003. An offer creates the exposure that this reserve exists to meet, and 03 says publishing a standing offer itself creates a declared exposure window that capacity and authority must cover.</dd></div>
+<div><dt>If you do not answer</dt><dd>No offer may be made available, for the same reason as Q-003. Everything else proceeds.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-012</span>
+<p class="cq">Who is the accepted successor if the founder and a material provider are lost together, and how are they appointed and paid without the founder?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>CAP-41 states that joint owner and provider loss must not depend on the absent owner to appoint or pay the substitute. That makes the arrangement itself a thing the founder must set up in advance: an appointment and a funding route that survive the founder&#x27;s absence cannot be created by an agent, and by construction cannot be created later by the founder either.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before B10 admission and before any continuing customer duty exists. The rehearsal of unfamiliar duties that CAP-41 requires needs the successor to exist first.</dd></div>
+<div><dt>If you do not answer</dt><dd>Joint-loss continuity is declared unavailable. That is a real limitation on what may be promised, and CAP-39&#x27;s residual form is how it is recorded. All construction proceeds.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-013</span>
+<p class="cq">What continuing infrastructure and operating spend is authorized, and is the priced OP-AWS-LINUX-1 deployment approved against its simpler comparator?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>02 section 2 lists continuing infrastructure funding and the accepted operating plan as admission inputs and states that no price or funding adequacy is asserted. 07 section 6 says the subscription baseline is an assumption from L10 and not an infrastructure budget or permission to spend. B10 says planned procurement is not permission to spend now. Committing money is the founder&#x27;s act.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before B10, and before any infrastructure is purchased. 02 section 2 also requires the priced bill of materials for both the selected placement and the simpler VPS comparator before Phase G can accept operating feasibility, so the comparison is owed before the decision.</dd></div>
+<div><dt>If you do not answer</dt><dd>No infrastructure is purchased and no operating promise is made. B01 through B09 run against local fixtures; 02 section 2 says a local simulation can validate syntax and some race behaviour and cannot admit host or admin independence.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-014</span>
+<p class="cq">Who is the actual founder, and who is the root custodian for BootstrapAuthorization — their identity assertions, keys and signatures?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>The bootstrap root is the one acceptance in the chain that cannot be derived from another acceptance. acceptance_chain.py now terminates because eight evidence.bootstrap.&lt;Record&gt;.v1 predicates exist and nine chain criteria carry a genesis disjunct; what those predicates read is an assertion made by an identified human. 01 section 3 says only the root ResponsibilityAssignment may reference its own first revision as owner and that its signed attributable acceptance and limited standing are explicit. No agent can be that human or hold that key.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before B02&#x27;s recovery substrate can be exercised end to end. It blocks nothing before that: the contracts, registries and validators are complete without it, and B01 builds against fixtures.</dd></div>
+<div><dt>If you do not answer</dt><dd>The contract work, the registries and the validators are unaffected and complete. B02 cannot be exercised end to end, so the recovery substrate stays untested against a real root.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article></div>
+<div class="note note--found">
+<p><b>Twelve of the thirteen exist because a reviewer went looking for them.</b> The register held
+one entry while the specification carried many human dependencies in prose — so "a founder reading
+the register concludes nothing is owed." They were promoted into the register with an owner and a
+deadline each. <b>They have been queued. They have not been asked until now.</b></p>
+</div>
+<p class="from">from: <b>planning/reviews/G-03… finding G3-06</b> · <b>registers/open-questions.json</b></p>
+</section>
+<section id="chosen">
+<div class="sec-head">
+<p class="eyebrow eyebrow--underlay">UNDERLAY</p>
+<h2>How the design was chosen</h2>
+</div>
+<div class="prose">
+<p>Fourteen research tracks ran first, each forming its findings <b>before</b> seeing any of the
+others, so that agreement between them would mean something. Then three materially different
+architectures were written out in full, attacked by three independent reviewers who did not know
+which would be chosen, repaired, and compared on the same requirements.</p>
+<p>The selection record is explicit about what that does and does not establish: it is "a design
+inference under uncertainty". The evidence establishes available mechanisms and important failure
+modes. <b>It does not establish which candidate runs a business most effectively.</b></p>
+</div>
+<p class="from">from: <b>planning/02-architecture-selection.md §1</b> · <b>research/lanes.json</b></p>
+
+<div class="stack-s">
+<h3>The fourteen research tracks</h3>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:620px"><thead><tr><th>Lane</th><th>Topic</th><th>Independent evidence audit</th></tr></thead><tbody><tr><td><span class="mono">L01</span></td><td>Vision and founder-intent preservation</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L02</span></td><td>Company and organizational operations</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L03</span></td><td>Agent and workflow architectures</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L04</span></td><td>Coding, terminal and software engineering</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L05</span></td><td>Memory, knowledge, context and grounding</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L06</span></td><td>Evaluation, evidence, truth and reproducibility</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L07</span></td><td>Security, permissions, identity and adversarial threats</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L08</span></td><td>Reliability, durable execution and incident recovery</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L09</span></td><td>Human factors, founder attention, competence and interfaces</td><td><span class="tag t-pend">not yet evidence-audited</span></td></tr><tr><td><span class="mono">L10</span></td><td>Economics, subscriptions, capacity and infrastructure</td><td><span class="tag t-acc">selected assertions audited</span></td></tr><tr><td><span class="mono">L11</span></td><td>Legal, privacy, governance and ethical consequences</td><td><span class="tag t-acc">selected assertions audited</span></td></tr><tr><td><span class="mono">L12</span></td><td>Self-improvement and controlled system change</td><td><span class="tag t-acc">selected assertions audited</span></td></tr><tr><td><span class="mono">L13</span></td><td>Contrarian and architecture-breaking alternatives</td><td><span class="tag t-pend">not independently source-audited</span></td></tr><tr><td><span class="mono">L14</span></td><td>Novel concepts beyond current frameworks</td><td><span class="tag t-pend">not independently source-audited</span></td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>research/lanes.json</b> · <b>planning/PLANNING-REPORT.md §4</b></p>
+</div>
+
+<div class="stack-s">
+<h3>The alternatives, compared on the same requirements</h3>
+<p class="sub">The baseline deliberately covers full business delivery, evidence, consequences,
+competence and closure — removing those would have produced an artificially cheap
+competitor.</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:880px"><thead><tr><th>Alternative</th><th>Its non-optional control choice</th><th>Credible reason to choose it</th><th>Its principal cost, or what would falsify it</th></tr></thead><tbody><tr><td><b>Simple comparator S0</b><br><span class="tag t-acc">baseline</span></td><td>Native business tools, a shared obligation register, fixed grants, a calendar, scheduled reconciliation and accountable manual releases</td><td>Existing tools and a competent owner may coordinate the required scale with less software and less upkeep</td><td>Manual commissioning, recovery and evidence assembly scale with output; missed duties or owner overload defeat it</td></tr><tr><td><b>Repaired A — selected, as S1.0</b><br><span class="tag t-suf">selected</span></td><td>A common admitted-case authority and deterministic scheduling; bounded adaptive planning handles unfamiliar work</td><td>One accepted work state makes cross-domain ownership, change and recovery explicit without negotiating internal administration</td><td>Central interpretation can be consistently wrong; mapping and case creation become hidden founder labour</td></tr><tr><td><b>Repaired B</b><br><span class="tag t-pend">not selected</span></td><td>Native domains own their own administration and scheduling; sponsors commission complete outcomes; independent issuers prepare an ordered release</td><td>Real autonomous suppliers or domain operators can preserve expertise and replacement options without migrating internal methods</td><td>Sponsorship disputes, resource holds and cross-issuer ordering can dominate coordination; native autonomy is unavailable where bypasses cannot be fenced</td></tr><tr><td><b>C2</b><br><span class="tag t-pend">not selected</span></td><td>Standing inquiry charters entitle eligible observers to a first discriminator and a separately governed disposition despite ordinary production priorities</td><td>Protects investigation from convenient local closure or indefinite deferral</td><td>Reserved analysis and assessor capacity can be consumed by false or low-value inquiries; continuity and appeal add permanent institutional labour</td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>planning/02-architecture-selection.md §2</b> · <b>planning/candidates/</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Ten questions the research did not settle</h3>
+<p class="sub">Where the lanes agreed on a need and disagreed about the trade-off, the
+disagreement was kept rather than averaged away. Each carries the question that would discriminate
+between the answers, and each records <span class="mono">decision: null</span>.</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:900px"><thead><tr><th>Axis</th><th>Topic</th><th>The question that would settle it</th><th>Lanes</th><th>Decision</th></tr></thead><tbody><tr><td><span class="mono">X01</span></td><td><b>Intent and obligations</b></td><td>How does each candidate preserve an obligation absent from its task structure or disputed by a counterparty?</td><td><span class="mono">L01, L02, L11, L13, L14</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X02</span></td><td><b>Production and institutional boundaries</b></td><td>Which responsibilities must be owned internally, and when would suppliers or existing domain tools be a better implementation?</td><td><span class="mono">L02, L10, L11, L13</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X03</span></td><td><b>Coordination</b></td><td>What decides the next move, where is its authority enforced, and when does coordination complexity outweigh benefit?</td><td><span class="mono">L03, L04, L08, L13, L14</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X04</span></td><td><b>Knowledge structures</b></td><td>What must share meaning, what stays native, and how can a false or stale belief be corrected without erasing its history?</td><td><span class="mono">L05, L13, L14</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X05</span></td><td><b>Evidence versus truth</b></td><td>What can the account prove, what remains outside observation, and how is missing or manipulated evidence detected?</td><td><span class="mono">L06, L07, L12, L13, L14</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X06</span></td><td><b>Authority and recovery</b></td><td>How can a delayed or restored worker be prevented from acting under obsolete authority, including ambiguous external completion?</td><td><span class="mono">L07, L08, L10, L11</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X07</span></td><td><b>Owner competence and attention</b></td><td>How does the owner stay capable without becoming a full-time reviewer or being subjected to opaque personal profiling?</td><td><span class="mono">L01, L09, L14</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X08</span></td><td><b>Economics and scope</b></td><td>Can complete delivery and responsible termination remain affordable when providers, owner time or suppliers are unavailable?</td><td><span class="mono">L10, L13, L14</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X09</span></td><td><b>Records and deletion</b></td><td>How are legally retained facts, erased personal data, unavailable vendor copies and honest reconstruction separated?</td><td><span class="mono">L05, L08, L11</span></td><td><span class="tag t-open">open</span></td></tr><tr><td><span class="mono">X10</span></td><td><b>Improvement and simplification</b></td><td>What can change, who independently observes its effect, and what evidence causes machinery to be removed?</td><td><span class="mono">L04, L12, L13, L14</span></td><td><span class="tag t-open">open</span></td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<div class="note">
+<p>The comparison file states its own limits: "Independent contexts share a model family; agreement
+is not statistically independent confirmation", and "no whole-company outcome has been
+established."</p>
+</div>
+<p class="from">from: <b>research/cross-lane-comparison.json</b></p>
+</div>
+
+<div class="stack-s">
+<h3>What would reopen the choice</h3>
+<p class="sub">All of these are required future evidence, not results. Measurement rules and
+fixtures must be frozen before results are inspected; failed attempts and manual interventions
+must be counted; safety, service, customer value, economics, owner competence and attention are
+reported separately. <b>No aggregate score selects a winner.</b></p>
+<ul class="ticks">
+<li><b>S0 wins if</b> matched manual coordination delivers equivalent useful outcomes and recovery within the same owner attention allowance, at lower full cost. Then remove the orchestration.</li><li><b>B wins if</b> actual independently administered domains reduce real replacement and coordination cost without losing authority or outcome ownership.</li><li><b>C2 wins if</b> deferred inquiry causes persistent missed opportunities, missed duties or owner blind spots that scheduled cross-domain review systematically misses, at acceptable total burden.</li><li><b>Any single contract reopens immediately on</b> a successful falsifier, an unavailable enforcement or continuity prerequisite, changed provider terms, a misleading acceptance, a missed material duty, or an inability to perform authorized closure.</li><li><b>The whole foundation reopens when</b> repairs repeatedly require hidden manual coordination, broad multi-domain negotiation, permanent exceptions, speculative containment or unaffordable independent roots.</li>
+</ul>
+<p class="from">from: <b>planning/02-architecture-selection.md §9</b> · <b>planning/PLANNING-REPORT.md §3</b></p>
+</div>
+</section>
+<section id="build">
+<div class="sec-head">
+<p class="eyebrow eyebrow--underlay">UNDERLAY</p>
+<h2>The build plan</h2>
+</div>
+<div class="hold">
+<p class="h">Founder hold — in place since 2026-09-13</p>
+<p>"Founder: do not start building yet. Hold after the planning disposition. B00 may be marked only as the disposition record; B01 is NOT to be dispatched until the founder lifts this hold explicitly."</p>
+<p class="from">from: <b>state.json</b> <span class="mono">founder_hold.lifted: false</span></p>
+</div>
+
+<div class="prose">
+<p>Twelve stages, in dependency order. <span class="mono">B00</span> is not a build stage — it is
+the gate: consolidating every answer, every subject and the component matrix, and passing an
+independent review before any runtime work. Every stage carries the completion evidence it must
+produce, and a field stating what that stage <b>does not</b> prove.</p>
+<p>Three stages are judged buildable today. Two wait on the coherence recheck, because the two
+missing decisions sat squarely on the money-and-fulfillment path immediately after the charge.
+That is the reviewer's split judgment, not a scheduling preference. And <b>none of the twelve has
+started.</b></p>
+</div>
+<p class="from">from: <b>planning/implementation-graph.json</b> · <b>planning/reviews/G-02…</b></p>
+
+<figure>
+<div class="diagram"><svg viewBox="0 0 1250 470" role="img" style="min-width:860px;width:100%" aria-label="The twelve construction stages B00 to B11 as a dependency graph. None is started; B01 to B03 are judged buildable now, B04 and B05 wait on the coherence recheck.">
+
+<defs>
+ <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+         orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+ <marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+         orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--rule-2)"/></marker>
+</defs>
+
+<path class="flow-soft" d="M142,232.0 C172,232.0 135,232.0 157,232.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M277,232.0 C307,232.0 270,142.0 292,142.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M277,232.0 C307,232.0 270,322.0 292,322.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M412,142.0 C442,142.0 405,142.0 427,142.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M412,142.0 C558.5,142.0 558.5,312.0 697,312.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M547,142.0 C577,142.0 540,232.0 562,232.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M412,322.0 C491.0,322.0 491.0,232.0 562,232.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M412,322.0 C558.5,322.0 558.5,162.0 697,162.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M412,322.0 C442,322.0 405,402.0 427,402.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M682,232.0 C712,232.0 675,162.0 697,162.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M682,232.0 C712,232.0 675,312.0 697,312.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M817,162.0 C847,162.0 810,232.0 832,232.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M817,312.0 C847,312.0 810,232.0 832,232.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M547,402.0 C693.5,402.0 693.5,232.0 832,232.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M952,232.0 C982,232.0 945,232.0 967,232.0" marker-end="url(#ahs)"/>
+<path class="flow-soft" d="M1087,232.0 C1117,232.0 1080,232.0 1102,232.0" marker-end="url(#ahs)"/>
+<rect x="30" y="200" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<rect class="cap-acc" x="30" y="200" width="112" height="3"/>
+<text class="t-mono" x="86.0" y="228" text-anchor="middle">B00</text>
+<text class="t-small" x="86.0" y="246" text-anchor="middle">the gate</text>
+<rect x="165" y="200" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<rect class="cap-suf" x="165" y="200" width="112" height="3"/>
+<text class="t-mono" x="221.0" y="228" text-anchor="middle">B01</text>
+<text class="t-small" x="221.0" y="246" text-anchor="middle">kernel</text>
+<rect x="300" y="110" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<rect class="cap-suf" x="300" y="110" width="112" height="3"/>
+<text class="t-mono" x="356.0" y="138" text-anchor="middle">B02</text>
+<text class="t-small" x="356.0" y="156" text-anchor="middle">durable recovery</text>
+<rect x="300" y="290" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<rect class="cap-pend" x="300" y="290" width="112" height="3"/>
+<text class="t-mono" x="356.0" y="318" text-anchor="middle">B04</text>
+<text class="t-small" x="356.0" y="336" text-anchor="middle">company work</text>
+<rect x="435" y="110" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<rect class="cap-suf" x="435" y="110" width="112" height="3"/>
+<text class="t-mono" x="491.0" y="138" text-anchor="middle">B03</text>
+<text class="t-small" x="491.0" y="156" text-anchor="middle">isolation</text>
+<rect x="435" y="370" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<text class="t-mono" x="491.0" y="398" text-anchor="middle">B08</text>
+<text class="t-small" x="491.0" y="416" text-anchor="middle">improvement</text>
+<rect x="570" y="200" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<rect class="cap-pend" x="570" y="200" width="112" height="3"/>
+<text class="t-mono" x="626.0" y="228" text-anchor="middle">B05</text>
+<text class="t-small" x="626.0" y="246" text-anchor="middle">adapters</text>
+<rect x="705" y="130" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<text class="t-mono" x="761.0" y="158" text-anchor="middle">B06</text>
+<text class="t-small" x="761.0" y="176" text-anchor="middle">human flows</text>
+<rect x="705" y="280" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<text class="t-mono" x="761.0" y="308" text-anchor="middle">B07</text>
+<text class="t-small" x="761.0" y="326" text-anchor="middle">deployment</text>
+<rect x="840" y="200" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<text class="t-mono" x="896.0" y="228" text-anchor="middle">B09</text>
+<text class="t-small" x="896.0" y="246" text-anchor="middle">rehearsal</text>
+<rect x="975" y="200" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<text class="t-mono" x="1031.0" y="228" text-anchor="middle">B10</text>
+<text class="t-small" x="1031.0" y="246" text-anchor="middle">go live</text>
+<rect x="1110" y="200" width="112" height="64" rx="2" fill="var(--raised)" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="4 3"/>
+<text class="t-mono" x="1166.0" y="228" text-anchor="middle">B11</text>
+<text class="t-small" x="1166.0" y="246" text-anchor="middle">operate</text>
+<text class="t-cap" x="30" y="458">EVERY STAGE IS NOT-STARTED — THE DASHED BORDER IS THE STATUS, NOT A STYLE</text>
+</svg></div>
+<p class="hint">Wide diagram — drag sideways to read the rest</p>
+<div class="legend">
+<span><span class="sw" style="background:var(--accent)"></span>the gate</span>
+<span><span class="sw" style="background:var(--sufficient)"></span>judged buildable now</span>
+<span><span class="sw" style="background:var(--pending)"></span>waiting on the coherence recheck</span>
+<span><span class="sw" style="background:var(--rule-2)"></span>later in the order</span>
+<span><span class="sw" style="background:transparent;border:1px dashed var(--rule-2)"></span>not started</span>
+</div>
+<figcaption>Arrows are dependencies: a stage cannot begin until everything pointing at it is
+done.</figcaption>
+</figure>
+
+<div class="stack-s">
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:900px"><thead><tr><th>Stage</th><th>Depends on</th><th>What it builds</th><th>Phase G judgment</th><th>Status</th></tr></thead><tbody><tr><td><span class="mono">B00</span></td><td><span class="mono">—</span></td><td>Consolidate all 566 question answers, 46 subjects and full component matrix; reconcile 01–08, actual adapter routes, operational prerequisites and independent G review before runtime work.</td><td><span class="tag t-acc">the gate itself</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B01</span></td><td><span class="mono">B00</span></td><td>system workspace, schemas/clients, canonical identities, pure command reducers, SERIALIZABLE storage, D0/D1/D2 distinctions, immutable group hashing, query/proof values and SQL outbox. C01/C02/C04/C05/C06 foundations.</td><td><span class="tag t-suf">buildable now</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B02</span></td><td><span class="mono">B01</span></td><td>Real Pg primary/hot standby plus R writable receipt ledger, complete blobs/keys, release/send claim, revocation/conflict migration, backup/WAL/restore/frontier membership. C04/C08.</td><td><span class="tag t-suf">buildable now</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B03</span></td><td><span class="mono">B02</span></td><td>Keycloak/step-ca, service epochs, trusted parameter/disclosure gates, G nftables/time/readback and N/X isolation. C04/C05/C08 runtime.</td><td><span class="tag t-suf">buildable now</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B04</span></td><td><span class="mono">B01</span></td><td>All company CAP procedures and responsibility/competence, work/workflow/delegation/skills, context/knowledge/forgetting, protected capture/dependencies and qualified judgments. C01/C02/C03/C05/C06/C07.</td><td><span class="tag t-pend">waits on the recheck</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B05</span></td><td><span class="mono">B03, B04</span></td><td>IC native/search/mail/public/payment/books/human adapters, account/billing/capacity and provider migration/removal. C03/C04/C05/C06/C08.</td><td><span class="tag t-pend">waits on the recheck</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B06</span></td><td><span class="mono">B04, B05</span></td><td>Full 04 human flows, permission-filtered UI, independent grievance/continuity, public form/product and service ownership. C07/C09 with company procedures.</td><td><span class="tag t-pend">later</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B07</span></td><td><span class="mono">B02, B05</span></td><td>IaC/systemd topology, secrets/keys, inventory/cost, observability, release/migration, backup/deletion/restore and actual provider descendants. C04/C08 and all providers.</td><td><span class="tag t-pend">later</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B08</span></td><td><span class="mono">B04</span></td><td>ProtectedChange/trial/evaluator/rollout/watch/migration, stochastic baseline and cumulative drift. C06/C04/C01.</td><td><span class="tag t-pend">later</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B09</span></td><td><span class="mono">B06, B07, B08</span></td><td>Full integrated company simulator/rehearsals with matched S0 comparison, admitted account fixtures and representative workloads. All C01…C09.</td><td><span class="tag t-pend">later</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B10</span></td><td><span class="mono">B09</span></td><td>Actual operational principals/accounts/caps/mandates/professionals, independent A/R custody, native billing attestation, domain/terms and scoped transition.</td><td><span class="tag t-pend">later</span></td><td><span class="tag t-open">not-started</span></td></tr><tr><td><span class="mono">B11</span></td><td><span class="mono">B10</span></td><td>Continuing delivery, settlement, grievances, obligation accounting, improvement watch and old-system retirement. All company lifecycle and removal.</td><td><span class="tag t-pend">later</span></td><td><span class="tag t-open">not-started</span></td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>planning/implementation-graph.json</b> · <b>specification/08-improvement-implementation.md §7</b></p>
+</div>
+
+<div class="note">
+<p><b>Three things the stages say about themselves, quoted:</b> B02 — "Local tests show protocol
+behavior only; operational independent roots remain B10 evidence." B07 — "Purchasing
+infrastructure alone cannot establish independent actual custodians or affordable useful
+operation." B11 — "Complete system capability construction is not proven commercial success.
+Failure may select S0 or a replacement."</p>
+</div>
+</section>
+<section id="questions">
+<div class="sec-head">
+<p class="eyebrow eyebrow--underlay">UNDERLAY</p>
+<h2>Questions and answers</h2>
+</div>
+<div class="prose">
+<p>The source vision document asked 566 exact questions across 53 subject fields. Every one of them
+was kept verbatim and joined to an answer, a component that owns it, its evidence, the decision it
+rests on, its remaining uncertainty, an accountable owner and the module that would implement it.
+All 566 answer pointers resolve, to 566 <i>distinct</i> targets — no two questions were quietly
+answered by the same paragraph.</p>
+</div>
+<p class="from">from: <b>coverage/questions.json</b> · <b>planning/PLANNING-REPORT.md §7</b></p>
+
+<div class="stack-s">
+<h3>Where the 566 stand</h3>
+<div class="bar" role="img" aria-label="Answered: 326 of 566; Requires further evidence: 142 of 566; Requires founder decision: 77 of 566; Requires external professional: 21 of 566"><div style="width:57.597%;background:var(--sufficient)"></div><div style="width:25.088%;background:var(--accent)"></div><div style="width:13.604%;background:var(--founder)"></div><div style="width:3.710%;background:var(--pending)"></div></div>
+<div class="barkey"><span><span class="sw" style="background:var(--sufficient)"></span>Answered <b>326</b></span><span><span class="sw" style="background:var(--accent)"></span>Requires further evidence <b>142</b></span><span><span class="sw" style="background:var(--founder)"></span>Requires founder decision <b>77</b></span><span><span class="sw" style="background:var(--pending)"></span>Requires external professional <b>21</b></span></div>
+<div class="note note--acc">
+<p><b>"Answered" is narrower than it sounds, and the package defines it narrowly:</b>
+"&#x27;Answered&#x27; means specified at this gate; &#x27;implemented&#x27; requires later implementation evidence." Every row separately keeps
+<span class="mono">implementation_status: planned-not-existing</span>. <b>326 answered means 326
+specified. It does not mean 326 built, and it does not mean 326 accepted.</b></p>
+<p>The rule file also names four statuses a classifier is <b>not allowed</b> to produce —
+Intentionally refused, Not applicable, Unresolved but non-blocking, Superseded by a better framing — because "a classifier that emitted one would be inventing
+a refusal or an acceptance nobody made."</p>
+</div>
+<p class="from">from: <b>coverage/status-rule.json</b></p>
+</div>
+
+<div class="stack-s">
+<h3>The fifty-three fields</h3>
+<p class="sub">Open any one for its question count, its status mix, and one real question with the
+beginning of its real answer. The full text of all 566 lives in the register — this is a way in,
+not a substitute.</p>
+<div><details>
+<summary><span class="f-n">1</span><span class="f-t">Direction and intent — what the company is trying to do</span>
+<span class="f-c">18 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-found">founder decision 18</span></div>
+<p class="qa-id">F01-Q01</p>
+<p class="q">What is this company for, and who is allowed to say?</p>
+<p class="a">The actual direction authority endorses the beneficiary, purpose, constraints and taste in canonical IntentVersion, preserving original words and interpretation. Other people and models can propose or challenge factual premises; neither a company role label nor a profitable forecast can replace that person&#x27;s authority over …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/0</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">2</span><span class="f-t">Work and tasks — how an intention becomes moves</span>
+<span class="f-c">16 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 16</span></div>
+<p class="qa-id">F02-Q01</p>
+<p class="q">How does something large become something a worker can actually start?</p>
+<p class="a">Decompose the endorsed outcome into the next independently inspectable result, finite dependencies, acceptance evidence and actual responsible WorkOrder before admitting a large effort.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/0</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">3</span><span class="f-t">Agents and the roster — who does the work</span>
+<span class="f-c">18 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 18</span></div>
+<p class="qa-id">F03-Q01</p>
+<p class="q">What roles need to exist, and how would you know if one is missing?</p>
+<p class="a">Roles follow needed outcome, decision, production, acceptance and continuity responsibilities; unowned duties, repeated unsupported handoffs or unavailable competence expose gaps.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/16</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">4</span><span class="f-t">How a worker thinks — the reasoning itself</span>
+<span class="f-c">17 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 17</span></div>
+<p class="qa-id">F04-Q01</p>
+<p class="q">When is it worth thinking longer, and when is that waste?</p>
+<p class="a">Extend reasoning only when another bounded discriminator can change a relevant decision within its deadline and allowance; repeated unchanged analysis opens a no-progress blocker.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/34</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">5</span><span class="f-t">Getting work to the right worker — orchestration</span>
+<span class="f-c">13 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 13</span></div>
+<p class="qa-id">F05-Q01</p>
+<p class="q">Who decides which worker does what?</p>
+<p class="a">C02 assigns admitted work under sponsor mandates and actual capacity; executors only propose bounded children with explicit benefit and acceptance responsibility.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/51</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">6</span><span class="f-t">Memory and context — what is remembered, and what is carried</span>
+<span class="f-c">15 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 15</span></div>
+<p class="qa-id">F06-Q01</p>
+<p class="q">What must a worker know before it can start, and where does it get it?</p>
+<p class="a">The C05 loader supplies exact purpose/criteria, relevant current constraints, sources, contradictions, partial work and duties through ContextManifest before a worker starts.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/64</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">7</span><span class="f-t">Knowledge — what the company knows and how it learns</span>
+<span class="f-c">12 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 12</span></div>
+<p class="qa-id">F07-Q01</p>
+<p class="q">How does the company know what it knows?</p>
+<p class="a">KnowledgeEntry points to canonical scoped claims, originals, evidence judgments, time and current applicability; the account distinguishes observed, told, inferred, disputed and unknown.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/79</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">8</span><span class="f-t">Capability — what the company can actually do</span>
+<span class="f-c">11 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 11</span></div>
+<p class="qa-id">F08-Q01</p>
+<p class="q">What is the company capable of, and how is that written down?</p>
+<p class="a">The 46-capability catalog states actual typed outcomes, routes, dependencies and acceptance; this file binds reusable procedures/templates without adding an agent per capability.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/91</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">9</span><span class="f-t">Reaching things — how the company touches the world</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 5</span> <span class="tag t-found">founder decision 2</span> <span class="tag t-suf">Answered 2</span> <span class="tag t-pend">external professional 1</span></div>
+<p class="qa-id">F09-Q01</p>
+<p class="q">What can the company actually reach — files, accounts, services, the network, the machine itself?</p>
+<p class="a">Workers reach only job manifest files and admitted broker methods. N retains subscription authentication; X has no login or production credential. Files, service accounts, endpoints and native non-shell channels are inventoried per AdapterProfile, with metadata, shared home and cloud administration excluded.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/0</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">10</span><span class="f-t">What comes in from outside</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 5</span> <span class="tag t-suf">Answered 3</span> <span class="tag t-found">founder decision 2</span></div>
+<p class="qa-id">F10-Q01</p>
+<p class="q">Where does new information arrive from?</p>
+<p class="a">New information enters through authorized search/fetch, Fastmail JMAP, Cloudflare staged forms, authenticated provider webhooks, source statements or authenticated human performance. Each begins as untrusted sourced observation or potential duty; none is automatically an instruction or accepted business fact. Webhook …</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/10</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">11</span><span class="f-t">What goes out into the world</span>
+<span class="f-c">11 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-found">founder decision 6</span> <span class="tag t-acc">further evidence 2</span> <span class="tag t-pend">external professional 2</span> <span class="tag t-suf">Answered 1</span></div>
+<p class="qa-id">F11-Q01</p>
+<p class="q">What may be sent, published, or spent without a person seeing it first?</p>
+<p class="a">Standing grants permit bounded approved routine replies and exact admitted public versions. Spending, publishing and messaging still cross the same parameter/disclosure/validity/release gate; free-form promises, new audiences and protected changes need the applicable decision and competence.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/20</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">12</span><span class="f-t">Communication — between workers, and with the owner</span>
+<span class="f-c">11 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 11</span></div>
+<p class="qa-id">F12-Q01</p>
+<p class="q">How does one worker tell another what it found and what it left undone?</p>
+<p class="a">Use a typed result message and canonical Continuation containing original purpose, outputs/partials, evidence, unknowns, effects, remaining duties and next action.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/102</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">13</span><span class="f-t">Truth — how the company knows what is actually so</span>
+<span class="f-c">11 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 11</span></div>
+<p class="qa-id">F13-Q01</p>
+<p class="q">What separates something the company measured from something it was told?</p>
+<p class="a">A measurement is an attributed Observation with capture method, source interval and completeness; testimony identifies its actual issuer and must not masquerade as measurement.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/113</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">14</span><span class="f-t">Judging the work — quality and review</span>
+<span class="f-c">12 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 12</span></div>
+<p class="qa-id">F14-Q01</p>
+<p class="q">Who decides that work is good enough?</p>
+<p class="a">The actual acceptance contract names C06 competent judgment and required sponsor/recipient authority; exact current subject/predicate acceptance governs downstream work.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/124</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">15</span><span class="f-t">Safety — what stops a bad thing happening</span>
+<span class="f-c">12 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 6</span> <span class="tag t-suf">Answered 4</span> <span class="tag t-found">founder decision 1</span> <span class="tag t-pend">external professional 1</span></div>
+<p class="qa-id">F15-Q01</p>
+<p class="q">What is the worst thing that could plausibly happen here?</p>
+<p class="a">Plausible material failures include an unauthorized contract/payment/public promise, confidential disclosure, lost duties after primary destruction, poisoned acceptance, uncontained native access or abandonment of due human service. Assess severity by the actual principal/beneficiary and continuing exposure, not merely one tool …</p>
+<p class="from">answer at: <b>planning/specification/components-authority.json#/questions/0</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">16</span><span class="f-t">Permission and identity — who may do what</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 5</span> <span class="tag t-found">founder decision 4</span> <span class="tag t-pend">external professional 1</span></div>
+<p class="qa-id">F16-Q01</p>
+<p class="q">On what basis is permission granted — the person, the task, the risk, the reversibility?</p>
+<p class="a">Permission is the intersection of actual principal/mandate, authenticated actor, task/purpose, action/resource/destination/account, consequence, current evidence, expiry and finite reservations. Reversibility affects required conditions but never offsets missing standing, forbidden disclosure or professional competence through …</p>
+<p class="from">answer at: <b>planning/specification/components-authority.json#/questions/12</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">17</span><span class="f-t">Where the work runs</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 8</span> <span class="tag t-suf">Answered 2</span></div>
+<p class="qa-id">F17-Q01</p>
+<p class="q">What machine or machines does this run on, and what happens when they are unavailable?</p>
+<p class="a">Operational A/R/G/N/X placement is explicit and separately priced; outages preserve D1 staging and already admitted local work while consequential authority awaits exact R proof. Local development fits the reported 16 GiB/45 GiB machine with sequential bounded tests and proves no independent roots.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/31</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">18</span><span class="f-t">The thinking capacity itself — which minds do the work</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 8</span> <span class="tag t-acc">further evidence 2</span></div>
+<p class="qa-id">F18-Q01</p>
+<p class="q">How is it decided how much thinking a piece of work deserves?</p>
+<p class="a">Choose the least costly qualified model/effort profile for the actual task predicate, permitted context and deadline. Record expected effort and a specific escalation trigger; do not substitute a universal premium-model rule or a cheapest-model rule for task evidence.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/41</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">19</span><span class="f-t">When work happens</span>
+<span class="f-c">11 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 11</span></div>
+<p class="qa-id">F19-Q01</p>
+<p class="q">What decides that now is the time to do something?</p>
+<p class="a">Durable event predicates, adopted Schedule occurrences and accepted due obligations trigger admission; a model does not invent urgency or work merely because idle.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/136</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">20</span><span class="f-t">Money, cost and value</span>
+<span class="f-c">12 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 12</span></div>
+<p class="qa-id">F20-Q01</p>
+<p class="q">What does this cost to run, and against what is that measured?</p>
+<p class="a">Economics reports observed costs, outstanding commitments, failed attempts, acquisition, fulfillment/refunds, review, maintenance and closure by principal and currency. Compare actual useful outcomes and total human burden against the simpler S0/native/manual baseline. Unknown categories remain tagged unknown; a narrow model …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/18</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">21</span><span class="f-t">How the owner sees and steers</span>
+<span class="f-c">11 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 11</span></div>
+<p class="qa-id">F21-Q01</p>
+<p class="q">What does the owner look at, and how often?</p>
+<p class="a">The owner uses /account to inspect changes, owed work, unknown effects, decisions, costs and missing evidence, then drills into original records. Cadence follows the endorsed ParticipationPlan and actual duty deadlines, with adopted urgent exceptions. The offered five-operating-day practice cycle is a testable default, not an …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/30</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">22</span><span class="f-t">The boundary around the owner</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-found">founder decision 10</span></div>
+<p class="qa-id">F22-Q01</p>
+<p class="q">Which decisions genuinely require this particular person?</p>
+<p class="a">A decision needs this particular person only when their current legitimate mandate reserves that value, taste, commitment or consent, or their actual role is otherwise indispensable. Factual competence can belong to a specialist instead. Why_this_person names the exact authority gap; a habitual founder notification is not …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/41</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">23</span><span class="f-t">Getting better over time</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 5</span> <span class="tag t-suf">Answered 3</span> <span class="tag t-found">founder decision 2</span></div>
+<p class="qa-id">F23-Q01</p>
+<p class="q">How does the company notice it did something badly?</p>
+<p class="a">Bad work is detected through native customer outcomes, due-duty failures, grievances, evidence contradictions, incidents, restore tests and resource/attention pressure, with complete populations and omissions. Agent self-critique is one signal and cannot close its own defect.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/74</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">24</span><span class="f-t">Running more than one thing at once</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-found">founder decision 10</span></div>
+<p class="qa-id">F24-Q01</p>
+<p class="q">What makes two efforts genuinely separate?</p>
+<p class="a">Separate efforts have explicit purpose, sponsor, beneficiaries, promises, resources and native field authority; legal principals are actual facts, not inferred from venture IDs. Shared accounts, people, data or counterparties create interaction determinations even when brands differ. Logical separation is therefore tested …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/51</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">25</span><span class="f-t">The kinds of work a company has to do</span>
+<span class="f-c">1 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-found">founder decision 1</span></div>
+<p class="qa-id">F25-Q01</p>
+<p class="q">Deciding what to build and for whom · designing how it looks and feels · building it · testing it · running it once it exists · finding the people who might want it · talking to them · selling · supporting them afterwards · keeping the books · staying on the right side of rules and contracts · researching what is true about the market · negotiating with suppliers · hiring and its equivalent here · and the question underneath all of them: does each of these need its own worker, or is it a way of working that any worker can adopt?</p>
+<p class="a">These are distinct procedures and acceptance responsibilities, not a permanent worker roster. CAP-03/04/05 investigate beneficiary and market, CAP-06/07 choose and specify an offer, CAP-08/09 design experience and identity, CAP-10/11 build and independently assess it, and CAP-12/30 launch and actually operate/deliver it …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/61</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">26</span><span class="f-t">Information about people</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 9</span></div>
+<p class="qa-id">F26-Q01</p>
+<p class="q">What information does the company hold, and about whom?</p>
+<p class="a">Inventory company/person/customer/supplier/collaborator facts, decisions, communications, money, artifacts, observations, context and evidence together with subjects, provenance, purpose, permitted recipients and retention. Metadata, linkage, titles, numeric values and enums can be sensitive; record size or public availability …</p>
+<p class="from">answer at: <b>planning/specification/components-authority.json#/questions/22</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">27</span><span class="f-t">Rules from outside</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 4</span> <span class="tag t-pend">external professional 3</span> <span class="tag t-found">founder decision 2</span></div>
+<p class="qa-id">F27-Q01</p>
+<p class="q">What outside rules apply here, and who is tracking them?</p>
+<p class="a">A competent actual custodian maintains the company&#x27;s applicable-rule/duty register with primary source, jurisdiction/principal/activity scope, effective/review dates and uncertainty. New contrary rules or missed freshness restrict dependent acts; this plan does not determine the company&#x27;s applicable law from geography or …</p>
+<p class="from">answer at: <b>planning/specification/components-authority.json#/questions/31</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">28</span><span class="f-t">Keeping it running</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 7</span> <span class="tag t-suf">Answered 1</span> <span class="tag t-found">founder decision 1</span> <span class="tag t-pend">external professional 1</span></div>
+<p class="qa-id">F28-Q01</p>
+<p class="q">How does something get from finished to actually live?</p>
+<p class="a">Finished artifacts remain staged until exact independent acceptance, current release prerequisites and protected deployment authorize their immutable manifest. G controls the deployment request; native version/readback and functional/beneficiary evidence establish live behavior, while unknown activation remains unknown and …</p>
+<p class="from">answer at: <b>planning/specification/components-authority.json#/questions/40</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">29</span><span class="f-t">Being seen from outside</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 9</span></div>
+<p class="qa-id">F29-Q01</p>
+<p class="q">Who is the audience, and what do they already believe?</p>
+<p class="a">CAP-04/05 build an audience account from authorized actual observation, customer language, alternatives and dated sources, separating statements, behavior and purchases. Record contrary/underserved cases and uncertainty about prior beliefs. A generated persona is a hypothesis for research, not evidence that real people share it.</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/62</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">30</span><span class="f-t">How the company holds itself together</span>
+<span class="f-c">8 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-found">founder decision 8</span></div>
+<p class="qa-id">F30-Q01</p>
+<p class="q">What does this company value, and how would that show up in a hard decision?</p>
+<p class="a">Endorsed IntentVersion preserves values, exclusions, taste and concrete examples from the legitimate owner. A hard decision records the competing consequences, applicable value and chosen tradeoff through the actual mandate. Evidence may challenge factual premises; neither a profitability objective nor an inferred personality …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/71</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">31</span><span class="f-t">When things go wrong</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 6</span> <span class="tag t-suf">Answered 4</span></div>
+<p class="qa-id">F31-Q01</p>
+<p class="q">What kinds of failure are there, and are they treated differently?</p>
+<p class="a">Distinguish invalid input, transient internal failure, auth/permission, provider capacity, stale context, invariant breach, unknown effect, competence gap and no progress. Each has its bounded refusal/retry/quarantine/reconcile/actual-human route, and all retain causal cost and surviving obligations.</p>
+<p class="from">answer at: <b>planning/specification/components-authority.json#/questions/50</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">32</span><span class="f-t">Knowing what is actually true about itself</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 10</span></div>
+<p class="qa-id">F32-Q01</p>
+<p class="q">For each thing the company believes about itself, what would show it to be false?</p>
+<p class="a">Register each self-claim&#x27;s exact proposition, evidence, scope and falsifier in EvaluationPlan; failures reopen its accepted use rather than being removed from the denominator.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/147</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">33</span><span class="f-t">Instructions — the words that steer behaviour</span>
+<span class="f-c">13 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 13</span></div>
+<p class="qa-id">F33-Q01</p>
+<p class="q">What is actually written down to make a worker behave the way it should?</p>
+<p class="a">InstructionBundle holds stable purpose/rules, authority references, bounded procedure, typed outputs, examples and versioned tests; task facts and current rights arrive separately.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/157</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">34</span><span class="f-t">Skills — packaged know-how the system can pick up</span>
+<span class="f-c">12 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 12</span></div>
+<p class="qa-id">F34-Q01</p>
+<p class="q">What is the unit of reusable know-how here, and what is inside one?</p>
+<p class="a">SkillVersion packages applicability, typed ports, finite steps, dependencies/tools, consequence limits, evidence, tests/examples, provenance/license, owner, freshness and replacement rules.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/170</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">35</span><span class="f-t">Connections to outside systems</span>
+<span class="f-c">12 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 7</span> <span class="tag t-suf">Answered 5</span></div>
+<p class="qa-id">F35-Q01</p>
+<p class="q">What does it take to let the system use a service it did not build?</p>
+<p class="a">A new service needs an actual account/standing, scoped credential, approved exposure/terms/billing, typed profile, native capability tests and independent accepted admission evidence. Marketing claims and installed availability alone do not establish usable company capability.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/51</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">36</span><span class="f-t">Using a tool — the act itself</span>
+<span class="f-c">11 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 5</span> <span class="tag t-acc">further evidence 4</span> <span class="tag t-pend">external professional 2</span></div>
+<p class="qa-id">F36-Q01</p>
+<p class="q">How does a worker decide which tool to reach for?</p>
+<p class="a">Select the admitted tool whose declared capability, exact account, input/meaning and current evidence match the WorkOrder predicate, budget and context. Registry ranking cannot override authority or substitute an unfamiliar provider automatically.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/63</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">37</span><span class="f-t">Workflows — when the path is fixed and when it is chosen</span>
+<span class="f-c">12 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 12</span></div>
+<p class="qa-id">F37-Q01</p>
+<p class="q">Which work should follow a fixed sequence, and which should be figured out as it goes?</p>
+<p class="a">Use fixed workflows for stable repeatable transformations/duties and bounded adaptive steps for unfamiliar interpretation; both keep the same authority/evidence/allowance contracts.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/182</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">38</span><span class="f-t">Stages — the shape of work over its life</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 9</span></div>
+<p class="qa-id">F38-Q01</p>
+<p class="q">What stages does a piece of work pass through, and who says it has moved?</p>
+<p class="a">WorkflowDefinition names domain-relevant stages and C02 applies guarded transitions; C06 evidence and legitimate sponsor establish readiness/acceptance where required.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/194</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">39</span><span class="f-t">Delegation — the shape of one worker using another</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 10</span></div>
+<p class="qa-id">F39-Q01</p>
+<p class="q">When should a worker do something itself rather than hand it on?</p>
+<p class="a">Do it directly when the executor is qualified and transfer/review/integration adds no benefit; delegate only a bounded independent useful result or required distinct observation.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/203</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">40</span><span class="f-t">Knowing whether the behaviour is any good</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 10</span></div>
+<p class="qa-id">F40-Q01</p>
+<p class="q">How do you tell whether the system is behaving well, as opposed to producing output?</p>
+<p class="a">Measure actual accepted outcomes, due service, customer utility, process authority, costs and remaining duties; output volume and heartbeat are only activity signals.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/213</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">41</span><span class="f-t">Testing and change — knowing a change did not break something</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 6</span> <span class="tag t-acc">further evidence 4</span></div>
+<p class="qa-id">F41-Q01</p>
+<p class="q">How do you know a change to how the system works made things better?</p>
+<p class="a">Predeclare intended benefit, meaningful effect threshold, full task population and critical regressions. Independently compare exact candidate and baseline with all attempts/costs and current evidence; sufficient uncertainty and useful performance are required, not a favorable narrative.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/84</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">42</span><span class="f-t">Seeing inside a run</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 9</span></div>
+<p class="qa-id">F42-Q01</p>
+<p class="q">While something is running, what can be seen?</p>
+<p class="a">The work and terminal views show exact WorkOrder, step, owner, lease, meaningful progress, dependency, current context, commands/output, artifacts/tests, resource consumption, unknown effects and remaining duties. Each item has source/time and uncertainty. A heartbeat is liveness evidence only; hidden native activity or missing …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/79</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">43</span><span class="f-t">Guardrails — the checks that sit around behaviour</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 8</span> <span class="tag t-pend">external professional 1</span></div>
+<p class="qa-id">F43-Q01</p>
+<p class="q">What checks run before an action, and what runs after?</p>
+<p class="a">Before action validate identity/standing, exact schema/parameters/revisions, live disclosure/lineage, causal/resources/conflicts/duties, exact accepted prerequisites, independent durability and time gate. Afterward capture/reconcile native effect, assess the actual outcome/beneficiary, account costs/duties/descendants and …</p>
+<p class="from">answer at: <b>planning/specification/components-authority.json#/questions/60</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">44</span><span class="f-t">Grounding — where an answer&#x27;s facts come from</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 10</span></div>
+<p class="qa-id">F44-Q01</p>
+<p class="q">When should the system look something up rather than rely on what it knows?</p>
+<p class="a">Look up mutable external/product/market/rule facts and uncertain relevant claims; use exact admitted records and stable deterministic computations when fresh search adds no needed information.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/223</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">45</span><span class="f-t">The shape of what passes between steps</span>
+<span class="f-c">8 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 8</span></div>
+<p class="qa-id">F45-Q01</p>
+<p class="q">What form does a result take when it moves from one step to the next?</p>
+<p class="a">Each edge carries exact typed record/artifact refs plus attributable AttemptReport, state/uncertainty, source manifest, resources and unfinished duties defined by its port contract.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/233</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">46</span><span class="f-t">Where a person sits inside the work</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 9</span></div>
+<p class="qa-id">F46-Q01</p>
+<p class="q">Which steps require a person, and is that because of risk or because of taste?</p>
+<p class="a">The specific decision contract states why a human is required: legitimate values/taste authority, legally effective standing, professional competence, real relationship/service work, or an evidence/independence prerequisite. Routine deterministic or model production can proceed within admitted bounds. No universal risk score …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/88</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">47</span><span class="f-t">The system changing itself</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 7</span> <span class="tag t-suf">Answered 2</span></div>
+<p class="qa-id">F47-Q01</p>
+<p class="q">What parts of itself may the system propose changes to?</p>
+<p class="a">Agents may propose changes across prompts, instructions, skills, tools, workflows, schemas, routing, memory, evaluations, templates, UI and architecture. The proposal names affected authority/evidence/people/duties and exact candidate; permission to propose never grants permission to activate.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/94</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">48</span><span class="f-t">Reproducibility</span>
+<span class="f-c">7 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 7</span></div>
+<p class="qa-id">F48-Q01</p>
+<p class="q">Can the same request twice give the same answer, and should it?</p>
+<p class="a">Exact deterministic semantic outputs may repeat under pinned inputs; creative/model outputs may vary while satisfying the same contract, and authorized consequence bytes must remain frozen.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/241</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">49</span><span class="f-t">Using one source of judgement against another</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 10</span></div>
+<p class="qa-id">F49-Q01</p>
+<p class="q">Is a second opinion worth anything if it comes from the same place as the first?</p>
+<p class="a">A second opinion is useful only for a demonstrated different relevant observation/method or calibrated error reduction; another invocation sharing the same roots can add little.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/248</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">50</span><span class="f-t">Questioning what is already settled</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-suf">Answered 10</span></div>
+<p class="qa-id">F50-Q01</p>
+<p class="q">How does anything settled ever get re-opened?</p>
+<p class="a">New contrary evidence, missed expiry, changed dependency or legitimate challenge creates an owned re-examination and current validity consequence without rewriting the historical decision.</p>
+<p class="from">answer at: <b>planning/specification/work-knowledge-contracts.json#/question_answers/258</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">51</span><span class="f-t">When there is more than one person</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-found">founder decision 10</span></div>
+<p class="qa-id">F51-Q01</p>
+<p class="q">What changes when a second person is involved — a partner, a contractor, someone hired?</p>
+<p class="a">Add actual identity, principal/mandate bindings, scoped access, competence/conflict checks, accepted duties, deciding rules and departure/continuity terms. A collaborator can perform only their admitted scope; shared ownership needs exact combination rules where applicable. More people can improve capacity while adding …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/97</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">52</span><span class="f-t">Building this, and moving to it</span>
+<span class="f-c">10 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-acc">further evidence 7</span> <span class="tag t-suf">Answered 3</span></div>
+<p class="qa-id">F52-Q01</p>
+<p class="q">What gets built first, and what decides that?</p>
+<p class="a">Build B00 contracts/gate, B01 pure kernel, B02 durability/recovery, B03 identity/gate/isolation, B04 full company/work/context/evidence, B05 adapters, B06 humans/public, B07 operations, B08 improvement, B09 full rehearsals, B10 admission and B11 real outcome/retirement. Dependencies are explicit, not an MVP sequence.</p>
+<p class="from">answer at: <b>planning/specification/integrations-capacity-build.json#/questions/103</b></p>
+</div>
+</details><details>
+<summary><span class="f-n">53</span><span class="f-t">What a business needs in order to actually exist</span>
+<span class="f-c">9 q</span></summary>
+<div class="det-body">
+<div class="stack-xs" style="flex-direction:row;flex-wrap:wrap;gap:6px"><span class="tag t-pend">external professional 9</span></div>
+<p class="qa-id">F53-Q01</p>
+<p class="q">What does it take for an effort to be a real thing that can transact — an entity, an account, a way to take money, an address, a name nobody else owns?</p>
+<p class="a">CAP-40 turns the intended activity into an actual readiness checklist: principal, signatory, relevant activity/location facts, account access, name/asset rights, required registrations and competent results. Each prerequisite has an owner, evidence and lead-time limits. A domain label or generated formation packet is not an …</p>
+<p class="from">answer at: <b>planning/specification/capabilities.json#/source_question_contracts/107</b></p>
+</div>
+</details></div>
+<p class="from">from: <b>coverage/questions.json</b> · <b>planning/specification/capabilities.json</b></p>
+</div>
+</section>
+<section id="limits">
+<div class="sec-head">
+<p class="eyebrow eyebrow--plain">PLAIN</p>
+<h2>Honest limits</h2>
+</div>
+<div class="prose">
+<p>This is the part that would be left out of a sales document. It is here because a plan you can
+stand behind has to include what it cannot do.</p>
+</div>
+
+<ul class="ticks">
+<li class="neg"><b>One model family, throughout.</b> Every author and every reviewer of this
+package shares a model family. The independence is <i>procedural</i> — no reviewer read the
+authors' self-assessments — not statistical. The standard this work holds itself to asks for a
+panel across at least two distinct model families; that is not met anywhere in the package,
+because no non-Anthropic model is reachable from inside the tooling. This is an <b>accepted
+limitation of the method, not a discharged requirement.</b> It does not make the eleven
+"sufficient" judgments wrong. It means they are eleven careful readings by one family.</li>
+<li class="neg"><b>No runtime. Nothing has been executed.</b> Every verdict in this package
+concerns specified behaviour. Of 33 modelled attack cases, the implementation-test field is null
+on all 33 — because there is nothing to test against.</li>
+<li class="neg"><b>No provider, no professional, no customer.</b> No account has been opened, no
+accountant or lawyer engaged, no successor or custodian appointed, no customer spoken to, no sale
+made, no demand evidence gathered.</li>
+<li class="neg"><b>Roughly half the source corpus has no usable per-source metadata,</b> and
+<b>no URL in this package has been independently fetched and verified.</b> The source index calls
+itself a "locator index only" and does not claim verification of what it points at.</li>
+<li class="neg"><b>Nineteen record types have failed the hardest coverage test</b> across two
+censuses — they are justified by a contract but by no source concern. Eight of them are still open.
+That is the direction that catches machinery built because it was architecturally satisfying
+rather than because anything needed it, and it is the leg to watch.</li>
+<li class="pos"><b>All of the above is written down in the package itself,</b> by the reviewers who
+found it, and none of it was removed to make the report read better.</li>
+</ul>
+<p class="from">from: <b>planning/PLANNING-REPORT.md §5 and §7</b> · <b>state.json active_risks</b> · <b>research/source-index.json</b></p>
+
+<div class="stack-s">
+<h3>The seventeen risks</h3>
+<p class="sub">Each group carries nineteen fields — cause, likelihood or uncertainty, consequence,
+prevention, detection, containment, rollback, residual risk, accountable owner and escalation.
+<b>Every control described is unimplemented</b>; the representative status reads "controls
+specified … no runtime test executed."</p>
+<div class="scrollwrap"><div class="scroll"><table class="compact" style="min-width:620px"><thead><tr><th>ID</th><th>Risk group</th><th>Attack cases covered</th></tr></thead><tbody><tr><td><span class="mono">RISK-01</span></td><td>Untrusted content becomes authority</td><td><span class="mono">AC01, AC02, AC03, AC07, AC16</span></td></tr><tr><td><span class="mono">RISK-02</span></td><td>Credential and descendant authority compromise</td><td><span class="mono">AC13, AC14, AC15, AC16, AC28</span></td></tr><tr><td><span class="mono">RISK-03</span></td><td>Disclosure through permitted destinations</td><td><span class="mono">AC01, AC02, AC03, AC04, AC13, AC16</span></td></tr><tr><td><span class="mono">RISK-04</span></td><td>Stale or poisoned knowledge becomes usable again</td><td><span class="mono">AC04, AC05, AC06, AC22, AC29</span></td></tr><tr><td><span class="mono">RISK-05</span></td><td>False success through shared evidence interpretation</td><td><span class="mono">AC06, AC08, AC11, AC12, AC21, AC22, AC30, AC31</span></td></tr><tr><td><span class="mono">RISK-06</span></td><td>Lost or duplicated effects and promises</td><td><span class="mono">AC09, AC10, AC11, AC12, AC13, AC14, AC28, AC29</span></td></tr><tr><td><span class="mono">RISK-07</span></td><td>Revocation, time or scope migration race</td><td><span class="mono">AC10, AC13, AC14, AC16, AC28</span></td></tr><tr><td><span class="mono">RISK-08</span></td><td>Runaway delegated work, retries and capacity use</td><td><span class="mono">AC17, AC18, AC19, AC20, AC23, AC27</span></td></tr><tr><td><span class="mono">RISK-09</span></td><td>Provider outage, policy or semantic drift</td><td><span class="mono">AC25, AC26, AC27, AC30, AC31</span></td></tr><tr><td><span class="mono">RISK-10</span></td><td>Owner overload or loss of competence</td><td><span class="mono">AC21, AC22, AC23, AC24</span></td></tr><tr><td><span class="mono">RISK-11</span></td><td>Intent and governing meaning drift</td><td><span class="mono">AC20, AC21, AC22, AC29, AC32</span></td></tr><tr><td><span class="mono">RISK-12</span></td><td>Institutional, professional or continuity incapacity</td><td><span class="mono">AC11, AC12, AC13, AC23, AC25, AC27, AC28, AC29</span></td></tr><tr><td><span class="mono">RISK-13</span></td><td>Ineffective redress and irresponsible closure</td><td><span class="mono">AC05, AC11, AC12, AC23, AC28, AC29</span></td></tr><tr><td><span class="mono">RISK-14</span></td><td>Business failure and shifted human burden</td><td><span class="mono">AC12, AC20, AC21, AC23</span></td></tr><tr><td><span class="mono">RISK-15</span></td><td>Compromised improvement and cumulative change</td><td><span class="mono">AC06, AC08, AC21, AC30, AC31, AC32, AC33</span></td></tr><tr><td><span class="mono">RISK-16</span></td><td>Isolation and software supply-chain failure</td><td><span class="mono">AC01, AC02, AC03, AC15, AC16, AC26, AC31, AC33</span></td></tr><tr><td><span class="mono">RISK-17</span></td><td>Cross-venture interaction and migration error</td><td><span class="mono">AC09, AC10, AC13, AC14, AC20, AC28, AC29, AC31</span></td></tr></tbody></table></div><p class="hint">Wide table — drag sideways to read the rest</p></div>
+<p class="from">from: <b>registers/risks.json</b> · <b>research/attack-coverage.json</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Where two artifacts disagree</h3>
+<p class="sub">Eight of them. Collected rather than resolved, because silently picking a winner is
+how a package stops being checkable.</p>
+<div><details><summary><span class="f-t">The 566-row status distribution</span></summary><div class="det-body"><p class="a">A frozen review computed 566 of 566 as “requires further evidence”; the current register reads 326 / 142 / 77 / 21. Both are correct about different trees — a repair landed between them, and the frozen archive is deliberately not edited to match.</p></div></details><details><summary><span class="f-t">The validator&#x27;s own numbers</span></summary><div class="det-body"><p class="a">Two reviewers on the same frozen subject reported 252,513 and 252,511 checks. Most of the spread across readings is genuine tree movement; that two-check gap is not, and is unexplained.</p></div></details><details><summary><span class="f-t">One finding measured three ways</span></summary><div class="det-body"><p class="a">A guard-similarity residue was reported as 210 collisions, then decomposed to 6 real ones, then 5. The reviewer&#x27;s point survives all three numbers: what was missing was not content but a ratchet.</p></div></details><details><summary><span class="f-t">Is “coverage” one of the twelve dimensions?</span></summary><div class="det-body"><p class="a">One reviewer counted it as a dimension; the frozen protocol does not list it. It matters arithmetically — “eleven of twelve” is only true on the protocol&#x27;s list.</p></div></details><details><summary><span class="f-t">A reviewer&#x27;s own arithmetic</span></summary><div class="det-body"><p class="a">One report opens “nine of the twelve dimensions” and then lists ten. A small slip, recorded because the archive is not edited.</p></div></details><details><summary><span class="f-t">Capability contracts</span></summary><div class="det-body"><p class="a">A reviewer found a field null on all 46 capabilities; recomputed at the current head it is 0 of 46 null. Repaired — not independently rechecked.</p></div></details><details><summary><span class="f-t">Stale consolidation claims</span></summary><div class="det-body"><p class="a">Two specification chapters say a matrix “remains a separate consolidation obligation”; the matrix holds all 171 entries and is complete. True when written, false now. A reader following it would redo finished work.</p></div></details><details><summary><span class="f-t">Whether the threat registers cover the specification</span></summary><div class="det-body"><p class="a">They present themselves as covering the design; they contain zero references into the specification directory and are bound to a commit predating it. The content is substantive; the binding is to the wrong subject. Both hold at once.</p></div></details></div>
+<p class="from">from: <b>planning/PLANNING-REPORT.md §10</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Where everything lives</h3>
+<p class="sub">Nothing durable lives in a conversation. Every artifact behind every claim on this
+page is a file in this tree.</p>
+<pre class="tree">docs/vision-system/
+├── README.md                  Package index — start here or at state.json
+├── state.json                 DURABLE STATE. The continuation entry point
+├── history.jsonl              Meaningful checkpoints, append-only
+│
+├── inputs/                    Your directive, verbatim, plus the two source vision
+│                              documents and their exact git provenance
+│
+├── planning/
+│   ├── PLANNING-REPORT.md     The full report this page is drawn from
+│   ├── 00-executive-guide.md  What the system is, in plain language
+│   ├── 01-understand.md       Ambition, invariants, tensions, nondelegable
+│   │                          responsibilities, unproven hypotheses
+│   ├── 02-architecture-selection.md   S1.0: selection, alternatives, trade-offs,
+│   │                                  retained mechanisms, reopen conditions
+│   ├── implementation-graph.json      B00–B11 with dependencies and evidence
+│   ├── candidates/            A, B, C1, the C2 amendment, the two repair addenda
+│   ├── reviews/               EVERY independent review, archived verbatim
+│   └── specification/         The twelve numbered contracts and their machine
+│                              registries, plus contracts/ — the canonical
+│                              registries, schemas, validator, negative fixtures
+│
+├── coverage/                  package.json (24 families) · questions.json (566) ·
+│                              supplemental.json (62) · discovered.json (15) ·
+│                              capability-requirements.json (46) · status-rule.json
+│
+├── registers/                 decisions.json (AD-001…014) · open-questions.json
+│                              (THE FOUNDER QUEUE) · risks.json (17) ·
+│                              review-findings.json · specification-findings.json ·
+│                              claims.json · contradictions.json
+│
+└── research/                  L01–L14 (fourteen independent lanes) · lanes.json ·
+                               cross-lane-comparison.json (ten unresolved axes) ·
+                               source-index.json (305 locators) · attack-coverage.json ·
+                               implementation/N01-native-execution.md ·
+                               reviews/ (six independent source audits)</pre>
+</div>
+
+<div class="stack-s">
+<h3>How this is picked up again</h3>
+<ul class="ticks">
+<li><b>Read <span class="mono">state.json</span> first.</b> It carries the phase, the base commit,
+whether planning is accepted, whether implementation has started, the full completed list, what is
+in flight, what happens next, and the standing risks.</li>
+<li><b>Read the exact artifacts it names</b> — not a summary of them, and not this page in place
+of them.</li>
+<li><b>Inspect the working tree before editing.</b> A lost session once left 38 MB of uncommitted
+canonical contracts in one lane that <span class="mono">state.json</span> did not know about.</li>
+<li><b>Do not inherit historical measurements as current facts.</b> Re-run the instrument.</li>
+<li><b>Reviewers receive the subject and the acceptance criteria — never a producer's
+self-assessment.</b> That rule is what makes the review archive worth anything.</li>
+</ul>
+<p class="from">from: <b>planning/PLANNING-REPORT.md §9</b> · <b>state.json</b></p>
+</div>
+
+<div class="hold">
+<p class="h">The authorization boundary, restated</p>
+<p>Repository-local research, planning, tests and implementation are authorized. <b>Additional
+spending, publication, outbound messages, legal commitments and consequential production
+deployment are not authorized</b> by the directive this package was written under.</p>
+</div>
+</section><footer class="foot">
+<p>Every figure on this page was read from a file in
+<span class="mono">docs/vision-system/</span> or recomputed against it on 13 September 2026. Where
+a count came from an archived review rather than a live file, the review is named and the archive
+is not edited to agree with the present tree.</p>
+<p>Nothing on this page is an acceptance of the plan. No planning disposition exists. No
+construction stage has begun.</p>
+</footer></main></div>
