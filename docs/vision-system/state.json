@@ -75,20 +75,20 @@
     "Merged g3-registers 2c57d84, g1-coverage eb6eb66, g-prose 50ab4e8. Phase G (a)/(b) repairs landed for G1-01..07, G3-01/02/03/05/06, G3-04, G4-04, G4-06, G2-03. Prose lane meaning-preservation checked by diff: 560 lines relabelled, 2 sentences absent and both inside supersession blocks. AD-011..014 recorded. Founder queue Q-002..Q-014 queued, not asked. Remaining before disposition: phase-content merge, guard repair for the two (d) findings, independent recheck of that repair.",
     "Merged phase-content lane: FI-11 content half authored by derivation with citations (AD-012). Root verified: 0 sibling collisions with state literals erased, 5 all-strings-erased all declared as gaps, 327 skeletons, 18/18 negative fixtures rejected, 267079 checks; orchestrator's fabricated-quote mutation makes the validator exit 1. 67 gaps and 2 prose contradictions registered in contracts/phase-content-gaps.json, none filled with invented text.",
     "Merged guard-repair eaf5ada (AD-013/014 implemented; Fulfillment domain lifecycle; distinctness ratchet with declared budget 5; criterion-content drift oracle; G4-01/02/03/04/08 guards; G2-07 custody-on-removal; two prose contradictions resolved). Root verified 268836 checks, 27/27 fixtures, distinctness exit 0, direct checks on the two (d) repairs. GR-01..04 registered. Planning report merged with disposition PENDING.",
-    "Independent recheck archived (planning/reviews/G-02-recheck-01.md) at f27c22e: G2-01 and G2-02 CLOSED at specification level — no (d) remains in any of the twelve dimensions; both carry (a) residue. G2-05 closed for delivery, (a) for refund/failure. G2-06 stays (a) OPEN: the content oracle pins to an author-controlled derivation file (RC-02) and the fixture suite has no count ratchet (RC-04). RC-01 is a real break the repair introduced. RC-01..08 registered."
+    "Independent recheck archived (planning/reviews/G-02-recheck-01.md) at f27c22e: G2-01 and G2-02 CLOSED at specification level — no (d) remains in any of the twelve dimensions; both carry (a) residue. G2-05 closed for delivery, (a) for refund/failure. G2-06 stays (a) OPEN: the content oracle pins to an author-controlled derivation file (RC-02) and the fixture suite has no count ratchet (RC-04). RC-01 is a real break the repair introduced. RC-01..08 registered.",
+    "Merged ratchet-pin lane (7 commits): pinned-conjuncts.json (25 pins / 44 requirements / 6 transitions), fixture MANIFEST (31), RC-01 in-flight failure and refund reachability, RC-03 requires-vs-conjuncts with 17 named waivers, RC-05/06/08. Root validator run: 31/31 fixtures rejected, 1311 edges. RP-01 registered."
   ],
   "active_work": [
     {
-      "agent": "orchestrator",
-      "scope": "Integrate the three returns; then freeze the Phase G subject and dispatch the architecture-neutral complete-plan review across all twelve protocol dimensions with separate judgments; then accepted plan and full build."
+      "agent": "next team (fresh session)",
+      "scope": "Steps 0–6 per planning/HANDOFF-F2-agents-work-layer.md",
+      "status": "not started"
     }
   ],
   "next_actions": [
-    "Receive build-residue; merge",
-    "Dispatch ratchet-pin lane for RC-01, RC-02, RC-04 (+RC-03/05/06/08 where cheap); narrow independent recheck of RC-02 by mutating phase_content.py again",
-    "Record the scoped planning disposition; replace the PENDING block in PLANNING-REPORT.md; commit the accepted package; present per §15",
-    "Publish the founder page when the designer lane returns",
-    "HELD BY FOUNDER: B01 not to be dispatched until the hold is lifted"
+    "Next team: read HANDOFF-F2-agents-work-layer.md; first action is the narrow recheck G-02-recheck-02 (ratchet-pin is merged); then Step 0",
+    "Planning disposition deferred until the F2 round completes",
+    "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
     {
@@ -193,5 +193,6 @@
     "scope_open": "work, agents, routing, layers, authority, tools, skills, context engineering, shared state, tasks, task states — families 8.7 8.8 8.9 8.12 and their joins into 8.6 8.11 8.14 8.21; specification 05 and the parts of 01/02/04/06/07/08/11 they bind",
     "scope_fixed_unless_evidence": "the consequence/release boundary, evidence and acceptance, recovery, human responsibility and founder-competence mechanisms, the whole-company lifecycle scope — each reopenable only by a lane returning a specific falsifier",
     "status": "run structure being proposed to the founder; no lane dispatched yet"
-  }
+  },
+  "handoff": "planning/HANDOFF-F2-agents-work-layer.md — the next team runs Steps 0–6 of the agents/work-layer rethink from this document plus the directive"
 }
