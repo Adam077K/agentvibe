@@ -85,6 +85,13 @@ def calls(body):
 BASE_OPS = {"all", "nonempty_fields", "related_phases", "accepted_for",
             "attested_result"}
 
+# Written onto every criterion this tool authors. It is what makes a second run
+# idempotent: without it, run two read run one's OWN output as "pre-existing
+# record-specific content" and carried it forward again -- 114 criteria came back
+# "preserved" and all 104 gaps vanished, on a tree that had not changed. A tool whose
+# second run disagrees with its first is not a derivation, it is a drift.
+CONTENT_SOURCE = "tools/phase_content.py"
+
 
 def ops_in(node, found=None):
     found = set() if found is None else found
@@ -137,8 +144,10 @@ def main():
     pc.set_primitives(primitives)
 
     if "content_unspecified" not in primitives:
+        # Appended, NOT re-sorted. Sorting the registry to add one entry produced a
+        # 4437-line diff for a 12-line addition, which hides the change inside the
+        # noise of moving everything else.
         primitives["content_unspecified"] = CONTENT_UNSPECIFIED
-        primitives = dict(sorted(primitives.items()))
         dump("primitive-registry.json", primitives)
 
     # criterion id -> (record, phase). Edges first, because an edge's `criterion_id` is
@@ -185,7 +194,14 @@ def main():
 
         record, phase = used[criterion_id]
         declared = set(predicate["argument_types"])
-        carried = record_specific_conjuncts(predicate["body"])
+        carried = (predicate.get("carried_conjuncts", [])
+                   if predicate.get("content_source") == CONTENT_SOURCE
+                   else record_specific_conjuncts(predicate["body"]))
+        predicate["content_source"] = CONTENT_SOURCE
+        if carried:
+            predicate["carried_conjuncts"] = carried
+        else:
+            predicate.pop("carried_conjuncts", None)
         body, meta, reason = pc.compose(record, phase, criterion_id,
                                         records_schema, declared)
 
