@@ -82,52 +82,17 @@
     {
       "agent": "reviewer (recheck-02)",
       "scope": "G-02-recheck-02 at frozen 3579cc2",
-      "status": "running"
+      "status": "running; interim report shows a new leak finding on the pin (containment, not demand)"
     },
     {
-      "agent": "sourcer (R1)",
-      "scope": "context engineering and shared state",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
-    },
-    {
-      "agent": "sourcer (R2)",
-      "scope": "when an agent earns its existence",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
-    },
-    {
-      "agent": "sourcer (R3)",
-      "scope": "frameworks and harnesses as evidence",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
-    },
-    {
-      "agent": "sourcer (R4)",
-      "scope": "authority as the boundary",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
-    },
-    {
-      "agent": "sourcer (R5)",
-      "scope": "work discovery and routing incl. unanticipated jobs",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
-    },
-    {
-      "agent": "sourcer (R6)",
-      "scope": "skills and knowledge",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
-    },
-    {
-      "agent": "sourcer (R7)",
-      "scope": "independent verification under one model family",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
-    },
-    {
-      "agent": "sourcer (R8)",
-      "scope": "contrarian: chartered persistent agents vs zero agents",
-      "status": "dispatched 2026-09-13 after protocol freeze 26af5d5; blind; returns archived verbatim under research/F2/"
+      "agent": "framer (f2-cross-lane)",
+      "scope": "Step 2 cross-lane comparison research/F2/cross-lane-comparison.{json,md}",
+      "status": "dispatched 2026-09-13"
     }
   ],
   "next_actions": [
-    "Archive R1..R8 returns verbatim under research/F2/ with provenance headers; then Step 2 cross-lane comparison",
-    "Archive recheck-02 as planning/reviews/G-02-recheck-02.md; update RC-01..08",
+    "Verify and commit Step 2 cross-lane comparison; then Step 3: >=4 candidate work/agent models (framer, partitioned by file under planning/F2/candidates/)",
+    "Archive recheck-02 as planning/reviews/G-02-recheck-02.md; update RC-01..08 and register new RC2-* findings",
     "Planning disposition deferred until the F2 round completes",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
@@ -182,7 +147,8 @@
     "specification_inspections": "research/specification-inspections.json; complete-draft read hashes avoid repeated inspection, no independent acceptance",
     "epistemic_review": "research/reviews/2026-09-12-epistemic-traceability.md and epistemic-recheck.md; EPT01 metadata scope closed, no runtime acceptance",
     "package_navigation": "coverage/package.json;24directive deliverable families, explicit pending11 and independent acceptance",
-    "phase_g": "planning/reviews/G-01-completeness-vision-coverage.md, G-02-coherence-buildability-changeability.md, G-03-evidence-unknowns-adversarial.md, G-04-traceability-alternatives-feasibility-responsibility.md — verbatim; no aggregate score; (d)-class: G2-01, G2-02 only"
+    "phase_g": "planning/reviews/G-01-completeness-vision-coverage.md, G-02-coherence-buildability-changeability.md, G-03-evidence-unknowns-adversarial.md, G-04-traceability-alternatives-feasibility-responsibility.md — verbatim; no aggregate score; (d)-class: G2-01, G2-02 only",
+    "research_f2": "research/F2/R1..R8 — eight blind lane reports, 44k-78k chars each, extracted verbatim from sourcer transcripts (return channel truncates at ~4k and drops drains >16k); none of the eight could register ledger claims (claim-append tool absent in their sessions)"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
