@@ -3234,6 +3234,7 @@
     "guard.interest.precondition_invokes_no_model",
     "guard.interest.writer_keys_not_self_declared",
     "guard.launcher.stripping_positive_control",
+    "guard.protected.control_object_change_authorized",
     "guard.readset.delivered_equals_declared",
     "guard.reservation.lapse_independent_of_consent",
     "guard.skill.declared_grant_inert",

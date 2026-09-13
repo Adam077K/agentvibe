@@ -1352,6 +1352,51 @@ for _name, _primitive in PRIMITIVES.items():
 # RC3-01 and RC3-02 one layer out -- so the same `polarised_nodes` walk that decides a pin
 # row decides this, rather than a `predicate_id in json.dumps(body)` that would accept all
 # four.
+# --- F6D-07: THE PRESENCE HALF OF THE CONTROL-OBJECT RULE, WHICH LIVES IN THE SCHEMA. ---
+#
+# `guard.protected.control_object_change_authorized` carries the PHASE half -- a named
+# protected change stands at `authorized` or later -- with `optional: true`, because 08
+# section 1 states the benign case in as many words: a `ConfigurationVersion` with no
+# `control_object_kind` is an ordinary configuration and its admission requires no protected
+# change. A guard binding cannot be optional on one record and mandatory on three, so the
+# PRESENCE half is stated in records.schema.json and asserted here. Without this check the
+# guard's `optional: true` would be an escape hatch on every one of the nine edges, which is
+# the state the finding measured: the objects that decide who may act changed through
+# ordinary transitions, and `ProtectedChange` was referenced by none of them.
+#
+# PS-CONTROL-OBJECT-CONDITIONAL.
+CONTROL_OBJECT_RECORDS = ("ConsequenceClassDefinition", "FieldAuthority", "StandingHolder")
+for _record in CONTROL_OBJECT_RECORDS:
+    _payload = SCHEMAS["records.schema.json"]["$defs"][_record]["properties"]["payload"]
+    checked("protected_change_ref" in _payload.get("required", []),
+            ("A CONTROL OBJECT MAY CHANGE WITH NO PROTECTED CHANGE NAMED. Every listed "
+             "transition of this record is a change to one of the six control objects of "
+             "08 section 1, so `protected_change_ref` is not optional on it, and the guard "
+             "on those edges is written with `optional: true` because ConfigurationVersion "
+             "needs it -- so this is the only thing demanding presence (F6D-07)", _record))
+_configuration = SCHEMAS["records.schema.json"]["$defs"]["ConfigurationVersion"]["properties"]["payload"]
+checked(_configuration.get("dependentRequired", {}).get("control_object_kind")
+        == ["protected_change_ref"],
+        ("THE CONDITIONAL THAT MAKES A DECLARED CONTROL OBJECT NEED AN AUTHORIZATION IS "
+         "GONE. `control_object_kind` is optional on purpose -- an ordinary configuration is "
+         "the paired benign case and must not be refused -- so declaring the kind is the "
+         "thing that makes `protected_change_ref` mandatory. Without the dependency, the "
+         "class mapping table, the derivation function and the external policy object are "
+         "changed by an ordinary configuration admission again (F6D-07)",
+         {"dependentRequired": _configuration.get("dependentRequired")}))
+checked(set(_configuration["properties"]["control_object_kind"]["enum"])
+        == {"derivation_function", "class_mapping_table", "external_policy_object"},
+        ("the ConfigurationVersion control-object enum is not the three of 08 section 1's "
+         "table that this record carries; an open or widened enum admits a control object "
+         "nobody named (F6D-07)",
+         _configuration["properties"]["control_object_kind"].get("enum")))
+checked(len(SCHEMAS["records.schema.json"]["$defs"]["ProtectedChange"]["properties"]["payload"]
+            ["properties"]["protected_subject_kind"]["enum"]) == 6,
+        ("`ProtectedChange.protected_subject_kind` is not a closed enum over the SIX control "
+         "objects. A seventh subject kind is a control object nobody enumerated, and the "
+         "whole reason 08 section 1 lists them is that each reads as configuration rather "
+         "than as a change (F6D-07)"))
+
 PIN_ATTACHMENT_KEYS = {"guard", "edges", "findings", "why"}
 checked(bool(str(PINNED.get("pinned_attachments_why", "")).strip()),
         "pinned-conjuncts.json declares attachments with no reason")
@@ -1741,8 +1786,8 @@ checked(version_rows >= 14,
 #   positive: 17, one benign case per adverse case of selection-record section 12.5.
 #             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
 #             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 62
-POSITIVE_FIXTURE_FLOOR = 23
+NEGATIVE_FIXTURE_FLOOR = 63
+POSITIVE_FIXTURE_FLOOR = 24
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

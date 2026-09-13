@@ -82915,6 +82915,17 @@
             },
             "activation_generation": {
               "$ref": "values.schema.json#/$defs/UInt64"
+            },
+            "protected_subject_kind": {
+              "type": "string",
+              "enum": [
+                "consequence_class_derivation_function",
+                "class_mapping_table",
+                "standing_holder_set",
+                "declared_class_floor",
+                "external_policy_object",
+                "writer_key_assignment"
+              ]
             }
           },
           "required": [
@@ -103412,6 +103423,14 @@
             },
             "expires_at": {
               "$ref": "values.schema.json#/$defs/UTC"
+            },
+            "control_object_kind": {
+              "type": "string",
+              "enum": [
+                "derivation_function",
+                "class_mapping_table",
+                "external_policy_object"
+              ]
             }
           },
           "required": [
@@ -103423,7 +103442,12 @@
             "owner_component",
             "expires_at"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "dependentRequired": {
+            "control_object_kind": [
+              "protected_change_ref"
+            ]
+          }
         }
       },
       "required": [
@@ -103889,8 +103913,9 @@
           "required": [
             "class_id",
             "predicate",
-            "required_gate_predicates",
+            "protected_change_ref",
             "qualitative_constraints",
+            "required_gate_predicates",
             "version_reason_ref"
           ],
           "additionalProperties": false
@@ -204370,17 +204395,41 @@
             },
             "successor_epoch": {
               "$ref": "values.schema.json#/$defs/UInt64"
+            },
+            "protected_change_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ProtectedChange"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
-            "field_path",
-            "epoch",
             "authority_assignment_ref",
+            "closure_walk_completed",
             "declaring_component_id",
-            "last_writer_wins",
             "derived_closure_refs",
-            "reopened_acceptance_refs",
-            "closure_walk_completed"
+            "epoch",
+            "field_path",
+            "last_writer_wins",
+            "protected_change_ref",
+            "reopened_acceptance_refs"
           ],
           "additionalProperties": false
         }
@@ -206778,25 +206827,49 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "protected_change_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ProtectedChange"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
-            "holder_id",
-            "duty_class_id",
-            "intake_address",
-            "mandate_ref",
-            "reservation_ref",
             "alternate_assignment_ref",
-            "suspension_procedure",
-            "review_at",
-            "clock_runs_with_no_case",
-            "outside_party_may_reach",
-            "duty_survives_closure",
-            "veto_right",
-            "stated_minimum_status",
             "carries_model_memory",
+            "clock_runs_with_no_case",
+            "duty_class_id",
+            "duty_survives_closure",
             "exercising_fixture_id",
-            "live_duty_refs"
+            "holder_id",
+            "intake_address",
+            "live_duty_refs",
+            "mandate_ref",
+            "outside_party_may_reach",
+            "protected_change_ref",
+            "reservation_ref",
+            "review_at",
+            "stated_minimum_status",
+            "suspension_procedure",
+            "veto_right"
           ],
           "additionalProperties": false
         }

@@ -61805,7 +61805,15 @@
           "proposer_identity_ref",
           "independence_profile_ref"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "protected_subject_kind": {
+            "type": "Enum<consequence_class_derivation_function,class_mapping_table,standing_holder_set,declared_class_floor,external_policy_object,writer_key_assignment>",
+            "required": false,
+            "added_by": "WORK-1.1-F6D-07",
+            "note": "F6D-07. Optional because most protected changes are not changes to one of the six control objects; closed because the six are enumerated in 08-improvement-implementation.md section 1 and a seventh subject kind is a control object nobody named."
+          }
+        }
       }
     },
     "lifecycle": {
@@ -76831,7 +76839,15 @@
           "owner_component",
           "expires_at"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "control_object_kind": {
+            "type": "Enum<derivation_function,class_mapping_table,external_policy_object>",
+            "required": false,
+            "added_by": "WORK-1.1-F6D-07",
+            "note": "F6D-07. Three of the six control objects are ConfigurationVersion variants and none of them was a record. Optional: a ConfigurationVersion with no control_object_kind is an ordinary configuration whose admission requires no protected change, which is the paired benign case. Declaring the kind is what makes protected_change_ref mandatory, through dependentRequired on this payload."
+          }
+        }
       }
     },
     "lifecycle": {
@@ -77169,8 +77185,9 @@
         "required_fields": [
           "class_id",
           "predicate",
-          "required_gate_predicates",
+          "protected_change_ref",
           "qualitative_constraints",
+          "required_gate_predicates",
           "version_reason_ref"
         ],
         "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
@@ -81314,6 +81331,12 @@
           "successor_epoch": {
             "type": "UInt64",
             "required": false
+          },
+          "protected_change_ref": {
+            "type": "Ref<ProtectedChange>",
+            "required": true,
+            "added_by": "WORK-1.1-F6D-07",
+            "note": "F6D-07. This record IS a writer-key assignment -- (field_path, epoch), declared by C01 -- so declaring or superseding one is a protected control change by the definition in 08 section 1."
           }
         }
       }
@@ -82919,6 +82942,12 @@
           "successor_holder_ref": {
             "type": "Ref<StandingHolder>",
             "required": false
+          },
+          "protected_change_ref": {
+            "type": "Ref<ProtectedChange>",
+            "required": true,
+            "added_by": "WORK-1.1-F6D-07",
+            "note": "F6D-07. The standing-holder SET is the holders currently in `staffed`, so a transition into or out of that phase is a change to the set. There is no separate set object and inventing one would be the second implementation this package refuses everywhere else."
           }
         }
       }

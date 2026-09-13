@@ -27428,6 +27428,7 @@
           "field_paths": [
             "/access_policy_ref",
             "/retention_policy_ref",
+            "/payload/protected_change_ref",
             "/owner_assignment_ref"
           ]
         },
@@ -27599,6 +27600,7 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/protected_change_ref",
             "/owner_assignment_ref"
           ]
         },
@@ -184571,6 +184573,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.ConfigurationVersion.admitted.v1",
           "arguments": {
             "subject_ref": {
@@ -186132,6 +186143,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.ConsequenceClassDefinition.restricted.v1",
           "arguments": {
             "subject_ref": {
@@ -186339,6 +186359,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.ConsequenceClassDefinition.retired.v1",
           "arguments": {
             "subject_ref": {
@@ -186540,6 +186569,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -241141,6 +241179,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.FieldAuthority.superseded.v1",
           "arguments": {
             "subject_ref": {
@@ -241282,6 +241329,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -366549,6 +366605,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.StandingHolder.staffed.v1",
           "arguments": {
             "subject_ref": {
@@ -366703,6 +366768,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.StandingHolder.retired_into.v1",
           "arguments": {
             "subject_ref": {
@@ -366849,6 +366923,15 @@
         {
           "op": "call",
           "predicate_id": "guard.holder.no_veto",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.protected.control_object_change_authorized",
           "arguments": {
             "subject_ref": {
               "arg": "subject_ref"
@@ -396727,6 +396810,259 @@
               "type": "string",
               "enum": [
                 "SkillVersion"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "guard.protected.control_object_change_authorized": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Record>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/protected_change_ref",
+              "states": [
+                "authorized",
+                "staged",
+                "activated",
+                "verified"
+              ],
+              "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    "meaning": "A change to one of the six control objects is refused unless a `ProtectedChange` naming that subject stands at `authorized` or later. `reviewed` is not enough: reviewed requires a completed independent assessment and authorized requires the exact current competent decision, and it is the decision this rule is about (F6D-07).",
+    "owner_component": "S1-C01",
+    "source": "08-improvement-implementation.md#1-change-authority",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "AcceptanceInterval",
+                "AccessDescendant",
+                "AccessGraph",
+                "AccessPolicy",
+                "Account",
+                "AccountReconstruction",
+                "AdapterProfile",
+                "AdmissionRecord",
+                "AgentInstance",
+                "AgentTemplate",
+                "ArmedSet",
+                "ArtifactVersion",
+                "AttemptReport",
+                "BackupPolicy",
+                "BillingProfile",
+                "Blocker",
+                "BrandGuide",
+                "BuildArtifact",
+                "BusinessAccount",
+                "Campaign",
+                "CandidateAssessment",
+                "CapacityObservation",
+                "CapacityStudy",
+                "Case",
+                "CasePool",
+                "CashPosition",
+                "CausalEpisode",
+                "ChangeWatch",
+                "Claim",
+                "ClosurePlan",
+                "Commitment",
+                "ConfigurationVersion",
+                "ConflictClaim",
+                "ConsequenceClassDefinition",
+                "ConsequenceDerivation",
+                "Constraint",
+                "ConstraintSet",
+                "ContentAsset",
+                "ContextManifest",
+                "ContextTransformation",
+                "Continuation",
+                "ContinuityArrangement",
+                "ContradictionSet",
+                "Conversation",
+                "DecisionChallenge",
+                "DecisionPacket",
+                "DecisionRecord",
+                "Defect",
+                "Delegation",
+                "DeletionReceipt",
+                "DeletionScope",
+                "DeliveryCapacity",
+                "DependencyClosure",
+                "Deployment",
+                "DisclosureContract",
+                "DomainAssessment",
+                "DomainAuthorityBinding",
+                "DomainEvent",
+                "DurabilityReceipt",
+                "Economics",
+                "EffectIdentity",
+                "EvaluationCase",
+                "EvaluationPlan",
+                "EvaluationRun",
+                "EvaluationTrial",
+                "EvaluatorProfile",
+                "EvidenceBaseVersion",
+                "EvidenceJudgment",
+                "ExecutionCapacity",
+                "ExecutionSelection",
+                "ExistenceJustification",
+                "ExperienceArtifact",
+                "Experiment",
+                "ExternalAttempt",
+                "FailureRecord",
+                "FieldAuthority",
+                "ForgetRequest",
+                "FormationReadiness",
+                "Fulfillment",
+                "GenerationSeal",
+                "Goal",
+                "Grant",
+                "GrantDeliveryReceipt",
+                "GrievanceCase",
+                "HandoffAcceptance",
+                "HumanResponse",
+                "IdentityBinding",
+                "ImprovementProposal",
+                "Incident",
+                "IndexSnapshot",
+                "InstructionBundle",
+                "InstrumentCalibration",
+                "IntegrationConnection",
+                "IntegrationInvocation",
+                "IntegrationObservation",
+                "IntentVersion",
+                "InteractionDetermination",
+                "InterventionRequest",
+                "JournalBatch",
+                "KeyManifest",
+                "KnowledgeEntry",
+                "KnowledgeQuestion",
+                "LaunchReadiness",
+                "LearningProposal",
+                "LifecycleStatus",
+                "Mandate",
+                "MarketBrief",
+                "MessageAcknowledgment",
+                "MetricDefinition",
+                "MetricSeries",
+                "MigrationPlan",
+                "Mission",
+                "Obligation",
+                "Observation",
+                "ObservationSet",
+                "Offer",
+                "OperationIntent",
+                "OperationStatus",
+                "OperationalAdmission",
+                "OperatorProjection",
+                "Opportunity",
+                "ParameterAuthority",
+                "ParticipationEncounter",
+                "ParticipationPlan",
+                "Partnership",
+                "PausePlan",
+                "PivotPlan",
+                "PrerequisiteSnapshot",
+                "PriceProposal",
+                "Principal",
+                "Principle",
+                "ProcessingUse",
+                "ProductSpec",
+                "ProfessionalDetermination",
+                "ProfessionalRequest",
+                "Project",
+                "ProjectionGrant",
+                "ProtectedChange",
+                "ReasonRecord",
+                "ReasoningPlan",
+                "RecoveryEnvelope",
+                "RecoveryPacket",
+                "RegistryMembership",
+                "Release",
+                "ReleaseManifest",
+                "ResearchPlan",
+                "Reservation",
+                "ResourceAccount",
+                "ResponseDecision",
+                "ResponsibilityAssignment",
+                "RetentionPolicy",
+                "RetrievalAttempt",
+                "RetrievalProfile",
+                "RetryContract",
+                "Review",
+                "RollbackPlan",
+                "RolloutPlan",
+                "RuntimeProfile",
+                "SalesAgreement",
+                "Schedule",
+                "ScheduleOccurrence",
+                "ScopeRegistry",
+                "SecurityCase",
+                "SemanticMappingVersion",
+                "SendClaim",
+                "ShedDecision",
+                "SkillSelection",
+                "SkillVersion",
+                "SourceCursor",
+                "SourceRecord",
+                "StandingHolder",
+                "StandingInterest",
+                "StepExecution",
+                "SummaryLoss",
+                "SupplierEngagement",
+                "SupportCase",
+                "Suppression",
+                "TransferPlan",
+                "UnmatchedPoolEntry",
+                "ValidityEpoch",
+                "Venture",
+                "WorkDependency",
+                "WorkMessage",
+                "WorkOrder",
+                "WorkflowDefinition",
+                "WorkflowRun",
+                "WorkspaceAssignment",
+                "Workstream"
               ]
             },
             "revision": {

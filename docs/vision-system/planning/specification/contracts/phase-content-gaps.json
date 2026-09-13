@@ -2196,29 +2196,9 @@
     }
   ],
   "conjuncts_dropped_for_absent_fields": {
-    "WorkDependency": {
-      "waived-inapplicable": [
+    "CandidateAssessment": {
+      "retained-restricted": [
         "rp"
-      ]
-    },
-    "FailureRecord": {
-      "retry_admitted": [
-        "s1:resource_equation(not defined for FailureRecord)"
-      ]
-    },
-    "SkillSelection": {
-      "budget_exhausted": [
-        "s1:resource_equation(not defined for SkillSelection)"
-      ]
-    },
-    "ContradictionSet": {
-      "settled": [
-        "nf"
-      ]
-    },
-    "Economics": {
-      "validated": [
-        "s1:resource_equation(not defined for Economics)"
       ]
     },
     "CashPosition": {
@@ -2226,72 +2206,9 @@
         "s1:resource_equation(not defined for CashPosition)"
       ]
     },
-    "JournalBatch": {
-      "balanced": [
-        "nf",
-        "s1:resource_equation(not defined for JournalBatch)"
-      ],
-      "posted": [
-        "s1:resource_equation(not defined for JournalBatch)"
-      ],
-      "corrected": [
-        "rp"
-      ]
-    },
-    "CandidateAssessment": {
-      "retained-restricted": [
-        "rp"
-      ]
-    },
-    "Experiment": {
-      "running": [
-        "s1:resource_equation(not defined for Experiment)"
-      ]
-    },
-    "IdentityBinding": {
-      "suspended": [
-        "rp"
-      ]
-    },
     "CausalEpisode": {
       "exhausted": [
         "s1:resource_equation(not defined for CausalEpisode)"
-      ]
-    },
-    "ContextManifest": {
-      "exhausted": [
-        "nf",
-        "s1:resource_equation(not defined for ContextManifest)"
-      ]
-    },
-    "ValidityEpoch": {
-      "current": [
-        "nf"
-      ]
-    },
-    "Reservation": {
-      "held": [
-        "s1:resource_equation(not defined for Reservation)"
-      ],
-      "partly_consumed": [
-        "s1:resource_equation(not defined for Reservation)"
-      ],
-      "consumed": [
-        "s1:resource_equation(not defined for Reservation)"
-      ],
-      "uncertain": [
-        "s1:resource_equation(not defined for Reservation)"
-      ]
-    },
-    "OperationIntent": {
-      "held": [
-        "s1:resource_equation(not defined for OperationIntent)"
-      ],
-      "reconciled": [
-        "s1:resource_equation(not defined for OperationIntent)"
-      ],
-      "cancelled_before_release": [
-        "s1:resource_equation(not defined for OperationIntent)"
       ]
     },
     "ConflictClaim": {
@@ -2302,9 +2219,30 @@
         "s1:resource_equation(not defined for ConflictClaim)"
       ]
     },
-    "Release": {
-      "reconciled": [
-        "s1:resource_equation(not defined for Release)"
+    "ContextManifest": {
+      "exhausted": [
+        "nf",
+        "s1:resource_equation(not defined for ContextManifest)"
+      ]
+    },
+    "ContradictionSet": {
+      "settled": [
+        "nf"
+      ]
+    },
+    "DecisionChallenge": {
+      "consumed": [
+        "s1:resource_equation(not defined for DecisionChallenge)"
+      ]
+    },
+    "Economics": {
+      "validated": [
+        "s1:resource_equation(not defined for Economics)"
+      ]
+    },
+    "Experiment": {
+      "running": [
+        "s1:resource_equation(not defined for Experiment)"
       ]
     },
     "ExternalAttempt": {
@@ -2312,9 +2250,14 @@
         "s1:resource_equation(not defined for ExternalAttempt)"
       ]
     },
-    "RollbackPlan": {
-      "reconciled": [
-        "s1:resource_equation(not defined for RollbackPlan)"
+    "FailureRecord": {
+      "retry_admitted": [
+        "s1:resource_equation(not defined for FailureRecord)"
+      ]
+    },
+    "IdentityBinding": {
+      "suspended": [
+        "rp"
       ]
     },
     "IntegrationInvocation": {
@@ -2322,9 +2265,66 @@
         "nf"
       ]
     },
-    "DecisionChallenge": {
+    "JournalBatch": {
+      "balanced": [
+        "nf",
+        "s1:resource_equation(not defined for JournalBatch)"
+      ],
+      "corrected": [
+        "rp"
+      ],
+      "posted": [
+        "s1:resource_equation(not defined for JournalBatch)"
+      ]
+    },
+    "OperationIntent": {
+      "cancelled_before_release": [
+        "s1:resource_equation(not defined for OperationIntent)"
+      ],
+      "held": [
+        "s1:resource_equation(not defined for OperationIntent)"
+      ],
+      "reconciled": [
+        "s1:resource_equation(not defined for OperationIntent)"
+      ]
+    },
+    "Release": {
+      "reconciled": [
+        "s1:resource_equation(not defined for Release)"
+      ]
+    },
+    "Reservation": {
       "consumed": [
-        "s1:resource_equation(not defined for DecisionChallenge)"
+        "s1:resource_equation(not defined for Reservation)"
+      ],
+      "held": [
+        "s1:resource_equation(not defined for Reservation)"
+      ],
+      "partly_consumed": [
+        "s1:resource_equation(not defined for Reservation)"
+      ],
+      "uncertain": [
+        "s1:resource_equation(not defined for Reservation)"
+      ]
+    },
+    "RollbackPlan": {
+      "reconciled": [
+        "s1:resource_equation(not defined for RollbackPlan)"
+      ]
+    },
+    "SkillSelection": {
+      "budget_exhausted": [
+        "s1:resource_equation(not defined for SkillSelection)"
+      ]
+    },
+    "ValidityEpoch": {
+      "current": [
+        "nf"
+      ]
+    },
+    "WorkDependency": {
+      "waived-inapplicable": [
+        "rp"
       ]
     }
   },
