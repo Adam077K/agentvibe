@@ -381676,5 +381676,160 @@
       ],
       "additionalProperties": false
     }
+  },
+  "edge.Fulfillment.validated.delivering.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Fulfillment>",
+      "observation_refs": "Ref<Observation>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "subject_unchanged",
+          "subject_ref": {
+            "arg": "subject_ref"
+          }
+        },
+        {
+          "op": "status_edge",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "from_state": "validated",
+          "to_state": "delivering"
+        },
+        {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.delivering",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
+          "op": "current_owner",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "actor_ref": {
+            "context": "actor_identity_ref"
+          },
+          "command": {
+            "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "criterion.Fulfillment.delivering.v1",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "Fulfillment: validated → delivering; RC-08. `validated` was a dead end that only `restricted` and `superseded` left, so the generic validation branch and the delivery branch could not be walked in one lifetime: a record that had been validated could only be delivered by a route that skipped validation. The evidence this edge requires is the same as the one from `proposed` -- entering delivery asserts nothing about delivery -- and what validation established is not re-asked.",
+    "owner_component": "S1-C03",
+    "source": "capabilities.json#/record_types/Fulfillment",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Fulfillment"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "decision_refs"
+      ],
+      "additionalProperties": false
+    }
   }
 }

@@ -2344,6 +2344,7 @@
     "edge.Fulfillment.proposed.validated.v1",
     "edge.Fulfillment.refunded.superseded.v1",
     "edge.Fulfillment.restricted.superseded.v1",
+    "edge.Fulfillment.validated.delivering.v1",
     "edge.Fulfillment.validated.restricted.v1",
     "edge.Fulfillment.validated.superseded.v1",
     "edge.Goal.achieved.endorsed.v1",
