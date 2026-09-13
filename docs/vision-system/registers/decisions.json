@@ -375,25 +375,22 @@
     "architecture_version": "S1.0",
     "date": "2026-09-13",
     "status": "adopted; mechanism decision derived from the selected architecture; revisable by a reviewed ChangeProposal",
-    "owner": "orchestrator under founder directive",
+    "owner": "orchestrator (decision); canonical contract author (implementation); independent reviewer (recheck)",
     "title": "Performance of a sale is accepted delivery plus discharged or transferred obligations — never payment alone",
-    "problem": "FI-11's mechanism is closed — every edge guard calls its own criterion_id and declared-but-unread arguments are gone — but the CONTENT is not: for 167 of 173 records the source corpus states no per-phase evidence requirement, so two criteria of one record can still differ only by the criterion a judgment must name. The tempting repair is to write plausible per-phase requirements, which would put invented obligations into an executable registry and make the guard distinctness metric go green on fiction.",
+    "problem": "G2-01 (d): criterion.SalesAgreement.performed.v1 demanded exactly what accepted demanded; SalesAgreement had no relation to Fulfillment; a paid but undelivered sale could reach performed. \"What evidence constitutes performance of a sale\" was unstated, and the two available inventions (payment settled / delivery accepted) describe different companies.",
     "decision": "SalesAgreement gains /payload/fulfillment_ref → Fulfillment; criterion.SalesAgreement.performed.v1 requires Fulfillment in a delivered/accepted state and every linked Obligation discharged or transferred; payment settlement moves the agreement to accepted or partially-performed, not performed. Fulfillment gains a domain lifecycle (proposed → delivering → delivered → failed | refunded) with an authenticated attributable event on the delivered edge.",
     "alternatives": [
-      "Invent plausible per-phase requirements, which greens guard_distinctness.py on content nothing supports",
-      "Leave all 167 as they are, which keeps 1295 edges sharing one meaning tail and leaves FI-11's defect reproduced at edge scale",
-      "Delete the per-phase criterion mechanism, which would discard a repair that is already correct"
+      "Payment settled = performed (rejected: makes a paid-but-undelivered sale complete; contradicts SalesAgreement.invariants[0] and 02 §6)",
+      "Leave to implementation (rejected: the reviewer showed this is the silent path, and both choices are plausible to an implementer)",
+      "Split into performed_paid and performed_delivered (rejected: two \"performed\" states invite the same conflation the protocol names; the existing accepted / partially-performed states already hold the paid-not-delivered case)"
     ],
-    "evidence_and_reasoning": "02-architecture-selection.md §3: \"accepted work cannot discharge external standing through an internal status\"; §6: \"a valid sale records the exact offer and potential obligations before controlled acceptance. Delivery produces independently observed results\"; SalesAgreement.invariants[0]: \"performance is shown by substantive fulfillment\". The alternative — payment as performance — describes a company that has been paid, not one that has delivered, and was refused by the selection.",
-    "epistemic_basis": "Design decision about how to close a content gap, not a measurement. The 167-of-173 figure and the one-shared-meaning-tail finding are F-canonical-01's; re-measure with contracts/tools/guard_distinctness.py rather than quoting them.",
-    "accepted_design_costs": [
-      "Derivation is slower than authoring and will leave content_unspecified criteria standing where the prose genuinely says nothing, so the distinctness metric will not reach a clean number",
-      "Each registered gap is a specification obligation someone must later discharge, and the register will carry them visibly rather than absorbing them"
-    ],
-    "external_exposure_authorized": false,
+    "evidence_and_reasoning": "02 §3 \"accepted work cannot discharge external standing through an internal status\"; 02 §6 \"Delivery produces independently observed results\"; the record's own invariant \"performance is shown by substantive fulfillment\" was enforced by nothing (G2-01 counterexample validated). Requiring Fulfillment delivered and Obligations discharged/transferred makes the prose true.",
+    "epistemic_basis": "Decision. Derived from the adopted S1.0 selection (02-architecture-selection.md §3, §6) and from the consistency of the existing closure-edge set in contracts/record-registry.json; not from new evidence and not from a founder value. The Phase G reviewer classified the gap (d): implementation would otherwise settle it silently.",
+    "accepted_design_costs": "Fulfillment must gain a domain lifecycle (G2-05) before any sale can reach performed; a service with no observable delivery event cannot be marked performed by payment alone and must record why. More edges, more evidence, less convenience — deliberately.",
+    "external_exposure_authorized": "None. A contract change; no spend, publication, contact or deployment.",
     "reversibility": "Reversible before B04 by editing the SalesAgreement/Fulfillment contracts; after live sales, a migration under 02 §10 (T-R1).",
-    "reopen_trigger": "Phase G finding G2-01 (d), planning/reviews/G-02-coherence-buildability-changeability.md",
-    "implementation_evidence": null
+    "reopen_trigger": "A lawful offer class whose performance genuinely IS payment (e.g. a donation with no deliverable) that the Fulfillment lifecycle cannot represent without a fictitious delivery; or measured owner labor from performing the distinction exceeding its benefit under CF1 maintenance comparison.",
+    "implementation_evidence": "None yet. Guard repair lane owed; independent recheck owed; no runtime exists."
   },
   {
     "id": "AD-014",
@@ -401,24 +398,20 @@
     "architecture_version": "S1.0",
     "date": "2026-09-13",
     "status": "adopted; mechanism decision derived from the selected architecture; revisable by a reviewed ChangeProposal",
-    "owner": "orchestrator under founder directive",
+    "owner": "orchestrator (decision); canonical contract author (implementation); independent reviewer (recheck)",
     "title": "Terminating a sales agreement is a closure event; surviving duties live in terminated_with_residuals",
-    "problem": "FI-11's mechanism is closed — every edge guard calls its own criterion_id and declared-but-unread arguments are gone — but the CONTENT is not: for 167 of 173 records the source corpus states no per-phase evidence requirement, so two criteria of one record can still differ only by the criterion a judgment must name. The tempting repair is to write plausible per-phase requirements, which would put invented obligations into an executable registry and make the guard distinctness metric go green on fiction.",
+    "problem": "G2-02 (d): the four SalesAgreement:*→terminated edges carried transition_basis only, while every other closure edge in the registry carries due_preserved; there was no terminated_with_residuals state, so terminating a disputed sale with recognized obligations succeeded and asserted closure with nothing having looked.",
     "decision": "All four SalesAgreement:*→terminated edges carry due_preserved; a new terminal state terminated_with_residuals holds the case where the transitive due set is not empty, with an accepted custodian for each residual, matching Commitment:made→ended_with_residuals and CAP-39 closed-with-residuals. terminated asserts that nothing is owed.",
     "alternatives": [
-      "Invent plausible per-phase requirements, which greens guard_distinctness.py on content nothing supports",
-      "Leave all 167 as they are, which keeps 1295 edges sharing one meaning tail and leaves FI-11's defect reproduced at edge scale",
-      "Delete the per-phase criterion mechanism, which would discard a repair that is already correct"
+      "Declare termination not a closure event (rejected: would have to explain why Commitment ended, Offer withdrawn and Case abandoned — the same act at another record — all carry due_preserved)",
+      "due_preserved without a residuals state (rejected: forces either refusal to terminate while duties survive, or silent closure; the Commitment and CAP-39 precedent is a residuals state with custodians)"
     ],
-    "evidence_and_reasoning": "Every comparable closure edge in the registry (Commitment, Offer, Case, GrievanceCase, Obligation, Fulfillment, ClosurePlan, Venture) carries due_preserved; 02-architecture-selection.md §3 \"an obligation survives that case\"; protocol §Changeability \"old effects or duties cannot disappear\". Making SalesAgreement the one exception would be a modelling choice with no stated reason.",
-    "epistemic_basis": "Design decision about how to close a content gap, not a measurement. The 167-of-173 figure and the one-shared-meaning-tail finding are F-canonical-01's; re-measure with contracts/tools/guard_distinctness.py rather than quoting them.",
-    "accepted_design_costs": [
-      "Derivation is slower than authoring and will leave content_unspecified criteria standing where the prose genuinely says nothing, so the distinctness metric will not reach a clean number",
-      "Each registered gap is a specification obligation someone must later discharge, and the register will carry them visibly rather than absorbing them"
-    ],
-    "external_exposure_authorized": false,
+    "evidence_and_reasoning": "Consistency of the existing closure-edge set (Commitment, Offer, Case, GrievanceCase, Obligation, Fulfillment, ClosurePlan, Venture); 02 §3 \"an obligation survives that case\"; protocol §Changeability \"old effects or duties cannot disappear\". The reviewer's counterexample (three recognized obligations and an open SupportCase survive a successful terminate) validated at 7ddc066.",
+    "epistemic_basis": "Decision. Derived from the adopted S1.0 selection (02-architecture-selection.md §3, §6) and from the consistency of the existing closure-edge set in contracts/record-registry.json; not from new evidence and not from a founder value. The Phase G reviewer classified the gap (d): implementation would otherwise settle it silently.",
+    "accepted_design_costs": "Terminating a sale now requires computing the transitive due set at the witnessed frontier and assigning a custodian to each residual; a terminate that cannot do so lands in terminated_with_residuals rather than terminated.",
+    "external_exposure_authorized": "None. A contract change; no spend, publication, contact or deployment.",
     "reversibility": "Reversible before B04 by editing the SalesAgreement/Fulfillment contracts; after live sales, a migration under 02 §10 (T-R1).",
-    "reopen_trigger": "Phase G finding G2-02 (d), planning/reviews/G-02-coherence-buildability-changeability.md",
-    "implementation_evidence": null
+    "reopen_trigger": "A demonstrated class of sale whose termination can never carry residuals (would make the state dead weight); or due_preserved cost at termination measurably dominating ordinary closure work.",
+    "implementation_evidence": "None yet. Guard repair lane owed; independent recheck owed; no runtime exists."
   }
 ]
