@@ -1,0 +1,49 @@
+{
+  "id": "r10-criterion-demands-less-than-its-predecessor",
+  "repair": "R-D",
+  "finding": "G2-06",
+  "why": "The reviewer's third mutation: make `performed` demand STRICTLY LESS than `accepted` -- one field, an attestation and an acceptance. A later phase that asks for less than an earlier one is the exact shape of G2-01, and it still reads as a requirement. Every argument stays read and every citation stays resolvable, so no shape check reaches it.",
+  "expect_failure_contains": "criterion content drifts from its derivation",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.SalesAgreement.performed.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "nonempty_fields",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "field_paths": [
+              "/payload/original_exchange"
+            ]
+          },
+          {
+            "op": "attested_result",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.SalesAgreement.performed.v1",
+            "predicate_version": "1.0",
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          },
+          {
+            "op": "accepted_for",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.SalesAgreement.performed.v1",
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "id": "r11-component-removal-ignores-record-custody",
+  "repair": "R-J",
+  "finding": "G2-07",
+  "why": "The component-custody conjunct is removed from the edge where a staged change becomes a live one. `owner_component` returns to being read by 0 of 2274 predicates, which is the state the reviewer measured: every record carries the field, the Removal rows state the rule for all nine components, and nothing executes it.",
+  "expect_failure_contains": "required guard op removed",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.ProtectedChange.staged.activated.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "subject_unchanged",
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          },
+          {
+            "op": "status_edge",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "from_state": "staged",
+            "to_state": "activated"
+          },
+          {
+            "op": "control_contract",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "target_state": "activated",
+            "command": {
+              "context": "command_name"
+            }
+          },
+          {
+            "op": "transition_basis",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "event_kind": "record.activated",
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "decision_refs": {
+              "arg": "decision_refs"
+            }
+          },
+          {
+            "op": "current_owner",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "actor_ref": {
+              "context": "actor_identity_ref"
+            },
+            "command": {
+              "context": "command_name"
+            }
+          },
+          {
+            "op": "call",
+            "predicate_id": "criterion.ProtectedChange.activated.v1",
+            "arguments": {
+              "subject_ref": {
+                "arg": "subject_ref"
+              },
+              "observation_refs": {
+                "arg": "observation_refs"
+              },
+              "judgment_refs": {
+                "arg": "judgment_refs"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -194,6 +194,47 @@ def main():
         "predicates_unreachable_from_any_guard": len(unreachable),
         "primitives_used_by_no_predicate": sorted(set(primitives) - used_ops),
     }
+    # THE RATCHET. Until this line the module `return 0`d unconditionally: it measured the
+    # residue, printed its own worst number unprompted, and could not fail a build with it.
+    # The Phase G reviewer's sentence for that is the right one -- "what is genuinely
+    # missing is not content but a ratchet" -- and an instrument that cannot say no is a
+    # report, not a control.
+    #
+    # The comparison is against a DECLARED BUDGET, not against the length of
+    # `residual_sibling_collisions`. That list is recomputed from the tree on every
+    # authoring run, so its length always equals the measurement and a ratchet against it
+    # would compare a number to itself. The budget is a literal in
+    # tools/author_phase_content.py; raising it is a decision someone makes and a diff
+    # someone reviews.
+    gaps = json.loads((ROOT / "phase-content-gaps.json").read_text())
+    budget = gaps.get("residual_sibling_collision_budget")
+    measured = len(harsh_collisions)
+    if budget is None:
+        print(json.dumps({
+            "ratchet": "REFUSED",
+            "detail": ("phase-content-gaps.json declares no "
+                       "`residual_sibling_collision_budget`. A ratchet with no declared "
+                       "budget cannot fail and must not report a pass."),
+        }, indent=2))
+        return 1
+    if measured > budget:
+        print(json.dumps({
+            "ratchet": "FAILED",
+            "detail": "guard distinctness ratchet: sibling collisions exceed the budget",
+            "measured_sibling_collisions_all_strings_erased": measured,
+            "declared_budget": budget,
+            "collisions": [
+                {"record": g["record"], "from_state": g["from_state"],
+                 "to_phases": g["to_phases"]}
+                for g in skeletons.sibling_collisions(RECORDS, PREDICATES,
+                                                      erase_all_strings)],
+            "note": ("Two edges leaving one state of one record whose effective guards "
+                     "differ only in `predicate_id` and `to_state` cannot be told apart by "
+                     "anything executable. Author the difference, or raise the budget in "
+                     "tools/author_phase_content.py and say in the diff why the pair is "
+                     "genuinely indistinguishable."),
+        }, indent=2))
+        return 1
     print(json.dumps(report, indent=2))
     return 0
 

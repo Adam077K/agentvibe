@@ -1,0 +1,101 @@
+{
+  "id": "r10-sibling-collision-budget-exceeded",
+  "repair": "R-D",
+  "finding": "G2-06",
+  "why": "The same shape collapse as r9, with the two resulting groups DECLARED in phase-content-gaps.json. The set-equality check is therefore satisfied and this fixture reaches the control it is for: the budget. The distinction is the whole point of having a budget at all -- `residual_sibling_collisions` is recomputed from the tree on every authoring run, so its length always equals the measurement, and a ratchet against it would compare a number to itself. 5 declared, 7 measured, and raising the budget is a diff someone reviews.",
+  "expect_failure_contains": "guard distinctness ratchet: sibling collisions exceed the budget",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.Mission.retired-with-residuals.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "nonempty_fields",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "field_paths": [
+              "/payload/residual_obligation_refs",
+              "/owner_assignment_ref"
+            ]
+          },
+          {
+            "op": "related_phases",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "bindings": [
+              {
+                "field_path": "/owner_assignment_ref",
+                "states": [
+                  "accepted"
+                ],
+                "optional": false
+              }
+            ]
+          },
+          {
+            "op": "complete_capture",
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          },
+          {
+            "op": "accepted_for",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.Mission.retired-with-residuals.v1",
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          },
+          {
+            "op": "attested_result",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.Mission.retired-with-residuals.v1",
+            "predicate_version": "1.0",
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "phase-content-gaps.json",
+      "pointer": "/residual_sibling_collisions/5",
+      "op": "add",
+      "value": {
+        "record": "Mission",
+        "from_state": "active",
+        "to_phases": [
+          "retired-with-residuals",
+          "retired"
+        ],
+        "why": "declared by this fixture so the SET check passes and the RATCHET is what refuses",
+        "gapped_phases": []
+      }
+    },
+    {
+      "file": "phase-content-gaps.json",
+      "pointer": "/residual_sibling_collisions/6",
+      "op": "add",
+      "value": {
+        "record": "Mission",
+        "from_state": "parked",
+        "to_phases": [
+          "retired-with-residuals",
+          "retired"
+        ],
+        "why": "declared by this fixture so the SET check passes and the RATCHET is what refuses",
+        "gapped_phases": []
+      }
+    }
+  ]
+}
