@@ -1943,8 +1943,8 @@ checked(version_rows >= 14,
 #   positive: 17, one benign case per adverse case of selection-record section 12.5.
 #             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
 #             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 69
-POSITIVE_FIXTURE_FLOOR = 30
+NEGATIVE_FIXTURE_FLOOR = 71
+POSITIVE_FIXTURE_FLOOR = 32
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
