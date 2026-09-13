@@ -513,5 +513,24 @@
     "origin": "canonical repair R2, 2026-09-13",
     "raised": "2026-09-13; recorded by the orchestrator from canonical repair R2. Queued, not yet put to the founder.",
     "asked": null
+  },
+  {
+    "id": "Q-015",
+    "kind": "Founder clarification and pending decision",
+    "date": "2026-09-13",
+    "status": "Open — founder signalled intent; decision packet offered, not yet answered",
+    "decision": "Whether the system carries a chartered persistent-agent layer (named agents with standing charters: role, responsibilities, authority ceiling, memory scope, reserved capacity, evaluation, suspension/retirement) on top of the selected S1.0 control — and, separately, whether such charters carry independent inquiry rights (the C2 question in 02-architecture-selection.md §2/§9).",
+    "founder_statement": "2026-09-13: \"I am accepting the agent system and agent charter and all of that. It wasn't my intention to cancel it straight away.\" Recorded verbatim as intent; not yet recorded as a decision because the two sub-choices above have different costs.",
+    "why_founder": "Directive §1.2/§8.8 set the default; the founder owns the vision and may amend the default. This is identity and taste, not a technical unknown.",
+    "latest_responsible_time": "Before B04 (company procedures and delegation) — B01–B03 are unaffected either way.",
+    "options": [
+      "A: Chartered persistent agents as a layer above S1.0 (charter = accepted Mandate + identity + skill bundle + memory scope + reserved capacity + evaluator); no inquiry rights beyond the mandate",
+      "B: Option A plus C2-style independent inquiry charters (a chartered agent may open an investigation the case authority cannot defer)",
+      "C: Keep the current no-roster model; revisit on evidence (current plan)"
+    ],
+    "consequences": "A: ~10–15% of the specification amended (05, 8.8, records for Agent/Role/Charter lifecycles, capacity reservation, per-agent evaluation, 04 surfaces); the nine-component core, consequence/release boundaries and sponsor rule unchanged; standing context and capacity cost rise; department-silo risk returns and is mitigated only by the sponsor rule. B: adds the C2 institutional labor the selection deferred (reserved assessor capacity, continuity, appeal). C: no change.",
+    "unrelated_work_continues": true,
+    "if_no_answer": "Plan stays at C; the disposition is recorded against the current package; a later charter layer becomes a versioned ChangeProposal (S1.1) rather than a reopening.",
+    "recommendation": "A, specified as a layer with a removal trigger, so the roster is a choice with a measured cost rather than an assumption."
   }
 ]
