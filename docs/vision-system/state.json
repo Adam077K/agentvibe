@@ -79,23 +79,19 @@
     "Merged ratchet-pin lane (7 commits): pinned-conjuncts.json (25 pins / 44 requirements / 6 transitions), fixture MANIFEST (31), RC-01 in-flight failure and refund reachability, RC-03 requires-vs-conjuncts with 17 named waivers, RC-05/06/08. Root validator run: 31/31 fixtures rejected, 1311 edges. RP-01 registered.",
     "G-02-recheck-02 archived (planning/reviews/G-02-recheck-02.md, subject 3579cc2): RC-01, RC-03..RC-08 CLOSED at specification level; RC-02 OPEN (a) — a disjunction sibling of the one-hunk attack passes at exit 0 with pins untouched (RC2-02); RC2-01 (b), RC2-03 (b), RC2-04 (c) registered. Repair lane dispatched.",
     "Step 2 cross-lane comparison committed (ddd7c22): 42-claim matrix (15 with conflicts), 18 agreements, 16 disagreements preserved, axes X01..X10 reconciled + X11..X20 new, 0 falsifiers against fixed boundaries (2 against protocol-granted B0 strengths), 41 of 65 cross-lane questions open. AM-01 recorded (F-4 paired clean case).",
-    "RC2-01..04 repaired (d3cf3ea, 73827d8, 931a314, 7b3d388; contracts/ only): pins carry `disjoined` with any-ancestry tracking; fixtures 31→33; validator 269,697 checks exit 0 (author-recorded). Candidates M1, M2, M3, M5 committed; M4 in progress."
+    "RC2-01..04 repaired (d3cf3ea, 73827d8, 931a314, 7b3d388; contracts/ only): pins carry `disjoined` with any-ancestry tracking; fixtures 31→33; validator 269,697 checks exit 0 (author-recorded). Candidates M1, M2, M3, M5 committed; M4 in progress.",
+    "Step 3 complete: five materially different candidates committed under planning/F2/candidates/ (M1 capability-differentiated ephemeral, M2 chartered persistent, M3 workflow-first no agents, M4 hybrid by consequence class, M5 subscription-activated shared record), each on Phase C dimensions, six fixtures, 46-CAP binding, both comparators, (d)-self-audit, evidence ledger."
   ],
   "active_work": [
     {
       "agent": "reviewer (recheck-03)",
-      "scope": "G-02-recheck-03 at frozen 1bef187: RC2-01..04 plus a search for further non-demanding contexts",
-      "status": "dispatched 2026-09-13"
-    },
-    {
-      "agent": "framer (cand-M4)",
-      "scope": "candidate M4",
+      "scope": "G-02-recheck-03 at 1bef187",
       "status": "running"
     }
   ],
   "next_actions": [
-    "Verify and commit M4; then Step 4 independent attacks on M1..M5 (reviewer engine; never shown authors' self-assessments)",
-    "Archive recheck-03 as planning/reviews/G-02-recheck-03.md; update RC2-* register",
+    "Step 4: dispatch five independent attack reviewers (technical; human/company; economic/capacity; context-loss/evidence; security/adversarial) against all five candidates at the frozen Step 3 commit",
+    "Archive recheck-03; update RC2-*",
     "Planning disposition deferred until the F2 round completes",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
