@@ -83,11 +83,19 @@
       "dispatched": "2026-09-13"
     },
     {
-      "agent": "build-technical-amendment (builder)",
-      "scope": "Finish the interrupted attack_technical lane: concrete Postmark ingress and positive permitted mail path, event identity and event-specific deduplication, dated provider terms with invalidators, permitted outbound metadata. Must conform to T-R3. Must not send mail or create accounts.",
-      "worktree": ".worktrees/technical-amendment",
-      "branch": "docs/vision-technical-amendment",
-      "base": "cb4bf52",
+      "agent": "build-xsr-residue (builder)",
+      "scope": "Repair XSR-02 residue F50-Q08 and F33-Q04, and XSR-R-01..03; refresh the 268-row root projection; verify by computation.",
+      "worktree": ".worktrees/xsr-residue",
+      "branch": "docs/vision-xsr-residue",
+      "base": "78b3e57",
+      "dispatched": "2026-09-13"
+    },
+    {
+      "agent": "build-canonical-repair (builder)",
+      "scope": "Repair FI-11, FI-12 and CCR-01..07 in contracts/: edge guards must call and read their criterion (R1); ground the mandate regress at a bootstrap root, mechanism decided, human identity left as admission check (R2); restrict subject enums to non-intrinsic records (R3); command membership (R4); resolvable destinations (R5); prose files bind or move (R6); derived coverage inventory (R7); validator gains negative fixtures and loses its stub-only FI-12 block (R8). Commit per milestone.",
+      "worktree": ".worktrees/canonical-repair",
+      "branch": "docs/vision-canonical-repair",
+      "base": "a7b2c5c",
       "dispatched": "2026-09-13"
     },
     {
