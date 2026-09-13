@@ -1115,18 +1115,53 @@ for pin in PINNED["pins"]:
         foreign = [(entry, inadmissible_ancestor(entry, row, boolean_op))
                    for entry in demanded]
         foreign = [(entry, operator) for entry, operator in foreign if operator is not None]
+        # RC4-04. This message used to close "Demand the collection non-empty on the same
+        # path, or state the requirement outside the quantifier" -- and the first of those
+        # two is not accepted. The recheck wrote the body the note asks for: a sibling
+        # `nonempty_fields` on the SAME pointer the message itself prints, outside the
+        # quantifier, so the collection cannot be empty and the conjuncts under the
+        # `forall` really are required. Refused, with the same words. An author who follows
+        # a remedy that does not exist writes it, is refused again, and learns to route
+        # around the checker -- which is the outcome this package cites as its reason for
+        # REFUSING to widen the RC-03 phase rule, so paying it here would be incoherent.
+        #
+        # The choice made, and it is the message rather than the rule: `quantified` stays
+        # unconditionally non-demanding. Implementing the sibling case means deciding when
+        # one conjunct forces another's collection non-empty, and `nonempty_fields` on a
+        # pointer of the SUBJECT is not the same claim as a lower bound on the collection a
+        # quantifier resolves and ranges over -- a satisfiability question, decided by a
+        # checker, over a population of zero. This file's own rule is that a narrowing that
+        # fails nothing may be a narrowing that does nothing; a WIDENING that passes
+        # something is worse, and RC4-02 is what a widening of exactly this kind costs. So
+        # the note now states the one remedy that works and says plainly that the sibling
+        # does not lift the rule. The headline moved too: it claimed the collection is one
+        # "nothing forces to be non-empty", which was false about the tree in front of it.
         checked(demanded or not quantified,
                 ("PINNED CONJUNCT ONLY UNDER A QUANTIFIER: the registry still MENTIONS what "
-                 "this finding required, inside a quantifier over a collection nothing "
-                 "forces to be non-empty, and so no longer DEMANDS it",
+                 "this finding required, inside a quantifier, and a quantifier is treated "
+                 "here as DEMANDING NOTHING -- unconditionally, whatever else the body says "
+                 "about the collection it ranges over",
                  predicate_id, row["op"], row["why"],
                  {"findings": pin["findings"], "decisions": pin["decisions"],
                   "quantifiers": sorted({note for entry in quantified
                                          for note in entry.quantifiers}),
-                  "note": "a `forall` over a field records.schema.json permits to be `[]` "
-                          "is vacuously true, so a conjunct moved inside it is required of "
-                          "nothing (RC3-01). Demand the collection non-empty on the same "
-                          "path, or state the requirement outside the quantifier."}))
+                  "accepted": "ONE remedy: state the requirement OUTSIDE the quantifier. A "
+                              "demanded copy beside the quantified one satisfies this row "
+                              "-- the quantified copy is then free to stay.",
+                  "not_accepted": "Demanding the collection non-empty on the same path does "
+                                  "NOT lift this rule, and adding such a sibling conjunct "
+                                  "will be refused with this same message (RC4-04). The "
+                                  "rule does not reason about which conjunct bounds which "
+                                  "collection: `nonempty_fields` on a pointer of the "
+                                  "subject is not a lower bound on the collection this "
+                                  "quantifier resolves and ranges over, and a checker that "
+                                  "guessed they were the same would be widening the demand "
+                                  "rule, which is the defect class RC4-02 came from.",
+                  "why_at_all": "a `forall` over a field records.schema.json permits to be "
+                                "`[]` is vacuously true, so a conjunct moved inside it is "
+                                "required of nothing (RC3-01). Zero `forall` nodes exist in "
+                                "this corpus, so the conservative reading costs no live "
+                                "criterion today."}))
         checked(demanded or not positioned,
                 ("PINNED CONJUNCT ONLY UNDER A DISJUNCTION: the registry still MENTIONS what "
                  "this finding required, inside one branch of an `any`, and so no longer "
