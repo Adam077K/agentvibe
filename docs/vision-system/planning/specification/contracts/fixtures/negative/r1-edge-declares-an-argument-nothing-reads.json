@@ -1,0 +1,30 @@
+{
+  "id": "r1-edge-declares-an-argument-nothing-reads",
+  "repair": "R1",
+  "finding": "CCR-01 / FI-11",
+  "why": "2588 declared-but-unread arguments were committed: judgment_refs in the argument_types of 1077 edge predicates and in none of their bodies, continuation_ref 963, decision_refs 295, observation_refs 253. A registered argument shape that no guard reads is a contract the guard does not keep.",
+  "expect_failure_contains": "FI-11: declared arguments that nothing reads",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.Goal.proposed.endorsed.v1/argument_types/continuation_ref",
+      "op": "add",
+      "value": "Ref<Continuation>?"
+    },
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.Goal.proposed.endorsed.v1/argument_schema/properties/continuation_ref",
+      "op": "add",
+      "value": {
+        "type": "object",
+        "properties": {
+          "record_id": {"$ref": "values.schema.json#/$defs/UUID"},
+          "record_type": {"type": "string", "enum": ["Continuation"]},
+          "revision": {"$ref": "values.schema.json#/$defs/Revision"}
+        },
+        "required": ["record_id", "record_type", "revision"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

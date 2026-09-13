@@ -123,7 +123,13 @@ def _obligations_of(criterion_id, nodes):
                     continue
                 for state in binding["states"]:
                     found.add(criterion_for(target, state))
-    return {name for name in found if name and name != criterion_id}
+    # The SELF obligation is kept deliberately. `criterion.Mandate.accepted.v1` uses
+    # attested_result, whose semantics require an accepted assessor mandate -- that
+    # is the regress, and it is a self-loop. Filtering self-loops as uninteresting
+    # made this walker report the chain grounded when the genesis disjunct had been
+    # removed from Mandate alone, because the other eight criteria were still
+    # grounded. A negative fixture caught it; reading the code did not.
+    return {name for name in found if name}
 
 
 def genesis_disjunct(criterion_id):

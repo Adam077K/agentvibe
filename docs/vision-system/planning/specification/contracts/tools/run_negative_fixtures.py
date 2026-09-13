@@ -117,7 +117,12 @@ def run_fixture(fixture, verbose):
             rederive_inventory(directory)
         completed = subprocess.run(
             [sys.executable, "validate_contracts.py"], cwd=directory,
-            capture_output=True, text=True)
+            capture_output=True, text=True,
+            # Set here, not only by the validator that spawns this runner. Running
+            # this runner directly from a shell otherwise lets each fixture's
+            # validator start the whole fixture suite again, and the real failure
+            # gets buried inside a nested transcript of itself.
+            env={**os.environ, "CONTRACTS_FIXTURE_RUN": "1"})
     output = completed.stdout + completed.stderr
     if completed.returncode == 0:
         return False, "fixture PASSED validation; the check that should reject it is absent"
