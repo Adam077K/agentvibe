@@ -1,0 +1,82 @@
+{
+  "id": "r10-criterion-field-paths-repointed",
+  "repair": "R-D",
+  "finding": "G2-06",
+  "why": "The reviewer's second mutation: repoint `field_paths` at an unrelated field that DOES exist on the record. No path-resolution check can catch this one -- `/payload/offer_ref` resolves, and a guard demanding the offer instead of the delivery reads exactly like a guard demanding the delivery. Only a derivation can tell them apart, which is why the oracle is a re-derivation and not a lookup.",
+  "expect_failure_contains": "criterion content drifts from its derivation",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.SalesAgreement.performed.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "nonempty_fields",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "field_paths": [
+              "/payload/offer_ref"
+            ]
+          },
+          {
+            "op": "related_phases",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "bindings": [
+              {
+                "field_path": "/payload/fulfillment_ref",
+                "states": [
+                  "delivered"
+                ],
+                "optional": false
+              },
+              {
+                "field_path": "/payload/obligation_refs",
+                "states": [
+                  "discharged",
+                  "transferred"
+                ],
+                "optional": false
+              }
+            ]
+          },
+          {
+            "op": "native_correlated",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "result": "delivered"
+          },
+          {
+            "op": "accepted_for",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.SalesAgreement.performed.v1",
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          },
+          {
+            "op": "attested_result",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.SalesAgreement.performed.v1",
+            "predicate_version": "1.0",
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

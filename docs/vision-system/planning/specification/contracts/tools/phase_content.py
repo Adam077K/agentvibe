@@ -79,6 +79,13 @@ CITE = {
         "../02-architecture-selection.md",
         "End-to-end acceptance belongs to its sponsor with actual counterparty/discharge "
         "rules, not the sum of completed tasks."),
+    "arch6-delivery": (
+        "../02-architecture-selection.md",
+        "Delivery produces independently observed results; support can reopen the demand "
+        "or claim evidence without undoing existing duties."),
+    "arch6-verify": (
+        "../02-architecture-selection.md",
+        "independently verify delivery against the offer"),
     "arch6-closure": (
         "../02-architecture-selection.md",
         "Closure requires real dispositions and continued reachable redress for "
@@ -394,6 +401,32 @@ CITE = {
         "the entire order. Acceptance uses the agreed criteria and counterparty "
         "acknowledgment where required; a silent customer does not acquire a new "
         "discharge meaning."),
+    "d-taste": (
+        "../../inputs/DIRECTIVE.md",
+        "The system must help the founder remain capable of ... exercising taste ... "
+        "making difficult decisions"),
+    "c-onboarding-failure": (
+        "03-company-capabilities.md",
+        "CAP-30 then executes onboarding ... Failure creates a support/remedy duty with "
+        "an update deadline."),
+    "c-sales-outcome": (
+        "03-company-capabilities.md",
+        "Sales marks its complete commercial outcome only after CAP-30 ... accepted "
+        "delivery and the specified payment conditions; agreement formation remains "
+        "separately visible before then."),
+    "c-triage-independence": (
+        "03-company-capabilities.md",
+        "A complaint about the current custodian routes outside the disputed "
+        "decision/incentive dependency."),
+    "c-grievance-remedy": (
+        "03-company-capabilities.md",
+        "A competent authority has decided a specific remedy, its funding is **actually "
+        "reserved**, and a performer and due date exist"),
+    "c-shifted-burden": (
+        "03-company-capabilities.md",
+        "run an operationally successful losing case and a profitable case with excessive "
+        "customer/applicant/contractor coordination. Report distinct economic, usefulness "
+        "and individual-burden failures; no combined score rescues them."),
     "c-closure": (
         "03-company-capabilities.md",
         "CAP-39 closure inventories accepted and potential promises, refunds, service, "
@@ -872,7 +905,9 @@ ENVELOPE_FALLBACK = {
 # --- Conjunct DSL. ---------------------------------------------------------------
 #
 #   ("nf",  [role, ...])                        nonempty_fields over those roles
+#   ("nfp", [path, ...])                        nonempty_fields over EXACTLY those paths
 #   ("rp",  [(role, [phase, ...], optional)])    related_phases, one binding per role
+#   ("rpp", [(path, [phase, ...], optional)])    related_phases over EXACTLY those paths
 #   ("af",)                                     accepted_for, naming this criterion
 #   ("ar",)                                     attested_result, naming this criterion
 #   ("nc",  result)                             native_correlated with that result
@@ -884,6 +919,11 @@ ENVELOPE_FALLBACK = {
 #   ("not", inner)                              negation of one conjunct
 #   ("ne",  arg)                                nonempty over a declared argument
 #   ("uq",  arg)                                unique over a declared argument
+#   ("neF", path)                               nonempty over the subject's own value
+#   ("prF", path)                               present at the subject's own path
+#   ("eqF", path, literal)                      that path equals that exact literal
+#   ("either", [item, ...])                     any over built conjuncts
+#   ("every", [item, ...])                      a nested all over built conjuncts
 #
 # `nf` and `ag` need at least one role to RESOLVE on the record; `fi` needs both a
 # start and an end path. A conjunct whose roles resolve to nothing is DROPPED rather
@@ -891,6 +931,16 @@ ENVELOPE_FALLBACK = {
 # here to remove, not a smaller version of a real one. A spec marked `hard` loses its
 # whole criterion to a gap when its conjunct cannot resolve, because the requirement
 # it states cannot be expressed against that record at all.
+#
+# `nfp` and `rpp` name FIELD PATHS rather than roles, and exist for one reason: a
+# recorded decision that names the exact field. AD-013 says `criterion.SalesAgreement.
+# performed.v1` must require `/payload/fulfillment_ref` -- not "whatever the dependency
+# role happens to match on SalesAgreement". Resolving that through a role would make the
+# decision depend on a regex, and widening a role to reach one field changes what every
+# other record's criteria demand. They are deliberately unavailable to PHASE_SPECS, which
+# is kind-level and must stay record-independent: `compose` refuses a `nfp`/`rpp` outside
+# RECORD_OVERRIDES, and refuses a path the record's own schema does not declare, so a
+# typo is a crash here rather than a criterion that silently checks nothing.
 
 
 def spec(requires, cites, conjuncts, hard=()):
@@ -1489,6 +1539,23 @@ PHASE_SPECS = {
         ["c-closure", "arch6-closure"],
         [("nf", ["duty", "custodian", "uncertainty", "quantity"]),
          ("rp", [("custodian", ["accepted"], False)]), ("fi",), AF, AR],
+        hard=["rp"]),
+    # AD-014. The same requirement `ended_with_residuals` states, at the phase name a
+    # terminated agreement uses. It is kind-level and not a record override on purpose:
+    # `terminated` is a closure event wherever it appears, and a residuals state that
+    # only one record could reach would invite the next record to settle the question
+    # silently by writing a guard, which is exactly how G2-02 arose.
+    "terminated_with_residuals": spec(
+        "As `terminated` -- forward performance has ended -- except that the transitive "
+        "due set is NOT empty. Every surviving obligation, claim, reservation, descendant "
+        "and pending operation is carried on the record with an accepted custodian for "
+        "each, its funding and its review interval. This phase asserts that duties "
+        "survive; `terminated` asserts that none do, and the difference is the whole "
+        "point of having both.",
+        ["c-closure", "arch6-closure", "arch4-revocation"],
+        [("nf", ["duty", "custodian", "uncertainty", "quantity"]),
+         ("rp", [("custodian", ["accepted"], False)]),
+         ("fi",), AF, AR],
         hard=["rp"]),
     "closed_with_residuals": spec(
         "As `closed-with-residuals`; this spelling is the same requirement.",
@@ -2392,6 +2459,151 @@ PHASE_SPECS.pop("settled_dispute_placeholder")
 DOMAIN_VALIDATOR_CITE = ("capabilities.json", "#/domain_validators")
 
 RECORD_OVERRIDES = {
+
+    # -- R-C / AD-013: Fulfillment's domain lifecycle. ----------------------------
+    #
+    # `refunded` is deliberately ABSENT and becomes a registered gap. The corpus says
+    # what a refund IS (CAP-17: "authorized repair/completion/refund", conflict identity
+    # so support and sales "cannot pay it twice") and says it about the SupportCase that
+    # performs it. It nowhere says what a Fulfillment record in `refunded` must show.
+    # Inventing that sentence here is the false closure this module exists to refuse.
+    ("Fulfillment", "delivering"): spec(
+        "The agreed service is being performed by a currently accepted performer, with "
+        "the milestone steps, the service window and the obligations still outstanding "
+        "all recorded. Being in delivery asserts nothing about delivery: no receipt, no "
+        "counterparty acknowledgment and no independent observation is required here, "
+        "and none of them would be sufficient to leave this phase either.",
+        ["c-fulfillment", "arch6-verify"],
+        [("nfp", ["/payload/performer_assignment", "/payload/delivery_steps",
+                  "/payload/service_window", "/payload/remaining_duties"]),
+         ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
+         AR],
+        hard=["nfp", "rpp"]),
+    ("Fulfillment", "delivered"): spec(
+        "Delivery is established by an independently observed result correlated to the "
+        "delivery adapter's own native object, by the receipts the milestones require "
+        "and by a current accepted judgment on THIS criterion. Correlation is against "
+        "the delivery, never against the payment: a settled charge is evidence about "
+        "money and says nothing about whether the service arrived. Partial receipts do "
+        "not complete the order and a silent customer acquires no new discharge meaning.",
+        ["c-fulfillment", "arch6-delivery", "arch6-acceptance"],
+        [("nfp", ["/payload/receipts", "/payload/delivery_steps",
+                  "/payload/remaining_duties"]),
+         ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
+         ("nc", "delivered"), AF, AR],
+        hard=["nfp", "rpp", "nc"]),
+    ("Fulfillment", "failed"): spec(
+        "The delivery did not happen and the failure is owned rather than closed: the "
+        "service window and the receipts actually obtained are recorded, the remaining "
+        "obligations survive on the record, and no observation correlates a delivery. "
+        "Failure creates a support/remedy duty with an update deadline; it does not "
+        "discharge the order, and it is not a route to `delivered` by another name.",
+        ["c-onboarding-failure", "arch3-outcome"],
+        [("nfp", ["/payload/remaining_duties", "/payload/receipts",
+                  "/payload/service_window"]),
+         ("rpp", [("/payload/performer_assignment", ["accepted"], False)]),
+         ("not", ("nc", "delivered")), AR],
+        hard=["nfp", "not"]),
+
+    # -- R-A / AD-013: what evidence constitutes performance of a sale. -----------
+    #
+    # The gap the Phase G reviewer classified (d): `performed` demanded byte-identical
+    # `field_paths` to `accepted`, SalesAgreement had no relation to Fulfillment, and the
+    # only native object reachable from the record was the Stripe payment behind
+    # `payment_operation`. A buyer could pay, the Fulfillment stay `proposed`, every
+    # Obligation stay `recognized`, and the agreement reach `performed` with nothing in
+    # the machine objecting. AD-013 decides it: delivery, not payment.
+    ("SalesAgreement", "performed"): spec(
+        "Performance of a sale is accepted delivery plus discharged or transferred "
+        "obligations -- never payment alone. The agreement names its own Fulfillment "
+        "record, that Fulfillment is currently `delivered`, and every linked Obligation "
+        "is `discharged` or `transferred`. The correlated native object is the DELIVERY, "
+        "not the charge: a settled payment is evidence about money and establishes "
+        "nothing about whether the service arrived, so it moves the agreement to "
+        "`accepted` or `partially-performed` and can never move it here.",
+        ["c-fulfillment", "c-sales-outcome", "arch6-delivery", "arch3-outcome"],
+        [("nfp", ["/payload/fulfillment_ref", "/payload/obligation_refs",
+                  "/payload/acceptance_evidence", "/payload/agreed_terms"]),
+         ("rpp", [("/payload/fulfillment_ref", ["delivered"], False),
+                  ("/payload/obligation_refs", ["discharged", "transferred"], False)]),
+         ("nc", "delivered"), AF, AR],
+        hard=["nfp", "rpp", "nc"]),
+
+    # -- R-F / G4-02: CAP-42's "funded remedy" was prose. -------------------------
+    #
+    # `remedy_reservation_refs` is required in the payload and was read by 0 predicates;
+    # `criterion.GrievanceCase.remedy_authorized.v1` carried `nonempty_fields: []` for the
+    # funding half, so a remedy could be authorized with no reservation at all. The
+    # kind-level `remedy_authorized` spec reaches for `resource_equation`, which CCR-03
+    # restricted to ResourceAccount, so on GrievanceCase it drops out entirely -- which is
+    # exactly why this record needs its own entry naming its own funding field.
+    ("GrievanceCase", "remedy_authorized"): spec(
+        "A competent authority has decided a specific remedy and its funding is ACTUALLY "
+        "RESERVED: every `remedy_reservation_refs` entry resolves to a Reservation "
+        "currently `held` or `partly_consumed`, and the list is not empty. A performer "
+        "and a due date exist, and the deciding response decision is recorded. An "
+        "authorization with no live reservation is an unowned promise, not this phase, "
+        "and an empty reservation list is the shape that made CAP-42's funded remedy "
+        "prose.",
+        ["c-grievance-remedy", "c-grievance"],
+        [("nfp", ["/payload/remedy_reservation_refs", "/payload/response_decision_refs",
+                  "/payload/requested_remedy", "/payload/decision_due_at",
+                  "/payload/custodian_assignment_ref"]),
+         ("rpp", [("/payload/remedy_reservation_refs", ["held", "partly_consumed"], False),
+                  ("/payload/custodian_assignment_ref", ["accepted"], False)]),
+         AF, AR],
+        hard=["nfp", "rpp"]),
+
+    # -- R-H / G4-08: the schema and the guard disagreed, and the guard was wrong. -
+    #
+    # `records.schema.json#/$defs/DecisionPacket` omitted `competence_requirement_ref`
+    # from `required`; `criterion.DecisionPacket.ready.v1` listed it in `nonempty_fields`,
+    # so a packet could not reach `ready` without it. Two implementers derive different
+    # packets from one contract. It is optional in BOTH now, and the guard states the case
+    # the stricter reading destroyed: DIRECTIVE.md §1.6 wants the founder exercising taste
+    # and making difficult decisions, and a pure taste decision has no competence
+    # prerequisite to name. `taste_decision` is a required flag rather than an inference,
+    # because "this is a matter of taste" is a claim someone makes, not one a guard reads
+    # off an absent field -- and an absent flag is unresolved and denies.
+    ("DecisionPacket", "ready"): spec(
+        "Every required child prerequisite resolves to a current accepted judgment on its "
+        "exact subject and predicate, the dependency graph over those children is "
+        "acyclic, and no activation or effect is claimed. AND the packet states its "
+        "competence footing exactly once: either `taste_decision` is true -- a decision "
+        "the owner makes because it is theirs to make, which has no competence "
+        "prerequisite to name and must not be blocked for lacking one -- or "
+        "`competence_requirement_ref` is present. Neither is inferred from the absence of "
+        "the other.",
+        ["s-per-edge", "c-launch", "s-no-self-support", "d-taste"],
+        [("nf", ["dependency", "evidence"]),
+         ("rp", [("dependency", ["accepted", "verified"], False)]),
+         ("ag", ["dependency"]),
+         ("either", [("eqF", "/payload/taste_decision", True),
+                     ("prF", "/payload/competence_requirement_ref")]),
+         AF, AR],
+        hard=["ag", "either"]),
+
+    # -- R-K(2): parking records BOTH, and the kernel's `or` is read as a conjunction.
+    #
+    # The two halves answer different questions -- the review date says when someone looks
+    # again, the closure account says what happens to the duties if nobody does -- and a
+    # guard cannot check `or` without knowing which field carries which. The cheapest
+    # correct reading of an ambiguous `or` in a duty-preserving contract is the one that
+    # preserves more.
+    ("Case", "parked"): spec(
+        "An AUTHORIZED reason, and BOTH halves of the kernel's disjunction: the next "
+        "review date and the closure account that says what becomes of the surviving "
+        "duties if that review never happens. Every surviving duty keeps a named accepted "
+        "custodian. No obligation disappears, and parking never discharges external "
+        "standing.",
+        ["k-case-park", "k11-transfer", "c-pause", "c-goal-review"],
+        [("nf", ["duty", "custodian", "successor"]),
+         ("nfp", ["/payload/review_at", "/payload/parking_closure_account_ref"]),
+         ("rp", [("custodian", ["accepted"], False),
+                 ("duty", ["potential", "recognized", "performing"], True)]),
+         ("fi",), AR],
+        hard=["rp", "fi", "nfp"]),
+
     ("DeliveryCapacity", "verified"): spec(
         "verified requires actual performer acknowledgment, applicable access/materials, "
         "window, resources and continuity evidence; not compute availability.",
@@ -2448,15 +2660,33 @@ RECORD_OVERRIDES = {
          ("s1", "launch_children"), ("uq", "judgment_refs"),
          ("ag", ["dependency"]), AF, AR],
         hard=["s1"]),
+    # R-G / G4-03 extends this entry. The domain_validators requirement is unchanged and
+    # still first; what is added is the external-burden half, which the criterion checked
+    # nowhere. `external_burden_observations` is a required ARRAY, and an array validates
+    # empty, so the protocol's required case -- a profitable venture shifting work onto
+    # customers, applicants or contractors -- passed with `[]`.
     ("Economics", "validated"): spec(
         "observed_revenue and observed_cost allow observed or unknown, never estimated "
         "presented as actual; any unknown input makes the corresponding aggregate "
         "incomplete, so a known subtotal plus missing categories is reported instead of a "
-        "complete total.",
-        ["c-price"],
+        "complete total. AND the external burden this venture places on customers, "
+        "applicants and contractors is accounted for: either the observations are "
+        "nonempty, or `external_burden_account` positively finds `none_observed` and "
+        "carries the reason, the observation window and the assignment answerable for it. "
+        "An empty observation array on its own is the absence of evidence and establishes "
+        "no absence of burden.",
+        ["c-price", "c-shifted-burden"],
         [("nf", ["quantity", "evidence", "uncertainty"]),
+         ("either", [("neF", "/payload/external_burden_observations"),
+                     ("every", [("eqF", "/payload/external_burden_account/finding",
+                                 "none_observed"),
+                                ("prF", "/payload/external_burden_account/reason"),
+                                ("prF", "/payload/external_burden_account/"
+                                        "observation_window"),
+                                ("prF", "/payload/external_burden_account/"
+                                        "responsible_assignment")])]),
          ("s1", "resource_equation"), ("s1", "complete_capture"), AF, AR],
-        hard=["s1"]),
+        hard=["s1", "either"]),
     ("CashPosition", "validated"): spec(
         "Each expected account has an AccountBalanceObservation or a named coverage gap; "
         "an absent reconciliation date or unknown balance cannot establish zero assets or "
@@ -2478,6 +2708,14 @@ OVERRIDE_SOURCE = {
 #
 # Where two passages disagree about what a phase requires, NEITHER is encoded. The
 # entry is recorded and the criterion becomes an explicit gap.
+#
+# BOTH entries are RESOLVED BY DECISION as of R-K (2026-09-13) and kept here rather
+# than deleted: which reading was chosen, and what the losing reading meant, is the
+# part a later reader needs. A resolved contradiction is not an absent one.
+#
+# Resolving them here resolves them in the MACHINES. The prose files are deliberately
+# untouched -- that is a separate pass -- so each entry names the sentences that now
+# need a supersession note, in `prose_supersession_needed`.
 
 CONTRADICTIONS = [
     {
@@ -2496,9 +2734,39 @@ CONTRADICTIONS = [
              "Obligations distinguish reported performance from legitimate discharge, "
              "transfer and surviving dispute."],
         ],
-        "resolution": "neither encoded; both phases keep their own kind-level content "
-                      "and no record-specific disambiguation is invented.",
-        "applies_to_criteria": [],
+        "status": "resolved_by_decision",
+        "resolution": (
+            "RESOLVED AS MECHANISM (R-K, 2026-09-13). `contested` is the PERSISTED state "
+            "and `disputed` is a PROJECTION of it: a presentation may call a contested "
+            "judgment \"disputed\" and must never persist a second verdict. The registry "
+            "already agrees and nothing had to be removed to make it so -- EvidenceJudgment "
+            "declares proposed, accepted, rejected, inconclusive, contested, stale and "
+            "withdrawn, and has never declared a `disputed` phase. "
+            "02-architecture-selection.md's \"surviving dispute\" is about a DIFFERENT "
+            "SUBJECT: an Obligation that remains contested after the Case carrying it "
+            "closes. That is a duty surviving a closure, not a second state of a judgment, "
+            "and the two passages were never about the same thing. Every `disputed` phase "
+            "that does exist in the registry -- Case, Obligation, SalesAgreement, "
+            "Commitment -- is a dispute about work, a duty or an agreement; none is a "
+            "dispute about a judgment. `criterion.EvidenceJudgment.contested.v1` carries "
+            "the content and no criterion encodes a second verdict. The kind-level "
+            "`disputed` spec stays, because the records that use it are the ones this "
+            "decision says may legitimately have one. "
+            "SUPERSEDED READING: \"neither encoded; both phases keep their own kind-level "
+            "content and no record-specific disambiguation is invented.\""),
+        "applies_to_criteria": ["criterion.EvidenceJudgment.contested.v1"],
+        "prose_supersession_needed": [
+            ["01-contract-kernel.md",
+             "EvidenceJudgment stores one canonical state. Presentation may call contested "
+             "\"disputed\"; it must not persist a second disputed verdict.",
+             "Now enforced rather than asserted; the sentence stands and should say so."],
+            ["../02-architecture-selection.md",
+             "Obligations distinguish reported performance from legitimate discharge, "
+             "transfer and surviving dispute.",
+             "Needs a note that \"surviving dispute\" means a CONTESTED OBLIGATION "
+             "surviving case closure, not a second judgment state -- which is the reading "
+             "that made this look like a contradiction."],
+        ],
     },
     {
         "id": "gap-contradiction-parked-review-vs-closure",
@@ -2518,10 +2786,47 @@ CONTRADICTIONS = [
              "At review time an untouched goal is reaffirmed with evidence, narrowed, "
              "parked with a reopening trigger or abandoned with duty disposition."],
         ],
-        "resolution": "the shared half is encoded (authorized reason, surviving duty "
-                      "ownership, a bounded interval); the review-versus-closure choice "
-                      "is not.",
-        "applies_to_criteria": [],
+        "status": "resolved_by_decision",
+        "resolution": (
+            "RESOLVED AS MECHANISM (R-K, 2026-09-13). Parking records BOTH. The kernel's "
+            "`or` is read as a CONJUNCTION, because its two halves answer different "
+            "questions: the review date says when someone looks again, the closure account "
+            "says what becomes of the surviving duties if nobody does. A guard cannot check "
+            "`or` without knowing which field carries which, and the cheapest correct "
+            "reading of an ambiguous `or` in a duty-preserving contract is the one that "
+            "preserves more -- the looser reading lets a park with a date and no account "
+            "pass, and that park is how a duty goes quiet. Case gains "
+            "`/payload/parking_closure_account_ref` -> ReasonRecord, OPTIONAL on the record "
+            "and REQUIRED by `criterion.Case.parked.v1` beside `/payload/review_at`. "
+            "Optional on the record because a field every Case must carry merely to be "
+            "registered is not what parking needs; required by the criterion because that "
+            "is where parking happens. Same shape AD-013 gives `fulfillment_ref`. "
+            "03-company-capabilities.md is NOT contradicted by this: it names one of the "
+            "two halves and the kernel names both, which is an incompleteness rather than a "
+            "disagreement. "
+            "SUPERSEDED READING: \"the shared half is encoded (authorized reason, surviving "
+            "duty ownership, a bounded interval); the review-versus-closure choice is not.\""),
+        "applies_to_criteria": ["criterion.Case.parked.v1"],
+        "prose_supersession_needed": [
+            ["01-contract-kernel.md",
+             "proposed/admitted/active/waiting-for-evidence → parked or abandoned: "
+             "authorized reason, next review/closure account, cancellation and surviving "
+             "duty ownership",
+             "Needs a note that `next review/closure account` is read as BOTH, and that "
+             "the guard now demands both."],
+            ["03-company-capabilities.md",
+             "At review time an untouched goal is reaffirmed with evidence, narrowed, "
+             "parked with a reopening trigger or abandoned with duty disposition.",
+             "Names the review half only. Needs a note that parking a Case also records a "
+             "closure account, so a reader does not take this sentence as the whole rule."],
+        ],
+        "scope_note": (
+            "The mechanism is on Case, the record the contradiction named. Seven other "
+            "records declare a `parked` phase -- Goal, Mission, Project, WorkflowRun, "
+            "KnowledgeQuestion, Opportunity, WorkOrder -- and none gains a closure-account "
+            "field here. Adding one to eight records on the authority of a contradiction "
+            "raised about one of them would be a bigger decision than the one recorded, "
+            "and it is not made. That is a KNOWN residue, stated rather than closed."),
     },
 ]
 
@@ -2573,6 +2878,55 @@ def primitive_admits(op, record):
     return enum is None or record in enum
 
 
+ENVELOPE_PATHS = frozenset({
+    "/owner_assignment_ref", "/access_policy_ref", "/retention_policy_ref",
+    "/provenance_refs", "/effective_from", "/effective_until",
+})
+
+
+def payload_declared(records_schema, record):
+    """Every payload field the record's schema declares, required or not.
+
+    `nfp`/`rpp` may name an OPTIONAL field -- AD-013 makes `/payload/fulfillment_ref`
+    optional at registration and required to reach `performed`, which is the whole
+    point of the decision. What they may not name is a field that does not exist.
+    """
+    payload = records_schema["$defs"][record].get("properties", {}).get("payload", {})
+    names = set(payload.get("properties", {}))
+    for branch in payload.get("oneOf", []):
+        names |= set(branch.get("properties", {}))
+    return names
+
+
+RECORD_SPECIFIC_KINDS = ("nfp", "rpp", "neF", "prF", "eqF")
+
+
+def literal_paths(item):
+    """Every field path this conjunct names, recursively; () when it names none."""
+    if item[0] == "nfp":
+        return tuple(item[1])
+    if item[0] == "rpp":
+        return tuple(path for path, _states, _optional in item[1])
+    if item[0] in ("neF", "prF", "eqF"):
+        return (item[1],)
+    if item[0] == "not":
+        return literal_paths(item[1])
+    if item[0] in ("either", "every"):
+        return tuple(p for inner in item[1] for p in literal_paths(inner))
+    return ()
+
+
+def literal_kinds(item):
+    """Every conjunct kind this item uses, recursively."""
+    found = [item[0]]
+    if item[0] == "not":
+        found.extend(literal_kinds(item[1]))
+    if item[0] in ("either", "every"):
+        for inner in item[1]:
+            found.extend(literal_kinds(inner))
+    return found
+
+
 def payload_required(records_schema, record):
     """The record's REQUIRED payload field names, in schema order."""
     definition = records_schema["$defs"][record]
@@ -2618,6 +2972,18 @@ def _subject():
     return {"arg": "subject_ref"}
 
 
+def _subject_path(pointer):
+    """The subject's own decoded value at `pointer`.
+
+    One idiom, already in the registry: `identity.current.v1` and
+    `capture.kind.present.v1` both spell a field read as path-over-resolve. Unlike
+    `nonempty_fields` this reaches INSIDE a payload value, which is what a typed marker
+    with its own `reason` and window needs.
+    """
+    return {"op": "path", "value": {"op": "resolve", "ref": _subject()},
+            "pointer": pointer}
+
+
 def build_conjunct(item, record, criterion_id, required_fields):
     """One conjunct node, or None when its evidence does not exist on this record."""
     kind = item[0]
@@ -2632,6 +2998,14 @@ def build_conjunct(item, record, criterion_id, required_fields):
         if not paths:
             return None
         return {"op": "nonempty_fields", "subject_ref": _subject(), "field_paths": paths}
+    if kind == "nfp":
+        return {"op": "nonempty_fields", "subject_ref": _subject(),
+                "field_paths": list(item[1])}
+    if kind == "rpp":
+        return {"op": "related_phases", "subject_ref": _subject(),
+                "bindings": [{"field_path": path, "states": list(states),
+                              "optional": bool(optional)}
+                             for path, states, optional in item[1]]}
     if kind == "rp":
         bindings = []
         for role, states, optional in item[1]:
@@ -2681,6 +3055,24 @@ def build_conjunct(item, record, criterion_id, required_fields):
         if inner is None or inner is NOT_APPLICABLE:
             return inner
         return {"op": "not", "predicate": inner}
+    if kind == "neF":
+        return {"op": "nonempty", "value": _subject_path(item[1])}
+    if kind == "prF":
+        return {"op": "present", "value": _subject_path(item[1])}
+    if kind == "eqF":
+        return {"op": "eq", "left": _subject_path(item[1]), "right": item[2]}
+    if kind in ("either", "every"):
+        built = []
+        for inner_item in item[1]:
+            inner = build_conjunct(inner_item, record, criterion_id, required_fields)
+            if inner is None or inner is NOT_APPLICABLE:
+                # A disjunct that does not resolve is not a disjunct that is satisfied.
+                # Dropping it would WIDEN an `any`; dropping one from an `all` narrows the
+                # requirement. Either way the stated requirement is no longer what is
+                # written, so the whole conjunct fails to resolve and its spec decides.
+                return inner
+            built.append(inner)
+        return {"op": "any" if kind == "either" else "all", "predicates": built}
     raise ValueError("unknown conjunct kind: " + kind)
 
 
@@ -2699,6 +3091,32 @@ def compose(record, phase, criterion_id, records_schema, declared_args,
         entry = _INITIAL_PHASE_SPEC
     if entry is None:
         return None, None, "the prose states no evidence requirement for this phase name"
+
+    # A literal path is a claim about THIS record's schema, so it is checked against it
+    # before anything is emitted. Unchecked, a renamed or misspelled field would produce
+    # a `nonempty_fields` naming nothing -- a criterion that reads as a requirement and
+    # demands a field the record cannot have.
+    declared_paths = payload_declared(records_schema, record)
+    for item in entry["conjuncts"]:
+        for path in literal_paths(item):
+            if path in ENVELOPE_PATHS:
+                continue
+            # Only the first payload segment is checked: `eqF` and `prF` reach INSIDE a
+            # typed value (`/payload/external_burden_account/finding`), whose shape is
+            # values.schema.json's business and not this module's.
+            segments = path.split("/")
+            if len(segments) < 3 or segments[1] != "payload" \
+                    or segments[2] not in declared_paths:
+                raise ValueError(
+                    "%s %s: conjunct names %r, which %s does not declare"
+                    % (record, phase, path, record))
+        if (record, phase) not in RECORD_OVERRIDES:
+            for kind in literal_kinds(item):
+                if kind in RECORD_SPECIFIC_KINDS:
+                    raise ValueError(
+                        "%s %s: `%s` names one record's own fields and belongs in "
+                        "RECORD_OVERRIDES, not in a kind-level PHASE_SPECS entry"
+                        % (record, phase, kind))
 
     required_fields = payload_required(records_schema, record)
     predicates, dropped = [], []

@@ -1,0 +1,146 @@
+{
+  "id": "r11-overlap-tie-break-recorded-but-unread",
+  "repair": "R-I",
+  "finding": "G4-04",
+  "why": "`neq(custody_tie_break_reason, \"no_overlap\")` becomes `eq`, so an assignment with contesting mandates is required to claim there was no overlap. The enum is still recorded, still typed and still populated -- which is exactly the state G4-04 found and called decoration.",
+  "expect_failure_contains": "required guard op removed",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.ResponsibilityAssignment.proposed.accepted.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "subject_unchanged",
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          },
+          {
+            "op": "status_edge",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "from_state": "proposed",
+            "to_state": "accepted"
+          },
+          {
+            "op": "transition_basis",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "event_kind": "authority.actual_accepted",
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "decision_refs": {
+              "arg": "decision_refs"
+            }
+          },
+          {
+            "op": "current_owner",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "actor_ref": {
+              "context": "actor_identity_ref"
+            },
+            "command": {
+              "context": "command_name"
+            }
+          },
+          {
+            "op": "present",
+            "value": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/custody_basis"
+            }
+          },
+          {
+            "op": "any",
+            "predicates": [
+              {
+                "op": "not",
+                "predicate": {
+                  "op": "nonempty",
+                  "value": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/contesting_mandate_refs"
+                  }
+                }
+              },
+              {
+                "op": "all",
+                "predicates": [
+                  {
+                    "op": "eq",
+                    "left": {
+                      "op": "path",
+                      "value": {
+                        "op": "resolve",
+                        "ref": {
+                          "arg": "subject_ref"
+                        }
+                      },
+                      "pointer": "/payload/custody_basis"
+                    },
+                    "right": "provisional_overlap_resolution"
+                  },
+                  {
+                    "op": "eq",
+                    "left": {
+                      "op": "path",
+                      "value": {
+                        "op": "resolve",
+                        "ref": {
+                          "arg": "subject_ref"
+                        }
+                      },
+                      "pointer": "/payload/custody_tie_break_reason"
+                    },
+                    "right": "no_overlap"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "op": "call",
+            "predicate_id": "criterion.ResponsibilityAssignment.accepted.v1",
+            "arguments": {
+              "subject_ref": {
+                "arg": "subject_ref"
+              },
+              "observation_refs": {
+                "arg": "observation_refs"
+              },
+              "judgment_refs": {
+                "arg": "judgment_refs"
+              },
+              "bootstrap_authorization": {
+                "arg": "bootstrap_authorization"
+              },
+              "bootstrap_records": {
+                "arg": "bootstrap_records"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -25492,6 +25492,7 @@
           "agreed_terms": "Ref<ArtifactVersion>",
           "acceptance_evidence": "EvidenceRef[]",
           "payment_operation": "Ref<OperationIntent>?",
+          "fulfillment_ref": "Ref<Fulfillment>?",
           "obligation_refs": "Ref<Obligation>[]"
         },
         "required_fields": [
@@ -25514,6 +25515,7 @@
         "partially-performed",
         "performed",
         "disputed",
+        "terminated_with_residuals",
         "terminated"
       ],
       "intrinsic": false,
@@ -25742,6 +25744,76 @@
           "allowed_command_ids": [
             "kernel.record.transition"
           ]
+        },
+        {
+          "edge_id": "SalesAgreement:proposed->terminated_with_residuals",
+          "from": "proposed",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.proposed.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:accepted->terminated_with_residuals",
+          "from": "accepted",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.accepted.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:partially-performed->terminated_with_residuals",
+          "from": "partially-performed",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.partially-performed.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:disputed->terminated_with_residuals",
+          "from": "disputed",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.disputed.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:terminated_with_residuals->terminated",
+          "from": "terminated_with_residuals",
+          "to": "terminated",
+          "predicate_id": "edge.SalesAgreement.terminated_with_residuals.terminated.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
         }
       ],
       "state_preserving_update": "No in-place business or status-link mutation and no generic same-phase annotation. New observations/reasons are separate facts; a changed disposition follows a registered edge (including reopening where defined). Business edits use record.revise and a new initial lifecycle. Immutable single-phase facts have no update edge."
@@ -25789,6 +25861,13 @@
         "field_path": "/payload/payment_operation",
         "targets": [
           "OperationIntent"
+        ],
+        "cardinality": "optional_one"
+      },
+      {
+        "field_path": "/payload/fulfillment_ref",
+        "targets": [
+          "Fulfillment"
         ],
         "cardinality": "optional_one"
       },
@@ -27096,6 +27175,7 @@
           "currency": "Currency",
           "owner_minutes": "MinutesKnowledge",
           "external_burden_observations": "EvidenceRef[]",
+          "external_burden_account": "ExternalBurdenAccount?",
           "allocation_rule": "string",
           "missing_costs": "string[]",
           "observed_revenue": "MoneyKnowledge",
@@ -31693,6 +31773,10 @@
       "phases": [
         "proposed",
         "validated",
+        "delivering",
+        "delivered",
+        "failed",
+        "refunded",
         "superseded",
         "restricted"
       ],
@@ -31774,6 +31858,118 @@
           "from": "restricted",
           "to": "superseded",
           "predicate_id": "edge.Fulfillment.restricted.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:proposed->delivering",
+          "from": "proposed",
+          "to": "delivering",
+          "predicate_id": "edge.Fulfillment.proposed.delivering.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.delivering.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivering->delivered",
+          "from": "delivering",
+          "to": "delivered",
+          "predicate_id": "edge.Fulfillment.delivering.delivered.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.delivered.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivered->failed",
+          "from": "delivered",
+          "to": "failed",
+          "predicate_id": "edge.Fulfillment.delivered.failed.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.failed.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivered->refunded",
+          "from": "delivered",
+          "to": "refunded",
+          "predicate_id": "edge.Fulfillment.delivered.refunded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.refunded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivering->superseded",
+          "from": "delivering",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.delivering.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:delivered->superseded",
+          "from": "delivered",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.delivered.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:failed->superseded",
+          "from": "failed",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.failed.superseded.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.Fulfillment.superseded.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "Fulfillment:refunded->superseded",
+          "from": "refunded",
+          "to": "superseded",
+          "predicate_id": "edge.Fulfillment.refunded.superseded.v1",
           "predicate_version": "1.0",
           "owner_component": "S1-C03",
           "criterion_id": "criterion.Fulfillment.superseded.v1",
@@ -38998,6 +39194,7 @@
           "checkpoint_ref": "Ref<Continuation>?",
           "work_order_refs": "Ref<WorkOrder>[]",
           "review_at": "UTC",
+          "parking_closure_account_ref": "Ref<ReasonRecord>?",
           "successor_case_ref": "Ref<Case>?"
         },
         "required_fields": [
@@ -39694,6 +39891,13 @@
         "field_path": "/payload/successor_case_ref",
         "targets": [
           "Case"
+        ],
+        "cardinality": "optional_one"
+      },
+      {
+        "field_path": "/payload/parking_closure_account_ref",
+        "targets": [
+          "ReasonRecord"
         ],
         "cardinality": "optional_one"
       }
@@ -47696,7 +47900,10 @@
           "performance_predicates": "TypedPredicate[]",
           "continuity_ref": "Ref<ContinuityArrangement>",
           "expires_at": "UTC",
-          "unresolved_scope": "ScopeSelector"
+          "unresolved_scope": "ScopeSelector",
+          "contesting_mandate_refs": "Ref<Mandate>[]",
+          "custody_basis": "Enum<promise_sponsor,service_mandate,maintenance_custodian,provisional_overlap_resolution>",
+          "custody_tie_break_reason": "Enum<narrowest_sufficient_scope,alternate_available,earliest_acceptance,no_overlap>"
         },
         "required_fields": [
           "principal_ref",
@@ -47711,7 +47918,10 @@
           "performance_predicates",
           "continuity_ref",
           "expires_at",
-          "unresolved_scope"
+          "unresolved_scope",
+          "contesting_mandate_refs",
+          "custody_basis",
+          "custody_tie_break_reason"
         ],
         "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
       }
@@ -47930,6 +48140,13 @@
           "Mandate"
         ],
         "cardinality": "one"
+      },
+      {
+        "field_path": "/payload/contesting_mandate_refs",
+        "targets": [
+          "Mandate"
+        ],
+        "cardinality": "many"
       },
       {
         "field_path": "/payload/authority_limit_refs",
@@ -67668,6 +67885,7 @@
           "contrary_refs": "EvidenceRef[]",
           "unknowns": "string[]",
           "reversibility": "string",
+          "taste_decision": "boolean",
           "latest_decision_at": "UTC",
           "expires_at": "UTC",
           "no_answer_rule_ref": "Ref<ConfigurationVersion>",
@@ -67685,6 +67903,7 @@
           "contrary_refs",
           "unknowns",
           "reversibility",
+          "taste_decision",
           "latest_decision_at",
           "expires_at",
           "no_answer_rule_ref",

@@ -20474,7 +20474,11 @@
         "criterion.FormationReadiness.expired.v1",
         "criterion.FormationReadiness.preparing.v1",
         "criterion.FormationReadiness.ready.v1",
+        "criterion.Fulfillment.delivered.v1",
+        "criterion.Fulfillment.delivering.v1",
+        "criterion.Fulfillment.failed.v1",
         "criterion.Fulfillment.proposed.v1",
+        "criterion.Fulfillment.refunded.v1",
         "criterion.Fulfillment.restricted.v1",
         "criterion.Fulfillment.superseded.v1",
         "criterion.Fulfillment.validated.v1",
@@ -20844,6 +20848,7 @@
         "criterion.SalesAgreement.performed.v1",
         "criterion.SalesAgreement.proposed.v1",
         "criterion.SalesAgreement.terminated.v1",
+        "criterion.SalesAgreement.terminated_with_residuals.v1",
         "criterion.Schedule.active.v1",
         "criterion.Schedule.expired.v1",
         "criterion.Schedule.paused.v1",
@@ -21508,9 +21513,17 @@
         "edge.FormationReadiness.preparing.conditionally-ready.v1",
         "edge.FormationReadiness.preparing.ready.v1",
         "edge.FormationReadiness.ready.expired.v1",
+        "edge.Fulfillment.delivered.failed.v1",
+        "edge.Fulfillment.delivered.refunded.v1",
+        "edge.Fulfillment.delivered.superseded.v1",
+        "edge.Fulfillment.delivering.delivered.v1",
+        "edge.Fulfillment.delivering.superseded.v1",
+        "edge.Fulfillment.failed.superseded.v1",
+        "edge.Fulfillment.proposed.delivering.v1",
         "edge.Fulfillment.proposed.restricted.v1",
         "edge.Fulfillment.proposed.superseded.v1",
         "edge.Fulfillment.proposed.validated.v1",
+        "edge.Fulfillment.refunded.superseded.v1",
         "edge.Fulfillment.restricted.superseded.v1",
         "edge.Fulfillment.validated.restricted.v1",
         "edge.Fulfillment.validated.superseded.v1",
@@ -22042,18 +22055,23 @@
         "edge.SalesAgreement.accepted.partially-performed.v1",
         "edge.SalesAgreement.accepted.performed.v1",
         "edge.SalesAgreement.accepted.terminated.v1",
+        "edge.SalesAgreement.accepted.terminated_with_residuals.v1",
         "edge.SalesAgreement.disputed.accepted.v1",
         "edge.SalesAgreement.disputed.partially-performed.v1",
         "edge.SalesAgreement.disputed.performed.v1",
         "edge.SalesAgreement.disputed.terminated.v1",
+        "edge.SalesAgreement.disputed.terminated_with_residuals.v1",
         "edge.SalesAgreement.interest.proposed.v1",
         "edge.SalesAgreement.partially-performed.disputed.v1",
         "edge.SalesAgreement.partially-performed.performed.v1",
         "edge.SalesAgreement.partially-performed.terminated.v1",
+        "edge.SalesAgreement.partially-performed.terminated_with_residuals.v1",
         "edge.SalesAgreement.performed.disputed.v1",
         "edge.SalesAgreement.proposed.accepted.v1",
         "edge.SalesAgreement.proposed.disputed.v1",
         "edge.SalesAgreement.proposed.terminated.v1",
+        "edge.SalesAgreement.proposed.terminated_with_residuals.v1",
+        "edge.SalesAgreement.terminated_with_residuals.terminated.v1",
         "edge.Schedule.active.expired.v1",
         "edge.Schedule.active.paused.v1",
         "edge.Schedule.active.retired.v1",
@@ -51815,6 +51833,261 @@
           "type": "object",
           "properties": {
             "predicate_id": {
+              "const": "criterion.Fulfillment.delivered.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "criterion.Fulfillment.delivering.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "criterion.Fulfillment.failed.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
               "const": "criterion.Fulfillment.proposed.v1"
             },
             "version": {
@@ -51876,6 +52149,109 @@
               "required": [
                 "subject_ref",
                 "observation_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "criterion.Fulfillment.refunded.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs"
               ],
               "additionalProperties": false
             }
@@ -79920,6 +80296,109 @@
               "required": [
                 "subject_ref",
                 "observation_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "criterion.SalesAgreement.terminated_with_residuals.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "SalesAgreement"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs"
               ],
               "additionalProperties": false
             }
@@ -171825,6 +172304,931 @@
           "type": "object",
           "properties": {
             "predicate_id": {
+              "const": "edge.Fulfillment.delivered.failed.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.Fulfillment.delivered.refunded.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.Fulfillment.delivered.superseded.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.Fulfillment.delivering.delivered.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.Fulfillment.delivering.superseded.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.Fulfillment.failed.superseded.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.Fulfillment.proposed.delivering.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
               "const": "edge.Fulfillment.proposed.restricted.v1"
             },
             "version": {
@@ -172132,6 +173536,159 @@
           "properties": {
             "predicate_id": {
               "const": "edge.Fulfillment.proposed.validated.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Fulfillment"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.Fulfillment.refunded.superseded.v1"
             },
             "version": {
               "const": "1.0"
@@ -253527,6 +255084,159 @@
           "type": "object",
           "properties": {
             "predicate_id": {
+              "const": "edge.SalesAgreement.accepted.terminated_with_residuals.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "SalesAgreement"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
               "const": "edge.SalesAgreement.disputed.accepted.v1"
             },
             "version": {
@@ -253987,6 +255697,159 @@
           "properties": {
             "predicate_id": {
               "const": "edge.SalesAgreement.disputed.terminated.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "SalesAgreement"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.SalesAgreement.disputed.terminated_with_residuals.v1"
             },
             "version": {
               "const": "1.0"
@@ -254751,6 +256614,159 @@
           "type": "object",
           "properties": {
             "predicate_id": {
+              "const": "edge.SalesAgreement.partially-performed.terminated_with_residuals.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "SalesAgreement"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
               "const": "edge.SalesAgreement.performed.disputed.v1"
             },
             "version": {
@@ -255211,6 +257227,312 @@
           "properties": {
             "predicate_id": {
               "const": "edge.SalesAgreement.proposed.terminated.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "SalesAgreement"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.SalesAgreement.proposed.terminated_with_residuals.v1"
+            },
+            "version": {
+              "const": "1.0"
+            },
+            "arguments": {
+              "type": "object",
+              "properties": {
+                "subject_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "SalesAgreement"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "observation_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "Observation"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "judgment_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "EvidenceJudgment"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decision_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "record_id": {
+                        "$ref": "values.schema.json#/$defs/UUID"
+                      },
+                      "record_type": {
+                        "type": "string",
+                        "enum": [
+                          "DecisionRecord"
+                        ]
+                      },
+                      "revision": {
+                        "$ref": "values.schema.json#/$defs/Revision"
+                      }
+                    },
+                    "required": [
+                      "record_id",
+                      "record_type",
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "continuation_ref": {
+                  "type": "object",
+                  "properties": {
+                    "record_id": {
+                      "$ref": "values.schema.json#/$defs/UUID"
+                    },
+                    "record_type": {
+                      "type": "string",
+                      "enum": [
+                        "Continuation"
+                      ]
+                    },
+                    "revision": {
+                      "$ref": "values.schema.json#/$defs/Revision"
+                    }
+                  },
+                  "required": [
+                    "record_id",
+                    "record_type",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "subject_ref",
+                "observation_refs",
+                "judgment_refs",
+                "decision_refs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "predicate_id",
+            "version",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "predicate_id": {
+              "const": "edge.SalesAgreement.terminated_with_residuals.terminated.v1"
             },
             "version": {
               "const": "1.0"
@@ -516635,6 +518957,71 @@
         "deciding_assignment_ref"
       ],
       "additionalProperties": false
+    },
+    "ExternalBurdenAccount": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "finding": {
+              "const": "observed"
+            },
+            "observation_window": {
+              "$ref": "values.schema.json#/$defs/TimeWindow"
+            }
+          },
+          "required": [
+            "finding",
+            "observation_window"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "finding": {
+              "const": "none_observed"
+            },
+            "reason": {
+              "$ref": "values.schema.json#/$defs/string"
+            },
+            "observation_window": {
+              "$ref": "values.schema.json#/$defs/TimeWindow"
+            },
+            "responsible_assignment": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ResponsibilityAssignment"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "finding",
+            "reason",
+            "observation_window",
+            "responsible_assignment"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "Whether external burden on customers, applicants or contractors was observed in a stated window. `none_observed` is a POSITIVE finding and carries its reason, its window and the assignment answerable for it; it is not the absence of evidence, which is what an empty observation array is and why an empty array cannot establish it."
     }
   }
 }

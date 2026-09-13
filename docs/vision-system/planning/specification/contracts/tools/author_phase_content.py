@@ -20,7 +20,22 @@ Three rules this tool will not break, each of which a committed check enforces:
      `validate_contracts.py` requires to terminate; one joins the closure predicate.
      Rewriting them would break FI-12 constraint 6 to improve an FI-11 number.
 
-Usage: python3 tools/author_phase_content.py [--dry-run]
+Usage: python3 tools/author_phase_content.py [--dry-run | --check] [<contracts-dir>]
+
+`--check` writes nothing and FAILS when what is committed differs from what this tool
+would write. That is the oracle for criterion CONTENT, and G2-06 is the finding it
+closes: three mutations of `criterion.SalesAgreement.performed.v1` -- erasing its
+`field_paths`, repointing them at an unrelated field, and making `performed` demand
+strictly less than `accepted` -- each passed all 252,513 checks of the validator, because
+nothing in the package compared a criterion body against anything at all. A hand-edited
+criterion is now a failing build, whatever it says.
+
+The directory argument exists for the same reason `guard_distinctness.py` has one, and it
+is load-bearing rather than convenient: `tools/` is a SYMLINK inside every negative-fixture
+scratch tree, so `Path(__file__).resolve()` lands in the REAL contracts directory. A
+`--check` that resolved its own root would cheerfully re-derive the committed registries
+while claiming to check the mutated copy in front of it -- a check reporting on a file it
+is not reading, which is the defect this package names in four places.
 """
 from __future__ import annotations
 
@@ -30,12 +45,18 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
+_OVERRIDE = [a for a in sys.argv[1:] if not a.startswith("-")]
+ROOT = Path(_OVERRIDE[0]) if _OVERRIDE and Path(_OVERRIDE[0]).is_dir() else HERE.parent
 sys.path.insert(0, str(HERE))
 
 import phase_content as pc  # noqa: E402
 
 DRY = "--dry-run" in sys.argv
+CHECK = "--check" in sys.argv
+
+# What this run WOULD write, keyed by file name. `--check` compares it to what is
+# committed; the other modes write it.
+PRODUCED = {}
 
 CONTENT_UNSPECIFIED = {
     "args": ["subject_ref", "gap_id"],
@@ -63,10 +84,19 @@ def load(name):
 
 
 def dump(name, value):
-    if DRY:
+    PRODUCED[name] = value
+    if DRY or CHECK:
         return
     (ROOT / name).write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n",
                              encoding="utf-8")
+
+
+# The budget is a LITERAL, and it has to be: `residual_sibling_collisions` is recomputed
+# from the tree on every run, so its length always equals what the tree measures, and a
+# ratchet against a number the tool derives from the thing it is ratcheting is vacuous. A
+# reader raising this integer is making a decision; a tool cannot make it for them.
+# tools/guard_distinctness.py exits non-zero when the measurement exceeds it.
+RESIDUAL_SIBLING_COLLISION_BUDGET = 5
 
 
 def calls(body):
@@ -282,6 +312,7 @@ def main():
         },
         "grouped_findings": _grouped_findings(gaps),
         "gaps": sorted(gaps, key=lambda g: g["gap_id"]),
+        "residual_sibling_collision_budget": RESIDUAL_SIBLING_COLLISION_BUDGET,
         "residual_sibling_collisions": _residual_collisions(records, predicates),
         "contradictions": pc.CONTRADICTIONS,
         "conjuncts_dropped_for_absent_fields": dropped_report,
@@ -298,10 +329,13 @@ def main():
     dump("phase-content-gaps.json", gaps_document)
     dump("predicate-registry.json", predicates)
 
-    if not DRY:
+    if not DRY and not CHECK:
         inventory = load("coverage-inventory.json")
         derived = _derive_inventory(inventory)
         dump("coverage-inventory.json", derived)
+
+    if CHECK:
+        return _report_drift()
 
     print(json.dumps({
         "criteria_enriched": enriched,
@@ -312,6 +346,42 @@ def main():
         "dry_run": DRY,
     }, indent=2))
     return 0
+
+
+def _report_drift():
+    """Name every criterion whose committed content is not what this tool would write.
+
+    Reported per criterion rather than as a whole-file diff: the registry is 11 MB and a
+    byte diff of it says "something changed", which is the least useful true sentence
+    available. `criterion.SalesAgreement.performed.v1: body` is the one a reader can act on.
+    """
+    findings = []
+    for name, produced in PRODUCED.items():
+        committed = load(name)
+        if committed == produced:
+            continue
+        if name != "predicate-registry.json":
+            findings.append({"file": name, "detail": "differs from its derivation"})
+            continue
+        for predicate_id in sorted(set(committed) | set(produced)):
+            if predicate_id not in committed:
+                findings.append({"predicate": predicate_id, "detail": "derived but absent"})
+            elif predicate_id not in produced:
+                findings.append({"predicate": predicate_id,
+                                 "detail": "committed but not derived"})
+            elif committed[predicate_id] != produced[predicate_id]:
+                keys = sorted(k for k in set(committed[predicate_id]) | set(produced[predicate_id])
+                              if committed[predicate_id].get(k) != produced[predicate_id].get(k))
+                findings.append({"predicate": predicate_id, "fields": keys})
+    print(json.dumps({
+        "check": "criterion content drifts from its derivation",
+        "drifted": len(findings),
+        "findings": findings[:40],
+        "note": ("criterion bodies, `requires`, `derived_from` and `meaning` are authored "
+                 "by tools/phase_content.py. Re-run `python3 tools/author_phase_content.py` "
+                 "to regenerate them; do not hand-edit a criterion."),
+    }, indent=2))
+    return 1 if findings else 0
 
 
 def _gap_predicate(predicate, criterion_id, gap_id, declared, record, phase):

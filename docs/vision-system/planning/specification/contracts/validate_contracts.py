@@ -573,6 +573,76 @@ except ValueError:
     checked(True,"duplicate keys rejected before canonicalization")
 checked(Decimal("0.1")+Decimal("0.2")==Decimal("0.3"),"exact decimal resource arithmetic")
 
+# --- Edge guards a Phase G finding requires to READ something. -----------------
+#
+# Criterion CONTENT has an oracle two blocks below: it is derived, so a hand edit is a
+# failing build. Edge guards have none -- they are authored by hand, and each evidence op
+# a repair put on one is a sentence nothing would notice the removal of. That is the
+# G2-06 defect at the other layer, and the cure is the same one round 9 used on the CI
+# parser: declare what must be read, and refuse the rest.
+#
+# Each row names the FINDING as well as the op, because a message saying `neq` is missing
+# tells a reader what is absent and not why anyone wanted it.
+REQUIRED_GUARD_OPS = {
+    "edge.GrievanceCase.received.triaged.v1": [
+        ("path", "G4-01: `disputed_custodian` is required on GrievanceCase and was read "
+                 "by 0 of 2255 predicates; a guard must READ it"),
+        ("neq", "G4-01: where the custodian is the one complained about, the escalation "
+                "assignment must DIFFER from the custodian assignment"),
+    ],
+    "edge.ResponsibilityAssignment.proposed.accepted.v1": [
+        ("present", "G4-04: `custody_basis` records which branch of the ordered resolver "
+                    "produced this assignment"),
+        ("eq", "G4-04: a recorded overlap must carry custody_basis = "
+               "provisional_overlap_resolution"),
+        ("neq", "G4-04: ... and a tie_break_reason that is not `no_overlap`; without this "
+                "comparison the enums record a value nothing reads"),
+    ],
+    "edge.ProtectedChange.staged.activated.v1": [
+        ("component_custody_transferred",
+         "G2-07: all 173 records carry `owner_component` and no predicate read it; "
+         "removal of a component must require an accepted successor owner"),
+    ],
+    "edge.Fulfillment.delivering.delivered.v1": [
+        ("transition_basis", "G2-05/AD-013: delivery needs an authenticated attributable "
+                             "delivery event"),
+        ("native_correlated", "G2-05/AD-013: ... natively correlated against the delivery "
+                              "adapter, never against the payment"),
+    ],
+}
+for from_state in ("proposed", "accepted", "partially-performed", "disputed"):
+    REQUIRED_GUARD_OPS[f"edge.SalesAgreement.{from_state}.terminated.v1"] = [
+        ("due_preserved", "G2-02/AD-014: terminating a sales agreement is a closure event "
+                          "and must compute the transitive due set")]
+    REQUIRED_GUARD_OPS[f"edge.SalesAgreement.{from_state}.terminated_with_residuals.v1"] = [
+        ("due_preserved", "G2-02/AD-014: the residuals state exists to hold a non-empty "
+                          "due set with an accepted custodian for each")]
+for required_guard, required_rows in REQUIRED_GUARD_OPS.items():
+    checked(required_guard in PREDICATES, ("a required guard no longer exists", required_guard))
+    guard_ops = ops_in(PREDICATES[required_guard]["body"], set())
+    for required_op, finding in required_rows:
+        checked(required_op in guard_ops,
+                ("required guard op removed", required_guard, required_op, finding))
+
+# --- The two oracles that can fail on CONTENT rather than on shape. ------------
+#
+# Both are run as subprocesses with THIS directory passed explicitly, because `tools/` is
+# a symlink inside every fixture scratch tree and a module that resolved its own root
+# would check the committed registries while claiming to check the mutation in front of
+# it. The ratchet runs BEFORE the drift check on purpose: a fixture that adds a declared
+# collision drifts the gaps file too, and the message a reader gets should name the
+# control that is actually doing the refusing.
+import subprocess  # noqa: E402
+for oracle_argv, oracle_name in (
+    ([sys.executable, str(ROOT / "tools" / "guard_distinctness.py"), str(ROOT)],
+     "guard distinctness ratchet"),
+    ([sys.executable, str(ROOT / "tools" / "author_phase_content.py"), "--check", str(ROOT)],
+     "criterion content drifts from its derivation"),
+):
+    oracle = subprocess.run(oracle_argv, capture_output=True, text=True)
+    checked(oracle.returncode == 0,
+            (oracle_name, oracle.stdout[-2500:] + oracle.stderr[-2500:]))
+
 # --- Negative control. --------------------------------------------------------
 # Everything above passing proves nothing on its own: this file returned
 # {"status":"passed"} on the tree an independent review then found seven defects in.

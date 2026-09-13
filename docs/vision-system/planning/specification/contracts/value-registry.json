@@ -2574,5 +2574,19 @@
     "version": "2.0",
     "relations": "subject, configuration and actual deciding assignment exact refs",
     "implementation_status": "specified, not implemented"
+  },
+  "ExternalBurdenAccount": {
+    "kind": "typed-value-or-response",
+    "schema_ref": "values.schema.json#/$defs/ExternalBurdenAccount",
+    "identity": "by exact containing canonical bytes; no independent Ref/head",
+    "owner_component": "S1-C02",
+    "source_of_truth": "named canonical fields and authenticated sources in containing record/response; value alone grants no authority",
+    "lifecycle": "inherits containing business revision or ephemeral response lifetime; no separate lifecycle record",
+    "authorization": "current containing AccessPolicy/principal/purpose; signed/fresh responses additionally verify their nonce/issuer; composite projections never authorize",
+    "retention_deletion": "inherit sensitivity, scope and all physical-copy rules of containing record; value type/size does not justify plaintext",
+    "audit": "exact enclosing command/event/source and schema version; cryptographic proof outside its own unsigned subject",
+    "version": "2.0 representation except predicate/primitive registry version1.0; explicit source field mapping",
+    "relations": "every Ref target is closed and validated by schema resolver",
+    "implementation_status": "specified; not implemented"
   }
 }
