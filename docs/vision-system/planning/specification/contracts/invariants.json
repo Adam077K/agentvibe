@@ -30,7 +30,7 @@
     "fresh nonce/authenticated current witness query; historical capture remains evidence only"
   ],
   "LifecycleStatus": [
-    "subject is neither LifecycleStatus nor intrinsic/derived record",
+    "subject is neither LifecycleStatus nor an intrinsic record; ENFORCED by the subject_ref.record_type enum of every subject-taking primitive in primitive-registry.json, derived from `intrinsic: true` in record-registry.json by tools/repair_r3_intrinsic_subjects.py and re-checked by validate_contracts.py",
     "phase and links schema match exact subject type",
     "prior status same exact subject; current subject and prior lifecycle head CAS",
     "supporting judgment/decision/response links must satisfy the named edge, not mere schema shape"

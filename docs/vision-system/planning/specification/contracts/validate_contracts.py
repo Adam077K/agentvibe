@@ -124,6 +124,20 @@ checked(set(INVENTORY["source_work_commands"]) <= set(COMMANDS), "source command
 # The AST has no opaque eval/code/prompt escape. World-facing primitives have typed named contracts.
 call_graph = {name: set() for name in PREDICATES}
 
+def ref_target(declared):
+    """Record type named by a Ref<X>, Ref<X>[] or Ref<X>? argument declaration."""
+    if not isinstance(declared, str):
+        return None
+    base = declared[:-1] if declared.endswith("?") else declared
+    base = base[:-2] if base.endswith("[]") else base
+    return base[4:-1] if base.startswith("Ref<") and base.endswith(">") else None
+
+def admitted_record_types(schema):
+    """The record_type enum a primitive parameter admits, or None if it constrains none."""
+    if schema.get("type") == "array":
+        schema = schema.get("items", {})
+    return schema.get("properties", {}).get("record_type", {}).get("enum")
+
 def ast_check(node, env, predicate_name):
     if isinstance(node, list):
         for item in node:
@@ -150,6 +164,27 @@ def ast_check(node, env, predicate_name):
             checked(set(node["arguments"]) == set(PREDICATES[target]["argument_types"]),
                     ("predicate call args", target))
             call_graph[predicate_name].add(target)
+        # CCR-03: a primitive's record_type enum is enforcement, not documentation.
+        # Before this, judgment_matches(subject_ref = Ref<LifecycleStatus>) validated --
+        # a status accepted by a judgment about that status -- because nothing ever
+        # compared an argument's declared type against the enum the primitive names.
+        parameter_schemas = PRIMITIVES[operator].get("argument_schema", {}).get("properties", {})
+        for parameter, value in node.items():
+            if parameter == "op" or parameter not in parameter_schemas:
+                continue
+            if not (isinstance(value, dict) and set(value) == {"arg"}):
+                continue
+            wanted = admitted_record_types(parameter_schemas[parameter])
+            declared = PREDICATES[predicate_name]["argument_types"].get(value["arg"])
+            if wanted is None or ref_target(declared) is None:
+                continue
+            # Compare enum to enum, so a generic Ref<Record> argument is checked by
+            # what its own argument_schema admits rather than by the word "Record".
+            offered = admitted_record_types(
+                PREDICATES[predicate_name]["argument_schema"]["properties"][value["arg"]])
+            checked(offered is not None and set(offered) <= set(wanted),
+                    ("primitive argument record type", predicate_name, operator, parameter,
+                     sorted(set(offered or []) - set(wanted))))
         for key, value in node.items():
             if key not in ("op", "predicate_id"):
                 ast_check(value, env, predicate_name)
