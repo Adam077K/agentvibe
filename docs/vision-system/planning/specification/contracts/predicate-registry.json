@@ -84065,10 +84065,10 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
-            "/payload/standing_refs",
+            "/payload/protected_party_scope",
             "/payload/discharge_authority_ref",
+            "/payload/standing_refs",
             "/payload/performance_evidence_refs"
           ]
         },
@@ -84079,7 +84079,7 @@
           },
           "bindings": [
             {
-              "field_path": "/payload/standing_refs",
+              "field_path": "/payload/discharge_authority_ref",
               "states": [
                 "accepted"
               ],
@@ -84252,10 +84252,10 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
-            "/payload/standing_refs",
+            "/payload/protected_party_scope",
             "/payload/discharge_authority_ref",
+            "/payload/standing_refs",
             "/payload/performance_evidence_refs"
           ]
         },
@@ -84409,8 +84409,8 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
+            "/payload/protected_party_scope",
             "/payload/performance_evidence_refs",
             "/payload/custodian_ref"
           ]
@@ -84559,8 +84559,8 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
+            "/payload/protected_party_scope",
             "/payload/custodian_ref"
           ]
         },
@@ -84730,8 +84730,8 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
+            "/payload/protected_party_scope",
             "/payload/custodian_ref"
           ]
         },
@@ -84850,8 +84850,8 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
+            "/payload/protected_party_scope",
             "/payload/custodian_ref",
             "/payload/performance_evidence_refs"
           ]
@@ -85011,8 +85011,8 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
+            "/payload/protected_party_scope",
             "/payload/custodian_ref"
           ]
         },
@@ -85168,8 +85168,8 @@
           },
           "field_paths": [
             "/payload/beneficiary_refs",
-            "/payload/protected_party_scope",
             "/payload/duty_source_refs",
+            "/payload/protected_party_scope",
             "/payload/custodian_ref",
             "/payload/performance_evidence_refs"
           ]
@@ -138235,11 +138235,11 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/steps",
-            "/payload/stage_rules",
-            "/payload/mode",
             "/payload/acceptance_contract",
             "/payload/migration_rule",
+            "/payload/mode",
+            "/payload/stage_rules",
+            "/payload/steps",
             "/owner_assignment_ref",
             "/payload/compatible_predecessor_refs"
           ]
@@ -287791,6 +287791,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.obligation.production_mode_named",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.Obligation.recognized.v1",
           "arguments": {
             "subject_ref": {
@@ -288896,6 +288905,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.obligation.production_mode_named",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -386756,6 +386774,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.launch.actual_compared_to_expected",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.WorkflowRun.accepted.v1",
           "arguments": {
             "subject_ref": {
@@ -397223,6 +397250,81 @@
       "additionalProperties": false
     }
   },
+  "guard.launch.actual_compared_to_expected": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<WorkflowRun>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/actual_native_launch_count",
+            "/payload/expected_native_launch_count",
+            "/payload/workflow_ref"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/workflow_ref",
+              "states": [
+                "admitted",
+                "restricted"
+              ],
+              "optional": false
+            }
+          ]
+        }
+      ]
+    },
+    "meaning": "A run closes with its actual native-launch count recorded beside the count the admitted procedure version expected, so the divergence is readable from the record. This is the dominant unpriced cost of the step model and it is also the instrument that notices a changed provider property (R-X12, F6C-04, F6C-14).",
+    "owner_component": "S1-C02",
+    "source": "07-integrations-capacity.md#6-capacity-pressure-and-exhaustion",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "WorkflowRun"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
   "guard.launcher.stripping_positive_control": {
     "version": "1.0",
     "argument_types": {
@@ -397403,6 +397505,76 @@
               "type": "string",
               "enum": [
                 "ContextManifest"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "guard.obligation.production_mode_named": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Obligation>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/production_mode"
+          ]
+        },
+        {
+          "op": "present",
+          "value": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/duty_class_can_exhaust"
+          }
+        }
+      ]
+    },
+    "meaning": "An obligation is admitted only with its non-model production mode named and the exhaustibility of its duty class recorded rather than inferred. An exhaustible duty whose mode is `none` is a promise with nobody behind it, and the moment to discover that is not the moment the bucket empties (R-G01, F6C-01).",
+    "owner_component": "S1-C02",
+    "source": "07-integrations-capacity.md#6-capacity-pressure-and-exhaustion",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "Obligation"
               ]
             },
             "revision": {

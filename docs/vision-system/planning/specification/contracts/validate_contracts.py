@@ -1352,6 +1352,39 @@ for _name, _primitive in PRIMITIVES.items():
 # RC3-01 and RC3-02 one layer out -- so the same `polarised_nodes` walk that decides a pin
 # row decides this, rather than a `predicate_id in json.dumps(body)` that would accept all
 # four.
+# --- F6C-01: AN EXHAUSTIBLE DUTY WITH NO PERFORMER IS REFUSED AT ADMISSION. ---
+#
+# PS-EXHAUSTIBLE-DUTY-CONDITIONAL. 07 section 6's exhaustion rule is not the pressure rule --
+# the pressure rule governs a FILLING bucket and this one governs an EMPTY one, and fifty
+# percent of an empty bucket is zero. The rule turns on a VALUE rather than on a presence, so
+# it is a payload conditional and not a guard row, for the same reason the control-object rule
+# is split: writing "mode is not `none` OR the class cannot exhaust" as a disjunction would
+# need rows excused from demanding their own conjunct, and an excused row is what the
+# disjoined ceiling exists to keep rare.
+_obligation = SCHEMAS["records.schema.json"]["$defs"]["Obligation"]["properties"]["payload"]
+_exhaustible = [branch for branch in _obligation.get("allOf", [])
+                if branch.get("if", {}).get("properties", {})
+                .get("duty_class_can_exhaust", {}).get("const") is True]
+checked(len(_exhaustible) == 1,
+        ("THE EXHAUSTION RULE HAS NO CONDITIONAL BEHIND IT. `production_mode` may then be "
+         "`none` on a duty class that can empty, which is a promise with nobody behind it, "
+         "and the moment it is discovered is the moment the bucket empties (F6C-01)",
+         {"branches": len(_exhaustible)}))
+_then = _exhaustible[0]["then"]
+checked(_then.get("properties", {}).get("production_mode", {}).get("not", {}).get("const")
+        == "none",
+        ("the exhaustible-duty conditional no longer refuses `production_mode: none`, which "
+         "is the one value 07 section 6 names as inadmissible there (F6C-01)", _then))
+checked("production_performer_ref" in _then.get("required", []),
+        ("an exhaustible duty may name a production mode and no performer to carry it. "
+         "`named explicitly on the obligation` is about the performer as much as the mode "
+         "(F6C-01, MD-02)", _then.get("required")))
+checked(set(_obligation["properties"]["production_mode"]["enum"])
+        == {"manual_founder", "contracted_professional", "other_provider", "none"},
+        ("the production-mode enum is not the closed four of 07 section 6; an open mode is "
+         "the free-text state the field was added to leave (F6C-01)",
+         _obligation["properties"]["production_mode"].get("enum")))
+
 # --- F6A-06: THE DECLARED FLOOR HAS A SOURCE, AND THE SOURCE IS A CHECKED TABLE. ---
 #
 # `ConsequenceDerivation.declared_floor_ref` is REQUIRED, and 05 section 11 says the class

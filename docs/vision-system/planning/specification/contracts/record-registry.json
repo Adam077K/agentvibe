@@ -3129,6 +3129,12 @@
             "required": false,
             "added_by": "WORK-1.1",
             "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+          },
+          "expected_native_launch_count": {
+            "type": "UInt64",
+            "required": true,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-04. 07 section 6 (R-X12): each admitted procedure version declares an expected native-launch count, and actual is compared against it at run close. `expected_launch`, `launch_count` and `expected native-launch` occurred ZERO times anywhere under contracts/, so the dominant unpriced cost of the step model was named in prose and measured by nothing."
           }
         }
       }
@@ -3482,7 +3488,21 @@
           "current_step_ids",
           "unfinished_obligation_refs"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "expected_native_launch_count": {
+            "type": "UInt64",
+            "required": true,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-04. Frozen from the procedure version at run start, so the comparison at close is against what was admitted rather than against whatever the definition says later."
+          },
+          "actual_native_launch_count": {
+            "type": "UInt64",
+            "required": false,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-04, F6C-14. Optional at registration and REQUIRED AT CLOSE, demanded by guard.launch.actual_compared_to_expected on the run's `* -> accepted` edge: a run that has not finished has no actual count to state. Reopen condition 4 of 02 section 9 -- changed provider terms or semantics -- names this comparison as its instrument, so without the two counts the condition cannot fire."
+          }
+        }
       }
     },
     "lifecycle": {
@@ -40480,7 +40500,27 @@
           "disputed",
           "dispute_refs"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "production_mode": {
+            "type": "Enum<manual_founder,contracted_professional,other_provider,none>",
+            "required": true,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-01. 07 section 6: when the allowance is empty and a due obligation falls due, the NAMED NON-MODEL PRODUCTION MODE performs it. `production_mode`, `non_model_production_mode` and every equivalent occurred ZERO times across the registry, the schema, the predicates and the invariants, so \"named explicitly on the obligation\" named nothing. Required and closed, so that `named` is a field a predicate reads rather than a sentence a reader trusts."
+          },
+          "production_performer_ref": {
+            "type": "Ref<ResponsibilityAssignment>",
+            "required": false,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-01. The assignment that carries the mode. Optional in the payload and MANDATORY whenever the duty class can exhaust, through the conditional on this payload -- a duty that cannot exhaust has no empty bucket to meet and needs no standing performer. Who that person is remains MD-02, an open (d); this field is where the answer goes."
+          },
+          "duty_class_can_exhaust": {
+            "type": "boolean",
+            "required": true,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-01. Recorded, never inferred. The exhaustion rule is not the pressure rule -- fifty percent of an empty bucket is zero -- so whether THIS duty's class can empty is a fact the obligation carries, and it is what the conditional below turns on."
+          }
+        }
       }
     },
     "lifecycle": {

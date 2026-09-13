@@ -2081,6 +2081,70 @@
           "why": "and that calibration stands at `run`. This is the conjunct that makes 'unresolved, never pass' a refusal rather than a sentence"
         }
       ]
+    },
+    {
+      "predicate_id": "guard.obligation.production_mode_named",
+      "kind": "guard",
+      "findings": [
+        "F6C-01"
+      ],
+      "decisions": [
+        "R-G01"
+      ],
+      "why": "The field half of G-01. The guard demands the two facts the payload conditional needs to bind: the mode is named, and whether this duty's class can exhaust is RECORDED rather than inferred from the class id by whoever reads it next. The refusal of `production_mode == none` on an exhaustible class is the conditional on the payload itself (PS-EXHAUSTIBLE-DUTY-CONDITIONAL), for the same reason the control-object rule is split: a rule that binds on a VALUE of one field is a schema conditional, and writing it as a disjunction in the guard would need two rows excused from demanding their own conjunct.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/production_mode"
+          ],
+          "why": "the production mode is named on the obligation. `none` is a NAMED mode and is admissible for a duty class that cannot exhaust; what is refused is silence, and then `none` on a class that can"
+        },
+        {
+          "op": "present",
+          "contains_pointers": [
+            "/payload/duty_class_can_exhaust"
+          ],
+          "why": "and the exhaustibility of the duty class is on the record. `present` rather than `nonempty` because it is a boolean and `false` is an answer"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.launch.actual_compared_to_expected",
+      "kind": "guard",
+      "findings": [
+        "F6C-04",
+        "F6C-14"
+      ],
+      "decisions": [
+        "R-X12"
+      ],
+      "why": "Both counts are on the closing run and the definition they came from is an admitted procedure version, so the divergence is readable from the record. The divergence is NOT stored as a third number: a stored difference can disagree with the two values it is derived from, and this package has paid for that class of mistake more than once. A procedure that checkpoints at every step boundary makes more launches than one that does not, and before these two fields nothing in the package would have noticed.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/actual_native_launch_count",
+            "/payload/expected_native_launch_count",
+            "/payload/workflow_ref"
+          ],
+          "why": "the actual count, the expected count and the procedure version are all named at close. `actual_native_launch_count` is optional at registration for the obvious reason and is demanded HERE, which is what \"required at close\" means"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/workflow_ref",
+              "states_exactly": [
+                "admitted",
+                "restricted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and the expected count came from a procedure version that was actually admitted, rather than from a draft someone edited after the run started"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -2503,6 +2567,34 @@
         "F6B-02"
       ],
       "why": "This edge is where `guard.constraint.set_bound_at_transfer` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "Obligation",
+      "from": "not_arisen",
+      "to": "recognized",
+      "findings": [
+        "F6C-01"
+      ],
+      "why": "This edge is where `guard.obligation.production_mode_named` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "Obligation",
+      "from": "potential",
+      "to": "recognized",
+      "findings": [
+        "F6C-01"
+      ],
+      "why": "This edge is where `guard.obligation.production_mode_named` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "WorkflowRun",
+      "from": "acceptance_pending",
+      "to": "accepted",
+      "findings": [
+        "F6C-04",
+        "F6C-14"
+      ],
+      "why": "This edge is where `guard.launch.actual_compared_to_expected` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
     }
   ],
   "requires_waivers_why": "RC-03. `requires` and `conjuncts` are independent fields of one spec and nothing compared them, so a criterion could state one requirement and demand another -- which is what the weakened derivation produced: the sentence still promised delivery over a body that had stopped asking for it. Measured before any waiver: 774 criteria examined, 0 failing the field-path rule, 17 failing the phase-name rule, every one of the 17 a phase-kind synonym for the criterion's OWN phase. Each waiver below names the exact tokens it excuses, so a new unmatched phase on a waived criterion still fails. SCOPE, stated because the rule's name promises more than the rule does (RC2-03). What is compared is a FORMATTING-DEPENDENT SUBSET of the sentence: backticked lowercase tokens (PROSE_TOKEN) and field paths that are either backticked or written literally as /payload/... (PROSE_PATH). English nouns are not compared to conjuncts, and most of what these sentences are made of is English nouns. Removing three pairs of backticks leaves a sentence promising a reader exactly the same thing and invisible to the rule -- the recheck measured that, and the run went from stopping at RC-03 in 19 seconds to passing it and failing 640 seconds later for an unrelated reason. LIVE POPULATION, re-derived on the committed corpus with the disjunction-aware walker: 774 criteria examined; 0 of them (0.0%) name a field path in `requires`, so the PATHS rule -- the half RC-03's required contract actually named -- has an applicable population of ZERO and contributes no live assertion; 19 (2.5%) name a backticked phase of a related record, 22 tokens in all; 17 of those 19 rely on a waiver below, and all 17 waivers are in use; the remaining 5 tokens across 2 criteria (criterion.SalesAgreement.performed.v1: `delivered`, `discharged`, `transferred`; criterion.GrievanceCase.remedy_authorized.v1: `held`, `partly_consumed`) are bound by a conjunct and are the whole of the rule's live force. THE NARROW SCOPE IS THE ACCEPTED LIMIT, and the alternative was measured rather than argued. Widening the phase rule to unbackticked tokens of related records' phase vocabulary produces 425 findings across 266 of the 774 criteria (34%), over 62 distinct tokens -- case-sensitive, and already excluding every token a conjunct binds or a waiver excuses. The vocabulary is ordinary English past participles used as verbs: `recorded` 104 (\"the subject's own declared identity/scope fields are recorded\"), `required` 43 (\"no judgment is required\"), `current` 37, `admitted` 34, `assigned` 30 (\"a custodian is assigned\"). A waiver list of that size is not a waiver list, it is a second corpus, and a rule that demands one teaches contributors to route around the checker. So the rule keeps its scope, the number is written down here rather than left to be rediscovered, and what is added instead is the control the live half never had: fixtures/negative/r14-requires-names-a-related-phase-no-conjunct-binds. Until it, the only RC-03 fixture exercised the half with zero population. The cure for the formatting dependency is upstream and is not a checker change. A criterion's `requires` sentence and its conjuncts are written by one author in one entry of tools/phase_content.py, so what makes the rule reach is the author backticking the phases the sentence promises. That is a CONVENTION, nothing enforces it, and this sentence exists so that nobody reads the rule's name as though something did.",
@@ -2909,6 +3001,17 @@
       "why": "Detached, an interest declares its own writer key, which is authority granting itself authority -- AS-M5-02."
     },
     {
+      "guard": "guard.launch.actual_compared_to_expected",
+      "edges": [
+        "edge.WorkflowRun.acceptance_pending.accepted.v1"
+      ],
+      "findings": [
+        "F6C-04",
+        "F6C-14"
+      ],
+      "why": "F6C-04, F6C-14. The run's only route into `accepted`, which is what `* -> accepted` means for this record. Detached, no criterion compares actual launches to expected at run close, and reopen condition 4 of 02 section 9 -- changed provider terms or semantics -- names an instrument that does not exist, so the condition cannot fire. Under W9's own probe, swap the model provider, the package's stated detector would be absent and a changed provider property is noticed only by whatever else happens to break."
+    },
+    {
       "guard": "guard.launcher.stripping_positive_control",
       "edges": [
         "edge.SkillVersion.trial.admitted.v1"
@@ -2927,6 +3030,17 @@
         "F6B-01"
       ],
       "why": "F6B-01. Detached, two of the three fields 06 section 2 requires of a manifest are required by nothing again: `dropped_constraints` was named by 0 predicates and `assembled_for_class` by 0 in the shipped registry -- its only appearance outside the schema was inside a benign fixture that inserts a presence check and throws it away when the run ends. A field whose only requirement lives in a discarded mutation is not required."
+    },
+    {
+      "guard": "guard.obligation.production_mode_named",
+      "edges": [
+        "edge.Obligation.not_arisen.recognized.v1",
+        "edge.Obligation.potential.recognized.v1"
+      ],
+      "findings": [
+        "F6C-01"
+      ],
+      "why": "F6C-01. Both routes into `recognized`, because an obligation that was `not_arisen` and then arises is admitted by the second one and would otherwise be the way round the first. Detached, no predicate can refuse the admission of a due obligation in an exhaustible class that has no performer -- which was the measured state, uniform gap G-01 answered in prose only."
     },
     {
       "guard": "guard.protected.control_object_change_authorized",
