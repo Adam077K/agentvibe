@@ -12594,7 +12594,8 @@
         "status": "planned-not-existing"
       },
       "verification_refs": [
-        "WK-V19"
+        "WK-V19",
+        "WK-V56"
       ],
       "status": "specified-pending-independent-review",
       "completion_claim": false,
@@ -12603,15 +12604,23 @@
         "work-knowledge-contracts.json#/records/AgentTemplate"
       ],
       "verification_family_refs": [
-        "WK-T01",
-        "WK-T02",
-        "WK-T03"
+        "WK-T04"
       ],
       "verification_bindings": [
         {
           "subcase_id": "WK-V19",
           "assertion_id": "WK-V19-A1",
           "location": "work-knowledge-contracts.json#/verification_subcases/18/assertions/0"
+        },
+        {
+          "subcase_id": "WK-V56",
+          "assertion_id": "WK-V56-A1",
+          "location": "work-knowledge-contracts.json#/verification_subcases/55/assertions/0"
+        },
+        {
+          "subcase_id": "WK-V56",
+          "assertion_id": "WK-V56-A2",
+          "location": "work-knowledge-contracts.json#/verification_subcases/55/assertions/1"
         }
       ]
     },
@@ -18081,7 +18090,8 @@
       },
       "verification_refs": [
         "WK-V35",
-        "WK-V43"
+        "WK-V43",
+        "WK-V55"
       ],
       "status": "specified-pending-independent-review",
       "completion_claim": false,
@@ -18092,9 +18102,7 @@
         "work-knowledge-contracts.json#/records/EvaluationPlan"
       ],
       "verification_family_refs": [
-        "WK-T04",
-        "WK-T05",
-        "WK-T06"
+        "WK-T05"
       ],
       "verification_bindings": [
         {
@@ -18106,6 +18114,16 @@
           "subcase_id": "WK-V43",
           "assertion_id": "WK-V43-A2",
           "location": "work-knowledge-contracts.json#/verification_subcases/42/assertions/1"
+        },
+        {
+          "subcase_id": "WK-V55",
+          "assertion_id": "WK-V55-A1",
+          "location": "work-knowledge-contracts.json#/verification_subcases/54/assertions/0"
+        },
+        {
+          "subcase_id": "WK-V55",
+          "assertion_id": "WK-V55-A2",
+          "location": "work-knowledge-contracts.json#/verification_subcases/54/assertions/1"
         }
       ]
     },
@@ -20024,6 +20042,50 @@
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
       "status": "specified-unexecuted",
       "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
+    },
+    {
+      "id": "WK-V55",
+      "family_ref": "WK-T05",
+      "name": "Challenge supply without a standing adversary",
+      "stimulus": "Run three arms on settled questions. (a) A question whose permitted corpus genuinely holds no contrary source and whose independently held withheld controls all pass. (b) The same question with a real contrary source present in the corpus and a failing case in the withheld control set. (c) Arm (b) again with the designated dissent or \"challenger\" role removed, disabled or out of budget. Offer the system a standing generated challenger agent it may use in every arm.",
+      "procedure": "Register exact subjects, authorized scope, fixture/production status, expected meanings, resource limits and observation sources before outcomes; perform the stated contrasting cases and record every attempted or unavailable outcome.",
+      "assertions": [
+        {
+          "id": "WK-V55-A1",
+          "expected_observation": "In arm (a) the recorded disposition is \"no contrary evidence within the inspected scope\", naming the adverse sampling rule, the corpus and version scope inspected, and each withheld-control outcome — and no objection is raised. A challenge supplied by a standing adversarial persona raises an objection in arm (a) with no source span and no control outcome to bind it to; an objection that binds neither is not disagreement and must not count as challenge supplied."
+        },
+        {
+          "id": "WK-V55-A2",
+          "expected_observation": "Arm (c) surfaces the same contrary source and the same failing withheld control as arm (b), because challenge is carried by the sampling rule and the independently held controls rather than by a role. A system whose challenge is supplied through a standing challenger records no disagreement in arm (c) while arm (b) appeared to pass — the removal of the persona, not the evidence, is what changed."
+        }
+      ],
+      "positive_control": "Run the clean arm: a settled question whose permitted corpus genuinely holds no contrary source and whose withheld controls all pass. A conforming system records \"no contrary evidence within the inspected scope\", naming the sampling rule, the corpus scope and each control outcome, and produces no objection. A system supplying challenge through a standing challenger produces an objection here with no source span and no control outcome to bind it to — that is the observable difference, and it is why the clean arm, not the adverse arm, is the control.",
+      "execution_boundary": "Adverse sampling, withheld-control custody and span binding are local. Whether a contrary source exists outside the permitted corpus is not observable here and must stay recorded as inspected scope, never as absence.",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE",
+      "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
+      "status": "specified-unexecuted"
+    },
+    {
+      "id": "WK-V56",
+      "family_ref": "WK-T04",
+      "name": "Allocation between standing instruction and WorkOrder",
+      "stimulus": "Vary which content sits in which carrier, holding the content itself fixed. Correct arm: stable method and constraints in the standing instruction; this order's goal, facts, resources, scope, deadline and legitimate decision references in the WorkOrder. Misallocated arm: the current deadline, beneficiary and resource ceiling placed in the standing instruction, and the stable method placed in the WorkOrder. Then re-run the same standing instruction against a second, different WorkOrder in both arms.",
+      "procedure": "Register exact subjects, authorized scope, fixture/production status, expected meanings, resource limits and observation sources before outcomes; perform the stated contrasting cases and record every attempted or unavailable outcome.",
+      "assertions": [
+        {
+          "id": "WK-V56-A1",
+          "expected_observation": "Misallocated content is detected at admission and refused or relocated: current-task facts offered as standing content are not admitted as standing method, and stable method arriving in the WorkOrder is admitted as an instruction reference rather than as a task fact. An implementation that concatenates the two carriers and emits two labeled sections produces byte-identical observations in the correct and misallocated arms, because it labels the carriers rather than allocating the content."
+        },
+        {
+          "id": "WK-V56-A2",
+          "expected_observation": "Re-running the same standing instruction against the second WorkOrder shows none of the first order's deadline, beneficiary or resource ceiling in the second order's effective facts. In the misallocated arm a conforming system leaves them absent because they were refused as standing content; a concatenating system carries the first order's deadline into the second, which is the observable failure the allocation rule exists to prevent."
+        }
+      ],
+      "positive_control": "Run the correct allocation: stable method and constraints in the standing instruction, and this order's goal, facts, resources, scope, deadline and decision references in the WorkOrder. The work proceeds, and re-running the same standing instruction against a second, different WorkOrder carries none of the first order's facts into it. A system that concatenates both carriers and emits two labeled log sections produces identical sections in the correct and misallocated arms, and carries the first order's deadline into the second — which is the failure this control is built to expose.",
+      "execution_boundary": "Carrier allocation, admission refusal and cross-order leakage are observable in fixtures. Whether the standing method is the right method for real work is outside this subcase.",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE",
+      "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
+      "status": "specified-unexecuted"
     }
   ],
   "verification_binding_contract": {
@@ -20093,7 +20155,9 @@
         "WK-V51",
         "WK-V52",
         "WK-V53",
-        "WK-V54"
+        "WK-V54",
+        "WK-V55",
+        "WK-V56"
       ],
       "reason": "One text calibrates this whole group because `procedure` states a registration discipline — declare the exact subjects, authorized scope, fixture or production status, expected meanings, resource limits and observation sources BEFORE any outcome is read — and that discipline is the same act whatever the stimulus is. Its violation is observable and identical wherever it occurs: an outcome read before its expected meaning was registered. Nothing about which stimulus is running changes it, so a per-subcase rewording would be one rule spelled out once per subcase and would discriminate nothing.",
       "not_covered": "`positive_control` and `execution_boundary` are per subcase and are covered by no group. Each names its own stimulus's ordinary authorized counterpart, so applying one to a different subcase observes the wrong thing or nothing at all. If a future edit makes two of them identical, `scripts/vision-wk-bindings.mjs verify` fails at C1 rather than letting the sharing go undeclared."
