@@ -110,6 +110,22 @@ checked(set(RECORDS) == set(INVENTORY["canonical_records"]), "record coverage")
 checked(set(COMMANDS) == set(INVENTORY["canonical_commands"]), "command coverage")
 checked(set(PREDICATES) == set(INVENTORY["canonical_predicates"]), "predicate coverage")
 checked(set(PRIMITIVES) == set(INVENTORY["canonical_primitives"]), "primitive coverage")
+# GR-04. values.schema.json's PredicateId enum is DERIVED here rather than compared to
+# nothing. Two hand-kept lists of the same 2273 ids drift in silence, and this pair had:
+# measured 2026-09-13, 9 registered predicates were missing from the enum and 6 enum
+# entries named predicates R3 had deleted. Neither direction is cosmetic -- an enum
+# entry with no predicate lets a TypedPredicate reference nothing and still validate,
+# and a registered predicate absent from the enum cannot be cited at all. The expected
+# value is `sorted(PREDICATES)`, which is what the committed file already was, so the
+# order is the derivation's rather than an accident someone must preserve by hand.
+predicate_id_enum = SCHEMAS["values.schema.json"]["$defs"]["PredicateId"]["enum"]
+checked(predicate_id_enum == sorted(PREDICATES),
+        ("PredicateId enum differs from its derivation from predicate-registry.json",
+         {"registered_but_absent_from_enum":
+              sorted(set(PREDICATES) - set(predicate_id_enum))[:10],
+          "in_enum_but_no_such_predicate":
+              sorted(set(predicate_id_enum) - set(PREDICATES))[:10],
+          "order_differs": sorted(predicate_id_enum) != predicate_id_enum}))
 checked(set(FILES["value-registry.json"]) == set(INVENTORY["canonical_values"]), "value metadata coverage")
 checked(set(INVENTORY["required_subjects"]) <= set(BINDINGS), "46 directive subjects")
 checked(len(INVENTORY["required_subjects"]) == len(set(INVENTORY["required_subjects"])) == 46,
