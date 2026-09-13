@@ -2,7 +2,7 @@
   "id": "r3-lifecycle-status-as-judgment-subject",
   "repair": "R3",
   "finding": "CCR-03 / FI-12 constraint 2",
-  "why": "F-canonical-01's exact counterexample: a judgment_matches node whose subject_ref is a Ref<LifecycleStatus> -- a status accepted by a judgment about that status. It validated at cb4bf52 because every subject-taking primitive's record_type enum listed all 173 records and nothing compared an argument's declared type against it.",
+  "why": "F-canonical-01's exact counterexample: a judgment_matches node whose subject_ref is a Ref<LifecycleStatus> -- a status accepted by a judgment about that status. It validated at cb4bf52 because every subject-taking primitive's record_type enum listed all 173 records and nothing compared an argument's declared type against it. The fixture adds a predicate, so the scratch tree must re-derive everything derived FROM the predicate registry -- the coverage inventory and, since GR-04, values.schema.json's PredicateId enum. Without the second one this fixture is rejected for enum drift instead of for its own reason, which is a leak.",
   "expect_failure_contains": "primitive argument record type",
   "patch": [
     {
@@ -93,5 +93,5 @@
       }
     }
   ],
-  "rederive_inventory": true
+  "rederive_from_registries": true
 }
