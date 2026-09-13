@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "F-complete-system-specification",
+  "phase": "G-complete-plan-review",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-2-1789160976",
@@ -70,7 +70,8 @@
     "Founder directive preserved verbatim at inputs/DIRECTIVE.md; directive-contract.json remains the structured extraction and is subordinate to it.",
     "Merged xsr-residue lane at 4e03c99: F50-Q08 and F33-Q04 gain discriminating subcases WK-V55/WK-V56; XSR-R-01 family refs derived from bindings (0 mismatches); XSR-R-02 56 distinct positive controls; XSR-R-03 R-NATIVE one selected + two candidate profiles. Root ran the lane's verifier. Author-recorded, independent recheck pending under Phase G.",
     "Merged technical-amendment lane at c71be26: 07-integrations-capacity.md §9 outbound-mail transport boundary, event identity, terms IC-S30/31, closed disclosure object, T-R3 table, MAIL-T01…08.",
-    "Merged canonical-repair lane at 1be959c (R1–R8). Validator 252513 checks, 13/13 negative fixtures rejected. FI-11 mechanism closed (every edge calls its criterion, all declared args read, 0 sibling collisions with state literals erased) but CONTENT half open: 210 sibling collisions and 92 skeletons when all strings are erased. FI-12 constraints 2 and 6 repaired at mechanism level; founder/root-custodian identity is an admission check. CCR-01..07 repaired, all pending independent review."
+    "Merged canonical-repair lane at 1be959c (R1–R8). Validator 252513 checks, 13/13 negative fixtures rejected. FI-11 mechanism closed (every edge calls its criterion, all declared args read, 0 sibling collisions with state literals erased) but CONTENT half open: 210 sibling collisions and 92 skeletons when all strings are erased. FI-12 constraints 2 and 6 repaired at mechanism level; founder/root-custodian identity is an admission check. CCR-01..07 repaired, all pending independent review.",
+    "PHASE G RUN at frozen subject 7ddc066 — four independent reviewers, twelve dimensions, eight scenarios, negative controls, §8.21 checklist, EAS-R1. Archived verbatim as planning/reviews/G-01…G-04. Verdict: ELEVEN dimensions sufficient for implementation to begin; ONE — internal coherence — INSUFFICIENT on two (d)-class findings, both on SalesAgreement (G2-01 what evidence is performance of a sale; G2-02 whether terminated asserts closure). Buildability sufficient for B01–B03, insufficient for the money/fulfillment vertical until G2-01/02/05/06 land. FI-11 residue re-measured by G2 as 6 sibling pairs (not 210) plus a missing validator ratchet — 3 of 3 criterion-content mutations leaked. Twenty-eight (a)/(b)/(c) findings across G1/G3/G4, repair lanes dispatched by file partition."
   ],
   "active_work": [
     {
@@ -91,10 +92,11 @@
     }
   ],
   "next_actions": [
-    "Freeze the Phase G subject at the commit that records this state. Dispatch the architecture-neutral complete-plan review per planning/reviews/G-acceptance-protocol.md: twelve dimensions split across four independent reviewers, separate judgments per dimension, no aggregate score, the eight whole-company scenarios, negative controls, EAS-R1's four comparisons. Reviewers receive subject and protocol only — never the producers' self-assessments.",
-    "Reviewers must explicitly judge whether FI-11's content residue (210 collisions all-strings-erased) is (d) a missing decision, (a) concrete authoring work, or (c) acceptable with a protocol.",
-    "Integrate the four G reports verbatim; classify every finding; repair (a)-class blockers; escalate any genuine founder decision as a §3 packet without pausing unrelated work; record the scoped planning disposition",
-    "Commit the accepted package; present the §15 navigable planning report to the founder; then B00 gate → build B01…B11"
+    "Receive phase-content, g3-registers, g1-coverage and g-prose lanes; verify each by its own script and merge",
+    "After phase-content merges: dispatch the guard repair lane for G2-01 (fulfillment_ref relation + performed criterion requiring Fulfillment validated and Obligations discharged/transferred), G2-02 (due_preserved on all four terminated edges + terminated_with_residuals), G2-05 (Fulfillment domain lifecycle with delivered/failed/refunded and an evidence op on entry), G2-06 (14th negative fixture + exit-nonzero distinctness ratchet on the 6 sibling pairs), G4-01/02 (GrievanceCase neq on custodian refs; remedy_reservation_refs at remedy_authorized), G4-03 (external_burden_observations nonempty or explicit none-observed), G4-08 (DecisionPacket competence_requirement_ref schema/guard agreement with the taste case), G4-04 fields from the prose lane, G2-07 (owner_component read by a removal predicate)",
+    "Record AD-013 (performance of a sale = accepted delivery + discharged/transferred obligations, never payment alone — derived from 02-architecture-selection §3/§6) and AD-014 (terminated is a closure edge; residuals live in terminated_with_residuals) in decisions.json after the g3-registers lane merges",
+    "Independent recheck of the G2-01/G2-02 repair by a reviewer who did not author it; then record the scoped planning disposition: eleven dimensions sufficient, coherence re-judged",
+    "Commit the accepted package; present the §15 navigable planning report; B00 gate; build B01…B03 (judged buildable now) while B04/B05 wait on the coherence re-judgment"
   ],
   "dependencies": [
     {
@@ -146,7 +148,8 @@
     "integration_review": "planning/reviews/F-integration-01…04, F-cross-scope-01…02 and F-coverage-components-01; bounded dispositions and different detections retained, no fullG/runtime",
     "specification_inspections": "research/specification-inspections.json; complete-draft read hashes avoid repeated inspection, no independent acceptance",
     "epistemic_review": "research/reviews/2026-09-12-epistemic-traceability.md and epistemic-recheck.md; EPT01 metadata scope closed, no runtime acceptance",
-    "package_navigation": "coverage/package.json;24directive deliverable families, explicit pending11 and independent acceptance"
+    "package_navigation": "coverage/package.json;24directive deliverable families, explicit pending11 and independent acceptance",
+    "phase_g": "planning/reviews/G-01-completeness-vision-coverage.md, G-02-coherence-buildability-changeability.md, G-03-evidence-unknowns-adversarial.md, G-04-traceability-alternatives-feasibility-responsibility.md — verbatim; no aggregate score; (d)-class: G2-01, G2-02 only"
   },
   "constraints": [
     "Full company lifecycle; do not reduce to coding or a dashboard",
