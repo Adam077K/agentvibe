@@ -288032,6 +288032,73 @@
           }
         },
         {
+          "op": "present",
+          "value": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/custody_basis"
+          }
+        },
+        {
+          "op": "any",
+          "predicates": [
+            {
+              "op": "not",
+              "predicate": {
+                "op": "nonempty",
+                "value": {
+                  "op": "path",
+                  "value": {
+                    "op": "resolve",
+                    "ref": {
+                      "arg": "subject_ref"
+                    }
+                  },
+                  "pointer": "/payload/contesting_mandate_refs"
+                }
+              }
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/custody_basis"
+                  },
+                  "right": "provisional_overlap_resolution"
+                },
+                {
+                  "op": "neq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/custody_tie_break_reason"
+                  },
+                  "right": "no_overlap"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "op": "call",
           "predicate_id": "criterion.ResponsibilityAssignment.accepted.v1",
           "arguments": {

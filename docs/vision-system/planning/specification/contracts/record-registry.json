@@ -47892,7 +47892,10 @@
           "performance_predicates": "TypedPredicate[]",
           "continuity_ref": "Ref<ContinuityArrangement>",
           "expires_at": "UTC",
-          "unresolved_scope": "ScopeSelector"
+          "unresolved_scope": "ScopeSelector",
+          "contesting_mandate_refs": "Ref<Mandate>[]",
+          "custody_basis": "Enum<promise_sponsor,service_mandate,maintenance_custodian,provisional_overlap_resolution>",
+          "custody_tie_break_reason": "Enum<narrowest_sufficient_scope,alternate_available,earliest_acceptance,no_overlap>"
         },
         "required_fields": [
           "principal_ref",
@@ -47907,7 +47910,10 @@
           "performance_predicates",
           "continuity_ref",
           "expires_at",
-          "unresolved_scope"
+          "unresolved_scope",
+          "contesting_mandate_refs",
+          "custody_basis",
+          "custody_tie_break_reason"
         ],
         "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
       }
@@ -48126,6 +48132,13 @@
           "Mandate"
         ],
         "cardinality": "one"
+      },
+      {
+        "field_path": "/payload/contesting_mandate_refs",
+        "targets": [
+          "Mandate"
+        ],
+        "cardinality": "many"
       },
       {
         "field_path": "/payload/authority_limit_refs",

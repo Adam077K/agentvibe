@@ -61130,6 +61130,50 @@
             },
             "unresolved_scope": {
               "$ref": "values.schema.json#/$defs/ScopeSelector"
+            },
+            "contesting_mandate_refs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "record_id": {
+                    "$ref": "values.schema.json#/$defs/UUID"
+                  },
+                  "record_type": {
+                    "type": "string",
+                    "enum": [
+                      "Mandate"
+                    ]
+                  },
+                  "revision": {
+                    "$ref": "values.schema.json#/$defs/Revision"
+                  }
+                },
+                "required": [
+                  "record_id",
+                  "record_type",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "custody_basis": {
+              "type": "string",
+              "enum": [
+                "promise_sponsor",
+                "service_mandate",
+                "maintenance_custodian",
+                "provisional_overlap_resolution"
+              ]
+            },
+            "custody_tie_break_reason": {
+              "type": "string",
+              "enum": [
+                "narrowest_sufficient_scope",
+                "alternate_available",
+                "earliest_acceptance",
+                "no_overlap"
+              ]
             }
           },
           "required": [
@@ -61145,7 +61189,10 @@
             "performance_predicates",
             "continuity_ref",
             "expires_at",
-            "unresolved_scope"
+            "unresolved_scope",
+            "contesting_mandate_refs",
+            "custody_basis",
+            "custody_tie_break_reason"
           ],
           "additionalProperties": false
         }
