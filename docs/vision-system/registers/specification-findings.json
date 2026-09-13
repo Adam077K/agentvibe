@@ -113,22 +113,27 @@
       "id": "FI-10",
       "issue": "Final catalog must expand composite Budget/Handoff subjects and presentation aliases to concrete record/value reference types. Per-question pointers must become substantive answers, not chapter-link counts.",
       "owner": "Full schema and coverage consolidation",
-      "status": "Remaining full-plan integration obligation",
-      "completion_evidence": null,
+      "status": "CLOSED at specification level by independent review at cb4bf52 (F-canonical-01): Budget→[ResourceAccount,Reservation], Handoff→[Continuation,ResponsibilityAssignment,HandoffAcceptance], Evaluation→[EvaluationPlan,EvaluationRun,EvaluationTrial,EvidenceJudgment], role-specific single-member enums; 0 composite Ref<> left in record-registry. Caveat CCR-05 (destination resolution).",
+      "completion_evidence": {
+        "commit": "cb4bf52",
+        "specification": "planning/specification/contracts/subject-bindings.json",
+        "independent_review": "planning/reviews/F-canonical-01.md",
+        "runtime": null
+      },
       "inspection_note": "Previously cited Ref<Budget> example was already repaired in cb1eac4: Experiment uses ResourceAccount and Reservation references. Remaining obligation is full consolidation and semantic coverage, not that stale example. Work/knowledge draft makes Evaluation a composite; company Ref<Evaluation> fields need role-specific exact Plan/Run/Judgment bindings. Handoff must preserve accepted assignment transfer alongside Continuation."
     },
     {
       "id": "FI-11",
       "issue": "Full schema consolidation must supply registered TypedPredicate IDs and argument shapes plus materially distinct per-transition guards; draft40-record work catalog has373 edges sharing one common guard and delegating to short record-specific prose. A copied guard count does not establish buildability.",
       "owner": "Full schema consolidation after05–08 integration",
-      "status": "Known consolidation obligation; draft inspection, not independent blocking verdict",
+      "status": "OPEN — independent review at cb4bf52 (F-canonical-01) REOPENS. 1295 distinct predicate ids but only 19 body skeletons; guards vary only by restating their own from/to state; 104 command guards share one body; criterion.* family (853 predicates) unreachable from any guard; declared args (judgment_refs ×1077 etc.) never read; conjunction-only. Orchestrator inspection in cb4bf52 (\"does not reproduce\") was WRONG — it measured byte distinctness, not guard distinctness. Repair dispatched 2026-09-13.",
       "completion_evidence": null
     },
     {
       "id": "FI-12",
       "issue": "An acceptance judgment on a proposed subject revision may mismatch immediately if the subject becomes validated/accepted by incrementing that same revision. Exact FIR subject/version binding requires a coherent candidate-state and judgment write contract, not equivalence by summary.",
       "owner": "Canonical schema author; independent reviewer after concrete alternatives",
-      "status": "Design-contract discovery; author selected immutable business revisions plus separately versioned intrinsic LifecycleStatus for concrete amendment; independent review pending",
+      "status": "OPEN — independent review at cb4bf52 (F-canonical-01): constraints 2 and 6 unmet in the machine contract. (2) subject_ref record_type enums on all eight subject-taking primitives admit LifecycleStatus and all six intrinsics; exclusion is prose-only. (6) Mandate acceptance requires attested_result which requires an accepted mandate; bootstrap_roots is referenced by zero predicates — no ground. Validator's FI-12 block tests a 33-line FocalStore stub, not the registries. Repair dispatched 2026-09-13.",
       "completion_evidence": null,
       "constraints": [
         "Exact immutable business subject and acceptance predicate, with current authoritative judgment/status validity at use",
@@ -145,6 +150,62 @@
         "rejected_alternative": "Atomic frozen complete candidate-postimage and judgment group with final independent digest endorsements; adds routine preparation/confirmation labor and brittle self/child joins. Broader mechanical migration of existing lifecycle contracts preferred, pending defensibility review.",
         "remaining": "Complete affected schema/API/storage/command/source mappings, finite actual human bootstrap, exact tests, migration version and independent conformance judgment."
       }
+    },
+    {
+      "id": "CCR-01",
+      "issue": "Edge criterion_id is named on all 1295 edges and evaluated by no edge guard; 11-schemas-state-contracts.md:111 claims otherwise. Missing decision: does a transition require its criterion, and how is it evaluated?",
+      "class": "d",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Open; from planning/reviews/F-canonical-01.md at cb4bf52",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-02",
+      "issue": "bootstrap_roots is defined in primitive-registry.json and invoked by zero predicates; the mandate→attested_result→mandate regress has no terminator. Missing decision: the finite actual human root of trust.",
+      "class": "d",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Open; from planning/reviews/F-canonical-01.md at cb4bf52",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-03",
+      "issue": "Intrinsic/LifecycleStatus subject exclusion is prose-only in invariants.json; all eight subject-taking primitives' record_type enums admit all 173 records including LifecycleStatus and six intrinsics.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Open; from planning/reviews/F-canonical-01.md at cb4bf52",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-04",
+      "issue": "26 edges list kernel.projection.recompute in allowed_command_ids; it is absent from the 104-entry command-registry.json. validate_contracts.py:113 checks only non-emptiness, never membership.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Open; from planning/reviews/F-canonical-01.md at cb4bf52",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-05",
+      "issue": "source-field-mappings.json destination is checked only for truthiness (validate_contracts.py:179); ~56 do not resolve against records.schema.json; one is a sentence.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Open; from planning/reviews/F-canonical-01.md at cb4bf52",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-06",
+      "issue": "invariants.json, control-contracts.json and endpoints.json are loaded but referenced by no check and no schema; values.schema.json#/$defs/string is unconstrained.",
+      "class": "b",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Open; from planning/reviews/F-canonical-01.md at cb4bf52",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-07",
+      "issue": "Coverage checks compare registry to inventory, both authored in the same run; the inventory is never re-derived from capabilities.json / work-knowledge-contracts.json.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Open; from planning/reviews/F-canonical-01.md at cb4bf52",
+      "completion_evidence": null
     }
   ],
   "planning_accepted": false,
