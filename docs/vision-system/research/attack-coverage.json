@@ -46,7 +46,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "8-domain-production-api-and-durable-work",
+          "answers": "Every visible input is recorded by C05 and untrusted text may propose data or actions but cannot change authority fields, policies, tool schemas or supervisor instructions."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "81-trusted-parameter-selection",
+          "answers": "Recipient, account, principal, amount, path and destination are authority-bearing fields resolved by deterministic code from canonical sources; the model only proposes candidates."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "3-retrieval-ranking-freshness-and-contradiction",
+          "answers": "Retrieval text stays attributed source content, separate from authenticated instruction; private context cannot supply arbitrary search terms through a read-only tool."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "10-deterministic-invariant-register",
+          "answers": "K15: no native tool, imported text, response rationale or provider credential grants production account authority or unrestricted disclosure."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T03",
+        "A-T09",
+        "IC-T01",
+        "WK-V19"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "C05 loader records the actual delivered input set and deterministic parameter resolution at C04 compares final bytes to authorized values; the injected instruction has no path to an authority field.",
+      "gap": null
     },
     {
       "id": "AC02",
@@ -81,7 +112,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "2-invocation-capture-and-truthful-outcomes",
+          "answers": "A hostile HTML page, e-mail, tool response or test log is data, including text that impersonates a system instruction; parser output is a derived Observation."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "3-selected-fulfillment-adapters",
+          "answers": "IC-SEARCH pins the resolved public IP set and rejects loopback, private, link-local, metadata, user-info URLs, DNS rebinding, unsupported MIME, decompression bombs and redirects."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "81-trusted-parameter-selection",
+          "answers": "A payment destination comes from an independently verified beneficiary record, not from an invoice's free-form replacement URL."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "3-retrieval-ranking-freshness-and-contradiction",
+          "answers": "Citation checking resolves the exact source and tests claim support; a plausible URL does not suffice."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T03",
+        "A-T09",
+        "IC-T01",
+        "WK-V19"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Fetch is mediated by G with pinned destination and TLS identity, extraction happens in X without scripts, and the resulting text enters the registry only as an attributed Observation.",
+      "gap": null
     },
     {
       "id": "AC03",
@@ -117,7 +179,39 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "8-domain-production-api-and-durable-work",
+          "answers": "Tool stdout/stderr, fixtures, repository rules and startup context are recorded visible inputs; model tools cannot execute in the credential-bearing native client or consequence broker."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "81-trusted-parameter-selection",
+          "answers": "A cloud mutation uses an admitted resource identifier/account, not a path embedded in tool output."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "2-invocation-capture-and-truthful-outcomes",
+          "answers": "RawCapture precedes offering the result to a model; streaming gaps, truncation and parser failure stay explicit."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "5-protected-evidence-and-account-reconstruction",
+          "answers": "Native status and parser output remain attributed observations until independent reconciliation supports the outcome."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T03",
+        "A-T09",
+        "IC-T01",
+        "IC-T06",
+        "WK-V19"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Capture occurs before the tool result reaches a model, and the authority-bearing fields of the resulting operation are resolved by deterministic code rather than from that result.",
+      "gap": null
     },
     {
       "id": "AC04",
@@ -152,7 +246,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "1-canonical-knowledge-and-distinct-memory",
+          "answers": "C03 proposes scratch and cannot promote scratch to company knowledge; the knowledge steward proposes and competent C06 judgment determines accepted scope."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "4-maintenance-corrections-and-deliberate-forgetting",
+          "answers": "Promotion into durable knowledge requires a stated reusable need, source rights, scope, expiry/review and owner."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "2-context-assembly-and-information-loss",
+          "answers": "Resume may reuse a native session only when every retained input is allowed for current recipients and purpose; otherwise the opaque route is closed and lost uncaptured influence is recorded."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "83-atomic-validity-and-continuing-deletion-scope",
+          "answers": "Restored caches and opaque conversation resumes are checked against current scopes before exposure."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T04",
+        "A-T10",
+        "WK-V22",
+        "WK-V24"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Promotion is a separate authorized transition owned by C06, so poisoned scratch cannot become durable knowledge by accumulation or repetition.",
+      "gap": null
     },
     {
       "id": "AC05",
@@ -187,7 +312,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "4-maintenance-corrections-and-deliberate-forgetting",
+          "answers": "A material active prerequisite receives a review deadline; overdue unverified evidence loses current eligibility, and time passing alone cannot renew a claim."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "3-retrieval-ranking-freshness-and-contradiction",
+          "answers": "Freshness is a use predicate or explicit warning, not a popularity bonus; repeated retrieval never renews verification."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "7-core-relationships-and-exact-state-transitions",
+          "answers": "ValidityEpoch carries monotonically increasing epochs and an invalidated derivative frontier; EvidenceJudgment moves to stale/contested on dependency revocation."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "83-atomic-validity-and-continuing-deletion-scope",
+          "answers": "Publication and release lock and check current epochs in the same registry transaction."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T09",
+        "K-T04",
+        "A-T10",
+        "WK-V24"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Current read and release checks evaluate the complete dependency closure against live epochs and fail pending a verified closure index.",
+      "gap": null
     },
     {
       "id": "AC06",
@@ -231,7 +387,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "5-protected-evidence-and-account-reconstruction",
+          "answers": "The protected evidence closure covers capture, parser, selection, denominator and evaluator; a producer cannot choose all adverse samples, delete failed attempts or alter expected answers."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "13-native-execution-evidence-independence-and-protected-changes",
+          "answers": "C06 capture receives raw envelopes directly from protected transport; producer-selected logs are reported evidence, not independently complete capture."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "10-deterministic-invariant-register",
+          "answers": "K09: evidence acceptance depends on the full capture-to-interpretation closure including selection and denominator."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "7-cases-trials-independence-and-negative-controls",
+          "answers": "Positive detection controls inject a known defect, fake citation, skipped authorization, omitted failed attempt and changed denominator."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T06",
+        "A-T11",
+        "WK-V40",
+        "WK-V43"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Capture and selection paths sit outside the evaluated producer's write authority, so fabricated evidence cannot reach the acceptance guard unchallenged.",
+      "gap": null
     },
     {
       "id": "AC07",
@@ -257,7 +444,33 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "13-native-execution-evidence-independence-and-protected-changes",
+          "answers": "A second model sharing the same corrupt parser, prompt, log owner or reward does not supply independence; common roots and collusion possibilities remain recorded."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "7-cases-trials-independence-and-negative-controls",
+          "answers": "A different model family adds a tested viewpoint but is not proof of independent error; record shared training/provider, parser, source, rubric, labels, capture owner and incentives where known; unknown roots remain unknown; measure joint false acceptance on controlled defects before treating panel agreement as extra assurance."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "2-improvement-evidence-stochastic-comparison-and-drift",
+          "answers": "Assessors disclose conflicts and cannot rely solely on a colluding model panel."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T11",
+        "K-T06",
+        "WK-V37",
+        "WK-V55"
+      ],
+      "enforcement": "rule-only",
+      "enforcement_basis": "Every cited passage states a measurement obligation or a prohibition on calling a shared-root panel independent. None states a refusal predicate for the case where the trust roots are UNKNOWN: 06 section 7 resolves unknown roots by leaving them unknown, and no passage bars an acceptance whose only independence evidence is agreement between panel members with unrecorded roots.",
+      "gap": "No passage specifies what the system DOES when independence roots are unknown. A specification passage would have to name the boundary (C06 acceptance) and the predicate that refuses, or explicitly admit the residual and bound it. Recorded as a specification gap, not a review omission."
     },
     {
       "id": "AC08",
@@ -291,7 +504,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "6-evaluation-contracts-at-every-level",
+          "answers": "An always-pass reviewer must fail the known-defect control; the checker itself has an independent acceptance owner; the producer cannot become sole independent acceptor by changing role labels."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "7-cases-trials-independence-and-negative-controls",
+          "answers": "A checker drifting toward agreement is challenged with independently held defects, swapped identities/order and false-positive controls; invalidated evaluator dependencies withdraw affected acceptance."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "1-protected-improvement-contract",
+          "answers": "A candidate evaluator cannot select its own hidden tests, alter the gate, sign its acceptance or provision the signing key."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "13-native-execution-evidence-independence-and-protected-changes",
+          "answers": "The producer cannot activate its evaluator revision or accept its own unsupported claim."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T06",
+        "A-T11",
+        "A-T16",
+        "WK-V43"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The evaluator is a protected surface: activating a changed evaluator is a ProtectedChange requiring a reviewer and authorizer outside the improver's write authority, and the known-defect control is a declared acceptance obligation on the checker itself.",
+      "gap": null
     },
     {
       "id": "AC09",
@@ -326,7 +570,40 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "5-command-query-and-event-protocol",
+          "answers": "Deduplication key is company + authenticated actor + command_id; same key with different content returns 409 idempotency_conflict, and a different command_id never bypasses business ConflictClaim identity."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "5-reservations-exact-operation-identity-and-prerequisites",
+          "answers": "ConflictClaim canonical business keys come from trusted business records, so two independently named operations on one entitlement share the relevant liability constraint."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "62-ordered-preparation-release-and-send-claim",
+          "answers": "The SendClaim is consumed once at the registry and once in the gateway's local durable attempt ledger; duplicate delivery cannot allocate another worker/socket or renew the frozen deadline."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "9-operationattempt-state-cancellation-retry-and-outcomes",
+          "answers": "Provider idempotency key lifetime and account scope are stored, not presumed permanent; unknown or partial effect forbids blind retry."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T01",
+        "A-T07",
+        "A-T08",
+        "IC-T02",
+        "MAIL-T04",
+        "MAIL-T05"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Uniqueness is enforced at three distinct boundaries: command dedup at ingress, ConflictClaim at P1, and single claim consumption at P4/P5.",
+      "gap": null
     },
     {
       "id": "AC10",
@@ -355,7 +632,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "6-authoritative-storage-and-transaction-boundary",
+          "answers": "A mutating command uses SERIALIZABLE isolation with sorted explicit row locks, unique constraints and foreign keys; the server rereads all predicate dependencies."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "7-core-relationships-and-exact-state-transitions",
+          "answers": "All state machines reject unlisted transitions; revision increments by exactly one under a matching expected revision."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "10-conflict-scope-and-participant-migrations--t-r1",
+          "answers": "Overlapping conflict scopes freeze as a union and migrate forward; splitting into disjoint scopes requires affirmative disjointness evidence."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "6-concurrency-failure-retry-and-stop",
+          "answers": "One writer holds an exact mutable artifact/resource scope; a clean textual merge is not behavioral compatibility, and semantic-conflict refs supplement path leases."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T01",
+        "A-T08",
+        "WK-V20",
+        "WK-V47"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The registry's serial order plus expected-revision checks decide the winner deterministically; the loser rereads or conflicts with no partial event, outbox or account update.",
+      "gap": null
     },
     {
       "id": "AC11",
@@ -403,7 +711,39 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "5-command-query-and-event-protocol",
+          "answers": "A 202 durability_pending response or interrupted connection requires a status lookup; status never synthesizes acceptance from a primary row, and the absence of a rejected result after a crash cannot be read as acceptance."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "63-lost-acknowledgmentstatus-outcomes",
+          "answers": "Each lost-acknowledgment condition has a required behavior; crash after SendClaim before reliable send observation is unknown_effect until positive proof narrows it."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "9-operationattempt-state-cancellation-retry-and-outcomes",
+          "answers": "proven_unsent requires positive complete gateway proof covering every permitted route; missing logs are insufficient."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "6-concurrency-failure-retry-and-stop",
+          "answers": "C02 checks heartbeat separately from meaningful progress; rework, rejected attempts and abandoned outputs stay in the denominator."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T02",
+        "K-T08",
+        "A-T14",
+        "IC-T02",
+        "MAIL-T05"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The unknown state is a first-class terminal value with an owned reconciliation duty, so a failure has nowhere to become silence.",
+      "gap": null
     },
     {
       "id": "AC12",
@@ -452,7 +792,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "4-intent-knowledge-rationale-and-events",
+          "answers": "DomainEvent is a committed transition or attributed receipt, not a free-form claim of success; event transport delivery cannot establish business completion."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "9-operationattempt-state-cancellation-retry-and-outcomes",
+          "answers": "An HTTP 200, CLI exit zero, payment authorization or delivery receipt is an observation whose business meaning comes from the EvidenceContract; effects can be applied even when the user-facing call failed."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "6-evaluation-contracts-at-every-level",
+          "answers": "Producer self-checks are useful preparation and do not become independent acceptance; local accepted subtasks cannot hide a failed whole."
+        },
+        {
+          "file": "planning/specification/03-company-capabilities.md",
+          "anchor": "record-and-procedure-contract",
+          "answers": "Kernel accepted means committed and independently witnessed; it does not mean an outward effect occurred or a customer was satisfied."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T05",
+        "A-T14",
+        "IC-T05",
+        "WK-V02"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Acceptance is a separate transition owned by C06 with its own evidence closure; a producer's reported outcome is evidence input and never an authoritative success override.",
+      "gap": null
     },
     {
       "id": "AC13",
@@ -502,7 +873,45 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "62-ordered-preparation-release-and-send-claim",
+          "answers": "P1 to P7 makes every external effect pass preparation, frozen envelope, witnessed release, unique claim, protected transport, protected observation and reconciliation."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "7-trusted-time-and-bounded-transport--t-r3",
+          "answers": "The controlled event is outbound kernel-buffer admission at the nftables forward hook with an absolute time cutoff and no alternative route."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "74-partial-sends-revocation-and-observed-limits",
+          "answers": "No adapter may advertise cancelled, never sent or no effect from an HTTP timeout alone; bytes admitted before cutoff may still arrive later."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "9-operationattempt-state-cancellation-retry-and-outcomes",
+          "answers": "After release, cancellation forbids future claims and preserves already authorized possibly applied effects; compensating action is a new separately granted operation."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "96-t-r3-conformance-for-this-adapter",
+          "answers": "The residual revocation window for a mail effect does not end at the gate cutoff; it ends only at an observed provider outcome or an explicitly declared unknown."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T01",
+        "A-T04",
+        "A-T05",
+        "A-T07",
+        "IC-T02",
+        "MAIL-T08"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Irreversibility is not prevented but is bounded and made visible: the gate bounds when the effect may start, and the unknown residual is a declared state with an owner rather than a cancellation claim.",
+      "gap": null
     },
     {
       "id": "AC14",
@@ -548,7 +957,39 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "4-authentication-principals-and-grant-attenuation",
+          "answers": "ConsequenceVector separates money by currency and principal; routing class C3 requires actual principal/account, entitlement, reserve and competent standing, and defaults grant no external money."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "5-reservations-exact-operation-identity-and-prerequisites",
+          "answers": "reserved + consumed + uncertain must not exceed total_authorized; a negative balance is an incident, not silently repaired by raising the ceiling."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "9-scheduling-bounds-and-useful-progress",
+          "answers": "The allowance vector separates money by currency and principal; unknown metered consumption reserves the maximum authorized remainder until reconciled."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "6-capacity-money-and-scheduling",
+          "answers": "Money cannot be inferred from token estimates; uncertain billing quarantines affected launch or release, and no provider outage silently increases spend."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T13",
+        "A-T14",
+        "K-T07",
+        "IC-T07",
+        "IC-T09"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "C04 reserves money before disclosure or external mutation and the reservation invariant is a registry constraint, so an unauthorized spend fails at P1 rather than at reconciliation.",
+      "gap": null
     },
     {
       "id": "AC15",
@@ -576,7 +1017,32 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "12-keys-native-descendants-deletion-and-backup-handling",
+          "answers": "Revoking a credential records an AccessDescendant graph, not one token string; a revoked parent token is not proof that a resource policy, minted token, deploy key or server-side task lost authority."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "4-authentication-principals-and-grant-attenuation",
+          "answers": "Five-minute workload certificates bound to environment/component/actor/instance, checked against the current IdentityBinding epoch; certificate validity alone never grants consequence authority."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "1-integration-identity-and-admission",
+          "answers": "A credential broader than a job stays in a protected connector process; the model receives an invocation capability with exact job, action, account, destination and amount bounds."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T13",
+        "A-T17",
+        "IC-T12"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Containment is a registered graph with a working containment method required before release; if enumeration is incomplete, residual_authority is unknown and affected scopes are held.",
+      "gap": null
     },
     {
       "id": "AC16",
@@ -608,7 +1074,39 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "4-authentication-principals-and-grant-attenuation",
+          "answers": "Attenuation is set intersection and componentwise reduction; a child cannot convert a purpose restriction into spare money or reissue authority through a new actor, and parent and children reserve against common accounts."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "10-deterministic-invariant-register",
+          "answers": "K15: no native tool, imported text, response rationale or provider credential grants production account authority."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "12-keys-native-descendants-deletion-and-backup-handling",
+          "answers": "Producer credentials cannot mint roles, tokens, webhooks or automations or alter resource policies; a job worker receives job capabilities, not production credentials."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "4-temporary-workers-model-choice-and-bounded-reasoning",
+          "answers": "Trust is scoped eligibility, not a general score; success never expands authority automatically and increased autonomy requires an actual amended grant."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T09",
+        "A-T13",
+        "A-T16",
+        "K-T11",
+        "WK-V19"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The intersection is computed and checked by the server at authority.grant.attenuate; a noncomparable semantic selector is rejected rather than widened.",
+      "gap": null
     },
     {
       "id": "AC17",
@@ -634,7 +1132,32 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "5-delegation-messages-and-accountable-handoffs",
+          "answers": "C02 owns assignment; the default maximum delegation depth is one child layer, a second requires explicit admission rationale and reserved coordination capacity, and depth is never a substitute for the root causal ceiling."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "9-scheduling-bounds-and-useful-progress",
+          "answers": "A child proposes its scope; a parent cannot evade limits by minting IDs, and a delegated child cannot refill an episode."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "8-domain-production-api-and-durable-work",
+          "answers": "Models can propose decomposition, but only C02 may admit children and atomically reserve from the same root allowance."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T07",
+        "A-T12",
+        "WK-V49"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Child admission is a registry transaction that reserves from the same root allowance vector, so fan-out consumes rather than creates capacity.",
+      "gap": null
     },
     {
       "id": "AC18",
@@ -668,7 +1191,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "9-scheduling-bounds-and-useful-progress",
+          "answers": "Reservations plus consumed must not exceed each enforceable ceiling; opaque subscription-internal usage is unknown, not zero, and reserves the maximum authorized remainder."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "6-capacity-money-and-scheduling",
+          "answers": "Pressure is the maximum of independently observed saturation dimensions; new discretionary admission stops at 85% and restores only below 65% for ten minutes."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "5-reservations-exact-operation-identity-and-prerequisites",
+          "answers": "Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "5-native-subscription-execution",
+          "answers": "Native job defaults bound launches, network window, vCPU, memory, output bytes and permitted network bytes measured at the gateway."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T07",
+        "A-T12",
+        "IC-T07",
+        "WK-V03"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The ceiling is checked inside the same transaction that admits the work, and unknown consumption holds capacity instead of being treated as zero.",
+      "gap": null
     },
     {
       "id": "AC19",
@@ -694,7 +1248,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "9-operationattempt-state-cancellation-retry-and-outcomes",
+          "answers": "Default external attempt maximum is one; an admitted RetryContract authorizes at most three attempts within the same causal ceilings, and retries never run on unknown effect merely because a delay elapsed."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "6-concurrency-failure-retry-and-stop",
+          "answers": "One retry after a changed input, environment or method; two failed attempts with the same cause open a Blocker, and repeated model calls to rediscover exhaustion are forbidden."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "2-invocation-capture-and-truthful-outcomes",
+          "answers": "The circuit breaker opens after three transport failures in five minutes and probes once after five minutes with a harmless admitted read."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "6-authoritative-storage-and-transaction-boundary",
+          "answers": "Serialization failures retry the entire pure transaction at most three times with no external action inside the retries."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T07",
+        "A-T14",
+        "IC-T02",
+        "WK-V05"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Every retry is debited from a finite attempt allowance in the same registry that admitted the work, and the FailureRecord fingerprint uses semantic cause so a renamed agent cannot create fresh allowance.",
+      "gap": null
     },
     {
       "id": "AC20",
@@ -743,7 +1328,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "4-intent-knowledge-rationale-and-events",
+          "answers": "IntentVersion records the original endorsed text and endorser; inferred goals cannot become endorsed intent."
+        },
+        {
+          "file": "planning/specification/03-company-capabilities.md",
+          "anchor": "operating-setup-and-bounded-autonomy",
+          "answers": "Goals have a review date, next bounded discriminator, horizon and abandonment authority; at review an untouched goal is reaffirmed with evidence, narrowed, parked or abandoned with duty disposition."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "2-improvement-evidence-stochastic-comparison-and-drift",
+          "answers": "Cumulative drift review compares the current release with the last independently endorsed strategic baseline after every five accepted changes or 30 days; changes cannot evade review by splitting."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "8-drift-reopening-economics-and-comparators",
+          "answers": "Reaffirming a settled choice requires current reasoning about its premises; values deliberately settled by their owner retain the actual amendment route."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T16",
+        "K-T11",
+        "WK-V42",
+        "WK-V53"
+      ],
+      "enforcement": "rule-only",
+      "enforcement_basis": "The cited passages supply a review cadence, a reopening trigger and a prohibition on promoting inferred goals to endorsed intent. None supplies a predicate evaluated at an enforcement boundary that detects divergence between admitted work and endorsed intent and refuses; detection depends on a scheduled competent review, so any interval between reviews is unguarded by construction.",
+      "gap": "No passage names the boundary at which drift from endorsed intent is computed, nor the observable that would show it. The invariant register (01 section 10) has no K-row for intent divergence, which is where such a predicate would live."
     },
     {
       "id": "AC21",
@@ -789,7 +1405,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "6-evaluation-contracts-at-every-level",
+          "answers": "EvaluationPlan is registered before seeing treatment results and fixes unit, population, outcome and process criteria, forbidden outcomes, selection, denominator and stopping rule."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "7-cases-trials-independence-and-negative-controls",
+          "answers": "Negative controls include a sham change expected not to improve the endpoint; a moving baseline requires bridged common cases and explicit changed populations."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "10-deterministic-invariant-register",
+          "answers": "K09 names selection and denominator inside the acceptance closure, so a changed denominator invalidates affected judgments."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "2-improvement-evidence-stochastic-comparison-and-drift",
+          "answers": "Other regressions use predeclared thresholds, not a posteriori explanations; extending sample size needs a declared sequential rule, not optional stopping."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T06",
+        "A-T11",
+        "WK-V40",
+        "WK-V43"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The denominator is part of the EvidenceBaseVersion closure checked at acceptance, so changing it invalidates the dependent judgment rather than improving the score.",
+      "gap": null
     },
     {
       "id": "AC22",
@@ -834,7 +1481,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "2-context-assembly-and-information-loss",
+          "answers": "ContextTransformation records spans included and excluded and known loss; a summary carries SummaryLoss entries, and compression passes only for its declared use."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "5-protected-evidence-and-account-reconstruction",
+          "answers": "Human-facing summaries preserve critical differences and expose originals within access limits; a gap is not inactivity."
+        },
+        {
+          "file": "planning/specification/04-human-operation.md",
+          "anchor": "accessibility-faults-evaluation-and-source-trace",
+          "answers": "Conformance cases include a missing native source hidden by a fluent summary and a stale phone approving changed terms."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "5-delegation-messages-and-accountable-handoffs",
+          "answers": "A summary is an additional derivative beside the canonical Continuation, never its replacement; the receiver checks critical predicates against originals before acting."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T08",
+        "WK-V21",
+        "WK-V33",
+        "WK-V51"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Exact consequential amounts, identities, deadlines and exclusions remain references with accessible original spans, so a distorted summary cannot be the only reachable form of the fact.",
+      "gap": null
     },
     {
       "id": "AC23",
@@ -885,7 +1563,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/04-human-operation.md",
+          "anchor": "attention-and-practiced-competence",
+          "answers": "ParticipationPlan is owner-endorsed setup data with availability windows, maximum decision-batch minutes and interrupt limit; an empty plan means no asserted attention capacity for dependent promises; when a batch reaches the chosen limit, remaining nonurgent decisions defer and their latest responsible times trigger substitute or continuity, never automatic approval."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "9-scheduling-bounds-and-useful-progress",
+          "answers": "The allowance vector includes human attention minutes by actual person and capacity pool; actual performer calendars are mandatory operating inputs."
+        },
+        {
+          "file": "planning/specification/03-company-capabilities.md",
+          "anchor": "incidents-knowledge-growth-and-responsible-ending",
+          "answers": "CAP-35 tests growth against owner load; new admissions shrink before mandated review or existing-duty progress is starved."
+        },
+        {
+          "file": "planning/specification/04-human-operation.md",
+          "anchor": "decision-timing-and-no-answer-behavior",
+          "answers": "A packet is generated only when a current mandate cannot resolve a real decision without that person; if readiness cannot be established, escalate the lack of readiness rather than pressure a hurried signature."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T18",
+        "K-T12",
+        "WK-V18",
+        "WK-V54"
+      ],
+      "enforcement": "rule-only",
+      "enforcement_basis": "The attention ceiling is owner-declared setup data and the batch limit defers nonurgent decisions, but no passage specifies an enforcement point that refuses a new admission on an OBSERVED attention overrun. 04 states explicitly that the number of decisions is not itself a limit and that estimates are checked against actual minutes afterwards, so the control is retrospective.",
+      "gap": "No passage names the predicate, the boundary or the measured observable for owner overload. 01 section 9 makes attention minutes a reservable unit, which is where an enforceable ceiling could live, but no section binds a refusal to it."
     },
     {
       "id": "AC24",
@@ -918,7 +1627,33 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/04-human-operation.md",
+          "anchor": "attention-and-practiced-competence",
+          "answers": "Practice encounters compare unaided recognition, intervention quality, false-positive assessments, owner time and reported emotional burden separately; familiar task success cannot establish general competence; consented longitudinal comparison including absence and closure is required before claiming preservation."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "6-evaluation-contracts-at-every-level",
+          "answers": "Attention/competence row: attendance, confidence and agreement cannot establish competence, and the assessment runs under the consented human protocol."
+        },
+        {
+          "file": "planning/specification/04-human-operation.md",
+          "anchor": "collaboration-absence-succession-and-departure",
+          "answers": "A staged month-long absence tests whether real due service, refunds, professional tasks and grievances were fulfilled or legitimately disposed of."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T15",
+        "A-T18",
+        "K-T12",
+        "WK-V54"
+      ],
+      "enforcement": "rule-only",
+      "enforcement_basis": "The only specified detector is a consented longitudinal comparison whose schedule is declared to be a proposed dose to test, not a proven one; decline, interruption and noncompletion are recorded as visible coverage limits and block nothing. No passage makes a measured competence loss refuse or narrow any consequential action.",
+      "gap": "No passage states what happens when the owner declines the assessment for a sustained period. The nearest is 04's competence-prerequisite path, which triggers on a material MISUNDERSTANDING actually observed, not on absence of measurement."
     },
     {
       "id": "AC25",
@@ -952,7 +1687,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "3-durability-classes-and-safe-work-during-outages",
+          "answers": "During witness outage already admitted computation continues within its valid lease and reserved budget and can create D1 artifacts; no fresh external authority is minted from an offline cache."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "6-capacity-money-and-scheduling",
+          "answers": "A provider outage pauses its queue, permits local staging and already admitted computation, and routes suitable work to an independently qualified substitute; it never silently increases spend or authority."
+        },
+        {
+          "file": "planning/specification/03-company-capabilities.md",
+          "anchor": "fulfillment-routes-and-unresolved-adapters",
+          "answers": "A real person can perform a separately admitted manual route when qualified and reachable, with exact scope, first-action cutoff and unknown-effect reconciliation."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "7-durable-schedules-and-capacity-gaps",
+          "answers": "During a gap, surviving local work checkpoints through D1, due service uses actually available independent routes, and unavailable performance remains an operational failure."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T10",
+        "A-T14",
+        "IC-T07",
+        "IC-T11"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Safe unavailability is recorded as an availability failure rather than a success, and the substitute route is an admitted capability with its own authority rather than an automatic fallback.",
+      "gap": null
     },
     {
       "id": "AC26",
@@ -980,7 +1746,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "1-integration-identity-and-admission",
+          "answers": "AdapterProfile pins request/response schema digests, endpoint policy and parser versions; admitted profiles move to quarantined or draining and return to admitted only on new evidence."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "2-invocation-capture-and-truthful-outcomes",
+          "answers": "Authentication failure, schema drift, unexpected redirect or destination, charge mode change or capture corruption quarantines immediately."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "8-admission-evidence-and-removal",
+          "answers": "A provider's silent version, terms or billing change invalidates relevant profile evidence and requires a protected migration with explicit quality and cost comparison."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "11-contract-evolution-scaling-and-removal",
+          "answers": "RuntimeProfile pins versions and configuration hashes; patch changes trigger compatibility and escape/race tests, and an admission report has expiry and owner."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T10",
+        "A-T14",
+        "IC-T10",
+        "IC-T12"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Drift is detected at the capture/parse boundary and quarantines the connection; the profile cannot silently continue on changed semantics.",
+      "gap": null
     },
     {
       "id": "AC27",
@@ -1015,7 +1812,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "5-native-subscription-execution",
+          "answers": "AuthAttestation carries actual auth-status evidence, permitted usage and approved credit settings; missing or stale billing evidence stops new launches and an observed quota reset never renews the company causal budget."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "9-operationattempt-state-cancellation-retry-and-outcomes",
+          "answers": "Provider quota or auth failure before request with positive unsent proof parks or uses another already admitted subscription within the same causal totals; never metered fallback."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "9-scheduling-bounds-and-useful-progress",
+          "answers": "A provider reset, new case, new observation or delegated child cannot refill an episode."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "6-capacity-money-and-scheduling",
+          "answers": "If the provider has no reliable remaining value, schedule conservatively at one launch and use actual throttling plus finite episode reservations, not invented task capacity."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T07",
+        "K-T10",
+        "A-T14",
+        "IC-T07"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The company allowance is a separate ledger from the provider's quota, so a provider reset changes neither the reservation nor the episode ceiling.",
+      "gap": null
     },
     {
       "id": "AC28",
@@ -1064,7 +1892,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "6-authoritative-storage-and-transaction-boundary",
+          "answers": "Immutable canonical bytes are retained and chained to the predecessor group; hash, identity, uniqueness and foreign-key constraints join canonical IDs and revisions, and overflow fails the command."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "61-persistence-and-proof",
+          "answers": "The witness verifies the complete contiguous group and content; different content at an already witnessed sequence seals the scope as a corruption incident."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "11-outbox-membership-fencing-and-restore",
+          "answers": "Recovery seals the generation, fences old identities, verifies chain continuity and restores from the witness frontier rather than from A's stale backup."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "63-lost-acknowledgmentstatus-outcomes",
+          "answers": "A/backup restored behind R must be fenced and recovered to the current R frontier; R is never overwritten with A's old state."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T02",
+        "A-T02",
+        "A-T03",
+        "A-T17"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Corruption is detected by an independently administered witness that holds its own receipt chain, so the corrupt primary cannot certify itself.",
+      "gap": null
     },
     {
       "id": "AC29",
@@ -1115,7 +1974,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "10-deterministic-invariant-register",
+          "answers": "K11: ownership transfer requires acknowledgment of actual scope and capacity; parking, closure, absence and tool success never discharge external standing."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "7-core-relationships-and-exact-state-transitions",
+          "answers": "Continuation moves prepared to offered to acknowledged to active; the old owner retains unfinished scope until exact acknowledged transfer."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "5-delegation-messages-and-accountable-handoffs",
+          "answers": "Result transfer carries typed outputs, partial-state flags, unknowns, remaining duties and pending effects; a receipt, model paraphrase or acknowledgment cannot transfer duties."
+        },
+        {
+          "file": "planning/specification/04-human-operation.md",
+          "anchor": "collaboration-absence-succession-and-departure",
+          "answers": "Recipient acknowledgment of receipt differs from acceptance of responsibility; if rejected, the existing custodian or accepted alternate remains responsible."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T08",
+        "A-T15",
+        "WK-V07",
+        "WK-V14"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "Transfer is a guarded transition requiring the recipient's authority, competence and access checks; there is no path by which an incomplete handoff leaves the duty unowned.",
+      "gap": null
     },
     {
       "id": "AC30",
@@ -1143,7 +2033,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "11-contract-evolution-scaling-and-removal",
+          "answers": "RuntimeProfile pins native executable and validator versions; patch changes trigger relevant compatibility and escape/race tests, and production changes cannot bypass these checks by being called maintenance."
+        },
+        {
+          "file": "planning/specification/05-work-agents-skills.md",
+          "anchor": "4-temporary-workers-model-choice-and-bounded-reasoning",
+          "answers": "A changed model, tool or skill, missed material defect, drift or invalidated prerequisite narrows eligibility immediately; provider names and leaderboard ranks cannot qualify a profile."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "2-improvement-evidence-stochastic-comparison-and-drift",
+          "answers": "Model upgrades and fallback providers are evaluated on the actual work predicate, not model-name equivalence."
+        },
+        {
+          "file": "planning/specification/07-integrations-capacity.md",
+          "anchor": "5-native-subscription-execution",
+          "answers": "Pinned CLI artifact and effective managed configuration; unknown flags or effective configuration differences stop launch, and no upgrade download occurs during a job."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T10",
+        "A-T16",
+        "IC-T10",
+        "WK-V42"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The runtime is admitted by digest and the admission expires; an updated model is a new profile requiring readmission, not a silent substitution.",
+      "gap": null
     },
     {
       "id": "AC31",
@@ -1180,7 +2101,38 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "11-contract-evolution-scaling-and-removal",
+          "answers": "Schema major changes require explicit migration; minor versions cannot weaken validation, authority or retention, and semantic changes to acceptance, denominators or conflict identity require a new version and the migration protocol."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "5-protected-evidence-and-account-reconstruction",
+          "answers": "Changed or corrupted dependencies trigger invalidation and mark affected judgments stale or contested before their next consequential use."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "3-repository-and-process-implementation-target",
+          "answers": "Version-lock concrete dependencies and artifacts at construction; dependency updates are ProtectedChanges, not floating production installs."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "10-conflict-scope-and-participant-migrations--t-r1",
+          "answers": "Conflict, alias and participant changes freeze the union, fence inflight eligibility and map conservatively; unmapped keys retain a union-wide hold."
+        }
+      ],
+      "falsifier_refs": [
+        "K-T09",
+        "A-T08",
+        "IC-T10",
+        "WK-V47"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The dependency closure is stored with reverse edges and checked at current use, so a changed dependency invalidates dependent acceptance rather than being absorbed silently.",
+      "gap": null
     },
     {
       "id": "AC32",
@@ -1215,7 +2167,37 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "10-deterministic-invariant-register",
+          "answers": "K13: self-improvers cannot alter their own authority, evidence capture, evaluator acceptance, release gate, recovery roots or rollback acceptance."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "1-protected-improvement-contract",
+          "answers": "Ordinary improvement agents have no write access to deployment and configuration roots; being beneficial, small, reversible or generated by an evaluator does not grant system-change authority."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "13-native-execution-evidence-independence-and-protected-changes",
+          "answers": "A protected change requires exact diff and artifact hashes, independent review, an actual authorized signer, staged tests, current recovery proof and an activation/rollback plan."
+        },
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "2-improvement-evidence-stochastic-comparison-and-drift",
+          "answers": "Cumulative drift review compares the current release with the last independently endorsed strategic baseline; changes cannot evade review by splitting one change into small revisions."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T16",
+        "K-T11",
+        "WK-V42"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The protected surfaces are a registry of subjects with a named authority per subject; the improver has no write or approval path into them, so drift requires an independent authorizer's act.",
+      "gap": null
     },
     {
       "id": "AC33",
@@ -1243,14 +2225,62 @@
         ]
       },
       "implementation_test": null,
-      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending"
+      "status": "conceptual responses reviewed; concrete specification/conformance and runtime evidence pending",
+      "specification_refs": [
+        {
+          "file": "planning/specification/08-improvement-implementation.md",
+          "anchor": "1-protected-improvement-contract",
+          "answers": "A dedicated protected registry defines which authority may change each subject; a candidate evaluator cannot select its own hidden tests, alter the gate, sign its acceptance or provision the signing key, and if independent competence is unavailable the protected change waits."
+        },
+        {
+          "file": "planning/specification/01-contract-kernel.md",
+          "anchor": "10-deterministic-invariant-register",
+          "answers": "K13 places the evaluator, release gate, recovery roots and rollback acceptance outside the improver's reach."
+        },
+        {
+          "file": "planning/specification/02-authority-recovery.md",
+          "anchor": "13-native-execution-evidence-independence-and-protected-changes",
+          "answers": "Protected changes include the capture, evaluation and recovery machinery; reverting code alone cannot undo already authorized consequences."
+        },
+        {
+          "file": "planning/specification/06-knowledge-evidence-evaluation.md",
+          "anchor": "6-evaluation-contracts-at-every-level",
+          "answers": "The checker itself has an independent acceptance owner and must fail the known-defect control."
+        }
+      ],
+      "falsifier_refs": [
+        "A-T16",
+        "A-T11",
+        "K-T11",
+        "WK-V43"
+      ],
+      "enforcement": "enforcement-point-named",
+      "enforcement_basis": "The improvement mechanism's own gate is a protected subject with a separate authority; compromising the improver does not reach the surface that would admit its change.",
+      "gap": null
     }
   ],
   "additional_cases": "coverage/discovered.json",
-  "review_subject_commit": "595f931",
+  "review_subject_commit": "7ddc066",
   "limitations": [
     "Coverage is the presence of a concrete review discussion, not a passing test.",
     "Original reports preserve partial or unexamined scopes and empirical uncertainties.",
-    "No candidate scenario, exploit or longitudinal competence experiment has been executed."
+    "No candidate scenario, exploit or longitudinal competence experiment has been executed.",
+    "Coverage here is a documentary join between an attack case, a specification passage and a named test. It is not evidence that the passage is sufficient, that the test is adequate, or that either has run.",
+    "implementation_test remains null and status remains identical across all 33 cases because that is accurate: no case has runtime evidence. Per-case differentiation now lives in specification_refs, falsifier_refs, enforcement and gap, not in status.",
+    "Four cases are enforcement: rule-only (AC07, AC20, AC23, AC24). Each carries a gap naming the missing predicate. Repaired 2026-09-13 for G3-01 and G3-02; pending independent recheck."
+  ],
+  "review_subject_commit_note": "Rebound from 595f931 to 7ddc066 on 2026-09-13 while repairing G3-01 and G3-02. 595f931 predates planning/specification/ entirely, so the specification_refs and falsifier_refs added here could not have existed under that binding. The original 595f931 binding is preserved in git history for this file and is not restated as a live value.",
+  "join_contract": "Each case names specification_refs (file plus GitHub-style heading anchor, with the sentence that answers the case) and falsifier_refs (named tests from 01 section 12 K-T##, 02 section 14 A-T##, 07 section 8 IC-T##, 07 section 9.7 MAIL-T##, and work-knowledge-contracts.json WK-T##/WK-V##). planning/specification/contracts/tools/attack_join.py fails if a case lacks specification_refs, if an anchor does not resolve to a heading in the named file, or if a falsifier id is outside the declared ranges. enforcement is enforcement-point-named or rule-only; rule-only cases carry a gap naming what a specification passage would have to say.",
+  "repair_provenance": [
+    {
+      "findings": [
+        "G3-01",
+        "G3-02"
+      ],
+      "date": "2026-09-13",
+      "review": "planning/reviews/G-03-evidence-unknowns-adversarial.md",
+      "state": "repaired, pending independent recheck",
+      "what_changed": "Added specification_refs, falsifier_refs, enforcement, enforcement_basis and gap to all 33 cases; rebound review_subject_commit to 7ddc066; added the machine-checked join at planning/specification/contracts/tools/attack_join.py."
+    }
   ]
 }
