@@ -764,6 +764,161 @@ CITE = {
         "The first lifecycle heads follow from this one initialization command and its "
         "verified root authorization, not recursively from accepted lifecycle records. "
         "The initial grant set permits only the declared preparatory scope."),
+    # --- BEGIN WORK-1.1 citations (F2 amendment) ---
+    #
+    # Every quote below is asserted present in the file it names before the
+    # registries are written, and validate_contracts.py resolves each one again
+    # on every run: a citation that cannot be opened, or that its file does not
+    # contain, is not a citation.  Section 10 of 05 states what must be true to
+    # be in each new phase, section 11 of 11 states the transition the registry
+    # must enforce, and sections 11 and 12 of 05 state the layer rules they sit
+    # inside.  Per-phase content is derived from those three and nowhere else.
+    "s-ai": (
+        "11-schemas-state-contracts.md",
+        '`* → accepted` is **rejected by the writer guard when the resolution reason is '
+        'empty**'),
+    "s-ar": (
+        "11-schemas-state-contracts.md",
+        '`→ refused` requires a **named failed predicate** and an acceptance owner; '
+        '**silence is not refusal**'),
+    "s-as": (
+        "11-schemas-state-contracts.md",
+        '**No component may prevent membership.** The admission authority holds no write '
+        'access to any precondition-bearing kind'),
+    "s-cd": (
+        "11-schemas-state-contracts.md",
+        '`recomputed_at_release → parked_on_mismatch` **never resolves downward**; '
+        '`mismatch_disposition` is writable only by the party owning the park'),
+    "s-cs": (
+        "11-schemas-state-contracts.md",
+        'a transfer whose set **fails schema validation** produces a quarantined report '
+        'and a bounded repair request, **never a best-effort continue**'),
+    "s-ei": (
+        "11-schemas-state-contracts.md",
+        'a second claimant **joins the first and inherits its outcome**; it does not race '
+        'and does not re-release'),
+    "s-ej": (
+        "11-schemas-state-contracts.md",
+        '`proposed → admitted` is **refused if the decidable test cannot return false**'),
+    "s-fa": (
+        "11-schemas-state-contracts.md",
+        '**no last-writer-wins path exists anywhere**'),
+    "s-gr": (
+        "11-schemas-state-contracts.md",
+        'an executor whose grant did not arrive **fails loudly**, never completing with less'),
+    "s-ic": (
+        "11-schemas-state-contracts.md",
+        "a **missing clean-case rate** makes the checker's verdict `unresolved`"),
+    "s-pg": (
+        "11-schemas-state-contracts.md",
+        '**re-read at every read** of the derived projection; revocation invalidates '
+        'derivatives already written'),
+    "s-registered-type": (
+        "11-schemas-state-contracts.md",
+        'Each is a registered type in the closed set above'),
+    "s-sd": (
+        "11-schemas-state-contracts.md",
+        'records the lane, the authority, the obligations moved with named custodians, '
+        'the stated minimum, whether it was breached, the overflow count and the '
+        'lapsed-unconsumed quantity'),
+    "s-sh": (
+        "11-schemas-state-contracts.md",
+        '`staffed → retired_into` is **refused while any duty it holds is live**; `* → '
+        'suspended` **stops admission in that duty class**'),
+    "s-si": (
+        "11-schemas-state-contracts.md",
+        '`proposed → trial` is admissible **only at the two lowest effect classes**; a '
+        'proposal declaring a writer key is **refused, naming the predicate**'),
+    "s-up": (
+        "11-schemas-state-contracts.md",
+        'retention **exceeds the longest plausible outage**; the arrival alarm has a '
+        '**named reader**'),
+    "w-acceptance-role-unfilled": (
+        "05-work-agents-skills.md",
+        'admission in that duty class stops while it is unfilled'),
+    "w-ai-in-acceptance": (
+        "05-work-agents-skills.md",
+        'The producer has declared completion, the acceptance owner has not written the '
+        "terminal edge, and the interval holder is the producing structure's sponsor"),
+    "w-ar-refused": (
+        "05-work-agents-skills.md",
+        'A named failed predicate is recorded and an acceptance owner is named'),
+    "w-cd-park": (
+        "05-work-agents-skills.md",
+        'The recomputed set differs from the admitted set and the effect is held'),
+    "w-cd-recompute": (
+        "05-work-agents-skills.md",
+        'The class set has been recomputed inside the ordered release transaction, on the '
+        '**frozen bytes**, by the release path'),
+    "w-class-gates-all": (
+        "05-work-agents-skills.md",
+        "**Every reached class's gates apply.** No total rank exists"),
+    "w-class-one-function": (
+        "05-work-agents-skills.md",
+        'The set is computed by **one deterministic function** from four inputs and no others'),
+    "w-ei-claimed": (
+        "05-work-agents-skills.md",
+        'An allocation has been claimed by a releasing attempt before the effect is released'),
+    "w-ej-admitted": (
+        "05-work-agents-skills.md",
+        'Exactly one admitted reason is named with its unit, and the decidable test **can '
+        'return false**'),
+    "w-fa-superseded": (
+        "05-work-agents-skills.md",
+        'A later epoch declares the authority for that `field_path`'),
+    "w-gr-written": (
+        "05-work-agents-skills.md",
+        "The enforcement point attested the grant's arrival at the first effect"),
+    "w-holder-ephemeral": (
+        "05-work-agents-skills.md",
+        "an ephemeral worker instantiated under the holder's mandate, carrying the "
+        "holder's reservation ref and intake address and nothing else of the holder's."),
+    "w-holder-iff": (
+        "05-work-agents-skills.md",
+        'A standing holder exists for a duty class if and only if all three of these hold.'),
+    "w-holder-minimum-evidence": (
+        "05-work-agents-skills.md",
+        "**The holder's stated minimum is evidence, not consent**"),
+    "w-holder-no-veto": (
+        "05-work-agents-skills.md",
+        'A holder **may negotiate, never veto; may not refuse admission narrowing; and '
+        'may not defend its own mandate.**'),
+    "w-holder-prohibitions": (
+        "05-work-agents-skills.md",
+        'A holder **never produces**, **never releases**, **never decides the matter it '
+        'is the subject of**, and **carries no model memory**.'),
+    "w-ic-run": (
+        "05-work-agents-skills.md",
+        'A calibration session has recorded the planted-defect result **and** the paired '
+        'clean-case refusal rate from that same session'),
+    "w-intake-subcap": (
+        "05-work-agents-skills.md",
+        'every published intake carries a **per-counterparty and per-origin-channel sub-cap**'),
+    "w-pg-active": (
+        "05-work-agents-skills.md",
+        'A grant issued as a C2 act and released by C04, with `recipient_scope` and '
+        '`purpose` resolved from a `ParameterAuthority`'),
+    "w-precedence": (
+        "05-work-agents-skills.md",
+        'Lower-numbered layers govern.'),
+    "w-sd-written": (
+        "05-work-agents-skills.md",
+        'C02 proposed and C01 authorised a shed; the lane, the moved obligations with '
+        'named custodians, the stated minimum, whether it was breached, the overflow '
+        'count and the lapsed-unconsumed quantity are all recorded'),
+    "w-sh-suspended": (
+        "05-work-agents-skills.md",
+        "The holder's mandate is live and its intake is stopped, and **admission in that "
+        'duty class has stopped with it**'),
+    "w-si-trial": (
+        "05-work-agents-skills.md",
+        'An interest is admitted on an **expiring bounded trial**, at one of the two '
+        'lowest effect classes, under a standing mandate'),
+    "w-up-landed": (
+        "05-work-agents-skills.md",
+        "A work record armed no interest, the entry's retention exceeds the longest "
+        'plausible outage, and the arrival alarm has reached its named reader'),
+    # --- END WORK-1.1 citations ---
 }
 
 
@@ -2789,6 +2944,382 @@ RECORD_OVERRIDES = {
         [("nf", ["quantity", "evidence", "uncertainty", "native"]),
          ("s1", "resource_equation"), ("nc", "observed_applied"), AF, AR],
         hard=["nc"]),
+    # --- BEGIN WORK-1.1 record overrides (F2 amendment) ---
+    #
+    # The fifteen records the WORK-1.1 amendment registers.  Every entry is a
+    # RECORD OVERRIDE rather than a kind-level PHASE_SPECS entry, for the reason
+    # the module header gives: `nfp`/`rpp` name the record's own exact fields, so
+    # what a phase demands is a decision about THAT record rather than whatever a
+    # role regex happens to match on it.  Two phases of one record differ in WHAT
+    # they check -- which primitives compose, how many of the record's own fields
+    # each demands, and which phases the related records must be in -- and all
+    # three survive the all-strings-erased skeleton, which is what keeps two edges
+    # out of one state distinguishable by something executable.
+
+    # -- AcceptanceInterval (S1-C06) ---------------------------
+    ("AcceptanceInterval", "declared_done"): spec(
+        'The producer has declared completion against a work order, the submission is '
+        'sequenced, the sponsor holding the interval is named, and the criteria this '
+        'submission will be judged against were frozen before the producing step started.',
+        ['w-ai-in-acceptance', 's-registered-type'],
+        [('nfp', ['/payload/work_order_ref', '/payload/submission_seq', '/payload/holder_ref', '/payload/criteria_ref', '/payload/criteria_frozen_at', '/payload/producing_started_at']), AR],
+        hard=['nfp']),
+    ("AcceptanceInterval", "in_acceptance"): spec(
+        'The acceptance owner is named and currently accepted, the latest responsible '
+        'moment is recorded, and the effect class this interval sits at is recorded. '
+        'Producer-declared completion is not acceptance and cannot advance by deadline.',
+        ['w-ai-in-acceptance', 's-ai'],
+        [('nfp', ['/payload/acceptance_owner_ref', '/payload/latest_responsible_at', '/payload/effect_class_id', '/payload/declared_done_at']), ('rpp', [('/payload/acceptance_owner_ref', ['accepted'], False)]), AR],
+        hard=['nfp', 'rpp']),
+    ("AcceptanceInterval", "accepted"): spec(
+        'A resolution reason is recorded, the acceptance owner that wrote the terminal '
+        'edge is named and currently accepted, and a current accepted judgment on this '
+        'criterion exists. An acceptance with an empty reason is rejected by the writer '
+        'guard.',
+        ['w-ai-in-acceptance', 's-ai'],
+        [('nfp', ['/payload/resolution_reason', '/payload/acceptance_owner_ref', '/payload/criteria_ref']), ('rpp', [('/payload/acceptance_owner_ref', ['accepted'], False)]), AF, AR],
+        hard=['nfp', 'rpp']),
+    ("AcceptanceInterval", "rejected"): spec(
+        'A resolution reason is recorded and the work order the rejection returns to is '
+        'named. Rejection is a decided outcome with a reason, never an interval that ran '
+        'out.',
+        ['w-ai-in-acceptance', 's-ai'],
+        [('nfp', ['/payload/resolution_reason', '/payload/work_order_ref']), AR],
+        hard=['nfp']),
+
+    # -- AdmissionRecord (S1-C02) ---------------------------
+    ("AdmissionRecord", "opened"): spec(
+        'The arrival is attributed to its origin and channel and sequenced, and the '
+        'consequence classes it reaches are computed before its kind is decided. Opening '
+        'is not admitting.',
+        ['w-ar-refused', 's-registered-type'],
+        [('nfp', ['/payload/origin', '/payload/arrival_seq', '/payload/origin_channel_id', '/payload/effect_class_ids']), AR],
+        hard=['nfp']),
+    ("AdmissionRecord", "admitted"): spec(
+        'The acceptance role for this duty class is staffed, the typing outcome is one of '
+        'the three admissible ones, the ordered custody resolver skipped the admitting '
+        'identity, and a current accepted judgment on this criterion exists.',
+        ['w-acceptance-role-unfilled', 's-ar'],
+        [('nfp', ['/payload/duty_class_id', '/payload/acceptance_holder_ref', '/payload/typing_outcome', '/payload/custody_order_identity_ids', '/payload/admitting_identity_id']), ('rpp', [('/payload/acceptance_holder_ref', ['staffed'], False)]), AF, AR],
+        hard=['nfp', 'rpp']),
+    ("AdmissionRecord", "refused"): spec(
+        'A named failed predicate is recorded, an acceptance owner for the refusal is '
+        'named, and the basis of the refusal is a failed predicate rather than unfamiliar '
+        'wording. Silence is not refusal, and a genuine job in unfamiliar wording types '
+        'as no match rather than as a refusal.',
+        ['w-ar-refused', 's-ar'],
+        [('nfp', ['/payload/failed_predicate_id', '/payload/acceptance_owner_ref']), ('eqF', '/payload/refusal_basis', 'failed_predicate'), AR],
+        hard=['nfp', 'eqF']),
+    ("AdmissionRecord", "parked"): spec(
+        'The sub-caps for this origin channel and counterparty are recorded, intake was '
+        'not refused, and the destination that received the overflow has a named reader. '
+        'A full cap at the one object whose purpose is guaranteed reachability is the '
+        'worst possible place for a refusal.',
+        ['w-intake-subcap', 's-ar'],
+        [('nfp', ['/payload/origin_subcap', '/payload/counterparty_subcap', '/payload/overflow_destination_ref', '/payload/overflow_alarm_reader_ref']), ('eqF', '/payload/intake_refused', False), ('rpp', [('/payload/overflow_alarm_reader_ref', ['accepted'], False)]), AR],
+        hard=['nfp', 'eqF', 'rpp']),
+    ("AdmissionRecord", "escalated"): spec(
+        'The standing holder the arrival escalated to is named and staffed, and the '
+        'deadline the escalation carries is recorded. An escalation ladder that ends '
+        'assigned and silent is the failure this phase exists to make visible.',
+        ['w-acceptance-role-unfilled', 's-ar'],
+        [('nfp', ['/payload/acceptance_holder_ref', '/payload/escalation_deadline', '/payload/duty_class_id']), ('rpp', [('/payload/acceptance_holder_ref', ['staffed'], False)]), AR],
+        hard=['nfp', 'rpp']),
+
+    # -- ArmedSet (S1-C02) ---------------------------
+    ("ArmedSet", "current"): spec(
+        'The projection names the journal position it was evaluated at, the moment of '
+        'evaluation, the deterministic evaluator that produced it, and the interests it '
+        'armed. It is derived: nobody writes it and no component may prevent membership.',
+        ['s-as', 'w-precedence'],
+        [('nfp', ['/payload/journal_position', '/payload/evaluated_at', '/payload/evaluator_module', '/payload/armed_interest_refs']), AR],
+        hard=['nfp']),
+
+    # -- ConsequenceDerivation (S1-C04) ---------------------------
+    ("ConsequenceDerivation", "computed"): spec(
+        'The derivation names the operation intent it is about, the exact version of the '
+        'function that produced it, the moment it was produced and the inputs it read. '
+        'Being computed is not being gated: an admission-time class set authorizes no '
+        'release on its own.',
+        ['w-class-one-function', 's-registered-type'],
+        [('nfp', ['/payload/operation_intent_ref', '/payload/derivation_fn_version', '/payload/derived_at', '/payload/derivation_input_refs']), AR],
+        hard=['nfp']),
+    ("ConsequenceDerivation", "recomputed_at_release"): spec(
+        'The class set was recomputed inside the ordered release transaction over the '
+        'frozen bytes, by the release path and by nobody else, with the reached set, the '
+        'gated set and the declared floor all recorded. A pre-drift class is stale the '
+        'way a pre-drift fact is.',
+        ['w-cd-recompute', 'w-class-gates-all', 's-cd'],
+        [('nfp', ['/payload/frozen_payload_digest', '/payload/reached_class_ids', '/payload/gated_class_ids', '/payload/declared_floor_ref', '/payload/release_path_component_id']), ('eqF', '/payload/append_only', True), AR],
+        hard=['nfp', 'eqF']),
+    ("ConsequenceDerivation", "matched"): spec(
+        'The recomputed set and the admitted set are both recorded and a current accepted '
+        'judgment on this criterion establishes that they agree. Agreement is '
+        'established, never assumed from the absence of a recorded disagreement.',
+        ['w-cd-recompute', 's-cd'],
+        [('nfp', ['/payload/recomputed_class_ids', '/payload/reached_class_ids', '/payload/release_ref']), AF, AR],
+        hard=['nfp']),
+    ("ConsequenceDerivation", "parked_on_mismatch"): spec(
+        'The recomputed set differs from the admitted set, the effect is held, and the '
+        'party owning the park is named on the record. There is no route from here to a '
+        'release under the lower set, and the disposition is writable only by that party.',
+        ['w-cd-park', 's-cd'],
+        [('nfp', ['/payload/recomputed_class_ids', '/payload/park_owner_assignment_ref']), ('rpp', [('/payload/park_owner_assignment_ref', ['accepted'], False)]), AR],
+        hard=['nfp', 'rpp']),
+
+    # -- ConstraintSet (S1-C05) ---------------------------
+    ("ConstraintSet", "issued"): spec(
+        'The set is identified by its own content digest, every member it carries is a '
+        'typed value, the boundary it was validated at is named, and any prose sits at a '
+        'reference rather than in the transfer. A receiver may act only on members it can '
+        'restate as typed values.',
+        ['s-cs', 'w-precedence'],
+        [('nfp', ['/payload/content_digest', '/payload/typed_members', '/payload/boundary_kind', '/payload/producing_structure_ref']), ('eqF', '/payload/validated_at_boundary', True), ('eqF', '/payload/prose_delivery', 'ref_only'), AR],
+        hard=['nfp', 'eqF']),
+
+    # -- EffectIdentity (S1-C04) ---------------------------
+    ("EffectIdentity", "allocated"): spec(
+        'The identity triple is complete before any release: the effect class, the '
+        'counterparty and the digest of the payload, with the moment of allocation and '
+        'the reserved name range it came from. Allocation happens before release and '
+        'never after it.',
+        ['w-ei-claimed', 's-registered-type'],
+        [('nfp', ['/payload/effect_class_id', '/payload/counterparty_id', '/payload/payload_digest', '/payload/allocated_at', '/payload/reserved_name_range']), AR],
+        hard=['nfp']),
+    ("EffectIdentity", "claimed"): spec(
+        'A releasing attempt has claimed the allocation, the claim is timestamped after '
+        'the allocation, and the first claimant is named so a second joins it rather than '
+        'racing it.',
+        ['w-ei-claimed', 's-ei'],
+        [('nfp', ['/payload/claimed_at', '/payload/first_claimant_ref']), ('rpp', [('/payload/first_claimant_ref', ['released', 'observed'], False)]), AF, AR],
+        hard=['nfp', 'rpp']),
+    ("EffectIdentity", "observed"): spec(
+        'An independent observation of the effect is correlated to this identity. '
+        'Observation is established by a recorded observation, never by the absence of a '
+        'reported failure.',
+        ['w-ei-claimed', 's-ei'],
+        [('nfp', ['/payload/observation_refs']), ('nc', 'released'), AR],
+        hard=['nfp']),
+
+    # -- ExistenceJustification (S1-C02) ---------------------------
+    ("ExistenceJustification", "proposed"): spec(
+        'The justification names the instance it is about, exactly one reason and the '
+        'unit that reason predicates on, the alternative that was considered and the '
+        'criterion that would remove the worker. Proposing is not admitting.',
+        ['w-ej-admitted', 's-registered-type'],
+        [('nfp', ['/payload/agent_instance_ref', '/payload/reason_kind', '/payload/reason_unit', '/payload/alternative_considered', '/payload/removal_criterion']), AR],
+        hard=['nfp']),
+    ("ExistenceJustification", "admitted"): spec(
+        'A decidable test is recorded and it can return false, the admitting mandate is '
+        'currently accepted, an attributable identity is bound, the approval carries an '
+        'expiry and a current accepted judgment on this criterion exists. A justification '
+        'naming a capability is uncheckable and is refused here.',
+        ['w-ej-admitted', 's-ej'],
+        [('nfp', ['/payload/decidable_test', '/payload/admitting_mandate_ref', '/payload/attributable_identity_ref', '/payload/approval_expires_at']), ('eqF', '/payload/test_can_return_false', True), ('rpp', [('/payload/admitting_mandate_ref', ['accepted'], False)]), AF, AR],
+        hard=['nfp', 'eqF', 'rpp']),
+    ("ExistenceJustification", "expired_with_instance"): spec(
+        'The worker this justification exists for is no longer running and the expiry is '
+        'recorded. The justification does not outlive its instance, and expiry is a '
+        'recorded moment rather than an absence of activity.',
+        ['w-ej-admitted', 's-ej'],
+        [('nfp', ['/payload/approval_expires_at']), ('rpp', [('/payload/agent_instance_ref', ['stopped', 'expired'], False)]), AR],
+        hard=['nfp', 'rpp']),
+
+    # -- FieldAuthority (S1-C01) ---------------------------
+    ("FieldAuthority", "declared"): spec(
+        'The declaration names the exact field path it governs, the epoch it governs '
+        'from, and the party C01 declared as its authority. Declaring an authority is not '
+        'making it current.',
+        ['s-fa', 's-registered-type'],
+        [('nfp', ['/payload/field_path', '/payload/epoch', '/payload/authority_assignment_ref', '/payload/declaring_component_id']), AR],
+        hard=['nfp']),
+    ("FieldAuthority", "current"): spec(
+        'The named authority is currently accepted and no last-writer-wins path is '
+        'declared for this field. Only the named authority writes the value.',
+        ['s-fa', 'w-precedence'],
+        [('nfp', ['/payload/authority_assignment_ref', '/payload/field_path']), ('eqF', '/payload/last_writer_wins', False), ('rpp', [('/payload/authority_assignment_ref', ['accepted'], False)]), AF, AR],
+        hard=['nfp', 'eqF', 'rpp']),
+    ("FieldAuthority", "superseded"): spec(
+        'A later epoch declares the authority for that path, the transitive closure of '
+        'derived entries naming the superseded value has been walked to completion, and '
+        'every acceptance the walk reopened is recorded. The superseded authority writes '
+        'nothing.',
+        ['w-fa-superseded', 's-fa'],
+        [('nfp', ['/payload/successor_epoch']), ('eqF', '/payload/closure_walk_completed', True), ('prF', '/payload/derived_closure_refs'), ('prF', '/payload/reopened_acceptance_refs'), AR],
+        hard=['nfp', 'eqF', 'prF']),
+
+    # -- GrantDeliveryReceipt (S1-C04) ---------------------------
+    ("GrantDeliveryReceipt", "written"): spec(
+        'The enforcement point names itself, the instance it attested and the grant that '
+        'arrived, at the sequence number of the first effect. It attests arrival, not '
+        'scope, and an executor whose grant did not arrive fails loudly instead of '
+        'completing with less.',
+        ['w-gr-written', 's-gr'],
+        [('nfp', ['/payload/agent_instance_ref', '/payload/first_effect_seq', '/payload/enforcement_point_id', '/payload/grant_ref']), ('eqF', '/payload/arrival_attested', True), ('rpp', [('/payload/grant_ref', ['active'], False)]), AR],
+        hard=['nfp', 'eqF', 'rpp']),
+
+    # -- InstrumentCalibration (S1-C06) ---------------------------
+    ("InstrumentCalibration", "scheduled"): spec(
+        'The session names the checker and the rubric version it will exercise, the date '
+        'it is due, and the custodian that will write it. Scheduling a calibration '
+        'establishes nothing about the instrument.',
+        ['w-ic-run', 's-registered-type'],
+        [('nfp', ['/payload/checker_id', '/payload/rubric_version', '/payload/run_date', '/payload/custodian_assignment_ref']), AR],
+        hard=['nfp']),
+    ("InstrumentCalibration", "run"): spec(
+        'Both numbers from the same session are recorded: the planted-defect result and '
+        'the paired clean-case refusal rate. The custodian that wrote them is excluded '
+        'from every producing path and the write is carried by an authorized protected '
+        'change. A missing clean-case rate leaves the checker unresolved rather than '
+        'passed.',
+        ['w-ic-run', 's-ic'],
+        [('nfp', ['/payload/planted_defect_detection_rate', '/payload/clean_case_refusal_rate', '/payload/session_observation_refs', '/payload/protected_change_ref']), ('eqF', '/payload/custodian_excluded_from_producing', True), ('rpp', [('/payload/protected_change_ref', ['authorized', 'activated', 'verified'], False)]), AF, AR],
+        hard=['nfp', 'eqF', 'rpp']),
+    ("InstrumentCalibration", "superseded"): spec(
+        'A later rubric version has been calibrated for the same checker. Superseding a '
+        'reading does not erase it, and the old reading stays interpretable under its own '
+        'rubric.',
+        ['w-ic-run', 's-ic'],
+        [('nfp', ['/payload/successor_rubric_version', '/payload/checker_id']), AR],
+        hard=['nfp']),
+
+    # -- ProjectionGrant (S1-C04) ---------------------------
+    ("ProjectionGrant", "issued"): spec(
+        'The grantor, the recipient scope and the purpose are recorded, the scope and '
+        'purpose resolve from a parameter authority, and the approval carries an expiry. '
+        'Issuing is a proposal right; the release is performed elsewhere.',
+        ['w-pg-active', 's-registered-type'],
+        [('nfp', ['/payload/grantor_ref', '/payload/recipient_scope', '/payload/purpose', '/payload/parameter_authority_ref', '/payload/approval_expires_at']), AR],
+        hard=['nfp']),
+    ("ProjectionGrant", "active"): spec(
+        'The parameter authority the scope and purpose resolve from is currently '
+        'verified, the release was performed by the component that performs every '
+        'release, the grant is re-read at every read of the derived projection, and a '
+        'current accepted judgment on this criterion exists.',
+        ['w-pg-active', 's-pg'],
+        [('nfp', ['/payload/parameter_authority_ref', '/payload/released_by_component_id', '/payload/granted_at']), ('eqF', '/payload/reread_at_every_read', True), ('rpp', [('/payload/parameter_authority_ref', ['verified'], False)]), AF, AR],
+        hard=['nfp', 'eqF', 'rpp']),
+    ("ProjectionGrant", "revoked"): spec(
+        'The reason for revocation is recorded and the derivatives written under the '
+        'grant are enumerated, because revocation invalidates them. Revocation is not '
+        'expiry and does not wait for one.',
+        ['w-pg-active', 's-pg'],
+        [('nfp', ['/payload/revocation_reason']), ('prF', '/payload/derivative_refs'), AR],
+        hard=['nfp', 'prF']),
+    ("ProjectionGrant", "expired"): spec(
+        'The approval expiry has been reached and the derivatives written under the grant '
+        'are enumerated. Expiry is a recorded moment reached, never a grant nobody used.',
+        ['w-pg-active', 's-pg'],
+        [('nfp', ['/payload/approval_expires_at', '/payload/approved_at']), ('prF', '/payload/derivative_refs'), AR],
+        hard=['nfp', 'prF']),
+
+    # -- ShedDecision (S1-C02) ---------------------------
+    ("ShedDecision", "written"): spec(
+        'The lane, the window, the proposing and authorising components, every obligation '
+        'that moved with the custodian that took it, the stated minimum and whether it '
+        'was breached, the overflow count and the quantity of allowance that lapsed '
+        "unconsumed are all recorded. The holder's stated minimum is evidence and the "
+        'record exists whether or not the holder concurred.',
+        ['w-sd-written', 'w-holder-minimum-evidence', 's-sd'],
+        [('nfp', ['/payload/lane_ref', '/payload/window', '/payload/proposing_component_id', '/payload/authorising_component_id', '/payload/moved_obligation_refs', '/payload/named_custodian_refs', '/payload/stated_minimum']), ('prF', '/payload/overflow_count'), ('prF', '/payload/lapsed_unconsumed_quantity'), ('prF', '/payload/minimum_breached'), AR],
+        hard=['nfp', 'prF']),
+
+    # -- StandingHolder (S1-C01) ---------------------------
+    ("StandingHolder", "proposed"): spec(
+        'The proposal names the duty class, the address an outside party reaches it by, '
+        'the mandate it would hold and the frozen fixture that exercises it. A holder '
+        'exercised by no fixture is unjustified and is refused on sight.',
+        ['w-holder-iff', 's-registered-type'],
+        [('nfp', ['/payload/holder_id', '/payload/duty_class_id', '/payload/intake_address', '/payload/exercising_fixture_id']), AR],
+        hard=['nfp']),
+    ("StandingHolder", "staffed"): spec(
+        'All three parts of the conjunction are recorded as holding, the mandate is '
+        'currently accepted, a reservation, an alternate, a suspension procedure and a '
+        'review date exist, the holder carries no model memory, and a current accepted '
+        'judgment on this criterion exists.',
+        ['w-holder-iff', 'w-holder-prohibitions', 's-sh'],
+        [('nfp', ['/payload/mandate_ref', '/payload/reservation_ref', '/payload/alternate_assignment_ref', '/payload/suspension_procedure', '/payload/review_at']), ('eqF', '/payload/carries_model_memory', False), ('rpp', [('/payload/mandate_ref', ['accepted'], False)]), AF, AR],
+        hard=['nfp', 'eqF', 'rpp']),
+    ("StandingHolder", "suspended"): spec(
+        'The mandate is still live, the suspension procedure that was followed is '
+        'recorded, and admission in that duty class has stopped with it. Suspension is '
+        'the state that stops work arriving; it never leaves work assigned to nobody.',
+        ['w-sh-suspended', 's-sh'],
+        [('nfp', ['/payload/suspension_procedure', '/payload/duty_class_id', '/payload/mandate_ref']), ('eqF', '/payload/admission_stopped_for_duty_class', True), AR],
+        hard=['nfp', 'eqF']),
+    ("StandingHolder", "retired_into"): spec(
+        'No duty this holder carries is still live, and the successor that inherits the '
+        'address and the residual duties is named. Retirement is refused while any duty '
+        'it holds is live.',
+        ['w-holder-iff', 's-sh'],
+        [('nfp', ['/payload/successor_holder_ref']), ('rpp', [('/payload/successor_holder_ref', ['staffed'], False)]), AR],
+        hard=['nfp', 'rpp']),
+
+    # -- StandingInterest (S1-C02) ---------------------------
+    ("StandingInterest", "proposed"): spec(
+        'The proposal names the interest and its version, the deterministic preconditions '
+        'it would arm on, the trust class those preconditions require and the maintenance '
+        'custodian proposing it. Proposing is not arming.',
+        ['w-si-trial', 's-registered-type'],
+        [('nfp', ['/payload/interest_id', '/payload/interest_version', '/payload/precondition_predicate_ids', '/payload/required_trust_class', '/payload/maintenance_custodian_ref']), AR],
+        hard=['nfp']),
+    ("StandingInterest", "trial"): spec(
+        'The trial is bounded and expires, it sits at one of the two lowest effect '
+        'classes, it runs under a currently accepted standing mandate, its preconditions '
+        'are evaluated deterministically, and it declares no writer key of its own.',
+        ['w-si-trial', 's-si'],
+        [('nfp', ['/payload/trial_expires_at', '/payload/effect_class_id', '/payload/standing_mandate_ref', '/payload/precondition_evaluator_kind']), ('eqF', '/payload/self_declared_writer_keys', []), ('rpp', [('/payload/standing_mandate_ref', ['accepted'], False)]), AR],
+        hard=['nfp', 'eqF', 'rpp']),
+    ("StandingInterest", "admitted"): spec(
+        'The capability owner that admits it is currently accepted, the per-origin arming '
+        'rate is declared, every declared prerequisite is recorded, the interest writes '
+        'only proposals, and a current accepted judgment on this criterion exists.',
+        ['w-si-trial', 's-si'],
+        [('nfp', ['/payload/admitting_owner_ref', '/payload/per_origin_arming_rate', '/payload/prerequisite_refs', '/payload/write_target_phases']), ('rpp', [('/payload/admitting_owner_ref', ['accepted'], False)]), AF, AR],
+        hard=['nfp', 'rpp']),
+    ("StandingInterest", "suspended"): spec(
+        'Arming has stopped and the custodian that may propose its resumption is '
+        'recorded. Suspension stops the interest arming; it does not retire it and it '
+        'does not discharge what already armed.',
+        ['w-si-trial', 's-si'],
+        [('nfp', ['/payload/maintenance_custodian_ref', '/payload/interest_version', '/payload/effect_class_id']), AR],
+        hard=['nfp']),
+    ("StandingInterest", "retired"): spec(
+        'The interest no longer arms and the version that last armed is recorded. '
+        'Retirement is a recorded end rather than an interest that stopped matching.',
+        ['w-si-trial', 's-si'],
+        [('nfp', ['/payload/interest_version']), AR],
+        hard=['nfp']),
+
+    # -- UnmatchedPoolEntry (S1-C05) ---------------------------
+    ("UnmatchedPoolEntry", "landed"): spec(
+        'A work record armed no interest, its retention exceeds the longest plausible '
+        'outage, the arrival alarm has reached a named reader, and the residue this pool '
+        'cannot catch is recorded. A catch-all that caught everything is not this.',
+        ['w-up-landed', 's-up'],
+        [('nfp', ['/payload/work_record_ref', '/payload/retention_until', '/payload/longest_plausible_outage', '/payload/alarm_reader_ref', '/payload/alarm_raised_at', '/payload/residue_note']), AR],
+        hard=['nfp']),
+    ("UnmatchedPoolEntry", "claimed"): spec(
+        'An admitted interest has claimed the entry and that interest is named. Claiming '
+        'is deterministic and by the pool interest, never by whoever noticed it first.',
+        ['w-up-landed', 's-up'],
+        [('nfp', ['/payload/claiming_interest_ref', '/payload/work_record_ref', '/payload/landed_at']), ('rpp', [('/payload/claiming_interest_ref', ['admitted'], False)]), AF, AR],
+        hard=['nfp', 'rpp']),
+    ("UnmatchedPoolEntry", "refused"): spec(
+        'A reason for the refusal is recorded against the work record the entry names. A '
+        'refusal from the pool is a decided outcome and not an entry whose retention ran '
+        'out.',
+        ['w-up-landed', 's-up'],
+        [('nfp', ['/payload/refusal_reason', '/payload/work_record_ref']), AR],
+        hard=['nfp']),
+    ("UnmatchedPoolEntry", "escalated"): spec(
+        'The standing holder the entry escalated to is named and staffed, the alarm '
+        'reader that saw it is recorded, and the retention the entry still carries is '
+        'recorded. Escalation preserves the entry rather than discharging it.',
+        ['w-up-landed', 'w-acceptance-role-unfilled', 's-up'],
+        [('nfp', ['/payload/escalation_holder_ref', '/payload/alarm_reader_ref', '/payload/retention_until', '/payload/residue_note']), ('rpp', [('/payload/escalation_holder_ref', ['staffed'], False)]), AR],
+        hard=['nfp', 'rpp']),
+    # --- END WORK-1.1 record overrides ---
 }
 
 # The `capabilities.json#/domain_validators` provenance for the eight overrides above.

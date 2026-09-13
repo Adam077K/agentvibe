@@ -1234,6 +1234,37 @@ checked(WALK_CENSUS["slots_classified"] >= 8000,
 checked(len(WALK_CENSUS["operators"]) >= 20,
         ("the demand walk met almost no distinct operators", sorted(WALK_CENSUS["operators"])))
 
+# --- R-X02: the alias table, and the refusal that makes it a contract. ---------
+#
+# Four of the five F2 candidates proposed RENAMING existing registry records. Nothing is
+# renamed; aliases.json publishes every candidate-era name against its registry name, and
+# the load-bearing half is the refusal: a candidate-era name is never admitted AS a record
+# name. Both directions are checked, because a table whose keys drifted into the registry
+# would read as a migration while naming records that exist, and a table whose values
+# drifted out would resolve a candidate name to nothing.
+ALIASES = FILES["aliases.json"]
+checked(set(ALIASES) == {"schema_version", "kind", "why", "how_to_read", "checked_by",
+                         "not_aliases", "floor", "floor_why", "aliases", "sources"},
+        ("alias table shape", sorted(ALIASES)))
+alias_table = ALIASES["aliases"]
+checked(isinstance(alias_table, dict) and alias_table, "the alias table is empty")
+checked(len(alias_table) >= ALIASES["floor"],
+        ("the alias table has shrunk below its declared floor; a table with no aliases "
+         "refuses nothing and passes exactly as loudly as a full one",
+         {"aliases": len(alias_table), "floor": ALIASES["floor"]}))
+for candidate_name, registry_name in alias_table.items():
+    checked(candidate_name not in RECORDS,
+            ("a candidate-era name is ALSO a record name, so the registry admits the very "
+             "name this table exists to refuse (R-X02)", candidate_name))
+    checked(registry_name in RECORDS,
+            ("an alias resolves to no registry record, so reading through it reaches "
+             "nothing", candidate_name, registry_name))
+    checked(candidate_name != registry_name, ("alias maps to itself", candidate_name))
+for excluded, reason in ALIASES["not_aliases"].items():
+    checked(excluded not in alias_table and reason.strip(),
+            ("a name is both excluded from the table and in it, or excluded with no "
+             "reason", excluded))
+
 # --- capabilities.json records the chapter contract versions, and they must AGREE. ---
 #
 # The F2 join bumped eight chapter contract versions and capabilities.json still carried
