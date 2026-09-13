@@ -5234,7 +5234,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#5-native-subscription-execution",
-          "version": "IC1.0 / N-CLAUDE-SUPPLIED/v1"
+          "version": "IC1.0.1 / N-CLAUDE-SUPPLIED/v1"
         }
       ],
       "selected_route_ids": [
@@ -5263,7 +5263,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         }
       ],
       "selected_route_ids": [
@@ -5290,7 +5290,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         }
       ],
       "selected_route_ids": [
@@ -5316,7 +5316,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         }
       ],
       "selected_route_ids": [
@@ -5344,7 +5344,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         }
       ],
       "selected_route_ids": [
@@ -5370,7 +5370,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         }
       ],
       "selected_route_ids": [
@@ -5397,7 +5397,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         }
       ],
       "selected_route_ids": [
@@ -5421,7 +5421,7 @@
       "selected_contracts": [
         {
           "location": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         }
       ],
       "selected_route_ids": [
@@ -5448,27 +5448,27 @@
       "selected_contracts": [
         {
           "location": "01-contract-kernel.md",
-          "version": "S1-KERNEL 1.0.0"
+          "version": "S1-KERNEL 1.0.1"
         },
         {
           "location": "02-authority-recovery.md",
-          "version": "S1-AUTHORITY 1.0.0"
+          "version": "S1-AUTHORITY 1.0.1"
         },
         {
           "location": "05-work-agents-skills.md",
-          "version": "WORK-1.0"
+          "version": "WORK-1.1"
         },
         {
           "location": "06-knowledge-evidence-evaluation.md",
-          "version": "KNOWLEDGE-1.0"
+          "version": "KNOWLEDGE-1.0.1"
         },
         {
           "location": "07-integrations-capacity.md",
-          "version": "IC1.0"
+          "version": "IC1.0.1"
         },
         {
           "location": "08-improvement-implementation.md",
-          "version": "IB1.0"
+          "version": "IB1.0.1"
         }
       ],
       "selected_route_ids": [],
@@ -5490,7 +5490,7 @@
       "selected_contracts": [
         {
           "location": "04-human-operation.md",
-          "version": "HUMAN-1.0"
+          "version": "HUMAN-1.0.1"
         }
       ],
       "selected_route_ids": [],

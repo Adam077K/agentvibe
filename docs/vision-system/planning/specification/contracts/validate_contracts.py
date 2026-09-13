@@ -1234,6 +1234,63 @@ checked(WALK_CENSUS["slots_classified"] >= 8000,
 checked(len(WALK_CENSUS["operators"]) >= 20,
         ("the demand walk met almost no distinct operators", sorted(WALK_CENSUS["operators"])))
 
+# --- capabilities.json records the chapter contract versions, and they must AGREE. ---
+#
+# The F2 join bumped eight chapter contract versions and capabilities.json still carried
+# the versions before them, so the same contract had two version numbers in two files and
+# nothing compared them. That is the defect this package names in four other places, in
+# its smallest possible form. The chapter header is the authority; capabilities.json's
+# `selected_contracts` rows follow it.
+CHAPTER_VERSION_HEAD = re.compile(
+    r"\*\*(?:Contract|Specification version):\*\*\s*(.+?)\s*(?:·|—|\n)")
+# A closed exemption table, for the one row whose `version` is not a chapter version at
+# all. Declare what is read and refuse the rest: a file this checker cannot parse and
+# cannot excuse is a failure, not a silent skip.
+CHAPTER_VERSION_EXEMPT = {
+    "03-company-capabilities.md":
+        "the row's `version` is the CAP-01–46 record-and-procedure contract id "
+        "(`company.cap01–46.v1`), not this chapter's specification version, which is "
+        "COMPANY-1.0 in its own header. Two different objects; comparing them would be "
+        "a false equality.",
+}
+
+
+def chapter_contract_version(relative_path):
+    """The contract version a chapter's own header declares, or None."""
+    document = ROOT.parent / relative_path
+    if not document.exists():
+        return None
+    head = "\n".join(document.read_text(encoding="utf-8").splitlines()[:8])
+    found = CHAPTER_VERSION_HEAD.search(head)
+    return found.group(1).strip() if found else None
+
+
+CAPABILITIES = json.loads((ROOT.parent / "capabilities.json").read_text(encoding="utf-8"))
+version_rows, exemptions_used = 0, set()
+for route in CAPABILITIES["fulfillment_routes"].values():
+    for row in route.get("selected_contracts", []):
+        chapter = row["location"].split("#")[0]
+        if chapter in CHAPTER_VERSION_EXEMPT:
+            exemptions_used.add(chapter)
+            continue
+        declared = chapter_contract_version(chapter)
+        checked(declared is not None,
+                ("capabilities.json names a contract whose chapter header this checker "
+                 "cannot read, and it is not excused", chapter, row["version"]))
+        # A compound row (`IC1.0.1 / N-CLAUDE-SUPPLIED/v1`) records the chapter contract
+        # FIRST and a native profile after it; the chapter half is the half this compares.
+        checked(row["version"].split(" / ")[0] == declared,
+                ("capabilities.json records a contract version its chapter does not "
+                 "declare", chapter,
+                 {"capabilities.json": row["version"], "chapter header": declared}))
+        version_rows += 1
+checked(exemptions_used == set(CHAPTER_VERSION_EXEMPT),
+        ("a chapter is excused from the version comparison and no row uses the "
+         "exemption", sorted(set(CHAPTER_VERSION_EXEMPT) - exemptions_used)))
+checked(version_rows >= 14,
+        ("the chapter-version comparison examined almost no rows; a comparison with an "
+         "empty population passes vacuously", version_rows))
+
 
 # --- Negative control. --------------------------------------------------------
 # Everything above passing proves nothing on its own: this file returned
