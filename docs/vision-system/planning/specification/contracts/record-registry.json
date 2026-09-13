@@ -50140,7 +50140,7 @@
       "to": "2.0 immutable content + lifecycle representation",
       "mapping": "source-field-mappings.json and FI-12 migration; historical bytes unchanged; no automatic acceptance upgrade"
     },
-    "source_contract": "../candidates/company-foundation-repairs-v1.md",
+    "source_contract": "03-company-capabilities.md#cap-42-grievance-case-lifecycle",
     "planned_module": "system/packages/company",
     "implementation_status": "specified, not implemented; independent assessment pending"
   },
