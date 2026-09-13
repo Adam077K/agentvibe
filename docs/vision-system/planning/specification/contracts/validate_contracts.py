@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 from decimal import Decimal
 from urllib.parse import urldefrag
@@ -12,6 +13,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT / "tools"))
+import destination_paths  # noqa: E402  one implementation of the path grammar, shared
 COUNT = 0
 
 def checked(condition, detail):
@@ -111,6 +114,13 @@ for name, record in RECORDS.items():
         checked(edge["from"] in phases and edge["to"] in phases, ("phase edge", edge))
         checked(edge["predicate_id"] in PREDICATES, ("edge predicate", edge))
         checked(bool(edge["allowed_command_ids"]), ("unrouted edge", edge))
+        # CCR-04: non-emptiness is not membership. 26 edges routed to
+        # kernel.projection.recompute, which was in no registry, and a route to a
+        # command that does not exist reads exactly like a route to one that does.
+        for routed_command in edge["allowed_command_ids"]:
+            checked(routed_command in COMMANDS, ("unregistered routed command", edge["edge_id"], routed_command))
+            checked(name in COMMANDS[routed_command]["target_types"],
+                    ("command does not target this record", edge["edge_id"], routed_command, name))
         checked(edge["mutates"].startswith("LifecycleStatus") or record["lifecycle"]["projection"],
                 ("unexpected business mutation", edge))
     for relation in record["relations"]:
@@ -211,7 +221,18 @@ source_fields = FILES["source-field-mappings.json"]["mappings"]
 checked(len({x["source"] for x in source_fields}) == len(source_fields), "unique source field mapping")
 for mapping in source_fields:
     checked(mapping["canonical_record"] in RECORDS, ("mapped canonical record", mapping))
-    checked(bool(mapping["destination"]), ("missing mapped field", mapping))
+    # CCR-05: truthiness is not resolution. A destination naming a field that does
+    # not exist, or carrying a whole sentence, passed `bool(...)` exactly as a real
+    # one did. The grammar has one implementation, in tools/destination_paths.py.
+    # Prose first, because a sentence and a typo both fail resolution and only one
+    # of them has an obvious remedy; the message should say which.
+    checked(" " not in mapping["destination"],
+            ("destination carries prose; put it in `note`", mapping["source"],
+             mapping["destination"]))
+    unresolved = destination_paths.resolve(SCHEMAS, mapping["canonical_record"],
+                                           mapping["destination"])
+    checked(unresolved is None,
+            ("unresolvable destination", mapping["source"], mapping["destination"], unresolved))
 
 # Pure synthetic cases. These helpers specify focal contracts; they are deliberately not a runtime.
 U1 = "01800000-0000-7000-8000-000000000001"

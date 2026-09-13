@@ -355801,5 +355801,65 @@
       ],
       "additionalProperties": false
     }
+  },
+  "command.kernel.projection.recompute.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "command": "CommandEnvelope",
+      "prior_projection": "JsonValue",
+      "recomputed_projection": "JsonValue"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "command_dispatch",
+          "command": {
+            "arg": "command"
+          }
+        },
+        {
+          "op": "same_business_bytes",
+          "before": {
+            "arg": "prior_projection"
+          },
+          "after": {
+            "arg": "recomputed_projection"
+          },
+          "allowed_paths": [
+            "/payload/projection",
+            "/lifecycle_status",
+            "/last_event_id",
+            "/recorded_at",
+            "/provenance_refs"
+          ]
+        }
+      ]
+    },
+    "meaning": "kernel.projection.recompute exact typed command and target dispatch, plus the obligation that distinguishes a recomputation from a decision: after removing the projected view and its audit fields, the canonical business bytes before and after agree. A projection may be rebuilt; it may not rewrite what it projects.",
+    "owner_component": "S1-C02",
+    "source": "11-schemas-state-contracts.md#registration-and-transition-routing",
+    "failure": "false or unresolved denies the recompute; a projection that cannot prove it left the business bytes intact is not recomputed, it is rewritten",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "values.schema.json#/$defs/CommandEnvelope"
+        },
+        "prior_projection": {
+          "$ref": "values.schema.json#/$defs/JsonValue"
+        },
+        "recomputed_projection": {
+          "$ref": "values.schema.json#/$defs/JsonValue"
+        }
+      },
+      "required": [
+        "command",
+        "prior_projection",
+        "recomputed_projection"
+      ],
+      "additionalProperties": false
+    }
   }
 }

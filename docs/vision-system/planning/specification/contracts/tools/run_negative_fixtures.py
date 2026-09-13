@@ -76,6 +76,10 @@ def run_fixture(fixture, verbose):
         for source in sorted(ROOT.glob("*.json")):
             os.symlink(source, directory / source.name)
         shutil.copy2(ROOT / "validate_contracts.py", directory / "validate_contracts.py")
+        # The validator imports the one shared path grammar from tools/; without this
+        # every fixture "fails" on ModuleNotFoundError, which is a failure for the
+        # wrong reason -- and this runner counts that as a leak, correctly.
+        os.symlink(ROOT / "tools", directory / "tools")
         apply_patch(directory, fixture["patch"])
         completed = subprocess.run(
             [sys.executable, "validate_contracts.py"], cwd=directory,
