@@ -589,6 +589,33 @@ except ValueError:
     checked(True,"duplicate keys rejected before canonicalization")
 checked(Decimal("0.1")+Decimal("0.2")==Decimal("0.3"),"exact decimal resource arithmetic")
 
+# --- The two oracles that can fail on CONTENT rather than on shape. ------------
+#
+# Both are run as subprocesses with THIS directory passed explicitly, because `tools/` is
+# a symlink inside every fixture scratch tree and a module that resolved its own root
+# would check the committed registries while claiming to check the mutation in front of
+# it. The ratchet runs BEFORE the drift check on purpose: a fixture that adds a declared
+# collision drifts the gaps file too, and the message a reader gets should name the
+# control that is actually doing the refusing.
+import subprocess  # noqa: E402
+for oracle_argv, oracle_name in (
+    ([sys.executable, str(ROOT / "tools" / "guard_distinctness.py"), str(ROOT)],
+     "guard distinctness ratchet"),
+    ([sys.executable, str(ROOT / "tools" / "author_phase_content.py"), "--check", str(ROOT)],
+     "criterion content drifts from its derivation"),
+):
+    oracle = subprocess.run(oracle_argv, capture_output=True, text=True)
+    checked(oracle.returncode == 0,
+            (oracle_name, oracle.stdout[-2500:] + oracle.stderr[-2500:]))
+
+# ORDER MATTERS, and it was measured rather than reasoned about. These checks sit
+# AFTER the two oracles on purpose: a HAND edit of a criterion drifts from the
+# derivation and the drift oracle is the check that should name it, while a
+# WEAKENED derivation regenerates cleanly and only these pins can. Placed before the
+# oracles, the pins fired first and three fixtures that exist to prove the drift
+# oracle still works -- r10-criterion-field-paths-erased, -repointed, and
+# -demands-less-than-its-predecessor -- were rejected for the wrong reason, which the
+# runner reports as a leak. It found this; reading the file did not.
 # --- PINNED CONJUNCTS: what a Phase G finding requires the registry to SAY. ----
 #
 # RC-02, and it is the reason this block reads a JSON file rather than carrying its own
@@ -657,6 +684,19 @@ def pin_row_matches(node, row):
             return False
     return True
 
+
+# A floor, and it is a LITERAL for the same reason the sibling-collision budget is: a
+# count derived from the file it measures is satisfied by the empty file. The coverage
+# check below forces every registered finding to be pinned or excused, which an author
+# could satisfy by moving all 25 pins into `unpinnable` one reason at a time; this is what
+# stops that being quiet. Lowering these numbers is a decision, and it should read like one.
+checked(len(PINNED["pins"]) >= 25 and len(PINNED["pinned_transitions"]) >= 6,
+        ("the pinned table has shrunk; a pin table with no pins passes vacuously",
+         {"pins": len(PINNED["pins"]), "floor": 25,
+          "pinned_transitions": len(PINNED["pinned_transitions"]), "transition_floor": 6}))
+checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= 44,
+        ("the pinned table kept its pins and lost its requirements",
+         sum(len(pin["require"]) for pin in PINNED["pins"])))
 
 pinned_predicates = set()
 for pin in PINNED["pins"]:
@@ -831,24 +871,6 @@ checked(requires_examined >= 700,
         ("RC-03 examined almost no criteria; the rule cannot pass vacuously",
          requires_examined))
 
-# --- The two oracles that can fail on CONTENT rather than on shape. ------------
-#
-# Both are run as subprocesses with THIS directory passed explicitly, because `tools/` is
-# a symlink inside every fixture scratch tree and a module that resolved its own root
-# would check the committed registries while claiming to check the mutation in front of
-# it. The ratchet runs BEFORE the drift check on purpose: a fixture that adds a declared
-# collision drifts the gaps file too, and the message a reader gets should name the
-# control that is actually doing the refusing.
-import subprocess  # noqa: E402
-for oracle_argv, oracle_name in (
-    ([sys.executable, str(ROOT / "tools" / "guard_distinctness.py"), str(ROOT)],
-     "guard distinctness ratchet"),
-    ([sys.executable, str(ROOT / "tools" / "author_phase_content.py"), "--check", str(ROOT)],
-     "criterion content drifts from its derivation"),
-):
-    oracle = subprocess.run(oracle_argv, capture_output=True, text=True)
-    checked(oracle.returncode == 0,
-            (oracle_name, oracle.stdout[-2500:] + oracle.stderr[-2500:]))
 
 # --- Negative control. --------------------------------------------------------
 # Everything above passing proves nothing on its own: this file returned
