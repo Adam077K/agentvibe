@@ -1,0 +1,16 @@
+{
+  "id": "r18-registry-payload-copied-from-another-record-benign",
+  "repair": "R18",
+  "finding": "F6A-07, benign column",
+  "case": "A record states one payload field in `fields` and not in `type_fields`, which is the convention for a field an amendment added and must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-registry-payload-copied-from-another-record.json",
+  "why": "The registry states a payload in two places on purpose: `type_fields` is the payload as it stood and `fields` is what an amendment added, with `added_by` per field. The drift check therefore reads the UNION. A check that read `type_fields` alone would refuse every one of the eight records WORK-1.1 extended, which is a false exclusion of the convention itself.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/ConsequenceDerivation/fields/payload/type_fields/declared_floor_ref",
+      "op": "remove"
+    }
+  ]
+}

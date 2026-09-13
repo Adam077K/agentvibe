@@ -6,7 +6,7 @@
     "tools/run_negative_fixtures.py: declared-but-absent and present-but-undeclared both fail",
     "validate_contracts.py: the fixture run's own count must equal this one, and every declared fixture must have been rejected"
   ],
-  "floor": 56,
+  "floor": 57,
   "floor_why": "RC4-03. A literal, for the reason every other floor in this package is a literal: a count derived from the file it measures is satisfied by the empty file. RC-04 gave this suite a DECLARED denominator, which catches a fixture deleted from the tree alone; it did not catch a fixture deleted from the tree AND from this list in one edit, because one hand writes both. Measured by the fourth recheck: 34 of 36 fixtures moved out of the directory and struck from this list together, full run exit 0, `checks: 288620` -- byte-identical to the baseline and to every conjunct_walk field -- with `negative_fixtures_rejected: 2`. Nothing compared that 2 to anything. It matters here more than anywhere: the only control that catches a mutation of the demand table is a fixture in this list. validate_contracts.py carries the same number as a literal and compares the two, so lowering it takes two edits a reviewer sees, and the reason goes in the constant's comment there.",
   "fixtures": [
     "r1-edge-declares-an-argument-nothing-reads",
@@ -49,6 +49,7 @@
     "r17-manifest-shrunk-below-floor",
     "r17-registry-flips-forall-to-demanded",
     "r17-self-declared-demanding-primitive-wraps-a-pin",
+    "r18-registry-payload-copied-from-another-record",
     "r2-acceptance-chain-loses-its-root",
     "r3-lifecycle-status-as-judgment-subject",
     "r4-edge-routes-to-an-unregistered-command",

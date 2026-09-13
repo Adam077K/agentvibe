@@ -209,6 +209,61 @@ for name in RECORDS:
     # FI-12's whole design: state lives in LifecycleStatus, never in business bytes.
     checked("state" not in payload_properties(name), ("payload declares a state field", name))
 
+# --- F6A-07: THE REGISTRY AND THE SCHEMA MUST AGREE ABOUT A RECORD'S PAYLOAD. ---
+#
+# `05` section 10 names record-registry.json "the authority for which transitions exist",
+# and this file read the SCHEMA's payload for every field question and never compared the
+# two. Measured at bcfd658: all FIFTEEN records the WORK-1.1 amendment adds declared
+# `ContextManifest`'s fifteen payload fields, verbatim, as their own `type_fields` and all
+# fifteen as `required_fields` -- so the declared authority said `StandingHolder` must
+# carry a `work_order_ref` and an `expires_at`, and said `ConsequenceDerivation` need not
+# carry `declared_floor_ref`, `reached_class_ids` or `frozen_payload_digest`. The schema
+# was right in every case and nothing compared it to the registry, so a copy-paste of one
+# record's payload into fifteen others was invisible to a full run.
+#
+# The registry states a payload in two places for a REASON, and the check reads both:
+# `type_fields`/`required_fields` is the record's payload as it stood, and `fields` is what
+# an amendment added to it, with `added_by` and a note per field. For the 165 records no
+# amendment touched, `fields` is absent. For the 8 it extended, the two partition the
+# payload. For the 15 it created, the whole payload is `fields`. All three shapes satisfy
+# one rule: the UNION is the schema's property set, and the union of the required halves is
+# the schema's `required`.
+#
+# LifecycleStatus is the one record this cannot ask about -- `kind: lifecycle-decision`,
+# and its schema payload declares no `properties` at all -- so the rule is stated over
+# records whose schema payload HAS a property set, which is 187 of 188. Narrowing it by
+# `kind` instead would have excused a record by a field its own author writes.
+for name, record in RECORDS.items():
+    schema_payload = SCHEMAS["records.schema.json"]["$defs"][name]["properties"].get("payload", {})
+    if "properties" not in schema_payload:
+        continue
+    payload = record["fields"]["payload"]
+    added = payload.get("fields") or {}
+    declared = set(payload.get("type_fields") or {}) | set(added)
+    declared_required = set(payload.get("required_fields") or []) | {
+        field for field, body in added.items() if body.get("required")}
+    checked(declared == set(schema_payload["properties"]),
+            ("REGISTRY AND SCHEMA DISAGREE ABOUT A RECORD'S PAYLOAD: record-registry.json "
+             "is the declared authority and records.schema.json is what is enforced, so a "
+             "field one names and the other does not is a rule with two answers (F6A-07)",
+             name,
+             {"in schema, not in registry": sorted(set(schema_payload["properties"]) - declared)[:8],
+              "in registry, not in schema": sorted(declared - set(schema_payload["properties"]))[:8]}))
+    checked(declared_required == set(schema_payload.get("required", [])),
+            ("REGISTRY AND SCHEMA DISAGREE ABOUT WHICH PAYLOAD FIELDS ARE REQUIRED. This "
+             "is the half that carried the defect: fifteen records declared another "
+             "record's fifteen fields required and their own optional (F6A-07)",
+             name,
+             {"required by schema only": sorted(set(schema_payload.get("required", [])) - declared_required)[:8],
+              "required by registry only": sorted(declared_required - set(schema_payload.get("required", [])))[:8]}))
+    # And the two halves must agree with each other where they overlap, which they do for
+    # all fifteen new records by construction: a type written twice drifts once.
+    for field, declared_type in (payload.get("type_fields") or {}).items():
+        if field in added:
+            checked(added[field]["type"] == declared_type,
+                    ("one record declares one payload field at two types", name, field,
+                     {"type_fields": declared_type, "fields": added[field]["type"]}))
+
 # time-window-declares-two-utc-bounds
 time_window = SCHEMAS["values.schema.json"]["$defs"]["TimeWindow"]["properties"]
 for bound in ("starts_at", "ends_at"):
@@ -1610,8 +1665,8 @@ checked(version_rows >= 14,
 #   positive: 17, one benign case per adverse case of selection-record section 12.5.
 #             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
 #             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 56
-POSITIVE_FIXTURE_FLOOR = 17
+NEGATIVE_FIXTURE_FLOOR = 57
+POSITIVE_FIXTURE_FLOOR = 18
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
