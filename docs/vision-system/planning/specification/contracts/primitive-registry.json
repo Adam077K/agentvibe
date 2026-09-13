@@ -6469,5 +6469,20 @@
     "semantics": "Resolve this exact command in command-registry. Authenticate transport actor, exact expected business/status revisions, current authority and causal resources; validate payload discriminator, declared targets and exclusive factories. Dispatch each affected record transition to its fixed owner/edge predicate, each new business revision to registration/storage/source guards, and every external effect to C04. One pure ordered group commits all or none; no I/O under locks; result accepted only after independent R receipt. See command transaction algorithm in11.",
     "failure": "deny unresolved/unknown target/unsupported edge; preserve original duplicate result and surviving duties",
     "planned_module": "system/packages/kernel/commands"
+  },
+  "content_unspecified": {
+    "args": [
+      "subject_ref",
+      "gap_id"
+    ],
+    "semantics": "EXPLICIT GAP. The source corpus states no evidence requirement for the phase this criterion assesses, so no requirement is expressed here. Never true and never false: it resolves unresolved, and a conjunction containing it is unresolved whatever its other conjuncts establish. gap_id names the entry in phase-content-gaps.json that records what the prose would have to say, and validate_contracts.py fails a body using this primitive with no matching entry. The alternative was a plausible body with no source, which reads exactly like a requirement and is the false closure this package refuses.",
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Record>",
+      "gap_id": "string"
+    },
+    "result_type": "boolean",
+    "failure": "unresolved: denies the dependent transition and preserves the typed reason and all surviving duties, exactly as a false criterion does",
+    "planned_module": "system/packages/contracts/src/predicates/content-gap.ts"
   }
 }

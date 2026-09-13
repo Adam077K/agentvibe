@@ -435,6 +435,120 @@ for name, predicate in PREDICATES.items():
             checked(node["predicate_id"] == name,
                     ("FI-12: criterion evidence names another predicate", name, node["predicate_id"]))
 
+# --- FI-11 CONTENT: every criterion states a sourced requirement, or a visible gap.
+#
+# The canonical repair closed FI-11's mechanism and left its content open: for 167 of
+# 173 records the corpus stated no per-phase evidence requirement, so two criteria of
+# one record differed only in the criterion a judgment had to name. The content is
+# authored in tools/phase_content.py. These checks are what stop it drifting back:
+#
+#   a criterion either carries `derived_from` -- citations that RESOLVE to files in
+#   this tree -- or it carries `content_unspecified` with a gap_id registered in
+#   phase-content-gaps.json. It cannot carry both, and it cannot carry neither. An
+#   unsourced body is the failure mode this package exists to refuse, and "plausible"
+#   is indistinguishable from "derived" once it is written down.
+_CITED_TEXT = {}
+
+
+def _cited_text(relative_path):
+    if relative_path not in _CITED_TEXT:
+        _CITED_TEXT[relative_path] = (ROOT.parent / relative_path).read_text(
+            encoding="utf-8")
+    return _CITED_TEXT[relative_path]
+
+
+GAPS = FILES["phase-content-gaps.json"]
+gap_ids = [entry["gap_id"] for entry in GAPS["gaps"]]
+checked(len(gap_ids) == len(set(gap_ids)), ("duplicate gap_id", sorted(gap_ids)))
+registered_gaps, claimed_gaps = set(gap_ids), set()
+content_criteria = unspecified_criteria = 0
+for name, predicate in PREDICATES.items():
+    if not name.startswith("criterion."):
+        continue
+    marks = [node for node in walk(predicate["body"])
+             if isinstance(node, dict) and node.get("op") == "content_unspecified"]
+    if marks:
+        unspecified_criteria += 1
+        checked(len(marks) == 1, ("one content_unspecified per criterion", name))
+        gap_id = marks[0]["gap_id"]
+        checked(gap_id in registered_gaps,
+                ("content_unspecified with no registered gap", name, gap_id))
+        checked(predicate.get("content_gap_id") == gap_id,
+                ("criterion gap_id disagrees with its body", name))
+        checked("derived_from" not in predicate,
+                ("a gap cannot also cite a source for content it does not state", name))
+        claimed_gaps.add(gap_id)
+        continue
+    content_criteria += 1
+    citations = predicate.get("derived_from")
+    checked(isinstance(citations, list) and citations,
+            ("criterion states content with no derived_from", name))
+    for citation in citations:
+        checked(set(citation) == {"file", "anchor_or_quote"},
+                ("citation shape", name, citation))
+        checked(isinstance(citation["anchor_or_quote"], str)
+                and citation["anchor_or_quote"].strip(),
+                ("empty citation", name))
+        checked((ROOT.parent / citation["file"]).exists(),
+                ("derived_from names a file that does not exist", name,
+                 citation["file"]))
+        # And the half that makes a citation more than a filename: the quoted text
+        # must actually BE in the file it names. Rule 3 is enforced for repo paths
+        # elsewhere in this repository and was not enforced here -- a criterion could
+        # cite any sentence at all, and a quote that has drifted from its source reads
+        # exactly like one that has not. `...` marks an elision; each side of it is
+        # checked separately. An ANCHOR -- `#/pointer` -- is resolved instead, as an
+        # RFC6901 pointer into the cited JSON, so the entries taken from
+        # `capabilities.json#/domain_validators` are held to the same standard as the
+        # quoted ones rather than exempted for being short.
+        anchor = citation["anchor_or_quote"]
+        if anchor.startswith("#/"):
+            checked(citation["file"].endswith(".json"),
+                    ("anchor citation into a non-JSON file", name, citation["file"]))
+            target = json.loads(_cited_text(citation["file"]))
+            for key in anchor[2:].split("/"):
+                key = key.replace("~1", "/").replace("~0", "~")
+                checked(isinstance(target, dict) and key in target,
+                        ("derived_from anchor does not resolve", name, anchor, key))
+                target = target[key]
+            continue
+        for segment in filter(None, (part.strip() for part in anchor.split("..."))):
+            checked(segment in _cited_text(citation["file"]),
+                    ("derived_from quotes text that is not in the file it cites",
+                     name, citation["file"], segment[:120]))
+    checked(isinstance(predicate.get("requires"), str) and predicate["requires"].strip(),
+            ("criterion states content with no `requires` sentence", name))
+# The converse: a gap registered for a criterion that does not carry it would let the
+# count of open work drift upward with nothing behind it.
+checked(claimed_gaps == registered_gaps,
+        ("gaps registered for no criterion", sorted(registered_gaps - claimed_gaps)))
+for entry in GAPS["gaps"]:
+    checked(entry["criterion_id"] in PREDICATES,
+            ("gap names a predicate that does not exist", entry["gap_id"]))
+    checked(entry["what_the_prose_would_need_to_say"].strip(),
+            ("gap with no statement of what is missing", entry["gap_id"]))
+
+# And the predicate FI-11 actually asserts: two edges leaving ONE state of ONE record
+# must not have the same effective guard SHAPE. Where they still do, the pair is
+# declared in phase-content-gaps.json with a reason -- and the declaration is checked
+# in BOTH directions, so a residual cannot be added silently and one cannot be removed
+# from the file while it is still live. Shape is computed by tools/skeletons.py, the
+# same implementation tools/guard_distinctness.py measures with.
+import skeletons  # noqa: E402
+residual = {(group["record"], group["from_state"], tuple(sorted(group["to_phases"])))
+            for group in skeletons.sibling_collisions(RECORDS, PREDICATES,
+                                                      skeletons.erase_all_strings)}
+declared_residual = {(entry["record"], entry["from_state"],
+                      tuple(sorted(entry["to_phases"])))
+                     for entry in GAPS["residual_sibling_collisions"]}
+checked(residual == declared_residual,
+        ("sibling guards share a shape that phase-content-gaps.json does not declare",
+         sorted(residual - declared_residual),
+         "or declares one that does not collide",
+         sorted(declared_residual - residual)))
+for entry in GAPS["residual_sibling_collisions"]:
+    checked(entry["why"].strip(), ("residual collision with no reason", entry))
+
 # FI-12 constraint 6 / CCR-02: the acceptance chain terminates at a recorded human
 # root in finitely many steps. One implementation, in tools/acceptance_chain.py.
 acceptance_chain.RECORDS = RECORDS
