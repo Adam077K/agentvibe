@@ -1,0 +1,427 @@
+{
+ "AE-M1-01": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M1-01 \u00b7 (b) \u00b7 E1 \u00b7 A cost figure in a forbidden unit, cited without its non-conformance label.**"
+ },
+ "AE-M1-02": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M1-02 \u00b7 (b) \u00b7 E2 \u00b7 The shed ladder answers pressure and does not answer exhaustion.**"
+ },
+ "AE-M1-03": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M1-03 \u00b7 (b) \u00b7 E3 \u00b7 The metered-path observation point is named; its cadence, owner and response are"
+ },
+ "AE-M1-04": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M1-04 \u00b7 (b) \u00b7 E4 \u00b7 No attempt ceiling behind the non-terminating validator.**"
+ },
+ "AE-M1-05": {
+  "file": "A-economic-capacity.md",
+  "class": "c",
+  "heading": "**AE-M1-05 \u00b7 (c) \u00b7 E7 \u00b7 \"Every mechanism carries a removal criterion\" is asserted more broadly than the"
+ },
+ "AE-M2-01": {
+  "file": "A-economic-capacity.md",
+  "class": "d",
+  "heading": "**AE-M2-01 \u00b7 (d) \u00b7 E2/E1 \u00b7 The size of each reserved lane and its lapse point is undecided, and it decides"
+ },
+ "AE-M2-02": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M2-02 \u00b7 (b) \u00b7 E1 \u00b7 \"Zero per work order\" is contradicted by M2's own decision probe.**"
+ },
+ "AE-M2-03": {
+  "file": "A-economic-capacity.md",
+  "class": "c",
+  "heading": "**AE-M2-03 \u00b7 (c) \u00b7 E1/E7 \u00b7 The evaluation cadence is M2's largest new recurring draw on the weekly bucket"
+ },
+ "AE-M2-04": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M2-04 \u00b7 (b) \u00b7 E3 \u00b7 Silent on the metered path.**"
+ },
+ "AE-M2-05": {
+  "file": "A-economic-capacity.md",
+  "class": "c",
+  "heading": "**AE-M2-05 \u00b7 (c) \u00b7 E4 \u00b7 The wake right can re-arm itself, and the only thing stopping it is a budget nobody"
+ },
+ "AE-M2-06": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M2-06 \u00b7 (b) \u00b7 E4 \u00b7 No retry ceiling anywhere.**"
+ },
+ "AE-M3-01": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M3-01 \u00b7 (b) \u00b7 E1/E2 \u00b7 The reserve-fill rule is narrower than the waste it was written to prevent.**"
+ },
+ "AE-M3-02": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M3-02 \u00b7 (b) \u00b7 E5 \u00b7 The F-2 answer never states the fixture's disposition, and never names the"
+ },
+ "AE-M3-03": {
+  "file": "A-economic-capacity.md",
+  "class": "c",
+  "heading": "**AE-M3-03 \u00b7 (c) \u00b7 E1 \u00b7 The per-step cacheless launch is named as M3's own counter-cost and is then charged"
+ },
+ "AE-M3-04": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M3-04 \u00b7 (b) \u00b7 E3 \u00b7 The metered answer is the round's best and is described as the only one available,"
+ },
+ "AE-M4-01": {
+  "file": "A-economic-capacity.md",
+  "class": "d",
+  "heading": "**AE-M4-01 \u00b7 (d) \u00b7 E2 \u00b7 A standing holder can veto the shedding of its own reserved lane, and no override"
+ },
+ "AE-M4-02": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M4-02 \u00b7 (b) \u00b7 E3 \u00b7 Silent on the metered path.**"
+ },
+ "AE-M4-03": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M4-03 \u00b7 (b) \u00b7 E1/E2 \u00b7 The return-to-pool rule requires an act that the veto lets a holder withhold.**"
+ },
+ "AE-M4-04": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M4-04 \u00b7 (b) \u00b7 E4 \u00b7 No retry ceiling and no no-progress class.**"
+ },
+ "AE-M4-05": {
+  "file": "A-economic-capacity.md",
+  "class": "c",
+  "heading": "**AE-M4-05 \u00b7 (c) \u00b7 E7 \u00b7 Nine holder records are recurring human labour that is never priced in any unit.**"
+ },
+ "AE-M5-01": {
+  "file": "A-economic-capacity.md",
+  "class": "c",
+  "heading": "**AE-M5-01 \u00b7 (c) \u00b7 E1 \u00b7 The design's own sharpest economic falsifier carries no evaluation protocol, while"
+ },
+ "AE-M5-02": {
+  "file": "A-economic-capacity.md",
+  "class": "c",
+  "heading": "**AE-M5-02 \u00b7 (c) \u00b7 E4 \u00b7 The per-cause allowance bounds the re-arming loop and its size is set by nobody.**"
+ },
+ "AE-M5-03": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M5-03 \u00b7 (b) \u00b7 E2 \u00b7 The protected floors are shares of an allowance that may be zero, and no non-model"
+ },
+ "AE-M5-04": {
+  "file": "A-economic-capacity.md",
+  "class": "b",
+  "heading": "**AE-M5-04 \u00b7 (b) \u00b7 E5 \u00b7 The F-2 disposition is correct and is stated two sections away from the fixture.**"
+ },
+ "AS-M1-01": {
+  "file": "A-security-adversarial.md",
+  "class": "d",
+  "heading": "#### AS-M1-01 \u00b7 (d) \u00b7 The consultation return is an unfiltered model-to-model channel into the identity holding the effect grants"
+ },
+ "AS-M1-02": {
+  "file": "A-security-adversarial.md",
+  "class": "d",
+  "heading": "#### AS-M1-02 \u00b7 (d) \u00b7 `ProjectionGrant` has no issuing authority, and M1 calls `Projection` its highest-risk object"
+ },
+ "AS-M1-03": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M1-03 \u00b7 (b) \u00b7 `InstrumentCalibration` has no named writer, and it is evidence history"
+ },
+ "AS-M1-04": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M1-04 \u00b7 (b) \u00b7 Six reasons multiply the channels AS-M1-01 travels on, and M1 concedes the direction"
+ },
+ "AS-M2-01": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M2-01 \u00b7 (b) \u00b7 The published reachability route is an attacker-reachable write path into a capped store, and volume is the unaddresse"
+ },
+ "AS-M2-02": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M2-02 \u00b7 (b) \u00b7 The ratchet is closed against the charter's record and left open against the approval set"
+ },
+ "AS-M2-03": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M2-03 \u00b7 (b) \u00b7 No metered-path observer \u2014 the rule is inherited and unenforced"
+ },
+ "AS-M3-01": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M3-01 \u00b7 (b) \u00b7 The declared branch set is a producer-selectable channel, and M3's strongest claim does not cover it"
+ },
+ "AS-M3-02": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M3-02 \u00b7 (b) \u00b7 The unclassified custodian may authorise effects one at a time, with no stated ceiling, on evidence assembled from unt"
+ },
+ "AS-M3-03": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M3-03 \u00b7 (b) \u00b7 A false journal entry's blast radius is stated and unmeasured; the containment is a person"
+ },
+ "AS-M3-04": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M3-04 \u00b7 (b) \u00b7 AS-X-03 in reverse: M3 has the mechanism and declines the claim"
+ },
+ "AS-M4-01": {
+  "file": "A-security-adversarial.md",
+  "class": "d",
+  "heading": "#### AS-M4-01 \u00b7 (d) \u00b7 M4's derivation makes every model call a C2 effect, and M4's mapping table then requires C04 to release it"
+ },
+ "AS-M4-02": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M4-02 \u00b7 (b) \u00b7 The `ConsequenceDerivation` record names no writer"
+ },
+ "AS-M4-03": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M4-03 \u00b7 (b) \u00b7 Composition across unjoined records is unsolved, and M4 is the candidate for which that matters most"
+ },
+ "AS-M4-04": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M4-04 \u00b7 (b) \u00b7 No metered-path observer"
+ },
+ "AS-M4-05": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M4-05 \u00b7 (b) \u00b7 Nine intake addresses are nine published inbound channels, and M4 does not say so"
+ },
+ "AS-M5-01": {
+  "file": "A-security-adversarial.md",
+  "class": "d",
+  "heading": "**AS-M5-01**, **AS-M5-02**. M2 and M3 carry no new (d) from this lane; M2's own two blocking (d) items"
+ },
+ "AS-M5-02": {
+  "file": "A-security-adversarial.md",
+  "class": "d",
+  "heading": "#### AS-M5-02 \u00b7 (d) \u00b7 A self-admitted trial interest declares `writer_keys`, and nothing says they must be disjoint from the existing sole-w"
+ },
+ "AS-M5-03": {
+  "file": "A-security-adversarial.md",
+  "class": "c",
+  "heading": "#### AS-M5-03 \u00b7 (c) \u00b7 Arming is unstoppable by design, which is also the amplifier an adversary rides"
+ },
+ "AS-M5-04": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M5-04 \u00b7 (b) \u00b7 The producer's own write arms its checker, and the tie-break selects the weakest one"
+ },
+ "AS-M5-05": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "#### AS-M5-05 \u00b7 (b) \u00b7 The metered-path interest observes and does not prevent, correctly stated"
+ },
+ "AS-X-01": {
+  "file": "A-security-adversarial.md",
+  "class": "d",
+  "heading": "### AS-X-01 \u00b7 (d) \u00b7 The acceptance criteria are an unblinded channel into the checker, and no candidate names their author"
+ },
+ "AS-X-02": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "### AS-X-02 \u00b7 (b) \u00b7 The W6 boundary in all five rests on one unbuilt policy object, and four name no check on the launcher"
+ },
+ "AS-X-03": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "### AS-X-03 \u00b7 (b) \u00b7 The model provider is a C2 destination under the fixed boundary, and four of five never say so"
+ },
+ "AS-X-04": {
+  "file": "A-security-adversarial.md",
+  "class": "b",
+  "heading": "### AS-X-04 \u00b7 (b) \u00b7 Fan-out is bounded only by budget in all five, and only M1 mentions the word"
+ },
+ "AT-M1-01": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M1-01 \u00b7 (d) \u00b7 `HandoffAcceptance` is declared NEW and already exists, with a different owner, a"
+ },
+ "AT-M1-02": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M1-02 \u00b7 (d) \u00b7 The set of \"critical fields\" a resumed attempt must re-derive is never defined and has no"
+ },
+ "AT-M1-03": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M1-03 \u00b7 (d) \u00b7 The checkpoint trigger is unspecified, and M1's own capacity finding says it cannot be"
+ },
+ "AT-M1-04": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M1-04 \u00b7 (a) \u00b7 The release locus for F-3's outward effect is stated two ways.**"
+ },
+ "AT-M1-05": {
+  "file": "A-technical.md",
+  "class": "b",
+  "heading": "**AT-M1-05 \u00b7 (b) \u00b7 W9's in-flight provider/model change is answered, by inheritance.** \u00a711 item 9 routes to"
+ },
+ "AT-M2-01": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M2-01 \u00b7 (a) \u00b7 \u00a78's narrowing claim is false for 6 of its 15 rows.**"
+ },
+ "AT-M2-02": {
+  "file": "A-technical.md",
+  "class": "c",
+  "heading": "**AT-M2-02 \u00b7 (c), not (d) \u00b7 Charter persistence is adopted against a spec clause requiring demonstrated"
+ },
+ "AT-M2-03": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M2-03 \u00b7 (d) \u00b7 Suspension's \"admissions narrow\" has no quantum and no computing party.**"
+ },
+ "AT-M2-04": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M2-04 \u00b7 (a) \u00b7 The two-desk tie-break is undefined for incomparable predicates.**"
+ },
+ "AT-M3-01": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M3-01 \u00b7 (d) \u00b7 Deleting `AgentTemplate` and `AgentInstance` leaves ~50 dangling registry references with"
+ },
+ "AT-M3-02": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M3-02 \u00b7 (a) \u00b7 Four of M3's eleven primitives are existing registry records under new names, with no"
+ },
+ "AT-M3-03": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M3-03 \u00b7 (d) \u00b7 No authority can stop a pre-endorsed shed in the moment.**"
+ },
+ "AT-M3-04": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M3-04 \u00b7 (a) \u00b7 The adaptive step's envelope has no named author and no default.**"
+ },
+ "AT-M3-05": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M3-05 \u00b7 (a) \u00b7 The collapse rule's N is unnamed and unowned.**"
+ },
+ "AT-M4-01": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M4-01 \u00b7 (d) \u00b7 Whether an outward artifact \"carries a promise\" is not computable from any of the four"
+ },
+ "AT-M4-02": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M4-02 \u00b7 (d), with W2 exposure \u00b7 `max()` converts the six routing classes from predicates into a total"
+ },
+ "AT-M4-03": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M4-03 \u00b7 (a) \u00b7 `H` appears as a preparing structure while \u00a72.3 says H's performer is an E.**"
+ },
+ "AT-M4-04": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M4-04 \u00b7 (a) \u00b7 No terminal holder for a C3 duty class that maps to none of the nine.**"
+ },
+ "AT-M5-01": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M5-01 \u00b7 (d) \u00b7 M5 adds a second writer to the existing `Constraint` record and does not say it is"
+ },
+ "AT-M5-02": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M5-02 \u00b7 (a) \u00b7 Six of the eleven entry kinds are existing registry records renamed, with no mapping"
+ },
+ "AT-M5-03": {
+  "file": "A-technical.md",
+  "class": "d",
+  "heading": "**AT-M5-03 \u00b7 (d) \u00b7 The only named detector for M5's acknowledged semantic-conflict gap is forbidden by M5's"
+ },
+ "AT-M5-04": {
+  "file": "A-technical.md",
+  "class": "a",
+  "heading": "**AT-M5-04 \u00b7 (a) \u00b7 No rule for custody landing on the Admission Authority's own identity.**"
+ },
+ "AX-M1-01": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M1-01 \u00b7 (b) \u00b7 The founder brief is the one untyped transfer, and it is the highest-consequence one.**"
+ },
+ "AX-M1-02": {
+  "file": "A-context-evidence.md",
+  "class": "c",
+  "heading": "**AX-M1-02 \u00b7 (c) \u00b7 Contamination has detection and supersession but no blast-radius enumeration.**"
+ },
+ "AX-M1-03": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M1-03 \u00b7 (b) \u00b7 One ledger restatement carries a date error and nothing in the round could have caught it.**"
+ },
+ "AX-M2-01": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M2-01 \u00b7 (b) \u00b7 Typing covers the carried record and does not cover the work-order transfer.**"
+ },
+ "AX-M2-02": {
+  "file": "A-context-evidence.md",
+  "class": "c",
+  "heading": "**AX-M2-02 \u00b7 (c) \u00b7 The instrument desk evaluates every other desk and is accepted by the founder alone.**"
+ },
+ "AX-M2-03": {
+  "file": "A-context-evidence.md",
+  "class": "a",
+  "heading": "**AX-M2-03 \u00b7 (a) \u00b7 The ledger's row 1 contradicts the body's own count, in the direction that flatters R8.**"
+ },
+ "AX-M2-04": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M2-04 \u00b7 (b) \u00b7 M2 names no trust level anywhere, at any granularity.**"
+ },
+ "AX-M3-01": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M3-01 \u00b7 (b) \u00b7 The manifest omits per-input trust level, which DIRECTIVE \u00a78.12 requires by name.**"
+ },
+ "AX-M4-01": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M4-01 \u00b7 (b) \u00b7 The manifest omits trust level, and M4's own derivation makes the omission bite harder"
+ },
+ "AX-M4-02": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M4-02 \u00b7 (b) \u00b7 One row labelled DIRECT OBSERVATION rests on two files the provenance header does not"
+ },
+ "AX-M5-01": {
+  "file": "A-context-evidence.md",
+  "class": "c",
+  "heading": "**AX-M5-01 \u00b7 (c) \u00b7 Contamination suspends future firing and does not reopen what already fired.**"
+ },
+ "AX-M5-02": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-M5-02 \u00b7 (b) \u00b7 One citation presents the favourable half of a tension the corpus documents in full, and"
+ },
+ "AX-M5-03": {
+  "file": "A-context-evidence.md",
+  "class": "a",
+  "heading": "**AX-M5-03 \u00b7 (a) \u00b7 Two citations to the governing directive do not resolve, and this is the one finding in"
+ },
+ "AX-ROUND-01": {
+  "file": "A-context-evidence.md",
+  "class": "b",
+  "heading": "**AX-ROUND-01 \u00b7 (b) \u00b7 One measured interval drifted inside its own lane's summary, propagated through the"
+ }
+}
