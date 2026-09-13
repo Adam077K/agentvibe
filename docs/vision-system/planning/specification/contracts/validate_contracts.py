@@ -1309,10 +1309,22 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
             ("the runner no longer declares a per-fixture leak reason, so the detail this "
              "file attaches when a fixture leaks would name the fixture and not the "
              "reason (RC3-03)", LEAK_RECORD))
+    # The report is found by a declared MARKER, not by the last `{` in the transcript.
+    # `stdout.rindex("{")` worked only while every value in the report was a scalar: a
+    # leak `reason` is a validator AssertionError and those carry dicts, so the last `{`
+    # became one inside a leak record and the decode failed. This file then reported that
+    # the runner had produced no per-fixture result -- about a list it was holding. Caught
+    # by reproducing the recheck's probe 7c against the repair, not by reading it.
+    REPORT_MARKER = "--- negative fixture report (JSON follows) ---"
+    checked(REPORT_MARKER in runner_source,
+            ("the report marker this file parses by is not in the runner that prints it, "
+             "so every branch below would take the no-report arm", REPORT_MARKER))
+    marker_at = completed.stdout.rfind(REPORT_MARKER)
     try:
-        runner_said = json.loads(completed.stdout[completed.stdout.rindex("{"):])
+        runner_said = (None if marker_at < 0 else
+                       json.loads(completed.stdout[marker_at + len(REPORT_MARKER):]))
     except ValueError:
-        # No JSON at all: the runner refused before reporting -- a symlinked tree, a
+        # No report at all: the runner refused before reporting -- a symlinked tree, a
         # missing manifest, a duplicate id. The generic check below names it, which is
         # right, because those refusals print their own sentence.
         runner_said = None

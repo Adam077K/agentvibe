@@ -305,6 +305,20 @@ def run_fixture(fixture, base, verbose):
 # message rather than an error.
 LEAK_RECORD_KEYS = ("id", "reason")
 
+# And the marker that DELIMITS the report, because attaching the reason is what broke the
+# caller's way of finding it. validate_contracts.py located this JSON with
+# `stdout[stdout.rindex("{"):]` -- the last `{` in the transcript -- which worked only
+# while every value in the report was a scalar or a list of scalars. A `reason` is a
+# validator AssertionError, and those carry dicts: `{'findings': [...], 'decisions': ...}`.
+# So the last `{` became one inside a leak record's own text, the slice decoded to
+# nothing, and the caller fell through to its "the runner reported no per-fixture result"
+# arm -- reporting the absence of a list that was right there. Measured on a probe 7c
+# reproduction, which is the only way it was going to be found.
+#
+# Both JSON reports this module prints for that caller carry the marker, and the report is
+# the last thing printed in both branches, so "from the marker to the end" is exact.
+REPORT_MARKER = "--- negative fixture report (JSON follows) ---"
+
 
 def discover():
     """Every fixture in the tree, as (id, document, base), by the one discovery rule.
@@ -409,6 +423,7 @@ def main(verbose: bool) -> int:
         # Both directions, and both of them matter. A declared fixture that is gone is a
         # control someone deleted; a fixture present and undeclared is a control the
         # denominator does not know about, so deleting it later would be silent.
+        print(REPORT_MARKER)
         print(json.dumps({
             "check": "negative fixture count ratchet (RC-04)",
             "declared": len(declared), "present": len(present),
@@ -429,6 +444,7 @@ def main(verbose: bool) -> int:
         print(f"  [{'ok' if ok else 'FAIL'}] {fixture['repair']} {fixture['id']}: {detail}")
         if not ok:
             failures.append({"id": fixture["id"], "reason": detail})
+    print(REPORT_MARKER)
     print(json.dumps({"fixtures": len(fixtures), "declared": len(declared),
                       "passed_as_required": len(fixtures) - len(failures),
                       "leaked": failures}, indent=2))
