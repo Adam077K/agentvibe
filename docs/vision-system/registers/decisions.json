@@ -307,5 +307,66 @@
     "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
     "reopen_trigger": "Reopen on incompatible meanings, hidden native writes, regression, lost obligations/restrictions or insufficient recovery evidence.",
     "implementation_evidence": null
+  },
+  {
+    "id": "AD-011",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-13",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Bounded string ceiling for the canonical value schema",
+    "problem": "values.schema.json#/$defs/string was an unconstrained {\"type\": \"string\"} resolved by 907 references, so every bounded field in the contract registries inherited no bound at all. An unbounded string in a canonically hashed, durably stored record is a storage and denial-of-service surface, and the schema could not refuse a payload no implementation would want to keep.",
+    "decision": "Set maxLength 8192 characters and forbid C0 and C7 control characters except tab, newline and carriage return. The ceiling is a mechanism decision taken to replace an absent bound, not a value derived from any observed field length; it is revisable through an explicit schema migration under the kernel's evolution rules.",
+    "alternatives": [
+      "Leave the type unconstrained, which is the pre-repair state and constrains 907 references to nothing",
+      "Set per-field ceilings at each of the 907 reference sites, which is more precise and 907 places to drift",
+      "Set a higher or lower shared ceiling, which is the same decision at a different number"
+    ],
+    "evidence_and_reasoning": [
+      "planning/specification/contracts/values.schema.json",
+      "planning/specification/01-contract-kernel.md#11-contract-evolution-scaling-and-removal",
+      "registers/specification-findings.json"
+    ],
+    "epistemic_basis": "Design decision under an absent bound. No field-length distribution was measured and none is claimed: the schema's own description says the exact ceiling is a storage and denial-of-service decision and is flagged for the founder, not derived.",
+    "accepted_design_costs": [
+      "A field that legitimately needs more than 8192 characters must be a blob reference or a schema migration, not a longer string",
+      "The ceiling is shared, so it is simultaneously too large for short identifiers and too small for long documents; per-field precision is traded for one place to change"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen if an admitted record type genuinely requires a longer inline value, if a measured field-length distribution contradicts the ceiling, or if the founder sets a different storage bound. Changing it is a schema major change and requires the migration protocol of 01 section 11, not a field rename. Origin: canonical repair R6.",
+    "implementation_evidence": null
+  },
+  {
+    "id": "AD-012",
+    "kind": "Decision",
+    "architecture_version": "S1.0",
+    "date": "2026-09-13",
+    "status": "adopted for Phase F specification; not complete-plan or runtime acceptance",
+    "owner": "orchestrator under founder directive",
+    "title": "Per-phase criterion content is authored by derivation from the prose contracts, never invented",
+    "problem": "FI-11's mechanism is closed — every edge guard calls its own criterion_id and declared-but-unread arguments are gone — but the CONTENT is not: for 167 of 173 records the source corpus states no per-phase evidence requirement, so two criteria of one record can still differ only by the criterion a judgment must name. The tempting repair is to write plausible per-phase requirements, which would put invented obligations into an executable registry and make the guard distinctness metric go green on fiction.",
+    "decision": "Author the missing per-phase criterion content by derivation from the prose contracts, with a citation to the passage each requirement comes from. Where the prose is silent on a phase, mark that criterion content_unspecified and register the gap rather than filling it. A criterion with no cited source is not admitted.",
+    "alternatives": [
+      "Invent plausible per-phase requirements, which greens guard_distinctness.py on content nothing supports",
+      "Leave all 167 as they are, which keeps 1295 edges sharing one meaning tail and leaves FI-11's defect reproduced at edge scale",
+      "Delete the per-phase criterion mechanism, which would discard a repair that is already correct"
+    ],
+    "evidence_and_reasoning": [
+      "planning/reviews/F-canonical-01.md",
+      "registers/specification-findings.json",
+      "planning/specification/11-schemas-state-contracts.md#c04-c06-and-c08-proof-boundaries",
+      "planning/specification/contracts/tools/guard_distinctness.py"
+    ],
+    "epistemic_basis": "Design decision about how to close a content gap, not a measurement. The 167-of-173 figure and the one-shared-meaning-tail finding are F-canonical-01's; re-measure with contracts/tools/guard_distinctness.py rather than quoting them.",
+    "accepted_design_costs": [
+      "Derivation is slower than authoring and will leave content_unspecified criteria standing where the prose genuinely says nothing, so the distinctness metric will not reach a clean number",
+      "Each registered gap is a specification obligation someone must later discharge, and the register will carry them visibly rather than absorbing them"
+    ],
+    "external_exposure_authorized": false,
+    "reversibility": "Repository-local specification remains reversible; operational promises, disclosure and lost data require separate consequence decisions.",
+    "reopen_trigger": "Reopen if a prose contract is amended to state a per-phase requirement that an existing criterion contradicts, or if the count of content_unspecified criteria stops falling across specification revisions. Origin: F-canonical-01, FI-11 content residue; the lane docs/vision-phase-content is in flight.",
+    "implementation_evidence": null
   }
 ]
