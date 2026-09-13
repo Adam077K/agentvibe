@@ -1,0 +1,17 @@
+{
+  "id": "r18-founder-brief-crosses-an-untyped-boundary",
+  "repair": "R18",
+  "finding": "F6B-02; reviews/F2-06-B-context-verification-founder-evidence.md; 05-work-agents-skills.md section 5 (R-X27); AX-M1-01",
+  "case": "A transfer names a constraint set that need not resolve, so the founder-facing brief crosses an untyped boundary again.",
+  "paired_benign_fixture": "fixtures/positive/r18-founder-brief-crosses-an-untyped-boundary-benign.json",
+  "why": "R-X27 requires a constraint set on every transfer the fixtures name, INCLUDING the continuation and the founder-facing brief. `constraint_set_ref` occurred twice in the whole schema, on one record, and was not required even there. With the binding optional, a `DecisionPacket` or an `OperatorProjection` names a set that resolves to nothing and is presented anyway -- which is uniform gap G-05, and the one reader whose errors are uncorrelated with the model family's is the one on the untyped side of it.",
+  "expect_failure_contains": "'guard.constraint.set_bound_at_transfer', 'related_phases'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.constraint.set_bound_at_transfer/body/predicates/1/bindings/0/optional",
+      "op": "replace",
+      "value": true
+    }
+  ]
+}

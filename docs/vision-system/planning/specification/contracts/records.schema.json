@@ -8573,17 +8573,18 @@
             }
           },
           "required": [
-            "parent_work_ref",
             "child_work_ref",
-            "sponsor_ref",
-            "performer_ref",
-            "reservation_refs",
-            "nondelegable_scopes",
+            "constraint_set_ref",
+            "continuation_ref",
             "depth",
+            "nondelegable_scopes",
+            "parent_work_ref",
+            "performer_ref",
             "receipt_due",
+            "reservation_refs",
             "response_due",
             "result_due",
-            "continuation_ref"
+            "sponsor_ref"
           ],
           "additionalProperties": false
         }
@@ -60466,21 +60467,24 @@
             }
           },
           "required": [
-            "work_order_ref",
-            "loader_identity_ref",
-            "loader_profile_ref",
-            "source_refs",
+            "allocations",
+            "assembled_for_class",
             "blob_refs",
             "captured_inputs",
-            "epochs",
-            "transformation_refs",
+            "closure_snapshot_ref",
             "destination_contract_refs",
-            "purpose_ids",
+            "dropped_constraints",
+            "epochs",
+            "expires_at",
+            "item_trust_levels",
+            "loader_identity_ref",
+            "loader_profile_ref",
             "native_ancestry",
             "omissions",
-            "allocations",
-            "closure_snapshot_ref",
-            "expires_at"
+            "purpose_ids",
+            "source_refs",
+            "transformation_refs",
+            "work_order_ref"
           ],
           "additionalProperties": false
         }
@@ -63214,24 +63218,48 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "constraint_set_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ConstraintSet"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
-            "source_work_ref",
-            "source_custodian_ref",
-            "last_witnessed_position",
-            "unfinished_work_refs",
-            "unfinished_obligation_refs",
-            "pending_operation_refs",
-            "context_manifest_ref",
-            "evidence_refs",
             "artifact_refs",
-            "unknowns",
-            "next_actions",
-            "proposed_assignment_ref",
-            "deadlines",
             "blocked_dependency_refs",
-            "remaining_reservation_refs"
+            "constraint_set_ref",
+            "context_manifest_ref",
+            "deadlines",
+            "evidence_refs",
+            "last_witnessed_position",
+            "next_actions",
+            "pending_operation_refs",
+            "proposed_assignment_ref",
+            "remaining_reservation_refs",
+            "source_custodian_ref",
+            "source_work_ref",
+            "unfinished_obligation_refs",
+            "unfinished_work_refs",
+            "unknowns"
           ],
           "additionalProperties": false
         }
@@ -91944,24 +91972,48 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "constraint_set_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ConstraintSet"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
-            "question",
-            "decision_domain",
-            "why_this_person",
-            "subject_refs",
-            "options",
             "authority_refs",
-            "evidence_refs",
+            "constraint_set_ref",
+            "continuing_work_refs",
             "contrary_refs",
-            "unknowns",
-            "reversibility",
-            "taste_decision",
-            "latest_decision_at",
+            "decision_domain",
+            "evidence_refs",
             "expires_at",
+            "latest_decision_at",
             "no_answer_rule_ref",
-            "continuing_work_refs"
+            "options",
+            "question",
+            "reversibility",
+            "subject_refs",
+            "taste_decision",
+            "unknowns",
+            "why_this_person"
           ],
           "additionalProperties": false
         }
@@ -95885,16 +95937,40 @@
             },
             "next_refresh_at": {
               "$ref": "values.schema.json#/$defs/UTC"
+            },
+            "constraint_set_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ConstraintSet"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
-            "view_id",
             "actor_scope_ref",
-            "projection",
+            "constraint_set_ref",
             "freshness",
             "included_refs",
             "omission_manifest_ref",
-            "selection_version_ref"
+            "projection",
+            "selection_version_ref",
+            "view_id"
           ],
           "additionalProperties": false
         }
@@ -201033,21 +201109,45 @@
             },
             "resolution_reason": {
               "$ref": "values.schema.json#/$defs/string"
+            },
+            "calibration_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "InstrumentCalibration"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
-            "work_order_ref",
-            "submission_seq",
-            "holder_ref",
             "acceptance_owner_ref",
-            "declared_done_at",
-            "latest_responsible_at",
-            "effect_class_id",
-            "criteria_ref",
-            "criteria_frozen_at",
-            "producing_started_at",
+            "calibration_ref",
             "criteria_author_component_id",
-            "producing_path_component_ids"
+            "criteria_frozen_at",
+            "criteria_ref",
+            "declared_done_at",
+            "effect_class_id",
+            "holder_ref",
+            "latest_responsible_at",
+            "producing_path_component_ids",
+            "producing_started_at",
+            "submission_seq",
+            "work_order_ref"
           ],
           "additionalProperties": false
         }

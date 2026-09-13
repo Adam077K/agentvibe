@@ -1,0 +1,25 @@
+{
+  "id": "r18-acceptance-on-an-uncalibrated-checker-benign",
+  "repair": "R18",
+  "finding": "F6B-03, benign column",
+  "case": "An acceptance whose checker carries a calibration standing at `run`, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-acceptance-on-an-uncalibrated-checker.json",
+  "why": "The eighteenth adverse row the review asked for needs its pair, or the control cannot be read as a detection rate. A calibration in `run` already carries a planted-defect detection rate, a clean-case refusal rate, session observations and a protected change -- criterion.InstrumentCalibration.run.v1 demands all four -- so an acceptance naming one has satisfied the substance of the rule and must commit. The patch hardens the same guard by also requiring the acceptance owner to be named.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.calibration.current_for_checker/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/acceptance_owner_ref"
+        ]
+      }
+    }
+  ]
+}

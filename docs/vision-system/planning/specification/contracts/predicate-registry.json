@@ -29972,10 +29972,10 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/work_order_ref",
-            "/payload/source_refs",
-            "/payload/destination_contract_refs",
             "/payload/closure_snapshot_ref",
+            "/payload/destination_contract_refs",
+            "/payload/source_refs",
+            "/payload/work_order_ref",
             "/payload/loader_identity_ref"
           ]
         },
@@ -30647,12 +30647,12 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/epochs",
             "/payload/destination_contract_refs",
+            "/payload/epochs",
             "/payload/purpose_ids",
-            "/payload/work_order_ref",
+            "/payload/closure_snapshot_ref",
             "/payload/source_refs",
-            "/payload/closure_snapshot_ref"
+            "/payload/work_order_ref"
           ]
         },
         {
@@ -30667,10 +30667,10 @@
             "arg": "subject_ref"
           },
           "edge_fields": [
-            "/payload/work_order_ref",
-            "/payload/source_refs",
+            "/payload/closure_snapshot_ref",
             "/payload/destination_contract_refs",
-            "/payload/closure_snapshot_ref"
+            "/payload/source_refs",
+            "/payload/work_order_ref"
           ]
         },
         {
@@ -31430,8 +31430,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/source_custodian_ref",
-            "/payload/proposed_assignment_ref"
+            "/payload/proposed_assignment_ref",
+            "/payload/source_custodian_ref"
           ]
         },
         {
@@ -31441,7 +31441,7 @@
           },
           "bindings": [
             {
-              "field_path": "/payload/source_custodian_ref",
+              "field_path": "/payload/proposed_assignment_ref",
               "states": [
                 "accepted"
               ],
@@ -32090,8 +32090,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/source_custodian_ref",
-            "/payload/proposed_assignment_ref"
+            "/payload/proposed_assignment_ref",
+            "/payload/source_custodian_ref"
           ]
         },
         {
@@ -32109,7 +32109,7 @@
           },
           "bindings": [
             {
-              "field_path": "/payload/source_custodian_ref",
+              "field_path": "/payload/proposed_assignment_ref",
               "states": [
                 "accepted"
               ],
@@ -32261,8 +32261,8 @@
           "field_paths": [
             "/payload/blocked_dependency_refs",
             "/payload/evidence_refs",
-            "/payload/source_custodian_ref",
-            "/payload/proposed_assignment_ref"
+            "/payload/proposed_assignment_ref",
+            "/payload/source_custodian_ref"
           ]
         },
         {
@@ -32549,10 +32549,10 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/unfinished_work_refs",
             "/payload/unfinished_obligation_refs",
-            "/payload/source_custodian_ref",
+            "/payload/unfinished_work_refs",
             "/payload/proposed_assignment_ref",
+            "/payload/source_custodian_ref",
             "/payload/next_actions"
           ]
         },
@@ -36012,9 +36012,9 @@
           },
           "field_paths": [
             "/owner_assignment_ref",
+            "/payload/options",
             "/payload/question",
-            "/payload/subject_refs",
-            "/payload/options"
+            "/payload/subject_refs"
           ]
         },
         {
@@ -36038,7 +36038,7 @@
             "arg": "subject_ref"
           },
           "start_path": "/effective_from",
-          "end_path": "/payload/latest_decision_at"
+          "end_path": "/payload/expires_at"
         },
         {
           "op": "nonempty",
@@ -36181,8 +36181,8 @@
           "field_paths": [
             "/payload/contrary_refs",
             "/owner_assignment_ref",
-            "/payload/latest_decision_at",
-            "/payload/expires_at"
+            "/payload/expires_at",
+            "/payload/latest_decision_at"
           ]
         },
         {
@@ -36345,9 +36345,9 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/options",
             "/payload/question",
             "/payload/subject_refs",
-            "/payload/options",
             "/owner_assignment_ref",
             "/payload/no_answer_rule_ref"
           ]
@@ -36458,8 +36458,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/latest_decision_at",
-            "/payload/expires_at"
+            "/payload/expires_at",
+            "/payload/latest_decision_at"
           ]
         },
         {
@@ -36470,7 +36470,7 @@
               "arg": "subject_ref"
             },
             "start_path": "/effective_from",
-            "end_path": "/payload/latest_decision_at"
+            "end_path": "/payload/expires_at"
           }
         },
         {
@@ -36620,9 +36620,9 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/options",
             "/payload/question",
             "/payload/subject_refs",
-            "/payload/options",
             "/payload/no_answer_rule_ref",
             "/owner_assignment_ref"
           ]
@@ -36633,7 +36633,7 @@
             "arg": "subject_ref"
           },
           "start_path": "/effective_from",
-          "end_path": "/payload/latest_decision_at"
+          "end_path": "/payload/expires_at"
         },
         {
           "op": "attested_result",
@@ -38999,8 +38999,8 @@
           },
           "field_paths": [
             "/payload/receipt_due",
-            "/payload/nondelegable_scopes",
-            "/payload/depth"
+            "/payload/depth",
+            "/payload/nondelegable_scopes"
           ]
         },
         {
@@ -39017,7 +39017,7 @@
               "optional": false
             },
             {
-              "field_path": "/payload/nondelegable_scopes",
+              "field_path": "/payload/depth",
               "states": [
                 "accepted"
               ],
@@ -39172,8 +39172,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/sponsor_ref",
-            "/payload/performer_ref"
+            "/payload/performer_ref",
+            "/payload/sponsor_ref"
           ]
         },
         {
@@ -39183,7 +39183,7 @@
           },
           "bindings": [
             {
-              "field_path": "/payload/sponsor_ref",
+              "field_path": "/payload/performer_ref",
               "states": [
                 "accepted"
               ],
@@ -39335,8 +39335,8 @@
           },
           "field_paths": [
             "/payload/receipt_due",
-            "/payload/parent_work_ref",
             "/payload/child_work_ref",
+            "/payload/parent_work_ref",
             "/payload/reservation_refs"
           ]
         },
@@ -39347,7 +39347,7 @@
           },
           "bindings": [
             {
-              "field_path": "/payload/parent_work_ref",
+              "field_path": "/payload/child_work_ref",
               "states": [
                 "accepted"
               ],
@@ -39661,8 +39661,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/sponsor_ref",
-            "/payload/performer_ref"
+            "/payload/performer_ref",
+            "/payload/sponsor_ref"
           ]
         },
         {
@@ -39680,7 +39680,7 @@
           },
           "bindings": [
             {
-              "field_path": "/payload/sponsor_ref",
+              "field_path": "/payload/performer_ref",
               "states": [
                 "accepted"
               ],
@@ -39830,8 +39830,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/sponsor_ref",
-            "/payload/performer_ref"
+            "/payload/performer_ref",
+            "/payload/sponsor_ref"
           ]
         },
         {
@@ -39940,8 +39940,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/nondelegable_scopes",
-            "/payload/depth"
+            "/payload/depth",
+            "/payload/nondelegable_scopes"
           ]
         },
         {
@@ -40090,8 +40090,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/sponsor_ref",
-            "/payload/performer_ref"
+            "/payload/performer_ref",
+            "/payload/sponsor_ref"
           ]
         },
         {
@@ -141737,6 +141737,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.calibration.current_for_checker",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.AcceptanceInterval.accepted.v1",
           "arguments": {
             "subject_ref": {
@@ -190519,6 +190528,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.manifest.omission_and_class_declared",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.ContextManifest.admitted.v1",
           "arguments": {
             "subject_ref": {
@@ -192776,6 +192794,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.constraint.set_bound_at_transfer",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -201092,6 +201119,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.constraint.set_bound_at_transfer",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -299932,6 +299968,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.constraint.set_bound_at_transfer",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.OperatorProjection.current.v1",
           "arguments": {
             "subject_ref": {
@@ -300400,6 +300445,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.constraint.set_bound_at_transfer",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.OperatorProjection.current.v1",
           "arguments": {
             "subject_ref": {
@@ -300864,6 +300918,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.constraint.set_bound_at_transfer",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -394920,6 +394983,78 @@
       "additionalProperties": false
     }
   },
+  "guard.calibration.current_for_checker": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<AcceptanceInterval>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/calibration_ref"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/calibration_ref",
+              "states": [
+                "run"
+              ],
+              "optional": false
+            }
+          ]
+        }
+      ]
+    },
+    "meaning": "An acceptance names the calibration of the instrument that produced its verdict, and that calibration currently stands at `run` -- not `scheduled`, which has no refusal rate on correct artifacts yet, and not `superseded`, which is no longer current. A verdict from an uncalibrated instrument is `unresolved` and may not satisfy this gate (F6B-03).",
+    "owner_component": "S1-C06",
+    "source": "06-knowledge-evidence-evaluation.md#7-instruments-and-calibration",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "AcceptanceInterval"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
   "guard.check.reads_only_non_authorable_fields": {
     "version": "1.0",
     "argument_types": {
@@ -395246,6 +395381,265 @@
               "type": "string",
               "enum": [
                 "ConsequenceDerivation"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "guard.constraint.set_bound_at_transfer": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<Record>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/constraint_set_ref"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/constraint_set_ref",
+              "states": [
+                "issued"
+              ],
+              "optional": false
+            }
+          ]
+        }
+      ]
+    },
+    "meaning": "Every transfer the fixtures name carries a typed constraint set that currently stands at `issued` -- including the continuation and the founder-facing brief, not only machine-to-machine handoffs (R-X27, F6B-02).",
+    "owner_component": "S1-C05",
+    "source": "05-work-agents-skills.md#5-acceptance-and-delegation",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "AcceptanceInterval",
+                "AccessDescendant",
+                "AccessGraph",
+                "AccessPolicy",
+                "Account",
+                "AccountReconstruction",
+                "AdapterProfile",
+                "AdmissionRecord",
+                "AgentInstance",
+                "AgentTemplate",
+                "ArmedSet",
+                "ArtifactVersion",
+                "AttemptReport",
+                "BackupPolicy",
+                "BillingProfile",
+                "Blocker",
+                "BrandGuide",
+                "BuildArtifact",
+                "BusinessAccount",
+                "Campaign",
+                "CandidateAssessment",
+                "CapacityObservation",
+                "CapacityStudy",
+                "Case",
+                "CasePool",
+                "CashPosition",
+                "CausalEpisode",
+                "ChangeWatch",
+                "Claim",
+                "ClosurePlan",
+                "Commitment",
+                "ConfigurationVersion",
+                "ConflictClaim",
+                "ConsequenceClassDefinition",
+                "ConsequenceDerivation",
+                "Constraint",
+                "ConstraintSet",
+                "ContentAsset",
+                "ContextManifest",
+                "ContextTransformation",
+                "Continuation",
+                "ContinuityArrangement",
+                "ContradictionSet",
+                "Conversation",
+                "DecisionChallenge",
+                "DecisionPacket",
+                "DecisionRecord",
+                "Defect",
+                "Delegation",
+                "DeletionReceipt",
+                "DeletionScope",
+                "DeliveryCapacity",
+                "DependencyClosure",
+                "Deployment",
+                "DisclosureContract",
+                "DomainAssessment",
+                "DomainAuthorityBinding",
+                "DomainEvent",
+                "DurabilityReceipt",
+                "Economics",
+                "EffectIdentity",
+                "EvaluationCase",
+                "EvaluationPlan",
+                "EvaluationRun",
+                "EvaluationTrial",
+                "EvaluatorProfile",
+                "EvidenceBaseVersion",
+                "EvidenceJudgment",
+                "ExecutionCapacity",
+                "ExecutionSelection",
+                "ExistenceJustification",
+                "ExperienceArtifact",
+                "Experiment",
+                "ExternalAttempt",
+                "FailureRecord",
+                "FieldAuthority",
+                "ForgetRequest",
+                "FormationReadiness",
+                "Fulfillment",
+                "GenerationSeal",
+                "Goal",
+                "Grant",
+                "GrantDeliveryReceipt",
+                "GrievanceCase",
+                "HandoffAcceptance",
+                "HumanResponse",
+                "IdentityBinding",
+                "ImprovementProposal",
+                "Incident",
+                "IndexSnapshot",
+                "InstructionBundle",
+                "InstrumentCalibration",
+                "IntegrationConnection",
+                "IntegrationInvocation",
+                "IntegrationObservation",
+                "IntentVersion",
+                "InteractionDetermination",
+                "InterventionRequest",
+                "JournalBatch",
+                "KeyManifest",
+                "KnowledgeEntry",
+                "KnowledgeQuestion",
+                "LaunchReadiness",
+                "LearningProposal",
+                "LifecycleStatus",
+                "Mandate",
+                "MarketBrief",
+                "MessageAcknowledgment",
+                "MetricDefinition",
+                "MetricSeries",
+                "MigrationPlan",
+                "Mission",
+                "Obligation",
+                "Observation",
+                "ObservationSet",
+                "Offer",
+                "OperationIntent",
+                "OperationStatus",
+                "OperationalAdmission",
+                "OperatorProjection",
+                "Opportunity",
+                "ParameterAuthority",
+                "ParticipationEncounter",
+                "ParticipationPlan",
+                "Partnership",
+                "PausePlan",
+                "PivotPlan",
+                "PrerequisiteSnapshot",
+                "PriceProposal",
+                "Principal",
+                "Principle",
+                "ProcessingUse",
+                "ProductSpec",
+                "ProfessionalDetermination",
+                "ProfessionalRequest",
+                "Project",
+                "ProjectionGrant",
+                "ProtectedChange",
+                "ReasonRecord",
+                "ReasoningPlan",
+                "RecoveryEnvelope",
+                "RecoveryPacket",
+                "RegistryMembership",
+                "Release",
+                "ReleaseManifest",
+                "ResearchPlan",
+                "Reservation",
+                "ResourceAccount",
+                "ResponseDecision",
+                "ResponsibilityAssignment",
+                "RetentionPolicy",
+                "RetrievalAttempt",
+                "RetrievalProfile",
+                "RetryContract",
+                "Review",
+                "RollbackPlan",
+                "RolloutPlan",
+                "RuntimeProfile",
+                "SalesAgreement",
+                "Schedule",
+                "ScheduleOccurrence",
+                "ScopeRegistry",
+                "SecurityCase",
+                "SemanticMappingVersion",
+                "SendClaim",
+                "ShedDecision",
+                "SkillSelection",
+                "SkillVersion",
+                "SourceCursor",
+                "SourceRecord",
+                "StandingHolder",
+                "StandingInterest",
+                "StepExecution",
+                "SummaryLoss",
+                "SupplierEngagement",
+                "SupportCase",
+                "Suppression",
+                "TransferPlan",
+                "UnmatchedPoolEntry",
+                "ValidityEpoch",
+                "Venture",
+                "WorkDependency",
+                "WorkMessage",
+                "WorkOrder",
+                "WorkflowDefinition",
+                "WorkflowRun",
+                "WorkspaceAssignment",
+                "Workstream"
               ]
             },
             "revision": {
@@ -396895,6 +397289,120 @@
               "type": "string",
               "enum": [
                 "SkillVersion"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "guard.manifest.omission_and_class_declared": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<ContextManifest>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "present",
+          "value": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/dropped_constraints"
+          }
+        },
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/assembled_for_class",
+            "/payload/item_trust_levels",
+            "/payload/captured_inputs"
+          ]
+        },
+        {
+          "op": "unique",
+          "items": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/assembled_for_class"
+          }
+        },
+        {
+          "op": "eq",
+          "left": {
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/item_trust_levels"
+            }
+          },
+          "right": {
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/captured_inputs"
+            }
+          }
+        }
+      ]
+    },
+    "meaning": "The manifest records which typed constraints were DROPPED -- present even when nothing was -- names the reached class set it was assembled for as a duplicate-free set, and carries one trust level per delivered item rather than an unindexed list (R-D14, F6B-01).",
+    "owner_component": "S1-C05",
+    "source": "06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "ContextManifest"
               ]
             },
             "revision": {

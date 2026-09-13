@@ -6966,7 +6966,7 @@
           },
           "constraint_set_ref": {
             "type": "Ref<ConstraintSet>",
-            "required": false,
+            "required": true,
             "added_by": "WORK-1.1",
             "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
           }
@@ -45676,21 +45676,21 @@
         "fields": {
           "item_trust_levels": {
             "type": "string[]",
-            "required": false,
+            "required": true,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "F6B-01. Required, and joined by count to `captured_inputs` by guard.manifest.omission_and_class_declared, because 06 section 2 says the PER-ITEM part is the load-bearing part and the field was an unindexed list of strings."
           },
           "dropped_constraints": {
             "type": "string[]",
-            "required": false,
+            "required": true,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "F6B-01. Required. 06 section 2 calls it \"the operative reading of what was omitted for a boundary crossing\", and it was optional and named by zero predicates. R2 F-04 measures boundary metadata surviving at ~0.57 against ~0.97 for facts, which is why a generic omissions list averages the two away and this field is the one that binds."
           },
           "assembled_for_class": {
             "type": "string",
-            "required": false,
+            "required": true,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "F6B-01. Required. Without it a manifest built for a low-class action is silently reusable for a higher-class one, which is the reuse 06 section 2 adds the field to stop. Its only appearance outside the schema was inside a benign fixture that inserts a presence check and discards it when the run ends."
           },
           "declared_read_set": {
             "type": "JsonPointer[]",
@@ -47907,7 +47907,15 @@
           "blocked_dependency_refs",
           "remaining_reservation_refs"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "constraint_set_ref": {
+            "type": "Ref<ConstraintSet>",
+            "required": true,
+            "added_by": "WORK-1.1-F6B",
+            "note": "F6B-02. R-X27: a constraint set is required on EVERY transfer the fixtures name, including the continuation. `Continuation` is the carrier for fixture F-5, the capacity-reset handoff, and it carried no typed constraint set at all -- so the 0.57 boundary-metadata survival rate applied to exactly the material that fixture plants."
+          }
+        }
       }
     },
     "lifecycle": {
@@ -68394,7 +68402,15 @@
           "no_answer_rule_ref",
           "continuing_work_refs"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "constraint_set_ref": {
+            "type": "Ref<ConstraintSet>",
+            "required": true,
+            "added_by": "WORK-1.1-F6B",
+            "note": "F6B-02. The founder-facing transfer. G-05 is \"no candidate types the founder-facing transfer except M3\", and the amendment answered it in prose in two chapters and in no record. The one reader whose errors are uncorrelated with the model family's was on the untyped side of the boundary."
+          }
+        }
       }
     },
     "lifecycle": {
@@ -71180,7 +71196,15 @@
           "omission_manifest_ref",
           "selection_version_ref"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "constraint_set_ref": {
+            "type": "Ref<ConstraintSet>",
+            "required": true,
+            "added_by": "WORK-1.1-F6B",
+            "note": "F6B-02. The other operator-facing carrier. `omission_manifest_ref` was already required here and is credited; a constraint set is the half that says what may not be done with what was rendered."
+          }
+        }
       }
     },
     "lifecycle": {
@@ -79014,6 +79038,12 @@
           "resolution_reason": {
             "type": "string",
             "required": false
+          },
+          "calibration_ref": {
+            "type": "Ref<InstrumentCalibration>",
+            "required": true,
+            "added_by": "WORK-1.1-F6B",
+            "note": "F6B-03. 06 section 7: a verdict from an instrument whose refusal rate on clean cases is unrecorded is `unresolved` and MAY NOT SATISFY AN ACCEPTANCE GATE. No record related to InstrumentCalibration at all, so the clause naming the attachment point was the one clause with no attachment, and an acceptance could commit on a checker with no calibration in `run` -- the state every checker is in before its first calibration session."
           }
         }
       }

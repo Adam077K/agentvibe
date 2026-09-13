@@ -1971,6 +1971,116 @@
           "why": "and the first claimant already released or was observed, so there is an outcome to inherit. A claim cannot invent one, which is the difference between joining and re-releasing."
         }
       ]
+    },
+    {
+      "predicate_id": "guard.manifest.omission_and_class_declared",
+      "kind": "guard",
+      "findings": [
+        "F6B-01"
+      ],
+      "decisions": [
+        "R-D14"
+      ],
+      "why": "06 section 2 states three requirements and this pin is all three. `present` rather than `nonempty` on `dropped_constraints` is deliberate and is the same choice pin 51 makes for a closure walk: a manifest that dropped nothing must record that it dropped nothing, and an absent list and an empty one are different facts. `assembled_for_class` is `nonempty` because a manifest is always assembled FOR something, and `unique` because it is a class SET -- pin 34's sentence, a repeated class id is how a count-based gate check gets fooled. The count equality is the per-item join the chapter calls the load-bearing part: `item_trust_levels` was `array<string>` with no length join to `captured_inputs`, so a manifest could carry one trust level for twelve delivered items and satisfy every check.",
+      "require": [
+        {
+          "op": "present",
+          "contains_pointers": [
+            "/payload/dropped_constraints"
+          ],
+          "why": "the dropped-constraint list was computed -- present even when empty, because nothing dropped is a result and an absent list is a silence"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/assembled_for_class",
+            "/payload/item_trust_levels",
+            "/payload/captured_inputs"
+          ],
+          "why": "the class set the manifest was assembled for is named, and the two lists the join below compares are both on the record"
+        },
+        {
+          "op": "unique",
+          "contains_pointers": [
+            "/payload/assembled_for_class"
+          ],
+          "why": "the assembled-for set is a SET; a repeated class id makes a reuse check count wrong in the direction that admits the reuse"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/item_trust_levels",
+            "/payload/captured_inputs"
+          ],
+          "why": "one trust level per delivered item. 06 section 2 says the per-item part is the load-bearing part, and without this the field is an unindexed list of strings beside an unrelated list of inputs"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.constraint.set_bound_at_transfer",
+      "kind": "guard",
+      "findings": [
+        "F6B-02"
+      ],
+      "decisions": [
+        "R-X27"
+      ],
+      "why": "A transfer names its constraint set and that set currently stands at `issued`. The phase row matters as much as the presence row: `ConstraintSet` is single-phase, so `issued` is the only state a real one can be in, and a binding that accepted any phase would accept a ref to a record that was never issued at all.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/constraint_set_ref"
+          ],
+          "why": "the transfer names a constraint set rather than narrating its constraints in the body it is carrying"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/constraint_set_ref",
+              "states_exactly": [
+                "issued"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and that set resolves and stands at `issued`. `optional: false`: a transfer with no constraint set is the untyped boundary this rule exists to close"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.calibration.current_for_checker",
+      "kind": "guard",
+      "findings": [
+        "F6B-03"
+      ],
+      "decisions": [
+        "AM-01"
+      ],
+      "why": "06 section 7: a verdict from an instrument whose refusal rate on correct artifacts is unrecorded is `unresolved`, and it MAY NOT SATISFY AN ACCEPTANCE GATE. The calibration record itself is well built and is credited -- criterion.InstrumentCalibration.run.v1 requires a planted-defect detection rate AND a clean-case refusal rate AND session observations AND a protected change, so a calibration cannot reach `run` on a detection rate alone. What was missing was anything joining that record to a verdict. `run` and only `run`: `scheduled` has no refusal rate yet and `superseded` is not current.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/calibration_ref"
+          ],
+          "why": "the acceptance names the calibration of the instrument that produced its verdict"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/calibration_ref",
+              "states_exactly": [
+                "run"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and that calibration stands at `run`. This is the conjunct that makes 'unresolved, never pass' a refusal rather than a sentence"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -2348,6 +2458,51 @@
         "F6D-07"
       ],
       "why": "This edge is where `guard.protected.control_object_change_authorized` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "Continuation",
+      "from": "prepared",
+      "to": "offered",
+      "findings": [
+        "F6B-02"
+      ],
+      "why": "This edge is where `guard.constraint.set_bound_at_transfer` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "DecisionPacket",
+      "from": "ready",
+      "to": "presented",
+      "findings": [
+        "F6B-02"
+      ],
+      "why": "This edge is where `guard.constraint.set_bound_at_transfer` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "OperatorProjection",
+      "from": "incomplete",
+      "to": "current",
+      "findings": [
+        "F6B-02"
+      ],
+      "why": "This edge is where `guard.constraint.set_bound_at_transfer` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "OperatorProjection",
+      "from": "stale",
+      "to": "current",
+      "findings": [
+        "F6B-02"
+      ],
+      "why": "This edge is where `guard.constraint.set_bound_at_transfer` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "OperatorProjection",
+      "from": "unknown",
+      "to": "current",
+      "findings": [
+        "F6B-02"
+      ],
+      "why": "This edge is where `guard.constraint.set_bound_at_transfer` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
     }
   ],
   "requires_waivers_why": "RC-03. `requires` and `conjuncts` are independent fields of one spec and nothing compared them, so a criterion could state one requirement and demand another -- which is what the weakened derivation produced: the sentence still promised delivery over a body that had stopped asking for it. Measured before any waiver: 774 criteria examined, 0 failing the field-path rule, 17 failing the phase-name rule, every one of the 17 a phase-kind synonym for the criterion's OWN phase. Each waiver below names the exact tokens it excuses, so a new unmatched phase on a waived criterion still fails. SCOPE, stated because the rule's name promises more than the rule does (RC2-03). What is compared is a FORMATTING-DEPENDENT SUBSET of the sentence: backticked lowercase tokens (PROSE_TOKEN) and field paths that are either backticked or written literally as /payload/... (PROSE_PATH). English nouns are not compared to conjuncts, and most of what these sentences are made of is English nouns. Removing three pairs of backticks leaves a sentence promising a reader exactly the same thing and invisible to the rule -- the recheck measured that, and the run went from stopping at RC-03 in 19 seconds to passing it and failing 640 seconds later for an unrelated reason. LIVE POPULATION, re-derived on the committed corpus with the disjunction-aware walker: 774 criteria examined; 0 of them (0.0%) name a field path in `requires`, so the PATHS rule -- the half RC-03's required contract actually named -- has an applicable population of ZERO and contributes no live assertion; 19 (2.5%) name a backticked phase of a related record, 22 tokens in all; 17 of those 19 rely on a waiver below, and all 17 waivers are in use; the remaining 5 tokens across 2 criteria (criterion.SalesAgreement.performed.v1: `delivered`, `discharged`, `transferred`; criterion.GrievanceCase.remedy_authorized.v1: `held`, `partly_consumed`) are bound by a conjunct and are the whole of the rule's live force. THE NARROW SCOPE IS THE ACCEPTED LIMIT, and the alternative was measured rather than argued. Widening the phase rule to unbackticked tokens of related records' phase vocabulary produces 425 findings across 266 of the 774 criteria (34%), over 62 distinct tokens -- case-sensitive, and already excluding every token a conjunct binds or a waiver excuses. The vocabulary is ordinary English past participles used as verbs: `recorded` 104 (\"the subject's own declared identity/scope fields are recorded\"), `required` 43 (\"no judgment is required\"), `current` 37, `admitted` 34, `assigned` 30 (\"a custodian is assigned\"). A waiver list of that size is not a waiver list, it is a second corpus, and a rule that demands one teaches contributors to route around the checker. So the rule keeps its scope, the number is written down here rather than left to be rediscovered, and what is added instead is the control the live half never had: fixtures/negative/r14-requires-names-a-related-phase-no-conjunct-binds. Until it, the only RC-03 fixture exercised the half with zero population. The cure for the formatting dependency is upstream and is not a checker change. A criterion's `requires` sentence and its conjuncts are written by one author in one entry of tools/phase_content.py, so what makes the rule reach is the author backticking the phases the sentence promises. That is a CONVENTION, nothing enforces it, and this sentence exists so that nobody reads the rule's name as though something did.",
@@ -2527,6 +2682,16 @@
       "why": "Detached, a model-authored typed value selects between acceptance strengths -- R-X19 and AS-M3-01 -- and the producing side picks how hard its own work will be checked."
     },
     {
+      "guard": "guard.calibration.current_for_checker",
+      "edges": [
+        "edge.AcceptanceInterval.in_acceptance.accepted.v1"
+      ],
+      "findings": [
+        "F6B-03"
+      ],
+      "why": "F6B-03. Detached, an acceptance commits on a checker with no calibration in `run` at all -- which is the state EVERY checker is in before its first calibration session, so the rule would be unenforced exactly when it matters most. No record in the registry related to `InstrumentCalibration`: the clause naming the attachment point was the one clause with no attachment."
+    },
+    {
       "guard": "guard.check.reads_only_non_authorable_fields",
       "edges": [
         "edge.StandingInterest.trial.admitted.v1"
@@ -2565,6 +2730,20 @@
         "F6D-01"
       ],
       "why": "Detached, the gate set may cover a proper subset of the reached set and the derivation still advances. This is the positive half of the same finding: no rank, AND every reached class gated."
+    },
+    {
+      "guard": "guard.constraint.set_bound_at_transfer",
+      "edges": [
+        "edge.Continuation.prepared.offered.v1",
+        "edge.DecisionPacket.ready.presented.v1",
+        "edge.OperatorProjection.incomplete.current.v1",
+        "edge.OperatorProjection.stale.current.v1",
+        "edge.OperatorProjection.unknown.current.v1"
+      ],
+      "findings": [
+        "F6B-02"
+      ],
+      "why": "F6B-02. Five edges over three carriers. `constraint_set_ref` occurred TWICE in the whole schema and on exactly one record, `Delegation`, where it was not required -- so R-X27's rule that a constraint set is required on every transfer the fixtures name, INCLUDING the continuation and the founder-facing brief, bound one boundary out of six and optionally there. Detached from the OperatorProjection edges in particular, the founder is back on the untyped side of the boundary, which is uniform gap G-05 and AX-M1-01."
     },
     {
       "guard": "guard.constraint.standing_interest_writes_proposed_only",
@@ -2738,6 +2917,16 @@
         "F6D-01"
       ],
       "why": "Detached, the probe skill's arrival at the enforcement point stops being a failure, and grant REMOVAL loses the positive control that grant delivery has. With the sibling guard also detached the whole skill-grant path of R2 F-08 and R6 F7 is restored."
+    },
+    {
+      "guard": "guard.manifest.omission_and_class_declared",
+      "edges": [
+        "edge.ContextManifest.captured.admitted.v1"
+      ],
+      "findings": [
+        "F6B-01"
+      ],
+      "why": "F6B-01. Detached, two of the three fields 06 section 2 requires of a manifest are required by nothing again: `dropped_constraints` was named by 0 predicates and `assembled_for_class` by 0 in the shipped registry -- its only appearance outside the schema was inside a benign fixture that inserts a presence check and throws it away when the run ends. A field whose only requirement lives in a discarded mutation is not required."
     },
     {
       "guard": "guard.protected.control_object_change_authorized",
