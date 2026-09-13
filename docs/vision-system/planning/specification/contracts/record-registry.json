@@ -55926,7 +55926,14 @@
     },
     "source_contract": "02-authority-recovery.md#9-operationattempt-state-cancellation-retry-and-outcomes",
     "planned_module": "system/packages/authority",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F17-Q07",
+      "source_concern_text": "What does a silent success look like, and how is it distinguished from a real one?",
+      "why": "The question cannot be answered without a record that separates one attempt's transport, the provider response and the observed effect, and keeps its fencing evidence and deadline. Collapse those into one \"sent\" flag and a send with no observed effect is byte-identical to a completed one, which is the silent success the question asks about. The same record is what discovered concern D01 (a run resumes after the service forgot its idempotency key) needs to reconcile rather than blindly resend.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "OperationStatus": {
     "schema_version": "2.0",
@@ -57793,7 +57800,7 @@
       "to": "2.0 immutable content + lifecycle representation",
       "mapping": "source-field-mappings.json and FI-12 migration; historical bytes unchanged; no automatic acceptance upgrade"
     },
-    "source_contract": "02-authority-recovery.md#10-conflict-scope-and-participant-migrations--t-r1",
+    "source_contract": "02-authority-recovery.md#10-conflict-scope-and-participant-migrations-t-r1",
     "planned_module": "system/packages/authority",
     "implementation_status": "specified, not implemented; independent assessment pending"
   },
@@ -58403,7 +58410,14 @@
     },
     "source_contract": "02-authority-recovery.md#11-outbox-membership-fencing-and-restore",
     "planned_module": "system/apps/witness",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "D02",
+      "source_concern_text": "A restored backup predates revocation, deletion or completion and resurrects authority or effects.",
+      "why": "D02 is exactly the failure this record prevents: an independent witness seals the old generation's complete frontier and every issued transport window, so a restore cannot silently reinstate old authority. Without the seal the restored system has no way to state which effects were already issued and which are unknown, and the answer to D02 would be a promise rather than a checkable fact. The name is about outbox GENERATIONS, not about generated content.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "DurabilityReceipt": {
     "schema_version": "2.0",
@@ -64327,7 +64341,15 @@
     },
     "source_contract": "08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift",
     "planned_module": "system/apps/witness",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F41-Q06",
+      "source_concern_text": "How is it undone?",
+      "directive_subject": "Rollback (§8.11)",
+      "why": "Answering \"how is it undone\" honestly requires separating reverting software from reverting business history: the record carries the compensating operations, the preserved epochs, the retained holds and the remaining obligations, so that \"rolled back\" names a reconciled state rather than a label. It is also what makes F41-Q07 and F28-Q04 (\"which changes cannot be undone\") answerable, because what cannot be compensated is visible in the same place.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "AdapterProfile": {
     "schema_version": "2.0",
@@ -71372,7 +71394,16 @@
     },
     "source_contract": "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
     "planned_module": "system/packages/authority",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F46-Q05",
+      "source_concern_text": "Is there a difference between approving and merely not objecting?",
+      "directive_subject": null,
+      "naming_hazard": "The name reads like directive §8.11's \"Disagreement\" and it is NOT that. This is a one-use authentication challenge bound to a DecisionPacket, an action digest and expected revisions, with an expiry. Filing it under Disagreement would leave §8.11's dissent subject looking covered while nothing implements it.",
+      "why": "The difference the question asks about is exactly what this record makes checkable: an approval is a positive, authenticated act on the exact packet and action digest, before expiry, replayable only to the original result. Silence produces no challenge response, and a stale approval cannot be replayed onto a changed subject — so \"merely not objecting\" cannot be recorded as approval.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "Account": {
     "schema_version": "2.0",
@@ -73232,7 +73263,15 @@
     },
     "source_contract": "01-contract-kernel.md#31-directive-subject-bindings-and-reference-identity",
     "planned_module": "system/packages/company",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "VISION-09",
+      "source_concern_text": "nondelegable wanting and promises, relationships and taste",
+      "directive_subject": "Principle (§8.11)",
+      "why": "VISION-09 holds that wanting, promising and taste are not delegable to the system. A Principle record is how that survives contact with software: an owner-endorsed statement with concrete hard-decision examples, a named amendment authority and a review date, so the system may expose a contradiction with a principle and may never rewrite the principle. Directive §8.11 names Principle as a required schema subject; this is what it is FOR.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "Commitment": {
     "schema_version": "2.0",
@@ -74566,7 +74605,15 @@
     },
     "source_contract": "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
     "planned_module": "system/packages/authority",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F26-Q09",
+      "source_concern_text": "Who can see what, and is that logged?",
+      "directive_subject": "Permission (§8.11)",
+      "why": "The question demands an answer per reader, purpose, field and destination, bound to live epochs rather than to a role name — and its load-bearing half is the invariant that an empty scope does not authorise a universal read. Every record in the registry carries access_policy_ref for this reason: without the record the answer to F26-Q09 would be a convention, not a check.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "RetentionPolicy": {
     "schema_version": "2.0",
@@ -74895,7 +74942,14 @@
     },
     "source_contract": "06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting",
     "planned_module": "system/packages/company",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F26-Q03",
+      "source_concern_text": "How long is it kept, and what causes it to be deleted?",
+      "why": "Answering it requires a per-field, per-copy-class purpose, deadline and competent determination — \"no universal sector period invented\" is the record's own binding. A single retention number on the company would answer the question falsely, because the copy classes (wal, replica, index, backup, export, provider copy) do not expire together.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "DeletionReceipt": {
     "schema_version": "2.0",
@@ -75197,7 +75251,14 @@
     },
     "source_contract": "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
     "planned_module": "system/apps/witness",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F26-Q04",
+      "source_concern_text": "Is deletion real?",
+      "why": "This record is the answer's evidence: an actual observer verifies one scope, copy class and method at a stated time and preserves the limits of what was checked, and residual or unknown copies keep residual status. Without it \"deleted\" is a tombstone label, which is the exact reading F26-Q04 exists to refuse.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "DependencyClosure": {
     "schema_version": "2.0",
@@ -75902,7 +75963,15 @@
     },
     "source_contract": "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction",
     "planned_module": "system/packages/context",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "derived_control_machinery": true,
+      "derived_from_record": "AccountReconstruction",
+      "obligation": "An unfamiliar authorized reader must be able to reconstruct the consequential result and the next duty from the account — which requires enumerating the typed transitive edges at a witnessed frontier, with omissions declared rather than absent. DeletionScope carries the same obligation in the other direction: inheritance to known and late derivatives cannot be asserted without the closure that names them.",
+      "why": "It is a derived-projection record, not a business fact: nothing is decided by creating one. Its invariant — proof/source cycles and absent roots cannot supply their own evidence — is a property of the enumeration, which is why it is machinery and why no source concern names it directly. The nearest concern it serves is F35-Q09, \"how is a connection removed, and how do you know nothing still depends on it\".",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "ConfigurationVersion": {
     "schema_version": "2.0",
@@ -76241,7 +76310,15 @@
     },
     "source_contract": "01-contract-kernel.md#11-contract-evolution-scaling-and-removal",
     "planned_module": "system/packages/authority",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F41-Q08",
+      "source_concern_text": "How is the system's own configuration versioned, and can you reproduce a past result?",
+      "directive_subject": "Configuration Version (§8.11)",
+      "why": "Reproducing a past result requires the exact closed configuration variant, its schema digest and meaning version, and the protected change that admitted it — the record's invariant that a protected change \"cannot enter as a plain file edit\" is what makes the reproduction claim survivable. A configuration that is only a file on disk answers the first half of the question and silently fails the second.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "ConsequenceClassDefinition": {
     "schema_version": "2.0",
@@ -76544,7 +76621,15 @@
     },
     "source_contract": "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
     "planned_module": "system/packages/authority",
-    "implementation_status": "specified, not implemented; independent assessment pending"
+    "implementation_status": "specified, not implemented; independent assessment pending",
+    "justification": {
+      "source_concern": "F15-Q01",
+      "source_concern_text": "What is the worst thing that could plausibly happen here?",
+      "directive_subject": "Consequence Class (§8.11)",
+      "why": "Consequence classes are the vocabulary every capability contract's consequence_classes field uses, so the question of what can plausibly go worst is answered by which class an action falls in. Defining a NEW class therefore cannot be a text edit: it needs an admitted classification predicate and the gates that class requires, \"without a universal risk score or invented founder tolerance\". F16-Q01 (on what basis permission is granted — person, task, risk, reversibility) rests on the same definitions.",
+      "recorded_by": "scripts/vision-record-registry.mjs",
+      "repair_state": "G1-06 repaired, pending independent recheck"
+    }
   },
   "DomainEvent": {
     "schema_version": "2.0",

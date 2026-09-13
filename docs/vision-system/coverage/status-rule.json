@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "kind": "The rule that assigns every coverage-register status. Not a status itself.",
+  "applies_to": [
+    "coverage/questions.json",
+    "coverage/supplemental.json",
+    "coverage/discovered.json"
+  ],
+  "computed_by": "scripts/vision-coverage-registers.mjs",
+  "hand_edit": "refused — run `node scripts/vision-coverage-registers.mjs project --write`; `verify` fails on drift",
+  "allowed_statuses_source": "inputs/DIRECTIVE.md §8.24, parsed at run time",
+  "answered_means": "planning/reviews/G-acceptance-protocol.md: \"'Answered' means specified at this gate; 'implemented' requires later implementation evidence.\"",
+  "answer_field": "Each row declares which key of its answer node carries the substantive text. The two source shapes are not unified by renaming: `decision` is the authored key of the integrations-capacity-build.json and components-authority.json question records.",
+  "rules": [
+    {
+      "id": "R0-authored-judgement-preserved",
+      "status": "(the authored status, preserved)",
+      "reads": "authored",
+      "why": "The row already carries an authored §8.24 judgement that no classifier may produce — the 35 supplemental rows superseded at 12-scope-lifecycle-traceability.md#scope-decision are the live case. Running the rules over them would have relabelled all 35 from a deliberate supersession to a computed status, which is the classifier overwriting a decision."
+    },
+    {
+      "id": "R1-external-professional",
+      "status": "Requires external professional",
+      "reads": "uncertainty",
+      "why": "The row states that a qualified external human — professional, licensed practitioner, assessor, insurer — and their engagement, result, standing or fee is what remains open. The phrase must join the actor to the act; a mention of \"professional/admin/owner labor\" inside a cost list does not fire it."
+    },
+    {
+      "id": "R2-founder-or-owner-input",
+      "status": "Requires founder decision",
+      "reads": "uncertainty",
+      "why": "The row states that an input only the owner can supply — endorsement, purpose, cap, mandate, account admission, real organisational standing — is not established. It is a decision, not a measurement: no test run by this system can produce it."
+    },
+    {
+      "id": "R3-future-empirical-result",
+      "status": "Requires further evidence",
+      "reads": "uncertainty",
+      "why": "The row states that a quantity inside its own answer is not yet measured — a latency, a rate, a cost, an effect size — so the answer cannot be closed by specification alone. This is NOT the same as the implementation evidence every unimplemented contract owes: phrases of the form \"require the stated tests\" or \"remains unimplemented\" are deliberately not in this list, because they describe the gate ahead of the whole package rather than an unmeasured quantity in this answer."
+    },
+    {
+      "id": "R4-open-prerequisite",
+      "status": "Requires further evidence",
+      "reads": "residual",
+      "why": "After the package-wide gate phrases are removed (GATE_PHRASES — \"remains unimplemented\", \"require the stated tests\", \"pending independent complete-plan review\" and the rest), the uncertainty still names something this project must do or obtain before the answer can be relied on: a test to run, a catalog to build, an input not supplied. The answer is written; it is not yet good for use. This rule is why \"Answered\" is not what every row falls into: it is checked BEFORE R9, so R9 keeps only the rows whose sole open item is the gate that stands in front of the whole package."
+    },
+    {
+      "id": "R9-specified-with-planned-verification",
+      "status": "Answered",
+      "reads": "structure",
+      "why": "Positive test, not a default: the answer pointer resolves, the declared answer_field holds substantive text, and the answer node names a planned verification. \"Answered\" is the acceptance protocol's sense — specified at this gate. The row keeps its own implementation_status (\"planned-not-existing\") and answer_status (\"independent review pending\"), which is where the fact that nothing is built or accepted is carried."
+    },
+    {
+      "id": "R10-unclassified",
+      "status": "Requires further evidence",
+      "reads": "structure",
+      "why": "The row does not pass R9 and no rule read its text. It keeps the status the whole register carried before this repair. Nothing is guessed."
+    }
+  ],
+  "order": "first match wins, in the order listed",
+  "cannot_produce": [
+    "Intentionally refused",
+    "Not applicable",
+    "Unresolved but non-blocking",
+    "Superseded by a better framing"
+  ],
+  "cannot_produce_why": "Each is an authored judgement about a specific row. A classifier that emitted one would be inventing a refusal or an acceptance nobody made. They remain available to a human author, and a row carrying one would have to leave this rule set explicitly.",
+  "distribution": {
+    "questions": {
+      "Answered": 326,
+      "Requires further evidence": 142,
+      "Requires founder decision": 77,
+      "Requires external professional": 21
+    },
+    "supplemental": {
+      "Superseded by a better framing": 35,
+      "Answered": 27
+    },
+    "discovered": {
+      "Answered": 15
+    }
+  },
+  "by_rule": {
+    "questions": {
+      "R9-specified-with-planned-verification": 326,
+      "R3-future-empirical-result": 88,
+      "R2-founder-or-owner-input": 77,
+      "R4-open-prerequisite": 54,
+      "R1-external-professional": 21
+    },
+    "supplemental": {
+      "R0-authored-judgement-preserved": 35,
+      "R9-specified-with-planned-verification": 27
+    },
+    "discovered": {
+      "R9-specified-with-planned-verification": 15
+    }
+  },
+  "repair_state": "G1-02 and G1-03 repaired, pending independent recheck"
+}

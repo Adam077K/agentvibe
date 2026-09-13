@@ -12,7 +12,7 @@
       37,
       48
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/62",
     "component": [
       "S1-C04",
@@ -28,7 +28,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L08-reliability.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D02",
@@ -44,7 +46,7 @@
       28,
       31
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/63",
     "component": [
       "S1-C04",
@@ -61,7 +63,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L08-reliability.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D03",
@@ -77,7 +81,7 @@
       42,
       43
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/64",
     "component": [
       "S1-C04",
@@ -93,7 +97,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L06-evaluation.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D04",
@@ -108,7 +114,7 @@
       20,
       24
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/65",
     "component": [
       "S1-C04"
@@ -123,7 +129,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L07-security.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D05",
@@ -139,7 +147,7 @@
       45,
       48
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/66",
     "component": [
       "S1-C06"
@@ -154,7 +162,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L06-evaluation.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D06",
@@ -170,7 +180,7 @@
       46,
       51
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/67",
     "component": [
       "S1-C07",
@@ -186,7 +196,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L09-human.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D07",
@@ -201,7 +213,7 @@
       28,
       53
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/68",
     "component": [
       "S1-C07",
@@ -217,7 +229,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L02-operations.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D08",
@@ -233,7 +247,7 @@
       40,
       41
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/69",
     "component": [
       "S1-C04",
@@ -249,7 +263,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L02-operations.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D09",
@@ -266,7 +282,7 @@
       44,
       45
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/70",
     "component": [
       "S1-C01",
@@ -282,7 +298,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L05-memory.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D10",
@@ -298,7 +316,7 @@
       47,
       50
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/71",
     "component": [
       "S1-C03",
@@ -314,7 +332,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L04-engineering.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D11",
@@ -332,7 +352,7 @@
       47,
       49
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/72",
     "component": [
       "S1-C06",
@@ -348,7 +368,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L12-improvement.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D12",
@@ -364,7 +386,7 @@
       35,
       36
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/73",
     "component": [
       "S1-C03",
@@ -380,7 +402,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L10-economics.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D13",
@@ -398,7 +422,7 @@
       35,
       44
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/74",
     "component": [
       "S1-C05",
@@ -415,7 +439,9 @@
       "planning/reviews/G-acceptance-protocol.md",
       "research/L10-economics.md",
       "research/L11-governance.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D14",
@@ -434,7 +460,7 @@
       51,
       53
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/75",
     "component": [
       "S1-C07",
@@ -450,7 +476,9 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L11-governance.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   },
   {
     "id": "D15",
@@ -466,7 +494,7 @@
       44,
       49
     ],
-    "status": "Requires further evidence",
+    "status": "Answered",
     "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/76",
     "component": [
       "S1-C05",
@@ -482,6 +510,8 @@
       "planning/02-architecture-selection.md",
       "planning/reviews/G-acceptance-protocol.md",
       "research/L12-improvement.md"
-    ]
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
   }
 ]
