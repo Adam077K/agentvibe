@@ -382046,26 +382046,32 @@
           }
         },
         {
-          "op": "subset",
+          "op": "eq",
           "left": {
-            "op": "path",
-            "value": {
-              "op": "resolve",
-              "ref": {
-                "arg": "subject_ref"
-              }
-            },
-            "pointer": "/payload/gated_class_ids"
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/reached_class_ids"
+            }
           },
           "right": {
-            "op": "path",
-            "value": {
-              "op": "resolve",
-              "ref": {
-                "arg": "subject_ref"
-              }
-            },
-            "pointer": "/payload/reached_class_ids"
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/gated_class_ids"
+            }
           }
         }
       ]
@@ -382234,26 +382240,32 @@
           }
         },
         {
-          "op": "subset",
+          "op": "eq",
           "left": {
-            "op": "path",
-            "value": {
-              "op": "resolve",
-              "ref": {
-                "arg": "subject_ref"
-              }
-            },
-            "pointer": "/payload/reached_class_ids"
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/recomputed_class_ids"
+            }
           },
           "right": {
-            "op": "path",
-            "value": {
-              "op": "resolve",
-              "ref": {
-                "arg": "subject_ref"
-              }
-            },
-            "pointer": "/payload/recomputed_class_ids"
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/reached_class_ids"
+            }
           }
         }
       ]
@@ -382424,26 +382436,32 @@
           }
         },
         {
-          "op": "subset",
+          "op": "eq",
           "left": {
-            "op": "path",
-            "value": {
-              "op": "resolve",
-              "ref": {
-                "arg": "subject_ref"
-              }
-            },
-            "pointer": "/payload/delivered_read_set"
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/declared_read_set"
+            }
           },
           "right": {
-            "op": "path",
-            "value": {
-              "op": "resolve",
-              "ref": {
-                "arg": "subject_ref"
-              }
-            },
-            "pointer": "/payload/declared_read_set"
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/delivered_read_set"
+            }
           }
         }
       ]

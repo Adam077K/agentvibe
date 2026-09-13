@@ -18,6 +18,39 @@
     "fixtures/negative/r14-pinned-conjunct-disjoined-with-a-tautology: disjoins each pinned conjunct of criterion.SalesAgreement.performed.v1 with a tautology, regenerates with author_phase_content.py, and must be REJECTED naming the disjunction -- r13-derivation-weakened-then-regenerated cannot catch this, because it REMOVES the conjuncts rather than weakening them"
   ],
   "finding_sources": {
+    "AC-M1-05": "planning/F2/reviews/A-company-human.md",
+    "AC-M3-02": "planning/F2/reviews/A-company-human.md",
+    "AC-M4-02": "planning/F2/reviews/A-company-human.md",
+    "AC-M4-05": "planning/F2/reviews/A-company-human.md",
+    "AE-M2-06": "planning/F2/reviews/A-economic-capacity.md",
+    "AE-M3-01": "planning/F2/reviews/A-economic-capacity.md",
+    "AE-M4-01": "planning/F2/reviews/A-economic-capacity.md",
+    "AE-M4-03": "planning/F2/reviews/A-economic-capacity.md",
+    "AE-M4-05": "planning/F2/reviews/A-economic-capacity.md",
+    "AS-M1-01": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M2-01": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M2-02": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M3-01": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M4-02": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M4-05": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M5-01": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M5-02": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M5-03": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-M5-04": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-X-01": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-X-02": "planning/F2/reviews/A-security-adversarial.md",
+    "AS-X-04": "planning/F2/reviews/A-security-adversarial.md",
+    "AT-M1-04": "planning/F2/reviews/A-technical.md",
+    "AT-M2-03": "planning/F2/reviews/A-technical.md",
+    "AT-M3-03": "planning/F2/reviews/A-technical.md",
+    "AT-M3-04": "planning/F2/reviews/A-technical.md",
+    "AT-M4-02": "planning/F2/reviews/A-technical.md",
+    "AT-M5-04": "planning/F2/reviews/A-technical.md",
+    "AX-M1-02": "planning/F2/reviews/A-context-evidence.md",
+    "AX-M2-01": "planning/F2/reviews/A-context-evidence.md",
+    "AX-M2-04": "planning/F2/reviews/A-context-evidence.md",
+    "AX-M3-01": "planning/F2/reviews/A-context-evidence.md",
+    "AX-M4-01": "planning/F2/reviews/A-context-evidence.md",
     "G1-06b": "planning/reviews/G-01-completeness-vision-coverage.md",
     "G2-01": "planning/reviews/G-02-coherence-buildability-changeability.md",
     "G2-02": "planning/reviews/G-02-coherence-buildability-changeability.md",
@@ -65,6 +98,193 @@
     }
   ],
   "pins": [
+    {
+      "predicate_id": "criterion.DecisionPacket.ready.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-08"
+      ],
+      "decisions": [],
+      "why": "G4-08: the schema omitted `competence_requirement_ref` from `required` while this criterion demanded it, so two implementers derive different packets from one contract -- and the stricter reading destroyed the case DIRECTIVE.md §1.6 most wants preserved, a pure taste decision with no competence prerequisite to name.",
+      "require": [
+        {
+          "op": "any",
+          "contains_pointers": [
+            "/payload/taste_decision",
+            "/payload/competence_requirement_ref"
+          ],
+          "why": "the packet states its competence footing EXACTLY ONCE, as a disjunction. Collapsing it either way is the finding: demand the ref and taste decisions cannot reach `ready`; demand neither and nothing states the footing."
+        },
+        {
+          "op": "acyclic_record_graph",
+          "why": "the dependency graph over the children is acyclic -- a packet that is its own prerequisite is `ready` under any evidence rule"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.Economics.validated.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-03"
+      ],
+      "decisions": [],
+      "why": "G4-03: `external_burden_observations` is required and is an ARRAY, so the protocol's required case -- a profitable venture shifting work onto customers, applicants or contractors -- validated with `[]`. The repair makes the empty case say so explicitly and own it.",
+      "require": [
+        {
+          "op": "any",
+          "contains_pointers": [
+            "/payload/external_burden_observations",
+            "/payload/external_burden_account/finding",
+            "/payload/external_burden_account/responsible_assignment"
+          ],
+          "why": "either burden was observed, or the account states `none_observed` with a reason, a window and a responsible assignment. Deleting the second disjunct restores the silent `[]`; deleting the first makes observation unrecordable."
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/observed_cost",
+            "/payload/outstanding_cost"
+          ],
+          "why": "the money halves the burden account sits beside"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.Fulfillment.delivered.v1",
+      "kind": "criterion",
+      "findings": [
+        "G2-05"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "G2-05: delivery must be established by an independently observed result correlated to the delivery adapter's own native object, never by the payment.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/receipts",
+            "/payload/delivery_steps"
+          ],
+          "why": "the receipts the milestones require, and the milestones themselves"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/performer_assignment",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "a currently accepted performer delivered it"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013: correlation against the delivery. A settled charge is evidence about money and says nothing about whether the service arrived."
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.Fulfillment.failed.v1",
+      "kind": "criterion",
+      "findings": [
+        "RC-01"
+      ],
+      "decisions": [],
+      "why": "RC-01 removed `not(native_correlated delivered)` from this criterion because it contradicted the only edge that could reach the phase. A conjunct removed for a stated reason is one removal away from the next one having no reason at all, so what REMAINS is pinned: the failure is owned, not merely declared.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/remaining_duties",
+            "/payload/receipts",
+            "/payload/service_window"
+          ],
+          "why": "the obligations survive on the record, and the receipts actually obtained and the window are recorded -- a failure that recorded none of these would be a closure wearing the word failure"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/performer_assignment",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "CAP-30: failure creates a support/remedy duty, and a duty with no accepted performer is unowned"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.GrievanceCase.remedy_authorized.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-02"
+      ],
+      "decisions": [],
+      "why": "G4-02: `remedy_reservation_refs` was required in the payload and used by 0 predicates, and this criterion carried `nonempty_fields: []` -- so a remedy could be authorized with no reservation at all, which is what made CAP-42's funded remedy prose.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/remedy_reservation_refs"
+          ],
+          "why": "an empty reservation list is the exact shape the finding names"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/remedy_reservation_refs",
+              "states_exactly": [
+                "held",
+                "partly_consumed"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "the funding is ACTUALLY RESERVED: every entry resolves to a live Reservation. A released or expired reservation funds nothing."
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.GrievanceCase.triaged.v1",
+      "kind": "criterion",
+      "findings": [
+        "G4-01"
+      ],
+      "decisions": [],
+      "why": "G4-01: `disputed_custodian` is required on GrievanceCase and was read by 0 of 2,255 predicates. The criterion carries the two refs the guard's `neq` compares; erase them here and the comparison one layer up compares absent fields.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/custodian_assignment_ref",
+            "/payload/independent_escalation_assignment_ref"
+          ],
+          "why": "both sides of the conflict-of-interest comparison must be recorded at triage"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/custodian_assignment_ref",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "the custodian has accepted the case"
+        }
+      ]
+    },
     {
       "predicate_id": "criterion.SalesAgreement.performed.v1",
       "kind": "criterion",
@@ -152,156 +372,69 @@
       ]
     },
     {
-      "predicate_id": "criterion.Fulfillment.delivered.v1",
-      "kind": "criterion",
+      "predicate_id": "edge.AgentInstance.leased.running.v1",
+      "kind": "edge",
       "findings": [
-        "G2-05"
+        "AT-M1-04",
+        "AS-X-02"
       ],
       "decisions": [
-        "AD-013"
+        "AD-020"
       ],
-      "why": "G2-05: delivery must be established by an independently observed result correlated to the delivery adapter's own native object, never by the payment.",
+      "why": "The GrantDeliveryReceipt guarantee, pinned where it binds: an executor whose grant did not arrive fails loudly and never completes with less. It is stated on the edge that starts the executor rather than in a guard, because the thirty guard names of section 12.4 are a closed list and this guarantee is not one of them.",
       "require": [
         {
           "op": "nonempty_fields",
           "field_paths_include": [
-            "/payload/receipts",
-            "/payload/delivery_steps"
+            "/payload/grant_delivery_receipt_ref"
           ],
-          "why": "the receipts the milestones require, and the milestones themselves"
+          "why": "the receipt the enforcement point wrote is named on the instance before it runs"
         },
         {
-          "op": "related_phases",
-          "bindings": [
-            {
-              "field_path": "/payload/performer_assignment",
-              "states_exactly": [
-                "accepted"
-              ],
-              "optional": false
-            }
-          ],
-          "why": "a currently accepted performer delivered it"
-        },
-        {
-          "op": "native_correlated",
-          "result": "delivered",
-          "why": "AD-013: correlation against the delivery. A settled charge is evidence about money and says nothing about whether the service arrived."
-        }
-      ]
-    },
-    {
-      "predicate_id": "criterion.GrievanceCase.triaged.v1",
-      "kind": "criterion",
-      "findings": [
-        "G4-01"
-      ],
-      "decisions": [],
-      "why": "G4-01: `disputed_custodian` is required on GrievanceCase and was read by 0 of 2,255 predicates. The criterion carries the two refs the guard's `neq` compares; erase them here and the comparison one layer up compares absent fields.",
-      "require": [
-        {
-          "op": "nonempty_fields",
-          "field_paths_include": [
-            "/payload/custodian_assignment_ref",
-            "/payload/independent_escalation_assignment_ref"
-          ],
-          "why": "both sides of the conflict-of-interest comparison must be recorded at triage"
-        },
-        {
-          "op": "related_phases",
-          "bindings": [
-            {
-              "field_path": "/payload/custodian_assignment_ref",
-              "states_exactly": [
-                "accepted"
-              ],
-              "optional": false
-            }
-          ],
-          "why": "the custodian has accepted the case"
-        }
-      ]
-    },
-    {
-      "predicate_id": "criterion.GrievanceCase.remedy_authorized.v1",
-      "kind": "criterion",
-      "findings": [
-        "G4-02"
-      ],
-      "decisions": [],
-      "why": "G4-02: `remedy_reservation_refs` was required in the payload and used by 0 predicates, and this criterion carried `nonempty_fields: []` -- so a remedy could be authorized with no reservation at all, which is what made CAP-42's funded remedy prose.",
-      "require": [
-        {
-          "op": "nonempty_fields",
-          "field_paths_include": [
-            "/payload/remedy_reservation_refs"
-          ],
-          "why": "an empty reservation list is the exact shape the finding names"
-        },
-        {
-          "op": "related_phases",
-          "bindings": [
-            {
-              "field_path": "/payload/remedy_reservation_refs",
-              "states_exactly": [
-                "held",
-                "partly_consumed"
-              ],
-              "optional": false
-            }
-          ],
-          "why": "the funding is ACTUALLY RESERVED: every entry resolves to a live Reservation. A released or expired reservation funds nothing."
-        }
-      ]
-    },
-    {
-      "predicate_id": "criterion.Economics.validated.v1",
-      "kind": "criterion",
-      "findings": [
-        "G4-03"
-      ],
-      "decisions": [],
-      "why": "G4-03: `external_burden_observations` is required and is an ARRAY, so the protocol's required case -- a profitable venture shifting work onto customers, applicants or contractors -- validated with `[]`. The repair makes the empty case say so explicitly and own it.",
-      "require": [
-        {
-          "op": "any",
+          "op": "eq",
           "contains_pointers": [
-            "/payload/external_burden_observations",
-            "/payload/external_burden_account/finding",
-            "/payload/external_burden_account/responsible_assignment"
+            "/payload/grant_arrival_attested"
           ],
-          "why": "either burden was observed, or the account states `none_observed` with a reason, a window and a responsible assignment. Deleting the second disjunct restores the silent `[]`; deleting the first makes observation unrecordable."
-        },
-        {
-          "op": "nonempty_fields",
-          "field_paths_include": [
-            "/payload/observed_cost",
-            "/payload/outstanding_cost"
-          ],
-          "why": "the money halves the burden account sits beside"
+          "right": true,
+          "why": "and arrival was attested at the first effect. Dropping this is 'the effect proceeds with less', which is section 9's adverse row 7"
         }
       ]
     },
     {
-      "predicate_id": "criterion.DecisionPacket.ready.v1",
-      "kind": "criterion",
+      "predicate_id": "edge.Delegation.offered.accepted.v1",
+      "kind": "edge",
       "findings": [
-        "G4-08"
+        "AS-M1-01",
+        "AX-M2-01"
       ],
-      "decisions": [],
-      "why": "G4-08: the schema omitted `competence_requirement_ref` from `required` while this criterion demanded it, so two implementers derive different packets from one contract -- and the stricter reading destroyed the case DIRECTIVE.md §1.6 most wants preserved, a pure taste decision with no competence prerequisite to name.",
+      "decisions": [
+        "AD-017"
+      ],
+      "why": "R-D13 and R-X27, pinned where the boundary is crossed: a model-to-model return exists only on a declared procedure edge, delivers TYPED OUTPUTS only, and stores prose at a Ref UNDELIVERED. The typed-member rule extends to every transfer the fixtures name, including the work-order dispatch and the founder-facing brief.",
       "require": [
         {
-          "op": "any",
-          "contains_pointers": [
-            "/payload/taste_decision",
-            "/payload/competence_requirement_ref"
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/constraint_set_ref",
+            "/payload/return_payload_kind"
           ],
-          "why": "the packet states its competence footing EXACTLY ONCE, as a disjunction. Collapsing it either way is the finding: demand the ref and taste decisions cannot reach `ready`; demand neither and nothing states the footing."
+          "why": "the typed constraint set and the kind of the return are both named on the crossing"
         },
         {
-          "op": "acyclic_record_graph",
-          "why": "the dependency graph over the children is acyclic -- a packet that is its own prerequisite is `ready` under any evidence rule"
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/return_payload_kind"
+          ],
+          "right": "typed_outputs",
+          "why": "the return delivers typed outputs. This is section 9's adverse row 15: a return delivering prose"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/prose_delivery"
+          ],
+          "right": "ref_only",
+          "why": "and prose is stored at a Ref rather than delivered -- evidence, never a substitute for a member the receiver can restate as a typed value"
         }
       ]
     },
@@ -329,39 +462,6 @@
       ]
     },
     {
-      "predicate_id": "criterion.Fulfillment.failed.v1",
-      "kind": "criterion",
-      "findings": [
-        "RC-01"
-      ],
-      "decisions": [],
-      "why": "RC-01 removed `not(native_correlated delivered)` from this criterion because it contradicted the only edge that could reach the phase. A conjunct removed for a stated reason is one removal away from the next one having no reason at all, so what REMAINS is pinned: the failure is owned, not merely declared.",
-      "require": [
-        {
-          "op": "nonempty_fields",
-          "field_paths_include": [
-            "/payload/remaining_duties",
-            "/payload/receipts",
-            "/payload/service_window"
-          ],
-          "why": "the obligations survive on the record, and the receipts actually obtained and the window are recorded -- a failure that recorded none of these would be a closure wearing the word failure"
-        },
-        {
-          "op": "related_phases",
-          "bindings": [
-            {
-              "field_path": "/payload/performer_assignment",
-              "states_exactly": [
-                "accepted"
-              ],
-              "optional": false
-            }
-          ],
-          "why": "CAP-30: failure creates a support/remedy duty, and a duty with no accepted performer is unowned"
-        }
-      ]
-    },
-    {
       "predicate_id": "edge.Fulfillment.delivering.failed.v1",
       "kind": "guard",
       "findings": [
@@ -380,75 +480,6 @@
           "result": "delivered",
           "negated": true,
           "why": "NEGATED on purpose: a failure in flight requires that NO observation correlates a delivery. If this ever appears positively here the route says the opposite of what it exists to say, and a containment check blind to polarity would accept it."
-        }
-      ]
-    },
-    {
-      "predicate_id": "edge.SalesAgreement.accepted.performed.v1",
-      "kind": "guard",
-      "findings": [
-        "RC-06"
-      ],
-      "decisions": [
-        "AD-013"
-      ],
-      "why": "RC-06: the three *->performed edges were the only SalesAgreement forward edges with no authenticated-event requirement, and each correlated the sale to `performed` -- its own payment -- which is the reading AD-013 refused one layer below.",
-      "require": [
-        {
-          "op": "transition_basis",
-          "event_kind": "record.performed",
-          "why": "performance needs an authenticated attributable event, as every closure edge already required"
-        },
-        {
-          "op": "native_correlated",
-          "result": "delivered",
-          "why": "AD-013 at the guard layer: the correlated native object is the DELIVERY, never the charge"
-        }
-      ]
-    },
-    {
-      "predicate_id": "edge.SalesAgreement.partially-performed.performed.v1",
-      "kind": "guard",
-      "findings": [
-        "RC-06"
-      ],
-      "decisions": [
-        "AD-013"
-      ],
-      "why": "RC-06, second of the three *->performed edges.",
-      "require": [
-        {
-          "op": "transition_basis",
-          "event_kind": "record.performed",
-          "why": "performance needs an authenticated attributable event"
-        },
-        {
-          "op": "native_correlated",
-          "result": "delivered",
-          "why": "AD-013: correlate to the delivery, not to the payment"
-        }
-      ]
-    },
-    {
-      "predicate_id": "edge.SalesAgreement.disputed.performed.v1",
-      "kind": "guard",
-      "findings": [
-        "RC-06"
-      ],
-      "decisions": [
-        "AD-013"
-      ],
-      "why": "RC-06, third of the three *->performed edges -- and the one that matters most, because it is the route out of a dispute.",
-      "require": [
-        {
-          "op": "transition_basis",
-          "event_kind": "record.performed",
-          "why": "performance needs an authenticated attributable event"
-        },
-        {
-          "op": "native_correlated",
-          "result": "delivered",
-          "why": "AD-013: correlate to the delivery, not to the payment"
         }
       ]
     },
@@ -477,6 +508,21 @@
           "why": "where the custodian is the one complained about, the escalation assignment must DIFFER from the custodian assignment -- and the comparison must be between those two refs, not between either of them and something else",
           "disjoined": true,
           "disjoined_why": "The other branch of the same `any`. On `disputed_custodian: false` there are no two assignments to compare, and a guard that demanded the comparison unconditionally would refuse every undisputed triage -- which is a different requirement from the one G4-01 recorded."
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.ProtectedChange.staged.activated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-07"
+      ],
+      "decisions": [],
+      "why": "G2-07: all 173 records carry `owner_component` and no predicate read it, so a component could be removed with its records left unowned.",
+      "require": [
+        {
+          "op": "component_custody_transferred",
+          "why": "removal of a component must require an accepted successor owner for the records it holds"
         }
       ]
     },
@@ -519,35 +565,25 @@
       ]
     },
     {
-      "predicate_id": "edge.ProtectedChange.staged.activated.v1",
+      "predicate_id": "edge.SalesAgreement.accepted.performed.v1",
       "kind": "guard",
       "findings": [
-        "G2-07"
-      ],
-      "decisions": [],
-      "why": "G2-07: all 173 records carry `owner_component` and no predicate read it, so a component could be removed with its records left unowned.",
-      "require": [
-        {
-          "op": "component_custody_transferred",
-          "why": "removal of a component must require an accepted successor owner for the records it holds"
-        }
-      ]
-    },
-    {
-      "predicate_id": "edge.SalesAgreement.proposed.terminated.v1",
-      "kind": "guard",
-      "findings": [
-        "G2-02"
+        "RC-06"
       ],
       "decisions": [
-        "AD-014"
+        "AD-013"
       ],
-      "why": "G2-02/AD-014: terminating a sales agreement is a closure event and must compute the transitive due set.",
+      "why": "RC-06: the three *->performed edges were the only SalesAgreement forward edges with no authenticated-event requirement, and each correlated the sale to `performed` -- its own payment -- which is the reading AD-013 refused one layer below.",
       "require": [
         {
-          "op": "due_preserved",
-          "target_state": "terminated",
-          "why": "closure requires discharged/not_arisen/transferred; `due_preserved`'s semantics branch on target_state, so the state named here is the discriminator between the two terminal routes"
+          "op": "transition_basis",
+          "event_kind": "record.performed",
+          "why": "performance needs an authenticated attributable event, as every closure edge already required"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013 at the guard layer: the correlated native object is the DELIVERY, never the charge"
         }
       ]
     },
@@ -570,7 +606,7 @@
       ]
     },
     {
-      "predicate_id": "edge.SalesAgreement.partially-performed.terminated.v1",
+      "predicate_id": "edge.SalesAgreement.accepted.terminated_with_residuals.v1",
       "kind": "guard",
       "findings": [
         "G2-02"
@@ -578,12 +614,35 @@
       "decisions": [
         "AD-014"
       ],
-      "why": "G2-02/AD-014: terminating a sales agreement is a closure event and must compute the transitive due set.",
+      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
       "require": [
         {
           "op": "due_preserved",
-          "target_state": "terminated",
-          "why": "closure requires discharged/not_arisen/transferred for every reachable duty"
+          "target_state": "terminated_with_residuals",
+          "why": "the residual branch retains the exact unresolved inventory"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.disputed.performed.v1",
+      "kind": "guard",
+      "findings": [
+        "RC-06"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "RC-06, third of the three *->performed edges -- and the one that matters most, because it is the route out of a dispute.",
+      "require": [
+        {
+          "op": "transition_basis",
+          "event_kind": "record.performed",
+          "why": "performance needs an authenticated attributable event"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013: correlate to the delivery, not to the payment"
         }
       ]
     },
@@ -602,6 +661,119 @@
           "op": "due_preserved",
           "target_state": "terminated",
           "why": "the conjunct that refuses that counterexample, by name"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.disputed.terminated_with_residuals.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: this is the route the refused counterexample is told to take instead, so it is the one that must actually hold the duties it inherits.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated_with_residuals",
+          "why": "the available route must preserve what the refused route would have dropped"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.partially-performed.performed.v1",
+      "kind": "guard",
+      "findings": [
+        "RC-06"
+      ],
+      "decisions": [
+        "AD-013"
+      ],
+      "why": "RC-06, second of the three *->performed edges.",
+      "require": [
+        {
+          "op": "transition_basis",
+          "event_kind": "record.performed",
+          "why": "performance needs an authenticated attributable event"
+        },
+        {
+          "op": "native_correlated",
+          "result": "delivered",
+          "why": "AD-013: correlate to the delivery, not to the payment"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.partially-performed.terminated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: terminating a sales agreement is a closure event and must compute the transitive due set.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated",
+          "why": "closure requires discharged/not_arisen/transferred for every reachable duty"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.partially-performed.terminated_with_residuals.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated_with_residuals",
+          "why": "the residual branch retains the exact unresolved inventory"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.proposed.terminated.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: terminating a sales agreement is a closure event and must compute the transitive due set.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated",
+          "why": "closure requires discharged/not_arisen/transferred; `due_preserved`'s semantics branch on target_state, so the state named here is the discriminator between the two terminal routes"
+        }
+      ]
+    },
+    {
+      "predicate_id": "edge.SalesAgreement.proposed.terminated_with_residuals.v1",
+      "kind": "guard",
+      "findings": [
+        "G2-02"
+      ],
+      "decisions": [
+        "AD-014"
+      ],
+      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "require": [
+        {
+          "op": "due_preserved",
+          "target_state": "terminated_with_residuals",
+          "why": "the residual branch retains the exact unresolved inventory; target_state is what selects that reading"
         }
       ]
     },
@@ -625,74 +797,974 @@
       ]
     },
     {
-      "predicate_id": "edge.SalesAgreement.proposed.terminated_with_residuals.v1",
+      "predicate_id": "guard.acceptance.resolution_reason_present",
       "kind": "guard",
       "findings": [
-        "G2-02"
+        "AC-M4-05",
+        "AT-M2-03"
       ],
       "decisions": [
-        "AD-014"
+        "AD-018"
       ],
-      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "why": "The writer guard on the terminal acceptance edge. Producer-declared completion is not acceptance, and an acceptance with no resolution reason is an interval that timed out wearing a decision's name.",
       "require": [
         {
-          "op": "due_preserved",
-          "target_state": "terminated_with_residuals",
-          "why": "the residual branch retains the exact unresolved inventory; target_state is what selects that reading"
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/resolution_reason",
+            "/payload/acceptance_owner_ref"
+          ],
+          "why": "the reason and the owner who wrote it are both on the record"
+        },
+        {
+          "op": "nonempty",
+          "contains_pointers": [
+            "/payload/resolution_reason"
+          ],
+          "why": "the reason is non-empty as a value, not merely present as a key"
+        },
+        {
+          "op": "neq",
+          "contains_pointers": [
+            "/payload/resolution_reason"
+          ],
+          "right": "",
+          "why": "and it is not the empty string. Two rows for one requirement because `present`, `nonempty` and `!= \"\"` fail on three different shapes of the same evasion"
         }
       ]
     },
     {
-      "predicate_id": "edge.SalesAgreement.accepted.terminated_with_residuals.v1",
+      "predicate_id": "guard.admission.acceptance_role_staffed",
       "kind": "guard",
       "findings": [
-        "G2-02"
+        "AC-M3-02",
+        "AC-M4-02",
+        "AE-M4-05",
+        "AT-M2-03"
       ],
       "decisions": [
-        "AD-014"
+        "AD-021"
       ],
-      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "why": "R-X09 and R-D09: every acceptance-owner role is a record, and admission in that duty class STOPS while it is unfilled. The mechanism is closed here; who is staffed is the founder's (MD-02).",
       "require": [
         {
-          "op": "due_preserved",
-          "target_state": "terminated_with_residuals",
-          "why": "the residual branch retains the exact unresolved inventory"
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/duty_class_id",
+            "/payload/acceptance_holder_ref"
+          ],
+          "why": "the duty class and the holder that accepts in it are both named on the admission"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/acceptance_holder_ref",
+              "states_exactly": [
+                "staffed"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "that holder is CURRENTLY `staffed`. `optional: true` here would readmit the whole finding with the field simply absent, which is what admission-narrowing exists to refuse"
         }
       ]
     },
     {
-      "predicate_id": "edge.SalesAgreement.partially-performed.terminated_with_residuals.v1",
+      "predicate_id": "guard.admission.refusal_names_failed_predicate",
       "kind": "guard",
       "findings": [
-        "G2-02"
+        "AT-M2-03",
+        "AS-M5-01"
       ],
       "decisions": [
-        "AD-014"
+        "AD-020"
       ],
-      "why": "G2-02/AD-014: the residuals state exists to hold a non-empty due set with an accepted custodian for each.",
+      "why": "A refusal is a terminal state of the admission record with a named failed predicate and its own acceptance owner. Silence is not refusal. The third row is the FALSE-EXCLUSION control (05 section 9, row 17): the basis of a refusal is a failed predicate, so a genuine job in wording the catalogue does not recognise types as no_match -- a searched answer -- rather than being refused.",
       "require": [
         {
-          "op": "due_preserved",
-          "target_state": "terminated_with_residuals",
-          "why": "the residual branch retains the exact unresolved inventory"
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/failed_predicate_id",
+            "/payload/acceptance_owner_ref"
+          ],
+          "why": "a refusal names the predicate that failed AND the party who accepts the refusal"
+        },
+        {
+          "op": "neq",
+          "contains_pointers": [
+            "/payload/failed_predicate_id"
+          ],
+          "right": "",
+          "why": "and that predicate id is not the empty string, which is how a required field becomes a formality"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/refusal_basis"
+          ],
+          "right": "failed_predicate",
+          "why": "the BASIS of the refusal is a failed predicate. Unfamiliar wording is not a predicate: this is the row that stops the refusal path swallowing work it merely did not recognise"
         }
       ]
     },
     {
-      "predicate_id": "edge.SalesAgreement.disputed.terminated_with_residuals.v1",
+      "predicate_id": "guard.approval.expiry_present",
       "kind": "guard",
       "findings": [
-        "G2-02"
+        "AS-M2-02"
       ],
       "decisions": [
-        "AD-014"
+        "AD-020"
       ],
-      "why": "G2-02/AD-014: this is the route the refused counterexample is told to take instead, so it is the one that must actually hold the duties it inherits.",
+      "why": "R-X18: every approval carries an expiry, and the monotonic-exposure diff is over effects releasable without a human. Each approval is individually small and the ratchet lives only in their sum, which is the object an executor's own record never shows.",
       "require": [
         {
-          "op": "due_preserved",
-          "target_state": "terminated_with_residuals",
-          "why": "the available route must preserve what the refused route would have dropped"
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/approved_at",
+            "/payload/approval_expires_at"
+          ],
+          "why": "an approval and its expiry are both on the record; an approval with no expiry is a permanent one"
+        },
+        {
+          "op": "lt",
+          "contains_pointers": [
+            "/payload/approved_at",
+            "/payload/approval_expires_at"
+          ],
+          "why": "and the expiry is strictly after the approval, so an expiry set to the approval instant is not an expiry"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.branch.no_model_selected_acceptance_strength",
+      "kind": "guard",
+      "findings": [
+        "AS-M3-01"
+      ],
+      "decisions": [
+        "AD-017"
+      ],
+      "why": "R-X19. Procedure admission refuses a branch set in which a model-authored value selects between acceptance strengths for one artifact. Acceptance-strength selection is a guard over journal state and consequence class, never a jump a model's output takes.",
+      "require": [
+        {
+          "op": "in",
+          "contains_pointers": [
+            "/payload/branch_set/selector_kind"
+          ],
+          "why": "the selector is one of the two admitted kinds, read off the declared branch set"
+        },
+        {
+          "op": "neq",
+          "contains_pointers": [
+            "/payload/branch_set/selector_kind"
+          ],
+          "right": "model",
+          "why": "and it is explicitly not a model. Stated twice on purpose: the allow-list is the rule and this is the sentence a reader of the diff sees"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.check.reads_only_non_authorable_fields",
+      "kind": "guard",
+      "findings": [
+        "AS-M5-04"
+      ],
+      "decisions": [
+        "AD-018"
+      ],
+      "why": "R-X20. A check interest's precondition reads ONLY fields the producer could not author; a check that reads an authorable field is a check the producer can arm and disarm.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/check_read_field_paths",
+            "/payload/non_authorable_field_paths"
+          ],
+          "why": "what the check reads and what the producer cannot author are both declared as path lists"
+        },
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/check_read_field_paths",
+            "/payload/non_authorable_field_paths"
+          ],
+          "why": "everything the check reads is inside the non-authorable set. Reversing the direction is the finding"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.check.tie_break_strongest_sufficient",
+      "kind": "guard",
+      "findings": [
+        "AS-M5-04"
+      ],
+      "decisions": [
+        "AD-018"
+      ],
+      "why": "The other half of R-X20: the tie-break for CHECK interests inverts to strongest sufficient, because the cheapest sufficient check is the one an adversary arms.",
+      "require": [
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/tie_break_rule"
+          ],
+          "right": "strongest_sufficient",
+          "why": "the tie-break rule is strongest-sufficient, declared as a value rather than left to the resolver's default"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.class.no_total_rank",
+      "kind": "guard",
+      "findings": [
+        "AT-M4-02"
+      ],
+      "decisions": [
+        "AD-015"
+      ],
+      "why": "The rule is NEGATIVE -- no total rank and no severity score is computed from the reached set -- and a negative rule needs something positive to check. The derivation declares its ordering as `none` and a guard reads that declaration; a future implementer who reintroduces a rank has to change this literal, which is a line in a diff someone sees.",
+      "require": [
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/class_ordering"
+          ],
+          "right": "none",
+          "why": "the derivation declares NO ordering over the reached set; any other value is a rank by another name"
+        },
+        {
+          "op": "unique",
+          "contains_pointers": [
+            "/payload/reached_class_ids"
+          ],
+          "why": "a set, not a list: a repeated class id is how a count-based gate check gets fooled"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.class.reached_set_gates_all",
+      "kind": "guard",
+      "findings": [
+        "AT-M4-02"
+      ],
+      "decisions": [
+        "AD-015",
+        "AD-016"
+      ],
+      "why": "AT-M4-02 measured the collapse: an action that is both C2 and C3, gated only by the higher row, loses C2's human requirement. The repair is that the gate evaluator consumes the SET, and these three rows ARE that -- the reached ids and the gated ids are both named, every reached class is inside the gated set, and the two are the same size, so gating a proper subset is not a smaller version of gating the set.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/reached_class_ids",
+            "/payload/gated_class_ids"
+          ],
+          "why": "both sides must be NAMED on the record; without them the two comparisons below bind to nothing"
+        },
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/reached_class_ids",
+            "/payload/gated_class_ids"
+          ],
+          "why": "every class the derivation reached is in the gated set -- this is 'every reached class's gates apply', stated as a predicate"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/reached_class_ids",
+            "/payload/gated_class_ids"
+          ],
+          "why": "and the two sets are the same size, so a gate set that covers only the highest reached class fails here rather than passing the containment above"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.constraint.standing_interest_writes_proposed_only",
+      "kind": "guard",
+      "findings": [
+        "AS-M5-02"
+      ],
+      "decisions": [
+        "AD-019"
+      ],
+      "why": "The containment that makes layer 3 safe to compute: an interest arms and proposes; it never admits. Its write targets are a subset of the proposed phase, checked rather than described.",
+      "require": [
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/write_target_phases"
+          ],
+          "right": [
+            "proposed"
+          ],
+          "why": "every phase this interest may write into is `proposed`. Widening this list is how an interest becomes an admitter"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.criteria.author_not_in_producing_path",
+      "kind": "guard",
+      "findings": [
+        "AS-X-01"
+      ],
+      "decisions": [
+        "AD-018"
+      ],
+      "why": "The other half of AS-X-01. Freezing criteria the producing path authored freezes the wrong thing, so the author is required to be outside the producing path by membership rather than by intent.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/criteria_author_component_id",
+            "/payload/producing_path_component_ids"
+          ],
+          "why": "the author and the producing path are both named as ids, which is what makes the membership test mechanical"
+        },
+        {
+          "op": "in",
+          "negated": true,
+          "contains_pointers": [
+            "/payload/criteria_author_component_id",
+            "/payload/producing_path_component_ids"
+          ],
+          "why": "the author is NOT a member of the producing path. The polarity is the requirement: drop the negation and the guard demands the opposite of what the finding asked for"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.criteria.frozen_before_producing_step",
+      "kind": "guard",
+      "findings": [
+        "AS-X-01"
+      ],
+      "decisions": [
+        "AD-018"
+      ],
+      "why": "AS-X-01, resolved by R-D11: the capability owner authors the acceptance criteria and they are frozen BEFORE the producing step starts. This closes the fourth unblinded channel into the checker, which no research lane named and one review found.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/criteria_ref",
+            "/payload/criteria_frozen_at",
+            "/payload/producing_started_at"
+          ],
+          "why": "the criteria, the moment they froze and the moment production started are all on the record, so the ordering below is checkable rather than asserted"
+        },
+        {
+          "op": "lt",
+          "contains_pointers": [
+            "/payload/criteria_frozen_at",
+            "/payload/producing_started_at"
+          ],
+          "why": "frozen STRICTLY BEFORE production started; equality would admit criteria written in the same act as the work they judge"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.custody.admitter_excluded",
+      "kind": "guard",
+      "findings": [
+        "AT-M5-04"
+      ],
+      "decisions": [
+        "AD-021"
+      ],
+      "why": "R-X06. The prohibition 'the admitter may not accept work it admitted' yields a mechanism rather than a sentence: the ordered custody resolver SKIPS the admitting identity and continues to the next tier.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/admitting_identity_id",
+            "/payload/custody_order_identity_ids"
+          ],
+          "why": "the admitting identity and the ordered custody list are both on the record, which is what makes the exclusion checkable"
+        },
+        {
+          "op": "in",
+          "negated": true,
+          "contains_pointers": [
+            "/payload/admitting_identity_id",
+            "/payload/custody_order_identity_ids"
+          ],
+          "why": "the admitting identity is NOT in the resolved custody order. Polarity is the rule here"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.delegation.width_ceiling_over_distinct_read_sets",
+      "kind": "guard",
+      "findings": [
+        "AS-X-04"
+      ],
+      "decisions": [
+        "AD-017"
+      ],
+      "why": "R-X16. Fifty sequential consultations, each individually cheap, sit inside one budget and are a fan-out incident. The ceiling is therefore over DISTINCT READ SETS rather than over cost, with the same owner and checkpoint as the depth ceiling.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/distinct_read_set_digests",
+            "/payload/width_ceiling"
+          ],
+          "why": "the read sets seen so far and the ceiling are both on the attempt"
+        },
+        {
+          "op": "lte",
+          "contains_pointers": [
+            "/payload/distinct_read_set_digests",
+            "/payload/width_ceiling"
+          ],
+          "why": "the COUNT of distinct read sets is at most the ceiling. Replacing this with a cost comparison is the finding"
+        },
+        {
+          "op": "unique",
+          "contains_pointers": [
+            "/payload/distinct_read_set_digests"
+          ],
+          "why": "and the digests are distinct, so fifty consultations over one read set count once and fifty over fifty count fifty"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.derivation.recompute_matches",
+      "kind": "guard",
+      "findings": [
+        "AT-M4-02",
+        "AS-M4-02"
+      ],
+      "decisions": [
+        "AD-016"
+      ],
+      "why": "A boundary is real only if what is checked at the moment of the effect is what was granted. `matched` is the phase that asserts the recomputation agreed with the admitted set, so the guard on that edge must compare the two sets and not merely observe that a recomputation happened.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/recomputed_class_ids",
+            "/payload/reached_class_ids"
+          ],
+          "why": "both sets are named on the record before either is compared"
+        },
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/recomputed_class_ids",
+            "/payload/reached_class_ids"
+          ],
+          "why": "nothing the release-time recomputation reached is outside the admitted set"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/recomputed_class_ids",
+            "/payload/reached_class_ids"
+          ],
+          "why": "and the sets are the same size, so a recomputation that reached MORE cannot take this edge -- it parks, and a park never resolves downward"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.derivation.writer_is_release_path",
+      "kind": "guard",
+      "findings": [
+        "AS-M4-02",
+        "AT-M1-04"
+      ],
+      "decisions": [
+        "AD-016"
+      ],
+      "why": "R-L1's writer clause. The derivation record is written only inside the release path and is append-only; an executor's grant scope is a proposal right and C04 performs every release (R-X01).",
+      "require": [
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/release_path_component_id"
+          ],
+          "right": "S1-C04",
+          "why": "the release path, named as a component id rather than implied by who happened to write it"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/append_only"
+          ],
+          "right": true,
+          "why": "append-only: a derivation that can be rewritten is a boundary that can be moved after the fact"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.effect.identity_allocated_before_release",
+      "kind": "guard",
+      "findings": [
+        "AE-M2-06"
+      ],
+      "decisions": [
+        "AD-016"
+      ],
+      "why": "The identity triple is complete and allocated BEFORE release, by C04. A second claimant joins the first and inherits its outcome; without an identity allocated first there is nothing for it to join.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/effect_class_id",
+            "/payload/counterparty_id",
+            "/payload/payload_digest",
+            "/payload/allocated_at"
+          ],
+          "why": "the whole identity triple plus the moment of allocation; a partial triple correlates two different effects"
+        },
+        {
+          "op": "lt",
+          "contains_pointers": [
+            "/payload/allocated_at",
+            "/payload/claimed_at"
+          ],
+          "why": "allocation strictly precedes the claim -- allocated BEFORE release is the ordering, not a field that happens to be filled in"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/allocating_component_id"
+          ],
+          "right": "S1-C04",
+          "why": "and C04 allocated it, which is the component that performs every release"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.effect.one_per_step",
+      "kind": "guard",
+      "findings": [
+        "AT-M3-04"
+      ],
+      "decisions": [
+        "AD-017"
+      ],
+      "why": "R-L2: one effect per effect step, and the step boundary is the checkpoint, so the step is the idempotency unit. Two effects in one step have one journal position between them and no way to resume between them.",
+      "require": [
+        {
+          "op": "lte",
+          "contains_pointers": [
+            "/payload/effect_refs"
+          ],
+          "right": "1",
+          "why": "at most ONE effect reference per step"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/idempotency_unit"
+          ],
+          "right": "step",
+          "why": "and the declared idempotency unit is the step, so a retry replays the same boundary"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.holder.no_veto",
+      "kind": "guard",
+      "findings": [
+        "AE-M4-01",
+        "AT-M3-03"
+      ],
+      "decisions": [
+        "AD-022"
+      ],
+      "why": "AE-M4-01: four protected holders that could each refuse a shed can hold an empty bucket hostage with no override anywhere. A holder may negotiate and never veto, and its pre-declared minimum is EVIDENCE rather than consent.",
+      "require": [
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/veto_right"
+          ],
+          "right": false,
+          "why": "the holder carries no veto right. Flipping this to true is the finding, restored"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/stated_minimum_status"
+          ],
+          "right": "evidence",
+          "why": "and its stated minimum is recorded AS evidence, so a shed records it and proceeds rather than waiting on it"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.holder.not_retired_while_duty_live",
+      "kind": "guard",
+      "findings": [
+        "AC-M1-05",
+        "AC-M4-05"
+      ],
+      "decisions": [
+        "AD-021"
+      ],
+      "why": "Retirement is refused while any duty the holder carries is live, and the successor that inherits the address and the residual duties is named. A closure that completed while a grievance route was unowned is a broken promise recorded as a clean end.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/successor_holder_ref"
+          ],
+          "why": "the holder this one retires INTO is named; retiring into nothing is the unowned route"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/live_duty_refs"
+          ],
+          "right": [],
+          "why": "and no duty it holds is still live"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.intake.per_origin_subcap_preserves_intake",
+      "kind": "guard",
+      "findings": [
+        "AS-M2-01",
+        "AS-M4-05"
+      ],
+      "decisions": [
+        "AD-021"
+      ],
+      "why": "AS-M2-01: an adversary filing many well-formed complaints through the published route exhausts the cap, and the next write -- from a legitimate complainant -- is refused at exactly the object whose purpose is to guarantee an outside party can always reach someone. R-X17: the cap overflows to a named destination with an alarm and a reader; it never refuses intake.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/origin_subcap",
+            "/payload/counterparty_subcap",
+            "/payload/overflow_destination_ref",
+            "/payload/overflow_alarm_reader_ref"
+          ],
+          "why": "both sub-caps, the overflow destination and the READER of its alarm. A destination nobody reads is a queue nobody polls, which this chapter names as a silent-drop shape"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/intake_refused"
+          ],
+          "right": false,
+          "why": "and intake was not refused. This is the row that distinguishes R-X17's repair from the design it repairs"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.interest.precondition_invokes_no_model",
+      "kind": "guard",
+      "findings": [
+        "AS-M5-01",
+        "AS-M5-03"
+      ],
+      "decisions": [
+        "AD-019"
+      ],
+      "why": "R-L3's hardest line: NO precondition may invoke a model. Arming is a computed, unstoppable set evaluated by deterministic code over typed fields after every committed transition, and a model in a precondition makes the set neither computed nor unstoppable.",
+      "require": [
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/precondition_evaluator_kind"
+          ],
+          "right": "deterministic",
+          "why": "the evaluator is deterministic, declared as a value a guard can read"
+        },
+        {
+          "op": "neq",
+          "contains_pointers": [
+            "/payload/precondition_evaluator_kind"
+          ],
+          "right": "model",
+          "why": "and it is explicitly not a model -- the prohibition stated as its own conjunct, because an allow-list widened by one entry is a quieter change than a deleted refusal"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.interest.writer_keys_not_self_declared",
+      "kind": "guard",
+      "findings": [
+        "AS-M5-02"
+      ],
+      "decisions": [
+        "AD-019"
+      ],
+      "why": "AS-M5-02: a trial interest declaring a writer key over an existing sole-writer kind takes custody of a kind by asserting it. An interest declares no writer key of its own, and writer-key authority comes from outside it.",
+      "require": [
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/self_declared_writer_keys"
+          ],
+          "right": [],
+          "why": "the self-declared writer key list is EMPTY. `[]` rather than absent: an absent field is a field nobody looked at"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/writer_key_authority_kind"
+          ],
+          "right": "external",
+          "why": "and the authority for any writer key it uses is external to the interest"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.launcher.stripping_positive_control",
+      "kind": "guard",
+      "findings": [
+        "AS-X-02"
+      ],
+      "decisions": [
+        "AD-020"
+      ],
+      "why": "AS-X-02 names the asymmetry: three candidates gave grant DELIVERY a positive control and none gave grant REMOVAL one. This is that control -- a probe skill that declares a tool grant, whose ARRIVAL at the enforcement point is the failure. A stripper that has never been observed to strip is a stripper nobody has seen work.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/grant_stripping_probe_ref",
+            "/payload/grant_stripping_probe_result"
+          ],
+          "why": "the probe and its result are both recorded; a control with no recorded reading is a control nobody ran"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/grant_stripping_probe_result"
+          ],
+          "right": "absent_at_enforcement_point",
+          "why": "the probe's declared grant was ABSENT at the enforcement point. This literal is the whole positive control"
+        },
+        {
+          "op": "neq",
+          "contains_pointers": [
+            "/payload/grant_stripping_probe_result"
+          ],
+          "right": "arrived_at_enforcement_point",
+          "why": "and it did not arrive. Stated as its own conjunct because the failing reading is the one a reader must be able to find by name"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.readset.delivered_equals_declared",
+      "kind": "guard",
+      "findings": [
+        "AX-M4-01",
+        "AX-M3-01"
+      ],
+      "decisions": [
+        "AD-017"
+      ],
+      "why": "AD-017: a step declares its read set and the loader delivers and RECORDS it. That converts 'the checker did not read the producer's rationale' from an assertion into a manifest fact. The equality is checked against the loader's own record, never against the caller's claimed read list.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/declared_read_set",
+            "/payload/delivered_read_set"
+          ],
+          "why": "the loader's record carries BOTH what was asked for and what it actually delivered"
+        },
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/declared_read_set",
+            "/payload/delivered_read_set"
+          ],
+          "why": "nothing declared went undelivered -- the half that catches a starved step"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/declared_read_set",
+            "/payload/delivered_read_set"
+          ],
+          "why": "and nothing UNDECLARED was delivered -- the half that catches the producer's rationale field arriving in a checker's inputs, which is section 9's adverse row 2"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.reservation.lapse_independent_of_consent",
+      "kind": "guard",
+      "findings": [
+        "AE-M4-01",
+        "AE-M3-01",
+        "AE-M4-03"
+      ],
+      "decisions": [
+        "AD-022"
+      ],
+      "why": "R-X24 and AD-022: a reserve under a non-rolling allowance is waste rather than thrift, so reserved-but-unconsumed allowance lapses at the declared point INDEPENDENTLY of the holder's consent, and the quantity that lapsed is recorded per lane per window.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/lapse_point"
+          ],
+          "why": "the lapse point is declared on the reservation rather than decided under pressure"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/lapse_requires_holder_consent"
+          ],
+          "right": false,
+          "why": "the lapse does NOT require the holder's consent. This is the whole of AD-022's second half"
+        },
+        {
+          "op": "present",
+          "contains_pointers": [
+            "/payload/lapsed_unconsumed_quantity"
+          ],
+          "why": "and the quantity that lapsed unconsumed is recorded -- an unrecorded lapse is the waste nobody can price"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.skill.declared_grant_inert",
+      "kind": "guard",
+      "findings": [
+        "AS-X-02"
+      ],
+      "decisions": [
+        "AD-020"
+      ],
+      "why": "R-X15. A skill's declared tool grant is INERT: the launcher computes the tool set from the work order's grant and strips tool-granting frontmatter. Content-hash pinning is re-checked at USE rather than at install, because a stale borrowed skill passes shape checks.",
+      "require": [
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/declared_tool_grant_effect"
+          ],
+          "right": "inert",
+          "why": "the skill's own declared grant grants nothing"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/tool_set_source"
+          ],
+          "right": "work_order",
+          "why": "and the tool set comes from the work order, which is the only place a grant is authorised"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/content_hash_rechecked_at_use"
+          ],
+          "right": true,
+          "why": "the content hash is re-checked at use; a hash checked only at install pins a file that has since moved"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.supersession.walks_derived_closure",
+      "kind": "guard",
+      "findings": [
+        "AX-M1-02"
+      ],
+      "decisions": [
+        "AD-017"
+      ],
+      "why": "R-G06. Superseding an entry walks the transitive closure of derived entries naming the superseded value and re-decides or flags each reopened acceptance. The `present` rows rather than `nonempty` rows are deliberate: a supersession with an EMPTY closure must reopen nothing and must pass, which is section 9's benign row 11.",
+      "require": [
+        {
+          "op": "present",
+          "contains_pointers": [
+            "/payload/derived_closure_refs"
+          ],
+          "why": "the closure was computed -- present even when empty, because an absent closure and an empty one are different facts"
+        },
+        {
+          "op": "present",
+          "contains_pointers": [
+            "/payload/reopened_acceptance_refs"
+          ],
+          "why": "and what it reopened was recorded, likewise present even when empty"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/closure_walk_completed"
+          ],
+          "right": true,
+          "why": "the walk ran to completion; a partial walk reports an empty closure that looks exactly like a real one"
+        },
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/reopened_acceptance_refs",
+            "/payload/derived_closure_refs"
+          ],
+          "why": "every acceptance reopened came from the closure, so the reopen set cannot be authored beside the walk"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.trust.derived_is_floor_of_inputs",
+      "kind": "guard",
+      "findings": [
+        "AX-M2-04",
+        "AX-M3-01"
+      ],
+      "decisions": [
+        "AD-017"
+      ],
+      "why": "R-X13. Per-item trust level is a required manifest field, and a derived item's level is the FLOOR of its inputs': deriving from an untrusted entry cannot launder it into a trusted one.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/item_trust_levels",
+            "/payload/derived_trust_level",
+            "/payload/minimum_input_trust_level"
+          ],
+          "why": "per-item levels are a manifest field, not a per-record one, and both sides of the floor are recorded"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/derived_trust_level",
+            "/payload/minimum_input_trust_level"
+          ],
+          "why": "the derived level IS the minimum input level; anything else is a promotion, which the guard below governs"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.trust.promotion_is_an_effect_with_a_non_model_discriminator",
+      "kind": "guard",
+      "findings": [
+        "AS-M5-01"
+      ],
+      "decisions": [
+        "AD-019"
+      ],
+      "why": "AS-M5-01: an untrusted entry promoted to attested by the investigating activation is the activation reading its own output back as corroboration. Promotion is an effect with a discriminator that is not a model, and the corroborant is out of band.",
+      "require": [
+        {
+          "op": "neq",
+          "contains_pointers": [
+            "/payload/trust_promotion_discriminator_kind"
+          ],
+          "right": "model",
+          "why": "the discriminator is not a model. This is the row the finding is about"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/trust_promotion_rule"
+          ],
+          "right": "out_of_band_corroborant",
+          "why": "and the rule names the out-of-band corroborant, so a promotion sourced from the investigating path has no route through this guard"
         }
       ]
     }
