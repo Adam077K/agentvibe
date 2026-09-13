@@ -202,8 +202,9 @@ def main():
             predicate["carried_conjuncts"] = carried
         else:
             predicate.pop("carried_conjuncts", None)
-        body, meta, reason = pc.compose(record, phase, criterion_id,
-                                        records_schema, declared)
+        body, meta, reason = pc.compose(
+            record, phase, criterion_id, records_schema, declared,
+            initial_phase=records[record]["lifecycle"]["initial_phase"])
 
         if body is None:
             if carried:

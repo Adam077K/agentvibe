@@ -220,7 +220,7 @@ CITE = {
         "Every dependent acceptance guard must match the exact required subject/version "
         "and predicate, require current state accepted, and validate scope, "
         "evidence-base closure, authority and expiry. An accepted report whose "
-        "proposition is “evidence is insufficient” does not satisfy a product, capacity "
+        "proposition is \"evidence is insufficient\" does not satisfy a product, capacity "
         "or launch predicate."),
     "k-terminal": (
         "01-contract-kernel.md",
@@ -2528,6 +2528,15 @@ CONTRADICTIONS = [
 
 # --- Composition. ----------------------------------------------------------------
 
+_INITIAL_PHASE_SPEC = spec(
+    "A seed factory may create this initial state and no other: the record's own "
+    "declared identity and scope fields are present, a custodian is assigned before "
+    "admission, and required inputs may be honest unknowns where the capability "
+    "permits uncertainty. Recording the revision does not make its output acceptable "
+    "or authorize any effect, so no judgment is required and none would be sufficient.",
+    ["c-seed", "k-envelope"],
+    [("nf", ["subject_identity", "custodian"]), AR])
+
 _COMPILED = {role: [re.compile(p) for p in pats] for role, pats in ROLES.items()}
 
 # CCR-03's repair restricted every subject-taking primitive's `record_type` enum, and
@@ -2667,9 +2676,19 @@ def build_conjunct(item, record, criterion_id, required_fields):
     raise ValueError("unknown conjunct kind: " + kind)
 
 
-def compose(record, phase, criterion_id, records_schema, declared_args):
+def compose(record, phase, criterion_id, records_schema, declared_args,
+            initial_phase=None):
     """(body, derived_from, dropped) or (None, None, reason) when this is a gap."""
     entry = RECORD_OVERRIDES.get((record, phase)) or PHASE_SPECS.get(phase)
+    if entry is None and phase == initial_phase:
+        # A record's INITIAL phase is not entered by any transition -- no edge names
+        # its criterion -- so what it states is "what a seed factory may create",
+        # which the company contract states once for every such phase rather than
+        # per name. 27 initial phases carry names the corpus uses nowhere else
+        # (`captured`, `unassessed`, `suspected`, `invited`, ...); this is the source
+        # for all of them, and it is deliberately NOT applied to any phase an edge
+        # enters, where a general rule would paper over a real per-phase question.
+        entry = _INITIAL_PHASE_SPEC
     if entry is None:
         return None, None, "the prose states no evidence requirement for this phase name"
 

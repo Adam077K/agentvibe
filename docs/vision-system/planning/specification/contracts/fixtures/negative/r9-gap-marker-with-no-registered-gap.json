@@ -1,0 +1,47 @@
+{
+  "id": "r9-gap-marker-with-no-registered-gap",
+  "repair": "R9",
+  "finding": "FI-11 content",
+  "why": "An explicit gap is only honest while the entry that says what is missing exists. Point the marker at an unregistered id and the criterion states nothing AND records nothing -- which is byte-indistinguishable from a gap somebody closed by deleting its entry.",
+  "expect_failure_contains": "content_unspecified with no registered gap",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.AgentTemplate.eligible.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "content_unspecified",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "gap_id": "gap-that-nobody-registered"
+          },
+          {
+            "op": "attested_result",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.AgentTemplate.eligible.v1",
+            "predicate_version": "1.0",
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          },
+          {
+            "op": "accepted_for",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.AgentTemplate.eligible.v1",
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

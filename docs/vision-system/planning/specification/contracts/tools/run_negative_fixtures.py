@@ -93,13 +93,27 @@ def rederive_inventory(directory):
 
 def run_fixture(fixture, verbose):
     with tempfile.TemporaryDirectory() as scratch:
-        # Mirror the real layout: <scratch>/contracts/ beside the source documents the
-        # inventory derivation reads from ROOT.parent. A flat scratch dir would make
+        # Mirror the real layout: <scratch>/planning/specification/contracts/, beside
+        # the source documents the inventory derivation reads from ROOT.parent and the
+        # PROSE CONTRACTS the criterion content cites. A flat scratch dir would make
         # the validator derive against sources that are not there.
-        directory = Path(scratch) / "contracts"
-        directory.mkdir()
-        for source_document in ("capabilities.json", "work-knowledge-contracts.json"):
-            os.symlink(ROOT.parent / source_document, Path(scratch) / source_document)
+        #
+        # Two levels, not one, and the second is load-bearing: criteria cite
+        # `../02-architecture-selection.md`, which lives one directory ABOVE the
+        # specification. With the old single-level layout that resolved to the system
+        # temp root, so `derived_from names a file that does not exist` fired inside
+        # every fixture and four of them then "failed for the wrong reason" -- the
+        # runner caught it, which is what it is for.
+        planning = Path(scratch) / "planning"
+        specification = planning / "specification"
+        directory = specification / "contracts"
+        directory.mkdir(parents=True)
+        for source_document in sorted(ROOT.parent.glob("*.json")):
+            os.symlink(source_document, specification / source_document.name)
+        for prose in sorted(ROOT.parent.glob("*.md")):
+            os.symlink(prose, specification / prose.name)
+        for prose in sorted(ROOT.parent.parent.glob("*.md")):
+            os.symlink(prose, planning / prose.name)
         for source in sorted(ROOT.glob("*.json")):
             os.symlink(source, directory / source.name)
         shutil.copy2(ROOT / "validate_contracts.py", directory / "validate_contracts.py")

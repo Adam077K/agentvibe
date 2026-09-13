@@ -3392,7 +3392,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -5139,7 +5139,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "05-work-agents-skills.md",
@@ -7844,7 +7844,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -8989,7 +8989,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -13128,7 +13128,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -13782,11 +13782,16 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-WorkMessage-created"
+          "field_paths": [
+            "/payload/kind",
+            "/payload/subject_refs",
+            "/payload/sender_ref",
+            "/payload/recipient_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -13801,7 +13806,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-WorkMessage-created. Phase assessed: created.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: created.",
     "owner_component": "S1-C02",
     "source": "work-knowledge-contracts.json#/records/WorkMessage",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -13866,8 +13871,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-WorkMessage-created",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `created` on WorkMessage. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.WorkMessage.queued.v1": {
     "version": "1.0",
@@ -17349,11 +17363,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-ScheduleOccurrence-planned"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -17368,7 +17384,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-ScheduleOccurrence-planned. Phase assessed: planned.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: planned.",
     "owner_component": "S1-C02",
     "source": "work-knowledge-contracts.json#/records/ScheduleOccurrence",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -17433,8 +17449,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-ScheduleOccurrence-planned",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `planned` on ScheduleOccurrence. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.ScheduleOccurrence.due.v1": {
     "version": "1.0",
@@ -23082,11 +23107,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-SummaryLoss-identified"
+          "field_paths": [
+            "/payload/kind",
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -23101,7 +23129,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-SummaryLoss-identified. Phase assessed: identified.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: identified.",
     "owner_component": "S1-C05",
     "source": "work-knowledge-contracts.json#/records/SummaryLoss",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -23166,8 +23194,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-SummaryLoss-identified",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `identified` on SummaryLoss. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.SummaryLoss.qualified.v1": {
     "version": "1.0",
@@ -25822,11 +25859,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-ForgetRequest-requested"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -25841,7 +25880,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-ForgetRequest-requested. Phase assessed: requested.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: requested.",
     "owner_component": "S1-C05",
     "source": "work-knowledge-contracts.json#/records/ForgetRequest",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -25906,8 +25945,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-ForgetRequest-requested",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `requested` on ForgetRequest. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.ForgetRequest.qualified.v1": {
     "version": "1.0",
@@ -31662,11 +31710,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Review-assigned"
+          "field_paths": [
+            "/payload/subject_ref",
+            "/payload/reviewer_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -31681,7 +31732,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Review-assigned. Phase assessed: assigned.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: assigned.",
     "owner_component": "S1-C06",
     "source": "work-knowledge-contracts.json#/records/Review",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -31746,8 +31797,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Review-assigned",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `assigned` on Review. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.Review.working.v1": {
     "version": "1.0",
@@ -32426,11 +32486,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-IndexSnapshot-building"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -32445,7 +32507,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-IndexSnapshot-building. Phase assessed: building.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: building.",
     "owner_component": "S1-C05",
     "source": "work-knowledge-contracts.json#/records/IndexSnapshot",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -32510,8 +32572,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-IndexSnapshot-building",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `building` on IndexSnapshot. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.IndexSnapshot.complete.v1": {
     "version": "1.0",
@@ -41378,11 +41449,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-SalesAgreement-interest"
+          "field_paths": [
+            "/payload/agreed_terms",
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -41397,7 +41471,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-SalesAgreement-interest. Phase assessed: interest.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: interest.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/SalesAgreement",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -41462,8 +41536,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-SalesAgreement-interest",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `interest` on SalesAgreement. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.SalesAgreement.proposed.v1": {
     "version": "1.0",
@@ -41767,7 +41850,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -43021,11 +43104,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-SupportCase-received"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -43040,7 +43125,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-SupportCase-received. Phase assessed: received.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: received.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/SupportCase",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -43105,8 +43190,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-SupportCase-received",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `received` on SupportCase. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.SupportCase.assessing.v1": {
     "version": "1.0",
@@ -48177,11 +48271,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-SecurityCase-suspected"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -48196,7 +48292,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-SecurityCase-suspected. Phase assessed: suspected.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: suspected.",
     "owner_component": "S1-C08",
     "source": "capabilities.json#/record_types/SecurityCase",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -48261,8 +48357,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-SecurityCase-suspected",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `suspected` on SecurityCase. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.SecurityCase.investigating.v1": {
     "version": "1.0",
@@ -50103,11 +50208,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-CandidateAssessment-invited"
+          "field_paths": [
+            "/payload/evaluation_criteria",
+            "/payload/assessor"
+          ]
         },
         {
           "op": "attested_result",
@@ -50122,7 +50230,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-CandidateAssessment-invited. Phase assessed: invited.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: invited.",
     "owner_component": "S1-C07",
     "source": "capabilities.json#/record_types/CandidateAssessment",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -50187,8 +50295,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-CandidateAssessment-invited",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `invited` on CandidateAssessment. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.CandidateAssessment.assessing.v1": {
     "version": "1.0",
@@ -58144,11 +58261,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-FormationReadiness-preparing"
+          "field_paths": [
+            "/payload/principal_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -58163,7 +58282,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-FormationReadiness-preparing. Phase assessed: preparing.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: preparing.",
     "owner_component": "S1-C07",
     "source": "capabilities.json#/record_types/FormationReadiness",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -58228,8 +58347,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-FormationReadiness-preparing",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `preparing` on FormationReadiness. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.FormationReadiness.conditionally-ready.v1": {
     "version": "1.0",
@@ -62537,11 +62665,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Principal-asserted"
+          "field_paths": [
+            "/payload/kind",
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -62556,7 +62687,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Principal-asserted. Phase assessed: asserted.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: asserted.",
     "owner_component": "S1-C01",
     "source": "01-contract-kernel.md#7-core-relationships-and-exact-state-transitions",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -62621,8 +62752,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Principal-asserted",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `asserted` on Principal. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.Principal.verified.v1": {
     "version": "1.0",
@@ -66081,7 +66221,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -67879,11 +68019,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-CausalEpisode-allocated"
+          "field_paths": [
+            "/payload/stop_predicate",
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -67898,7 +68041,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-CausalEpisode-allocated. Phase assessed: allocated.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: allocated.",
     "owner_component": "S1-C02",
     "source": "01-contract-kernel.md#9-scheduling-bounds-and-useful-progress",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -67963,8 +68106,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-CausalEpisode-allocated",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `allocated` on CausalEpisode. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.CausalEpisode.active.v1": {
     "version": "1.0",
@@ -69554,7 +69706,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -72619,11 +72771,18 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Claim-unassessed"
+          "field_paths": [
+            "/payload/proposition",
+            "/payload/subject_refs",
+            "/payload/scope",
+            "/payload/validity_predicates",
+            "/payload/kind",
+            "/payload/assessor_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -72638,7 +72797,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Claim-unassessed. Phase assessed: unassessed.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: unassessed.",
     "owner_component": "S1-C06",
     "source": "01-contract-kernel.md#4-intent-knowledge-rationale-and-events",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -72703,8 +72862,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Claim-unassessed",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `unassessed` on Claim. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.Claim.supported.v1": {
     "version": "1.0",
@@ -74125,11 +74293,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-ContextManifest-captured"
+          "field_paths": [
+            "/payload/loader_identity_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -74144,7 +74314,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-ContextManifest-captured. Phase assessed: captured.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: captured.",
     "owner_component": "S1-C05",
     "source": "06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -74209,8 +74379,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-ContextManifest-captured",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `captured` on ContextManifest. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.ContextManifest.admitted.v1": {
     "version": "1.0",
@@ -81696,11 +81875,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-GrievanceCase-received"
+          "field_paths": [
+            "/payload/custodian_assignment_ref",
+            "/payload/independent_escalation_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -81715,7 +81897,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-GrievanceCase-received. Phase assessed: received.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: received.",
     "owner_component": "S1-C07",
     "source": "../candidates/company-foundation-repairs-v1.md",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -81780,8 +81962,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-GrievanceCase-received",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `received` on GrievanceCase. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.GrievanceCase.triaged.v1": {
     "version": "1.0",
@@ -83347,11 +83538,15 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-DeletionScope-requested"
+          "field_paths": [
+            "/payload/subject_refs",
+            "/payload/future_copy_rule",
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -83366,7 +83561,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-DeletionScope-requested. Phase assessed: requested.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: requested.",
     "owner_component": "S1-C07",
     "source": "../candidates/company-foundation-repairs-v1.md",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -83431,8 +83626,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-DeletionScope-requested",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `requested` on DeletionScope. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.DeletionScope.determined.v1": {
     "version": "1.0",
@@ -89457,11 +89661,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-PrerequisiteSnapshot-captured"
+          "field_paths": [
+            "/payload/participant_refs"
+          ]
         },
         {
           "op": "attested_result",
@@ -89476,7 +89682,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-PrerequisiteSnapshot-captured. Phase assessed: captured.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: captured.",
     "owner_component": "S1-C04",
     "source": "02-authority-recovery.md#5-reservations-exact-operation-identity-and-prerequisites",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -89541,8 +89747,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-PrerequisiteSnapshot-captured",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `captured` on PrerequisiteSnapshot. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.PrerequisiteSnapshot.restricted.v1": {
     "version": "1.0",
@@ -97579,11 +97794,15 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-AccessDescendant-discovered"
+          "field_paths": [
+            "/payload/kind",
+            "/payload/scope",
+            "/payload/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -97598,7 +97817,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-AccessDescendant-discovered. Phase assessed: discovered.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: discovered.",
     "owner_component": "S1-C08",
     "source": "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -97663,8 +97882,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-AccessDescendant-discovered",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `discovered` on AccessDescendant. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.AccessDescendant.active.v1": {
     "version": "1.0",
@@ -108735,11 +108963,15 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-IntegrationConnection-pending"
+          "field_paths": [
+            "/payload/principal_ref",
+            "/payload/renewal_assignment_ref",
+            "/payload/recovery_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -108754,7 +108986,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-IntegrationConnection-pending. Phase assessed: pending.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: pending.",
     "owner_component": "S1-C04",
     "source": "07-integrations-capacity.md#1-integration-identity-and-admission",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -108819,8 +109051,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-IntegrationConnection-pending",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `pending` on IntegrationConnection. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.IntegrationConnection.active.v1": {
     "version": "1.0",
@@ -111738,11 +111979,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-BillingProfile-unverified"
+          "field_paths": [
+            "/payload/principal_ref",
+            "/payload/custodian_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -111757,7 +112001,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-BillingProfile-unverified. Phase assessed: unverified.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: unverified.",
     "owner_component": "S1-C04",
     "source": "07-integrations-capacity.md#1-integration-identity-and-admission",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -111822,8 +112066,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-BillingProfile-unverified",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `unverified` on BillingProfile. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.BillingProfile.verified.v1": {
     "version": "1.0",
@@ -112809,11 +113062,14 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Suppression-requested"
+          "field_paths": [
+            "/payload/principal_ref",
+            "/payload/recipient_scope"
+          ]
         },
         {
           "op": "attested_result",
@@ -112828,7 +113084,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Suppression-requested. Phase assessed: requested.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: requested.",
     "owner_component": "S1-C07",
     "source": "07-integrations-capacity.md#3-selected-fulfillment-adapters",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -112893,8 +113149,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Suppression-requested",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `requested` on Suppression. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.Suppression.active.v1": {
     "version": "1.0",
@@ -115109,7 +115374,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -116601,7 +116866,7 @@
     "derived_from": [
       {
         "file": "01-contract-kernel.md",
-        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is “evidence is insufficient” does not satisfy a product, capacity or launch predicate."
+        "anchor_or_quote": "Every dependent acceptance guard must match the exact required subject/version and predicate, require current state accepted, and validate scope, evidence-base closure, authority and expiry. An accepted report whose proposition is \"evidence is insufficient\" does not satisfy a product, capacity or launch predicate."
       },
       {
         "file": "01-contract-kernel.md",
@@ -116934,11 +117199,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-InterventionRequest-requested"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -116953,7 +117220,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-InterventionRequest-requested. Phase assessed: requested.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: requested.",
     "owner_component": "S1-C07",
     "source": "04-human-operation.md#human-records-and-command-contract",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -117018,8 +117285,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-InterventionRequest-requested",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `requested` on InterventionRequest. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.InterventionRequest.routed.v1": {
     "version": "1.0",
@@ -118192,11 +118468,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-DecisionChallenge-issued"
+          "field_paths": [
+            "/payload/actor_identity_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -118211,7 +118489,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-DecisionChallenge-issued. Phase assessed: issued.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: issued.",
     "owner_component": "S1-C04",
     "source": "02-authority-recovery.md#4-authentication-principals-and-grant-attenuation",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -118276,8 +118554,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-DecisionChallenge-issued",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `issued` on DecisionChallenge. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.DecisionChallenge.consumed.v1": {
     "version": "1.0",
@@ -118757,11 +119044,16 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Account-asserted"
+          "field_paths": [
+            "/payload/account_kind",
+            "/payload/principal_ref",
+            "/payload/provider_identity_ref",
+            "/payload/custodian_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -118776,7 +119068,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Account-asserted. Phase assessed: asserted.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: asserted.",
     "owner_component": "S1-C07",
     "source": "03-company-capabilities.md#native-business-authority-and-meaning",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -118841,8 +119133,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Account-asserted",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `asserted` on Account. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.Account.verified.v1": {
     "version": "1.0",
@@ -126749,11 +127050,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-DependencyClosure-building"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -126768,7 +127071,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-DependencyClosure-building. Phase assessed: building.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: building.",
     "owner_component": "S1-C05",
     "source": "06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -126833,8 +127136,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-DependencyClosure-building",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `building` on DependencyClosure. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.DependencyClosure.complete.v1": {
     "version": "1.0",
@@ -128736,11 +129048,13 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-AccessGraph-building"
+          "field_paths": [
+            "/owner_assignment_ref"
+          ]
         },
         {
           "op": "attested_result",
@@ -128755,7 +129069,7 @@
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-AccessGraph-building. Phase assessed: building.",
+    "meaning": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient. Phase assessed: building.",
     "owner_component": "S1-C08",
     "source": "02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -128820,8 +129134,17 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-AccessGraph-building",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `building` on AccessGraph. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "A seed factory may create this initial state and no other: the record's own declared identity and scope fields are present, a custodian is assigned before admission, and required inputs may be honest unknowns where the capability permits uncertainty. Recording the revision does not make its output acceptable or authorize any effect, so no judgment is required and none would be sufficient.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "`company.record.propose` implements the catalog's explicit seed factories. It validates typed source inputs, creates only the allowed initial state and assigns the declared custodian before admission. ... Types without a specialized state enum use `proposed/validated/superseded/restricted`: validation is a recorded domain acceptance decision, not a generic write. Every catalog entry has a distinct substantive acceptance condition and responsible acceptance role in addition to kernel checks."
+      },
+      {
+        "file": "01-contract-kernel.md",
+        "anchor_or_quote": "Owner assignment is required even for unfinished work. ... No service name, model identity or self-reference manufactures legal standing or competence."
+      }
+    ]
   },
   "criterion.AccessGraph.complete.v1": {
     "version": "1.0",
