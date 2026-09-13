@@ -1,0 +1,7 @@
+# F2 acceptance protocol — amendments
+
+The protocol at `00-acceptance-protocol.md` is frozen at commit `26af5d5`. Per the G protocol's rule, amendments are preserved here separately with their source requirement and reason, never by editing the frozen text. Negative control 10 voids any fixture or measurement rule authored after a candidate's result is known; every amendment below is dated and records the state of the round at the time.
+
+| # | Date | Round state | Amendment | Source requirement | Reason |
+|---|---|---|---|---|---|
+| AM-01 | 2026-09-13 | Steps 0–2 complete (`ddd7c22`); no candidate exists | Fixture **F-4** (a verification the producer must not influence) gains a **paired clean case**: alongside the planted-defect artifact, an artifact with no defect must be judged by the same checker under the same procedure, and the checker's refusal rate on the clean case is reported beside its detection rate on the defective one. | Protocol §4 negative control 3 (a checker that passes without checking) and its own pairing rule that every negative control carries a benign case it must not catch; DIRECTIVE §8.14 (negative controls, evaluator false positives). | R7 §8 amendment 1 (`research/F2/R7-verification.md`), classed (b) by R7 and recorded as FAL-09 in `research/F2/cross-lane-comparison.md` §E: measured false-positive rates of 68.4–96.8% on patched files mean an unpaired control cannot distinguish a working checker from one that refuses everything. The amendment adds a measurement; it does not change what passes. |

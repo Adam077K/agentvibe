@@ -77,23 +77,44 @@
     "Merged guard-repair eaf5ada (AD-013/014 implemented; Fulfillment domain lifecycle; distinctness ratchet with declared budget 5; criterion-content drift oracle; G4-01/02/03/04/08 guards; G2-07 custody-on-removal; two prose contradictions resolved). Root verified 268836 checks, 27/27 fixtures, distinctness exit 0, direct checks on the two (d) repairs. GR-01..04 registered. Planning report merged with disposition PENDING.",
     "Independent recheck archived (planning/reviews/G-02-recheck-01.md) at f27c22e: G2-01 and G2-02 CLOSED at specification level — no (d) remains in any of the twelve dimensions; both carry (a) residue. G2-05 closed for delivery, (a) for refund/failure. G2-06 stays (a) OPEN: the content oracle pins to an author-controlled derivation file (RC-02) and the fixture suite has no count ratchet (RC-04). RC-01 is a real break the repair introduced. RC-01..08 registered.",
     "Merged ratchet-pin lane (7 commits): pinned-conjuncts.json (25 pins / 44 requirements / 6 transitions), fixture MANIFEST (31), RC-01 in-flight failure and refund reachability, RC-03 requires-vs-conjuncts with 17 named waivers, RC-05/06/08. Root validator run: 31/31 fixtures rejected, 1311 edges. RP-01 registered.",
-    "G-02-recheck-02 archived (planning/reviews/G-02-recheck-02.md, subject 3579cc2): RC-01, RC-03..RC-08 CLOSED at specification level; RC-02 OPEN (a) — a disjunction sibling of the one-hunk attack passes at exit 0 with pins untouched (RC2-02); RC2-01 (b), RC2-03 (b), RC2-04 (c) registered. Repair lane dispatched."
+    "G-02-recheck-02 archived (planning/reviews/G-02-recheck-02.md, subject 3579cc2): RC-01, RC-03..RC-08 CLOSED at specification level; RC-02 OPEN (a) — a disjunction sibling of the one-hunk attack passes at exit 0 with pins untouched (RC2-02); RC2-01 (b), RC2-03 (b), RC2-04 (c) registered. Repair lane dispatched.",
+    "Step 2 cross-lane comparison committed (ddd7c22): 42-claim matrix (15 with conflicts), 18 agreements, 16 disagreements preserved, axes X01..X10 reconciled + X11..X20 new, 0 falsifiers against fixed boundaries (2 against protocol-granted B0 strengths), 41 of 65 cross-lane questions open. AM-01 recorded (F-4 paired clean case)."
   ],
   "active_work": [
     {
-      "agent": "framer (f2-cross-lane)",
-      "scope": "Step 2 cross-lane comparison",
+      "agent": "builder (rc2-repair)",
+      "scope": "RC2-01..04 in contracts/ only",
       "status": "running"
     },
     {
-      "agent": "builder (rc2-repair)",
-      "scope": "RC2-01..04 in planning/specification/contracts/ only",
-      "status": "dispatched 2026-09-13"
+      "agent": "framer (cand-M1)",
+      "scope": "Step 3 candidate M1 at planning/F2/candidates/M1-*.md",
+      "status": "dispatched 2026-09-13, blind of siblings"
+    },
+    {
+      "agent": "framer (cand-M2)",
+      "scope": "Step 3 candidate M2 at planning/F2/candidates/M2-*.md",
+      "status": "dispatched 2026-09-13, blind of siblings"
+    },
+    {
+      "agent": "framer (cand-M3)",
+      "scope": "Step 3 candidate M3 at planning/F2/candidates/M3-*.md",
+      "status": "dispatched 2026-09-13, blind of siblings"
+    },
+    {
+      "agent": "framer (cand-M4)",
+      "scope": "Step 3 candidate M4 at planning/F2/candidates/M4-*.md",
+      "status": "dispatched 2026-09-13, blind of siblings"
+    },
+    {
+      "agent": "framer (cand-M5)",
+      "scope": "Step 3 candidate M5 at planning/F2/candidates/M5-*.md",
+      "status": "dispatched 2026-09-13, blind of siblings"
     }
   ],
   "next_actions": [
-    "Verify and commit Step 2; then Step 3: >=4 candidate work/agent models",
-    "Verify rc2-repair return (validator exit 0, new fixtures rejected, probe-9 hunk now refused); narrow independent recheck G-02-recheck-03 after",
+    "Verify five candidates (dimensions, six fixtures, both comparators, capability binding, (d)-self-audit); commit; then Step 4 independent attacks (reviewer engine, never shown authors' self-assessments)",
+    "Verify rc2-repair; dispatch narrow recheck G-02-recheck-03",
     "Planning disposition deferred until the F2 round completes and RC2-02 is rechecked",
     "HELD BY FOUNDER: no build stage may be dispatched"
   ],
