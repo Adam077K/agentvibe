@@ -87,13 +87,38 @@
       "agent": "reviewer (recheck-03)",
       "scope": "G-02-recheck-03 at 1bef187",
       "status": "running"
+    },
+    {
+      "agent": "reviewer (attack-technical)",
+      "scope": "Step 4 technical attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
+      "status": "dispatched 2026-09-13"
+    },
+    {
+      "agent": "reviewer (attack-company)",
+      "scope": "Step 4 company attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
+      "status": "dispatched 2026-09-13"
+    },
+    {
+      "agent": "reviewer (attack-economic)",
+      "scope": "Step 4 economic attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
+      "status": "dispatched 2026-09-13"
+    },
+    {
+      "agent": "reviewer (attack-context)",
+      "scope": "Step 4 context attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
+      "status": "dispatched 2026-09-13"
+    },
+    {
+      "agent": "reviewer (attack-security)",
+      "scope": "Step 4 security attack on M1..M5 at frozen c6d62a3; report in scratchpad, archived on return",
+      "status": "dispatched 2026-09-13"
     }
   ],
   "next_actions": [
-    "Step 4: dispatch five independent attack reviewers (technical; human/company; economic/capacity; context-loss/evidence; security/adversarial) against all five candidates at the frozen Step 3 commit",
+    "Archive the five Step 4 reports verbatim under planning/F2/reviews/ with provenance; register findings; dispatch repair lanes by file partition where (a)/(b) repairs are possible; keep dissent",
     "Archive recheck-03; update RC2-*",
-    "Planning disposition deferred until the F2 round completes",
-    "HELD BY FOUNDER: no build stage may be dispatched"
+    "Step 5 synthesis (framer) only after attacks are archived",
+    "Planning disposition deferred; HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
     {
