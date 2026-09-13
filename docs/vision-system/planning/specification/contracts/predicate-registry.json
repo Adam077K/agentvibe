@@ -217189,7 +217189,8 @@
     "argument_types": {
       "subject_ref": "Ref<SalesAgreement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
     },
     "body": {
       "op": "all",
@@ -217209,6 +217210,19 @@
           "to_state": "performed"
         },
         {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.performed",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
           "op": "native_correlated",
           "subject_ref": {
             "arg": "subject_ref"
@@ -217216,7 +217230,7 @@
           "observation_refs": {
             "arg": "observation_refs"
           },
-          "result": "performed"
+          "result": "delivered"
         },
         {
           "op": "current_owner",
@@ -217247,7 +217261,7 @@
         }
       ]
     },
-    "meaning": "SalesAgreement: accepted → performed; Actual buyer acceptance of exact terms is captured; performance is shown by substantive fulfillment and disputes retain enforceable duties.",
+    "meaning": "SalesAgreement: accepted → performed; Actual buyer acceptance of exact terms is captured; performance is shown by substantive fulfillment and disputes retain enforceable duties. RC-06/AD-013: performance requires an authenticated attributable event, and the correlated native object is the DELIVERY -- `result: \"performed\"` correlated the sale to its own payment, which is the reading AD-013 refused.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/SalesAgreement",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -217329,12 +217343,39 @@
             ],
             "additionalProperties": false
           }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "decision_refs"
       ],
       "additionalProperties": false
     }
@@ -217750,7 +217791,8 @@
     "argument_types": {
       "subject_ref": "Ref<SalesAgreement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
     },
     "body": {
       "op": "all",
@@ -217770,6 +217812,19 @@
           "to_state": "performed"
         },
         {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.performed",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
           "op": "native_correlated",
           "subject_ref": {
             "arg": "subject_ref"
@@ -217777,7 +217832,7 @@
           "observation_refs": {
             "arg": "observation_refs"
           },
-          "result": "performed"
+          "result": "delivered"
         },
         {
           "op": "current_owner",
@@ -217808,7 +217863,7 @@
         }
       ]
     },
-    "meaning": "SalesAgreement: partially-performed → performed; Actual buyer acceptance of exact terms is captured; performance is shown by substantive fulfillment and disputes retain enforceable duties.",
+    "meaning": "SalesAgreement: partially-performed → performed; Actual buyer acceptance of exact terms is captured; performance is shown by substantive fulfillment and disputes retain enforceable duties. RC-06/AD-013: performance requires an authenticated attributable event, and the correlated native object is the DELIVERY -- `result: \"performed\"` correlated the sale to its own payment, which is the reading AD-013 refused.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/SalesAgreement",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -217890,12 +217945,39 @@
             ],
             "additionalProperties": false
           }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "decision_refs"
       ],
       "additionalProperties": false
     }
@@ -218838,7 +218920,8 @@
     "argument_types": {
       "subject_ref": "Ref<SalesAgreement>",
       "observation_refs": "Ref<Observation>[]",
-      "judgment_refs": "Ref<EvidenceJudgment>[]"
+      "judgment_refs": "Ref<EvidenceJudgment>[]",
+      "decision_refs": "Ref<DecisionRecord>[]"
     },
     "body": {
       "op": "all",
@@ -218858,6 +218941,19 @@
           "to_state": "performed"
         },
         {
+          "op": "transition_basis",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "event_kind": "record.performed",
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "decision_refs": {
+            "arg": "decision_refs"
+          }
+        },
+        {
           "op": "native_correlated",
           "subject_ref": {
             "arg": "subject_ref"
@@ -218865,7 +218961,7 @@
           "observation_refs": {
             "arg": "observation_refs"
           },
-          "result": "performed"
+          "result": "delivered"
         },
         {
           "op": "current_owner",
@@ -218896,7 +218992,7 @@
         }
       ]
     },
-    "meaning": "SalesAgreement: disputed → performed; Actual buyer acceptance of exact terms is captured; performance is shown by substantive fulfillment and disputes retain enforceable duties.",
+    "meaning": "SalesAgreement: disputed → performed; Actual buyer acceptance of exact terms is captured; performance is shown by substantive fulfillment and disputes retain enforceable duties. RC-06/AD-013: performance requires an authenticated attributable event, and the correlated native object is the DELIVERY -- `result: \"performed\"` correlated the sale to its own payment, which is the reading AD-013 refused.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/SalesAgreement",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -218978,12 +219074,39 @@
             ],
             "additionalProperties": false
           }
+        },
+        "decision_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "DecisionRecord"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [
         "subject_ref",
         "observation_refs",
-        "judgment_refs"
+        "judgment_refs",
+        "decision_refs"
       ],
       "additionalProperties": false
     }
