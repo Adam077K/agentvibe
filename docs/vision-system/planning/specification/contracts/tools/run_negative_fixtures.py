@@ -37,6 +37,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import traceback
 from pathlib import Path
 
 _TOOLS = Path(__file__).absolute().parent
@@ -305,18 +306,26 @@ def execute_fixture(fixture, base):
 
 
 def run_fixture(fixture, base, verbose):
-    """A negative fixture passes when the validator REJECTED it, for the stated reason."""
+    """A negative fixture passes when the validator REJECTED it, for the stated reason.
+
+    Returns (ok, kind, detail). `kind` is one of LEAK_KINDS and is RC4-05's field: the
+    three ways a negative fixture fails are three different things and the caller printed
+    one sentence over all of them. The runner has always known which; only the sentence
+    did not.
+    """
     code, output = execute_fixture(fixture, base)
     if code is None:
-        return False, output
+        return False, "never_ran", output
     if code == 0:
-        return False, "fixture PASSED validation; the check that should reject it is absent"
+        return False, "passed", ("fixture PASSED validation; the check that should reject "
+                                 "it is absent")
     wanted = fixture["expect_failure_contains"]
     if wanted not in output:
-        return False, f"failed for the wrong reason; expected {wanted!r} in:\n{output[-900:]}"
+        return False, "wrong_reason", (f"failed for the wrong reason; expected {wanted!r} "
+                                       f"in:\n{output[-900:]}")
     if verbose:
         print(f"    rejected with: {wanted}")
-    return True, "rejected as required"
+    return True, "rejected", "rejected as required"
 
 
 # RC3-03. A leak entry carries the REASON, not just the id, and the caller reads the
@@ -330,7 +339,27 @@ def run_fixture(fixture, base, verbose):
 # time. This constant is what the validator asserts still exists, for the same reason it
 # asserts FIXTURE_RATCHET does: a reader on the other side of a rename gets the wrong
 # message rather than an error.
-LEAK_RECORD_KEYS = ("id", "reason")
+#
+# RC4-05 adds `kind`, and the reason it is a KEY rather than a prefix of `reason` is the
+# same reason the report is found by a marker rather than by the last `{`: the caller must
+# not have to parse prose to learn which of four things happened. The recheck measured two
+# leaks of two different kinds printed under one sentence -- "a negative fixture was not
+# rejected; the check it names is gone" -- over a fixture that WAS rejected, by a check
+# that is not gone. RC2-04 had already split COUNT MISMATCH out of that headline for
+# exactly this reason; the leak arm still carried the rest.
+LEAK_RECORD_KEYS = ("id", "kind", "reason")
+
+# The closed set, declared here and asserted by validate_contracts.py, which refuses a kind
+# it does not have a sentence for rather than printing a generic one over it.
+#
+#   passed        the validator accepted the mutation: the check is GONE.
+#   wrong_reason  the validator rejected it, by a different check: the check the fixture
+#                 names is UNPROVEN. Not the same fact, and the opposite instruction to
+#                 the reader.
+#   never_ran     the fixture never reached the validator -- its regeneration step failed,
+#                 or run_fixture raised. A control that did not execute (RC4-06).
+#   id_mismatch   the document's own id disagrees with the file the manifest names it by.
+LEAK_KINDS = ("passed", "wrong_reason", "never_ran", "id_mismatch")
 
 # And the marker that DELIMITS the report, because attaching the reason is what broke the
 # caller's way of finding it. validate_contracts.py located this JSON with
@@ -474,12 +503,37 @@ def main(verbose: bool) -> int:
             mismatch = (f"fixture declares id {fixture['id']!r}; the manifest names "
                         "fixtures by file, so the two must agree")
             print(f"  [FAIL] {identifier}: {mismatch}")
-            failures.append({"id": identifier, "reason": mismatch})
+            failures.append({"id": identifier, "kind": "id_mismatch", "reason": mismatch})
             continue
-        ok, detail = run_fixture(fixture, base, verbose)
+        try:
+            ok, kind, detail = run_fixture(fixture, base, verbose)
+        except Exception as error:  # noqa: BLE001 -- see below; the breadth is the point
+            # RC4-06, and it was found by accident, which is the part worth keeping. A
+            # derivation edit rewrote a line three fixtures use as a `tools_patch` anchor;
+            # apply_tools_patch raised ValueError out of run_fixture and out of main(); the
+            # runner died without printing REPORT_MARKER; and validate_contracts.py took
+            # its no-report arm and attached "the runner reported no per-fixture result; it
+            # refused before running a fixture, or died" -- after SEVENTEEN fixtures had
+            # already reported [ok]. The sentence said the opposite of what happened, and
+            # the 2,000-character transcript tail beside it is the blind tail RC3-03 exists
+            # to replace. One malformed or stale fixture put the whole suite back on the
+            # path RC3-03 removed, for every fixture rather than for itself.
+            #
+            # So an exception is THIS fixture's failure and nothing else's: an unrunnable
+            # fixture is a control that is not working, which is what the leak list is for.
+            # The breadth of the except is deliberate -- the caller must learn which fixture
+            # raised and what it said, and narrowing it to the exception types seen so far
+            # is how the next unanticipated one re-enters the blind-tail path.
+            ok, kind = False, "never_ran"
+            frames = traceback.extract_tb(error.__traceback__)
+            where = ("%s:%d in %s" % (os.path.basename(frames[-1].filename),
+                                      frames[-1].lineno, frames[-1].name)
+                     if frames else "no traceback")
+            detail = ("the fixture could not be RUN, so it judged nothing: "
+                      "%s: %s (raised at %s)" % (type(error).__name__, error, where))
         print(f"  [{'ok' if ok else 'FAIL'}] {fixture['repair']} {fixture['id']}: {detail}")
         if not ok:
-            failures.append({"id": fixture["id"], "reason": detail})
+            failures.append({"id": fixture["id"], "kind": kind, "reason": detail})
     print(REPORT_MARKER)
     print(json.dumps({"fixtures": len(fixtures), "declared": len(declared),
                       "passed_as_required": len(fixtures) - len(failures),

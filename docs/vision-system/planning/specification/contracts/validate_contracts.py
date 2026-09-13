@@ -1720,11 +1720,17 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
     # STRUCTURED per-fixture reason out of the runner, and a runner that stopped emitting
     # one would leave this file attaching nothing at all -- which is worse than the blind
     # tail it replaces, because it would be silent rather than truncated.
-    LEAK_RECORD = 'LEAK_RECORD_KEYS = ("id", "reason")'
+    LEAK_RECORD = 'LEAK_RECORD_KEYS = ("id", "kind", "reason")'
     checked(LEAK_RECORD in runner_source,
             ("the runner no longer declares a per-fixture leak reason, so the detail this "
              "file attaches when a fixture leaks would name the fixture and not the "
-             "reason (RC3-03)", LEAK_RECORD))
+             "reason (RC3-03), or no longer declares the KIND this file chooses its "
+             "headline by (RC4-05)", LEAK_RECORD))
+    LEAK_KINDS_DECLARED = ('LEAK_KINDS = ("passed", "wrong_reason", "never_ran", '
+                           '"id_mismatch")')
+    checked(LEAK_KINDS_DECLARED in runner_source,
+            ("the runner no longer declares the closed set of leak kinds this file has "
+             "sentences for (RC4-05)", LEAK_KINDS_DECLARED))
     # The report is found by a declared MARKER, not by the last `{` in the transcript.
     # `stdout.rindex("{")` worked only while every value in the report was a scalar: a
     # leak `reason` is a validator AssertionError and those carry dicts, so the last `{`
@@ -1761,21 +1767,66 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
     # same defect RC2-04 was written to fix -- a message naming the wrong control -- one
     # layer down. The runner has carried the reason per fixture all along; this reads it
     # rather than slicing bytes, so the detail cannot depend on where a fixture sorts.
+    #
+    # RC4-05 is the layer above that, and it is the same defect once more: the DETAIL was
+    # corrected and the HEADLINE was not. Two measured leaks, two different truths, one
+    # sentence -- a fixture that passed validation (the check IS gone) and a fixture that
+    # was rejected by a different check (it was NOT "not rejected", and the check it names
+    # is NOT gone) both printed "a negative fixture was not rejected; the check it names is
+    # gone". RC2-04 split COUNT MISMATCH out of this same headline for this same reason and
+    # gave it a dedicated branch; the leak arm still carried the rest. The runner knows
+    # which kind each leak is and always did. These are its sentences, one per kind, and an
+    # unknown kind is refused rather than printed over.
+    LEAK_HEADLINES = {
+        "passed": "A NEGATIVE FIXTURE WAS NOT REJECTED: the validator accepted the "
+                  "mutation, so the check that fixture exists to exercise is GONE",
+        "wrong_reason": "A NEGATIVE FIXTURE WAS REJECTED BY A DIFFERENT CHECK than the one "
+                        "it exists to exercise, so THAT CHECK IS UNPROVEN. It WAS rejected "
+                        "and the check it names is not necessarily gone -- read the "
+                        "`reason` below, which carries what actually fired",
+        "never_ran": "A NEGATIVE FIXTURE COULD NOT BE RUN: it never reached the validator, "
+                     "so it is a control that did not execute rather than one that passed. "
+                     "Other fixtures in the same run may have reported [ok]; this says "
+                     "nothing about them (RC4-06)",
+        "id_mismatch": "A NEGATIVE FIXTURE'S OWN ID DISAGREES with the file the manifest "
+                       "names it by, so the denominator and the tree are counting "
+                       "different things",
+    }
     if isinstance(runner_said, dict) and runner_said.get("leaked"):
-        leak_detail = {"leaked": runner_said["leaked"],
+        leaked = runner_said["leaked"]
+        kinds = [kind for kind in LEAK_HEADLINES if any(record.get("kind") == kind
+                                                        for record in leaked)]
+        unknown = sorted({record.get("kind") for record in leaked} - set(LEAK_HEADLINES))
+        # A kind with no sentence must not borrow another kind's. Refused here, loudly,
+        # rather than folded into whichever headline happened to be first.
+        checked(not unknown,
+                ("the runner reported a leak kind this file has no sentence for, so the "
+                 "headline below would describe it as something else (RC4-05)", unknown,
+                 sorted(LEAK_HEADLINES)))
+        headline = " || ".join(LEAK_HEADLINES[kind] for kind in kinds)
+        leak_detail = {"leaked": leaked,
+                       "kinds": kinds,
                        "fixtures": runner_said.get("fixtures"),
                        "passed_as_required": runner_said.get("passed_as_required")}
     else:
         # The runner exited non-zero without naming a fixture, so there is no per-fixture
         # reason to read: it refused before running one, or it died. Its own sentence is
         # the only thing there is, and it is the LAST thing printed rather than the first.
+        #
+        # RC4-06 narrowed what reaches here. An exception inside run_fixture used to kill
+        # the suite mid-run and land on this arm, so this sentence was printed over a run
+        # in which seventeen fixtures had already reported [ok] -- and the transcript tail
+        # beside it is the blind tail RC3-03 exists to replace. The runner now records a
+        # raise as that fixture's own `never_ran` leak and keeps going, so this arm is once
+        # again only the refusal-before-any-fixture case its sentence describes.
+        headline = ("THE NEGATIVE SUITE PRODUCED NO PER-FIXTURE RESULT: it refused before "
+                    "running a fixture, or it died in a way the per-fixture handler does "
+                    "not cover. No fixture's verdict can be read from this run")
         leak_detail = {"leaked": None,
                        "why_no_leak_list": "the runner reported no per-fixture result; it "
                                            "refused before running a fixture, or died",
                        "runner_tail": completed.stdout[-2000:] + completed.stderr[-2000:]}
-    checked(completed.returncode == 0,
-            ("a negative fixture was not rejected; the check it names is gone",
-             leak_detail))
+    checked(completed.returncode == 0, (headline, leak_detail))
     FIXTURES_RUN = runner_said
     checked(FIXTURES_RUN["fixtures"] > 0, "refusing a vacuous pass with zero negative fixtures")
     # RC-04: `> 0` is not a count. With 1 of 27 fixtures present this block reported
