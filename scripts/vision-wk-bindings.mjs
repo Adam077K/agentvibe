@@ -164,6 +164,21 @@ function verify() {
     }
   }
 
+  // D1 — (XSR / G1-04) verification dilution. Informational: how many DISTINCT (subcase,
+  // assertion) pairs the answers actually rest on, and which pair carries the most answers.
+  // Reuse is not automatically a defect — several answers can legitimately turn on one
+  // observation — but the figure is the one G1-04 quotes, so it is computed here rather than
+  // written into prose that cannot be re-run.
+  const pairAnswers = new Map();
+  for (const q of answers)
+    for (const b of q.verification_bindings || []) {
+      const k = `${b.subcase_id}|${b.assertion_id}`;
+      if (!pairAnswers.has(k)) pairAnswers.set(k, []);
+      pairAnswers.get(k).push(q.question_id);
+    }
+  const pairSizes = [...pairAnswers.entries()].sort((a, b) => b[1].length - a[1].length);
+  const soleBinding = answers.filter((q) => (q.verification_bindings || []).length === 1).length;
+
   // A1 — unbound assertions (informational).
   const allAssertions = [...idx.keys()];
   const unbound = allAssertions.filter((a) => !boundAssertions.has(a));
@@ -216,6 +231,11 @@ function verify() {
   note.push(`distinct positive_control  ${uniq(src.verification_subcases.map((s) => s.positive_control)).length}`);
   note.push(`distinct execution_boundary ${uniq(src.verification_subcases.map((s) => s.execution_boundary)).length}`);
   note.push(`declared shared groups     ${groups.length} (${groups.map((g) => g.field).join(', ') || 'none'})`);
+  note.push(`distinct (subcase,assertion) pairs ${pairAnswers.size} for ${answers.length} answers`);
+  note.push(
+    `most-reused pair (G1-04)   ${pairSizes[0][0].replace('|', ' / ')} serves ${pairSizes[0][1].length}: ${pairSizes[0][1].join(', ')}`
+  );
+  note.push(`answers resting on ONE binding ${soleBinding} of ${answers.length}`);
   note.push(`unbound assertions (R-04)  ${unbound.length}${unbound.length ? ': ' + unbound.join(', ') : ''}`);
   note.push(`root projection divergences ${divergences}`);
 
