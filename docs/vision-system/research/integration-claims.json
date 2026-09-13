@@ -34,19 +34,20 @@
       "New large AWS download or historical body reconstruction",
       "New source-content or live account authentication/terms/credit inspection",
       "Runtime/model/isolation/provider/restore/human-service tests",
-      "Source-index/state/coverage edits or external mutation"
+      "Source-index/state/coverage edits or external mutation",
+      "2026-09-13 outbound-mail amendment turn: no network retrieval of any kind was available to the authoring engine, so no provider source was re-read, no body or hash captured and no new provider fact introduced. No edit was made to source-index.json, state.json or coverage/*; only this file's own claims, url map and coverage block changed, and the two registered locators were already present in source-index.json"
     ],
     "hash_honesty": "Do not manufacture historical AWS hashes. Fastmail hash identifies an inspection-reported representation whose body was not retained; neither is a current account quote or a reproducible archived body."
   },
   "coverage": {
-    "specification_bibliography_and_pricing_unique_urls": 50,
-    "registered_unique_urls": 52,
+    "specification_bibliography_and_pricing_unique_urls": 52,
+    "registered_unique_urls": 54,
     "source_groups": 29,
     "additional_narrow_or_inherited_sources": [
       "https://developers.cloudflare.com/d1/platform/limits/",
       "https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan"
     ],
-    "definition": "All external URLs introduced directly by 07/08 plus the companion pricing source map. N01 and substrate dependencies retain their original scoped report/register links; this file does not silently claim to rereview every transitive source."
+    "definition": "All external URLs introduced directly by 07/08 plus the companion pricing source map. N01 and substrate dependencies retain their original scoped report/register links; this file does not silently claim to rereview every transitive source. The 2026-09-13 outbound-mail transport amendment introduced no new URL: it registered two already-inspected Postmark locators (webhook overview, terms of service) that section 7 relied on through its review trail without their own claim group. Counts rose from 50/52 for that reason, not because new sources were retrieved."
   },
   "claims": {
     "IC-S01": {
@@ -307,9 +308,10 @@
       "kind": "Source claim",
       "title": "Outbound mail and tariff",
       "claim_scope": "Postmark documents send and suppression APIs. The author reports Basic $15/month for 10,000 messages and $1.80/1,000 overage. API acknowledgement is distinct from delivery, understanding and duty fulfillment.",
-      "normative_design_or_estimate_not_proved_by_source": "Exact content forms, capture/webhook verification, no assumed exactly-once guarantee, default tracking off, send caps and actual review/continuity are our protocol; quoted capacity is not actual permission or funded use.",
+      "normative_design_or_estimate_not_proved_by_source": "Exact content forms, capture/webhook verification, no assumed exactly-once guarantee, default tracking off, send caps and actual review/continuity are our protocol; quoted capacity is not actual permission or funded use. The 2026-09-13 transport amendment adds and does not weaken: the absolute endpoint URI, authentication header name, returned identity field names and any send idempotency contract are explicitly unknown admission checks, not values carried from this source.",
       "claimed_in": [
-        "../planning/specification/07-integrations-capacity.md#3-selected-fulfillment-adapters"
+        "../planning/specification/07-integrations-capacity.md#3-selected-fulfillment-adapters",
+        "../planning/specification/07-integrations-capacity.md#9-outbound-mail-transport-event-identity-and-disclosure"
       ],
       "metadata_policy_ref": "substrate-claims.json#/policy",
       "metadata_policy_id": "SC-POLICY-1",
@@ -2508,6 +2510,144 @@
       ],
       "expiry_behavior": "Inherit SC-POLICY-1: retain history but remove sole-current-prerequisite eligibility; obtain current primary evidence or justified compatible alternate and restrict affected claims/actions; do not silently grant broader access or paid fallback",
       "correction_behavior": "Inherit SC-POLICY-1: append correcting observation with affected contract/decision refs, preserve prior scope, reopen dependent selection/admission/tests"
+    },
+    "IC-S30": {
+      "kind": "Source claim",
+      "title": "Outbound mail webhook ingress and origin authentication",
+      "claim_scope": "Postmark documents no HMAC webhook signatures; its recommended protection combines HTTPS Basic Authentication with current provider IP allowlisting, endpoint verification is a separate feature, and the page describes retrying failed processing. Publication date was not established.",
+      "normative_design_or_estimate_not_proved_by_source": "The source does not supply, and this register does not assert: retry count, retry horizon, whether a redelivered event is byte-identical, current provider IP ranges, any per-event identifier field path or its stability under retry, or provider behaviour toward a suppressed recipient. Per-connection Basic credentials, trusted-proxy peer verification, allowlist maintenance as an expiring admitted dependency, the closed EventIdentity tuple with record_type inside it, reconcile-only admission where no stable per-event identity can be bound, contested rather than discarded collisions, retention of the deduplication key for the life of the related duty, and the rule that no inbound event alone produces a consequential effect are our authored protocol. Origin authentication here is a shared-secret claim: a leaked credential, stale allowlist or provider-side compromise still forges an accepted event, and a forged complaint can deny service to a legitimate recipient.",
+      "claimed_in": [
+        "../planning/specification/07-integrations-capacity.md#9-outbound-mail-transport-event-identity-and-disclosure"
+      ],
+      "metadata_policy_ref": "substrate-claims.json#/policy",
+      "metadata_policy_id": "SC-POLICY-1",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Planning orchestrator narrow inspection archived at reviews/2026-09-12-postmark-admission-inspection.md, and independent F-integration-04 access to the same page on the same date; not newly retrieved in the 2026-09-13 amendment turn",
+      "source_interests": "Provider documents/promotes its own service and may earn revenue from adoption, usage or support; primaryness does not establish independence or disinterest",
+      "sources": [
+        {
+          "title": "Postmark webhook overview",
+          "url": "https://postmarkapp.com/developer/webhooks/webhooks-overview",
+          "publication_date": null,
+          "publication_date_status": "Unknown: original publication/update date not established by either reader; access date is not substituted",
+          "version_identity": "Living documentation; exact deployed build/API/account version requires renewed admission",
+          "version_date": null,
+          "version_date_status": "Unknown: target/build/version identifier is not a release-date observation",
+          "source_type": "Primary maintainer/provider technical documentation",
+          "primaryness": "Primary for its own documented interface, recommendation or published terms; not independent validation of composition or actual account rights",
+          "retrieval": {
+            "reported_observation_date": "2026-09-12",
+            "this_metadata_turn": "Not re-retrieved. The 2026-09-13 amendment turn had no permitted network retrieval path and introduced no new provider fact; it carries the 2026-09-12 observations forward unchanged",
+            "known_failures": [],
+            "body_artifact": null,
+            "body_status": "No historical response body supplied to this register; no content hash was retained by the inspection, and no assertion is made that every other source archive was searched",
+            "sha256": null
+          }
+        }
+      ],
+      "assessed_confidence": {
+        "attributed_wording": "Qualified: two readers reported the same narrow wording on 2026-09-12; neither retrieval was reproduced in this turn and no body was retained",
+        "present_applicability": "Unknown until current exact version/account/endpoint configuration is revalidated",
+        "composition_security_and_value": "Unestablished; no runtime, ingress, forgery-resistance or deduplication result inferred"
+      },
+      "corroboration": [
+        {
+          "status": "Two independent readers, one provider page, on the same date",
+          "limit": "Reader corroboration of wording is not independent source evidence; both read the same commercially interested primary page, and a second reading cannot establish a fact the page does not state"
+        }
+      ],
+      "status": "current_claim_only_pending_account_and_runtime_admission",
+      "runtime_validation": null,
+      "account_admission": null,
+      "current_reliance": "Historical planning observation only. The webhook ingress profile cannot be admitted until the enumerated unknowns are closed by actual observation; they never default to the permissive branch",
+      "revalidation": {
+        "policy_ref": "substrate-claims.json#/policy",
+        "latest_scheduled_check": "2026-10-12",
+        "earlier_triggers": [
+          "Before final dependency locking or any operational admission",
+          "Before the first real inbound event is accepted from an actual account",
+          "On relevant documentation/security/maintenance/auth/terms changes even without binary upgrade",
+          "Webhook authentication, signature availability, retry, event payload, event identity or delivery-address changes"
+        ],
+        "owner": "Planning orchestrator; actual accepted dependency/knowledge/account custodian before operating reliance"
+      },
+      "invalidators": [
+        "Introduction of HMAC or any signature scheme, which would be a strict improvement and requires a profile revision rather than silent reliance",
+        "Change to recommended webhook protection, retry behaviour, delivery addresses or event payload structure",
+        "Controlled evidence contradicts the attributed behavior or reveals a missing prerequisite",
+        "Source cannot be reconstructed, is inaccessible at required revalidation, or a cited audit did not cover the relied-on assertion"
+      ],
+      "expiry_behavior": "Inherit SC-POLICY-1: retain history but remove sole-current-prerequisite eligibility; obtain current primary evidence or justified compatible alternate and restrict affected claims/actions; do not silently grant broader access or paid fallback",
+      "correction_behavior": "Inherit SC-POLICY-1: append correcting observation with affected contract/decision refs, preserve prior scope, reopen dependent selection/admission/tests"
+    },
+    "IC-S31": {
+      "kind": "Source claim",
+      "title": "Outbound mail provider terms relied on for eligibility",
+      "claim_scope": "The provider's terms of service, marked effective December 10, 2024, require permission-based lists and restrict unsolicited messages. They also address account credential sharing, approved API access, third-party application consent, unsubscribe handling and extra charges above the monthly allowance.",
+      "normative_design_or_estimate_not_proved_by_source": "That the terms address these subjects is what the source supports. What they permit for this company is an account-admission question and no answer is asserted. Explicitly unknown and not invented anywhere in the dependent specification: whether an actual account exists or would be approved for a custom API client, the account's monthly allowance, whether charges above it apply automatically, the eligible message streams, the applicable law, principal and recipients, and whether any clause is modified by an actual agreement. The ProviderEligibility predicate evaluated before preparation, the closed set of admitted mail forms, the refusal that names the unmet clause, and the inference that exact founder authorization alone cannot qualify derived-audience outreach are our authored protocol, not provider determinations.",
+      "claimed_in": [
+        "../planning/specification/07-integrations-capacity.md#9-outbound-mail-transport-event-identity-and-disclosure"
+      ],
+      "metadata_policy_ref": "substrate-claims.json#/policy",
+      "metadata_policy_id": "SC-POLICY-1",
+      "source_observation_date_reported": "2026-09-12",
+      "source_observer": "Planning orchestrator narrow inspection archived at reviews/2026-09-12-postmark-admission-inspection.md, and independent F-integration-04 access to the same document on the same date; not newly retrieved in the 2026-09-13 amendment turn",
+      "source_interests": "Provider publishes and may unilaterally revise terms governing its own service and revenue; the document is drafted in the provider's interest and is not a neutral statement of our rights",
+      "sources": [
+        {
+          "title": "Postmark terms of service, sections 3, 5 and 10",
+          "url": "https://postmarkapp.com/terms-of-service",
+          "publication_date": "2024-12-10",
+          "publication_date_status": "Effective date stated on the document and reported by both readers; this is the terms' own effective date, not a page-publication or retrieval date",
+          "version_identity": "Living documentation; exact deployed build/API/account version requires renewed admission",
+          "version_date": null,
+          "version_date_status": "Unknown: target/build/version identifier is not a release-date observation",
+          "source_type": "Primary provider contractual terms; an actual executed agreement or account determination may differ",
+          "primaryness": "Primary for its own documented interface, recommendation or published terms; not independent validation of composition or actual account rights",
+          "retrieval": {
+            "reported_observation_date": "2026-09-12",
+            "this_metadata_turn": "Not re-retrieved. The 2026-09-13 amendment turn had no permitted network retrieval path and introduced no new provider fact; it carries the 2026-09-12 observations forward unchanged",
+            "known_failures": [],
+            "body_artifact": null,
+            "body_status": "No historical response body supplied to this register; no content hash was retained by the inspection, and no assertion is made that every other source archive was searched",
+            "sha256": null
+          }
+        }
+      ],
+      "assessed_confidence": {
+        "attributed_wording": "Qualified: two readers reported the same narrow clauses and effective date on 2026-09-12; no body or hash was retained",
+        "present_applicability": "Unknown: a later effective date, an actual agreement or an account-level determination supersedes this reading",
+        "composition_security_and_value": "Unestablished; no eligibility, approval, legal advice or account right is inferred"
+      },
+      "corroboration": [
+        {
+          "status": "Two independent readers, one provider document, on the same date",
+          "limit": "Reader corroboration is not legal interpretation and not independent source evidence; an interested provider's terms cannot corroborate our eligibility under them"
+        }
+      ],
+      "status": "current_claim_only_pending_account_and_runtime_admission",
+      "runtime_validation": null,
+      "account_admission": null,
+      "current_reliance": "Historical planning observation only; eligibility for any actual audience requires the actual account, principal, applicable law and a competent determination, none of which this register supplies",
+      "revalidation": {
+        "policy_ref": "substrate-claims.json#/policy",
+        "latest_scheduled_check": "2026-10-12",
+        "earlier_triggers": [
+          "Before final dependency locking or any operational admission",
+          "Before any first contact, broadcast or new audience is sent through this adapter",
+          "At account creation, plan selection, renewal or any observed allowance or overage change",
+          "On any new effective date, policy notice or account-level determination"
+        ],
+        "owner": "Planning orchestrator; actual accepted account custodian and competent determiner before operating reliance"
+      },
+      "invalidators": [
+        "A new effective date or any revision to the permission, consent, API-access, unsubscribe or overage clauses",
+        "An actual executed agreement, account determination or approval that modifies the published terms",
+        "Controlled evidence contradicts the attributed behavior or reveals a missing prerequisite",
+        "Source cannot be reconstructed, is inaccessible at required revalidation, or a cited audit did not cover the relied-on assertion"
+      ],
+      "expiry_behavior": "Inherit SC-POLICY-1: retain history but remove sole-current-prerequisite eligibility; obtain current primary evidence or justified compatible alternate and restrict affected claims/actions; do not silently grant broader access or paid fallback",
+      "correction_behavior": "Inherit SC-POLICY-1: append correcting observation with affected contract/decision refs, preserve prior scope, reopen dependent selection/admission/tests"
     }
   },
   "source_url_to_claim": {
@@ -2562,7 +2702,9 @@
     "https://www.hetzner.com/cloud/block-storage/": "IC-S23",
     "https://www.iso20022.org/iso-20022-message-definitions": "IC-S12",
     "https://www.rfc-editor.org/rfc/rfc7518": "IC-S08",
-    "https://www.rfc-editor.org/rfc/rfc8621": "IC-S02"
+    "https://www.rfc-editor.org/rfc/rfc8621": "IC-S02",
+    "https://postmarkapp.com/developer/webhooks/webhooks-overview": "IC-S30",
+    "https://postmarkapp.com/terms-of-service": "IC-S31"
   },
   "design_and_estimate_boundaries": {
     "kind": "Decision/estimate separation, not additional sourced facts",
