@@ -1,0 +1,16 @@
+{
+  "id": "r18-guard-detached-from-its-edge",
+  "repair": "R18",
+  "finding": "F6D-01; reviews/F2-06-D-authority-buildability-adversarial.md; AT-M4-02",
+  "case": "A guard is removed from the edge that calls it. The guard definition is untouched, byte for byte, and every conjunct pin over it still passes.",
+  "paired_benign_fixture": "fixtures/positive/r18-guard-detached-from-its-edge-benign.json",
+  "why": "The review swept this: one detachment fixture per guard, every call site removed, thirty runs, THIRTY UNDETECTED AND ZERO CAUGHT. This is the sharpest instance. `guard.class.no_total_rank` detached from `edge.ConsequenceDerivation.computed.recomputed_at_release.v1` restores AT-M4-02 -- the derivation may declare an ordering, a rank returns, and C2's human requirement is dropped on an action that is both C2 and C3 -- and it also removes the `unique` on reached_class_ids that keeps the sibling gate check on the same edge honest. A conjunct pin holds a guard to what its BODY demands and says nothing about whether any edge calls it; pinned_attachments is the half that does.",
+  "expect_failure_contains": "GUARD DETACHED FROM ITS EDGE",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.ConsequenceDerivation.computed.recomputed_at_release.v1/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

@@ -1066,10 +1066,13 @@ def inadmissible_ancestor(entry, row, boolean_op):
 # check below forces every registered finding to be pinned or excused, which an author
 # could satisfy by moving all 25 pins into `unpinnable` one reason at a time; this is what
 # stops that being quiet. Lowering these numbers is a decision, and it should read like one.
-checked(len(PINNED["pins"]) >= 25 and len(PINNED["pinned_transitions"]) >= 6,
+# The transition floor was 6 and is 32 (F6D-04). The six were all on `Fulfillment` and
+# `SalesAgreement`; not one of the fifteen WORK-1.1 records had a pinned transition, and
+# three measured edge deletions on those records passed at exit 0.
+checked(len(PINNED["pins"]) >= 25 and len(PINNED["pinned_transitions"]) >= 32,
         ("the pinned table has shrunk; a pin table with no pins passes vacuously",
          {"pins": len(PINNED["pins"]), "floor": 25,
-          "pinned_transitions": len(PINNED["pinned_transitions"]), "transition_floor": 6}))
+          "pinned_transitions": len(PINNED["pinned_transitions"]), "transition_floor": 32}))
 checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= 44,
         ("the pinned table kept its pins and lost its requirements",
          sum(len(pin["require"]) for pin in PINNED["pins"])))
@@ -1333,6 +1336,79 @@ for _name, _primitive in PRIMITIVES.items():
 # EXISTS. RC-01 was that shape: every guard well formed, every criterion sourced, and no
 # transition at all for a delivery that fails in flight. Deleting a transition is a
 # one-line edit to record-registry.json, and nothing here would have noticed it.
+# --- F6D-01: WHERE A GUARD IS ATTACHED. HAND-WRITTEN, AND THE SECOND HALF OF A PIN. ---
+#
+# A conjunct pin holds a guard to what its BODY demands. It says nothing about whether any
+# edge CALLS it, and the measurement is not close: one detachment fixture per guard, every
+# call site removed, thirty runs, THIRTY UNDETECTED AND ZERO CAUGHT. The guard definition
+# survives byte for byte, every conjunct pin still passes over it, and the whole apparatus
+# reports green over a boundary that is no longer evaluated anywhere.
+#
+# Derived from nothing, for the same reason `pinned_transitions` is derived from nothing: a
+# table computed from the registry it checks agrees with every edit to that registry.
+#
+# The call must be DEMANDED, not merely present. A call inside a value slot, under a `not`,
+# under a disjunction or under a quantifier is a call the edge's truth does not depend on --
+# RC3-01 and RC3-02 one layer out -- so the same `polarised_nodes` walk that decides a pin
+# row decides this, rather than a `predicate_id in json.dumps(body)` that would accept all
+# four.
+PIN_ATTACHMENT_KEYS = {"guard", "edges", "findings", "why"}
+checked(bool(str(PINNED.get("pinned_attachments_why", "")).strip()),
+        "pinned-conjuncts.json declares attachments with no reason")
+ATTACHMENTS = PINNED["pinned_attachments"]
+# A floor, a LITERAL, and the same argument as every other floor here: a table derived from
+# what it measures is satisfied by the empty table, and the completeness rule below could be
+# satisfied by deleting guards rather than by attaching them.
+checked(len(ATTACHMENTS) >= 30,
+        ("the attachment table has shrunk; it is the only control that catches a guard "
+         "DETACHED from the edge it guards, and 30 of 30 were undetected before it existed",
+         {"rows": len(ATTACHMENTS), "floor": 30}))
+attached_guards = set()
+for row in ATTACHMENTS:
+    checked(set(row) == PIN_ATTACHMENT_KEYS,
+            ("pinned attachment shape", row.get("guard"),
+             sorted(set(row) ^ PIN_ATTACHMENT_KEYS)))
+    guard_id = row["guard"]
+    checked(guard_id not in attached_guards, ("guard attached twice", guard_id))
+    attached_guards.add(guard_id)
+    checked(guard_id in PREDICATES, ("a pinned attachment names no such guard", guard_id))
+    checked(bool(row["findings"]) and row["why"].strip(),
+            ("a pinned attachment states no finding or no reason", guard_id))
+    checked(bool(row["edges"]),
+            ("a guard is pinned to NO edge, which is the detached state this table exists "
+             "to refuse, written down", guard_id))
+    for edge_id in row["edges"]:
+        checked(edge_id in PREDICATES,
+                ("a pinned attachment names an edge predicate that does not exist",
+                 guard_id, edge_id))
+        calls = [entry for entry in polarised_nodes(PREDICATES[edge_id]["body"], edge_id)
+                 if entry.node.get("op") == "call"
+                 and entry.node.get("predicate_id") == guard_id]
+        demanded = [entry for entry in calls
+                    if not entry.in_value and not entry.negated
+                    and not entry.disjoined and not entry.quantifiers]
+        checked(demanded,
+                ("GUARD DETACHED FROM ITS EDGE: the edge no longer demands this guard, so "
+                 "the boundary it enforces is not evaluated on this transition. The guard "
+                 "definition is untouched and every conjunct pin over it still passes "
+                 "(F6D-01)",
+                 {"guard": guard_id, "edge": edge_id,
+                  "calls_found": len(calls), "demanded": len(demanded),
+                  "note": ("present but not demanded" if calls else "no call at all"),
+                  "why_it_matters": row["why"]}))
+# Completeness in the other direction: a guard registered with no attachment row is a guard
+# nobody has said where to find. The rule is stated over `guard.*` because that is the
+# prefix the amendment registers its boundaries under and the one 11-schemas-state-contracts
+# enumerates; an edge or a criterion is attached by the record registry, which is checked
+# elsewhere.
+registered_guards = {name for name in PREDICATES if name.startswith("guard.")}
+checked(registered_guards == attached_guards,
+        ("a registered guard has no pinned attachment, or an attachment names a guard the "
+         "registry no longer has. A guard nobody says where to attach is detachable by "
+         "construction (F6D-01)",
+         {"registered but unattached": sorted(registered_guards - attached_guards),
+          "attached but unregistered": sorted(attached_guards - registered_guards)}))
+
 PIN_TRANSITION_KEYS = {"record", "from", "to", "findings", "why"}
 for row in PINNED["pinned_transitions"]:
     checked(set(row) == PIN_TRANSITION_KEYS,
@@ -1665,8 +1741,8 @@ checked(version_rows >= 14,
 #   positive: 17, one benign case per adverse case of selection-record section 12.5.
 #             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
 #             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 59
-POSITIVE_FIXTURE_FLOOR = 20
+NEGATIVE_FIXTURE_FLOOR = 61
+POSITIVE_FIXTURE_FLOOR = 22
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

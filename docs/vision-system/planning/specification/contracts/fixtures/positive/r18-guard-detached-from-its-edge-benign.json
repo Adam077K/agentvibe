@@ -1,0 +1,21 @@
+{
+  "id": "r18-guard-detached-from-its-edge-benign",
+  "repair": "R18",
+  "finding": "F6D-01, benign column",
+  "case": "A guard gains a SECOND edge that calls it, which is an attachment the table does not name and must not refuse.",
+  "paired_adverse_fixture": "fixtures/negative/r18-guard-detached-from-its-edge.json",
+  "why": "The attachment table states where a guard MUST be called, not where it may be. A check that also refused an extra call site would refuse the ordinary way a boundary is widened -- and three rows of the table already name two edges and one names three, so the table would be contradicting itself. Here `guard.derivation.writer_is_release_path` is additionally demanded on `recomputed_at_release -> matched`, which is a strengthening: the release path is the only writer on that edge too.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.ConsequenceDerivation.recomputed_at_release.matched.v1/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "call",
+        "predicate_id": "guard.derivation.writer_is_release_path",
+        "arguments": { "subject_ref": { "arg": "subject_ref" } }
+      }
+    }
+  ]
+}
