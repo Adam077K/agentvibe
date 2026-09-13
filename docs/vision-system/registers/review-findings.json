@@ -930,7 +930,7 @@
     "severity": "low",
     "class": "a",
     "owner": "canonical contract author; independent reviewer after repair",
-    "status": "Open. The G1 repair justified the eleven records G1-06 named; its census over the same corpus finds eleven more: EvaluationCase, IndexSnapshot, ExperienceArtifact, BuildArtifact, SecurityCase, Partnership, CandidateAssessment, ContinuityArrangement, Constraint, Defect, AccessGraph. Not repaired in that lane; reported honestly.",
+    "status": "Open. Census at 755c59c (after the g1 and g-prose merges) finds 8 further contract-only records: EvaluationCase, IndexSnapshot, ExperienceArtifact, BuildArtifact, Partnership, ContinuityArrangement, Constraint, AccessGraph. Was 11 at eb6eb66; the prose lane named SecurityCase, CandidateAssessment and Defect while writing phase meanings.",
     "required_contract": "Each carries a justification object: a source concern whose meaning requires it, or derived_control_machinery with the owning record and obligation. Constraint and Defect are directive §8.11 subjects and can cite DIRECTIVE.md.",
     "independent_recheck": null,
     "implementation_evidence": null
