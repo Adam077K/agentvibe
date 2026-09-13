@@ -71,20 +71,18 @@
     "Merged xsr-residue lane at 4e03c99: F50-Q08 and F33-Q04 gain discriminating subcases WK-V55/WK-V56; XSR-R-01 family refs derived from bindings (0 mismatches); XSR-R-02 56 distinct positive controls; XSR-R-03 R-NATIVE one selected + two candidate profiles. Root ran the lane's verifier. Author-recorded, independent recheck pending under Phase G.",
     "Merged technical-amendment lane at c71be26: 07-integrations-capacity.md §9 outbound-mail transport boundary, event identity, terms IC-S30/31, closed disclosure object, T-R3 table, MAIL-T01…08.",
     "Merged canonical-repair lane at 1be959c (R1–R8). Validator 252513 checks, 13/13 negative fixtures rejected. FI-11 mechanism closed (every edge calls its criterion, all declared args read, 0 sibling collisions with state literals erased) but CONTENT half open: 210 sibling collisions and 92 skeletons when all strings are erased. FI-12 constraints 2 and 6 repaired at mechanism level; founder/root-custodian identity is an admission check. CCR-01..07 repaired, all pending independent review.",
-    "PHASE G RUN at frozen subject 7ddc066 — four independent reviewers, twelve dimensions, eight scenarios, negative controls, §8.21 checklist, EAS-R1. Archived verbatim as planning/reviews/G-01…G-04. Verdict: ELEVEN dimensions sufficient for implementation to begin; ONE — internal coherence — INSUFFICIENT on two (d)-class findings, both on SalesAgreement (G2-01 what evidence is performance of a sale; G2-02 whether terminated asserts closure). Buildability sufficient for B01–B03, insufficient for the money/fulfillment vertical until G2-01/02/05/06 land. FI-11 residue re-measured by G2 as 6 sibling pairs (not 210) plus a missing validator ratchet — 3 of 3 criterion-content mutations leaked. Twenty-eight (a)/(b)/(c) findings across G1/G3/G4, repair lanes dispatched by file partition."
+    "PHASE G RUN at frozen subject 7ddc066 — four independent reviewers, twelve dimensions, eight scenarios, negative controls, §8.21 checklist, EAS-R1. Archived verbatim as planning/reviews/G-01…G-04. Verdict: ELEVEN dimensions sufficient for implementation to begin; ONE — internal coherence — INSUFFICIENT on two (d)-class findings, both on SalesAgreement (G2-01 what evidence is performance of a sale; G2-02 whether terminated asserts closure). Buildability sufficient for B01–B03, insufficient for the money/fulfillment vertical until G2-01/02/05/06 land. FI-11 residue re-measured by G2 as 6 sibling pairs (not 210) plus a missing validator ratchet — 3 of 3 criterion-content mutations leaked. Twenty-eight (a)/(b)/(c) findings across G1/G3/G4, repair lanes dispatched by file partition.",
+    "Merged g3-registers 2c57d84, g1-coverage eb6eb66, g-prose 50ab4e8. Phase G (a)/(b) repairs landed for G1-01..07, G3-01/02/03/05/06, G3-04, G4-04, G4-06, G2-03. Prose lane meaning-preservation checked by diff: 560 lines relabelled, 2 sentences absent and both inside supersession blocks. AD-011..014 recorded. Founder queue Q-002..Q-014 queued, not asked. Remaining before disposition: phase-content merge, guard repair for the two (d) findings, independent recheck of that repair."
   ],
   "active_work": [
     {
-      "agent": "review-canonical (reviewer, read-only with shell)",
-      "scope": "Independent conformance review of the recovered contracts/ set against FI-10, FI-11, FI-12 at frozen subject cb4bf52. Must run the author's validator itself and name what it does not check; must test guard distinctness in meaning, not bytes; must trace FI-12's recursion risk end to end.",
-      "subject": "cb4bf52",
-      "dispatched": "2026-09-13"
-    },
-    {
-      "agent": "review-xsr (reviewer, read-only with shell)",
-      "scope": "Independent recheck of XSR-02 (discrimination of the 268 verification cases, not coverage) and XSR-03 (whether the 11 routes name an actual performer with unavailable-state behavior, or a category).",
-      "subject": "cb4bf52",
-      "dispatched": "2026-09-13"
+      "agent": "build-phase-content (builder)",
+      "scope": "Per-phase criterion content for 167 records by derivation from prose with citations; gaps registered, never invented (AD-012).",
+      "worktree": ".worktrees/phase-content",
+      "branch": "docs/vision-phase-content",
+      "base": "60c7966",
+      "dispatched": "2026-09-13",
+      "status": "in flight; the guard repair lane for G2-01/02/05/06, G4-01/02/03/08, G4-04 fields and G2-07 is queued behind it (shared predicate-registry.json)"
     },
     {
       "agent": "orchestrator",
