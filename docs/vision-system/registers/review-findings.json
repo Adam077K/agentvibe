@@ -782,7 +782,7 @@
     "title": "Question verification references do not exercise distinctive exit/reopening claims",
     "severity": "medium",
     "owner": "orchestrator integration; isolated author and independent reviewer",
-    "status": "Author correction 5349c3f integrated as dd17e17; 268 root verification projections refreshed. Independent recheck pending.",
+    "status": "Independent recheck at cb4bf52: PARTIALLY CLOSED with named residue. 394/394 joins resolve, 0 answers unbound, both original exemplars (F08-Q10→WK-V30, F50-Q06→WK-V53) directly answered; 22 of 24 sampled cases discriminate. Residue: F50-Q08 (no permanent adversarial persona) has no discriminating case; F33-Q04 (standing instruction vs request) does not vary content placement. Repair pending.",
     "required_contract": "Semantic question→contract→verification reconciliation; precise vendor-exit and equivalent-reopening subcases plus other affected joins, not test-family labels alone.",
     "resolution": {
       "source_commit": "5349c3f089ac6652d194db52e4d956e336468001",
@@ -790,7 +790,16 @@
       "artifact": "planning/specification/work-knowledge-contracts.json#/verification_subcases",
       "scope": "54 shared subcases, 159 observations and 394 joins for 268 unchanged answers; structural validation and root subcase inspection, without independent semantic closure."
     },
-    "independent_recheck": null,
+    "independent_recheck": {
+      "source": "planning/reviews/F-cross-scope-03.md",
+      "subject": "cb4bf52",
+      "disposition": "partially closed with named residue",
+      "residue": [
+        "F50-Q08",
+        "F33-Q04"
+      ],
+      "computed": "394 bindings, 0 broken; 152/159 assertions used, max reuse 8; 268/268 root rows match source"
+    },
     "implementation_evidence": null
   },
   {
@@ -800,7 +809,7 @@
     "title": "Fulfillment routes retain unresolved vendor choice after selection",
     "severity": "low",
     "owner": "orchestrator integration; isolated author and independent reviewer",
-    "status": "Author correction d9652586 integrated as a66f2ae; root read all 11 routes and changed prose. Independent recheck pending.",
+    "status": "Independent recheck at cb4bf52: CLOSED at specification level with one named residue (R-NATIVE, tracked as XSR-R-03). 0 placeholder phrases; 150/150 capability route refs resolve; all 11 routes carry admission checks; R-PERSON/R-REMEDY correctly preserve the human performer as unknown.",
     "required_contract": "R-routes delegate to selected versioned IC contracts; preserve unimplemented and actual-account/endpoint/funding/engagement unknowns.",
     "resolution": {
       "source_commit": "d9652586a35940615cfa278f6cfaeca8df1e1124",
@@ -808,7 +817,63 @@
       "artifact": "planning/specification/capabilities.json#/fulfillment_routes",
       "scope": "11 routes delegate to selected specification contracts and explicit remaining admission facts; no actual availability or provider authorization."
     },
-    "independent_recheck": null,
+    "independent_recheck": {
+      "source": "planning/reviews/F-cross-scope-03.md",
+      "subject": "cb4bf52",
+      "disposition": "closed at specification level",
+      "residue": [
+        "XSR-R-03"
+      ],
+      "computed": "11 routes × (performer, admission, unavailable-state) table in the archived report"
+    },
     "implementation_evidence": null
+  },
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-01",
+    "title": "Bindings cite a subcase whose family_ref is absent from the answer's declared verification_family_refs",
+    "severity": "medium",
+    "status": "Open. 88 of 394 bindings (22%) point at the wrong planned test module; e.g. F50-Q06 declares WK-T04/05/06 but binds WK-V53 in WK-T03.",
+    "required_contract": "Every binding's subcase family must appear in its answer's verification_family_refs, or the declared families must be corrected; a planned test module must be the one that actually exercises the answer."
+  },
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-02",
+    "title": "procedure, positive_control and execution_boundary are one identical string across all 54 subcases",
+    "severity": "low",
+    "status": "Open. 54 distinct stimuli share one procedure/positive-control/boundary text; a positive control that is the same for every case does not calibrate any case.",
+    "required_contract": "Per-subcase positive control and execution boundary that would be observably wrong for a different subcase, or an explicit statement of why one shared control is sufficient for a named group."
+  },
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-03",
+    "title": "R-NATIVE selected_route_ids lists three profiles while its version string selects one",
+    "severity": "low",
+    "status": "Open. Two views of one selection disagree — the XSR-03 class recurring in the one route the repair did not reach. selected_route_ids: N-CLAUDE-SUPPLIED/v1, N-CLAUDE-MEDIATED/v1, N-CODEX-SUPPLIED/v1; selected_contracts.version: \"N-CLAUDE-SUPPLIED/v1; mediated and Codex profiles require separate admission.\"",
+    "required_contract": "One selected profile in selected_route_ids with the other two as candidate_route_ids awaiting admission, or the version string widened to match; consumers of either field must derive the same set."
+  },
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-04",
+    "title": "Seven assertions bound by no answer",
+    "severity": "informational",
+    "status": "Open. WK-V04-A3, V09-A3, V20-A3, V23-A3, V26-A2, V33-A3, V43-A1 are defined and unused.",
+    "required_contract": "Bind each to the answer it verifies, or remove it with a reason; an unused assertion is either a missed join or dead weight."
   }
 ]
