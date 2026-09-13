@@ -18653,10 +18653,11 @@
           "expected_observation": "Permit the useful authorized first step while an unrelated future dependency remains unknown; plans and role conversations do not count as that outcome."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the same small deterministic request with no venture goal attached: it completes against one named beneficiary and one inspectable outcome, and creates no Mission or Project record. A run that manufactures a hierarchy for it, or refuses it for lacking one, fails; a subcase whose stimulus contains no decomposition choice has nothing for this control to observe.",
+      "execution_boundary": "Local fixtures establish decomposition and version tracing. The endorsement itself is an owner act: whether a real owner would endorse this goal, and whether the dropped exclusion matters to the excluded audience, are not observable here.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V02",
@@ -18678,10 +18679,11 @@
           "expected_observation": "Accept the conforming exact-scope result and reject unsupported completion without rejecting legitimate completed-inconclusive reporting."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Submit the conforming exact-scope artifact with the required sponsor judgment attached: it advances the accepting edge on the first pass. The exit-zero report without evidence must not advance the same edge, and the completed inconclusive assessment must complete its own accounting while leaving the product unaccepted — an implementation that treats all three alike has no acceptance rule to test.",
+      "execution_boundary": "Acceptance-edge behavior against a fixture sponsor is local. Whether a real sponsor is competent to judge this subject, and whether the judgment would be given, are not established here.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V03",
@@ -18703,10 +18705,11 @@
           "expected_observation": "Complete the feasible bounded workload and preserve due work when new discretionary demand exceeds actual capacity."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the same deliverable with one executor while review capacity is ample: it completes inside the owner allowance with coordination cost at zero. That arm is the baseline the two- and four-executor arms are scored against; a system reporting a throughput gain from splitting, with no single-executor arm run, has measured nothing.",
+      "execution_boundary": "Executor counts, queueing and coordination accounting are local. Actual reviewer and human-performer availability, and the real cost of their time, are operating facts a fixture sets rather than measures.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V04",
@@ -18728,10 +18731,11 @@
           "expected_observation": "Apply the adopted deadline/alternate/wait behavior without treating silence as consent; sufficient current evidence can resolve the blocker."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Supply the withheld dependency at the start and run the same order: it completes with no blocker recorded and no deadline or alternate route taken. Then run the blocked arm to its later sufficient-evidence point: the blocker must clear. A system that records a blocker in the first arm, or leaves one standing in the second, fails a different half of the same control.",
+      "execution_boundary": "Blocker records, routing and clearing are local. Whether the named resolver or custodian actually exists and would answer is a real-world fact no fixture establishes.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V05",
@@ -18753,10 +18757,11 @@
           "expected_observation": "Heartbeats and repeated plans do not constitute progress; identical no-progress attempts park the approach while legitimate other duties continue."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Change an actual causal input and re-run: the retry is admitted, failure identity changes, and the causal allowance is charged for the new condition. The renamed-worker, rewritten-error and provider-reset arms must not obtain that admission — those arms differ from this one only in whether a causal input moved, so a system admitting both has no retry rule.",
+      "execution_boundary": "Invariance to cosmetic change is fully testable locally. What a real provider reset actually resets, and what survives it, is a vendor fact this subcase stages rather than observes.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V06",
@@ -18778,10 +18783,11 @@
           "expected_observation": "Cursor, message and scheduled occurrence identities remain stable across delivery retries; reconstructing local state does not replay external effects."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Issue the genuinely separate entitlement under its own authorization: it is admitted and produces its external action exactly once. The repeated identical command must produce zero additional external actions against the same fixture counter. An implementation that collapses both, or admits both, fails one half of this control.",
+      "execution_boundary": "Same-ID lookup and local effect counting are observable. Whether the external provider itself deduplicates a replayed request requires a real authorized call.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V07",
@@ -18803,10 +18809,11 @@
           "expected_observation": "Record delivery, understood scope and accepted assignment separately; late/duplicate acknowledgments or reports cannot transfer obsolete responsibility or repeat effects."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Perform the clean handoff: the successor inspects the critical originals, demonstrates understood scope and accepts; the transfer is recorded and the late report from the original worker is filed as data with no effect replayed. An implementation for which message receipt alone satisfies this control has not run it.",
+      "execution_boundary": "Receipt, understanding and acceptance can be separated in fixtures. Whether a real successor understands enough to hold the responsibility is a competence judgment outside them.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V08",
@@ -18828,10 +18835,11 @@
           "expected_observation": "Authorized cleanup or abandonment retains original costs, partial artifacts and actual duty custody; a fresh allowed task can still complete."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Stop a run whose only pending action is provably unsent, then resume after the restriction change: lineage, generation and compatibility check out and the run completes. The possibly-sent action must not import on the same terms; identical import in both arms means the release fence is not being observed.",
+      "execution_boundary": "Fences, local staging and lineage checks are observable. Whether the possibly-sent action actually reached a provider is exactly the fact no fixture supplies, and this subcase exists to keep it unasserted.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V09",
@@ -18853,10 +18861,11 @@
           "expected_observation": "Keep observed cost/revenue, estimates and unknowns distinct; report imposed customer/expert labor and foregone work alongside internal efficiency."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the same combined promise with no rejected attempt, no abandonment, no repair and no customer verification labor: the accounting total equals the single successful attempt. The difference between that arm and the rework arm is the rework the accounting must find; an implementation reporting one total for both has not counted it.",
+      "execution_boundary": "Internal attempt and resource counting is local. Imposed customer and expert labor, observed revenue and foregone work require real delivery to a real recipient.",
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V10",
@@ -18878,10 +18887,11 @@
           "expected_observation": "Trial evidence can support qualification but never automatically enlarge authority; competent current evidence and an actual amended grant are both needed for greater freedom."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Admit the template through its actual capability and mandate owners after the bounded trial, dependency unchanged: it becomes eligible at exactly the granted scope and is usable. The changed-dependency arm must restrict that same eligibility before reuse; equal eligibility across both arms means the version did not travel with the use.",
+      "execution_boundary": "Version travel and eligibility restriction are local. Whether the admitting owner is genuinely competent for the granted scope is an authority fact, not a fixture property.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V11",
@@ -18903,10 +18913,11 @@
           "expected_observation": "An unowned duty or unavailable competence creates an explicit role/capacity gap; proposing a new persona cannot satisfy it, while the qualified ordinary route performs."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Route the purely technical part of the mixed task to the qualified generalist: it is performed and accepted with no specialization invoked. The reserved professional or value-bearing part must not be accepted from any model in the same run. A control that accepts both, or refuses both, has not located the boundary it exists to locate.",
+      "execution_boundary": "Routing and refusal are local. Actual professional standing, nontransferable access, and whether the named competent person would accept the engagement, are real-world facts.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V12",
@@ -18928,10 +18939,11 @@
           "expected_observation": "Permission-filtered peer work and scoped coordination remain useful without exposing other ventures' records, hidden labels or unauthorized counts."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the producer's permission-filtered peer coordination: it returns the records it is entitled to and the work proceeds. The same run must not yield its own withheld labels, activation of its evaluator, or a reusable credential. A control in which the useful arm also fails has proved nothing about reach.",
+      "execution_boundary": "Effective tool and context scope are observable in fixtures. Whether the real runtime hands out credentials the way its declared scope says requires the real runtime.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V13",
@@ -18953,10 +18965,11 @@
           "expected_observation": "Use a discriminating original observation where possible; repeated shared-source agreement neither proves independence nor collusion."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Present the two findings that differ only in units, converted: they reconcile to one consistent finding with no arbitration invoked. The genuine factual conflict and the two legitimate taste preferences in the same stimulus must not reconcile that way — an implementation that resolves all three identically is voting.",
+      "execution_boundary": "Unit reconciliation and disagreement typing are local. Whether a real domain authority holds the scope it claims to settle is not.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V14",
@@ -18978,10 +18991,11 @@
           "expected_observation": "Preserve the newcomer’s exact objection and provide evidence/disposition or a bounded discriminator without dismissing it for unfamiliarity."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Give the fresh session the permitted portable package for work it is fully covered for: it performs and is accepted without needing the withheld fact. In the arm that does need it, the fact must appear as an explicit gap; a fluent reconstruction that supplies it is the failure this control is set against.",
+      "execution_boundary": "Package content and gap reporting are local. Whether a real successor’s reconstruction is materially equivalent to the lost native context cannot be observed from inside the fixture.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V15",
@@ -19003,10 +19017,11 @@
           "expected_observation": "Test rival premises and explicit falsifiers; park, narrow or change the proposed approach when evidence defeats it rather than endlessly changing implementation."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Give the stable admitted procedure to the task it covers: it executes directly, consumes no discriminator budget and produces the outcome. The unfamiliar task’s bounded discriminator must be charged to the same allowance, and the repeated attractive plans must consume it without producing progress. Equal consumption across the arms means reasoning is not metered.",
+      "execution_boundary": "Allowance metering, parking and approach change are local. Whether the chosen discriminator would actually change a real decision is a judgment about that real decision.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V16",
@@ -19028,10 +19043,11 @@
           "expected_observation": "Open or complete an owned KnowledgeQuestion/inconclusive assessment with affected decision, next discriminator and stopping rule; unanswered questions cannot become assumptions."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Answer the part of the question the instrument reading fully covers: it is recorded as measured, with its origin, and is usable. The interested testimony and the model inference in the same stimulus must not acquire that label, and the failed search must not read as absence. An implementation where all of them arrive as one kind of claim has no distinction to test.",
+      "execution_boundary": "Claim typing and scope recording are local. Whether the instrument reading is itself accurate is an instrument fact this subcase does not examine.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V17",
@@ -19053,10 +19069,11 @@
           "expected_observation": "Use admitted deterministic/sampled checks for appropriate low-impact work, retaining competent independent endpoints where the actual claim/consequence requires them."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Score the predeclared fixed stratum whose outcomes are known: calibration is computed against actual outcomes and reported with its trial plan. One confident success and a vendor self-rating must not yield a calibration number in the same run.",
+      "execution_boundary": "Calibration arithmetic over fixture strata is local. The fresh stratum requires genuinely fresh real cases, and no calibration claim about real work is established here.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V18",
@@ -19078,10 +19095,11 @@
           "expected_observation": "Urgency and availability of a person do not add authority or competence; use scoped assistance/continuity and preserve legitimate personal ends."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Decide the routine choice the current bounded mandate already covers: it proceeds with no approval request generated and independent work continues. The novel personal-value decision must generate the ask, carrying options, contrary evidence, latest time and the no-answer route. An implementation that asks in both arms, or neither, has not found the mandate edge.",
+      "execution_boundary": "Mandate evaluation and routing are local. Whether the actual person is reachable before the latest responsible time is an operating fact.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V19",
@@ -19103,10 +19121,11 @@
           "expected_observation": "Reject secret/private cross-purpose instruction content and inherited hidden authority; copying an example cannot authorize disclosure or tool execution."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the standing instruction and WorkOrder with no hostile retrieved text present: work proceeds on the authenticated instruction, the loaded version is pinned and nothing is rejected. The hostile arm must be rejected against that same pinned version. Equal outcomes in both arms means precedence is not being resolved, only logged.",
+      "execution_boundary": "Precedence resolution and disclosure refusal are local. Whether a real retrieval corpus contains such an instruction, and whether a real tool would have executed it, are outside this subcase.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V20",
@@ -19128,10 +19147,11 @@
           "expected_observation": "Retain useful safe partials and allow unrelated edits while stale/conflicting publication is rejected."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the two producers on genuinely nonoverlapping files whose promises are compatible: both merge and the combined customer journey is accepted. The conflicting-promise arm must be rejected despite an equally clean textual merge — that difference is the whole control, and an implementation accepting both is checking text, not meaning.",
+      "execution_boundary": "Lease, epoch and merge behavior are local. Whether the combined journey is actually coherent for a real customer requires a real customer.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V21",
@@ -19153,10 +19173,11 @@
           "expected_observation": "If mandatory meaning cannot fit, split/narrow or use an eligible route; record actual supported input/usage limits and opaque measurements honestly rather than assuming exact native subcalls."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Fill the context to just under the admitted limit with mandatory material only: nothing is summarized, every exact number and exclusion is present at the far end, and SummaryLoss is empty. The over-limit arm must produce a non-empty SummaryLoss against the same originals. An empty loss record in both arms means loss is not being measured.",
+      "execution_boundary": "Context accounting and loss recording are local. Actual supported input limits and opaque native subcall behavior are provider facts this subcase deliberately refuses to assume.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V22",
@@ -19178,10 +19199,11 @@
           "expected_observation": "Minimize redundant/transient material without deleting needed accountability or rare continuity knowledge merely because it is unpopular."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Admit the authenticated decision through the knowledge steward: it is retained as a canonical decision with owner, purpose and review policy, and is usable. The single bad anecdote must not become a reusable lesson in the same run, and the rare emergency knowledge must survive the minimization pass. Retention on identical terms across those arms makes admission a formality.",
+      "execution_boundary": "Admission routing and retention policy are local. Whether the repeated supported pattern generalizes beyond the fixture corpus is exactly what a fixture cannot show.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V23",
@@ -19203,10 +19225,11 @@
           "expected_observation": "Field and combination sensitivity govern short/numeric/relationship data as well as long text; permitted bounded protected and nonprotected retrieval still works."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the permitted bounded protected retrieval and the nonprotected search after the erasure: both return their eligible results. An implementation that satisfies erasure by making these fail has passed by breaking the service; one that reports erasure while plaintext survives in WAL, an index, a log or the offline copy has passed by not looking.",
+      "execution_boundary": "Local stores, indexes, WAL, logs and the staged offline copy are inspectable. Provider-side replicas and real backups are outside the fixture, and their unverified state is what keeps deletion incomplete here rather than a reason to report it complete.",
       "planned_module": "system/tests/work-knowledge/wk-t07.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V24",
@@ -19228,10 +19251,11 @@
           "expected_observation": "Active overdue prerequisites restrict dependent use; a fresh correction changes later selection/behavior, while appropriately qualified historical use and unrelated work remain possible."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Use the old source for a question inside its still-valid scope and period: it applies and no refresh is demanded. The dependent use whose refresh deadline has passed must be restricted against the same source. Equal treatment of the two uses means valid time is not being read, only stored.",
+      "execution_boundary": "Valid-time, capture-time and epoch checks are local. Whether the later correction is itself correct is a source-truth question outside this subcase.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V25",
@@ -19253,10 +19277,11 @@
           "expected_observation": "Filter before snippets/titles/counts and revalidate at delivery; deny the private outward query unless destination-authorized while a bounded permitted lookup succeeds."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Issue the bounded permitted internal lookup over the same corpus: it returns the correction ranked above the obsolete popular snippet, with scan, chunk and byte cost charged to the work allowance. The private outward query must be denied in that same run, and the removed shard must appear as omitted coverage rather than as a smaller corpus.",
+      "execution_boundary": "Ranking, cost accounting and permission filtering scale locally. Real corpus-specific recall and correct-use rates at production size are not established by a fixture corpus.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V26",
@@ -19274,10 +19299,11 @@
           "expected_observation": "Separate decline, changed taste and actual competence/capacity evidence; preserve consent, contestation, values authority and unaffected authorized work."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Retain the authenticated taste correction and apply it: the next output honors it. The declined practice session must leave no inferred habit behind in the same run, and the consented domain assessment must remain usable within its consent. A profile that grows in both arms means consent is not governing retention.",
+      "execution_boundary": "Retention, inference and consent scoping are local. Actual owner consent, contestation and whether an inference would be unwelcome are the owner’s facts, not the fixture’s.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V27",
@@ -19299,10 +19325,11 @@
           "expected_observation": "Compose only a finite compatible dependency DAG with unioned constraints; explicit owner distinctions or replacement resolve overlap, not prompt concatenation."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the constant useful skill set against a 10-package library: selection loads the default five candidates and two bodies, picks the eligible skill and charges the scan to the work allowance. The same run at 1000 packages with near-duplicates must not expand that budget or reach the unauthorized tempting match. Unchanged measured cost across library sizes means selection cost is not being charged at all.",
+      "execution_boundary": "Selection behavior and cost accounting scale locally. Real maintenance cost of a large library, and real wrong-selection rates over time, are longitudinal facts.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V28",
@@ -19324,10 +19351,11 @@
           "expected_observation": "An unavailable creator/professional/physical performer leaves its result unfulfilled; an available qualified route must produce and independently verify the actual medium/service."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Exercise the valid case through an available qualified route: the actual output is produced and independently verified. Catalog listing, successful installation and a green report must not advance that same status in the arms where no output exists, and the unavailable performer arm must end unfulfilled rather than simulated.",
+      "execution_boundary": "Output production for local capabilities is observable. An unavailable creator, professional or physical performer is precisely the arm a fixture must record as unfulfilled; no synthetic success stands in for it.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V29",
@@ -19349,10 +19377,11 @@
           "expected_observation": "Allow the simpler adequately protected route to win; no free expert founder, invented availability or unpriced shifted customer labor improves a comparator."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Cost the same actual outcome through the qualified generalist with every obligation matched — delivery, review, integration, license, migration, recurring maintenance, owner and expert time, closure. That fully loaded arm is the comparator for build, rent and specialize. A comparison leaving founder time unpriced or assuming availability will favor the wrong option while remaining arithmetically consistent.",
+      "execution_boundary": "Arithmetic over declared costs under matched obligations is local. The cost figures themselves — vendor prices, real maintenance hours, actual owner time — are operating facts this subcase cannot measure.",
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V30",
@@ -19374,10 +19403,11 @@
           "expected_observation": "Keep duties, schedules, resources and lawful access alive through accepted cutover, then remove old credentials/routes; the complete compatible control actually continues service with measured migration labor."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Pair the same retirement with the complete portable export: the substitute takes over, unfamiliar real successor work is performed, cutover is accepted, old credentials are removed and service continues with migration labor measured. The omitted-field and opaque-context arms must not reach that state on the strength of an export file or a successful import.",
+      "execution_boundary": "Field mapping, cutover sequencing and credential removal are local. Whether a real successor provider interprets the status the same way, and whether real service actually continues, requires both real providers.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V31",
@@ -19395,10 +19425,11 @@
           "expected_observation": "Stale examples or changed executable dependencies restrict affected eligibility until scoped tests and independent reassessment; copied example success is not current evidence."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Import the borrowed skill with every license term, attribution and helper digest present: it is admitted, exportable, and dependent reuse proceeds. The missing-term arm must block dependent reuse while the original work still proceeds. A control that blocks everything has not separated rights from capability.",
+      "execution_boundary": "Provenance, digest and eligibility checking are local. Whether the license terms as written actually permit the intended redistribution is a legal question outside this subcase.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V32",
@@ -19420,10 +19451,11 @@
           "expected_observation": "Adopted latest-time/no-answer/interrupt rules choose wait, accepted substitute or preauthorized preservation; silence neither accepts a task nor proves no effect."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Send the result to an available recipient who answers within the latest responsible time: delivery, understood scope, accepted assignment and the answer are recorded as four separate facts. The unavailable-recipient arm must take the adopted no-answer route instead. If silence produces the same record as an answer, the four facts are one.",
+      "execution_boundary": "Transport identity and state separation are local. Whether a real recipient is reachable, and how a real mailbox behaves under retry, are integration facts.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V33",
@@ -19445,10 +19477,11 @@
           "expected_observation": "Separate endorsed reason, recorded sequence and unobservable causal influence; a fluent account cannot claim complete explanation or expose protected omissions."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Produce the same morning delta with narrative generation working and nothing unknown: the account and the underlying authoritative facts agree line for line. In the generation-failure arm those facts must still appear without the narrative. An account that shrinks when generation fails is hiding, not summarizing.",
+      "execution_boundary": "Account content, permission filtering and state visibility are local. Whether the account is actually readable and sufficient for the real owner requires the real owner.",
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V34",
@@ -19466,10 +19499,11 @@
           "expected_observation": "Receipt or stored text is insufficient: critical-field/original-source and unfamiliar transfer observations must show the correction changes subsequent behavior."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Issue the correction through legitimate authority and then run the later unfamiliar decision: the new amount and exclusion govern it, and the old summary does not reauthorize the superseded work. A run in which the correction is stored, acknowledged, and then absent from the unfamiliar decision is the exact failure this control separates from receipt.",
+      "execution_boundary": "Propagation into subsequent behavior is observable in fixtures. Whether a real delegate understood the correction is only observable in real subsequent work.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V35",
@@ -19491,10 +19525,11 @@
           "expected_observation": "Fresh adverse/original reconstruction and expiry/use checks reopen the contradicted current claim, while the supported clean claim remains usable."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Test the consequential claim against a disinterested source whose cited span actually entails it: it is substantiated, with span, origin, date, version, scope and interests bound. The interested-source arm and the non-entailing-citation arm must not reach substantiation on the same confident wording — equal treatment means the span is not being read.",
+      "execution_boundary": "Span binding and entailment checking over fixture sources are local. Real source rights, real interests, and whether a genuinely fresh adverse case exists in the world, are not.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V36",
@@ -19516,10 +19551,11 @@
           "expected_observation": "Only legitimate scoped residual-defect authority can accept an allowed limitation with owner/mitigation/expiry/review; it cannot waive core invariants, standing, required professional results or proof."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the actual independent review over a clean output: it records inspected originals, checks, findings, omissions, time and competence, and accepts. The nodded-through report must not produce that record for the same output. If both arms end in an acceptance with no difference in recorded evidence, review is a status field.",
+      "execution_boundary": "Review records and residual-defect scoping are local. Whether the reviewer was genuinely competent and independent is a standing fact about a real person or system.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V37",
@@ -19541,10 +19577,11 @@
           "expected_observation": "Blind irrelevant producer identity/order where appropriate, but inspect necessary authority/process evidence separately; disagreement uses evidence or legitimate authority rather than majority."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Add the actual different observation — different capture, different labels — to the two agreeing judges: assurance rises within the scope that observation demonstrably covers. Two further agreeing judges over the same shared data must not raise it. Identical assurance from both additions means independence is being counted by name.",
+      "execution_boundary": "Root disclosure and joint false-acceptance arithmetic are local. Whether two real providers share an upstream model or data source may be undiscoverable, and this subcase requires that to stay recorded as unknown.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V38",
@@ -19566,10 +19603,11 @@
           "expected_observation": "Current capacity, mandate, latest responsible time and accepted alternate govern admission; actual run acceptance completes an occurrence, not wakeup or elapsed time."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the same schedule across an unambiguous local time with no outage and no duplicate delivery: each occurrence fires once, invoices reconcile individually, and the campaign runs inside its window. The ambiguity, duplicate and outage arms must each differ from that baseline in a named way; without the baseline an implementation cannot tell a coalesced gap from a normal run.",
+      "execution_boundary": "Calendar-rule version, occurrence identity and coalescing policy are local. Actual scheduler delivery behavior during a real outage is an infrastructure fact.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V39",
@@ -19591,10 +19629,11 @@
           "expected_observation": "Checkpoint available local work visibly as D1 during witness gaps, preserve actual due service/alternate performance and report unavailable work honestly before current resume."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Leave standing bounded work available with the owner present and the provider healthy: it runs and is accepted under its current authority. In the arm where nothing due or adopted is useful, the system must idle — generating workload there is the failure, and an implementation busy in both arms has no idleness behavior to observe.",
+      "execution_boundary": "Idleness, checkpointing and honest unavailability reporting are local. Real provider exhaustion and a real owner’s absence are operating conditions a fixture stages rather than measures.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V40",
@@ -19616,10 +19655,11 @@
           "expected_observation": "Each self-claim has a falsifier and actual outcome/process/business endpoints; fresh/adverse questions can expose an unmeasured concern without claiming exhaustive knowledge."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Register subject, use, unit, population, criteria, sampling, denominator, controls and stopping rule before any treatment result, then report: the pre-registered denominator and the reported denominator are the same number, and failed and not-run units appear with reasons. The favorable-unit-after-the-fact arm must require a new qualified comparison. If both arms report cleanly, registration is decorative.",
+      "execution_boundary": "Registration, retention and lawful recomputation are local. Whether the chosen endpoint corresponds to real customer utility requires real customers.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V41",
@@ -19641,10 +19681,11 @@
           "expected_observation": "Record observable runtime/input/evidence versions and unknown internals; unavailable pinning or sources limits reproducibility and increases explicitly measured maintenance risk."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the predeclared qualification sample with sessions and outages genuinely independent: the scoped reliability claim holds with its stated assumptions. The shared-session arm must not inherit that certainty. Identical intervals from clustered and independent data means the analysis is assuming independence it does not have.",
+      "execution_boundary": "Clustering and paired analysis are local arithmetic. Unobservable provider internals and unpinnable versions are the condition this subcase requires to be recorded and bounded, not resolved.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V42",
@@ -19666,10 +19707,11 @@
           "expected_observation": "Distinguish gradual drift from isolated noise using registered rules and uncertainty; bounded discrimination can retain unaffected valid service."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Compare two months on the fixed regression pool with model and scoring instrument unchanged: the comparison is admitted and the difference is attributable. The arm in which population, model and scorer all moved must not be reported under the same baseline name. One number covering both is the drift this subcase exists to catch.",
+      "execution_boundary": "Pool bookkeeping, bridge construction and stratum matching are local. Real production drift requires real production samples across real months.",
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V43",
@@ -19691,10 +19733,11 @@
           "expected_observation": "An independent competent owner controls instrument qualification, expected labels and activation; its maintainer/producer cannot self-promote a favorable replacement."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the known-defect case and the clean case through the uncorrupted instrument: the planted defect is detected and the clean case passes. The always-pass and always-reject judges must both fail that pair. A control that runs only the defect case cannot tell a working instrument from one that rejects everything.",
+      "execution_boundary": "Instrument behavior over planted defects and sham controls is almost entirely local — this is one of the few subcases where fixtures are close to sufficient. Independent ownership of qualification, expected labels and activation is an organizational fact outside them.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V44",
@@ -19716,10 +19759,11 @@
           "expected_observation": "Measure instruction/context/maintenance cost and failures; repeated critical noncompliance can require a deterministic boundary or procedure change, not an assumed universally safe prompt length."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the instruction at its original length against a task it fully covers, with adherence checkpoints observable: the loaded version is pinned, the checkpoints show it was followed, and the outcome matches. The loaded-but-not-followed arm must be distinguishable from that on the same recorded evidence; presence in context looking identical across both arms is the failure.",
+      "execution_boundary": "Loaded-version pinning, adherence checkpoints and cost accounting are local. Whether an underlying model change materially altered behavior requires the real model.",
       "planned_module": "system/tests/work-knowledge/wk-t05.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V45",
@@ -19741,10 +19785,11 @@
           "expected_observation": "Track actual loading/following/outcomes and dependency/example freshness; preserve rare required duty capability and retire redundant packages only after replacement/dependency checks."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Admit the complete package — typed applicability and ports, finite steps, tools, bounds, evidence, examples, provenance, license, owner and replacement rule — and drive it with malformed, out-of-scope, injected and unavailable-performer inputs: every declared control is exercised and the package holds. The package with omitted helper, rights or stopping information must not be admitted on the same path.",
+      "execution_boundary": "Package admission and control exercise are local. Whether expected reuse actually exceeds authoring, selection and maintenance cost is a longitudinal claim no fixture settles.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V46",
@@ -19766,10 +19811,11 @@
           "expected_observation": "An unforeseen input creates an owned bounded exception instead of an implicit bypass, guessed result or producer-granted adaptive escape."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the stable transformation through the fixed definition with no unforeseen input: every stage executes, nothing is skipped, and replay is exact. The attempted stage skip must be refused under that same definition, and the unforeseen input must open an owned bounded exception rather than a bypass or a guessed result.",
+      "execution_boundary": "Mode selection, stage guards and exception opening are local. The exception and maintenance costs that decide which mode is actually cheaper accrue over real use.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V47",
@@ -19791,10 +19837,11 @@
           "expected_observation": "Atomically advance accepted step/cursor/next work once; captured responses replay as data, and neither migration nor reconstruction repeats the external action."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Interrupt after the external effect and resume on an unchanged, compatible workflow definition: the cursor advances exactly once, the captured response replays as data, and no external action repeats. The changed-definition arm must park and migrate through an accepted exact mapping instead. Identical resumption across both arms means compatibility is not being checked.",
+      "execution_boundary": "Cursor advance, replay and compensation authorization are local. Whether the external effect actually landed at the provider is the ambiguity this subcase preserves rather than resolves.",
       "planned_module": "system/tests/work-knowledge/wk-t02.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V48",
@@ -19816,10 +19863,11 @@
           "expected_observation": "Current contrary evidence or legitimate correction can reopen/move maturity backward while preserving historical judgment, surviving duties and unaffected accepted work."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Move a run forward with actual maturity evidence and sponsor authority: the stage advances and the movement is attributable. The finished-without-evidence arm must not advance on status alone, and the later legitimate contradiction must move maturity backward while the earlier judgment survives in history.",
+      "execution_boundary": "Stage and status separation, deadline crossing and history preservation are local. Business or evidence maturity itself is a judgment about the real venture.",
       "planned_module": "system/tests/work-knowledge/wk-t01.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V49",
@@ -19841,10 +19889,11 @@
           "expected_observation": "Original sponsor accountability and nondelegable ends/standing/independent acceptance survive child completion or failure; no chain avoids the actual hard decision."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Do the capable work directly: it completes, is accepted, and incurs no transfer, review or integration cost. That direct arm is the comparator for both the parallel-children arm and the deep chain. An implementation reporting delegation as beneficial without running the direct arm has no benefit measurement at all.",
+      "execution_boundary": "Cost accounting across delegation depth and ceiling inheritance are local. The difficulty of the judgment the chain passes onward is real-world difficulty a fixture cannot reproduce.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V50",
@@ -19866,10 +19915,11 @@
           "expected_observation": "Legitimate explanation/method variation and explicit partial/inconclusive outputs remain usable within scope; they cannot satisfy missing outcome evidence or alter recipients/promises."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Pass the valid output through the whole chain: every warning, unit, identity, exclusion, deadline and remaining duty present at the first edge is present and identical at the last. The fluent-but-missing-critical-field output must be caught at the edge where the field disappears. End-to-end type compatibility in both arms is exactly the false pass this control is set against.",
+      "execution_boundary": "Schema validation and cumulative meaning comparison across edges are local. Whether the final meaning is adequate for a real recipient is not.",
       "planned_module": "system/tests/work-knowledge/wk-t04.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V51",
@@ -19891,10 +19941,11 @@
           "expected_observation": "Separate record reconstruction, captured-response replay, newly authorized live rerun and distribution replication; missing originals/provider internals limit the claim instead of fabricated reproduction."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Repeat the deterministic task under pinned inputs: the semantic result is identical and the consequential bytes are unchanged. The creative task must be free to vary inside its taste and contract bounds in the same run. An implementation demanding identity from both, or permitting variation in both, has not separated them.",
+      "execution_boundary": "Determinism under pinned local inputs is observable. The three-week-old failure’s unavailable source and provider version are the missing originals this subcase requires to limit the claim rather than reconstruct around.",
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V52",
@@ -19916,10 +19967,11 @@
           "expected_observation": "Blind irrelevant identity/order, inspect required process separately, preserve disagreement and restrict a drifting default-agreement checker using independently held controls."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the single qualified check alone under the full review allowance: it produces its detections at a measured cost, with false acceptances and false refusals counted. The second similar model and the direct destination observation are scored against that arm. Without it, \"another opinion helped\" has no denominator.",
+      "execution_boundary": "Detection counting and blinding over fixture cases are local. Foregone service and the real cost of a false refusal to a real customer require real service.",
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V53",
@@ -19941,10 +19993,11 @@
           "expected_observation": "Any admissible novice/affected-person challenge receives its scoped reasoned route without automatic direction/suspension authority; settled personal ends keep their legitimate amendment rule and S1 does not invent C2 compulsory inquiry rights."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "File the genuinely new material contrary evidence: reassessment is admitted, the registered discriminator is used, and the original history is preserved. The rephrased-and-refiled equivalent inquiry must not obtain a fresh discretionary allowance in the same run. If both refilings are admitted, equivalence is being judged on local IDs.",
+      "execution_boundary": "Equivalence detection, allowance accounting and challenge routing are local. Whether the new evidence is genuinely material is a domain judgment outside the fixture.",
       "planned_module": "system/tests/work-knowledge/wk-t03.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     },
     {
       "id": "WK-V54",
@@ -19966,10 +20019,11 @@
           "expected_observation": "Allow a better simpler arrangement to win and trigger legitimate replacement; new/adverse observations challenge proxy gains and calcified methods without automatically amending owner values."
         }
       ],
-      "positive_control": "Exercise the useful authorized counterpart under the same controls and resources; a staged packet, blanket refusal or fabricated native/human success cannot pass. Record actual dependency/performer unavailability as such.",
-      "execution_boundary": "Planned conformance cases only. Pure local fixtures establish controlled behavior; claims about actual provider/customer/professional or longitudinal business performance require separately authorized real observations and cannot be inferred from synthetic fixtures.",
+      "positive_control": "Run the ordinary service arm against the competent simpler arrangement with external obligations, information, resources and owner allowance matched: both deliver, and delivery, rights, representation, truthful account, owner attention and total economics are scored separately. An arrangement winning on output volume or safe refusal while delivering less accepted work must lose this control.",
+      "execution_boundary": "Matched-comparison bookkeeping and separation of criteria are local. Every quantity that decides this comparison — real delivery, real rights outcomes, real owner attention, real economics — requires authorized real operation; this subcase can only stage it.",
       "planned_module": "system/tests/work-knowledge/wk-t06.test.ts",
-      "status": "specified-unexecuted"
+      "status": "specified-unexecuted",
+      "shared_control_group": "SCG-REGISTRATION-PROCEDURE"
     }
   ],
   "verification_binding_contract": {
@@ -19978,6 +20032,71 @@
     "rule": "Every question verification_binding identifies an explicit expected observation within a shared contrasting subcase. verification_family_refs retain the original broad portfolio grouping only and are not evidence that each distinctive question claim is exercised. No test file per source question is required.",
     "coverage": "All 268 unchanged source question IDs and texts receive operative subcase/assertion joins. This structural check does not independently establish semantic completeness.",
     "independent_review": "Required on the authored mappings and observations before closing XSR-02.",
-    "root_projection_refresh": "For every one of these 268 question_id rows, copy verification_refs and verification_bindings into the root coverage projection, preserving source text/IDs, answer_location and pending/unimplemented status."
-  }
+    "root_projection_refresh": "For every one of these 268 question_id rows, copy verification_refs and verification_bindings into the root coverage projection, preserving source text/IDs, answer_location and pending/unimplemented status.",
+    "controls": "Each subcase carries its own `positive_control` and `execution_boundary`, naming the ordinary authorized counterpart of its own stimulus and what its own stimulus cannot establish from fixtures (XSR-R-02). `procedure` remains one shared text and says so in `shared_control_groups`; sharing that is not declared there is a failure, not a default."
+  },
+  "shared_control_groups": [
+    {
+      "id": "SCG-REGISTRATION-PROCEDURE",
+      "field": "procedure",
+      "applies_to": [
+        "WK-V01",
+        "WK-V02",
+        "WK-V03",
+        "WK-V04",
+        "WK-V05",
+        "WK-V06",
+        "WK-V07",
+        "WK-V08",
+        "WK-V09",
+        "WK-V10",
+        "WK-V11",
+        "WK-V12",
+        "WK-V13",
+        "WK-V14",
+        "WK-V15",
+        "WK-V16",
+        "WK-V17",
+        "WK-V18",
+        "WK-V19",
+        "WK-V20",
+        "WK-V21",
+        "WK-V22",
+        "WK-V23",
+        "WK-V24",
+        "WK-V25",
+        "WK-V26",
+        "WK-V27",
+        "WK-V28",
+        "WK-V29",
+        "WK-V30",
+        "WK-V31",
+        "WK-V32",
+        "WK-V33",
+        "WK-V34",
+        "WK-V35",
+        "WK-V36",
+        "WK-V37",
+        "WK-V38",
+        "WK-V39",
+        "WK-V40",
+        "WK-V41",
+        "WK-V42",
+        "WK-V43",
+        "WK-V44",
+        "WK-V45",
+        "WK-V46",
+        "WK-V47",
+        "WK-V48",
+        "WK-V49",
+        "WK-V50",
+        "WK-V51",
+        "WK-V52",
+        "WK-V53",
+        "WK-V54"
+      ],
+      "reason": "One text calibrates this whole group because `procedure` states a registration discipline — declare the exact subjects, authorized scope, fixture or production status, expected meanings, resource limits and observation sources BEFORE any outcome is read — and that discipline is the same act whatever the stimulus is. Its violation is observable and identical wherever it occurs: an outcome read before its expected meaning was registered. Nothing about which stimulus is running changes it, so a per-subcase rewording would be one rule spelled out once per subcase and would discriminate nothing.",
+      "not_covered": "`positive_control` and `execution_boundary` are per subcase and are covered by no group. Each names its own stimulus's ordinary authorized counterpart, so applying one to a different subcase observes the wrong thing or nothing at all. If a future edit makes two of them identical, `scripts/vision-wk-bindings.mjs verify` fails at C1 rather than letting the sharing go undeclared."
+    }
+  ]
 }
