@@ -964,6 +964,35 @@ checked(requires_examined >= 700,
 FIXTURES_RUN = None
 if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
     import subprocess
+    # RC2-01, asked BEFORE the suite runs because it is a question about the TREE rather
+    # than about the registries: is `fixtures/negative` -- the directory this file takes
+    # both its count and, three checks down, its declared denominator from -- actually in
+    # the tree this file is in. The recheck measured what happens when it is not: pointed
+    # at a directory holding one fixture and a manifest declaring one, the suite printed
+    # `{"fixtures": 1, "declared": 1, "passed_as_required": 1}` and exited 0, and both
+    # comparisons below agreed with themselves because MANIFEST.json travels with the
+    # directory it measures.
+    #
+    # The assertion is made in two places on purpose, and they are not the same assertion:
+    # this one is about the tree validate_contracts.py was pointed at, the runner's own
+    # guard is about the tree the RUNNER was pointed at, and a symlinked `tools/` is
+    # exactly how those two come apart (RC-05).
+    for component in (ROOT / "fixtures", ROOT / "fixtures" / "negative"):
+        checked(not component.is_symlink(),
+                ("RC2-01: a fixture directory is a symlink, so the negative-control count "
+                 "and the MANIFEST.json declaring it both describe a tree other than this "
+                 "one", str(component)))
+    # And the guard itself is asserted rather than assumed. It cannot be a negative
+    # fixture -- a fixture is a mutation of the registries judged by this file, and this is
+    # a property of the directory layout the runner is invoked in -- so the runner builds
+    # the two trees itself and reports on both. Costs ~0.1 s and runs no fixture.
+    guard = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "run_negative_fixtures.py"), "--self-test"],
+        capture_output=True, text=True)
+    checked(guard.returncode == 0,
+            ("the negative-fixture runner's symlink guard does not refuse a symlinked "
+             "fixtures/negative, or refuses a real one too (RC2-01)",
+             guard.stdout[-1500:] + guard.stderr[-1500:]))
     completed = subprocess.run(
         [sys.executable, str(ROOT / "tools" / "run_negative_fixtures.py")],
         capture_output=True, text=True,

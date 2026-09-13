@@ -27,6 +27,7 @@ absent fails, and a fixture present that nothing declares fails: the first is a 
 someone deleted, the second is a control the denominator does not know about.
 
 Usage: python3 tools/run_negative_fixtures.py [--verbose]
+       python3 tools/run_negative_fixtures.py --self-test   (RC2-01; runs no fixture)
 Exit 0 when every fixture failed as required.
 """
 from __future__ import annotations
@@ -38,18 +39,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-# RC-05: NOT `.resolve()`. `tools/` is a symlink inside every fixture scratch tree, and
-# `Path(__file__).resolve()` follows it -- so a runner invoked through a symlinked `tools/`
-# counted the REAL tree's fixtures while claiming to measure the tree in front of it. The
-# recheck demonstrated it: a scratch tree holding ONE fixture reported 27. `absolute()`
-# prepends the cwd and follows nothing, and the two directories this runner derives its
-# root from are then asserted to be real, because an un-resolved path through a symlinked
-# parent is the same defect one level up.
 _TOOLS = Path(__file__).absolute().parent
-for _component in (_TOOLS, _TOOLS.parent):
-    if _component.is_symlink():
-        sys.exit("refusing to run: %s is a symlink, so this runner would report on the "
-                 "link target while naming the tree in front of it (RC-05)" % _component)
 ROOT = _TOOLS.parent
 FIXTURES = ROOT / "fixtures" / "negative"
 # RC-04: the fixture suite declares its own denominator, in the tree, beside the fixtures.
@@ -57,6 +47,33 @@ FIXTURES = ROOT / "fixtures" / "negative"
 # a suite that reports a verdict it has no coverage for. `if not fixtures` catches only the
 # empty directory, which is the one case nobody reaches by accident.
 MANIFEST = FIXTURES / "MANIFEST.json"
+
+# RC2-01 extends the loop below to `fixtures/negative` and its parent, and the reason is
+# the RC-04 comment two lines up: the denominator lives INSIDE the directory it measures,
+# so a symlinked `fixtures/negative` carries its own MANIFEST.json with it and every
+# comparison agrees with itself. Measured by the recheck -- `fixtures/negative` pointed at
+# a directory holding one fixture and a manifest declaring one printed
+# `{"fixtures": 1, "declared": 1, "passed_as_required": 1, "leaked": []}` at EXIT 0. One of
+# thirty-one, which is RC-04's original defect walked back in through the path rather than
+# through the count. Pointed the other way it reported 31 fixtures for a tree holding none
+# of its own: the exact sentence in this refusal message.
+#
+# RC-05: NOT `.resolve()`. `tools/` is a symlink inside every fixture scratch tree, and
+# `Path(__file__).resolve()` follows it -- so a runner invoked through a symlinked `tools/`
+# counted the REAL tree's fixtures while claiming to measure the tree in front of it. The
+# recheck demonstrated it: a scratch tree holding ONE fixture reported 27. `absolute()`
+# prepends the cwd and follows nothing, and every directory this runner derives a COUNT
+# from is then asserted to be real, because an un-resolved path through a symlinked parent
+# is the same defect one level up.
+#
+# A negative fixture cannot express this one -- a fixture is a mutation of the registries
+# judged by validate_contracts.py, and this is a property of the tree the RUNNER is invoked
+# in. `--self-test` builds it instead; validate_contracts.py runs that.
+for _component in (_TOOLS, _TOOLS.parent, FIXTURES.parent, FIXTURES):
+    if _component.is_symlink():
+        sys.exit("refusing to run: %s is a symlink, so this runner would report on the "
+                 "link target while naming the tree in front of it (RC-05, extended to "
+                 "fixtures/ by RC2-01)" % _component)
 
 
 def resolve(document, pointer):
@@ -297,6 +314,62 @@ def discover():
     return sorted(found, key=lambda entry: entry[0])
 
 
+def self_test(verbose: bool) -> int:
+    """RC2-01: prove the symlink guard covers `fixtures/negative`, in a tree built here.
+
+    Every other control in this package is a negative fixture, and this one cannot be. A
+    fixture is a mutation of the registries judged by validate_contracts.py; a symlinked
+    fixtures directory is a property of the tree THIS RUNNER is invoked in, which no
+    fixture can set up for itself. So the control is built: two scratch trees differing in
+    exactly one thing.
+
+    Both halves are asserted, and the second is the one that makes the first mean
+    anything. A guard that refuses the symlinked tree AND the real one refuses everything
+    and proves nothing -- which is how a control degrades into a control-shaped constant.
+
+    The guard runs at IMPORT, so importing the module is the whole probe: no fixture is
+    ever run, and a broken guard costs a failed import rather than half an hour of
+    validator subprocesses.
+    """
+    probe = ("import sys; sys.path.insert(0, 'tools'); "
+             "import run_negative_fixtures")
+    results = {}
+    with tempfile.TemporaryDirectory() as scratch:
+        for case, symlinked in (("real_directory", False), ("symlinked_directory", True)):
+            contracts = Path(scratch) / case / "contracts"
+            (contracts / "tools").mkdir(parents=True)
+            shutil.copy2(Path(__file__).absolute(), contracts / "tools" / Path(__file__).name)
+            (contracts / "fixtures").mkdir()
+            if symlinked:
+                os.symlink(FIXTURES, contracts / "fixtures" / "negative")
+            else:
+                (contracts / "fixtures" / "negative").mkdir()
+            completed = subprocess.run([sys.executable, "-c", probe], cwd=contracts,
+                                       capture_output=True, text=True)
+            results[case] = {"exit": completed.returncode,
+                             "said": (completed.stdout + completed.stderr).strip()[-300:]}
+    refusal = results["symlinked_directory"]
+    control = results["real_directory"]
+    failures = []
+    if refusal["exit"] == 0:
+        failures.append("a symlinked fixtures/negative was ACCEPTED: the runner would "
+                        "report a count for a tree that holds none of its own (RC2-01)")
+    elif "fixtures/negative" not in refusal["said"] or "symlink" not in refusal["said"]:
+        failures.append("the refusal does not name the symlinked fixtures directory, so a "
+                        "reader cannot tell which guard fired: " + refusal["said"])
+    if control["exit"] != 0:
+        failures.append("the POSITIVE CONTROL failed: a real fixtures/negative was "
+                        "refused too, so the refusal above distinguishes nothing: "
+                        + control["said"])
+    if verbose or failures:
+        print(json.dumps(results, indent=2))
+    print(json.dumps({"check": "symlink guard covers fixtures/negative (RC2-01)",
+                      "refused_symlinked": refusal["exit"] != 0,
+                      "accepted_real": control["exit"] == 0,
+                      "failures": failures}, indent=2))
+    return 1 if failures else 0
+
+
 def main(verbose: bool) -> int:
     if not FIXTURES.is_dir():
         print("no fixtures/negative directory; a validator with no negative control "
@@ -348,4 +421,6 @@ def main(verbose: bool) -> int:
 
 
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        sys.exit(self_test("--verbose" in sys.argv))
     sys.exit(main("--verbose" in sys.argv))
