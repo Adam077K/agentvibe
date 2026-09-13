@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "kind": "declared negative-fixture suite",
+  "why": "RC-04. tools/run_negative_fixtures.py had no denominator: with 1 of 27 fixtures present it printed `negative_fixtures_rejected: 1` and exited 0, and validate_contracts.py accepted that as its negative control. The only guards were `if not fixtures` and `fixtures > 0`, which catch the empty directory and nothing else. This file is the declared count, and it is hand-maintained on purpose: a denominator derived from the directory it measures cannot notice a deletion. Adding a fixture means adding its id here; removing one means removing it here, which is a line in a diff a reviewer sees.",
+  "checked_by": [
+    "tools/run_negative_fixtures.py: declared-but-absent and present-but-undeclared both fail",
+    "validate_contracts.py: the fixture run's own count must equal this one, and every declared fixture must have been rejected"
+  ],
+  "fixtures": [
+    "r1-edge-declares-an-argument-nothing-reads",
+    "r1-edge-does-not-call-its-criterion",
+    "r10-criterion-demands-less-than-its-predecessor",
+    "r10-criterion-field-paths-erased",
+    "r10-criterion-field-paths-repointed",
+    "r10-sibling-collision-budget-exceeded",
+    "r11-component-removal-ignores-record-custody",
+    "r11-delivery-correlated-to-nothing",
+    "r11-grievance-escalation-may-be-the-custodian",
+    "r11-overlap-tie-break-recorded-but-unread",
+    "r11-sale-terminates-without-computing-its-due-set",
+    "r12-predicate-id-enum-drifts-from-the-registry",
+    "r2-acceptance-chain-loses-its-root",
+    "r3-lifecycle-status-as-judgment-subject",
+    "r4-edge-routes-to-an-unregistered-command",
+    "r5-destination-carries-prose",
+    "r5-destination-names-a-field-that-does-not-exist",
+    "r6-control-contract-for-a-record-no-guard-invokes",
+    "r6-invariant-names-an-unregistered-check",
+    "r6-payload-declares-a-state-field",
+    "r7-inventory-drifts-from-its-derivation",
+    "r7-source-field-left-unmapped",
+    "r8-guard-states-a-different-transition",
+    "r9-content-cites-a-file-that-does-not-exist",
+    "r9-content-quotes-text-its-source-does-not-contain",
+    "r9-criterion-content-with-no-source",
+    "r9-gap-marker-with-no-registered-gap",
+    "r9-sibling-criteria-share-a-shape-undeclared"
+  ]
+}

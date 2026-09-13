@@ -680,5 +680,19 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
              completed.stdout[-2000:] + completed.stderr[-2000:]))
     FIXTURES_RUN = json.loads(completed.stdout[completed.stdout.rindex("{"):])
     checked(FIXTURES_RUN["fixtures"] > 0, "refusing a vacuous pass with zero negative fixtures")
+    # RC-04: `> 0` is not a count. With 1 of 27 fixtures present this block reported
+    # `negative_fixtures_rejected: 1` and exited 0 -- the suite lost 96% of its coverage
+    # and the verdict did not move. The denominator is DECLARED, in the tree, and read
+    # here rather than taken from the runner's own tally, so a runner that miscounts and
+    # a tree that lost a fixture are two different failures with two different messages.
+    declared_fixtures = json.loads(
+        (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text())["fixtures"]
+    checked(FIXTURES_RUN["fixtures"] == len(declared_fixtures),
+            ("negative fixture count differs from fixtures/negative/MANIFEST.json",
+             {"declared": len(declared_fixtures), "ran": FIXTURES_RUN["fixtures"]}))
+    checked(FIXTURES_RUN["passed_as_required"] == len(declared_fixtures),
+            ("a declared negative fixture was not rejected",
+             {"declared": len(declared_fixtures),
+              "rejected": FIXTURES_RUN["passed_as_required"]}))
 
 print(json.dumps({"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"limits":"Offline schema/ref/AST/source-inventory/registry checks plus negative fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."},indent=2))

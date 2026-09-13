@@ -22,6 +22,10 @@ The mutation is applied to a scratch directory in which every untouched file is 
 SYMLINK to the real one, so a fixture cannot accidentally measure a stale copy and
 16 MB of schema is not duplicated eight times.
 
+Every fixture is DECLARED in `fixtures/negative/MANIFEST.json`. A declared fixture that is
+absent fails, and a fixture present that nothing declares fails: the first is a control
+someone deleted, the second is a control the denominator does not know about.
+
 Usage: python3 tools/run_negative_fixtures.py [--verbose]
 Exit 0 when every fixture failed as required.
 """
@@ -34,8 +38,25 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+# RC-05: NOT `.resolve()`. `tools/` is a symlink inside every fixture scratch tree, and
+# `Path(__file__).resolve()` follows it -- so a runner invoked through a symlinked `tools/`
+# counted the REAL tree's fixtures while claiming to measure the tree in front of it. The
+# recheck demonstrated it: a scratch tree holding ONE fixture reported 27. `absolute()`
+# prepends the cwd and follows nothing, and the two directories this runner derives its
+# root from are then asserted to be real, because an un-resolved path through a symlinked
+# parent is the same defect one level up.
+_TOOLS = Path(__file__).absolute().parent
+for _component in (_TOOLS, _TOOLS.parent):
+    if _component.is_symlink():
+        sys.exit("refusing to run: %s is a symlink, so this runner would report on the "
+                 "link target while naming the tree in front of it (RC-05)" % _component)
+ROOT = _TOOLS.parent
 FIXTURES = ROOT / "fixtures" / "negative"
+# RC-04: the fixture suite declares its own denominator, in the tree, beside the fixtures.
+# Without it, deleting 26 of 27 fixtures left `negative_fixtures_rejected: 1` and exit 0 --
+# a suite that reports a verdict it has no coverage for. `if not fixtures` catches only the
+# empty directory, which is the one case nobody reaches by accident.
+MANIFEST = FIXTURES / "MANIFEST.json"
 
 
 def resolve(document, pointer):
@@ -186,23 +207,66 @@ def run_fixture(fixture, verbose):
     return True, "rejected as required"
 
 
+def discover():
+    """Every fixture in the tree, as (id, document), by the one discovery rule.
+
+    `MANIFEST.json` is the declaration, not a fixture, and is excluded by name here so
+    that the count it declares is never satisfied by itself.
+    """
+    found = []
+    for path in sorted(FIXTURES.glob("*.json")):
+        if path.name == MANIFEST.name:
+            continue
+        found.append((path.stem, json.loads(path.read_text(encoding="utf-8"))))
+    return found
+
+
 def main(verbose: bool) -> int:
     if not FIXTURES.is_dir():
         print("no fixtures/negative directory; a validator with no negative control "
               "is the defect this runner exists to prevent")
         return 1
-    fixtures = sorted(FIXTURES.glob("*.json"))
+    if not MANIFEST.exists():
+        print("fixtures/negative/MANIFEST.json is missing; it declares how many fixtures "
+              "must run, and without it a suite that lost 26 of 27 reports a pass (RC-04)")
+        return 1
+    declared = json.loads(MANIFEST.read_text(encoding="utf-8"))["fixtures"]
+    if len(declared) != len(set(declared)):
+        print("MANIFEST.json declares a fixture id twice; the declared count would then "
+              "be met by fewer fixtures than it names")
+        return 1
+    fixtures = discover()
     if not fixtures:
         print("fixtures/negative is empty; refusing to report a vacuous pass")
         return 1
+    present = [identifier for identifier, _ in fixtures]
+    absent = sorted(set(declared) - set(present))
+    undeclared = sorted(set(present) - set(declared))
+    if absent or undeclared:
+        # Both directions, and both of them matter. A declared fixture that is gone is a
+        # control someone deleted; a fixture present and undeclared is a control the
+        # denominator does not know about, so deleting it later would be silent.
+        print(json.dumps({
+            "check": "negative fixture count ratchet (RC-04)",
+            "declared": len(declared), "present": len(present),
+            "declared_but_absent": absent, "present_but_undeclared": undeclared,
+            "note": "every fixture is declared in fixtures/negative/MANIFEST.json; adding "
+                    "or removing one is an edit to that file as well as to the tree",
+        }, indent=2))
+        return 1
     failures = []
-    for path in fixtures:
-        fixture = json.loads(path.read_text(encoding="utf-8"))
+    for identifier, fixture in fixtures:
+        if fixture["id"] != identifier:
+            print(f"  [FAIL] {identifier}: fixture declares id {fixture['id']!r}; the "
+                  "manifest names fixtures by file, so the two must agree")
+            failures.append(identifier)
+            continue
         ok, detail = run_fixture(fixture, verbose)
         print(f"  [{'ok' if ok else 'FAIL'}] {fixture['repair']} {fixture['id']}: {detail}")
         if not ok:
             failures.append(fixture["id"])
-    print(json.dumps({"fixtures": len(fixtures), "passed_as_required": len(fixtures) - len(failures),
+    print(json.dumps({"fixtures": len(fixtures), "declared": len(declared),
+                      "passed_as_required": len(fixtures) - len(failures),
                       "leaked": failures}, indent=2))
     return 1 if failures else 0
 
