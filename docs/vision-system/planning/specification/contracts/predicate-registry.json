@@ -108202,9 +108202,10 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/consumed_quantity",
+            "/payload/lapsed_unconsumed_quantity",
             "/payload/maximum_quantity",
             "/payload/reserved_quantity",
-            "/payload/consumed_quantity",
             "/payload/uncertain_quantity",
             "/provenance_refs"
           ]
@@ -108357,9 +108358,10 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/consumed_quantity",
+            "/payload/lapsed_unconsumed_quantity",
             "/payload/maximum_quantity",
             "/payload/reserved_quantity",
-            "/payload/consumed_quantity",
             "/payload/uncertain_quantity",
             "/provenance_refs"
           ]
@@ -108481,9 +108483,10 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/consumed_quantity",
+            "/payload/lapsed_unconsumed_quantity",
             "/payload/maximum_quantity",
             "/payload/reserved_quantity",
-            "/payload/consumed_quantity",
             "/payload/uncertain_quantity",
             "/provenance_refs"
           ]
@@ -108805,9 +108808,10 @@
           },
           "field_paths": [
             "/payload/uncertain_quantity",
+            "/payload/consumed_quantity",
+            "/payload/lapsed_unconsumed_quantity",
             "/payload/maximum_quantity",
-            "/payload/reserved_quantity",
-            "/payload/consumed_quantity"
+            "/payload/reserved_quantity"
           ]
         },
         {
@@ -239637,6 +239641,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.failure.no_progress_names_recipient",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.FailureRecord.blocked.v1",
           "arguments": {
             "subject_ref": {
@@ -240150,6 +240163,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.failure.no_progress_names_recipient",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -240708,6 +240730,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.failure.no_progress_names_recipient",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -331247,6 +331278,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.reservation.lapse_independent_of_consent",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.Reservation.released.v1",
           "arguments": {
             "subject_ref": {
@@ -331899,6 +331939,15 @@
           },
           "command": {
             "context": "command_name"
+          }
+        },
+        {
+          "op": "call",
+          "predicate_id": "guard.reservation.lapse_independent_of_consent",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
           }
         },
         {
@@ -396590,6 +396639,76 @@
       "additionalProperties": false
     }
   },
+  "guard.failure.no_progress_names_recipient": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<FailureRecord>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/error_class"
+          ]
+        },
+        {
+          "op": "present",
+          "value": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/no_progress_terminal"
+          }
+        }
+      ]
+    },
+    "meaning": "A failure record reaching its terminal blocked phase names its error class and records whether that class is terminal. `no_progress` with no named recipient is the silent drop R-X10 names, and the payload conditional refuses it (F6C-09).",
+    "owner_component": "S1-C02",
+    "source": "05-work-agents-skills.md#6-effects-idempotency-and-failure",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "FailureRecord"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
   "guard.grant.declared_resolves_to_live_grant": {
     "version": "1.0",
     "argument_types": {
@@ -398027,10 +398146,39 @@
             },
             "pointer": "/payload/lapsed_unconsumed_quantity"
           }
+        },
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/lapse_occurrence_ref"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/lapse_occurrence_ref",
+              "states": [
+                "due",
+                "admitted",
+                "running",
+                "completed",
+                "missed",
+                "disposed"
+              ],
+              "optional": false
+            }
+          ]
         }
       ]
     },
-    "meaning": "Reserved-but-unconsumed allowance lapses at the declared lapse point independently of the holder's consent (R-X24, AE-M4-01).",
+    "meaning": "Reserved-but-unconsumed allowance lapses at the declared lapse point independently of the holder's consent, and PASSING THAT POINT IS AN EVENT: the reservation names a ScheduleOccurrence that has left `planned`, so the lapse is something that fired rather than a field nobody read (R-X24, AE-M4-01, F6C-03).",
     "owner_component": "S1-C04",
     "source": "05-work-agents-skills.md#12-standing-accountability",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -398239,10 +398387,56 @@
             },
             "pointer": "/payload/derived_closure_refs"
           }
+        },
+        {
+          "op": "subset",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/accepted_closure_member_refs"
+          },
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/reopened_acceptance_refs"
+          }
+        },
+        {
+          "op": "subset",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/accepted_closure_member_refs"
+          },
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/derived_closure_refs"
+          }
         }
       ]
     },
-    "meaning": "A supersession walks the transitive closure of derived entries and every reopened acceptance comes from that closure. An empty closure reopens nothing, and that is a result (R-G06).",
+    "meaning": "A supersession walks the transitive closure of derived entries; every reopened acceptance came from that closure AND every accepted outcome in the closure was reopened. An empty closure reopens nothing, and that is a result (R-G06, F6C-15).",
     "owner_component": "S1-C05",
     "source": "05-work-agents-skills.md#6-concurrency-failure-retry-and-stop",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",

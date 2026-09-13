@@ -1,0 +1,16 @@
+{
+  "id": "r18-reservation-released-on-a-route-with-no-lapse-event",
+  "repair": "R18",
+  "finding": "F6C-03; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 07-integrations-capacity.md section 6 (R-X24); 05 section 9 adverse row 10",
+  "case": "A reservation is released with no event behind its lapse, so passing the lapse point is a comparison nobody made.",
+  "paired_benign_fixture": "fixtures/positive/r18-reservation-released-on-a-route-with-no-lapse-event-benign.json",
+  "why": "The guard was called by `held -> released` AND BY NO OTHER, while `partly_consumed -> released` and `uncertain -> released` carried no guard at all -- so a partly-consumed lane could be released without recording the lapsed unconsumed quantity, which is the quantity R-X24 says makes a never-consumed lane visible. Worse, the adverse case as worded is a reservation that takes NO TRANSITION AT ALL: nothing fired when the point passed, there is no `lapsed` phase, and none of the five fields was required. The repair binds the lapse to a ScheduleOccurrence; this mutation removes the demand that the occurrence exist, and the lapse is a field nobody reads again.",
+  "expect_failure_contains": "'guard.reservation.lapse_independent_of_consent', 'nonempty_fields'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.reservation.lapse_independent_of_consent/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

@@ -1352,6 +1352,26 @@ for _name, _primitive in PRIMITIVES.items():
 # RC3-01 and RC3-02 one layer out -- so the same `polarised_nodes` walk that decides a pin
 # row decides this, rather than a `predicate_id in json.dumps(body)` that would accept all
 # four.
+# --- F6C-09: A TERMINAL ERROR CLASS WITH NO RECIPIENT IS A SILENT DROP. ---
+#
+# PS-NO-PROGRESS-RECIPIENT. `no_progress` was an `error_class` enum member with an OPTIONAL
+# recipient that nothing demanded: `no_progress_recipient_ref` and `no_progress_terminal`
+# occurred zero times in predicate-registry.json, and all eleven FailureRecord transitions
+# called no guard at all. So a record with `error_class: "no_progress"` and no recipient
+# passed schema validation and every registered edge -- the silent drop R-X10 names, reachable
+# through the rule's own record. The rule binds on a VALUE, so it is a payload conditional.
+_failure = SCHEMAS["records.schema.json"]["$defs"]["FailureRecord"]["properties"]["payload"]
+_no_progress = [branch for branch in _failure.get("allOf", [])
+                if branch.get("if", {}).get("properties", {})
+                .get("error_class", {}).get("const") == "no_progress"]
+checked(len(_no_progress) == 1,
+        ("A TERMINAL ERROR CLASS MAY BE RECORDED WITH NO RECIPIENT. `no_progress` with nobody "
+         "named is the silent drop, and it is reachable through the record the rule is "
+         "written on (F6C-09)", {"branches": len(_no_progress)}))
+checked({"no_progress_recipient_ref", "no_progress_terminal"}
+        <= set(_no_progress[0]["then"].get("required", [])),
+        ("the no-progress conditional no longer demands a named recipient", _no_progress[0]))
+
 # --- F6C-01: AN EXHAUSTIBLE DUTY WITH NO PERFORMER IS REFUSED AT ADMISSION. ---
 #
 # PS-EXHAUSTIBLE-DUTY-CONDITIONAL. 07 section 6's exhaustion rule is not the pressure rule --
@@ -1943,8 +1963,8 @@ checked(version_rows >= 14,
 #   positive: 17, one benign case per adverse case of selection-record section 12.5.
 #             Unchanged: the r17 fixtures are mutations of the demand tables, not adverse
 #             cases of that section, so the pairing rule that sets 17 does not reach them.
-NEGATIVE_FIXTURE_FLOOR = 71
-POSITIVE_FIXTURE_FLOOR = 32
+NEGATIVE_FIXTURE_FLOOR = 74
+POSITIVE_FIXTURE_FLOOR = 35
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

@@ -22919,6 +22919,7 @@
         "guard.effect.identity_allocated_before_release",
         "guard.effect.one_per_step",
         "guard.effect.second_claimant_inherits",
+        "guard.failure.no_progress_names_recipient",
         "guard.grant.declared_resolves_to_live_grant",
         "guard.holder.no_veto",
         "guard.holder.not_retired_while_duty_live",

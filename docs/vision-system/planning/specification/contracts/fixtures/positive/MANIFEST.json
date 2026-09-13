@@ -6,7 +6,7 @@
     "tools/run_positive_fixtures.py: declared-but-absent and present-but-undeclared both fail, and a fixture that does NOT pass validation fails",
     "validate_contracts.py: the positive run's own count must equal this one, every declared fixture must have passed, and the declared count must not fall below the floor"
   ],
-  "floor": 32,
+  "floor": 35,
   "floor_why": "A literal, for the reason every other floor in this package is a literal: a count derived from the directory it measures is satisfied by the empty directory. Seventeen is one benign case per adverse case of selection-record section 12.5, and dropping one would drop the pairing rule for that row. Lowering this number is a decision and should read like one.",
   "fixtures": [
     "r16-01-derivation-gates-only-the-higher-class-benign",
@@ -36,10 +36,13 @@
     "r18-guard-detached-from-its-edge-benign",
     "r18-load-bearing-edge-deleted-benign",
     "r18-manifest-omits-what-it-dropped-and-what-it-was-for-benign",
+    "r18-no-progress-with-no-named-recipient-benign",
     "r18-readset-equality-fooled-by-a-duplicate-benign",
     "r18-recompute-matches-having-lost-a-reached-class-benign",
     "r18-registry-payload-copied-from-another-record-benign",
+    "r18-reservation-released-on-a-route-with-no-lapse-event-benign",
     "r18-run-closes-without-comparing-its-launches-benign",
-    "r18-second-claimant-re-releases-benign"
+    "r18-second-claimant-re-releases-benign",
+    "r18-supersession-leaves-an-accepted-outcome-standing-benign"
   ]
 }

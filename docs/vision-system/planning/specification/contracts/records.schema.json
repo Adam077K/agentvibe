@@ -11036,7 +11036,27 @@
             "changed_condition_refs",
             "next_discriminator"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "error_class": {
+                    "const": "no_progress"
+                  }
+                },
+                "required": [
+                  "error_class"
+                ]
+              },
+              "then": {
+                "required": [
+                  "no_progress_recipient_ref",
+                  "no_progress_terminal"
+                ]
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -69373,17 +69393,44 @@
             },
             "lapsed_unconsumed_quantity": {
               "$ref": "values.schema.json#/$defs/UInt64"
+            },
+            "lapse_occurrence_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ScheduleOccurrence"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
-            "operation_or_work_ref",
-            "causal_episode_id",
             "account_ref",
-            "maximum_quantity",
-            "reserved_quantity",
+            "authority_ref",
+            "causal_episode_id",
             "consumed_quantity",
-            "uncertain_quantity",
-            "authority_ref"
+            "lapse_occurrence_ref",
+            "lapse_point",
+            "lapse_requires_holder_consent",
+            "lapsed_unconsumed_quantity",
+            "maximum_quantity",
+            "operation_or_work_ref",
+            "reserved_quantity",
+            "uncertain_quantity"
           ],
           "additionalProperties": false
         }
@@ -204593,9 +204640,36 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "accepted_closure_member_refs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "record_id": {
+                    "$ref": "values.schema.json#/$defs/UUID"
+                  },
+                  "record_type": {
+                    "type": "string",
+                    "enum": [
+                      "AcceptanceInterval"
+                    ]
+                  },
+                  "revision": {
+                    "$ref": "values.schema.json#/$defs/Revision"
+                  }
+                },
+                "required": [
+                  "record_id",
+                  "record_type",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": [
+            "accepted_closure_member_refs",
             "authority_assignment_ref",
             "closure_walk_completed",
             "declaring_component_id",

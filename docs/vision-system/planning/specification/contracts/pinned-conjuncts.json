@@ -1703,9 +1703,10 @@
       "predicate_id": "guard.reservation.lapse_independent_of_consent",
       "kind": "guard",
       "findings": [
-        "AE-M4-01",
         "AE-M3-01",
-        "AE-M4-03"
+        "AE-M4-01",
+        "AE-M4-03",
+        "F6C-03"
       ],
       "decisions": [
         "AD-022"
@@ -1733,6 +1734,31 @@
             "/payload/lapsed_unconsumed_quantity"
           ],
           "why": "and the quantity that lapsed unconsumed is recorded -- an unrecorded lapse is the waste nobody can price"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/lapse_occurrence_ref"
+          ],
+          "why": "F6C-03: the reservation names the ScheduleOccurrence that IS its lapse. The adverse case as worded is a reservation that takes no transition at all -- nothing fires when the point passes -- so the lapse has to be an event rather than a field nobody reads"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/lapse_occurrence_ref",
+              "states_exactly": [
+                "due",
+                "admitted",
+                "running",
+                "completed",
+                "missed",
+                "disposed"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and that occurrence has left `planned`, so the durable timer sweep has actually reached it. `planned` is excluded on purpose: a scheduled lapse nobody woke for is the case this row exists to refuse"
         }
       ]
     },
@@ -1777,7 +1803,8 @@
       "predicate_id": "guard.supersession.walks_derived_closure",
       "kind": "guard",
       "findings": [
-        "AX-M1-02"
+        "AX-M1-02",
+        "F6C-15"
       ],
       "decisions": [
         "AD-017"
@@ -1813,6 +1840,22 @@
             "/payload/derived_closure_refs"
           ],
           "why": "every acceptance reopened came from the closure, so the reopen set cannot be authored beside the walk"
+        },
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/accepted_closure_member_refs",
+            "/payload/reopened_acceptance_refs"
+          ],
+          "why": "F6C-15, AND IT IS THE DIRECTION THE ADVERSE CASE NEEDS. The four rows above contain the reopen set within the closure -- a real guarantee, and a DIFFERENT one: with derived_closure_refs = [an accepted outcome] and reopened_acceptance_refs = [], subset([], [x]) holds and every one of them passes the case 05 section 9 row 11 says must fail. Every accepted outcome in the closure is in the reopen set."
+        },
+        {
+          "op": "subset",
+          "contains_pointers": [
+            "/payload/accepted_closure_member_refs",
+            "/payload/derived_closure_refs"
+          ],
+          "why": "and the accepted members are themselves drawn from the closure, so the new field cannot be emptied beside a walk that found something. The benign row is untouched: an EMPTY closure has no accepted members, reopens nothing, and passes."
         }
       ]
     },
@@ -2143,6 +2186,33 @@
             }
           ],
           "why": "and the expected count came from a procedure version that was actually admitted, rather than from a draft someone edited after the run started"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.failure.no_progress_names_recipient",
+      "kind": "guard",
+      "findings": [
+        "F6C-09"
+      ],
+      "decisions": [
+        "R-X10"
+      ],
+      "why": "The guard demands the two facts the payload conditional turns on; the conditional itself refuses `no_progress` with no recipient, because the rule binds on a VALUE of `error_class` and that is a schema conditional rather than a guard row. `present` on `no_progress_terminal` rather than `nonempty`: it is a boolean and `false` is an answer. Note what is still true and is not this pin's business -- `no_progress` is not a lifecycle PHASE, so `terminal` means the record reached `blocked` carrying that class, which is what the attachment says.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/error_class"
+          ],
+          "why": "the error class is named on a record that is about to stop moving"
+        },
+        {
+          "op": "present",
+          "contains_pointers": [
+            "/payload/no_progress_terminal"
+          ],
+          "why": "and whether that class is terminal is recorded rather than inferred from the phase by whoever reads it next"
         }
       ]
     }
@@ -2595,6 +2665,33 @@
         "F6C-14"
       ],
       "why": "This edge is where `guard.launch.actual_compared_to_expected` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "FailureRecord",
+      "from": "investigating",
+      "to": "blocked",
+      "findings": [
+        "F6C-09"
+      ],
+      "why": "This edge is where `guard.failure.no_progress_names_recipient` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "FailureRecord",
+      "from": "observed",
+      "to": "blocked",
+      "findings": [
+        "F6C-09"
+      ],
+      "why": "This edge is where `guard.failure.no_progress_names_recipient` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
+    },
+    {
+      "record": "FailureRecord",
+      "from": "retry_admitted",
+      "to": "blocked",
+      "findings": [
+        "F6C-09"
+      ],
+      "why": "This edge is where `guard.failure.no_progress_names_recipient` is attached. Deleting the TRANSITION is a different attack from deleting the call: the edge predicate survives, the attachment pin still resolves, and only the route is gone (F6D-04)."
     }
   ],
   "requires_waivers_why": "RC-03. `requires` and `conjuncts` are independent fields of one spec and nothing compared them, so a criterion could state one requirement and demand another -- which is what the weakened derivation produced: the sentence still promised delivery over a body that had stopped asking for it. Measured before any waiver: 774 criteria examined, 0 failing the field-path rule, 17 failing the phase-name rule, every one of the 17 a phase-kind synonym for the criterion's OWN phase. Each waiver below names the exact tokens it excuses, so a new unmatched phase on a waived criterion still fails. SCOPE, stated because the rule's name promises more than the rule does (RC2-03). What is compared is a FORMATTING-DEPENDENT SUBSET of the sentence: backticked lowercase tokens (PROSE_TOKEN) and field paths that are either backticked or written literally as /payload/... (PROSE_PATH). English nouns are not compared to conjuncts, and most of what these sentences are made of is English nouns. Removing three pairs of backticks leaves a sentence promising a reader exactly the same thing and invisible to the rule -- the recheck measured that, and the run went from stopping at RC-03 in 19 seconds to passing it and failing 640 seconds later for an unrelated reason. LIVE POPULATION, re-derived on the committed corpus with the disjunction-aware walker: 774 criteria examined; 0 of them (0.0%) name a field path in `requires`, so the PATHS rule -- the half RC-03's required contract actually named -- has an applicable population of ZERO and contributes no live assertion; 19 (2.5%) name a backticked phase of a related record, 22 tokens in all; 17 of those 19 rely on a waiver below, and all 17 waivers are in use; the remaining 5 tokens across 2 criteria (criterion.SalesAgreement.performed.v1: `delivered`, `discharged`, `transferred`; criterion.GrievanceCase.remedy_authorized.v1: `held`, `partly_consumed`) are bound by a conjunct and are the whole of the rule's live force. THE NARROW SCOPE IS THE ACCEPTED LIMIT, and the alternative was measured rather than argued. Widening the phase rule to unbackticked tokens of related records' phase vocabulary produces 425 findings across 266 of the 774 criteria (34%), over 62 distinct tokens -- case-sensitive, and already excluding every token a conjunct binds or a waiver excuses. The vocabulary is ordinary English past participles used as verbs: `recorded` 104 (\"the subject's own declared identity/scope fields are recorded\"), `required` 43 (\"no judgment is required\"), `current` 37, `admitted` 34, `assigned` 30 (\"a custodian is assigned\"). A waiver list of that size is not a waiver list, it is a second corpus, and a rule that demands one teaches contributors to route around the checker. So the rule keeps its scope, the number is written down here rather than left to be rediscovered, and what is added instead is the control the live half never had: fixtures/negative/r14-requires-names-a-related-phase-no-conjunct-binds. Until it, the only RC-03 fixture exercised the half with zero population. The cure for the formatting dependency is upstream and is not a checker change. A criterion's `requires` sentence and its conjuncts are written by one author in one entry of tools/phase_content.py, so what makes the rule reach is the author backticking the phases the sentence promises. That is a CONVENTION, nothing enforces it, and this sentence exists so that nobody reads the rule's name as though something did.",
@@ -2939,6 +3036,18 @@
       "why": "F6D-11. Detached, `allocated -> claimed` asserts only that a claim happened, and the answer 05 section 6 gives to the protocol's tenth (d)-class example -- no stated winner between concurrent attempts on one work order -- is carried by nothing. The sibling guard is sound and is credited: it constrains ONE record's internal consistency, `allocated_at < claimed_at` and an allocating component of S1-C04, both of which are true of each racer independently."
     },
     {
+      "guard": "guard.failure.no_progress_names_recipient",
+      "edges": [
+        "edge.FailureRecord.investigating.blocked.v1",
+        "edge.FailureRecord.observed.blocked.v1",
+        "edge.FailureRecord.retry_admitted.blocked.v1"
+      ],
+      "findings": [
+        "F6C-09"
+      ],
+      "why": "F6C-09. All three routes into `blocked`, which is the terminal phase a no-progress failure reaches. Detached, ALL ELEVEN FailureRecord transitions call no guard again -- which was the measured state -- and a record with `error_class: no_progress` and no recipient passes schema validation and every registered edge. That is the silent drop the rule names, reachable through the rule's own record."
+    },
+    {
       "guard": "guard.grant.declared_resolves_to_live_grant",
       "edges": [
         "edge.StepExecution.dispatched.running.v1",
@@ -3073,12 +3182,15 @@
     {
       "guard": "guard.reservation.lapse_independent_of_consent",
       "edges": [
-        "edge.Reservation.held.released.v1"
+        "edge.Reservation.held.released.v1",
+        "edge.Reservation.partly_consumed.released.v1",
+        "edge.Reservation.uncertain.released.v1"
       ],
       "findings": [
+        "F6C-03",
         "F6D-01"
       ],
-      "why": "Detached, a reserved lane is released with no record of the lapsed unconsumed quantity, which is the quantity R-X24 says makes a never-consumed lane visible. Section 9 row 10 is the case: a reservation unconsumed at the lapse point, held past it."
+      "why": "F6C-03. THREE release edges, because a reservation reaches `released` from `held`, from `partly_consumed` and from `uncertain`, and the guard was on the first alone -- so a partly-consumed lane could be released without recording the lapsed unconsumed quantity, which is the quantity R-X24 says makes a never-consumed lane visible. Detached from any one of them, that route reopens. Section 9 row 10 is the case: a reservation unconsumed at the lapse point, held past it."
     },
     {
       "guard": "guard.skill.declared_grant_inert",

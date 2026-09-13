@@ -8899,8 +8899,8 @@
           "no_progress_recipient_ref": {
             "type": "Ref<ResponsibilityAssignment>",
             "required": false,
-            "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-09. Optional in the payload and MANDATORY whenever `error_class` is `no_progress`, through the conditional on this payload. R-X10: a terminal class with no recipient is a silent drop, and the string occurred zero times in predicate-registry.json."
           },
           "attempt_ceiling": {
             "type": "UInt64",
@@ -52676,21 +52676,27 @@
           },
           "lapse_point": {
             "type": "UTC",
-            "required": false,
+            "required": true,
             "added_by": "WORK-1.1",
             "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
           },
           "lapse_requires_holder_consent": {
             "type": "boolean",
-            "required": false,
+            "required": true,
             "added_by": "WORK-1.1",
             "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
           },
           "lapsed_unconsumed_quantity": {
             "type": "UInt64",
-            "required": false,
+            "required": true,
             "added_by": "WORK-1.1",
             "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+          },
+          "lapse_occurrence_ref": {
+            "type": "Ref<ScheduleOccurrence>",
+            "required": true,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-03. R-X24's adverse case is a reservation that takes NO TRANSITION AT ALL -- nothing fires when the lapse point passes, so `lapse_point` is a field nobody reads. The reviewer offered two repairs and this is the second: the lapse is a `ScheduleOccurrence`, so passing the point is an event the durable timer sweep produces rather than a comparison somebody has to remember to make."
           }
         }
       }
@@ -81425,6 +81431,12 @@
             "required": true,
             "added_by": "WORK-1.1-F6D-07",
             "note": "F6D-07. This record IS a writer-key assignment -- (field_path, epoch), declared by C01 -- so declaring or superseding one is a protected control change by the definition in 08 section 1."
+          },
+          "accepted_closure_member_refs": {
+            "type": "Ref<AcceptanceInterval>[]",
+            "required": true,
+            "added_by": "WORK-1.1-F6C",
+            "note": "F6C-15. The closure walk must distinguish which members are ACCEPTED OUTCOMES, because the adverse case of 05 section 9 row 11 is a closure containing one that was left unreopened -- and `subset(reopened, closure)` passes that case with an empty reopen set. This field is what the containment in the other direction is stated over."
           }
         }
       }

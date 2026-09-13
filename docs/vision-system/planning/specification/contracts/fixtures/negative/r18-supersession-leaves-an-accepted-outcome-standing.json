@@ -1,0 +1,16 @@
+{
+  "id": "r18-supersession-leaves-an-accepted-outcome-standing",
+  "repair": "R18",
+  "finding": "F6C-15; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 05-work-agents-skills.md section 9 adverse row 11",
+  "case": "A supersession whose derived closure contains an accepted outcome leaves it unreopened, and the guard passes it.",
+  "paired_benign_fixture": "fixtures/positive/r18-supersession-leaves-an-accepted-outcome-standing-benign.json",
+  "why": "This is the counterexample computed against the four original conjuncts: derived_closure_refs = [an accepted outcome], reopened_acceptance_refs = [], closure_walk_completed = true. `subset([], [x])` holds, all four conjuncts hold, AND THE GUARD PASSES THE ADVERSE CASE 05 section 9 row 11 says must fail. The containment ran the wrong way -- a real guarantee, that the reopen set cannot be authored beside the walk, and a different one from the guarantee the row needs. The mutation removes the containment in the corrected direction, restoring exactly that.",
+  "expect_failure_contains": "'guard.supersession.walks_derived_closure', 'subset'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.supersession.walks_derived_closure/body/predicates/4",
+      "op": "remove"
+    }
+  ]
+}

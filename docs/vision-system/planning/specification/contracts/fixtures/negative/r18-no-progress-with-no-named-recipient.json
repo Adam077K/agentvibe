@@ -1,0 +1,16 @@
+{
+  "id": "r18-no-progress-with-no-named-recipient",
+  "repair": "R18",
+  "finding": "F6C-09; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 05-work-agents-skills.md section 6 (R-X10)",
+  "case": "A failure record reaches its terminal blocked phase with error class `no_progress` and nobody named to receive it.",
+  "paired_benign_fixture": "fixtures/positive/r18-no-progress-with-no-named-recipient-benign.json",
+  "why": "R-X10: `FailureRecord` names `no_progress` as a terminal error class WITH A NAMED RECIPIENT, and a terminal class with no recipient is a silent drop. Measured: `no_progress_recipient_ref` and `no_progress_terminal` were optional properties occurring zero times in predicate-registry.json, and all ELEVEN FailureRecord transitions called no guard. The mutation removes the payload conditional, so a record carrying that class with no recipient passes schema validation and every registered edge -- the silent drop reachable through the rule's own record.",
+  "expect_failure_contains": "A TERMINAL ERROR CLASS MAY BE RECORDED WITH NO RECIPIENT",
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/FailureRecord/properties/payload/allOf",
+      "op": "remove"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "r18-supersession-leaves-an-accepted-outcome-standing-benign",
+  "repair": "R18",
+  "finding": "F6C-15; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 05-work-agents-skills.md section 9 adverse row 11, benign column",
+  "case": "A supersession with an empty closure, which must reopen nothing and must pass.",
+  "paired_adverse_fixture": "fixtures/negative/r18-supersession-leaves-an-accepted-outcome-standing.json",
+  "why": "The benign row of section 9 is a supersession that found nothing to reopen, and the `present`-rather-than-`nonempty` choice in the original pin is deliberate and correct for it: an absent closure and an empty one are different facts. An empty closure has no accepted members, so the corrected containment is vacuously satisfied and the record passes -- which is what keeps this repair from turning a walk that legitimately found nothing into a failure. The patch restates the walk-completed flag as its own presence check, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.supersession.walks_derived_closure/body/predicates/6",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/closure_walk_completed"
+        }
+      }
+    }
+  ]
+}
