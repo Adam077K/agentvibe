@@ -25515,6 +25515,7 @@
         "partially-performed",
         "performed",
         "disputed",
+        "terminated_with_residuals",
         "terminated"
       ],
       "intrinsic": false,
@@ -25735,6 +25736,76 @@
           "from": "disputed",
           "to": "terminated",
           "predicate_id": "edge.SalesAgreement.disputed.terminated.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:proposed->terminated_with_residuals",
+          "from": "proposed",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.proposed.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:accepted->terminated_with_residuals",
+          "from": "accepted",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.accepted.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:partially-performed->terminated_with_residuals",
+          "from": "partially-performed",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.partially-performed.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:disputed->terminated_with_residuals",
+          "from": "disputed",
+          "to": "terminated_with_residuals",
+          "predicate_id": "edge.SalesAgreement.disputed.terminated_with_residuals.v1",
+          "predicate_version": "1.0",
+          "owner_component": "S1-C03",
+          "criterion_id": "criterion.SalesAgreement.terminated_with_residuals.v1",
+          "mutates": "LifecycleStatus only; exact immutable business subject retained",
+          "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
+          "allowed_command_ids": [
+            "kernel.record.transition"
+          ]
+        },
+        {
+          "edge_id": "SalesAgreement:terminated_with_residuals->terminated",
+          "from": "terminated_with_residuals",
+          "to": "terminated",
+          "predicate_id": "edge.SalesAgreement.terminated_with_residuals.terminated.v1",
           "predicate_version": "1.0",
           "owner_component": "S1-C03",
           "criterion_id": "criterion.SalesAgreement.terminated.v1",

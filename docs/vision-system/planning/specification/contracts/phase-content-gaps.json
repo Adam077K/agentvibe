@@ -3,7 +3,7 @@
   "kind": "explicit per-phase content gaps",
   "why": "A criterion whose body uses `content_unspecified` states no requirement because no source states one. Each entry below names what the prose would have to say for that criterion to carry content. validate_contracts.py fails a `content_unspecified` body with no entry here, and fails an entry here with no such body -- so the count cannot drift in either direction.",
   "counts": {
-    "criteria_with_content": 763,
+    "criteria_with_content": 764,
     "criteria_content_unspecified": 68,
     "criteria_preserved_from_repair": 10
   },

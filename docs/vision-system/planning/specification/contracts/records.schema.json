@@ -131473,7 +131473,8 @@
                     "partially-performed",
                     "performed",
                     "disputed",
-                    "terminated"
+                    "terminated",
+                    "terminated_with_residuals"
                   ]
                 },
                 "links": {

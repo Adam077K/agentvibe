@@ -1531,6 +1531,23 @@ PHASE_SPECS = {
         [("nf", ["duty", "custodian", "uncertainty", "quantity"]),
          ("rp", [("custodian", ["accepted"], False)]), ("fi",), AF, AR],
         hard=["rp"]),
+    # AD-014. The same requirement `ended_with_residuals` states, at the phase name a
+    # terminated agreement uses. It is kind-level and not a record override on purpose:
+    # `terminated` is a closure event wherever it appears, and a residuals state that
+    # only one record could reach would invite the next record to settle the question
+    # silently by writing a guard, which is exactly how G2-02 arose.
+    "terminated_with_residuals": spec(
+        "As `terminated` -- forward performance has ended -- except that the transitive "
+        "due set is NOT empty. Every surviving obligation, claim, reservation, descendant "
+        "and pending operation is carried on the record with an accepted custodian for "
+        "each, its funding and its review interval. This phase asserts that duties "
+        "survive; `terminated` asserts that none do, and the difference is the whole "
+        "point of having both.",
+        ["c-closure", "arch6-closure", "arch4-revocation"],
+        [("nf", ["duty", "custodian", "uncertainty", "quantity"]),
+         ("rp", [("custodian", ["accepted"], False)]),
+         ("fi",), AF, AR],
+        hard=["rp"]),
     "closed_with_residuals": spec(
         "As `closed-with-residuals`; this spelling is the same requirement.",
         ["c-closure", "arch6-closure"],
