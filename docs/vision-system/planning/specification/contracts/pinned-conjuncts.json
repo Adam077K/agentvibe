@@ -1,18 +1,21 @@
 {
   "schema_version": "1.0",
   "kind": "pinned conjuncts: hand-written assertions about the LIVE registries",
-  "why": "RC-02. The criterion-content oracle compares predicate-registry.json to tools/phase_content.py and fails on any difference -- which makes a HAND edit of a criterion a failing build, and makes a DERIVATION edit invisible. The recheck measured it: one hunk replacing the ('SalesAgreement','performed') spec, then `python3 tools/author_phase_content.py`, and the whole G2-01 defect is back at exit 0, 268,829 checks, with all 27 negative fixtures still rejecting. A checker that compares an artifact to a source the same author controls is not a checker. Every assertion below is written BY HAND against the live registry and is never generated from anything: author_phase_content.py does not read this file and cannot write it, so regenerating the registry from a weakened derivation now fails HERE, naming the conjunct that went missing.",
+  "why": "RC-02. The criterion-content oracle compares predicate-registry.json to tools/phase_content.py and fails on any difference -- which makes a HAND edit of a criterion a failing build, and makes a DERIVATION edit invisible. The recheck measured it: one hunk replacing the ('SalesAgreement','performed') spec, then `python3 tools/author_phase_content.py`, and the whole G2-01 defect is back at exit 0, 268,829 checks, with all 27 negative fixtures still rejecting. A checker that compares an artifact to a source the same author controls is not a checker. Every assertion below is written BY HAND against the live registry and is never generated from anything: author_phase_content.py does not read this file and cannot write it, so regenerating the registry from a weakened derivation now fails HERE, naming the conjunct that went missing. RC2-02, the same argument one operator over and found the same way -- by mutation, not by reading: these rows asserted CONTAINMENT, and a conjunct kept verbatim inside an `any` beside a trivially-true alternative is contained by the body while being demanded by nothing. Every `why` below is written as a demand, so each row now says which it means: `disjoined` defaults to false and the four rows whose requirement really is conditional name their branch.",
   "how_to_read": {
     "pin": "one predicate id, the findings and decisions that put each requirement there, and the `require` rows that must hold of its body in the committed predicate-registry.json",
     "matching": "a row matches when SOME node of the body carries that `op` and satisfies every constraint on the row. Structural containment only: a body may carry more than is pinned, never less.",
     "negated": "false (the default) requires a matching node that is NOT beneath a `not`; true requires one that IS. Without this, wrapping a pinned conjunct in `not` would satisfy a containment check while inverting the requirement.",
+    "disjoined": "false (the default) requires a matching node that is NOT beneath an `any`: the body must DEMAND the conjunct, not merely mention it in one branch of a disjunction. true permits a match inside one, for a requirement that is genuinely conditional, and then `disjoined_why` must name the condition. RC2-02 is why it exists and it was measured, not argued: disjoining each of the three pinned conjuncts of criterion.SalesAgreement.performed.v1 with `present(/payload/agreed_terms)` -- a field records.schema.json already requires of every SalesAgreement -- left every pin matching, this file untouched, and validate_contracts.py at exit 0 with 31 of 31 negative fixtures still rejecting, over a criterion that demanded none of it. Four rows opt in; each names its branch. Disjunction is read through negation rather than beside it, because `not(any(A, B))` demands `not A` while `not(all(A, B))` demands neither.",
+    "disjoined_why": "required on a row with `disjoined: true` and REFUSED on any other row. An opt-out of the demand rule states which condition makes the requirement conditional, in the same way `unpinnable` states why no conjunct can carry a finding: an excuse nobody had to write is an excuse nobody reads.",
     "states_exactly": "the binding's `states` list must equal this set. A superset is a weakening -- `['delivered','proposed']` admits the exact counterexample AD-013 was decided to refuse -- and a subset is a different requirement than the one recorded.",
     "closed_key_set": "validate_contracts.py declares the constraint keys it reads and REFUSES any other key in a row. A pin whose constraint the checker silently ignored would be the same defect one layer up: a control that reads as enforcement while nothing checks it."
   },
   "checked_by": [
     "validate_contracts.py: each pin against predicate-registry.json directly, with no import of tools/phase_content.py",
     "validate_contracts.py: coverage -- every finding id swept out of registers/review-findings.json is pinned here or declared in `unpinnable` with a reason",
-    "fixtures/negative/r13-derivation-weakened-then-regenerated: patches tools/phase_content.py, regenerates with author_phase_content.py, and must be REJECTED by these pins"
+    "fixtures/negative/r13-derivation-weakened-then-regenerated: patches tools/phase_content.py, regenerates with author_phase_content.py, and must be REJECTED by these pins",
+    "fixtures/negative/r14-pinned-conjunct-disjoined-with-a-tautology: disjoins each pinned conjunct of criterion.SalesAgreement.performed.v1 with a tautology, regenerates with author_phase_content.py, and must be REJECTED naming the disjunction -- r13-derivation-weakened-then-regenerated cannot catch this, because it REMOVES the conjuncts rather than weakening them"
   ],
   "finding_sources": {
     "G1-06b": "planning/reviews/G-01-completeness-vision-coverage.md",
@@ -461,7 +464,9 @@
         {
           "op": "path",
           "pointer": "/payload/disputed_custodian",
-          "why": "the required field that 0 of 2,255 predicates read"
+          "why": "the required field that 0 of 2,255 predicates read",
+          "disjoined": true,
+          "disjoined_why": "G4-01's requirement is conditional by its own terms: the comparison is demanded only where the custodian is the one complained about. The guard reads the flag as the branch test itself -- `any(not(eq(/payload/disputed_custodian, true)), neq(...))` -- so the read IS the disjunction, and demanding it outside one would demand a second read that decides nothing."
         },
         {
           "op": "neq",
@@ -469,7 +474,9 @@
             "/payload/independent_escalation_assignment_ref",
             "/payload/custodian_assignment_ref"
           ],
-          "why": "where the custodian is the one complained about, the escalation assignment must DIFFER from the custodian assignment -- and the comparison must be between those two refs, not between either of them and something else"
+          "why": "where the custodian is the one complained about, the escalation assignment must DIFFER from the custodian assignment -- and the comparison must be between those two refs, not between either of them and something else",
+          "disjoined": true,
+          "disjoined_why": "The other branch of the same `any`. On `disputed_custodian: false` there are no two assignments to compare, and a guard that demanded the comparison unconditionally would refuse every undisputed triage -- which is a different requirement from the one G4-01 recorded."
         }
       ]
     },
@@ -495,7 +502,9 @@
           "contains_pointers": [
             "/payload/custody_basis"
           ],
-          "why": "a recorded overlap must carry custody_basis = provisional_overlap_resolution"
+          "why": "a recorded overlap must carry custody_basis = provisional_overlap_resolution",
+          "disjoined": true,
+          "disjoined_why": "G4-04's enum comparison is demanded only where a contesting mandate exists: `any(not(nonempty(/payload/contesting_mandate_refs)), all(eq(...), neq(...)))`. Demanding `custody_basis = provisional_overlap_resolution` unconditionally would force every clean assignment to claim an overlap it did not have."
         },
         {
           "op": "neq",
@@ -503,7 +512,9 @@
           "contains_pointers": [
             "/payload/custody_tie_break_reason"
           ],
-          "why": "... and a tie_break_reason that is not `no_overlap`; without this comparison the enums record a value nothing reads"
+          "why": "... and a tie_break_reason that is not `no_overlap`; without this comparison the enums record a value nothing reads",
+          "disjoined": true,
+          "disjoined_why": "The second half of that same conditional branch. `custody_tie_break_reason != no_overlap` is a requirement ABOUT an overlap; with no contesting mandate there is no overlap for it to describe."
         }
       ]
     },

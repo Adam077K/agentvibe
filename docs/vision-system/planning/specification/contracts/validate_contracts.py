@@ -636,39 +636,64 @@ for oracle_argv, oracle_name in (
 # `terminated_with_residuals -> terminated`; the nine are listed one by one in the file.
 PINNED = FILES["pinned-conjuncts.json"]
 PIN_VALUE_KEYS = ("result", "right", "event_kind", "target_state", "pointer")
-PIN_ROW_KEYS = {"op", "why", "negated", "field_paths_include", "bindings",
-                "contains_pointers", *PIN_VALUE_KEYS}
+PIN_ROW_KEYS = {"op", "why", "negated", "disjoined", "disjoined_why",
+                "field_paths_include", "bindings", "contains_pointers", *PIN_VALUE_KEYS}
 PIN_KEYS = {"predicate_id", "kind", "findings", "decisions", "why", "require"}
 PIN_BINDING_KEYS = {"field_path", "states_exactly", "optional"}
 
 
-def polarised_nodes(node, negated=False):
-    """Every `op` node of a body, paired with whether it sits beneath a `not`.
+def polarised_nodes(node, negated=False, disjoined=False):
+    """Every `op` node of a body, with the two facts about its CONTEXT that a containment
+    check needs: whether it sits beneath a `not`, and whether it sits beneath a disjunction.
 
     Polarity is the half a containment check forgets. `not(native_correlated delivered)`
     CONTAINS `native_correlated(result: delivered)`, so a pin that only asked whether the
     op appears would accept the inversion of the requirement it exists to hold.
+
+    RC2-02 is that sentence one operator over, and it was found the same way -- by running a
+    mutation, not by reading this function. Disjoining each of the three pinned conjuncts of
+    `criterion.SalesAgreement.performed.v1` with `present(/payload/agreed_terms)`, a field
+    records.schema.json already requires of every SalesAgreement, left every pin matching,
+    pinned-conjuncts.json untouched, and this file at exit 0 with 31 of 31 negative fixtures
+    still rejecting -- over a criterion that no longer required the agreement to name its
+    Fulfillment, that Fulfillment to be `delivered`, or any Obligation to be discharged. A
+    node inside an `any` is CONTAINED by the body exactly as one in the top-level `all` is.
+    It is not DEMANDED by it, and every `why` in the pin file is written as a demand.
+
+    Disjunction is read THROUGH the negation rather than beside it: `not(any(A, B))` demands
+    `not A`, and `not(all(A, B))` demands neither, so which operator branches depends on the
+    parity of the `not`s above it. No node in the committed corpus sits that way -- 2,169
+    `all` and 13 `any`, none beneath a `not` -- so that half is untested here and is written
+    correctly anyway, because a rule that is right by accident stops being right silently.
     """
     found = []
     if isinstance(node, dict):
         if "op" in node:
-            found.append((node, negated))
-        inner = negated != (node.get("op") == "not")
+            found.append((node, negated, disjoined))
+        operator = node.get("op")
+        inner = negated != (operator == "not")
+        branching = (operator == "any") != negated and operator in ("any", "all")
         for key, value in node.items():
             if key != "op":
-                found.extend(polarised_nodes(value, inner))
+                found.extend(polarised_nodes(value, inner, disjoined or branching))
     elif isinstance(node, list):
         for value in node:
-            found.extend(polarised_nodes(value, negated))
+            found.extend(polarised_nodes(value, negated, disjoined))
     return found
 
 
 def pointers_in(node):
-    return {n["pointer"] for n, _ in polarised_nodes(node)
+    return {n["pointer"] for n, _, _ in polarised_nodes(node)
             if n.get("op") == "path" and isinstance(n.get("pointer"), str)}
 
 
-def pin_row_matches(node, row):
+def pin_row_matches(node, row, disjoined=False):
+    # RC2-02. A match inside an `any` says the body MENTIONS this requirement in one branch,
+    # which is not what any `why` in the pin file claims. A row whose requirement really is
+    # conditional says so with `disjoined: true` and names the branch in `disjoined_why`;
+    # every other row means what it says, so unconditional is the default.
+    if disjoined and not row.get("disjoined", False):
+        return False
     if set(row.get("field_paths_include", [])) - set(node.get("field_paths") or []):
         return False
     for wanted in row.get("bindings", []):
@@ -697,6 +722,18 @@ checked(len(PINNED["pins"]) >= 25 and len(PINNED["pinned_transitions"]) >= 6,
 checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= 44,
         ("the pinned table kept its pins and lost its requirements",
          sum(len(pin["require"]) for pin in PINNED["pins"])))
+# And a CEILING, for the mirror-image reason. `disjoined: true` excuses a row from demanding
+# its conjunct, so a table where every row is excused passes as loudly as one where none is
+# -- the floors above cannot tell 44 rows from 44 inert ones, which is precisely the gap
+# RC2-02 walked through. Four rows are excused today, each naming its branch. Raising this
+# is a decision and should read like one.
+disjoined_rows = [row for pin in PINNED["pins"] for row in pin["require"] if row.get("disjoined")]
+checked(len(disjoined_rows) <= 4,
+        ("more pinned rows are excused from DEMANDING their conjunct than when this ceiling "
+         "was set; each `disjoined: true` is a row that accepts a match inside an `any`",
+         {"disjoined": len(disjoined_rows), "ceiling": 4,
+          "rows": [(pin["predicate_id"], row["op"]) for pin in PINNED["pins"]
+                   for row in pin["require"] if row.get("disjoined")]}))
 
 pinned_predicates = set()
 for pin in PINNED["pins"]:
@@ -716,6 +753,16 @@ for pin in PINNED["pins"]:
                 ("unknown key in a pinned requirement", predicate_id, sorted(set(row) - PIN_ROW_KEYS)))
         checked("op" in row and row.get("why", "").strip(),
                 ("a pinned requirement states no op or no reason", predicate_id, row))
+        # RC2-02: an opt-out of the demand rule states its condition, and a row that is not
+        # opted out carries no excuse. Both directions, because an orphaned `disjoined_why`
+        # reads as an excuse that is in force while nothing is excused by it.
+        checked(isinstance(row.get("disjoined", False), bool),
+                ("`disjoined` is a boolean: a row either demands its conjunct or names the "
+                 "branch it may sit in", predicate_id, row["op"], row.get("disjoined")))
+        checked(bool(row.get("disjoined_why", "").strip()) == bool(row.get("disjoined", False)),
+                ("`disjoined: true` with no `disjoined_why`, or a `disjoined_why` on a row "
+                 "that demands its conjunct unconditionally: an excuse nobody had to write "
+                 "is an excuse nobody reads", predicate_id, row["op"]))
         for binding in row.get("bindings", []):
             checked(set(binding) == PIN_BINDING_KEYS,
                     ("pinned binding shape", predicate_id, sorted(set(binding) ^ PIN_BINDING_KEYS)))
@@ -732,10 +779,28 @@ for pin in PINNED["pins"]:
                 ("`negated` on a pinned value op: polarity is a property of a predicate, "
                  "and this op returns a value", predicate_id, row["op"]))
         wanted_negated = bool(row.get("negated", False))
-        checked(any(node.get("op") == row["op"]
-                    and (negated == wanted_negated or not boolean_op)
-                    and pin_row_matches(node, row)
-                    for node, negated in nodes),
+        # Two questions, not one, because they have two different answers and a reader who
+        # is told the wrong one looks in the wrong place. CONTAINED: does the body carry
+        # this conjunct anywhere at all. DEMANDED: does it carry it where the body's truth
+        # depends on it. Probe 9 of G-02-recheck-02 is the whole difference -- contained,
+        # not demanded, at exit 0.
+        contained = [(node, negated, disjoined) for node, negated, disjoined in nodes
+                     if node.get("op") == row["op"]
+                     and (negated == wanted_negated or not boolean_op)
+                     and pin_row_matches(node, row)]
+        demanded = [entry for entry in contained
+                    if pin_row_matches(entry[0], row, entry[2])]
+        checked(demanded or not contained,
+                ("PINNED CONJUNCT ONLY UNDER A DISJUNCTION: the registry still MENTIONS what "
+                 "this finding required, inside one branch of an `any`, and so no longer "
+                 "DEMANDS it", predicate_id, row["op"], row["why"],
+                 {"findings": pin["findings"], "decisions": pin["decisions"],
+                  "note": "a conjunct kept verbatim and disjoined with a trivially-true "
+                          "alternative satisfies a containment check while requiring "
+                          "nothing (RC2-02). If this requirement really is conditional, "
+                          "set `disjoined: true` on the row and name the branch in "
+                          "`disjoined_why`; four rows do."}))
+        checked(bool(demanded),
                 ("PINNED CONJUNCT MISSING: the registry no longer says what this finding "
                  "required", predicate_id, row["op"], row["why"],
                  {"findings": pin["findings"], "decisions": pin["decisions"],
@@ -820,9 +885,24 @@ PROSE_TOKEN = re.compile(r"`([a-z][a-z_\-]*)`")
 
 
 def stated_paths_and_states(body):
+    """What the body DEMANDS -- not what it mentions.
+
+    RC2-02's blind spot, second site, and it is why RC-03 was silent on the same mutation
+    the pins were silent on: this walked every node regardless of context, so a
+    `related_phases` binding moved inside an `any` still counted as a promise kept. It now
+    reads the same walker the pins do and skips whatever sits under a disjunction, so the
+    two halves of RC-03 and the pin table answer to one definition of "demanded" rather
+    than to two that can drift.
+
+    Measured on the committed corpus before changing it, because a narrowing that fails
+    nothing may be a narrowing that does nothing: 774 criteria examined, the same 0
+    failures either way. The 13 `any` nodes in the registry sit in bodies whose `requires`
+    sentence names nothing that only they carry -- so this buys no live assertion today and
+    closes the route probe 9 took.
+    """
     paths, states = set(), set()
-    for node in walk(body):
-        if not isinstance(node, dict):
+    for node, _negated, disjoined in polarised_nodes(body):
+        if disjoined:
             continue
         paths.update(node.get("field_paths") or [])
         for binding in node.get("bindings") or []:
