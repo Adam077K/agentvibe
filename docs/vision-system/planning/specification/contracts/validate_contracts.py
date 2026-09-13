@@ -753,6 +753,84 @@ for finding in sorted(covered | set(unpinnable)):
     checked(finding in document.read_text(encoding="utf-8"),
             ("finding_sources names a file that does not mention this finding", finding, source))
 
+# --- RC-03: a criterion's `requires` sentence and its conjuncts must agree. ----
+#
+# They are independent fields of one spec and nothing compared them, so a criterion could
+# state one requirement and demand another -- which is exactly what the recheck's weakened
+# derivation produced: `requires` still read "that Fulfillment is currently `delivered`"
+# over a body demanding none of it. Two halves of one statement, disagreeing, with every
+# control green.
+#
+# Two rules, both mechanical:
+#   PATHS  -- every field path the sentence names is named by some conjunct.
+#   PHASES -- every phase name the sentence backticks that belongs to a RELATED record and
+#             not to the subject's own lifecycle is bound by some `related_phases` state.
+# The phase rule is narrowed to related records on purpose: a criterion's own phase is what
+# the sentence is ABOUT, and a rule that flagged it would fire on the noun in every
+# sentence. Waivers live in pinned-conjuncts.json, name the exact tokens they excuse, and
+# so cannot cover the next one.
+REQUIRES_WAIVERS = {entry["criterion"]: entry for entry in PINNED["requires_waivers"]}
+for entry in PINNED["requires_waivers"]:
+    checked(set(entry) == {"criterion", "phases", "why"}, ("requires waiver shape", entry))
+    checked(entry["why"].strip() and entry["criterion"] in PREDICATES,
+            ("a requires waiver with no reason, or for no such criterion", entry["criterion"]))
+
+PROSE_PATH = re.compile(r"`(/[A-Za-z0-9_./\-]+)`|(?<![`\w])(/payload/[a-z_]+)")
+PROSE_TOKEN = re.compile(r"`([a-z][a-z_\-]*)`")
+
+
+def stated_paths_and_states(body):
+    paths, states = set(), set()
+    for node in walk(body):
+        if not isinstance(node, dict):
+            continue
+        paths.update(node.get("field_paths") or [])
+        for binding in node.get("bindings") or []:
+            paths.add(binding["field_path"])
+            states.update(binding["states"])
+        if node.get("op") == "path" and isinstance(node.get("pointer"), str):
+            paths.add(node["pointer"])
+    return paths, states
+
+
+requires_examined = 0
+for name, predicate in PREDICATES.items():
+    if not name.startswith("criterion.") or predicate.get("content_gap_id"):
+        continue
+    sentence = predicate.get("requires")
+    record_name = name.split(".")[1]
+    if not sentence or record_name not in RECORDS:
+        continue
+    requires_examined += 1
+    body_paths, body_states = stated_paths_and_states(predicate["body"])
+    own_phases = set(RECORDS[record_name]["lifecycle"]["phases"])
+    related_phases = set()
+    for relation in RECORDS[record_name]["relations"]:
+        for target in relation["targets"]:
+            related_phases.update(RECORDS[target]["lifecycle"]["phases"])
+    for match in PROSE_PATH.finditer(sentence):
+        stated = match.group(1) or match.group(2)
+        # Prefix either way: a sentence may name `/payload/external_burden_account` where
+        # the conjunct reaches inside it, and naming the leaf is not naming less.
+        checked(any(stated == known or known.startswith(stated + "/")
+                    or stated.startswith(known + "/") for known in body_paths),
+                ("RC-03: `requires` names a field path no conjunct demands", name, stated,
+                 sorted(body_paths)))
+    waived = set(REQUIRES_WAIVERS.get(name, {}).get("phases", []))
+    for token in PROSE_TOKEN.findall(sentence):
+        if token not in related_phases or token in own_phases or token in body_states:
+            continue
+        checked(token in waived,
+                ("RC-03: `requires` names a related record's phase that no conjunct binds",
+                 name, token,
+                 "bind it in `related_phases`, or waive it by name in "
+                 "pinned-conjuncts.json#/requires_waivers"))
+# An instrument reports its denominator before its verdict: a narrowing that quietly
+# examined six criteria would pass exactly as loudly as one that examined all of them.
+checked(requires_examined >= 700,
+        ("RC-03 examined almost no criteria; the rule cannot pass vacuously",
+         requires_examined))
+
 # --- The two oracles that can fail on CONTENT rather than on shape. ------------
 #
 # Both are run as subprocesses with THIS directory passed explicitly, because `tools/` is

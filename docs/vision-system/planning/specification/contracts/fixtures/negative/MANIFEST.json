@@ -21,6 +21,7 @@
     "r12-predicate-id-enum-drifts-from-the-registry",
     "r13-delivery-fails-in-flight-with-no-transition",
     "r13-derivation-weakened-then-regenerated",
+    "r13-requires-promises-what-the-body-does-not-demand",
     "r2-acceptance-chain-loses-its-root",
     "r3-lifecycle-status-as-judgment-subject",
     "r4-edge-routes-to-an-unregistered-command",
