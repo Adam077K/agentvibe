@@ -1094,5 +1094,18 @@
     "required_contract": "validated->delivering edge, or retire validated for Fulfillment with a reason.",
     "independent_recheck": null,
     "implementation_evidence": null
+  },
+  {
+    "id": "RP-01",
+    "source": "build-ratchet-pin lane return, 2026-09-13",
+    "review_subject": "docs/vision-ratchet-pin head",
+    "title": "TypedPredicate enum branches disagree with their predicate argument_schema; nothing compares them",
+    "severity": "medium",
+    "class": "a",
+    "owner": "contracts author; independent recheck after",
+    "status": "Open. 1,680 of 2,270 values.schema.json TypedPredicate branches disagree with the argument_schema of the predicate they name. Not introduced by the repair; found while pinning. A branch that admits arguments the predicate does not declare is a schema that validates instances the predicate cannot evaluate.",
+    "required_contract": "Derive TypedPredicate branches from predicate-registry.json argument_schema (as PredicateId now is) and fail on drift; negative fixture: one branch with an extra property → rejected.",
+    "independent_recheck": null,
+    "implementation_evidence": null
   }
 ]
