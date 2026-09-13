@@ -2,8 +2,9 @@
 
 This package responds to the founder's **Autonomous Discovery, System Design, and Full Implementation Directive** of 2026-09-12. The objective is a complete system through which one responsible person or a small founding team can create, operate, grow, govern, improve, pause and close businesses and other complex projects while preserving intent, truthful accounts, competence and control.
 
-**Status: S1.0 selected as the logical specification anchor; complete specification in progress. No complete-plan acceptance or implementation completion claimed.**
+**Status: Phase G complete (eleven of twelve dimensions sufficient; coherence under repair); planning disposition PENDING independent recheck; implementation not started.**
 
+- [Planning report](planning/PLANNING-REPORT.md) is the founder-facing §15 package: the Phase G verdict, the 24-family index, the architecture and its alternatives, the evidence and decision maps, the founder-decision queue, the twelve construction stages, the coverage matrix, and where every durable artifact lives.
 - [Executive guide](planning/00-executive-guide.md) explains the intended system and how to navigate the complete package.
 - [Durable state](state.json) is the continuation entry point.
 - [Research lane register](research/lanes.json) records independent work and dependencies.
