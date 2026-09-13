@@ -788,5 +788,47 @@
     "origin": "F2 Step 5a-ii selection record §6.5, MD-08",
     "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
     "asked": null
+  },
+  {
+    "id": "Q-022",
+    "kind": "Deferred question",
+    "question": "Is the one-concurrent-native-job pin a provider constraint or a self-imposed policy — what does the account entitlement say?",
+    "status": "Open",
+    "owner": "founder",
+    "evidence": "X14. 07 section 6's capacity policy CP1 initializes at one native N job and one X job concurrently, and 05 section 12's reserved-lane holder is justified by fixture F-2, which requires 4× demand and therefore cannot be run at that pin — recorded there as owed, not as passed. The prerequisite is an account inspection, reading the account entitlement, and not an experiment: raising the pin to find out would be circular. The attack consolidation recorded this as G-04, \"the round's highest-leverage open question, gating four claim verdicts … and no owner\", and the F2 join reproduced it unchanged. 07 section 5 names an authenticated custodian for Claude usage and billing-UI observations and does not extend to the entitlement read. Q-020 and Q-021 each defer to this prerequisite by name in their latest_responsible_time.",
+    "source_refs": [
+      "planning/reviews/F2-06-C-capacity-reliability-changeability-alternatives.md",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability",
+      "planning/specification/07-integrations-capacity.md#6-capacity-money-and-scheduling",
+      "planning/specification/07-integrations-capacity.md#5-native-subscription-execution",
+      "planning/F2/04-attack-consolidation.md"
+    ],
+    "packet": {
+      "decision_required": "Read the provider account entitlement and record what it says about concurrent native jobs — the observed limit, its source and its date — so that the pin is settled as a provider constraint or as a self-imposed policy.",
+      "why_this_owner": "Only the founder holds the provider account, so the read is an act on a credential nobody else has. DIRECTIVE §3: information only he holds. It is not a design decision and no agent can perform it.",
+      "latest_responsible_time": "Before any CapacityPlan revision that raises the concurrency pin, and before F-2 is claimed as exercised. It is the first of the three capacity packets to answer, because Q-020 and Q-021 both defer to it by name.",
+      "options": [
+        "(a) Read the entitlement now and record the observed limit with its source and date",
+        "(b) Defer the read to an authenticated custodian, and carry the pin as unknown until one exists",
+        "(c) Leave it unread, and keep the reserved-lane holder recorded as owed rather than exercised indefinitely"
+      ],
+      "consequences": [
+        "(a) costs one inspection, settles the four claim verdicts G-04 names, and unblocks Q-020 and Q-021",
+        "(b) defers indefinitely: 07 section 5's authenticated custodian covers billing-UI observations and no party holds the entitlement read today",
+        "(c) leaves F-2 unexecutable, so 05 section 12's reserved-lane holder remains one structure resting on a fixture nobody can run"
+      ],
+      "uncertainty": "Whether the entitlement is published at all at the account tier in use. If it is not, the answer is \"not observable from the account\", which is itself a result: the pin then stops being policy-or-constraint and becomes unobservable, and the reserved lane's justification has to be argued another way.",
+      "reversibility": "Total. Reading an entitlement changes nothing. Raising the pin to discover the limit is circular and is refused by 05 section 12.",
+      "recommendation": "(a). It is one inspection, it is not an experiment, and three open items sit behind it.",
+      "if_no_answer": "The pin stands, F-2 stays unexecutable, the reserved-lane holder stays owed rather than passed, and Q-020 and Q-021 stay not-urgent behind this prerequisite.",
+      "unrelated_work_continues": true
+    },
+    "overlaps": [
+      "Q-020 — the shed-halt authority defers to this account inspection by name and cannot become urgent before it is answered.",
+      "Q-021 — the lane sizes, minimums and lapse point defer to the same inspection; this packet is the prerequisite both of them name."
+    ],
+    "origin": "F2 Step 6 review C, finding F6C-07 — X14 had no owner while both founder packets that depend on it deferred to it by name; recorded in the attack consolidation as G-04.",
+    "raised": "2026-09-14; written as a DIRECTIVE §3 packet by the Step 6 prose repair and promoted into this register. Queued, not yet put to the founder.",
+    "asked": null
   }
 ]
