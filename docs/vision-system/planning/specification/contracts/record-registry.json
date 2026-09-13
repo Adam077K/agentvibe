@@ -25492,6 +25492,7 @@
           "agreed_terms": "Ref<ArtifactVersion>",
           "acceptance_evidence": "EvidenceRef[]",
           "payment_operation": "Ref<OperationIntent>?",
+          "fulfillment_ref": "Ref<Fulfillment>?",
           "obligation_refs": "Ref<Obligation>[]"
         },
         "required_fields": [
@@ -25789,6 +25790,13 @@
         "field_path": "/payload/payment_operation",
         "targets": [
           "OperationIntent"
+        ],
+        "cardinality": "optional_one"
+      },
+      {
+        "field_path": "/payload/fulfillment_ref",
+        "targets": [
+          "Fulfillment"
         ],
         "cardinality": "optional_one"
       },

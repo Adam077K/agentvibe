@@ -2479,6 +2479,30 @@ RECORD_OVERRIDES = {
          ("not", ("nc", "delivered")), AR],
         hard=["nfp", "not"]),
 
+    # -- R-A / AD-013: what evidence constitutes performance of a sale. -----------
+    #
+    # The gap the Phase G reviewer classified (d): `performed` demanded byte-identical
+    # `field_paths` to `accepted`, SalesAgreement had no relation to Fulfillment, and the
+    # only native object reachable from the record was the Stripe payment behind
+    # `payment_operation`. A buyer could pay, the Fulfillment stay `proposed`, every
+    # Obligation stay `recognized`, and the agreement reach `performed` with nothing in
+    # the machine objecting. AD-013 decides it: delivery, not payment.
+    ("SalesAgreement", "performed"): spec(
+        "Performance of a sale is accepted delivery plus discharged or transferred "
+        "obligations -- never payment alone. The agreement names its own Fulfillment "
+        "record, that Fulfillment is currently `delivered`, and every linked Obligation "
+        "is `discharged` or `transferred`. The correlated native object is the DELIVERY, "
+        "not the charge: a settled payment is evidence about money and establishes "
+        "nothing about whether the service arrived, so it moves the agreement to "
+        "`accepted` or `partially-performed` and can never move it here.",
+        ["c-fulfillment", "c-sales-outcome", "arch6-delivery", "arch3-outcome"],
+        [("nfp", ["/payload/fulfillment_ref", "/payload/obligation_refs",
+                  "/payload/acceptance_evidence", "/payload/agreed_terms"]),
+         ("rpp", [("/payload/fulfillment_ref", ["delivered"], False),
+                  ("/payload/obligation_refs", ["discharged", "transferred"], False)]),
+         ("nc", "delivered"), AF, AR],
+        hard=["nfp", "rpp", "nc"]),
+
     ("DeliveryCapacity", "verified"): spec(
         "verified requires actual performer acknowledgment, applicable access/materials, "
         "window, resources and continuity evidence; not compute availability.",

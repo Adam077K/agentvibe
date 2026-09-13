@@ -42051,9 +42051,10 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/owner_assignment_ref",
-            "/payload/original_exchange",
-            "/payload/acceptance_evidence"
+            "/payload/fulfillment_ref",
+            "/payload/obligation_refs",
+            "/payload/acceptance_evidence",
+            "/payload/agreed_terms"
           ]
         },
         {
@@ -42063,9 +42064,17 @@
           },
           "bindings": [
             {
-              "field_path": "/owner_assignment_ref",
+              "field_path": "/payload/fulfillment_ref",
               "states": [
-                "accepted"
+                "delivered"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/obligation_refs",
+              "states": [
+                "discharged",
+                "transferred"
               ],
               "optional": false
             }
@@ -42079,7 +42088,17 @@
           "observation_refs": {
             "arg": "observation_refs"
           },
-          "result": "observed_applied"
+          "result": "delivered"
+        },
+        {
+          "op": "accepted_for",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.SalesAgreement.performed.v1",
+          "judgment_refs": {
+            "arg": "judgment_refs"
+          }
         },
         {
           "op": "attested_result",
@@ -42091,20 +42110,10 @@
           "observation_refs": {
             "arg": "observation_refs"
           }
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.SalesAgreement.performed.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
         }
       ]
     },
-    "meaning": "Actual performance by the accepted performer, observed independently of the performer's own report. Phase assessed: performed.",
+    "meaning": "Performance of a sale is accepted delivery plus discharged or transferred obligations -- never payment alone. The agreement names its own Fulfillment record, that Fulfillment is currently `delivered`, and every linked Obligation is `discharged` or `transferred`. The correlated native object is the DELIVERY, not the charge: a settled payment is evidence about money and establishes nothing about whether the service arrived, so it moves the agreement to `accepted` or `partially-performed` and can never move it here. Phase assessed: performed.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/SalesAgreement",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -42196,15 +42205,23 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "Actual performance by the accepted performer, observed independently of the performer's own report.",
+    "requires": "Performance of a sale is accepted delivery plus discharged or transferred obligations -- never payment alone. The agreement names its own Fulfillment record, that Fulfillment is currently `delivered`, and every linked Obligation is `discharged` or `transferred`. The correlated native object is the DELIVERY, not the charge: a settled payment is evidence about money and establishes nothing about whether the service arrived, so it moves the agreement to `accepted` or `partially-performed` and can never move it here.",
     "derived_from": [
       {
         "file": "03-company-capabilities.md",
         "anchor_or_quote": "Fulfillment executes the actual agreed digital, human or physical service through an accepted performer. For each milestone record promised outcome, window, evidence and remaining obligations. Partial receipts do not complete the entire order. Acceptance uses the agreed criteria and counterparty acknowledgment where required; a silent customer does not acquire a new discharge meaning."
       },
       {
-        "file": "06-knowledge-evidence-evaluation.md",
-        "anchor_or_quote": "Independent perspective means different relevant evidence, method, measurement or competent human grounding under separate protected authority. ... A different model family can add a tested viewpoint but is not a proof of independent error."
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Sales marks its complete commercial outcome only after CAP-30 ... accepted delivery and the specified payment conditions; agreement formation remains separately visible before then."
+      },
+      {
+        "file": "../02-architecture-selection.md",
+        "anchor_or_quote": "Delivery produces independently observed results; support can reopen the demand or claim evidence without undoing existing duties."
+      },
+      {
+        "file": "../02-architecture-selection.md",
+        "anchor_or_quote": "an obligation survives that case; an operation can remain uncertain after both a worker and a plan stop. Accepted work cannot discharge external standing through an internal status."
       }
     ]
   },

@@ -31410,6 +31410,29 @@
               ],
               "additionalProperties": false
             },
+            "fulfillment_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "Fulfillment"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
+            },
             "obligation_refs": {
               "type": "array",
               "items": {
