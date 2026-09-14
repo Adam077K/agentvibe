@@ -79166,13 +79166,14 @@
           "work_record_ref": "Ref<WorkOrder>",
           "landed_at": "UTC",
           "retention_until": "UTC",
-          "longest_plausible_outage": "string",
+          "longest_plausible_outage": "Duration",
           "alarm_reader_ref": "Ref<ResponsibilityAssignment>",
           "alarm_raised_at": "UTC",
           "residue_note": "string",
           "claiming_interest_ref": "Ref<StandingInterest>",
           "refusal_reason": "string",
-          "escalation_holder_ref": "Ref<StandingHolder>"
+          "escalation_holder_ref": "Ref<StandingHolder>",
+          "retention_span": "Duration"
         },
         "required_fields": [
           "work_record_ref",
@@ -79200,8 +79201,9 @@
             "required": true
           },
           "longest_plausible_outage": {
-            "type": "string",
-            "required": true
+            "type": "Duration",
+            "required": true,
+            "note": "F6C-11: was `string`. The rule compares this against the entry's retention, and a comparison between two free strings is not one. `Duration` is milliseconds and is an established field type in this registry."
           },
           "alarm_reader_ref": {
             "type": "Ref<ResponsibilityAssignment>",
@@ -79226,6 +79228,12 @@
           "escalation_holder_ref": {
             "type": "Ref<StandingHolder>",
             "required": false
+          },
+          "retention_span": {
+            "type": "Duration",
+            "required": true,
+            "added_by": "WORK-1.1",
+            "note": "F6C-11, new: the retention window this entry actually holds, in the same unit as `longest_plausible_outage`, so `criterion.UnmatchedPoolEntry.landed.v1` can COMPARE them. `retention_until` is an instant and the outage is a span; the operator set has no instant-plus-duration primitive, so the comparison is made between two spans. OWED: nothing yet ties this span to `retention_until` minus `landed_at`."
           }
         }
       }

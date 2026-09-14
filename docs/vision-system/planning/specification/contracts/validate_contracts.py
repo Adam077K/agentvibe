@@ -264,6 +264,45 @@ for name, record in RECORDS.items():
                     ("one record declares one payload field at two types", name, field,
                      {"type_fields": declared_type, "fields": added[field]["type"]}))
 
+# --- F6C-11: A RULE THAT STATES A COMPARISON MAKES ONE. ------------------------
+#
+# `05` section 6's silent-drop counter (3) reads: "retention on any holding destination
+# EXCEEDS the longest plausible outage, and the outage figure is stated, not assumed."
+# `criterion.UnmatchedPoolEntry.landed.v1` demanded `work_record_ref`, `retention_until`,
+# `longest_plausible_outage`, `alarm_reader_ref`, `alarm_raised_at` and `residue_note` all
+# nonempty and contained NO COMPARISON OPERATOR AT ALL -- so an entry with a one-day
+# retention and a thirty-day stated outage satisfied it. The package names that exact
+# anti-shape in its own fixture r16-08: "a guard that collects the evidence for the ceiling
+# and never applies it."
+#
+# Read HERE, off the criterion body, and deliberately BEFORE the derivation oracle further
+# down. F6R-04 is the reason: a hand edit of a criterion surfaces as DRIFT first, and drift
+# tells a reader a table moved rather than which rule stopped being checked. On a mutation
+# that trips both, the reader should be told the concrete thing.
+_pool_body = json.dumps(PREDICATES["criterion.UnmatchedPoolEntry.landed.v1"]["body"])
+checked('"op": "lt"' in _pool_body
+        and '"/payload/longest_plausible_outage"' in _pool_body
+        and '"/payload/retention_span"' in _pool_body,
+        ("THE RETENTION CEILING IS COLLECTED AND NEVER APPLIED: the rule this criterion "
+         "carries states that retention EXCEEDS the longest plausible outage, and the "
+         "criterion holds both operands and compares neither -- which admits a one-day "
+         "retention beside a thirty-day stated outage. Requiring the outage per entry is "
+         "the right answer to `stated, not assumed`; it is not the comparison (F6C-11)",
+         {"needs": ["lt", "/payload/longest_plausible_outage", "/payload/retention_span"],
+          "note": "the conjunct is authored by tools/phase_content.py as "
+                  "('ltF', '/payload/longest_plausible_outage', '/payload/retention_span'); "
+                  "weakening the derivation and regenerating does not satisfy this."}))
+# And both operands are SPANS in one unit. `lt` is a checked comparison of the same operand
+# type, so this is what makes the comparison meaningful rather than merely present: an
+# instant compared against a duration is exactly the incomparable-units case `lt` fails on,
+# and `retention_until` is an instant.
+for _field in ("longest_plausible_outage", "retention_span"):
+    checked(str(SCHEMAS["records.schema.json"]["$defs"]["UnmatchedPoolEntry"]["properties"]
+                ["payload"]["properties"][_field].get("$ref", "")).endswith("/Duration"),
+            ("AN OPERAND OF THE RETENTION COMPARISON IS NOT A DURATION: the two sides are "
+             "compared as spans in one unit, and a comparison between two free strings is "
+             "not a comparison (F6C-11)", _field))
+
 # --- F6D-09: A FIELD THAT NAMES A PREDICATE IS TYPED AS ONE. -------------------
 #
 # `values.schema.json` defines `PredicateId` as an enum of all registry keys. It is derived
@@ -1461,7 +1500,7 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
 ANSWERED_ELSEWHERE_CEILING = 2
-NOT_ANSWERED_CEILING = 34
+NOT_ANSWERED_CEILING = 33
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -1491,8 +1530,8 @@ checked(len(NOT_ANSWERED) <= NOT_ANSWERED_CEILING,
 # that does not move with the table it budgets is the denominator again, which is the rule
 # NEGATIVE_FIXTURE_FLOOR's own comment states and this file did not apply to itself.
 # RAISE THESE WHENEVER A PIN IS ADDED. Never lower one without writing the reason here.
-PIN_FLOOR = 68           # 67 -> 68 (F6D-12): the ExistenceJustification pairing pin
-PIN_ROW_FLOOR = 150      # 148 -> 150 (F6D-12): two rows on the pairing pin
+PIN_FLOOR = 69           # 68 -> 69 (F6C-11): the retention-comparison pin
+PIN_ROW_FLOOR = 152      # 150 -> 152 (F6C-11): two rows on the retention pin
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
 FINDING_SOURCE_FLOOR = 106  # new (RC5-02): the declaration the ceiling above reads
 checked(len(PINNED["pins"]) >= PIN_FLOOR
@@ -2542,12 +2581,13 @@ checked(version_rows >= 14,
 #   negative: 96 -> 97 and positive 57 -> 58 (F6D-12): the seventh-reason pair.
 #   negative: 97 -> 98 and positive 58 -> 59 (F6D-09): the predicate-bearing type
 #             pair -- one adverse untyping a field, one benign reordering an enum.
+#   negative: 98 -> 99 and positive 59 -> 60 (F6C-11): the retention-comparison pair.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 98
-POSITIVE_FIXTURE_FLOOR = 59
+NEGATIVE_FIXTURE_FLOOR = 99
+POSITIVE_FIXTURE_FLOOR = 60
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

@@ -1088,6 +1088,8 @@ ENVELOPE_FALLBACK = {
 #   ("neF", path)                               nonempty over the subject's own value
 #   ("prF", path)                               present at the subject's own path
 #   ("eqF", path, literal)                      that path equals that exact literal
+#   ("ltF", path, path)                         the first path is strictly less
+#                                               than the second (F6C-11)
 #   ("either", [item, ...])                     any over built conjuncts
 #   ("every", [item, ...])                      a nested all over built conjuncts
 #
@@ -3328,13 +3330,22 @@ RECORD_OVERRIDES = {
         hard=['nfp']),
 
     # -- UnmatchedPoolEntry (S1-C05) ---------------------------
+    # F6C-11: `05` section 6's silent-drop counter (3) states a COMPARISON --
+    # "retention on any holding destination exceeds the longest plausible outage" --
+    # and this criterion demanded all six operands nonempty and contained no comparison
+    # operator at all, so a one-day retention with a thirty-day stated outage satisfied
+    # it. The package names that exact anti-shape in its own fixture r16-08: "a guard
+    # that collects the evidence for the ceiling and never applies it." The `ltF` below
+    # applies it. Requiring `longest_plausible_outage` per entry was already the right
+    # answer to "stated, not assumed" and is kept.
     ("UnmatchedPoolEntry", "landed"): spec(
-        'A work record armed no interest, its retention exceeds the longest plausible '
-        'outage, the arrival alarm has reached a named reader, and the residue this pool '
-        'cannot catch is recorded. A catch-all that caught everything is not this.',
+        'A work record armed no interest, its retention STRICTLY EXCEEDS the longest '
+        'plausible outage -- the two compared as spans in one unit, not merely recorded '
+        'beside each other -- the arrival alarm has reached a named reader, and the residue this '
+        'pool cannot catch is recorded. A catch-all that caught everything is not this.',
         ['w-up-landed', 's-up'],
-        [('nfp', ['/payload/work_record_ref', '/payload/retention_until', '/payload/longest_plausible_outage', '/payload/alarm_reader_ref', '/payload/alarm_raised_at', '/payload/residue_note']), AR],
-        hard=['nfp']),
+        [('nfp', ['/payload/work_record_ref', '/payload/retention_until', '/payload/longest_plausible_outage', '/payload/alarm_reader_ref', '/payload/alarm_raised_at', '/payload/residue_note', '/payload/landed_at', '/payload/retention_span']), ('ltF', '/payload/longest_plausible_outage', '/payload/retention_span'), AR],
+        hard=['nfp', 'ltF']),
     ("UnmatchedPoolEntry", "claimed"): spec(
         'An admitted interest has claimed the entry and that interest is named. Claiming '
         'is deterministic and by the pool interest, never by whoever noticed it first.',
@@ -3802,6 +3813,14 @@ def build_conjunct(item, record, criterion_id, required_fields):
         return {"op": "present", "value": _subject_path(item[1])}
     if kind == "eqF":
         return {"op": "eq", "left": _subject_path(item[1]), "right": item[2]}
+    if kind == "ltF":
+        # F6C-11. The DSL had no comparison at all, which is why 33 of the 46 criteria on
+        # the fifteen new records contain no comparison operator: a rule whose own words
+        # state one could only collect its operands. Both sides are the SUBJECT's own
+        # paths -- `_subject_path` refuses a path the record's schema does not declare --
+        # and `lt` is checked exact decimal or canonical UTC comparison of the same operand
+        # type, so two spans compare and a span against an instant does not.
+        return {"op": "lt", "left": _subject_path(item[1]), "right": _subject_path(item[2])}
     if kind in ("either", "every"):
         built = []
         for inner_item in item[1]:

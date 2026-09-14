@@ -202794,7 +202794,7 @@
               "$ref": "values.schema.json#/$defs/UTC"
             },
             "longest_plausible_outage": {
-              "$ref": "values.schema.json#/$defs/string"
+              "$ref": "values.schema.json#/$defs/Duration"
             },
             "alarm_reader_ref": {
               "type": "object",
@@ -202873,6 +202873,9 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "retention_span": {
+              "$ref": "values.schema.json#/$defs/Duration"
             }
           },
           "required": [
@@ -202882,7 +202885,8 @@
             "longest_plausible_outage",
             "alarm_reader_ref",
             "alarm_raised_at",
-            "residue_note"
+            "residue_note",
+            "retention_span"
           ],
           "additionalProperties": false
         }

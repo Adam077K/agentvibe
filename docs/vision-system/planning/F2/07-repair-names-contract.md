@@ -201,6 +201,61 @@ so the partition does not record this finding as wholly answered. `not_answered`
 
 ---
 
+## F6C-11 — the retention ceiling is applied, not just collected
+
+*Required contract (C:325–345): a conjunct `gt(retention_until, landed_at +
+longest_plausible_outage)`; make `landed_at` exist and be required if it does not.*
+
+**`landed_at` already existed and was already required** on `UnmatchedPoolEntry` — that half of the
+contract was a no-op, and saying so is part of the answer.
+
+**The comparison as literally written is NOT expressible, and the substitute is exact about what it
+does and does not carry.** `add` is `DecimalString` only; there is **no instant-plus-duration
+primitive** in `primitive-registry.json`, so `landed_at + longest_plausible_outage` cannot be formed.
+Both sides are therefore compared **as spans in one unit**:
+
+| name | kind | where |
+|---|---|---|
+| `retention_span` | **new required payload field**, type `Duration` | `record-registry.json` `UnmatchedPoolEntry` (`type_fields` + `fields`, `required: true`) and `records.schema.json` (`$ref …/Duration`, added to `required`) |
+| `longest_plausible_outage` | **retyped** `string` → `Duration` | the same two places |
+| `("ltF", path, path)` | **new conjunct DSL code** | `tools/phase_content.py`, documented above `def spec`, composing to `{"op":"lt", left, right}` over two subject paths |
+| the `ltF` conjunct | criterion conjunct | `criterion.UnmatchedPoolEntry.landed.v1`, authored and regenerated |
+| `THE RETENTION CEILING IS COLLECTED AND NEVER APPLIED` | check (reads the body) | `validate_contracts.py` |
+| `AN OPERAND OF THE RETENTION COMPARISON IS NOT A DURATION` | check ×2 | `validate_contracts.py` |
+| pin on `criterion.UnmatchedPoolEntry.landed.v1` | pin (2 require rows, one of them `op: lt`) | `pinned-conjuncts.json#/pins` |
+| `r23-retention-ceiling-collected-and-never-applied` | negative fixture | `fixtures/negative/` |
+| `r23-retention-field-note-edited-benign` | positive fixture | `fixtures/positive/` |
+
+**It refuses the review's own counterexample exactly.** One-day retention, thirty-day stated outage:
+`lt(30d, 1d)` is false, so the entry does not reach `landed`. That was the case the criterion admitted.
+
+**`lt` and not `lte`, deliberately** — "exceeds" is the chapter's word, and `lte` would admit an entry
+whose retention ends exactly at the outage horizon, which is the boundary the rule is about.
+
+**Why the check reads the criterion body and sits ABOVE the derivation oracle.** This is **F6R-04's
+ordering, acted on** (see that section). A hand edit of a criterion trips the drift oracle too, and
+drift tells a reader *a table moved*; the concrete message says *which rule stopped being checked*.
+The negative fixture's `expect_failure_contains` is the concrete one, which is how the ordering is
+pinned rather than merely intended.
+
+### OWED — the span is not tied to the instants
+
+Nothing ties `retention_span` to `retention_until − landed_at`. A producer may state a 30-day outage,
+a 31-day `retention_span` and a `retention_until` one hour after `landed_at`, and the criterion passes.
+**That is a real, smaller hole, and it is this lane's, not a pre-existing one.** It is strictly better
+than the committed state — which admitted the review's counterexample outright — and it is worse than
+the contract asked for.
+
+Closing it needs an **instant-offset primitive** (`UTC` + `Duration` → `UTC`), after which the right
+form is the review's literal one and `retention_span` should be deleted rather than kept beside it.
+Registering a primitive is an architectural decision this lane was not briefed to take, which is why
+it is written here instead of taken.
+
+**Under F6R-01:** F6C-11 is **pinned**, so it leaves `not_answered` (34 → 33). Floors: `PIN_FLOOR`
+68 → 69, `PIN_ROW_FLOOR` 150 → 152, negative 98 → 99, positive 59 → 60.
+
+---
+
 ## What this lane did NOT land, and exactly where it stopped
 
 The lane was dispatched against **18** findings and landed **two** — F6A-10 and F6D-12 — plus

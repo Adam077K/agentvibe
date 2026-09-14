@@ -2398,6 +2398,35 @@
           "why": "and the three structural conjuncts the review credited stay: a decidable test is recorded, the admitting mandate is named and the approval carries an expiry. A justification naming a capability is uncheckable"
         }
       ]
+    },
+    {
+      "predicate_id": "criterion.UnmatchedPoolEntry.landed.v1",
+      "kind": "criterion",
+      "findings": [
+        "F6C-11"
+      ],
+      "decisions": [],
+      "why": "F6C-11: the one case in the amendment where a rule's own words state a comparison and the criterion carrying it makes none. 33 of the 46 criteria on the fifteen new records contain no comparison operator and that is disclosed rather than hidden -- the substantive comparisons live in the 30 guards. This one is different because `05` section 6 states the comparison in the sentence the criterion exists to carry. Pinned so that regenerating a weakened derivation cannot quietly return it to collecting both operands and comparing neither.",
+      "require": [
+        {
+          "op": "lt",
+          "why": "retention STRICTLY EXCEEDS the longest plausible outage. `lte` would admit an entry whose retention ends exactly at the outage horizon, which is the boundary the rule is about -- and `exceeds` is the chapter's own word"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/work_record_ref",
+            "/payload/retention_until",
+            "/payload/longest_plausible_outage",
+            "/payload/retention_span",
+            "/payload/landed_at",
+            "/payload/alarm_reader_ref",
+            "/payload/alarm_raised_at",
+            "/payload/residue_note"
+          ],
+          "why": "and the operands stay REQUIRED. Requiring `longest_plausible_outage` as a per-entry field is the right answer to `stated, not assumed` and is more than the prose promised; the comparison is what it was missing, not the collection"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -3451,7 +3480,6 @@
     "F6C-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-07": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
-    "F6C-11": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-12": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-13": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-16": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
