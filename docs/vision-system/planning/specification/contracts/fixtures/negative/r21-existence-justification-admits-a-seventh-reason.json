@@ -4,8 +4,8 @@
   "finding": "F6D-12; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-12)",
   "case": "A seventh admitted reason -- specialized knowledge, which `05` section 4 refuses by name -- added to the closed enum.",
   "paired_benign_fixture": "fixtures/positive/r21-existence-justification-six-reasons-reordered-benign.json",
-  "why": "F6D-12: negative control 8 is a job-title roster relabelled as capabilities, and before this repair it PASSED the record built to catch it -- `reason_kind` was a free string and the admitted criterion never constrained it. The enum alone is not the control; the enum plus a literal that says WHICH six is. This fixture adds a seventh to one declaration, which the members comparison sees first, and the six-reason literal would see next.",
-  "expect_failure_contains": "DISAGREE ABOUT A CLOSED ENUM'S MEMBERS",
+  "why": "F6D-12: negative control 8 is a job-title roster relabelled as capabilities, and before this repair it PASSED the record built to catch it -- `reason_kind` was a free string and the admitted criterion never constrained it. The enum alone is not the control; the enum plus a literal that says WHICH six is. This fixture adds a seventh to one declaration, and the check it exists to exercise is F6D-12's own six-reason literal. CORRECTED (r7-contracts-b): this field previously read `DISAGREE ABOUT A CLOSED ENUM'S MEMBERS`, which is F6A-10's registry-versus-schema comparison -- a DIFFERENT check, which also fires on this patch because the patch moves the schema and not the registry. F6D-12's check runs earlier in the file, so the suite refused this fixture for F6D-12's reason while the declaration claimed F6A-10's, and run_negative_fixtures.py reported the mismatch as a wrong_reason leak. The declaration is moved to the check the fixture is FOR rather than the checks being reordered, because reordering would have bought nothing: a fixture names the control it proves, and this one proves the six-reason literal.",
+  "expect_failure_contains": "A SEVENTH ADMITTED REASON IS WRITABLE",
   "rederive_from_registries": true,
   "patch": [
     {

@@ -395,8 +395,32 @@ checked(set(SCHEMAS["records.schema.json"]["$defs"]["StandingInterest"]["propert
 # evidence for the ceiling and never applies it, which is the anti-shape fixture r16-08
 # exists to name. The classification has to exist before the conjunct can mean anything.
 # This assertion is what makes the absence visible instead of silent.
-_statuses = {predicate.get("implementation_status") for predicate in PREDICATES.values()}
-checked(len(_statuses) == 1,
+#
+# IT MEASURES THE CONTRACT, NOT A SCRATCH TREE. A negative fixture runs this file over a
+# patched copy of the registries, and a fixture that ADDS a predicate must give it a
+# status. `r3-lifecycle-status-as-judgment-subject` does exactly that, and its status
+# literal says what it is -- the sentinel below, whose own words are "never part of the
+# contract". Without the exclusion, that fixture -- which exists to exercise the
+# primitive-argument record-type comparison -- was refused HERE instead, and a negative
+# fixture refused by a check other than its own is a wrong_reason leak: the suite reports
+# a rejection while the control it was written to prove is never reached. The exclusion is
+# keyed on the STATUS VALUE and not on where the predicate came from, so a fixture that
+# introduces a genuine second classification still trips this, which is what
+# fixtures/negative/r25-predicate-status-gains-a-second-classification exists to show and
+# what fixtures/positive/r25-predicate-status-fixture-sentinel-ignored-benign holds the
+# exclusion itself to.
+#
+# And it is an EQUALITY against a named literal now, not a count. `len(_statuses) == 1`
+# is satisfied by any single value, so a registry-wide rewrite of the status to some other
+# single string would have passed the tripwire whose entire subject is what that string
+# says -- the same defect shape as counting a set instead of comparing its members, which
+# F6A-10 is about two hundred lines below.
+FIXTURE_ONLY_PREDICATE_STATUS = "negative fixture; never part of the contract"
+CONTRACT_PREDICATE_STATUS = ("specified; conformance interpreter only, "
+                             "no production binding implemented")
+_statuses = {predicate.get("implementation_status") for predicate in PREDICATES.values()
+             if predicate.get("implementation_status") != FIXTURE_ONLY_PREDICATE_STATUS}
+checked(_statuses == {CONTRACT_PREDICATE_STATUS},
         ("THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS and F6D-09's third "
          "clause is no longer unwritable: it asked for a conjunct asserting each named "
          "precondition predicate's registered `implementation_status` is deterministic, "
@@ -404,7 +428,9 @@ checked(len(_statuses) == 1,
          "would have made the conjunct vacuous. More than one value exists now -- write "
          "the conjunct, type `precondition_predicate_ids` against the deterministic subset, "
          "and delete this check (F6D-09, owed clause)",
-         {"distinct_statuses": sorted(_statuses)[:6], "predicates": len(PREDICATES)}))
+         {"distinct_statuses": sorted(_statuses)[:6], "predicates": len(PREDICATES),
+          "the one contract status": CONTRACT_PREDICATE_STATUS,
+          "excluded fixture sentinel": FIXTURE_ONLY_PREDICATE_STATUS}))
 
 # --- F6D-12: THE SIX ADMITTED REASONS, AS A LITERAL, AND THE PAIRING. -----------
 #
@@ -2619,12 +2645,18 @@ checked(version_rows >= 14,
 #             pair -- one adverse untyping a field, one benign reordering an enum.
 #   negative: 98 -> 99 and positive 59 -> 60 (F6C-11): the retention-comparison pair.
 #   negative: 99 -> 100 and positive 60 -> 61 (F6C-10): the attempt-ceiling pair.
+#   negative: 100 -> 101 and positive 61 -> 62 (F6D-09, the wrong_reason repair):
+#   the predicate-implementation-status pair. The adverse case gives one predicate a
+#   genuine second classification and must trip the F6D-09 tripwire; the benign case
+#   gives one predicate the NEGATIVE-FIXTURE SENTINEL and must not, because that is
+#   the exclusion which stopped r3-lifecycle-status-as-judgment-subject being refused
+#   by a check it was not written for.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 100
-POSITIVE_FIXTURE_FLOOR = 61
+NEGATIVE_FIXTURE_FLOOR = 101
+POSITIVE_FIXTURE_FLOOR = 62
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

@@ -304,6 +304,77 @@ were behind it — so no prose edit was owed for the two clauses that landed. If
 
 ---
 
+## r7-contracts-b, step 0 --- the two wrong_reason leaks, and what the repair NAMED
+
+The previous lane never ran the full validator, so the ten fixtures it added had never been
+executed. Two of the hundred were refused by a check other than the one they exist to exercise.
+`tools/run_negative_fixtures.py` reports that as a wrong_reason leak and it is right to: a
+negative fixture rejected for the wrong reason proves nothing about the control it names, and
+the suite that reports it as a rejection is counting a pass it did not earn.
+
+### `r21-existence-justification-admits-a-seventh-reason` --- the declaration moved, not the checks
+
+The fixture adds `specialized_knowledge` to `records.schema.json`'s `reason_kind` enum and left
+`record-registry.json` alone, so TWO checks see it: F6D-12's six-reason literal (**A SEVENTH
+ADMITTED REASON IS WRITABLE**) and F6A-10's registry-versus-schema membership comparison
+(**DISAGREE ABOUT A CLOSED ENUM'S MEMBERS**). F6D-12's runs earlier in the file. The fixture
+declared F6A-10's message.
+
+**Fixed by moving the declaration to the check the fixture is FOR, not by reordering the checks.**
+The fixture's own `finding` field says F6D-12 and its `why` argues the six-reason literal; the
+expectation was simply written against the wrong one of two true failures. Reordering would have
+made F6A-10's comparison unreachable for this shape and bought nothing. `expect_failure_contains`
+is now `A SEVENTH ADMITTED REASON IS WRITABLE`, and the `why` records what it used to say and why
+that was wrong, so a reader who greps the old string finds the correction rather than nothing.
+
+### `r3-lifecycle-status-as-judgment-subject` --- the F6D-09 tripwire measured a scratch tree
+
+The tripwire counted DISTINCT `implementation_status` values over the whole predicate registry and
+fired when more than one existed. `r3` patches a predicate INTO the registry, and a patched-in
+predicate must carry a status; `r3`'s says `negative fixture; never part of the contract`. So the
+tripwire fired inside `r3`'s own scratch tree, on an entry `r3` introduced, and refused `r3` for a
+finding that has nothing to do with what `r3` proves.
+
+Two names are registered in `validate_contracts.py`, both string literals beside the tripwire:
+
+| name | value | meaning |
+|---|---|---|
+| `FIXTURE_ONLY_PREDICATE_STATUS` | `negative fixture; never part of the contract` | the status a fixture-introduced predicate carries; **excluded** from the tripwire's set |
+| `CONTRACT_PREDICATE_STATUS` | `specified; conformance interpreter only, no production binding implemented` | the one status every one of the 2,397 real predicates carries |
+
+The exclusion is keyed on the **status value**, never on where the predicate came from, so a
+fixture that introduces a genuine second classification still trips the tripwire. That is the
+difference between narrowing a control and disabling it, and it is held to a pair rather than
+asserted:
+
+- `fixtures/negative/r25-predicate-status-gains-a-second-classification` --- gives one REAL
+  predicate a real second classification; the tripwire must still fire.
+- `fixtures/positive/r25-predicate-status-fixture-sentinel-ignored-benign` --- gives one predicate
+  the sentinel; it must not. **If someone widens the exclusion, this pair is what fails.**
+
+Floors moved with them: negative 100 -> 101, positive 61 -> 62, in `MANIFEST.json` and in
+`NEGATIVE_FIXTURE_FLOOR` / `POSITIVE_FIXTURE_FLOOR`, with the reason written at both literals.
+
+**The tripwire also got STRONGER in the same edit, and this is the part worth reading.** It was
+`len(_statuses) == 1` --- satisfied by ANY single value. A registry-wide rewrite of the status to
+some other single string would have passed a tripwire whose entire subject is what that string
+says. It is now an equality against `CONTRACT_PREDICATE_STATUS` by name. That is the same defect
+shape F6A-10 is about two hundred lines below: **counting a set instead of comparing its members.**
+
+### What is STILL OWED, and it is the same clause the previous lane declined
+
+F6D-09's third clause --- a conjunct asserting each named precondition predicate's registered
+`implementation_status` is deterministic --- **is still not written, and the measurement that
+declined it is unchanged**: `implementation_status` takes exactly ONE value across all 2,397
+predicates. There is no deterministic subset to type `precondition_predicate_ids` against, because
+there is no classification in the registry at all. Writing the conjunct now would make it true of
+every predicate by construction --- the anti-shape `r16-08` exists to name --- and typing the field
+against a subset that is the whole set constrains nothing. **Classifying 2,397 predicates is an
+architectural decision about what the registry means, not a repair**, so it is recorded owed rather
+than faked. The tripwire is what makes the absence loud, and it survives this step narrowed and
+strengthened rather than deleted.
+
+---
 ## What this lane did NOT land, and exactly where it stopped
 
 Dispatched against **18** findings. Landed **five** — F6A-10, F6D-12, F6D-09, F6C-11, F6C-10 — plus
