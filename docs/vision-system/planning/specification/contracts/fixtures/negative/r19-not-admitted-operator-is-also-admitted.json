@@ -1,0 +1,15 @@
+{
+  "id": "r19-not-admitted-operator-is-also-admitted",
+  "repair": "RC5-03",
+  "finding": "RC5-03 (planning/reviews/G-02-recheck-05.md, probe 3e)",
+  "why": "`#/admissible_ancestors_not_admitted` names `forall` and says, in the row for `anything else`, that any primitive not in the admitting table is refused -- INCLUDING ONE REGISTERED TOMORROW THAT DECLARES ITS OWN BOOLEAN CHILD `demanded`, which is RC4-02 named verbatim by the file it defends. `grep -c not_admitted validate_contracts.py` returned 0. The fifth recheck added `forall` to the ADMITTING key while this key still forbade it: exit 0, 299,363 checks, nothing comparing the two. This fixture writes the same contradiction from the other side -- `any` is admitted, as `row_disjoined`, and is declared here as not admitted -- because after RC5-01 the admitting table is a literal in validate_contracts.py that no patch to this tree can reach, and the contradiction is the finding either way round. A block that names an attack and restricts nothing is the decorative-declaration class this package names in four other places; it is data now, or it is deleted.",
+  "expect_failure_contains": "AN OPERATOR IS BOTH ADMITTED AND NOT ADMITTED",
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/admissible_ancestors_not_admitted/any",
+      "op": "add",
+      "value": "A disjunction never demands its children, so a pinned conjunct may not be satisfied through one."
+    }
+  ]
+}

@@ -6,8 +6,8 @@
     "tools/run_positive_fixtures.py: declared-but-absent and present-but-undeclared both fail, and a fixture that does NOT pass validation fails",
     "validate_contracts.py: the positive run's own count must equal this one, every declared fixture must have passed, and the declared count must not fall below the floor"
   ],
-  "floor": 53,
-  "floor_why": "A literal, for the reason every other floor in this package is a literal: a count derived from the directory it measures is satisfied by the empty directory. Seventeen is one benign case per adverse case of selection-record section 12.5, and dropping one would drop the pairing rule for that row. Lowering this number is a decision and should read like one. RAISED BY R18 (the Step 6 repair of the F2 layer): negative 56 -> 91, positive 17 -> 52. Thirty-five new adverse cases and thirty-five paired benign ones, one per finding the four Step 6 reviews raised against the contracts, plus one pair per guard that had none. F6C-16 measured 14 of 30 guards exercised by a paired fixture; every registered guard has one now, and the count is derived rather than quoted -- `comm -12 <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/negative | sort -u) <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/positive | sort -u) | wc -l`. Lowering either number is still two edits and a written reason.",
+  "floor": 55,
+  "floor_why": "A literal, for the reason every other floor in this package is a literal: a count derived from the directory it measures is satisfied by the empty directory. Seventeen is one benign case per adverse case of selection-record section 12.5, and dropping one would drop the pairing rule for that row. Lowering this number is a decision and should read like one. RAISED BY R18 (the Step 6 repair of the F2 layer): negative 56 -> 91, positive 17 -> 52. Thirty-five new adverse cases and thirty-five paired benign ones, one per finding the four Step 6 reviews raised against the contracts, plus one pair per guard that had none. F6C-16 measured 14 of 30 guards exercised by a paired fixture; every registered guard has one now, and the count is derived rather than quoted -- `comm -12 <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/negative | sort -u) <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/positive | sort -u) | wc -l`. Lowering either number is still two edits and a written reason. RAISED BY RC5-01 and RC5-03 to the committed count: positive 53 -> 55, one adverse and one benign fixture for the allowlist literal and for the not-admitted block.",
   "fixtures": [
     "r16-01-derivation-gates-only-the-higher-class-benign",
     "r16-02-checker-delivered-the-producers-rationale-benign",
@@ -61,6 +61,8 @@
     "r18-step-emits-more-than-one-effect-benign",
     "r18-supersession-leaves-an-accepted-outcome-standing-benign",
     "r18-terminal-flag-not-recorded-on-a-blocked-failure-benign",
-    "r18-tie-break-reverts-to-weakest-sufficient-benign"
+    "r18-tie-break-reverts-to-weakest-sufficient-benign",
+    "r19-allowlist-widened-in-json-benign",
+    "r19-not-admitted-operator-is-also-admitted-benign"
   ]
 }

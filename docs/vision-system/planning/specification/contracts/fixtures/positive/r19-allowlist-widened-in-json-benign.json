@@ -1,0 +1,67 @@
+{
+  "id": "r19-allowlist-widened-in-json-benign",
+  "repair": "RC5-01",
+  "case": "registering a primitive with no predicate child, used in a value position",
+  "why": "The benign twin of r19-allowlist-widened-in-json, differing in exactly the thing the refusal is about. `identity_value` is registered with one argument, `value`, typed JsonValue and classified `value` by `argument_positions` -- NO boolean child, so nothing about it can widen what satisfies a pin -- it is USED, in the value slot of guard.acceptance.resolution_reason_present's `nonempty` conjunct, and the digest is re-pinned by hand in the same edit because `argument_positions` moved. Nothing is added to `#/admissible_ancestors`, because nothing needs to be. This must PASS, and a checker that refused it would be refusing the registration of primitives rather than the widening of the allowlist -- a suite that rejects everything passes every adverse row, which is the pairing rule this fixture exists for. It also exercises the two controls the adverse case trips, in the direction that must not fire: the allowlist equality check (the JSON block still equals ADMISSIBLE_LITERAL) and the demanding-declaration check (no demanding role, so no entry required).",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "primitive-registry.json",
+      "pointer": "/identity_value",
+      "op": "add",
+      "value": {
+        "args": [
+          "value"
+        ],
+        "semantics": "Return the decoded current-authorized value unchanged; a naming wrapper for a value position, with no predicate child, no mutation and no new authority.",
+        "version": "1.0",
+        "argument_types": {
+          "value": "JsonValue"
+        },
+        "argument_positions": {
+          "value": "value"
+        },
+        "argument_schema": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "$ref": "values.schema.json#/$defs/JsonValue"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        "result_type": "JsonValue",
+        "failure": "unresolved on absent, ambiguous, stale, unauthorized or invalid input; never silently coerced to true or a guessed world fact",
+        "planned_module": "system/packages/contracts/predicates"
+      }
+    },
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.acceptance.resolution_reason_present/body/predicates/1/value",
+      "op": "replace",
+      "value": {
+        "op": "identity_value",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/resolution_reason"
+        }
+      }
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/argument_positions_digest",
+      "op": "replace",
+      "value": "2d3cfe8ff2baf6e19188115a8444b94c78e8dd93ee48b17a2d6d047e3a4aad23"
+    }
+  ],
+  "rederive_from_registries": true
+}

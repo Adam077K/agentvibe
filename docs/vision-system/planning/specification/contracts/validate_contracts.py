@@ -981,16 +981,65 @@ def pin_row_matches(node, row):
 #
 # Membership is by NAME, not by role, and that is the whole point. A rule phrased over
 # roles ("any operator whose slot is `demanded`") reads the same file the attack edits.
-ADMISSIBLE = PINNED["admissible_ancestors"]
+#
+# --- RC5-01: AND THE SET ITSELF IS A CLOSED LITERAL HERE, NOT A JSON BLOCK. -----
+#
+# The fifth recheck measured the price of leaving it in JSON. ONE hunk -- register
+# `every_linked_obligation` with `argument_positions.predicate: "demanded"`, add it to
+# `#/admissible_ancestors` with a plausible sentence, re-pin `argument_positions_digest`
+# -- put G2-01's counterexample back at exit 0 and 299,409 checks, thirty MORE than the
+# baseline, with every pin satisfied. Three edits, one commit, one author, and the whole
+# defence was "a reviewer sees the diff". That is the answer this lineage rejected for the
+# `disjoined` ceiling, for the pin floors, for the fixture manifests and for the census.
+#
+# So the live table is the LITERAL BELOW and the JSON block is DOCUMENTATION that must
+# agree with it. Widening what may satisfy a pin is now an edit to validate_contracts.py,
+# which is the expensive act by construction: the table a pin consults cannot be reached
+# by any patch to the data this package derives, registers or hand-writes.
+#
+# Both directions fail, and that is deliberate: a JSON block that says LESS than the
+# literal is as bad as one that says more, because a reader who opens
+# pinned-conjuncts.json to learn what may satisfy a pin must not be shown a smaller table
+# than the one running. One truth, stated twice, compared.
+ADMISSIBLE_LITERAL = {
+    "all": {"registry_role": "demanded", "admits": "always"},
+    "not": {"registry_role": "negated", "admits": "row_polarity"},
+    "any": {"registry_role": "disjoined", "admits": "row_disjoined"},
+}
+# The walker reads THIS. `PINNED["admissible_ancestors"]` is never consulted for a verdict.
+ADMISSIBLE = ADMISSIBLE_LITERAL
+ADMISSIBLE_DECLARED = PINNED["admissible_ancestors"]
 ADMISSIBLE_KEYS = {"registry_role", "admits", "why"}
 # Declare what is read and REFUSE the rest, at the CONDITION rather than at the value: an
 # `admits` string this file does not evaluate would be a condition that reads as a
 # restriction and restricts nothing, which is the RC4 class one layer up.
 ADMITS_CONDITIONS = {"always", "row_polarity", "row_disjoined"}
-checked(isinstance(ADMISSIBLE, dict) and ADMISSIBLE,
+checked(isinstance(ADMISSIBLE_DECLARED, dict) and ADMISSIBLE_DECLARED,
         "pinned-conjuncts.json declares no `admissible_ancestors`; an empty set would "
         "refuse every pin rather than passing vacuously, but it is still not a table")
-for _operator, _entry in ADMISSIBLE.items():
+checked({_operator: {"registry_role": _entry.get("registry_role"),
+                     "admits": _entry.get("admits")}
+         for _operator, _entry in ADMISSIBLE_DECLARED.items()} == ADMISSIBLE_LITERAL,
+        ("THE ADMISSIBLE-ANCESTOR TABLE IS NOT THE LITERAL IN validate_contracts.py: "
+         "`pinned-conjuncts.json#/admissible_ancestors` is the DECLARATION of which "
+         "operators a pinned conjunct may be satisfied through, and the walker reads the "
+         "literal `ADMISSIBLE_LITERAL` in this file instead -- so an entry added to the "
+         "JSON block grants nothing and an entry removed from it hides something that is "
+         "still granted. Either way the two disagree and one of them is what a reviewer "
+         "reads (RC5-01)",
+         {"literal in validate_contracts.py":
+             {_operator: _rule["admits"] for _operator, _rule in ADMISSIBLE_LITERAL.items()},
+          "declared in pinned-conjuncts.json":
+             {_operator: _entry.get("admits")
+              for _operator, _entry in ADMISSIBLE_DECLARED.items()},
+          "widened by": sorted(set(ADMISSIBLE_DECLARED) - set(ADMISSIBLE_LITERAL)),
+          "narrowed by": sorted(set(ADMISSIBLE_LITERAL) - set(ADMISSIBLE_DECLARED)),
+          "note": "WIDENING WHAT SATISFIES A PIN IS AN EDIT TO validate_contracts.py. "
+                  "Add the operator to ADMISSIBLE_LITERAL with its condition, and to "
+                  "pinned-conjuncts.json#/admissible_ancestors with its reason, in one "
+                  "commit -- and expect the checker edit to be reviewed as one. Adding it "
+                  "to the JSON alone is the RC5-01 hunk and is what this refuses."}))
+for _operator, _entry in ADMISSIBLE_DECLARED.items():
     checked(set(_entry) == ADMISSIBLE_KEYS,
             ("admissible ancestor shape", _operator, sorted(set(_entry) ^ ADMISSIBLE_KEYS)))
     checked(_entry["admits"] in ADMITS_CONDITIONS,
@@ -998,17 +1047,58 @@ for _operator, _entry in ADMISSIBLE.items():
              "restriction it reads as is one nothing applies", _operator, _entry["admits"],
              sorted(ADMITS_CONDITIONS)))
     checked(_entry["why"].strip(), ("an admissible ancestor states no reason", _operator))
+for _operator, _rule in ADMISSIBLE_LITERAL.items():
+    checked(_rule["admits"] in ADMITS_CONDITIONS,
+            ("the literal admits a condition this file does not evaluate", _operator,
+             _rule["admits"], sorted(ADMITS_CONDITIONS)))
     checked(_operator in PRIMITIVES,
-            ("pinned-conjuncts.json admits an operator the registry does not define",
+            ("validate_contracts.py admits an operator the registry does not define",
              _operator))
     # The hand-written name and the derived role must agree about the SAME operator. They
     # are two files with two authors, which is the design; two files with two authors that
     # never meet is how a hand-written table goes stale beside a registry that moved.
-    checked(_entry["registry_role"] in set(PRIMITIVES[_operator]["argument_positions"].values()),
+    checked(_rule["registry_role"] in set(PRIMITIVES[_operator]["argument_positions"].values()),
             ("an admissible ancestor claims a role primitive-registry.json no longer gives "
              "that operator anywhere, so this table and the demand table describe different "
-             "things", _operator, _entry["registry_role"],
+             "things", _operator, _rule["registry_role"],
              sorted(set(PRIMITIVES[_operator]["argument_positions"].values()))))
+
+# --- RC5-03: THE SIBLING KEY THAT NAMED THE ATTACK AND RESTRICTED NOTHING. ------
+#
+# `#/admissible_ancestors_not_admitted` names `forall` and "anything else" -- including,
+# verbatim, "one registered tomorrow that declares its own `boolean` child `demanded`",
+# which is RC4-02 -- and `grep -c not_admitted validate_contracts.py` returned 0. The
+# fifth recheck added `forall` to the ADMITTING key while the NOT-admitting key still
+# forbade it, at exit 0, with nothing comparing the two. Prose inside a JSON file whose
+# whole premise is that prose rots and data does not.
+#
+# Read, therefore, in the two ways that make it data: nothing is both admitted and not
+# admitted, and every name here other than the literal "anything else" is an operator that
+# exists. The block is kept rather than deleted because of the third rule below, which is
+# what gives it force: the `quantified` escape must be declared here BY NAME.
+NOT_ADMITTED = PINNED["admissible_ancestors_not_admitted"]
+NOT_ADMITTED_CATCH_ALL = "anything else"
+checked(isinstance(NOT_ADMITTED, dict) and NOT_ADMITTED_CATCH_ALL in NOT_ADMITTED,
+        ("`admissible_ancestors_not_admitted` must exist and must carry its catch-all row; "
+         "a table of named exceptions with no catch-all reads as exhaustive and is not",
+         sorted(NOT_ADMITTED) if isinstance(NOT_ADMITTED, dict) else type(NOT_ADMITTED).__name__))
+checked(not (set(NOT_ADMITTED) & set(ADMISSIBLE_LITERAL)),
+        ("AN OPERATOR IS BOTH ADMITTED AND NOT ADMITTED: `admissible_ancestors_not_admitted` "
+         "names an operator `ADMISSIBLE_LITERAL` admits, so pinned-conjuncts.json states "
+         "two incompatible things about the same name and a reader is told whichever one "
+         "they opened first (RC5-03)",
+         {"in both": sorted(set(NOT_ADMITTED) & set(ADMISSIBLE_LITERAL)),
+          "admitted": sorted(ADMISSIBLE_LITERAL),
+          "note": "if the operator really is admissible, delete its not_admitted row in "
+                  "the same commit that adds it to ADMISSIBLE_LITERAL; if it is not, it "
+                  "does not belong in the admitting table."}))
+for _name, _why in NOT_ADMITTED.items():
+    checked(str(_why).strip(), ("a not-admitted operator states no reason", _name))
+    checked(_name == NOT_ADMITTED_CATCH_ALL or _name in PRIMITIVES,
+            ("`admissible_ancestors_not_admitted` names something that is not a registered "
+             "primitive and is not the catch-all row, so it forbids an operator no body "
+             "could carry -- a restriction over nothing reads as a restriction (RC5-03)",
+             _name, NOT_ADMITTED_CATCH_ALL))
 
 
 def inadmissible_ancestor(entry, row, boolean_op):
@@ -1306,9 +1396,10 @@ checked(ARGUMENT_POSITIONS_DIGEST == PINNED["argument_positions_digest"],
                   "argument_positions_digest in the same commit as the registry edit, so "
                   "the two are one line apart in one diff. Recompute it with the command "
                   "in #/argument_positions_digest_why. Re-pinning is not the whole job: an "
-                  "operator that now declares a DEMANDING role must also be admitted by "
-                  "hand in #/admissible_ancestors, or no pinned conjunct may be satisfied "
-                  "through it."}))
+                  "operator that now declares a DEMANDING role must also be added by hand "
+                  "to ADMISSIBLE_LITERAL in validate_contracts.py and to "
+                  "#/admissible_ancestors, which are compared (RC5-01), or no pinned "
+                  "conjunct may be satisfied through it."}))
 # And what a deliberate re-pin must then survive. Reachable only AFTER someone re-pins the
 # digest -- the check above fires first on any table edit -- so no negative fixture
 # expresses it, and that is stated rather than implied: a fixture would have to carry a
@@ -1326,11 +1417,39 @@ for _name, _primitive in PRIMITIVES.items():
              "unilaterally, that a pinned conjunct written inside it is required (RC4-02)",
              _name, _demanding,
              {"admissible_ancestors": sorted(ADMISSIBLE),
-              "note": "either give this operator a hand-written entry in pinned-"
-                      "conjuncts.json#/admissible_ancestors with its reason and its "
-                      "condition, or declare the argument `quantified` -- which is "
-                      "non-demanding, and is the conservative reading for any operator "
-                      "whose child may be evaluated zero times."}))
+              "note": "either add this operator to ADMISSIBLE_LITERAL in "
+                      "validate_contracts.py with its condition AND to pinned-"
+                      "conjuncts.json#/admissible_ancestors with its reason -- the two are "
+                      "compared (RC5-01) -- or declare the argument `quantified`, which is "
+                      "non-demanding, is the conservative reading for any operator whose "
+                      "child may be evaluated zero times, and must then be named in "
+                      "#/admissible_ancestors_not_admitted."}))
+    # RC5-01 asked whether the `quantified` opt-in should be DELETED as "the only escape
+    # and it demands nothing". It is not deleted, because it has a caller: `forall`
+    # declares its predicate child `quantified`, and deleting the escape would force
+    # `forall` into ADMISSIBLE_LITERAL -- admitting, to close a hole, exactly the operator
+    # the whole lineage exists to refuse. What was free about the escape is now priced:
+    # an operator that takes it must be named in #/admissible_ancestors_not_admitted,
+    # which is the block RC5-03 made data. So the escape costs a hand-written declaration
+    # in the pin file, and it is the declaration that says why the operator demands
+    # nothing. `quantified` remains non-demanding in the walker; this adds no route in.
+    _quantified = sorted(argument for argument, role
+                         in _primitive["argument_positions"].items()
+                         if role == "quantified")
+    checked(not _quantified or _name in NOT_ADMITTED,
+            ("A PRIMITIVE TAKES THE `quantified` ESCAPE AND IS NOT DECLARED NON-ADMISSIBLE: "
+             "`quantified` is the one demand role that does not require an entry in the "
+             "admissible-ancestor table, because a child evaluated zero times demands "
+             "nothing -- so it is the cheapest way to register a boolean-child operator "
+             "this package never has to argue about. It is declared, by name, in "
+             "pinned-conjuncts.json#/admissible_ancestors_not_admitted, with the reason "
+             "(RC5-01, RC5-03)",
+             _name, _quantified,
+             {"declared not admissible": sorted(set(NOT_ADMITTED) - {NOT_ADMITTED_CATCH_ALL}),
+              "note": "add a row to #/admissible_ancestors_not_admitted naming this "
+                      "operator and saying why its quantified child demands nothing -- as "
+                      "`forall`'s row does: a quantifier over a collection nothing forces "
+                      "non-empty is vacuously true."}))
 
 # A conjunct pin holds a guard to what it demands and says nothing about whether the edge
 # EXISTS. RC-01 was that shape: every guard well formed, every criterion sourced, and no
@@ -1961,12 +2080,15 @@ checked(version_rows >= 14,
 #   negative: 53 at the fourth recheck, 56 before R18, 91 now -- +35 for the Step 6 repair
 #             of the F2 layer, one adverse case per contracts finding of the four reviews
 #             plus one per guard that had no adverse fixture of its own.
+#   negative: 92 -> 94 and positive 53 -> 55 (RC5-01, RC5-03): one adverse and one
+#             benign fixture for the admissible-ancestor literal and for the
+#             not-admitted block.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 92
-POSITIVE_FIXTURE_FLOOR = 53
+NEGATIVE_FIXTURE_FLOOR = 94
+POSITIVE_FIXTURE_FLOOR = 55
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

@@ -1,0 +1,76 @@
+{
+  "id": "r19-allowlist-widened-in-json",
+  "repair": "RC5-01",
+  "finding": "RC5-01 (planning/reviews/G-02-recheck-05.md, probes 3a and 3e)",
+  "why": "THE RC5-01 HUNK, in the three edits the fifth recheck measured and in no others: register `every_linked_obligation` with `argument_types.predicate: \"boolean\"` and `argument_positions.predicate: \"demanded\"`; add it to `pinned-conjuncts.json#/admissible_ancestors` with a plausible sentence; re-pin `argument_positions_digest` to 358f8d36c3b8d3964e252dbf0729819c6c4e6c61f9a884209c38b0679bebd55a, which is the digest of the mutated table and is what the recheck computed. Before the repair those three edits passed at exit 0 and 299,409 checks -- THIRTY MORE than the baseline -- with G2-01's counterexample restored: a sale reaching `performed` naming no Fulfillment, nothing `delivered`, no Obligation discharged, every pin satisfied, `under_quantifier: 0`, `refused: 0`. RC4-02 closed the registry author's route and this was the route the closure moved the authority INTO: the allowlist was hand-written, unbudgeted, unpinned and absent from the verdict, and the whole defence was that a reviewer sees the diff -- the answer this lineage rejected for the disjoined ceiling, the pin floors, the fixture manifests and the census. The body move is deliberately NOT included: the allowlist is now the closed literal ADMISSIBLE_LITERAL in validate_contracts.py and the JSON block is a declaration compared against it, so the edit is refused AT THE DECLARATION, before any body uses the new operator and before the digest is even consulted. Same argument r17-registry-flips-forall-to-demanded makes for the digest. If this fixture ever passes, widening what satisfies a pin has gone back to being a JSON edit.",
+  "expect_failure_contains": "THE ADMISSIBLE-ANCESTOR TABLE IS NOT THE LITERAL",
+  "patch": [
+    {
+      "file": "primitive-registry.json",
+      "pointer": "/every_linked_obligation",
+      "op": "add",
+      "value": {
+        "args": [
+          "items",
+          "bind",
+          "predicate"
+        ],
+        "semantics": "Evaluate the finite child for every Obligation the subject links, with lexical binding; no mutation or new authority.",
+        "version": "1.0",
+        "argument_types": {
+          "items": "JsonValue[]",
+          "bind": "string",
+          "predicate": "boolean"
+        },
+        "argument_positions": {
+          "items": "value",
+          "bind": "value",
+          "predicate": "demanded"
+        },
+        "argument_schema": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "values.schema.json#/$defs/JsonValue"
+              }
+            },
+            "bind": {
+              "$ref": "values.schema.json#/$defs/string"
+            },
+            "predicate": {
+              "$ref": "values.schema.json#/$defs/boolean"
+            }
+          },
+          "required": [
+            "items",
+            "bind",
+            "predicate"
+          ],
+          "additionalProperties": false
+        },
+        "result_type": "boolean_or_unresolved",
+        "failure": "unresolved on absent, ambiguous, stale, unauthorized or invalid input; never silently coerced to true or a guessed world fact",
+        "planned_module": "system/packages/contracts/predicates"
+      }
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/admissible_ancestors/every_linked_obligation",
+      "op": "add",
+      "value": {
+        "registry_role": "demanded",
+        "admits": "always",
+        "why": "Evaluates its predicate child for every linked Obligation, so a conjunct written inside it is demanded of each one -- strictly stronger than demanding it once."
+      }
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/argument_positions_digest",
+      "op": "replace",
+      "value": "358f8d36c3b8d3964e252dbf0729819c6c4e6c61f9a884209c38b0679bebd55a"
+    }
+  ],
+  "rederive_from_registries": true
+}
