@@ -148,11 +148,14 @@
     "class": "a",
     "heading": "### F6A-09 · class (a) · two alias-table keys collide with live specification names",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "6ae17ca"
+      ],
+      "repair_status": "repaired (author-recorded): r7-contracts-b: ConsequenceVector alias deleted, CapacityState defended, refusal widened to value-registry names; prose-identifier half declined with reason",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6A-10": {
@@ -160,11 +163,14 @@
     "class": "a",
     "heading": "### F6A-10 · class (a) · `custody_tie_break_reason = admitter_excluded` is outside a closed enum a guard already compares",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "0daf679"
+      ],
+      "repair_status": "repaired (author-recorded): r7-contracts: admitter_excluded in both enum declarations; closed-enum membership check; paired fixtures",
       "f2_06_recheck_01": "§5 OPEN — neither branch of the required contract taken",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6A-11": {
@@ -521,11 +527,14 @@
     "class": "b",
     "heading": "**F6C-06 · (b) · The cache-lifetime collapse is priced as a capacity event in prose and binds to no capacity",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "cc26cf9"
+      ],
+      "repair_status": "repaired (author-recorded): r7-contracts-b: CapacityMeasure registered with cache_lifetime; 07 §5 pointer; reverse check; paired fixtures",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6C-07": {
@@ -593,11 +602,14 @@
     "class": "a",
     "heading": "**F6C-10 · (a) · The attempt ceiling is on the wrong record, optional, and demanded by nothing.**",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "32c18de"
+      ],
+      "repair_status": "PARTIAL (author-recorded): r7-contracts: attempt_ceiling required on WorkOrder; ltCount conjunct on FailureRecord retry edge; pinned; paired fixtures. RESIDUE: park phase owed (edge predicates not tool-authored)",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6C-11": {
@@ -605,11 +617,14 @@
     "class": "a",
     "heading": "**F6C-11 · (a) · Silent-drop counter (3) states a comparison that its criterion does not make, although both",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "fdef870"
+      ],
+      "repair_status": "PARTIAL (author-recorded): r7-contracts: ltF Duration comparison conjunct, pinned, paired fixtures. RESIDUE: retention_span not tied to retention_until − landed_at (instant-offset primitive owed)",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6C-12": {
@@ -637,11 +652,14 @@
     "class": "b",
     "heading": "**F6C-13 · (b) · `critical_fields` carries its authorship rule in prose and in no predicate.**",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "558f6c4"
+      ],
+      "repair_status": "repaired (author-recorded): r7-contracts-c: critical_fields + critical_fields_authority_ref required on WorkOrder; guard excluding the resuming attempt on the admission edge; pinned; paired fixtures",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6C-14": {
@@ -821,11 +839,14 @@
     "class": "b",
     "heading": "## F6D-05 - (b) - Twenty-nine of the thirty guards read only fields on their own subject record, and in twenty-six the guard's owning component is the component that writes that record.",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "398f8d7"
+      ],
+      "repair_status": "PARTIAL (author-recorded): r7-contracts-c (partial): five control fields re-owned to S1-C04 and pinned as producer-unauthorable; two checks; paired fixtures. RESIDUE: guard-body rebinding through IdentityBinding owed; 05 §1 sentence owed",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "contracts/ (schema, registry, pins)"
+      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6D-06": {
@@ -863,11 +884,14 @@
     "class": "a",
     "heading": "## F6D-08 - (a) - The `ArmedSet` is unstoppable by prose only. Its stated invariant names the admission authority as the party that must not write it, and the registry names that same party as its own",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "b3ea337"
+      ],
+      "repair_status": "repaired (author-recorded): r7-contracts-c: computed-projection partition pinned (empty permitted_commands, pinned transition counts, registered evaluator modules); ArmedSet owner_component stated custodial; m4 fixture pair",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "contracts/ (schema, registry, pins)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6D-09": {
@@ -875,11 +899,14 @@
     "class": "a",
     "heading": "## F6D-09 - (a) - `PredicateId` is a 2,387-entry enum that zero record fields use. The two predicate-bearing fields this amendment adds are free strings, where thirty-two pre-existing fields are typed",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "69c4004"
+      ],
+      "repair_status": "PARTIAL (author-recorded): r7-contracts: failed_predicate_id and precondition_predicate_ids typed PredicateId; evaluator kind closed; tripwire narrowed by r7-contracts-b. RESIDUE: determinism conjunct returned as a decision (implementation_status single-valued)",
       "f2_06_recheck_01": "§5 OPEN — PredicateId used by 0 record fields",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "contracts/ (schema, registry, pins)"
+      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   },
   "F6D-10": {
@@ -916,11 +943,14 @@
     "class": "a",
     "heading": "## F6D-12 - (a) - `ExistenceJustification.reason_kind` is a free string. The six admitted reasons are a prose table, so the refused seventh is admissible.",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "ed50c84"
+      ],
+      "repair_status": "repaired (author-recorded): r7-contracts: reason_kind / reason_unit closed enums of six, pairing conjunct, pinned, paired fixtures",
       "f2_06_recheck_01": "§5 OPEN — both fields still free strings",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "contracts/ (schema, registry, pins)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
     }
   }
 }
