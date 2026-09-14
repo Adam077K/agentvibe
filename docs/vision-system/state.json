@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "F2 dispositioned (SCOPED); owed repair and verification lanes running; founder hold on building in force",
+  "phase": "F2 dispositioned (SCOPED); r7 repair lanes merged at 923d1ea; full validator running on 0d7578f; final recheck pending; founder hold on building in force",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-4-1789314685",
@@ -104,7 +104,7 @@
       "worktree": "harness-managed (Agent isolation=worktree); branch reported by the builder on return",
       "scope": "18 findings: F6A-09, F6A-10, F6C-06, F6C-10, F6C-11, F6C-12, F6C-13, F6D-05, F6D-08, F6D-09, F6D-12, F6X-01, F6X-02, F6R-01..04, RC4-07; writes only planning/specification/** and planning/F2/07-repair-names-contract.md",
       "dispatched": "2026-09-14",
-      "status": "RETURNED PARTIAL at aa63875 (7 commits): repaired F6A-10, F6D-12; partial F6D-09 (determinism conjunct owed — implementation_status single-valued, tripwire added), F6C-11 (retention_span not tied to retention_until − landed_at; needs instant-offset primitive), F6C-10 (park phase owed — edge predicates not tool-authored), F6R-01 (structural half: answered_elsewhere / not_answered partition with two ceilings; 32 reclassifications remain), F6R-04 (acted on in F6C-11; F6D-07 note remains); not-done F6C-13, F6X-01, F6X-02, F6A-09, F6C-06, F6C-12, F6D-08, F6D-05, RC4-07, F6R-03, F6R-02. Full validator NOT run by the lane (only CONTRACTS_FIXTURE_RUN=1 mode, green, 100/61 fixtures declared); orchestrator running the full validator on aa63875 now; no chapter file touched"
+      "status": "RETURNED PARTIAL at aa63875 (7 commits): repaired F6A-10, F6D-12; partial F6D-09 (determinism conjunct owed — implementation_status single-valued, tripwire added), F6C-11 (retention_span not tied to retention_until − landed_at; needs instant-offset primitive), F6C-10 (park phase owed — edge predicates not tool-authored), F6R-01 (structural half: answered_elsewhere / not_answered partition with two ceilings; 32 reclassifications remain), F6R-04 (acted on in F6C-11; F6D-07 note remains); not-done F6C-13, F6X-01, F6X-02, F6A-09, F6C-06, F6C-12, F6D-08, F6D-05, RC4-07, F6R-03, F6R-02. Full validator NOT run by the lane (only CONTRACTS_FIXTURE_RUN=1 mode, green, 100/61 fixtures declared); orchestrator running the full validator on aa63875 now; no chapter file touched — MERGED into ceo-4 at 278e526 / 923d1ea"
     },
     {
       "lane": "f2-06-recheck-02",
@@ -154,7 +154,7 @@
       "base": "aa63875 + merge of 3d09545",
       "worktree": "harness-managed; branch builder/f2-r7-contracts-b",
       "dispatched": "2026-09-14",
-      "status": "RETURNED PARTIAL at 41c51c7 (11 commits): repaired step-0 (two fixture leaks), F6X-02, F6X-01, F6A-09, F6C-06, F6R-02, RC4-07, F6R-04, F6R-03; partial F6R-01 (32 rows unmoved); not-done F6C-13, F6D-08, F6D-05, residues; F6D-09 conjunct returned as a decision (implementation_status single-valued). 14 new fixtures never executed; full validator running on 41c51c7 (orchestrator); scope clean; one chapter sentence (07 §5)"
+      "status": "RETURNED PARTIAL at 41c51c7 (11 commits): repaired step-0 (two fixture leaks), F6X-02, F6X-01, F6A-09, F6C-06, F6R-02, RC4-07, F6R-04, F6R-03; partial F6R-01 (32 rows unmoved); not-done F6C-13, F6D-08, F6D-05, residues; F6D-09 conjunct returned as a decision (implementation_status single-valued). 14 new fixtures never executed; full validator running on 41c51c7 (orchestrator); scope clean; one chapter sentence (07 §5) — MERGED into ceo-4 at 278e526 / 923d1ea"
     },
     {
       "lane": "q017-conjunction-rerun",
@@ -171,7 +171,7 @@
       "kind": "fresh contracts lane off 41c51c7",
       "scope": "F6C-13, F6D-08, F6D-05, F6R-01 32 rows, residues F6C-10/F6C-11/F6B-03; no chapter edits",
       "dispatched": "2026-09-14",
-      "status": "RETURNED PARTIAL at a41b62b (5 commits): F6C-13 repaired; F6D-08 repaired; F6D-05 partial (control fields re-owned to S1-C04 and pinned; guard-body rebinding through IdentityBinding owed); F6R-01 1 of 32 rows moved (30 unverified, said so); residues F6C-10/F6C-11/F6B-03 not started; 6 new fixtures (r33–r35 pairs) never executed; S1-C04 choice is the lane's reading of 02 §4 — recheck should treat it as such"
+      "status": "RETURNED PARTIAL at a41b62b (5 commits): F6C-13 repaired; F6D-08 repaired; F6D-05 partial (control fields re-owned to S1-C04 and pinned; guard-body rebinding through IdentityBinding owed); F6R-01 1 of 32 rows moved (30 unverified, said so); residues F6C-10/F6C-11/F6B-03 not started; 6 new fixtures (r33–r35 pairs) never executed; S1-C04 choice is the lane's reading of 02 §4 — recheck should treat it as such — MERGED into ceo-4 at 278e526 / 923d1ea"
     },
     {
       "lane": "r7-prose-c",
@@ -179,17 +179,15 @@
       "kind": "prose lane off 41c51c7, chapters 04/05/07 only",
       "scope": "F6W-01..08 and the Q-017 holder-table update in 05 §12",
       "dispatched": "2026-09-14",
-      "status": "RETURNED COMPLETE at bd5d103 (8 commits, on top of 41c51c7): F6W-01..08 repaired; Q-017 holder table in 05 §12 carries the founder's decision; verifiers green; merge waits on the validator for 41c51c7"
+      "status": "RETURNED COMPLETE at bd5d103 (8 commits, on top of 41c51c7): F6W-01..08 repaired; Q-017 holder table in 05 §12 carries the founder's decision; verifiers green; merge waits on the validator for 41c51c7 — MERGED into ceo-4 at 278e526 / 923d1ea"
     }
   ],
   "next_actions": [
-    "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work below",
-    "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words (his 2026-09-14 re-invocation with the directive did not lift it)",
-    "Owed: prose lane C for F6W-01..08 (05 §5/§12/§13, 07 header, 04 §117) after r7-contracts-b merges (same chapters)",
-    "Owed by Q-017's answer: six paired conformance cases (CAP-21, 23, 25, 27, 30, 41) before any of those roles is admitted; chapter 05 §12 holder table to name the founder as declared-exception holder of CAP-22/42/31 with the grievance-independence residue — after r7-contracts-b merges (chapter 05)",
-    "When the full validator on aa63875 is green: merge builder/f2-r7-contracts; then dispatch r7-contracts-b (fresh builder, off the merge) for F6C-13, F6X-01, F6X-02 (registering the names prose-b stated), F6A-09, F6C-06, F6C-12 (if any registry alias), F6D-08, F6D-05, RC4-07, F6R-03, F6R-02, F6R-01 reclassification, F6R-04 F6D-07 note, and the three owed residues (F6D-09 determinism conjunct, F6C-11 instant-offset, F6C-10 park phase)",
-    "recheck-02 DONE (archived). Residues owed: F6B-03 checker-binding (contracts lane), F6V-01/F6C-04 divergence wording or conjunct, F6V-02 (contracts), F6V-03/F6V-04 (prose lane); F6C-07 residue repaired in open-questions.json (Q-020/Q-021 → Q-022), recheck owed",
-    "Then: narrow independent recheck of the r7 and prose repairs (F2-06-recheck-03); update PLANNING-REPORT.md §8 counts, README, site, founder page; history.jsonl; session file",
+    "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work",
+    "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
+    "Full validator running on 0d7578f (merged head; first execution of the 20 fixture pairs from the three contracts lanes). Green → dispatch F2-06-recheck-04 (reviewer) on the contracts-side repairs of the day: F6A-09, F6A-10, F6C-06, F6C-10, F6C-11, F6C-13, F6D-05, F6D-08, F6D-09, F6D-12, F6X-01, F6X-02 (contracts half), F6R-01..04, RC4-07, and the r7-prose-c items F6W-01..08 + the Q-017 holder table. Red → one fix lane, then re-run",
+    "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
+    "Owed after that (contracts): F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05 guard-body rebinding, F6D-09 determinism conjunct (decision), F6V-02, F6W-01 capability_refs registration, F6R-01's 30 rows; (prose) 05 §1 and 05 §7 sentences the contracts lanes named as owed; the link from 05 §12 to planning/F2/09-q017-conjunction-rerun.md; six paired conformance cases for the flagged roles (Q-017)",
     "Founder: perform the Q-022 entitlement read and report the observed limit, source and date"
   ],
   "dependencies": [
