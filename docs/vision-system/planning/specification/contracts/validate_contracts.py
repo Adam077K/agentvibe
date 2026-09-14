@@ -264,6 +264,60 @@ for name, record in RECORDS.items():
                     ("one record declares one payload field at two types", name, field,
                      {"type_fields": declared_type, "fields": added[field]["type"]}))
 
+# --- F6D-12: THE SIX ADMITTED REASONS, AS A LITERAL, AND THE PAIRING. -----------
+#
+# `ExistenceJustification.reason_kind` and `reason_unit` were `values.schema.json#/$defs/
+# string`, and `criterion.ExistenceJustification.admitted.v1` -- five conjuncts, three of
+# them structural -- never constrained either. So `reason_kind: "specialized marketing
+# knowledge"`, `reason_unit: "the marketing function"`, `decidable_test: "does the worker
+# know marketing"`, `test_can_return_false: true` was ADMISSIBLE: negative control 8, a
+# job-title roster relabelled as capabilities, passing the record built to catch it, on a
+# chapter whose own words are "Specialized knowledge is refused as a reason".
+#
+# `05` section 4 states the six as a two-column table -- the reason and THE UNIT IT
+# PREDICATES ON -- so the contract is six PAIRS and not two independent enums. Two enums
+# alone admit `consequence_class` predicating on `a partition`, which is a reason applied
+# to a unit where it returns undecidable, and R2 F-20's finding is that undecidable reads
+# as satisfied. The pairing is a conjunct on the load-bearing transition, authored through
+# tools/phase_content.py like every other criterion body; this literal is what that
+# derivation is held to, and it is hand-written HERE for the reason every other literal in
+# this file is: a table derived from the file it measures is satisfied by the empty file.
+EXISTENCE_REASON_PAIRS = {
+    "permission_scope": "permission_scope",
+    "input_provenance": "input_set",
+    "consequence_class": "effect_class",
+    "confidentiality_boundary": "context_boundary",
+    "named_partition": "partition",
+    "verification_relation": "attempt_relation",
+}
+_ej_payload = SCHEMAS["records.schema.json"]["$defs"]["ExistenceJustification"]["properties"]["payload"]["properties"]
+checked(set(_ej_payload["reason_kind"].get("enum") or []) == set(EXISTENCE_REASON_PAIRS),
+        ("A SEVENTH ADMITTED REASON IS WRITABLE, or one of the six is not: `05` section 4 "
+         "admits exactly six reasons and refuses a seventh by name -- specialized "
+         "knowledge, attributable identity, provider or account separation are each "
+         "refused in that section's own words -- so this enum is the six and nothing else "
+         "(F6D-12)",
+         {"declared": sorted(_ej_payload["reason_kind"].get("enum") or []),
+          "the six": sorted(EXISTENCE_REASON_PAIRS)}))
+checked(set(_ej_payload["reason_unit"].get("enum") or []) == set(EXISTENCE_REASON_PAIRS.values()),
+        ("THE UNIT AN ADMITTED REASON PREDICATES ON IS NOT ONE OF THE SIX `05` section 4 "
+         "names (F6D-12)",
+         {"declared": sorted(_ej_payload["reason_unit"].get("enum") or []),
+          "the six": sorted(set(EXISTENCE_REASON_PAIRS.values()))}))
+# And the PAIRING, in the criterion, by reading the body rather than by trusting the
+# derivation: every one of the six pairs is stated somewhere under the criterion's
+# disjunction, and a pair that is not is a reason admitted with no unit it can predicate
+# on. This is the clause neither enum can carry alone.
+_ej_body = json.dumps(PREDICATES["criterion.ExistenceJustification.admitted.v1"]["body"])
+for _kind, _unit in sorted(EXISTENCE_REASON_PAIRS.items()):
+    checked('"%s"' % _kind in _ej_body and '"%s"' % _unit in _ej_body,
+            ("AN ADMITTED REASON IS NOT PAIRED WITH ITS UNIT IN THE CRITERION: `05` "
+             "section 4 is a two-column table, so the contract is six PAIRS. Two "
+             "independent enums admit `consequence_class` predicating on `a partition` -- "
+             "a criterion applied to a unit where it returns undecidable, which R2 F-20 "
+             "names and which reads as SATISFIED (F6D-12)",
+             {"reason": _kind, "unit": _unit}))
+
 # --- F6A-10: A CLOSED ENUM IS DECLARED TWICE, AND THE TWO DECLARATIONS ARE COMPARED. ---
 #
 # The rule above compares the registry's payload to the schema's as SETS OF FIELD NAMES,
@@ -1340,7 +1394,7 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
 ANSWERED_ELSEWHERE_CEILING = 1
-NOT_ANSWERED_CEILING = 36
+NOT_ANSWERED_CEILING = 35
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -1370,8 +1424,8 @@ checked(len(NOT_ANSWERED) <= NOT_ANSWERED_CEILING,
 # that does not move with the table it budgets is the denominator again, which is the rule
 # NEGATIVE_FIXTURE_FLOOR's own comment states and this file did not apply to itself.
 # RAISE THESE WHENEVER A PIN IS ADDED. Never lower one without writing the reason here.
-PIN_FLOOR = 67           # 25 -> 67 (RC5-02); was the committed count when it was set
-PIN_ROW_FLOOR = 148      # 44 -> 148 (RC5-02)
+PIN_FLOOR = 68           # 67 -> 68 (F6D-12): the ExistenceJustification pairing pin
+PIN_ROW_FLOOR = 150      # 148 -> 150 (F6D-12): two rows on the pairing pin
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
 FINDING_SOURCE_FLOOR = 106  # new (RC5-02): the declaration the ceiling above reads
 checked(len(PINNED["pins"]) >= PIN_FLOOR
@@ -2418,12 +2472,13 @@ checked(version_rows >= 14,
 #   negative: 94 -> 95 and positive 55 -> 56 (RC5-02): the pin-coverage pair.
 #   negative: 95 -> 96 and positive 56 -> 57 (F6A-10): the closed-enum membership
 #             pair -- one adverse removing a member, one benign reordering them.
+#   negative: 96 -> 97 and positive 57 -> 58 (F6D-12): the seventh-reason pair.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 96
-POSITIVE_FIXTURE_FLOOR = 57
+NEGATIVE_FIXTURE_FLOOR = 97
+POSITIVE_FIXTURE_FLOOR = 58
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

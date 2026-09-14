@@ -31756,8 +31756,8 @@
       "payload": {
         "type_fields": {
           "agent_instance_ref": "Ref<AgentInstance>",
-          "reason_kind": "string",
-          "reason_unit": "string",
+          "reason_kind": "Enum<permission_scope,input_provenance,consequence_class,confidentiality_boundary,named_partition,verification_relation>",
+          "reason_unit": "Enum<permission_scope,input_set,effect_class,context_boundary,partition,attempt_relation>",
           "decidable_test": "string",
           "test_can_return_false": "boolean",
           "alternative_considered": "string",
@@ -31791,11 +31791,11 @@
             "required": true
           },
           "reason_kind": {
-            "type": "string",
+            "type": "Enum<permission_scope,input_provenance,consequence_class,confidentiality_boundary,named_partition,verification_relation>",
             "required": true
           },
           "reason_unit": {
-            "type": "string",
+            "type": "Enum<permission_scope,input_set,effect_class,context_boundary,partition,attempt_relation>",
             "required": true
           },
           "decidable_test": {

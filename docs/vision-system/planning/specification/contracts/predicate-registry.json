@@ -54498,6 +54498,209 @@
           ]
         },
         {
+          "op": "any",
+          "predicates": [
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "permission_scope"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "permission_scope"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "input_provenance"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "input_set"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "consequence_class"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "effect_class"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "confidentiality_boundary"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "context_boundary"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "named_partition"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "partition"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "verification_relation"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "attempt_relation"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "op": "accepted_for",
           "subject_ref": {
             "arg": "subject_ref"
@@ -54520,7 +54723,7 @@
         }
       ]
     },
-    "meaning": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here. Phase assessed: admitted.",
+    "meaning": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here. The reason named is one of the six admitted reasons AND is paired with the unit that reason predicates on, so a seventh reason and a mismatched unit are both refused here. Phase assessed: admitted.",
     "owner_component": "S1-C02",
     "source": "05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -54612,7 +54815,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here.",
+    "requires": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here. The reason named is one of the six admitted reasons AND is paired with the unit that reason predicates on, so a seventh reason and a mismatched unit are both refused here.",
     "derived_from": [
       {
         "file": "05-work-agents-skills.md",

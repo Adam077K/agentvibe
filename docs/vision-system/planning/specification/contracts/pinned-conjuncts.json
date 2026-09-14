@@ -2367,6 +2367,37 @@
           "why": "and the route is an assignment that is currently `accepted`. A route nobody holds is not a route, which is the same failure the `production_mode: none` refusal catches one record earlier"
         }
       ]
+    },
+    {
+      "predicate_id": "criterion.ExistenceJustification.admitted.v1",
+      "kind": "criterion",
+      "findings": [
+        "F6D-12"
+      ],
+      "decisions": [
+        "R-L4"
+      ],
+      "why": "F6D-12: the load-bearing transition really is mechanical -- `test_can_return_false == true` is checked, which is what `05` section 4 says makes the existence gate mechanical rather than rhetorical -- and the one typed field the six-reason table needs was missing, so a seventh reason was admissible on the record built to refuse it. This pin holds the two halves the derivation must keep: the test that can fail, and the reason paired with its unit. The criterion body is authored by tools/phase_content.py and this table is not, which is the point: weakening the derivation and regenerating cannot satisfy these rows.",
+      "require": [
+        {
+          "op": "any",
+          "contains_pointers": [
+            "/payload/reason_kind",
+            "/payload/reason_unit"
+          ],
+          "why": "the reason and the unit it predicates on are decided TOGETHER, as a disjunction over the six pairs `05` section 4 tabulates. Collapsing it to two independent enums admits a reason applied to another reason's unit, which returns undecidable -- and undecidable reads as satisfied"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/decidable_test",
+            "/payload/admitting_mandate_ref",
+            "/payload/attributable_identity_ref",
+            "/payload/approval_expires_at"
+          ],
+          "why": "and the three structural conjuncts the review credited stay: a decidable test is recorded, the admitting mandate is named and the approval carries an expiry. A justification naming a capability is uncheckable"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -3427,7 +3458,6 @@
     "F6D-08": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-09": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
-    "F6D-12": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "G2-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion."
   }
 }

@@ -3113,6 +3113,13 @@ RECORD_OVERRIDES = {
         hard=['nfp']),
 
     # -- ExistenceJustification (S1-C02) ---------------------------
+    # F6D-12: `reason_kind` and `reason_unit` were free strings and
+    # `criterion.ExistenceJustification.admitted.v1` never constrained either, so
+    # `reason_kind: 'specialized marketing knowledge'` with a decidable test that can
+    # return false was ADMISSIBLE -- negative control 8, a job-title roster relabelled
+    # as capabilities, passing the record built to catch it. Both are closed enums now
+    # (`05` section 4's six rows), and the `either` below is the PAIRING: a reason
+    # admitted with another reason's unit is refused, which neither enum can say alone.
     ("ExistenceJustification", "proposed"): spec(
         'The justification names the instance it is about, exactly one reason and the '
         'unit that reason predicates on, the alternative that was considered and the '
@@ -3124,9 +3131,11 @@ RECORD_OVERRIDES = {
         'A decidable test is recorded and it can return false, the admitting mandate is '
         'currently accepted, an attributable identity is bound, the approval carries an '
         'expiry and a current accepted judgment on this criterion exists. A justification '
-        'naming a capability is uncheckable and is refused here.',
+        'naming a capability is uncheckable and is refused here. The reason named is one '
+        'of the six admitted reasons AND is paired with the unit that reason predicates '
+        'on, so a seventh reason and a mismatched unit are both refused here.',
         ['w-ej-admitted', 's-ej'],
-        [('nfp', ['/payload/decidable_test', '/payload/admitting_mandate_ref', '/payload/attributable_identity_ref', '/payload/approval_expires_at']), ('eqF', '/payload/test_can_return_false', True), ('rpp', [('/payload/admitting_mandate_ref', ['accepted'], False)]), AF, AR],
+        [('nfp', ['/payload/decidable_test', '/payload/admitting_mandate_ref', '/payload/attributable_identity_ref', '/payload/approval_expires_at']), ('eqF', '/payload/test_can_return_false', True), ('rpp', [('/payload/admitting_mandate_ref', ['accepted'], False)]), ('either', [('every', [('eqF', '/payload/reason_kind', 'permission_scope'), ('eqF', '/payload/reason_unit', 'permission_scope')]), ('every', [('eqF', '/payload/reason_kind', 'input_provenance'), ('eqF', '/payload/reason_unit', 'input_set')]), ('every', [('eqF', '/payload/reason_kind', 'consequence_class'), ('eqF', '/payload/reason_unit', 'effect_class')]), ('every', [('eqF', '/payload/reason_kind', 'confidentiality_boundary'), ('eqF', '/payload/reason_unit', 'context_boundary')]), ('every', [('eqF', '/payload/reason_kind', 'named_partition'), ('eqF', '/payload/reason_unit', 'partition')]), ('every', [('eqF', '/payload/reason_kind', 'verification_relation'), ('eqF', '/payload/reason_unit', 'attempt_relation')])]), AF, AR],
         hard=['nfp', 'eqF', 'rpp']),
     ("ExistenceJustification", "expired_with_instance"): spec(
         'The worker this justification exists for is no longer running and the expiry is '

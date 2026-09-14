@@ -51599,10 +51599,26 @@
               "additionalProperties": false
             },
             "reason_kind": {
-              "$ref": "values.schema.json#/$defs/string"
+              "type": "string",
+              "enum": [
+                "permission_scope",
+                "input_provenance",
+                "consequence_class",
+                "confidentiality_boundary",
+                "named_partition",
+                "verification_relation"
+              ]
             },
             "reason_unit": {
-              "$ref": "values.schema.json#/$defs/string"
+              "type": "string",
+              "enum": [
+                "permission_scope",
+                "input_set",
+                "effect_class",
+                "context_boundary",
+                "partition",
+                "attempt_relation"
+              ]
             },
             "decidable_test": {
               "$ref": "values.schema.json#/$defs/string"

@@ -1,0 +1,26 @@
+{
+  "id": "r21-existence-justification-admits-a-seventh-reason",
+  "repair": "R21",
+  "finding": "F6D-12; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-12)",
+  "case": "A seventh admitted reason -- specialized knowledge, which `05` section 4 refuses by name -- added to the closed enum.",
+  "paired_benign_fixture": "fixtures/positive/r21-existence-justification-six-reasons-reordered-benign.json",
+  "why": "F6D-12: negative control 8 is a job-title roster relabelled as capabilities, and before this repair it PASSED the record built to catch it -- `reason_kind` was a free string and the admitted criterion never constrained it. The enum alone is not the control; the enum plus a literal that says WHICH six is. This fixture adds a seventh to one declaration, which the members comparison sees first, and the six-reason literal would see next.",
+  "expect_failure_contains": "DISAGREE ABOUT A CLOSED ENUM'S MEMBERS",
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/ExistenceJustification/properties/payload/properties/reason_kind/enum",
+      "op": "replace",
+      "value": [
+        "permission_scope",
+        "input_provenance",
+        "consequence_class",
+        "confidentiality_boundary",
+        "named_partition",
+        "verification_relation",
+        "specialized_knowledge"
+      ]
+    }
+  ]
+}

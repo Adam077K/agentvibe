@@ -75,3 +75,67 @@ written into the constant's comment and into both `MANIFEST.json` `floor_why` st
 **Recorded under F6R-01 as:** `answered_elsewhere["F6A-10"]`, leaving `not_answered` (37 → 36).
 
 **Owed: nothing.**
+
+---
+
+## F6D-12 — `reason_kind` / `reason_unit` as closed enums, and the pairing
+
+*Required contract (D:491–520): `reason_kind` an enum of exactly the six, `reason_unit` an enum of the
+six units, a conjunct pairing them; adverse fixture a seventh reason; paired benign each of the six.*
+
+**No "or" in this one.** All three clauses landed. The one judgement taken is on the benign column —
+see below.
+
+**The six pairs, derived from `05` §4's two-column table (lines 113–120), snake-cased:**
+
+| `reason_kind` | `reason_unit` | chapter row |
+|---|---|---|
+| `permission_scope` | `permission_scope` | Permission scope / a permission scope |
+| `input_provenance` | `input_set` | Input provenance / an input set |
+| `consequence_class` | `effect_class` | Consequence class / an effect class |
+| `confidentiality_boundary` | `context_boundary` | Confidentiality boundary / a context boundary |
+| `named_partition` | `partition` | Named partition / a partition |
+| `verification_relation` | `attempt_relation` | Verification relation / a relation between two attempts |
+
+| name | kind | where |
+|---|---|---|
+| `Enum<permission_scope,…,verification_relation>` | payload type | `record-registry.json` → `ExistenceJustification` `type_fields.reason_kind` **and** `fields.reason_kind.type` (both halves — the registry states a payload in two places and F6A-07 compares them) |
+| `Enum<permission_scope,…,attempt_relation>` | payload type | the same two halves for `reason_unit` |
+| closed `enum` on both fields | schema | `records.schema.json` → `ExistenceJustification.payload.properties` (was `$ref: values.schema.json#/$defs/string` on each) |
+| `EXISTENCE_REASON_PAIRS` | hand-written literal (6 pairs) | `validate_contracts.py` |
+| `A SEVENTH ADMITTED REASON IS WRITABLE, or one of the six is not` | check | `validate_contracts.py` |
+| `THE UNIT AN ADMITTED REASON PREDICATES ON IS NOT ONE OF THE SIX` | check | `validate_contracts.py` |
+| `AN ADMITTED REASON IS NOT PAIRED WITH ITS UNIT IN THE CRITERION` | check ×6 | `validate_contracts.py` — reads the criterion **body**, not the derivation |
+| the pairing conjunct | criterion conjunct | `criterion.ExistenceJustification.admitted.v1`, authored through `tools/phase_content.py` as `('either', [('every', [('eqF', reason_kind, k), ('eqF', reason_unit, u)]) × 6])` |
+| pin on `criterion.ExistenceJustification.admitted.v1` | pin (2 require rows) | `pinned-conjuncts.json#/pins` |
+| `r21-existence-justification-admits-a-seventh-reason` | negative fixture | `fixtures/negative/` |
+| `r21-existence-justification-six-reasons-reordered-benign` | positive fixture | `fixtures/positive/` |
+
+**Why a pairing conjunct and not two independent enums.** `05` §4 is a two-column table, so the
+contract is six **pairs**. Two independent enums admit `consequence_class` predicating on `a
+partition` — a criterion applied to a unit where it returns undecidable, which is the failure R2 F-20
+names and which **reads as satisfied**. Neither enum can say this alone.
+
+**The conjunct was NOT hand-written into the registry.** Criterion bodies are authored by
+`tools/phase_content.py` and an oracle fails on drift between the two, so the derivation was edited and
+`tools/author_phase_content.py` re-ran. The `requires` sentence was extended in the same edit, because
+RC-03 requires a criterion's sentence and its conjuncts to agree.
+
+**Benign column — the judgement taken, stated plainly.** The review asked for "paired benign: each of
+the six". **All six are asserted on every run**, by `EXISTENCE_REASON_PAIRS` and by six checks that read
+the criterion body — which is stronger than six fixtures and does not cost six validator invocations.
+The single positive fixture therefore does the thing six fixtures could not: it **reorders** the six and
+must pass, which pins the control to membership-and-pairing rather than to the order the six happen to
+be written in. If a recheck wants six literal fixtures, that is a cost decision, not a coverage gap —
+and it is recorded here as the branch taken rather than left to be discovered.
+
+**Floors moved.** `PIN_FLOOR` 67 → 68, `PIN_ROW_FLOOR` 148 → 150, `NEGATIVE_FIXTURE_FLOOR` 96 → 97,
+`POSITIVE_FIXTURE_FLOOR` 57 → 58, each with the reason in the constant's comment.
+
+**Under F6R-01:** F6D-12 is now **pinned**, so it leaves `not_answered` entirely (36 → 35). The
+partition check caught this itself — the first run after the pin landed failed with
+`declared but not unanswered: ['F6D-12']`, which is the control doing its job on its own author.
+
+**Owed: nothing for this finding.** Note for the prose lane: `05` §4's table is prose and the ids above
+are this lane's snake-casing of it. If the chapter is ever re-worded, `EXISTENCE_REASON_PAIRS` is the
+thing to reconcile it against.
