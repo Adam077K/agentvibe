@@ -185158,7 +185158,8 @@
                 "narrowest_sufficient_scope",
                 "alternate_available",
                 "earliest_acceptance",
-                "no_overlap"
+                "no_overlap",
+                "admitter_excluded"
               ]
             }
           },

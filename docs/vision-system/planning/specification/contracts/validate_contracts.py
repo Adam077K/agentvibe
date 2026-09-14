@@ -264,6 +264,91 @@ for name, record in RECORDS.items():
                     ("one record declares one payload field at two types", name, field,
                      {"type_fields": declared_type, "fields": added[field]["type"]}))
 
+# --- F6A-10: A CLOSED ENUM IS DECLARED TWICE, AND THE TWO DECLARATIONS ARE COMPARED. ---
+#
+# The rule above compares the registry's payload to the schema's as SETS OF FIELD NAMES,
+# and says nothing about a field's admissible VALUES. F6A-10 walked through that gap.
+# `05-work-agents-skills.md` section 7 (R-X06) and `11-schemas-state-contracts.md` both
+# instruct the ordered custody resolver to skip the admitting identity "recording
+# `custody_tie_break_reason = admitter_excluded`" -- and BOTH declarations of that enum,
+# record-registry.json's `Enum<...>` and records.schema.json's closed `enum`, held four
+# values, none of them that one. `edge.ResponsibilityAssignment.proposed.accepted.v1`
+# already compares the enum, so the chapters instructed an author to write a record the
+# guard rejects. A full run said nothing, because nothing read an enum's members.
+#
+# FIFTY-SEVEN payload fields carry a closed enum and the pairs agreed on every one of them
+# before this check existed -- which is the argument for the check rather than against it:
+# the invariant was true and unguarded, so the first drift would have been silent, and one
+# of the 57 had already drifted from the CHAPTERS in the direction no field comparison can
+# see.
+#
+# Compared as SETS, not as sequences. An enum's members are a set; `in` does not read
+# order, and no predicate in the registry does. A byte-comparison would refuse a
+# reordering that changes no admissible value, and a control that refuses harmless edits
+# is a control contributors learn to route around --
+# fixtures/positive/r20-custody-tie-break-enum-reordered-benign reorders one and MUST
+# pass, fixtures/negative/r20-custody-tie-break-enum-omits-the-admitter-exclusion removes
+# a member and must be refused.
+ENUM_PAIRS = 0
+for name, record in RECORDS.items():
+    schema_payload = SCHEMAS["records.schema.json"]["$defs"][name]["properties"].get("payload", {})
+    if "properties" not in schema_payload:
+        continue
+    payload = record["fields"]["payload"]
+    declared_types = dict(payload.get("type_fields") or {})
+    for field, body in (payload.get("fields") or {}).items():
+        declared_types[field] = body["type"]
+    for field, declared_type in declared_types.items():
+        text = declared_type[:-1] if str(declared_type).endswith("?") else str(declared_type)
+        if not (text.startswith("Enum<") and text.endswith(">")):
+            continue
+        ENUM_PAIRS += 1
+        members = {value.strip() for value in text[len("Enum<"):-1].split(",")}
+        subschema = schema_payload["properties"].get(field, {})
+        schema_members = subschema.get("enum")
+        checked(isinstance(schema_members, list) and set(schema_members) == members,
+                ("REGISTRY AND SCHEMA DISAGREE ABOUT A CLOSED ENUM'S MEMBERS: the payload "
+                 "rule above compares FIELD NAMES and is satisfied by two declarations of "
+                 "one field that admit different values. That is how F6A-10 happened -- "
+                 "the chapters instructed `custody_tie_break_reason = admitter_excluded` "
+                 "and neither declaration admitted it, so the instruction produced a "
+                 "record the edge guard rejects and nothing compared the members (F6A-10)",
+                 name, field,
+                 {"registry": sorted(members),
+                  "schema": sorted(schema_members) if isinstance(schema_members, list)
+                            else schema_members,
+                  "in registry only": sorted(members - set(schema_members or [])),
+                  "in schema only": sorted(set(schema_members or []) - members),
+                  "note": "an enum is declared in record-registry.json AND in "
+                          "records.schema.json; a value admitted by one and not the other "
+                          "is a rule with two answers. Edit both."}))
+# A floor under the walk, for the reason every floor here is a literal: a comparison that
+# met no enum passes exactly as loudly as one that met all of them, and the loop above is
+# guarded by two `continue`s that a narrowing edit could widen into a skip of everything.
+checked(ENUM_PAIRS >= 57,
+        ("THE CLOSED-ENUM COMPARISON MET ALMOST NO ENUMS: 57 payload fields declare one, "
+         "and a walk that reached none of them reports a pass over an empty required set "
+         "(F6A-10)", {"pairs": ENUM_PAIRS, "floor": 57}))
+# And the member this finding is about, by NAME, against a hand-written literal. The walk
+# above proves the two declarations AGREE; it cannot prove they agree with the chapters.
+# Both declarations losing `admitter_excluded` in one edit is exactly the shape the pin
+# floors exist to catch elsewhere: one hand writes both and the pair agrees with itself.
+CUSTODY_TIE_BREAK_REASONS = {"narrowest_sufficient_scope", "alternate_available",
+                             "earliest_acceptance", "no_overlap", "admitter_excluded"}
+checked(set(SCHEMAS["records.schema.json"]["$defs"]["ResponsibilityAssignment"]["properties"]
+            ["payload"]["properties"]["custody_tie_break_reason"]["enum"])
+        == CUSTODY_TIE_BREAK_REASONS,
+        ("THE ORDERED CUSTODY RESOLVER CANNOT RECORD A REASON THE CHAPTERS INSTRUCT: "
+         "`05` section 7 (R-X06) and `11-schemas-state-contracts.md` name the reasons this "
+         "enum must admit, and `admitter_excluded` -- the one recorded when the resolver "
+         "skips the admitting identity and continues to the next tier -- is the one that "
+         "was missing from both declarations (F6A-10). `guard.custody.admitter_excluded` "
+         "enforces the BEHAVIOUR; this enum is what lets the record say so",
+         {"declared": sorted(SCHEMAS["records.schema.json"]["$defs"]["ResponsibilityAssignment"]
+                             ["properties"]["payload"]["properties"]
+                             ["custody_tie_break_reason"]["enum"]),
+          "required": sorted(CUSTODY_TIE_BREAK_REASONS)}))
+
 # time-window-declares-two-utc-bounds
 time_window = SCHEMAS["values.schema.json"]["$defs"]["TimeWindow"]["properties"]
 for bound in ("starts_at", "ends_at"):
@@ -1164,8 +1249,13 @@ def inadmissible_ancestor(entry, row, boolean_op):
 # floor. `#/finding_sources` is the pin file's own declaration that this package answers a
 # finding and where that finding is stated -- 106 of them -- so the set of declared
 # findings that no pin cites and no `unpinnable` row excuses is a number this file can
-# hold, and every pin deletion moves it by name. 37 today, all F6A/F6B/F6C/F6D and G2-06:
-# Step 6 findings whose repair landed as a check rather than as a conjunct.
+# hold, and every pin deletion moves it by name. 37 today.
+#
+# THIS COMMENT USED TO CLAIM WHAT THE 37 WERE: "all F6A/F6B/F6C/F6D and G2-06: Step 6
+# findings whose repair landed as a check rather than as a conjunct." F6R-01 opened them
+# and found three -- F6A-10, F6D-09, F6D-12 -- with no repair anywhere, so the sentence
+# told a reader the list was repairs delivered elsewhere and it was not. The causal clause
+# is gone from here and the claim is made per finding, in data, by the partition below.
 #
 # This sits ABOVE the floors deliberately, for the reason RC4-01's block states about its
 # own ordering: on a mutation that trips both, the reader should be told the concrete
@@ -1192,6 +1282,78 @@ checked(len(unanswered) <= UNANSWERED_CEILING,
                   "an `unpinnable` row saying why no conjunct can carry it. LOWERING this "
                   "ceiling is free and is the direction to move it; raising it is an edit "
                   "to validate_contracts.py."}))
+
+# --- F6R-01: `unanswered` IS A PARTITION, AND THE TWO HALVES MEAN DIFFERENT THINGS. ----
+#
+# The ceiling above counts correctly and the sentence beside it said something the count
+# does not support: "Step 6 findings whose repair landed as a check rather than as a
+# conjunct". The recheck opened the 37 and found F6A-10, F6D-09 and F6D-12 with no repair
+# ANYWHERE -- not a pin, not a check, not a chapter amendment -- while the gloss told a
+# reader the whole list was repairs delivered elsewhere. A count that carries two meanings
+# reports the safer one.
+#
+# So the set is DECLARED, as a partition, in pinned-conjuncts.json:
+#   `answered_elsewhere` -- the finding is answered, and the row NAMES the file and the
+#       check, so the claim is falsifiable by opening the file rather than by trusting a
+#       sentence. `file` must exist.
+#   `not_answered`       -- nothing here answers it, and the row says why not.
+# Each half carries its OWN bound. One ceiling over both would let an entry move from
+# "answered" to "not answered" at zero cost, which is exactly the ambiguity F6R-01 is
+# about; two ceilings make the crossing an edit to this file.
+#
+# `not_answered` is the CONSERVATIVE half: a finding whose answering file and check nobody
+# has named sits here, not in `answered_elsewhere`. That is deliberately pessimistic --
+# the failure this repair exists to prevent is a list of unverified entries wearing the
+# word "answered", and the cheap direction of error must be the one that understates.
+ANSWERED_ELSEWHERE = PINNED["answered_elsewhere"]
+NOT_ANSWERED = PINNED["not_answered"]
+checked(set(ANSWERED_ELSEWHERE) | set(NOT_ANSWERED) == set(unanswered),
+        ("THE UNANSWERED SET IS NOT PARTITIONED: a finding that no pin, no pinned "
+         "transition and no `unpinnable` row carries is either answered somewhere this "
+         "package can name or it is not answered, and every one of them must say which. "
+         "A finding in neither half is back in the single undifferentiated count F6R-01 "
+         "is about (F6R-01)",
+         {"unanswered": unanswered,
+          "in neither half": sorted(set(unanswered) - set(ANSWERED_ELSEWHERE) - set(NOT_ANSWERED)),
+          "declared but not unanswered": sorted((set(ANSWERED_ELSEWHERE) | set(NOT_ANSWERED))
+                                                - set(unanswered)),
+          "note": "add the finding to `#/answered_elsewhere` with the file and the check "
+                  "that answers it, or to `#/not_answered` with the reason nothing does."}))
+checked(not (set(ANSWERED_ELSEWHERE) & set(NOT_ANSWERED)),
+        ("a finding is declared BOTH answered elsewhere and not answered (F6R-01)",
+         sorted(set(ANSWERED_ELSEWHERE) & set(NOT_ANSWERED))))
+for _finding, _row in sorted(ANSWERED_ELSEWHERE.items()):
+    checked(isinstance(_row, dict) and str(_row.get("file", "")).strip()
+            and str(_row.get("check", "")).strip(),
+            ("A FINDING IS DECLARED ANSWERED WITH NO FILE AND NO CHECK NAMED: that is the "
+             "unfalsifiable sentence F6R-01 removed from the comment, moved into the data "
+             "(F6R-01)", _finding, _row))
+    _answering = ROOT.parents[2] / _row["file"] if "/" in _row["file"] else ROOT / _row["file"]
+    checked(_answering.exists(),
+            ("a finding is declared answered by a file that does not exist (F6R-01)",
+             _finding, _row["file"]))
+for _finding, _why in sorted(NOT_ANSWERED.items()):
+    checked(str(_why).strip(),
+            ("a finding is declared not answered with no reason (F6R-01)", _finding))
+# Two bounds, both CEILINGS, both literals. `not_answered` may only fall: a repair moves a
+# finding out of it. `answered_elsewhere` has a ceiling rather than a floor for the reason
+# every other ceiling here does -- a table where everything is declared answered passes as
+# loudly as one where nothing is, and the rows are the evidence, not the count.
+ANSWERED_ELSEWHERE_CEILING = 1
+NOT_ANSWERED_CEILING = 36
+checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
+        ("more findings are declared answered outside the pin machinery than when this "
+         "ceiling was set; each one is a claim that a named file and a named check carry "
+         "it, and raising this is an edit to validate_contracts.py (F6R-01)",
+         {"answered_elsewhere": len(ANSWERED_ELSEWHERE),
+          "ceiling": ANSWERED_ELSEWHERE_CEILING}))
+checked(len(NOT_ANSWERED) <= NOT_ANSWERED_CEILING,
+        ("MORE FINDINGS ARE DECLARED NOT ANSWERED than when this ceiling was set. This "
+         "number may only FALL: a finding leaves by being pinned or by being answered "
+         "with a file and a check named. It grows only when a new finding is declared in "
+         "`#/finding_sources` and nothing carries it (F6R-01)",
+         {"not_answered": len(NOT_ANSWERED), "ceiling": NOT_ANSWERED_CEILING,
+          "not_answered_findings": sorted(NOT_ANSWERED)}))
 
 # A floor, and it is a LITERAL for the same reason the sibling-collision budget is: a
 # count derived from the file it measures is satisfied by the empty file. The coverage
@@ -2254,12 +2416,14 @@ checked(version_rows >= 14,
 #             benign fixture for the admissible-ancestor literal and for the
 #             not-admitted block.
 #   negative: 94 -> 95 and positive 55 -> 56 (RC5-02): the pin-coverage pair.
+#   negative: 95 -> 96 and positive 56 -> 57 (F6A-10): the closed-enum membership
+#             pair -- one adverse removing a member, one benign reordering them.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 95
-POSITIVE_FIXTURE_FLOOR = 56
+NEGATIVE_FIXTURE_FLOOR = 96
+POSITIVE_FIXTURE_FLOOR = 57
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

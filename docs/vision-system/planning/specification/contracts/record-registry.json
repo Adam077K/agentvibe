@@ -65837,7 +65837,7 @@
           "unresolved_scope": "ScopeSelector",
           "contesting_mandate_refs": "Ref<Mandate>[]",
           "custody_basis": "Enum<promise_sponsor,service_mandate,maintenance_custodian,provisional_overlap_resolution>",
-          "custody_tie_break_reason": "Enum<narrowest_sufficient_scope,alternate_available,earliest_acceptance,no_overlap>"
+          "custody_tie_break_reason": "Enum<narrowest_sufficient_scope,alternate_available,earliest_acceptance,no_overlap,admitter_excluded>"
         },
         "required_fields": [
           "principal_ref",
