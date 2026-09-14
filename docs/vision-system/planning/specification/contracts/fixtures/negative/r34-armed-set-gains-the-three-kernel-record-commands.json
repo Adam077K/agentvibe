@@ -1,0 +1,21 @@
+{
+  "id": "r34-armed-set-gains-the-three-kernel-record-commands",
+  "repair": "R34",
+  "finding": "F6D-08; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-08, mutation m4)",
+  "case": "`ArmedSet.registration.permitted_commands` is replaced with the three kernel record commands, giving the admission authority a write path to a precondition-bearing kind.",
+  "paired_benign_fixture": "fixtures/positive/r34-computed-projection-table-reordered-benign.json",
+  "why": "F6D-08's m4, run verbatim by the review: exit 0, undetected. The empty list is the ONE structural containment the record has -- zero permitted commands, zero transitions, zero of 105 commands naming it -- and it was one JSON line from gone with nothing comparing it to anything. `05` section 7 says the admission authority holds no write access to any precondition-bearing kind, and `owner_component` is S1-C02.",
+  "expect_failure_contains": "A COMPUTED PROJECTION HAS A PERMITTED COMMAND",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/ArmedSet/registration/permitted_commands",
+      "op": "replace",
+      "value": [
+        "kernel.record.register",
+        "kernel.record.revise",
+        "kernel.record.transition"
+      ]
+    }
+  ]
+}

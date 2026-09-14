@@ -892,3 +892,68 @@ the contracts were behind the chapter, and this closes that direction.
 
 **Owed: nothing for this finding.** Stated narrowly: the two fixtures are declared and **have never
 been executed** — whether the adverse one fails for its stated reason is unverified by this lane.
+
+---
+## F6D-08 — a computed projection's emptiness, pinned; `owner_component` read as custodian
+
+*Required contract (D:354–390): a registry-level assertion that `permitted_commands` is empty for
+computed projections, pinned by hand like `pinned_transitions`; an `owner_component` for `ArmedSet`
+that is not the admission authority **or** an explicit statement that on a derived projection
+`owner_component` means custodian rather than writer; and a named evaluator binding.*
+
+**Branch taken on clause 2: the custodial statement, not a new owner.** Reassigning
+`ArmedSet.owner_component` away from S1-C02 decides which component owns the armed set — that is a
+choice about what the system IS, and the kind of decision this file's last section returns to the
+orchestrator rather than taking to green a check. The custodial reading is stated in two places: the
+record's own `owner_assignment` prose in `record-registry.json`, and `computed_projections_why`.
+
+| name | kind | where |
+|---|---|---|
+| `computed_projections_why` · `computed_projections` | JSON keys | `pinned-conjuncts.json` — 5 rows: `ArmedSet`, `AccessGraph`, `DomainEvent`, `OperationStatus`, `OperatorProjection` |
+| `computed_projections_with_writers` | JSON key | the same file — the **two** exceptions, `DependencyClosure` and `IndexSnapshot`, each with its command list mirrored from the registry |
+| `record` · `evaluator_modules` · `transition_count` · `why` | row keys (refused if others appear) | `computed_projections` |
+| `COMPUTED_PROJECTIONS` · `PROJECTIONS_WITH_WRITERS` · `COMPUTED_PROJECTION_FLOOR` (5) · `COMPUTED_PROJECTION_KEYS` · `PROJECTION_WRITER_KEYS` · `REGISTERED_MODULES` | validator names | `validate_contracts.py` |
+| `A COMPUTED PROJECTION HAS A PERMITTED COMMAND` | check (m4's refusal) | `validate_contracts.py` |
+| `A COMPUTED PROJECTION GAINED A LIFECYCLE TRANSITION` | check | the second write path |
+| `A PROJECTION'S EVALUATOR IS NOT A REGISTERED MODULE` | check | binds `evaluator_module` to a `planned_module` that exists |
+| `A DECLARED PROJECTION WRITER SET CHANGED IN ONE PLACE` | check | the two exceptions are a two-place edit |
+| `A PROJECTION RECORD IS IN NEITHER HALF OF THE PARTITION` | check | completeness over `lifecycle.projection` |
+| `computed_projections` | `HAND_WRITTEN_CONTROLS` row | so the count and floor appear in the verdict |
+| `r34-armed-set-gains-the-three-kernel-record-commands` | negative fixture (**m4 verbatim**) | `fixtures/negative/` |
+| `r34-computed-projection-table-reordered-benign` | positive fixture | `fixtures/positive/` |
+
+**Why a hand-written partition and not a rule over the flag.** Seven records declare
+`lifecycle.projection: true`. **Five carry no permitted command; two — `DependencyClosure` and
+`IndexSnapshot` — carry the three kernel record commands.** A blanket "projections are empty" rule
+would have been false about its own tree on the day it was written, which is how a control gets
+deleted rather than fixed. The two exceptions are therefore *declared*, with their command lists
+mirrored so widening one takes two edits. Completeness runs the other way too: a record that declares
+the flag and appears in neither list fails.
+
+**The no-transition clause was WRONG in this lane's first draft, and the validator said so.** It
+asserted `transitions == []` for all five; `AccessGraph` has **8**, `OperationStatus` **6**,
+`OperatorProjection` **12**. The clause now pins each count (`transition_count`) and refuses a
+*change* — an edge added to a projection is the second write path the finding names, and the three
+that already have edges are recorded rather than pretended away. `ArmedSet` and `DomainEvent` are at
+0 and the pin holds them there.
+
+**Clause 3, the evaluator binding, stated narrowly.** `evaluator_modules` for `ArmedSet` is the
+one-member closed set `["system/packages/work/armed-set"]`, and every member must be a
+`planned_module` registered on some record (23 distinct ids in the registry). That answers *"a named
+evaluator binding"* in the "state its closed set" direction. It does **not** make the creation path
+executable — no runtime exists — and the W8 observation that nothing *creates* an `ArmedSet` remains
+true of the specification.
+
+**Floors moved.** `NEGATIVE_FIXTURE_FLOOR` 109 → 110 · `POSITIVE_FIXTURE_FLOOR` 70 → 71 (both
+manifests too) · new `COMPUTED_PROJECTION_FLOOR` = 5.
+
+**Chapter sentences owed**
+- **`05` §7 (F6D-08).** One sentence stating that on a derived projection `owner_component` names the
+  **custodian** and not a writer, so that the section's own invariant — "the admission authority holds
+  no write access to any precondition-bearing kind" — and `ArmedSet.owner_component: S1-C02` are read
+  as consistent. The contracts now say this in `record-registry.json` and `pinned-conjuncts.json`; the
+  chapter does not. **This lane owns no chapter file** (04/05/07 are another lane's), so it is recorded
+  here rather than written.
+
+**Owed: nothing else for this finding.** The two fixtures are declared and were **not executed** by
+this lane.

@@ -3600,5 +3600,61 @@
     "under_negation",
     "under_quantifier",
     "value_positions"
+  ],
+  "computed_projections_why": "F6D-08, and it is a REGISTRY-LEVEL pin rather than a conjunct one: `ArmedSet.registration.permitted_commands` is `[]`, it has zero transitions, and mutation m4 -- replacing that empty list with the three kernel record commands -- was exit 0, UNDETECTED. The one structural containment the record has was one JSON line from gone and nothing compared it to anything. Seven records declare `lifecycle.projection: true`; FIVE have no permitted command and TWO (DependencyClosure, IndexSnapshot) do, so a blanket rule over the flag would be false about the tree it is written against. The partition below is hand-written for that reason and is checked in both directions -- a new projection record belongs in exactly one list, and adding one without saying which is what the completeness half refuses. SECOND, and this is the other half of F6D-08: on a derived projection `owner_component` names the CUSTODIAN, not a writer. `ArmedSet.owner_component` is S1-C02, the admission authority its own invariant excludes from writing precondition-bearing kinds; those two statements only contradict if the field is read as write authority. The custodial reading is now written into `ArmedSet.owner_assignment` in record-registry.json as well, because a reader of the record does not come here first. THIRD: `evaluator_module` was a free string with no binding to anything -- W8, nothing creates an `ArmedSet` either. `evaluator_modules` below states the closed set, each member of which must be a `planned_module` actually registered on some record. FOURTH, and it is a correction this lane made after its own first draft was refused: the no-transition clause was written as `transitions == []` for all five and AccessGraph has edges, so the rule was false about the tree in front of it. `transition_count` states each record's current count and the check compares it -- an edge ADDED to a projection is a second write path and is what this refuses; an edge that already exists is recorded, not pretended away.",
+  "computed_projections": [
+    {
+      "record": "ArmedSet",
+      "evaluator_modules": [
+        "system/packages/work/armed-set"
+      ],
+      "why": "`05` section 7: a computed projection with no lifecycle that nobody writes, and in particular the admission authority holds no write access to any precondition-bearing kind. m4 is the mutation this row refuses.",
+      "transition_count": 0
+    },
+    {
+      "record": "AccessGraph",
+      "evaluator_modules": [],
+      "why": "The reachability closure over access grants is derived from the grants; a command that wrote it would let a component grant itself reach.",
+      "transition_count": 8
+    },
+    {
+      "record": "DomainEvent",
+      "evaluator_modules": [],
+      "why": "Events are emitted by the kernel commit path, never registered through a record command; a permitted command here would let a party author its own history.",
+      "transition_count": 0
+    },
+    {
+      "record": "OperationStatus",
+      "evaluator_modules": [],
+      "why": "Status is read off the operation's own lifecycle. A writable status is a report of success for work that stopped, which is W7's failure condition verbatim.",
+      "transition_count": 6
+    },
+    {
+      "record": "OperatorProjection",
+      "evaluator_modules": [],
+      "why": "The operator's view is computed from the records it projects; writing it directly would make the view and the thing disagree with nothing noticing.",
+      "transition_count": 12
+    }
+  ],
+  "computed_projections_with_writers": [
+    {
+      "record": "DependencyClosure",
+      "permitted_commands": [
+        "kernel.record.register",
+        "kernel.record.revise",
+        "kernel.record.transition"
+      ],
+      "why": "Declared `projection: true` AND carries the three kernel record commands. Recorded rather than hidden: this is either a projection that is written or a flag that is wrong, and F6D-08 is about exactly that kind of disagreement. Naming it here means the next edit to it is a two-place edit a reviewer sees."
+    },
+    {
+      "record": "IndexSnapshot",
+      "permitted_commands": [
+        "kernel.record.register",
+        "kernel.record.revise",
+        "kernel.record.transition",
+        "knowledge.index.record"
+      ],
+      "why": "The same shape, plus `knowledge.index.record`. Same reading: listed so the exception is declared rather than discovered by a later mutation that passes."
+    }
   ]
 }

@@ -4489,7 +4489,7 @@
       ]
     },
     "owner_component": "S1-C02",
-    "owner_assignment": "Exact envelope owner_assignment_ref; actual current accepted custodian/mandate and scope required at each transition. Naming the component does not establish human competence.",
+    "owner_assignment": "Exact envelope owner_assignment_ref; actual current accepted custodian/mandate and scope required at each transition. Naming the component does not establish human competence. On a DERIVED PROJECTION this field names the CUSTODIAN, never a writer: `ArmedSet` is computed, `permitted_commands` is empty, it has no lifecycle transition, and nothing writes it. F6D-08: the record's own invariant excludes the admission authority from writing any precondition-bearing kind, and `owner_component` names that same component -- the two only contradict if `owner_component` is read as write authority. It is not, and this sentence is where that is said rather than assumed.",
     "source_of_truth": {
       "authority": "kernel immutable business and lifecycle heads, with native facts attributed through explicit DomainAuthorityBinding",
       "external_fact_rule": "Derived, not written. It is the deterministic evaluation of every admitted interest against one journal position, and no component may prevent membership."

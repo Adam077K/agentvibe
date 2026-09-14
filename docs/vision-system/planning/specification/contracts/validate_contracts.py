@@ -2946,8 +2946,9 @@ checked(version_rows >= 14,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
 #   negative: 108 -> 109 and positive 69 -> 70 (F6C-13): the critical-fields authority pair.
-NEGATIVE_FIXTURE_FLOOR = 109
-POSITIVE_FIXTURE_FLOOR = 70
+#   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
+NEGATIVE_FIXTURE_FLOOR = 110
+POSITIVE_FIXTURE_FLOOR = 71
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
@@ -2981,6 +2982,89 @@ for _kind, _floor in (("negative", NEGATIVE_FIXTURE_FLOOR), ("positive", POSITIV
                      "note": "raising a floor is an edit to MANIFEST.json and to "
                              "validate_contracts.py; lowering one is that plus a written "
                              "reason in the constant's comment."}))
+
+# --- F6D-08: WHAT A COMPUTED PROJECTION MAY BE WRITTEN BY. HAND-WRITTEN. ----------
+#
+# `ArmedSet.registration.permitted_commands` is `[]` and that emptiness is the ONLY thing
+# standing between the admission authority and the precondition-bearing kind its own
+# invariant says it may not write. Mutation m4 -- replace the empty list with the three
+# kernel record commands -- ran at exit 0 and was undetected, because nothing in this file
+# compared a projection's command list to anything at all.
+#
+# The rule is NOT "every record with lifecycle.projection is empty": two of the seven carry
+# commands, and a rule that is false about its own tree is a rule someone deletes. So the
+# table is a hand-written PARTITION over the seven, checked in both directions.
+checked(bool(str(PINNED.get("computed_projections_why", "")).strip()),
+        ("the computed-projection table states no reason",))
+COMPUTED_PROJECTIONS = PINNED["computed_projections"]
+PROJECTIONS_WITH_WRITERS = PINNED["computed_projections_with_writers"]
+COMPUTED_PROJECTION_FLOOR = 5   # new (F6D-08): the five projections nothing may write
+COMPUTED_PROJECTION_KEYS = set(["record", "evaluator_modules", "transition_count", "why"])
+PROJECTION_WRITER_KEYS = set(["record", "permitted_commands", "why"])
+REGISTERED_MODULES = set(record["planned_module"] for record in RECORDS.values()
+                         if isinstance(record, dict) and record.get("planned_module"))
+checked(len(COMPUTED_PROJECTIONS) >= COMPUTED_PROJECTION_FLOOR,
+        ("the computed-projection table has shrunk below its floor; a row removed here is a "
+         "projection whose emptiness nothing checks any more",
+         dict(rows=len(COMPUTED_PROJECTIONS), floor=COMPUTED_PROJECTION_FLOOR)))
+for _row in COMPUTED_PROJECTIONS:
+    checked(set(_row) == COMPUTED_PROJECTION_KEYS,
+            ("computed-projection row shape", _row.get("record"),
+             sorted(set(_row) ^ COMPUTED_PROJECTION_KEYS)))
+    _name = _row["record"]
+    checked(_name in RECORDS, ("a computed-projection row names no such record", _name))
+    checked(bool(_row["why"].strip()), ("a computed-projection row states no reason", _name))
+    checked(RECORDS[_name]["lifecycle"].get("projection") is True,
+            ("a record pinned as a computed projection does not declare itself one", _name))
+    checked(RECORDS[_name]["registration"]["permitted_commands"] == [],
+            ("A COMPUTED PROJECTION HAS A PERMITTED COMMAND: nothing writes a derived "
+             "projection, and an empty command list is the whole of that containment. For "
+             "ArmedSet this is the admission authority acquiring write access to a "
+             "precondition-bearing kind its own invariant excludes it from (F6D-08, m4)",
+             _name, dict(permitted_commands=RECORDS[_name]["registration"]["permitted_commands"],
+                         why_it_matters=_row["why"])))
+    checked(len(RECORDS[_name]["lifecycle"]["transitions"]) == _row["transition_count"],
+            ("A COMPUTED PROJECTION GAINED A LIFECYCLE TRANSITION: the other half of the same "
+             "containment -- an edge is a second way to write what no command may write. The "
+             "count is pinned rather than asserted to be zero, because AccessGraph already "
+             "has edges and a rule false about its own tree is one someone deletes",
+             _name, dict(registry=len(RECORDS[_name]["lifecycle"]["transitions"]),
+                         pinned=_row["transition_count"])))
+    for _module in _row["evaluator_modules"]:
+        checked(_module in REGISTERED_MODULES,
+                ("A PROJECTION'S EVALUATOR IS NOT A REGISTERED MODULE: `evaluator_module` was "
+                 "a free string bound to nothing, so how the projection comes into existence "
+                 "was left to construction (F6D-08, the W8 half)",
+                 _name, _module))
+for _row in PROJECTIONS_WITH_WRITERS:
+    checked(set(_row) == PROJECTION_WRITER_KEYS,
+            ("projection-with-writer row shape", _row.get("record"),
+             sorted(set(_row) ^ PROJECTION_WRITER_KEYS)))
+    _name = _row["record"]
+    checked(_name in RECORDS, ("a projection-with-writer row names no such record", _name))
+    checked(bool(_row["why"].strip()), ("a projection-with-writer row states no reason", _name))
+    checked(sorted(RECORDS[_name]["registration"]["permitted_commands"])
+            == sorted(_row["permitted_commands"]),
+            ("A DECLARED PROJECTION WRITER SET CHANGED IN ONE PLACE: the exception is "
+             "declared here and in the registry, and widening it is meant to be a two-place "
+             "edit a reviewer sees",
+             _name, dict(registry=RECORDS[_name]["registration"]["permitted_commands"],
+                         pinned=_row["permitted_commands"])))
+_declared_projections = ([_row["record"] for _row in COMPUTED_PROJECTIONS]
+                         + [_row["record"] for _row in PROJECTIONS_WITH_WRITERS])
+checked(len(_declared_projections) == len(set(_declared_projections)),
+        ("a record is declared twice across the projection partition",
+         sorted(set(n for n in _declared_projections if _declared_projections.count(n) > 1))))
+_flagged = set(name for name, record in RECORDS.items()
+               if isinstance(record, dict) and isinstance(record.get("lifecycle"), dict)
+               and record["lifecycle"].get("projection") is True)
+checked(_flagged == set(_declared_projections),
+        ("A PROJECTION RECORD IS IN NEITHER HALF OF THE PARTITION: every record declaring "
+         "`lifecycle.projection` says which it is -- nothing may write it, or these commands "
+         "may. A projection added without saying is the state F6D-08 found ArmedSet in",
+         dict(flagged_not_declared=sorted(_flagged - set(_declared_projections)),
+              declared_not_flagged=sorted(set(_declared_projections) - _flagged))))
+
 NEGATIVE_FIXTURES_DECLARED = len(json.loads(
     (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text(encoding="utf-8"))["fixtures"])
 POSITIVE_FIXTURES_DECLARED = len(json.loads(
@@ -3307,7 +3391,8 @@ checked(CENSUS_KEYS_PINNED == CENSUS_KEYS,
 # the DATA is; every bound named here is a literal in validate_contracts.py, which is the
 # terminal rule of this lineage -- widening any of them is an edit to the checker.
 HAND_WRITTEN_CONTROL_KEYS = {"pins", "require_rows", "pinned_transitions",
-                             "pinned_attachments", "finding_sources", "unanswered_findings",
+                             "pinned_attachments", "computed_projections", "finding_sources",
+                             "unanswered_findings",
                              "out_of_reach_findings", "disjoined_rows", "admissible_ancestors",
                              "argument_positions_digest", "negative_fixtures",
                              "positive_fixtures", "demand_walk_census", "census_keys"}
@@ -3321,6 +3406,9 @@ HAND_WRITTEN_CONTROLS = {
                            "file": "pinned-conjuncts.json#/pinned_transitions"},
     "pinned_attachments": {"count": len(ATTACHMENTS), "floor": PIN_ATTACHMENT_FLOOR,
                            "file": "pinned-conjuncts.json#/pinned_attachments"},
+    "computed_projections": dict(count=len(COMPUTED_PROJECTIONS),
+                                 floor=COMPUTED_PROJECTION_FLOOR,
+                                 file="pinned-conjuncts.json#/computed_projections"),
     "finding_sources": {"count": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR,
                         "file": "pinned-conjuncts.json#/finding_sources"},
     "unanswered_findings": {"count": len(unanswered), "ceiling": UNANSWERED_CEILING,
