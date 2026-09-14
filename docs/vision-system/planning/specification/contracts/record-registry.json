@@ -31622,7 +31622,7 @@
       "to": "2.0 immutable content + lifecycle representation",
       "mapping": "registered by the F2 amendment; candidate-era names resolve through aliases.json and are never admitted as record names (R-X02)"
     },
-    "source_contract": "07-integrations-capacity.md#6-capacity-pressure-and-exhaustion",
+    "source_contract": "07-integrations-capacity.md#6-capacity-money-and-scheduling",
     "planned_module": "system/packages/work/shed-decision",
     "removal_criterion": "Remove this record when no allowance empties under a due obligation across a fixed window AND every obligation in an exhaustible duty class has carried a non-`none` production mode for that whole window -- then the branch this record exists to name has had nothing to choose between (R-X26, 07 section 6).",
     "implementation_status": "specified, not implemented; independent assessment pending"
