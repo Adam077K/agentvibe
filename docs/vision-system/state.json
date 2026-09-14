@@ -163,14 +163,14 @@
       "subject": "e06fdce",
       "output": "planning/F2/09-q017-conjunction-rerun.md (orchestrator commits)",
       "dispatched": "2026-09-14",
-      "status": "running"
+      "status": "RETURNED; file committed at 311c302; founder answered on the reduced list"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work below",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words (his 2026-09-14 re-invocation with the directive did not lift it)",
-    "Owed by Q-017 (d): re-run the three-part conjunction test more strictly over the 46 acceptance-owner roles (framer or reviewer lane, read-only, at a frozen SHA), then re-ask Q-017 on the reduced list",
     "Owed: prose lane C for F6W-01..08 (05 §5/§12/§13, 07 header, 04 §117) after r7-contracts-b merges (same chapters)",
+    "Owed by Q-017's answer: six paired conformance cases (CAP-21, 23, 25, 27, 30, 41) before any of those roles is admitted; chapter 05 §12 holder table to name the founder as declared-exception holder of CAP-22/42/31 with the grievance-independence residue — after r7-contracts-b merges (chapter 05)",
     "When the full validator on aa63875 is green: merge builder/f2-r7-contracts; then dispatch r7-contracts-b (fresh builder, off the merge) for F6C-13, F6X-01, F6X-02 (registering the names prose-b stated), F6A-09, F6C-06, F6C-12 (if any registry alias), F6D-08, F6D-05, RC4-07, F6R-03, F6R-02, F6R-01 reclassification, F6R-04 F6D-07 note, and the three owed residues (F6D-09 determinism conjunct, F6C-11 instant-offset, F6C-10 park phase)",
     "recheck-02 DONE (archived). Residues owed: F6B-03 checker-binding (contracts lane), F6V-01/F6C-04 divergence wording or conjunct, F6V-02 (contracts), F6V-03/F6V-04 (prose lane); F6C-07 residue repaired in open-questions.json (Q-020/Q-021 → Q-022), recheck owed",
     "Then: narrow independent recheck of the r7 and prose repairs (F2-06-recheck-03); update PLANNING-REPORT.md §8 counts, README, site, founder page; history.jsonl; session file",
@@ -322,7 +322,7 @@
   "founder_decisions_2026_09_14": {
     "tc35_five_criteria_closed": false,
     "Q-016": "(d)",
-    "Q-017": "(d) re-run first; open",
+    "Q-017": "re-run option 1 + founder holds the 3 confirmed roles as a declared exception",
     "Q-018": "(b)",
     "Q-019": "(d) then (b)",
     "Q-020": "(a)",

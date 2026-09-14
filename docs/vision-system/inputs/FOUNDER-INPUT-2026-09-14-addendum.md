@@ -14,7 +14,7 @@
 |---|---|---|
 | TC-35 — is the five-reason list closed? | **Not closed; consequence class is admitted as a reason.** | The layered design (S1.1 / WORK-1.1) stands on the founder's own gate. |
 | Q-016 terminal owner of an unowned duty | (d) the founder, as an explicit exception | (a) or (b) owed before the first outward obligation |
-| Q-017 who holds the acceptance roles | (d) re-run the three-part conjunction test more strictly first | Re-run owed; packet re-asked on the reduced list |
+| Q-017 who holds the acceptance roles | (d) re-run first; then, on the re-run's reduced list ([09-q017-conjunction-rerun.md](../planning/F2/09-q017-conjunction-rerun.md)): **staff the 3 confirmed roles, author paired conformance cases for the 6 flagged before admitting any; the founder holds all three as a declared exception** | Six conformance cases owed; grievance-route independence owed before the first outward obligation; 32 roles dissolve into per-case acceptance |
 | Q-018 capability-creation approver in absence | (b) outward-acting creation parks | Arrival-rate count (U-1) owed |
 | Q-019 assessor of the founder's competence | (d) unperformed, recorded as such; then (b) a professional | Never recorded as passed |
 | Q-020 halting a capacity shed | (a) nobody halts; named after-the-fact reverser | Tabletop rehearsal owed |

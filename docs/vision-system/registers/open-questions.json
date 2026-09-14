@@ -587,7 +587,7 @@
     "id": "Q-017",
     "kind": "Deferred question",
     "question": "Which standing roles are staffed by a person other than the founder before work is admitted in that class, and what happens in a class where none is?",
-    "status": "Open; founder decided the method (d) — re-run owed, then re-ask",
+    "status": "Answered (2026-09-14); owed: six paired conformance cases before the flagged roles are admitted; grievance independence before the first outward obligation",
     "owner": "founder",
     "evidence": "AC-M3-02, AC-M4-01, AC-M5-02 and AE-M4-05 — four reviews, four candidates, one gap. The staffing-precondition mechanism exists in one candidate and was not applied to that candidate's own acceptance table. The load is counted: a person is the acceptor on 37 of 46 capabilities in the consequence-class candidate and on every action in the 26 that floor at the economic/contractual class or above; in the workflow-first candidate 19 of 46 name the founder and 13 more an unspecified human, with every outward artifact needing a human acceptance.",
     "source_refs": [
@@ -629,9 +629,10 @@
     "asked": "2026-09-14",
     "founder_answer": {
       "date": "2026-09-14",
-      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
-      "option": "(d) Reduce the number of roles by re-running the three-part conjunction test more strictly",
-      "note": "Founder chose (d): re-run the test first, then decide who holds the roles that survive. Packet stays open until the re-run lands and the founder answers on the reduced list."
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14, after the strict re-run planning/F2/09-q017-conjunction-rerun.md (subject e06fdce)",
+      "option": "Re-run option 1: staff the 3 confirmed standing roles (CAP-22 personal data/deletion, CAP-42 grievance/rights, CAP-31 continuity on the day-five arm); author paired conformance cases for the 6 flagged candidates (CAP-21, CAP-23, CAP-25, CAP-27, CAP-30, CAP-41) before admitting any; the other 32 roles dissolve into per-case acceptance",
+      "holder": "The founder holds all three confirmed roles as a declared exception with parking behaviour; grievance-route independence from the founder is owed before the first venture carries an outward obligation (Q-003/Q-004 risk named in the re-run)",
+      "note": "Reduces standing-infrastructure burden, not per-case acceptance workload: 37–38 of the 41 human-acceptance capabilities still need a human at acceptance time (re-run §4). CAP-17 customer-remedy dissent left open in the re-run."
     }
   },
   {
