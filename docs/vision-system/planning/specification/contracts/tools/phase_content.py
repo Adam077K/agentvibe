@@ -918,6 +918,17 @@ CITE = {
         "05-work-agents-skills.md",
         "A work record armed no interest, the entry's retention exceeds the longest "
         'plausible outage, and the arrival alarm has reached its named reader'),
+    "c-ed-written": (
+        "07-integrations-capacity.md",
+        'the breach-or-perform decision leaves a record naming which was chosen and why '
+        '\u2014 `ExhaustionDecision`, identity `(obligation_ref, window)`, written once, '
+        'proposed by C02 and authorised by C01, carrying the branch taken '
+        '(`performed | breached`), the route, the alerted recipient and the due obligation'),
+    "c-ed-route": (
+        "07-integrations-capacity.md",
+        'named on the obligation as a required field, `Obligation.production_mode`, a closed '
+        'enum over `{manual_founder, contracted_professional, other_provider, none}`, with '
+        '`production_performer_ref` naming the assignment that carries it'),
     # --- END WORK-1.1 citations ---
 }
 
@@ -3212,6 +3223,22 @@ RECORD_OVERRIDES = {
         ['w-pg-active', 's-pg'],
         [('nfp', ['/payload/approval_expires_at', '/payload/approved_at']), ('prF', '/payload/derivative_refs'), AR],
         hard=['nfp', 'prF']),
+
+    # -- ExhaustionDecision (S1-C02) ---------------------------
+    #
+    # The EXHAUSTION rule, which is NOT the pressure rule: ShedDecision governs a filling
+    # bucket and this one governs an empty one, and fifty percent of an empty bucket is zero.
+    # F6C-02 found that the breach-or-perform record was required by two chapters and that no
+    # record type was it.
+    ("ExhaustionDecision", "written"): spec(
+        'The due obligation, the window, the branch taken, the route it was taken by, the '
+        'recipient who was alerted and the reason are all recorded, and the proposing and '
+        'authorising components are named. Neither branch is silent and neither branch is '
+        'automatic, so the record exists whichever was chosen; the route is an assignment '
+        'that is currently accepted, because a route nobody holds is not a route.',
+        ['c-ed-written', 'c-ed-route'],
+        [('nfp', ['/payload/obligation_ref', '/payload/window', '/payload/branch', '/payload/route_ref', '/payload/alerted_recipient_ref', '/payload/reason', '/payload/proposing_component_id', '/payload/authorising_component_id']), ('rpp', [('/payload/route_ref', ['accepted'], False)]), AR],
+        hard=['nfp', 'rpp']),
 
     # -- ShedDecision (S1-C02) ---------------------------
     ("ShedDecision", "written"): spec(

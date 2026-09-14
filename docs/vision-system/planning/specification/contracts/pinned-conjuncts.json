@@ -2215,6 +2215,46 @@
           "why": "and whether that class is terminal is recorded rather than inferred from the phase by whoever reads it next"
         }
       ]
+    },
+    {
+      "predicate_id": "criterion.ExhaustionDecision.written.v1",
+      "kind": "criterion",
+      "findings": [
+        "F6C-02"
+      ],
+      "decisions": [
+        "R-G01"
+      ],
+      "why": "F6C-02: `07` section 6 and `05` section 7 both require that the breach-or-perform decision leaves a record naming which was chosen and why, and NO RECORD TYPE WAS IT. `ShedDecision` is written when C02 proposes and C01 authorises a SHED; its `minimum_breached` is a fact about a shed lane under pressure, not about an empty bucket meeting a due obligation, and one record carrying both would collapse the distinction the exhaustion rule exists to draw. This pin holds the new record's only criterion to the six things the chapter says it carries. The criterion body is authored by tools/phase_content.py and this table is not, which is the point: weakening the derivation and regenerating cannot satisfy these rows.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/obligation_ref",
+            "/payload/window",
+            "/payload/branch",
+            "/payload/route_ref",
+            "/payload/alerted_recipient_ref",
+            "/payload/reason",
+            "/payload/proposing_component_id",
+            "/payload/authorising_component_id"
+          ],
+          "why": "the branch, the route, the alerted recipient, the due obligation, the window and the reason are all on the record, with the proposing and authorising components named. Neither branch is silent and neither branch is automatic -- a record that reached `written` naming no branch is the sentence this record was created to stop being"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/route_ref",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and the route is an assignment that is currently `accepted`. A route nobody holds is not a route, which is the same failure the `production_mode: none` refusal catches one record earlier"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",

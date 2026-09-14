@@ -6,7 +6,7 @@
     "tools/run_positive_fixtures.py: declared-but-absent and present-but-undeclared both fail, and a fixture that does NOT pass validation fails",
     "validate_contracts.py: the positive run's own count must equal this one, every declared fixture must have passed, and the declared count must not fall below the floor"
   ],
-  "floor": 52,
+  "floor": 53,
   "floor_why": "A literal, for the reason every other floor in this package is a literal: a count derived from the directory it measures is satisfied by the empty directory. Seventeen is one benign case per adverse case of selection-record section 12.5, and dropping one would drop the pairing rule for that row. Lowering this number is a decision and should read like one. RAISED BY R18 (the Step 6 repair of the F2 layer): negative 56 -> 91, positive 17 -> 52. Thirty-five new adverse cases and thirty-five paired benign ones, one per finding the four Step 6 reviews raised against the contracts, plus one pair per guard that had none. F6C-16 measured 14 of 30 guards exercised by a paired fixture; every registered guard has one now, and the count is derived rather than quoted -- `comm -12 <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/negative | sort -u) <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/positive | sort -u) | wc -l`. Lowering either number is still two edits and a written reason.",
   "fixtures": [
     "r16-01-derivation-gates-only-the-higher-class-benign",
@@ -28,6 +28,7 @@
     "r16-17-triage-refuses-a-genuine-job-on-unfamiliar-wording-benign",
     "r18-acceptance-on-an-uncalibrated-checker-benign",
     "r18-approval-with-no-expiry-benign",
+    "r18-breach-or-perform-record-names-no-branch-benign",
     "r18-cap-exhaustion-refuses-the-next-complainant-benign",
     "r18-capability-floor-has-no-source-benign",
     "r18-check-interest-reads-a-field-the-producer-authored-benign",

@@ -54278,6 +54278,174 @@
       }
     ]
   },
+  "criterion.ExhaustionDecision.written.v1": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<ExhaustionDecision>",
+      "observation_refs": "Ref<Observation>[]",
+      "judgment_refs": "Ref<EvidenceJudgment>[]"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/obligation_ref",
+            "/payload/window",
+            "/payload/branch",
+            "/payload/route_ref",
+            "/payload/alerted_recipient_ref",
+            "/payload/reason",
+            "/payload/proposing_component_id",
+            "/payload/authorising_component_id"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/route_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.ExhaustionDecision.written.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
+        },
+        {
+          "op": "accepted_for",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.ExhaustionDecision.written.v1",
+          "judgment_refs": {
+            "arg": "judgment_refs"
+          }
+        }
+      ]
+    },
+    "meaning": "The due obligation, the window, the branch taken, the route it was taken by, the recipient who was alerted and the reason are all recorded, and the proposing and authorising components are named. Neither branch is silent and neither branch is automatic, so the record exists whichever was chosen; the route is an assignment that is currently accepted, because a route nobody holds is not a route. Phase assessed: written.",
+    "owner_component": "S1-C02",
+    "source": "05-work-agents-skills.md#12-standing-accountability",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "ExhaustionDecision"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        },
+        "observation_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "Observation"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "judgment_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_id": {
+                "$ref": "values.schema.json#/$defs/UUID"
+              },
+              "record_type": {
+                "type": "string",
+                "enum": [
+                  "EvidenceJudgment"
+                ]
+              },
+              "revision": {
+                "$ref": "values.schema.json#/$defs/Revision"
+              }
+            },
+            "required": [
+              "record_id",
+              "record_type",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "subject_ref",
+        "observation_refs",
+        "judgment_refs"
+      ],
+      "additionalProperties": false
+    },
+    "content_source": "tools/phase_content.py",
+    "requires": "The due obligation, the window, the branch taken, the route it was taken by, the recipient who was alerted and the reason are all recorded, and the proposing and authorising components are named. Neither branch is silent and neither branch is automatic, so the record exists whichever was chosen; the route is an assignment that is currently accepted, because a route nobody holds is not a route.",
+    "derived_from": [
+      {
+        "file": "07-integrations-capacity.md",
+        "anchor_or_quote": "the breach-or-perform decision leaves a record naming which was chosen and why — `ExhaustionDecision`, identity `(obligation_ref, window)`, written once, proposed by C02 and authorised by C01, carrying the branch taken (`performed | breached`), the route, the alerted recipient and the due obligation"
+      },
+      {
+        "file": "07-integrations-capacity.md",
+        "anchor_or_quote": "named on the obligation as a required field, `Obligation.production_mode`, a closed enum over `{manual_founder, contracted_professional, other_provider, none}`, with `production_performer_ref` naming the assignment that carries it"
+      }
+    ]
+  },
   "criterion.ExistenceJustification.admitted.v1": {
     "version": "1.0",
     "argument_types": {
@@ -394303,6 +394471,7 @@
                 "EvidenceJudgment",
                 "ExecutionCapacity",
                 "ExecutionSelection",
+                "ExhaustionDecision",
                 "ExistenceJustification",
                 "ExperienceArtifact",
                 "Experiment",
@@ -394833,6 +395002,7 @@
                 "EvidenceJudgment",
                 "ExecutionCapacity",
                 "ExecutionSelection",
+                "ExhaustionDecision",
                 "ExistenceJustification",
                 "ExperienceArtifact",
                 "Experiment",
@@ -395598,6 +395768,7 @@
                 "EvidenceJudgment",
                 "ExecutionCapacity",
                 "ExecutionSelection",
+                "ExhaustionDecision",
                 "ExistenceJustification",
                 "ExperienceArtifact",
                 "Experiment",
@@ -396830,6 +397001,7 @@
                 "EvidenceJudgment",
                 "ExecutionCapacity",
                 "ExecutionSelection",
+                "ExhaustionDecision",
                 "ExistenceJustification",
                 "ExperienceArtifact",
                 "Experiment",
@@ -397829,6 +398001,7 @@
                 "EvidenceJudgment",
                 "ExecutionCapacity",
                 "ExecutionSelection",
+                "ExhaustionDecision",
                 "ExistenceJustification",
                 "ExperienceArtifact",
                 "Experiment",
@@ -398947,6 +399120,7 @@
                   "EvidenceJudgment",
                   "ExecutionCapacity",
                   "ExecutionSelection",
+                  "ExhaustionDecision",
                   "ExistenceJustification",
                   "ExperienceArtifact",
                   "Experiment",

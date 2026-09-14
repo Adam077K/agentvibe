@@ -1965,8 +1965,8 @@ checked(version_rows >= 14,
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 91
-POSITIVE_FIXTURE_FLOOR = 52
+NEGATIVE_FIXTURE_FLOOR = 92
+POSITIVE_FIXTURE_FLOOR = 53
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
