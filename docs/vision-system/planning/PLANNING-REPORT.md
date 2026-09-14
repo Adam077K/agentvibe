@@ -4,7 +4,7 @@
 
 This is the report required by [DIRECTIVE.md §15](../inputs/DIRECTIVE.md). The directive says *"Do not compress the final planning package into a short summary"* and *"Make it navigable."* This document is therefore an index with judgments attached, not a précis. Every number in it names the file it was read from. Where two artifacts in the package disagree, both are cited and the disagreement is stated rather than resolved silently; those are collected in [§10](#10-where-artifacts-disagree).
 
-§15 asks for nine items. They are sections [1](#1-what-the-system-is) through [9](#9-where-the-durable-artifacts-are). Two sections the directive does not ask for come first, because they change how everything after them should be read: the [Phase G verdict](#phase-g-verdict) and [what this package does not claim](#what-this-package-does-not-claim).
+§15 asks for nine items. They are sections [1](#1-what-the-system-is) through [9](#9-where-the-durable-artifacts-are). Three sections the directive does not ask for come first, because they change how everything after them should be read: the [Phase G verdict](#phase-g-verdict), the [F2 round on agents, work and context](#agents-work-and-context--the-f2-round-2026-09-1314) — which is dated later than every other section and reopened one layer of the plan — and [what this package does not claim](#what-this-package-does-not-claim).
 
 | §15 item | Section |
 |---|---|
@@ -52,6 +52,182 @@ Both were decided as [AD-013 and AD-014](../registers/decisions.json) and a repa
 
 ---
 
+## Agents, work and context — the F2 round (2026-09-13/14)
+
+*This section is dated later than every other section of this report. It concerns one layer of the plan — how work is admitted, typed, staffed, carried, handed over and signed off, and whether agents should exist at all. Nothing else in the package was reopened, and nothing in it was built.*
+
+### What you asked
+
+On 2026-09-13 you reopened that one layer and wrote down your own account of it, labelling it a thesis to be tested rather than a rule to be satisfied. Your words, verbatim, are preserved at [FOUNDER-THESIS-2026-09-13-agents.md](../inputs/FOUNDER-THESIS-2026-09-13-agents.md):
+
+> *"It may be not named different agents, but agent that are different by the work, the authority, the tools, the skills, the context."*
+>
+> *"Agents should be added only when they introduce a real capability, such as parallel work, distinct tools or permissions, isolated context, specialized knowledge, or independent verification."*
+>
+> *"Instead of building a company of disconnected 'digital employees,' we should build coordinated capabilities around a shared source of truth."*
+>
+> *"This is only a thesis … what I'm thinking is not, like, gold."*
+
+The round was run as an answer to the last of those four sentences. Its brief is [HANDOFF-F2-agents-work-layer.md](HANDOFF-F2-agents-work-layer.md).
+
+### How the round ran
+
+**Step 0 froze the rules before anyone looked at anything.** [F2/00-acceptance-protocol.md](F2/00-acceptance-protocol.md) was written before a single research lane read a source and before any candidate existed. It sets fifteen dimensions, each judged separately with no aggregate score; six shared fixtures every candidate is worked through in the same words; ten negative controls, each paired with a benign case it must not catch; and four classes of finding, of which only a class (d) — *a missing decision without which an implementer would choose the system's meaning by inventing policy* — blocks. It also states, in its own text, that a candidate agreeing with you earns nothing by agreeing and a candidate contradicting you earns nothing by contradicting.
+
+**Eight research lanes formed blind of each other.** [R1 context and shared state](../research/F2/R1-context.md) · [R2 when an agent earns its existence](../research/F2/R2-agent-existence.md) · [R3 frameworks and harnesses](../research/F2/R3-frameworks.md) · [R4 authority as the boundary](../research/F2/R4-authority.md) · [R5 work discovery and routing](../research/F2/R5-routing.md) · [R6 skills and knowledge](../research/F2/R6-skills.md) · [R7 independent verification under one model family](../research/F2/R7-verification.md) · [R8 contrarian](../research/F2/R8-contrarian.md).
+
+**The lanes were then compared without forcing agreement.** [cross-lane-comparison.md](../research/F2/cross-lane-comparison.md) records 18 agreements, **16 disagreements preserved rather than resolved**, ten existing axes reconciled, ten new ones, and 41 of 65 cross-lane questions still open. It examined **14 falsifier candidates against the six boundaries the round was told to treat as fixed and returned zero** (§E) — so nothing licensed reopening the consequence and release boundary, evidence and acceptance, recovery, human responsibility, the founder-competence mechanism or whole-company scope.
+
+**Five materially different models were carried, not four.**
+
+| | The model | In one line |
+|---|---|---|
+| **M1** | [Capability-differentiated ephemeral agents around shared state](F2/candidates/M1-capability-differentiated-ephemeral.md) | Your thesis made concrete: many short-lived workers, each justified by a named capability, talking to each other around one record |
+| **M2** | [Chartered persistent agents](F2/candidates/M2-chartered-persistent.md) | Standing desks with identity, memory, reserved capacity, evaluation and retirement |
+| **M3** | [Workflow-first, no agents](F2/candidates/M3-workflow-first-no-agents.md) | A durable state machine in which model calls are steps and no agent exists at all |
+| **M4** | [Hybrid by consequence class](F2/candidates/M4-hybrid-by-consequence-class.md) | Persistent where continuity matters, ephemeral elsewhere, deterministic where the answer is computable |
+| **M5** | [Subscription-activated capabilities around a shared record](F2/candidates/M5-subscription-activated-shared-record.md) | Work becomes due when a typed standing interest arms, under an explicit admission authority |
+
+**Five independent attacks followed, by reviewers shown no author's self-assessment.** [technical](F2/reviews/A-technical.md) · [company and human](F2/reviews/A-company-human.md) · [economic and capacity](F2/reviews/A-economic-capacity.md) · [context and evidence](F2/reviews/A-context-evidence.md) · [security and adversarial](F2/reviews/A-security-adversarial.md). [04-attack-consolidation.md §H](F2/04-attack-consolidation.md) counts them: **111 findings** — 22 technical, 26 company and human, 24 economic, 14 context and evidence, 25 security. By class: **28 blocking (d)**, 12 (c), 53 (b), 17 (a), plus one outright negative-control failure. All ten controls were applied by at least one review; 48 of 50 candidate-control cells were resolved and the two that were never applied are recorded as unknown rather than as passes. **No candidate came out free of blockers** — M1 carried nine, M4 eight, M5 six, M2 and M3 four each. Merging the 28 blockers gave **24 distinct missing decisions**.
+
+**The selection took all five apart and kept the part of each that survived its own attack.** [05-selection-record.md](F2/05-selection-record.md) §1 and §3. Each candidate's blockers clustered on that candidate's own organizing unit, so choosing any one of them would have inherited that unit's blind spot.
+
+**The frozen protocol was amended once, in the open.** [00-acceptance-protocol-amendments.md](F2/00-acceptance-protocol-amendments.md) records AM-01: the fixture in which a checker examines a planted defect gains a paired clean artifact, so that a checker which refuses everything can no longer look like a checker that works. It was appended below the frozen text with its date and reason, never by editing it.
+
+**Four independent reviews then judged the amended layer, and most dimensions did not pass.** They read a frozen copy at commit `8f6c2c2`, wrote nothing in the round, and each disclosed its own limits.
+
+| Dimension | Review | Judgment |
+|---|---|---|
+| W11 vision preservation | [A](reviews/F2-06-A-completeness-coherence-vision-binding.md) | sufficient |
+| W5 independence of verification | [B](reviews/F2-06-B-context-verification-founder-evidence.md) | sufficient |
+| W9 changeability | [C](reviews/F2-06-C-capacity-reliability-changeability-alternatives.md) | sufficient |
+| W13 alternative depth and comparator honesty | [C](reviews/F2-06-C-capacity-reliability-changeability-alternatives.md) | sufficient |
+| W1 completeness for unknown future jobs | [A](reviews/F2-06-A-completeness-coherence-vision-binding.md) | **insufficient** |
+| W2 coherence with the fixed boundaries | [A](reviews/F2-06-A-completeness-coherence-vision-binding.md) | **insufficient** |
+| W15 capability binding and traceability | [A](reviews/F2-06-A-completeness-coherence-vision-binding.md) | **insufficient** |
+| W3 context integrity under summarization and handoff | [B](reviews/F2-06-B-context-verification-founder-evidence.md) | **insufficient** |
+| W12 founder attention and competence | [B](reviews/F2-06-B-context-verification-founder-evidence.md) | **insufficient** |
+| W14 evidence quality of the round's own claims | [B](reviews/F2-06-B-context-verification-founder-evidence.md) | **insufficient** |
+| W4 cost and capacity under subscription | [C](reviews/F2-06-C-capacity-reliability-changeability-alternatives.md) | **insufficient** |
+| W7 reliability and durable work state | [C](reviews/F2-06-C-capacity-reliability-changeability-alternatives.md) | **insufficient** |
+| W6 authority as boundary | [D](reviews/F2-06-D-authority-buildability-adversarial.md) | **insufficient** |
+| W8 buildability | [D](reviews/F2-06-D-authority-buildability-adversarial.md) | **insufficient** |
+| W10 adversarial robustness of the work layer | [D](reviews/F2-06-D-authority-buildability-adversarial.md) | **insufficient** |
+
+**Four sufficient, eleven insufficient.** [F2-06-findings-index.json](reviews/F2-06-findings-index.json) indexes **54 findings** across the four — 6 class (d), 4 class (c), 11 class (b), 33 class (a). The sharpest single measurement is review D's: it ran the contracts validator to completion, then detached each of the thirty new guards from every edge that calls it, and **all thirty detached with the validator still exiting 0**; three load-bearing routes could be deleted silently. Nothing pinned attachment, only bodies.
+
+**A repair round followed, and it is author-recorded rather than rechecked.** Repairs landed against the named findings — the middle consequence band was given a recipient that exists, the declared floor was given a source, the guards were pinned to the edges that must call them, the two guards that spelled set equality as *subset plus equal counts* were corrected, and the breach-or-perform record two chapters required and no record type was became `ExhaustionDecision`. [registers/review-findings.json](../registers/review-findings.json) carries each disposition, and two residue items are recorded Open: **F6X-01** (three records naming a command the command registry does not contain) and **F6X-02** (a boundary field left a free string, because its members would have been invented rather than derived). **A narrow independent recheck by someone who authored none of the repair, `F2-06-recheck-01`, has not run.** Until it does, no disposition belongs in [§8](#8-statement-about-implementation).
+
+### What was decided
+
+Eight decisions were entered in [registers/decisions.json](../registers/decisions.json), AD-015 through AD-022. The layer is re-specified in [05-work-agents-skills.md](specification/05-work-agents-skills.md), contract WORK-1.1.
+
+| The decision, in plain terms | Where |
+|---|---|
+| **Five layers, in a fixed order of precedence.** Consequence class decides who may act; a declared procedure decides how the work runs and what each step may see; a typed standing interest decides when work becomes due; an existence record decides whether a worker may be created at all; and exactly one standing party exists for each duty that outlives the case carrying it. **When two layers disagree, the lower-numbered one governs** — class may raise what a procedure permits and never lower it, and a holder may hold but never act | [AD-015](../registers/decisions.json) · [05 §1, §11](specification/05-work-agents-skills.md) |
+| **Still no permanent roster, and now with a test attached.** A worker exists only against an `ExistenceJustification` naming exactly **one** of six reasons with its unit and a test that can return false; the record expires with the worker. If the test cannot return false, creation is refused | [AD-020](../registers/decisions.json) |
+| **Specialized knowledge is refused as a reason to create a worker.** It predicates on a versioned, tested procedure a general worker loads, not on a worker. Across four model families, 162 roles and 2,410 questions, adding a persona gave no benefit and picking the best one was no better than random. The contrary ablation is carried alongside rather than dropped | [AD-020](../registers/decisions.json) · [05 §4](specification/05-work-agents-skills.md) |
+| **Attributable identity is mandatory for every worker and is never a reason to create one.** A property every worker must have cannot license creating one | [05 §4](specification/05-work-agents-skills.md) |
+| **The consequence class is computed from records the acting party cannot author** — resolved parameters, the destination and egress identity, open obligations and the owning capability's declared floor — and recomputed at the moment of release on the frozen bytes. A mismatch parks and never resolves downward. The derivation returns the **set** of classes reached and every reached class's gates apply; no rank is computed | [AD-016](../registers/decisions.json) |
+| **A step declares what it may read, and the loader delivers it and records what it actually delivered.** The caller's claim about what it read is not trusted. A guard is a pure function over typed outputs, and a model's output is an input to a guard, never a jump | [AD-017](../registers/decisions.json) |
+| **Acceptance criteria are authored somewhere else and frozen before the work starts.** The capability owner writes them at procedure admission; the producing path may neither author nor amend them, and an amendment between admission and submission is refused by a guard | [AD-018](../registers/decisions.json) |
+| **Relevance is computed, and no component may prevent an interest arming.** Preconditions are deterministic and no model may appear in one; the armed set has no writer | [AD-019](../registers/decisions.json) |
+| **Typed constraint sets cross every boundary — including the brief that reaches you.** Identity is a content digest, the record is immutable, **a receiver may act only on the members it can restate as typed values**, and prose alongside is evidence and never a substitute. Rules and promises survive a compressed handoff at about 0.57 where ordinary facts survive at about 0.97; typed constraints leaked 0 of 48 where prose leaked 73% | [AD-017](../registers/decisions.json) · [05 §5](specification/05-work-agents-skills.md) |
+| **Standing accountability is a record with an address and a reservation.** A holder is proposed by the capability owner and endorsed; it never produces, never releases, never decides a matter it is the subject of, and **carries no model memory**. Every acceptance-owner role carries a reachability route, a capacity reservation, an alternate and a review date | [AD-021](../registers/decisions.json) · [05 §12](specification/05-work-agents-skills.md) |
+| **The lapse rule.** A protected lane holder's stated minimum is **evidence, never consent** — there is no veto — and unconsumed reservation releases to the pool at a time-triggered lapse point independent of any holder's consent, with a declared order of who receives it. Under a window that resets whether consumed or not, a reserve is waste rather than thrift | [AD-022](../registers/decisions.json) |
+| **The exhaustion rule, which is not the pressure rule.** When the allowance is empty and a duty falls due, a **named non-model production mode** performs it, a named recipient is alerted, and the breach-or-perform choice leaves a record — `ExhaustionDecision`, deliberately not a variant of the shedding record, because fifty percent of an empty bucket is zero | [05 §7](specification/05-work-agents-skills.md) |
+
+The architecture version moves **S1.0 → S1.1**, not S2.0: the six fixed boundaries and the nine logical components stand unchanged and the layer is re-specified inside them ([02-architecture-selection.md](02-architecture-selection.md), version E1.2).
+
+### What was rejected, and why
+
+No candidate lost on preference. Each row names the evidence that decided it.
+
+| | Why it lost |
+|---|---|
+| **M1** | Nine blocking findings, the most in the round, and two are consequences of its own shape rather than repairable details: a model-to-model consultation return is an unfiltered channel into the identity holding the effect grants, and the object M1 itself calls its highest-risk one has no issuing authority, so a worker can issue one over its own work and choose who sees it. The two candidates with no model-to-model channel at all carried zero findings of that kind. |
+| **M2** | It failed a negative control outright, on a standing desk that none of the six frozen fixtures exercises, and the control failure blocks on its own footing. Underneath it, **no source in the round measures whether persistent identity improves any outcome**, and the two most-cited deployments refuse to support carried memory. M2 says both things about itself. |
+| **M3** | Deleting the worker records leaves 52 and 50 dangling registry references with no migration, and four of eleven primitives are existing records renamed with no mapping. Its founder-attention load is its central cost and is counted nowhere: 19 of 46 capabilities name you and 13 more name an unspecified human. Its execution structure was strong enough that the synthesis takes it whole. |
+| **M4** | Insufficient on six dimensions. Its central move collapses six predicates into a total rank, which the authority contract forbids by name, and the rank drops the human requirement on an action that is in two classes at once. Its own derivation makes every provider prompt a released effect, so every worker's every turn becomes a release transaction. |
+| **M5** | Two of its blockers are promotion paths: an activation may promote an entry's trust class on a model's reading of the attacker's own text, and a trial may declare a writer key, so a model-authored object reaches the permission boundary with no human in the loop. Its own sharpest falsifier — what fraction of the company's conditions are expressible as deterministic predicates — carries no measurement protocol. The synthesis takes its arming mechanism **and carries its falsifier**. |
+
+### Your five criteria and your four costs, judged
+
+From [cross-lane-comparison.md §I](../research/F2/cross-lane-comparison.md) and [05-selection-record.md §2](F2/05-selection-record.md).
+
+| Your criterion | The verdict |
+|---|---|
+| **Distinct tools or permissions** | **Confirmed, and the strongest of the five.** It is the only one enforced outside the model and the only one with a published price: 77% of benchmark tasks solved with provable security against 84% undefended. It does not hold for free — in the runtime you would use, a helper inherits every tool by default and a skill file can grant tools for the turn that loads it. It works, and it has to be built. |
+| **Isolated context** | **Refined, and split in two.** Isolation for attention moves with the model generation and is shrinking. Isolation for confidentiality is structural, and it is the only sense any of your six test cases exercises — so only it may justify creating a worker. Even then, separating things cut disclosure violations by 20 to 50 points and still left over 75%. |
+| **Independent verification** | **Refined, and half of it is out of reach.** You can stop the producer influencing the checker, and that is measurable. You cannot make their *errors* independent inside one model family, and no blinding reaches it. The best independent reviewer anyone has measured found under a third of planted defects. A model checker finds; a deterministic test or a person signs off. |
+| **Parallel work** | **Refined to nearly inert here.** Whether splitting pays is a property of the partition, not of the job, and your current concurrency admits two slots that are not interchangeable. Good partitioning gained 11 to 14 points; poor partitioning made both speed and quality worse. |
+| **Specialized knowledge** | **Overturned as a reason to create a worker.** It belongs to a versioned, tested procedure that a general worker loads. |
+
+**The list is not closed, and closing it is yours.** Five candidate sixth reasons survived adversarial search: input provenance, provider or account separation, consequence class, attributable identity, and — for people only — being a differently-correlated error source. The design uses consequence class as its top layer. **If you decide the list is closed at five, this design is inadmissible on your own gate and has to be rebuilt**, and M2 said the same about itself.
+
+| Your cost | The verdict |
+|---|---|
+| **Handoffs lose things** | **Confirmed and mis-aimed.** Ordinary facts survive a compressed transfer at about 0.97; rules, exclusions, deadlines and promises survive at about 0.57. Typed constraints leaked 0 of 48 where prose leaked 73%. The answer is not *split less*, it is **type what crosses**. |
+| **Token cost** | **Real in direction, folklore in magnitude, and in the wrong unit.** The most-circulated multiple is a vendor self-report with no published method, flagged independently by five lanes. Under a subscription, architecture does not change what you spend — it changes the date work stops, and unused allowance is destroyed rather than saved. |
+| **Latency** | **Sign indeterminate.** A latency figure without a count of how much actually ran in parallel cannot be interpreted, and at your current limit thirty workers queue rather than multiply. |
+| **Context loss** | **Confirmed and mis-assigned.** The single-worker arrangement owes it too, and it is mandatory: a native job caps at roughly a 360-second window, so even one worker hands off to itself on every long job. |
+
+**On your central sentence — coordinated capabilities around a shared source of truth — the largest part survives untouched.** Decomposition by job title buys nothing, and disconnected digital employees are the wrong shape. Three refinements are the design: it cannot mean one store everyone reads, because a larger authoritative view makes every reader measurably worse, so it becomes one authority per field with delivery narrowed per attempt; your five constituents are not sufficient, because the dominant measured failure is who may see and receive a fact, which is none of the five; and **a shared view does not fix duplicated action and may amplify it** — eighteen of thirty workers chose the identical branch name, and a job queue took 2.4 million requests to hand out 117. That is correlated behaviour between identical models, not divergent context, and it is a counter-mechanism the thesis does not predict.
+
+### What remains uncertain
+
+[05-selection-record.md §10](F2/05-selection-record.md) lists twelve unmeasured quantities and orders the experiments by cost. **The first four cost approximately nothing and none of them has been run; two of those are reads rather than experiments.**
+
+1. **The arrival rate of genuinely new kinds of work.** Every design in this round is calibrated against a rate nobody knows. Counting admitted work over a past window against what you already knew how to do needs no software and is the cheapest item in the round.
+2. **Whether the one-concurrent-job limit is the provider's constraint or your own policy.** It gates four claim verdicts wholly or in part, and raising it to find out is circular. Reading the account entitlement settles it. This is now **Q-022**.
+3. **Joint false acceptance for a same-family producer and checker on planted defects** — the quantity that decides whether separating the checker buys anything at all.
+4. **What one context compaction loses in load-bearing facts rather than in tokens.** The provider reports how much left, not which facts left.
+
+Four claims about cost **cannot be measured at your current concurrency at all** (X14), and the round records them as owed rather than as passed. Four more things the round names honestly: there is no published denominator for capacity, so every figure is a ratio between arms and never a fraction of your week; the maintenance and authoring effort of the chosen structure is unevaluable today; the human anchor the design leans on is an instrument with an unmeasured error rate, since human evaluators agree with each other 5–65%; and nobody has measured whether a shared authoritative view raises or lowers duplicated external effects, which is the question most adverse to your own mechanism.
+
+### What would reopen it
+
+From [05-selection-record.md §11](F2/05-selection-record.md) and [02-architecture-selection.md §9](02-architecture-selection.md). Every layer also carries its own removal test, in falsifier form, and a record admitted without one fails the amendment's own lint.
+
+- **A successful falsifier against any layer's own test**, reported with its measurement rather than argued.
+- **An unavailable enforcement prerequisite.** If the runtime holds no credential at the boundary that can be narrowed, the constraint has to be enforced by mediation instead, which is a different architecture for the release path.
+- **An unavailable continuity prerequisite.** If no party other than you can be reached inside a duty's real deadline, the staffing answer below becomes the permanent operating state rather than a temporary one.
+- **Changed provider terms or semantics** — the launch window, the concurrency limit, the cache lifetime, the metered path, the context-editing surface.
+- **A misleading sign-off.** A pass rate that rises as load rises is the registered tell that verification is being starved.
+- **A missed material duty**, or a closure that completed while the grievance route was unowned.
+- **The simple baseline matching on all six fixtures at equal or lower attention and capacity.** Then the right output is a smaller system, and the architecture record already commits to reducing it. **That condition is live at today's demand.**
+- **The worker shapes converging.** If a small stable set recurs over a month, this design has a roster it discovered rather than declared, and the honest response is to design the standing form properly.
+
+### What you must decide
+
+Seven decisions were added to the founder queue by this round — **Q-016 through Q-022** in [registers/open-questions.json](../registers/open-questions.json). They join Q-002…Q-014 in [§5](#5-risks-and-unresolved-decisions) rather than replacing them. Read the last column first: **none of them blocks the amendment or a builder**, and each says what happens if you do not answer.
+
+| ID | The decision | Why it is yours | Latest responsible time | With no answer |
+|---|---|---|---|---|
+| **Q-016** | Who is the terminal owner of an unowned duty or harm, and does that party exist as a record? | It is a staffing decision and a delegation of authority | Before the first admitted work order in a class whose harm no existing mandate covers | Admission stops in every class whose harm no mandate covers — a visible, recorded narrowing rather than a silent gap |
+| **Q-017** | Which standing roles are staffed by someone other than you before work is admitted in that class, and what happens where none is? | Staffing and money. A person is the acceptor on 37 of 46 capabilities in one candidate and on every action in the 26 that floor at the economic class or above | Before work is admitted in any affected class | Admission stops in every duty class whose acceptance role is unfilled. In a one-person company that leaves the reversible internal classes only |
+| **Q-018** | Who may approve creation of a new capability, and what happens while you are away? | Delegation of authority with a consequence ceiling | Before the first declared absence | Outward-acting capability creation parks; read-only and internal trials continue |
+| **Q-019** | Who signs off the assessment of your own competence? | Naming an assessor is staffing, and it is personal. The mechanism is already fixed; only the occupant is open | Before the first competence cycle runs | The cycle runs and the assessment is recorded as **unperformed**, never as passed |
+| **Q-020** | May anything halt or reverse a capacity shed in the moment, and who decides when a protected-lane holder refuses? | Who holds authority under pressure is a delegation of authority | Before any revision that raises the concurrency limit. **Not urgent** — no shed can occur at today's limit | No shed can be halted. Since none can occur, nothing happens |
+| **Q-021** | What is each reserved lane's share, its stated minimum and its lapse point? | These decide what the company gives up under pressure, which is its meaning rather than an engineering parameter | Before the first shed negotiation. **Not urgent**, for the same reason | No shed negotiation can run. Since none can occur, nothing happens |
+| **Q-022** | Is the one-concurrent-job limit a provider constraint or your own policy — what does the account entitlement say? | Only you hold the provider account, so the read is an act on a credential nobody else has | **Answer this one first of the three capacity questions**; the other two defer to it by name | The limit stands, the 4×-demand fixture stays unrunnable, and the reserved-lane structure stays owed rather than passed |
+
+**Two of the seven are the same staffing question seen from two capabilities** (Q-016 and Q-017), and **two are not urgent** because they sit behind a prerequisite that costs one inspection (Q-020 and Q-021 behind Q-022).
+
+### The pin-machinery lineage, in one paragraph
+
+One defect class in the contracts checker was chased through **five independent rechecks** — [G-02-recheck-02](reviews/G-02-recheck-02.md), [03](reviews/G-02-recheck-03.md), [04](reviews/G-02-recheck-04.md) and [05](reviews/G-02-recheck-05.md), each by a reviewer who authored neither the repair nor the previous recheck. Each one closed the attack it was given by name, and each time the next layer out leaked: the named one-hunk edit was refused, so a sibling edit disjoining each pinned condition with a trivially true alternative passed; that was closed, so moving the same conditions inside a quantifier the walker did not track passed; that was closed, so registering a new primitive that declared its own child as demanding passed; that was closed against the registry author, and the hand-written allowlist the fix introduced turned out to have no ceiling, no pinned membership and no line in the verdict. The terminal control is now **a closed literal inside the checker itself**, compared both ways against its data file and printed in the verdict. That placement is deliberate and its weakness is stated rather than discovered: the repository's own risk classifier tiers everything under `docs/` as trivial, so **editing that checker is a review convention here, not an enforced tier**. The last repair is author-recorded at 304,168 checks, exit 0, 95 of 95 adverse fixtures rejected and 56 of 56 benign fixtures passed, and it is **pending the same narrow independent recheck, `F2-06-recheck-01`, that the Step 6 repairs wait on**.
+
+### The independence caveat, which nothing in this round discharges
+
+Every author and every reviewer in this round shares one model family. Independence here is **procedural**: separate context, reviewers who wrote nothing in Steps 1–5, three standing bars on what they may read, and a discipline of computing rather than trusting. It is not statistical, and the directive's own expectation of a panel across two distinct model families is not met, because no non-Anthropic model is reachable from inside the tooling. The security review put the sharpest version of it: five candidates formed blind of each other agreed on ten to twelve mechanisms, and *"the correct reading of the convergence is one source with five copies"* — the selection record calls itself a sixth copy. **No runtime exists.** Every "sufficient" above is about specified behaviour checked offline; none of it is observed behaviour, and the round's own frozen protocol says that in the same words.
+
+### Where this leaves the build
+
+**Building has not started, and your hold stands.** No construction stage has been dispatched, and nothing has been written, bought or sent. The round's frozen protocol ([§8](F2/00-acceptance-protocol.md)) forbids its own outputs from claiming that the system works, that the design was confirmed, that the architecture was established, or that construction may start — and it states that the hold on building stands until you lift it in your own words. Eleven of fifteen dimensions were judged insufficient, six blocking findings were raised, repairs were authored against them, and the independent recheck of those repairs has not run.
+
+---
+
 ## What this package does not claim
 
 Each row names the artifact that says so, in that artifact's own voice.
@@ -84,7 +260,7 @@ This is a plan for a system that carries that work on the owner's behalf while k
 
 **What it costs, and what is unknown about the cost.** The priced reference deployment is **$435.70/month** of infrastructure ([07 §7](specification/07-integrations-capacity.md), recorded in [state.json](../state.json)), against a cheaper single-server comparator that the plan requires to be priced alongside it before operating feasibility can be accepted. Metered services on top are small and bounded but uncapped at the provider: search at $5/1,000 queries, transactional mail overage at $1.80/1,000 above 10,000 — and **nothing at the provider caps that spend**, so a misconfigured limit is detected at the next daily reconciliation rather than prevented (G4-07). A reference professional retainer of $399/$599 per month is recorded as eligibility-limited, explicitly not a quote. **The honest part is what is not priced:** the founder's own hours, the labour of keeping cross-domain meanings correct as things change, professional fees in a jurisdiction not yet chosen, and the cost of handling grievances and closing things down. [02 §8](02-architecture-selection.md) states directly that the cost of the selected design — waiting on durable confirmation, unavailable release, lineage tracking, recovery administration — is *"accepted architectural costs, not yet priced."* The single largest unknown in the entire package is whether one person can afford to run this, in money and in attention. Nothing in the package answers that, and the package says so.
 
-**Now with the names.** The selected architecture is **S1.0** ([02-architecture-selection.md](02-architecture-selection.md)): a common authority for admitted work and surviving obligations, specialized native production, and separately protected consequence, evidence and recovery boundaries. It decomposes into **nine logical components** (C01 direction and responsibility · C02 cases and scheduling · C03 production · C04 authority and release · C05 context and validity · C06 evidence and acceptance · C07 human and external responsibility · C08 recovery and continuity · C09 operator surfaces). Those are responsibilities, not agents, services or machines — [00-executive-guide.md](00-executive-guide.md) states *"this does not require nine agents, people, services or computers."* **46 capability contracts** cover the business lifecycle; coding is one of them, CAP-10 of 46. There is deliberately **no permanent roster of named agent personas**: [AD-002](../registers/decisions.json) allocates known predicates to deterministic code, waits and repetition to durable procedures, interpretation and generation to bounded model work, and real human, professional or physical work to accepted capable performers.
+**Now with the names.** The selected architecture is **S1.1** — record version **E1.2** of [02-architecture-selection.md](02-architecture-selection.md), with the work layer carried by contract **WORK-1.1** in [05-work-agents-skills.md](specification/05-work-agents-skills.md): a common authority for admitted work and surviving obligations, specialized native production, and separately protected consequence, evidence and recovery boundaries. S1.1 amends S1.0 rather than replacing it — the six fixed boundaries and the nine components below are unchanged, and only the work, agents, authority, tools, skills, context, shared-state, routing and task-state layer was re-specified, by the [F2 round](#agents-work-and-context--the-f2-round-2026-09-1314). It decomposes into **nine logical components** (C01 direction and responsibility · C02 cases and scheduling · C03 production · C04 authority and release · C05 context and validity · C06 evidence and acceptance · C07 human and external responsibility · C08 recovery and continuity · C09 operator surfaces). Those are responsibilities, not agents, services or machines — [00-executive-guide.md](00-executive-guide.md) states *"this does not require nine agents, people, services or computers."* **46 capability contracts** cover the business lifecycle; coding is one of them, CAP-10 of 46. There is deliberately **no permanent roster of named agent personas**: [AD-002](../registers/decisions.json) allocates known predicates to deterministic code, waits and repetition to durable procedures, interpretation and generation to bounded model work, and real human, professional or physical work to accepted capable performers.
 
 Fuller version: [00-executive-guide.md](00-executive-guide.md). The invariants, tensions, nondelegable responsibilities and unproven hypotheses this all has to satisfy: [01-understand.md](01-understand.md).
 
@@ -103,22 +279,22 @@ G-01 computed **0 unresolvable locations** across every `locations` entry in tha
 | 8.3 | Evidence map | [source-index.json](../research/source-index.json) · [cross-lane-comparison.json](../research/cross-lane-comparison.json) · [substrate-claims.json](../research/substrate-claims.json) · [claims.json](../registers/claims.json) · [contradictions.json](../registers/contradictions.json) · [decisions.json](../registers/decisions.json) | 305 source locators, ten unresolved cross-lane axes, disagreements kept rather than merged |
 | 8.4 | Capability map | [03-company-capabilities.md](specification/03-company-capabilities.md) · [capabilities.json](specification/capabilities.json) · [scope-lifecycle-contracts.json](specification/scope-lifecycle-contracts.json) | 46 capability contracts, each with the eleven §8.4 fields; F25-Q01 decomposed into 15 separately routed named jobs |
 | 8.5 | Architecture alternatives | [candidates/](candidates/) · [02-architecture-selection.md](02-architecture-selection.md) | Three materially different foundations, a C2 amendment, a simple comparator, and what would make each win |
-| 8.6 | Selected architecture | [02-architecture-selection.md](02-architecture-selection.md) · [01-contract-kernel.md](specification/01-contract-kernel.md) · [02-authority-recovery.md](specification/02-authority-recovery.md) · [08-improvement-implementation.md](specification/08-improvement-implementation.md) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) | Nine components × nineteen attributes = 171 populated entries, plus the authority trace |
-| 8.7 | Agent operating model | [05-work-agents-skills.md](specification/05-work-agents-skills.md) · [work-knowledge-contracts.json](specification/work-knowledge-contracts.json) | Temporary qualified procedures choosing among deterministic, workflow, model, human and professional execution by consequence |
-| 8.8 | Agent organization | [05-work-agents-skills.md](specification/05-work-agents-skills.md) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) | Why a persistent department roster is *not* justified; versioned templates, scoped creation and termination; success does not raise authority |
-| 8.9 | Skills | [05-work-agents-skills.md](specification/05-work-agents-skills.md) · [work-knowledge-contracts.json](specification/work-knowledge-contracts.json) | Typed, licensed, provenanced units with tests, composition bounds and library-scale selection degradation controls |
+| 8.6 | Selected architecture | [02-architecture-selection.md](02-architecture-selection.md) (E1.2, **S1.1**) · [01-contract-kernel.md](specification/01-contract-kernel.md) · [02-authority-recovery.md](specification/02-authority-recovery.md) · [08-improvement-implementation.md](specification/08-improvement-implementation.md) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) · [F2/05-selection-record.md](F2/05-selection-record.md) | Nine components × nineteen attributes = 171 populated entries, plus the authority trace. **§3 now also carries the F2 round's five layers and their precedence, §8 which candidate mechanisms were retained, §9 the F2 reopen conditions** — the six fixed boundaries and the nine components are unchanged, which is why the version is S1.1 and not S2.0 |
+| 8.7 | Agent operating model | [05-work-agents-skills.md](specification/05-work-agents-skills.md) (**WORK-1.1**, amended by the F2 round) · [work-knowledge-contracts.json](specification/work-knowledge-contracts.json) · [F2/05-selection-record.md](F2/05-selection-record.md) | Temporary qualified procedures choosing among deterministic, workflow, model, human and professional execution by consequence — now under five layers with a fixed precedence, the class computed from records the acting party cannot author, and a declared read set the loader delivers and records ([AD-015…AD-017](../registers/decisions.json)) |
+| 8.8 | Agent organization | [05-work-agents-skills.md](specification/05-work-agents-skills.md) (**WORK-1.1** §4, §12) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) · [F2/05-selection-record.md](F2/05-selection-record.md) | Why a persistent department roster is *not* justified; versioned templates, scoped creation and termination; success does not raise authority. **A worker now exists only against an `ExistenceJustification` naming one of six reasons with a test that can return false, and standing accountability is a record with an address and a reservation that never produces and carries no model memory** ([AD-020, AD-021](../registers/decisions.json)) |
+| 8.9 | Skills | [05-work-agents-skills.md](specification/05-work-agents-skills.md) (**WORK-1.1** §8, §10) · [work-knowledge-contracts.json](specification/work-knowledge-contracts.json) · [F2/05-selection-record.md](F2/05-selection-record.md) | Typed, licensed, provenanced units with tests, composition bounds and library-scale selection degradation controls. **Specialized knowledge is refused as a reason to create a worker: it predicates on a skill version, not on a worker** ([AD-020](../registers/decisions.json)) |
 | 8.10 | Tools and connections | [07-integrations-capacity.md](specification/07-integrations-capacity.md) · [N01-native-execution.md](../research/implementation/N01-native-execution.md) | Seven concrete adapters with endpoints, limits, failure behaviour, a simpler alternative each, and admission checks |
-| 8.11 | Schemas and contracts | [01-contract-kernel.md](specification/01-contract-kernel.md) · [11-schemas-state-contracts.md](specification/11-schemas-state-contracts.md) · [contracts/](specification/contracts/) · [specification-findings.json](../registers/specification-findings.json) | The canonical machine registries: 173 record types, 1,295 lifecycle edges, ~2,255 predicates, 46 required subjects, negative fixtures and a validator. **This is the one family whose status reads `foundational-consolidation-active` rather than review-pending** |
-| 8.12 | Memory and context | [06-knowledge-evidence-evaluation.md](specification/06-knowledge-evidence-evaluation.md) · [work-knowledge-contracts.json](specification/work-knowledge-contracts.json) | Working/session/episodic/semantic/procedural stores, provenance, contradictions, selective forgetting, context manifests |
+| 8.11 | Schemas and contracts | [01-contract-kernel.md](specification/01-contract-kernel.md) · [11-schemas-state-contracts.md](specification/11-schemas-state-contracts.md) · [contracts/](specification/contracts/) · [specification-findings.json](../registers/specification-findings.json) · [F2/05-selection-record.md §12](F2/05-selection-record.md) · [G-02-recheck-05](reviews/G-02-recheck-05.md) | The canonical machine registries: 173 record types, 1,295 lifecycle edges, ~2,255 predicates, 46 required subjects, negative fixtures and a validator. **This is the one family whose status reads `foundational-consolidation-active` rather than review-pending.** The F2 round added records, guards and fixtures for the work layer, and the pin machinery that keeps a guard from being weakened was chased through five independent rechecks ([G-02-recheck-02…05](reviews/G-02-recheck-02.md)) |
+| 8.12 | Memory and context | [06-knowledge-evidence-evaluation.md](specification/06-knowledge-evidence-evaluation.md) · [05-work-agents-skills.md](specification/05-work-agents-skills.md) (**WORK-1.1** §3, §5) · [work-knowledge-contracts.json](specification/work-knowledge-contracts.json) · [F2/05-selection-record.md](F2/05-selection-record.md) · [research/F2/R1-context.md](../research/F2/R1-context.md) | Working/session/episodic/semantic/procedural stores, provenance, contradictions, selective forgetting, context manifests. **A step now declares its read set and the loader delivers it and records what it actually delivered; a typed constraint set crosses every boundary including the brief to the founder, and a receiver may act only on members it can restate as typed values** ([AD-017](../registers/decisions.json)) |
 | 8.13 | Evidence and truth | [06-knowledge-evidence-evaluation.md](specification/06-knowledge-evidence-evaluation.md) · [substrate-claims.json](../research/substrate-claims.json) | Observation / claim / inference / decision / unknown kept distinct; transitive evidence closure; negative and missing evidence |
-| 8.14 | Evaluation | [06-knowledge-evidence-evaluation.md](specification/06-knowledge-evidence-evaluation.md) · [08-improvement-implementation.md](specification/08-improvement-implementation.md) · [G-acceptance-protocol.md](reviews/G-acceptance-protocol.md) | Every evaluation level, adversarial and negative controls, complete denominators, evaluator evaluation, and no aggregate success score |
+| 8.14 | Evaluation | [06-knowledge-evidence-evaluation.md](specification/06-knowledge-evidence-evaluation.md) · [08-improvement-implementation.md](specification/08-improvement-implementation.md) · [G-acceptance-protocol.md](reviews/G-acceptance-protocol.md) · [F2/00-acceptance-protocol.md](F2/00-acceptance-protocol.md) + [its amendment](F2/00-acceptance-protocol-amendments.md) · [F2/05-selection-record.md](F2/05-selection-record.md) | Every evaluation level, adversarial and negative controls, complete denominators, evaluator evaluation, and no aggregate success score. **The F2 round's own frozen protocol adds ten paired negative controls and AM-01, which requires a clean artifact beside every planted defect so a checker that refuses everything cannot look like one that works; the criteria are authored by the capability owner and frozen before the producing step** ([AD-018](../registers/decisions.json)) |
 | 8.15 | Threat model and risk register | [risks.json](../registers/risks.json) · [attack-coverage.json](../research/attack-coverage.json) · [02-authority-recovery.md](specification/02-authority-recovery.md) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) | 17 risk groups × 19 fields, 33 attack cases. **Read with G3-01: the registers are bound to a pre-specification commit** |
-| 8.16 | Permissions and consequences | [02-authority-recovery.md](specification/02-authority-recovery.md) · [04-human-operation.md](specification/04-human-operation.md) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) | C0–C5 consequence classes, scoped grants checked at use, witnessed release, no self-grant and no ambient inheritance |
+| 8.16 | Permissions and consequences | [02-authority-recovery.md](specification/02-authority-recovery.md) · [04-human-operation.md](specification/04-human-operation.md) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) · [05-work-agents-skills.md](specification/05-work-agents-skills.md) (**WORK-1.1** §11) · [F2/05-selection-record.md](F2/05-selection-record.md) · [research/F2/R4-authority.md](../research/F2/R4-authority.md) | C0–C5 consequence classes, scoped grants checked at use, witnessed release, no self-grant and no ambient inheritance. **The class is now computed from records the acting party cannot author and recomputed at release on the frozen bytes; the derivation returns the set of classes reached and every reached class's gates apply, with no rank** ([AD-016](../registers/decisions.json)) |
 | 8.17 | Reliability | [02-authority-recovery.md](specification/02-authority-recovery.md) · [05-work-agents-skills.md](specification/05-work-agents-skills.md) · [08-improvement-implementation.md](specification/08-improvement-implementation.md) | SQL scheduling, leases, exact deduplication, unknown-effect reconciliation, frontier restore, recovery verification |
 | 8.18 | Human operation | [04-human-operation.md](specification/04-human-operation.md) · [09-company-human-traceability.md](specification/09-company-human-traceability.md) | Intent, decisions, interruption, correction, taste, finite attention, absence and succession performance |
 | 8.19 | Mission Control and surfaces | [04-human-operation.md](specification/04-human-operation.md) · [10-components-authority-traceability.md](specification/10-components-authority-traceability.md) | Ten job-derived surfaces with source, state, uncertainty, latency, failure, accessibility and mobile behaviour; no fictional activity |
 | 8.20 | Terminal and coding surface | [04-human-operation.md](specification/04-human-operation.md) · [05-work-agents-skills.md](specification/05-work-agents-skills.md) | Conversation plus typed commands over live work, diffs, tests, approvals, parallel workers and recoverable task switching |
-| 8.21 | Economics and capacity | [07-integrations-capacity.md](specification/07-integrations-capacity.md) · [integrations-capacity-build.json](specification/integrations-capacity-build.json) · [2026-09-12-integration-economics-inspection.md](../research/reviews/2026-09-12-integration-economics-inspection.md) | Money and provider allowance kept separate; priced deployment and comparators; no silent metered fallback. G-04 checked all 17 §8.21 items — 16 specified by mechanism, 1 partial |
+| 8.21 | Economics and capacity | [07-integrations-capacity.md](specification/07-integrations-capacity.md) · [integrations-capacity-build.json](specification/integrations-capacity-build.json) · [2026-09-12-integration-economics-inspection.md](../research/reviews/2026-09-12-integration-economics-inspection.md) · [05-work-agents-skills.md](specification/05-work-agents-skills.md) (**WORK-1.1** §7) · [F2/05-selection-record.md](F2/05-selection-record.md) · [research/F2/R8-contrarian.md](../research/F2/R8-contrarian.md) | Money and provider allowance kept separate; priced deployment and comparators; no silent metered fallback. G-04 checked all 17 §8.21 items — 16 specified by mechanism, 1 partial. **The F2 round adds the lapse rule — a holder's stated minimum is evidence and never consent, and unconsumed reservation releases on a timer ([AD-022](../registers/decisions.json)) — and the exhaustion rule, where an empty allowance against a due duty is performed by a named non-model mode and leaves an `ExhaustionDecision`. Whether the concurrency limit is the provider's or self-imposed is unsettled and is now [Q-022](../registers/open-questions.json)** |
 | 8.22 | Self-improvement | [08-improvement-implementation.md](specification/08-improvement-implementation.md) · [06-knowledge-evidence-evaluation.md](specification/06-knowledge-evidence-evaluation.md) | Versioned evidence-led proposals, frozen comparisons, staged rollout, live rollback; protection roots that cannot self-modify |
 | 8.23 | Full implementation plan | [08-improvement-implementation.md](specification/08-improvement-implementation.md) · [implementation-graph.json](implementation-graph.json) | Repository and module map, four-VM topology, environments, secrets, tests, observability, and twelve dependency-ordered stages |
 | 8.24 | Coverage matrix | [questions.json](../coverage/questions.json) · [supplemental.json](../coverage/supplemental.json) · [discovered.json](../coverage/discovered.json) · [09](specification/09-company-human-traceability.md) · [10](specification/10-components-authority-traceability.md) · [12](specification/12-scope-lifecycle-traceability.md) | 566 + 62 + 15 rows joined to answer, component, evidence, decision, uncertainty, owner and planned module |
@@ -257,6 +433,8 @@ Read the last column first. **Every one of the thirteen says unrelated work cont
 | **Q-012** | Who is the accepted successor if the founder and a material provider are lost together, and how are they appointed and paid without the founder? | Before B10 admission and before any continuing customer duty exists | **Yes** — joint-loss continuity is declared unavailable, which is a real limitation on what may be promised |
 | **Q-013** | What continuing infrastructure and operating spend is authorized, and is the priced OP-AWS-LINUX-1 deployment approved against its simpler comparator? | Before B10 and before any infrastructure is purchased. **The comparison is owed before the decision** — [02 §2](02-architecture-selection.md) requires both bills of materials before operating feasibility can be accepted | **Yes** — B01–B09 run against local fixtures; nothing is purchased and no operating promise is made |
 | **Q-014** | Who is the actual founder, and who is the root custodian for BootstrapAuthorization — their identity assertions, keys and signatures? | Before B02's recovery substrate can be exercised end to end | **Yes** — contracts, registries and validators are complete without it; B01 builds against fixtures |
+
+**Seven more were added later and are not in the table above.** Q-016 through Q-022 came out of the F2 round; they are listed with the same four columns in [Agents, work and context](#agents-work-and-context--the-f2-round-2026-09-1314), and like these thirteen, none of them blocks construction starting.
 
 **Reading the queue as a whole.** Four of the thirteen (Q-003, Q-004, Q-011, and with them Q-007 and Q-010) gate *making an offer to anyone*. Six gate *admitting the system to operation* (B10). One gates *improvement* (Q-005/B08). One gates *exercising recovery for real* (Q-014/B02). None gates writing code. Q-002, Q-003, Q-004, Q-005, Q-006, Q-008 and Q-012 all ask the same underlying thing in different clothes: **which actual, named, competent humans exist, and on what terms** — and that is the question this plan cannot answer for itself.
 
@@ -425,22 +603,14 @@ Nothing in this report should be read as acceptance of the plan. The B00 gate ha
 <!-- ============================================================
      DISPOSITION BLOCK — RESERVED
      The orchestrator replaces the block below, and only the block
-     below, once the independent recheck of the G2-01/G2-02 repair
+     below, once the narrow independent recheck F2-06-recheck-01
      has returned. Do not edit it to record a disposition that has
      not been independently rechecked. Do not delete the markers.
      ============================================================ -->
 
 <!-- BEGIN DISPOSITION -->
 
-**Recorded disposition:** *none.* No planning disposition exists at the time this report was written.
-
-**What must happen before one can be recorded, in order:**
-
-1. The guard-repair lane lands the G2-01/G2-02 repair per AD-013 and AD-014, together with G2-05 (a Fulfillment domain lifecycle with `delivered`/`failed`/`refunded` and an evidence op on entry), G2-06 (a fourteenth negative fixture plus an exit-nonzero distinctness ratchet), G4-01/02, G4-03, G4-08 and G2-07.
-2. **A reviewer who did not author that repair** rechecks it independently, against the same protocol.
-3. The scoped disposition is recorded here and in `state.json`: eleven dimensions sufficient, internal coherence re-judged on the recheck's own finding.
-
-**Two things that recheck cannot do,** and they should be stated now rather than discovered later. It cannot supply a second model family — the accepted risk in [§5](#5-risks-and-unresolved-decisions) survives it. And it cannot turn *specified* into *works*: every judgment in Phase G concerns specified behaviour, because no runtime exists.
+<!-- F2-DISPOSITION: inserted by the orchestrator after F2-06-recheck-01 -->
 
 <!-- END DISPOSITION -->
 
@@ -473,11 +643,24 @@ docs/vision-system/
 │   ├── implementation-graph.json      B00–B11 with dependencies and completion evidence
 │   ├── package-work-map.json          All 53 source fields and 24 groups → authoring tracks
 │   ├── candidates/            A, B, C1, the C2 amendment, and the two repair addenda
+│   ├── HANDOFF-F2-agents-work-layer.md
+│   │                          The brief the F2 round was run against
+│   ├── F2/                    THE F2 ROUND on agents, work and context:
+│   │                          00-acceptance-protocol (frozen before Step 1) and its
+│   │                          amendments · 00-thesis-claims · 00-position-ledger ·
+│   │                          candidates/ (M1…M5) · reviews/ (the five Step 4
+│   │                          attacks) · 04-attack-consolidation (111 findings) ·
+│   │                          05-selection-record (the Phase E decision) ·
+│   │                          06-repair-names-contract
+│   ├── site/index.html        The founder-facing page, published privately
 │   ├── reviews/               EVERY independent review, archived verbatim:
 │   │                          D/D2 candidate attacks · F-integration-01…04 ·
 │   │                          F-cross-scope-01…03 · F-coverage-components-01 ·
 │   │                          F-canonical-01 · G-acceptance-protocol (frozen before
-│   │                          the reviewers read anything) · G-01…G-04
+│   │                          the reviewers read anything) · G-01…G-04 ·
+│   │                          G-02-recheck-01…05 (the pin-machinery lineage) ·
+│   │                          F2-06-A…D (the F2 Step 6 reviews) plus
+│   │                          F2-06-findings-index.json
 │   └── specification/         The twelve numbered contracts (01 kernel … 12 scope/
 │                              lifecycle trace), their machine registries
 │                              (capabilities · work-knowledge · integrations-build ·
@@ -490,9 +673,9 @@ docs/vision-system/
 │                              capability-requirements.json (46) · status-rule.json
 │                              (the rule that assigns every status)
 │
-├── registers/                 decisions.json (AD-001…014) · open-questions.json
-│                              (Q-001…014 — THE FOUNDER QUEUE) · risks.json (17) ·
-│                              review-findings.json (39) · specification-findings.json
+├── registers/                 decisions.json (AD-001…022) · open-questions.json
+│                              (Q-001…022 — THE FOUNDER QUEUE) · risks.json (17) ·
+│                              review-findings.json · specification-findings.json
 │                              (FI-01…12, CCR-01…07) · claims.json · contradictions.json
 │
 └── research/                  L01–L14 (fourteen independent lanes) · lanes.json ·
@@ -501,7 +684,9 @@ docs/vision-system/
                                integration-claims.json · attack-coverage.json (33 cases) ·
                                baseline-results.json · repository-observations.md ·
                                implementation/N01-native-execution.md ·
-                               reviews/ (six independent source audits)
+                               reviews/ (six independent source audits) ·
+                               F2/ (the F2 round's eight lanes R1–R8 and their
+                               cross-lane-comparison, which preserves 16 disagreements)
 ```
 
 ### How to resume — the procedure, not a narrative
@@ -540,3 +725,5 @@ Collected rather than resolved. Each names both sides.
 ---
 
 *Prepared against the package at branch `docs/vision-planning-report`, based on `c5aac4a`. Every count in this document was either read from the cited file or recomputed against it on 2026-09-13. Where a count came from an archived review rather than a live file, the review is named and the archive is not edited to agree with the present tree.*
+
+*[Agents, work and context](#agents-work-and-context--the-f2-round-2026-09-1314) and the index rows, joins and artifact map it touches were added on 2026-09-14 from the F2 round's own artifacts under `planning/F2/`, `research/F2/` and `planning/reviews/F2-06-*`. Every count in that section was read from the file named beside it. The Phase G archive above it was not edited to agree with it.*
