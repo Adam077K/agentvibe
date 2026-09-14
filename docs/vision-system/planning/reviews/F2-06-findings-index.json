@@ -51,11 +51,14 @@
     "class": "b",
     "heading": "### F6A-04 · class (b) · the model-call release construction asserts conformance rather than showing it",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "cbc9d72"
+      ],
+      "repair_status": "repaired by r7-prose-a (author-recorded): planning/02-architecture-selection.md §4 DECISION paragraph",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a"
     }
   },
   "F6A-05": {
@@ -148,11 +151,15 @@
     "class": "b",
     "heading": "### F6A-11 · class (b) · three of eight new decisions cite no specification section",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "a42c5d7",
+        "8c8729d"
+      ],
+      "repair_status": "repaired by r7-prose-a (author-recorded): registers/decisions.json AD-019/020/021 evidence_and_reasoning; R-G02 = R-D11 at 06 §7; R-D15 at 05 §9/§7; R-X07 recorded as NOT landed",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a"
     }
   },
   "F6A-12": {
@@ -226,11 +233,14 @@
     "class": "c",
     "heading": "### F6B-04 · (c) · R7's third amendment — the control that excludes \"more compute\" — is not adopted",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "a42c5d7"
+      ],
+      "repair_status": "repaired by r7-prose-a (author-recorded): 06 §7 fifth F-4 arm with floor, unit, repetitions, stopping rule, owner (DESIGN PROPOSAL placeholders)",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a"
     }
   },
   "F6B-05": {
@@ -663,11 +673,14 @@
     "class": "b",
     "heading": "**F6C-19 · (b) · W13 was judged once, by the lane that also judged W4, and returned sufficient for all",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "5a308de"
+      ],
+      "repair_status": "repaired by r7-prose-a (author-recorded): F2/04-attack-consolidation.md dated note; no cell edited",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a"
     }
   },
   "F6D-01": {

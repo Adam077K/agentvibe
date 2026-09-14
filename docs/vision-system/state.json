@@ -125,7 +125,7 @@
       "scope": "F6A-04, F6A-11, F6B-04, F6C-19, F6V-01 (02 half), F6V-03 (02 half), F6V-04; writes only planning/02-architecture-selection.md, specification/04, specification/06, registers/decisions.json, F2/04-attack-consolidation.md",
       "deferred_to_prose_b": "F6A-02, F6A-05, F6A-12, F6B-08, F6C-05, F6C-18, F6V-01 (07 §6), F6V-03 (05 §124) — chapters 05/07, after r7-contracts merges",
       "dispatched": "2026-09-14",
-      "status": "running; author-recorded until rechecked"
+      "status": "RETURNED COMPLETE and merged (14d8838 → merge into ceo-4): 7 findings repaired, author-recorded; recheck owed"
     }
   ],
   "next_actions": [
