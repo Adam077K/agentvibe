@@ -1493,11 +1493,11 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (chapter that should carry R-X07) / orchestrator (consolidation index)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8. capability_refs registration in contracts/** owed.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed. capability_refs registration in contracts/** still owed (the passage says so).",
     "issue": "R-X07 repairs two consolidation findings and lands in no chapter of the specification",
     "proposed_repair": "Either land R-X07 in the chapter that specifies the capability binding, with `capability_refs` named on the standing structures that must publish it, or amend the selection record's rows for the consolidation finding named in the archive and the consolidation finding named in the archive to read \"repaired-by a rule not carried into the specification\", so that the repair status and the landing status stop being the same string.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
   },
   {
     "id": "F6W-02",
@@ -1506,11 +1506,11 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (05 §12)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed.",
     "issue": "The holder-review denominator omits the four holders' alternates, and the omission runs toward a smaller founder load",
     "proposed_repair": "Add the four holder alternates to the enumeration and restate the two derived figures; and state that the holder count is the current floor rather than a closed set, given §12's own admission route.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
   },
   {
     "id": "F6W-03",
@@ -1519,11 +1519,11 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (05 §12)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed.",
     "issue": "Branch B's formula carries no holder term, so both of its stated endpoints contradict it",
     "proposed_repair": "Give the founder's term a holder component, for example `[2(46 − n) + 2(4 − h)] × m`, and restate the two endpoints against the corrected expression; or drop the endpoint sentences and let the formula stand alone.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
   },
   {
     "id": "F6W-04",
@@ -1532,11 +1532,11 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (07 header)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed.",
     "issue": "REGRESSION · `07`'s header says the planning shares are unchanged; the the earlier finding repair changed them",
     "proposed_repair": "Amend the header clause to name the planning shares as changed by the earlier finding, with the split recorded, or drop the shares from the unchanged list.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
   },
   {
     "id": "F6W-05",
@@ -1545,11 +1545,11 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (05 §13 row 9)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed.",
     "issue": "`05` §13 row 9 still says the conjunct compares the two launch counts",
     "proposed_repair": "Replace \"compared by a conjunct\" in §13 row 9 with the construction `07` §6 now carries: both counts demanded at run close, the divergence readable from the record rather than stored.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
   },
   {
     "id": "F6W-06",
@@ -1558,11 +1558,11 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (04 §117 cross-reference)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed.",
     "issue": "`04` §117 cites `05` §192, which is a blank line at the subject",
     "proposed_repair": "Repoint the reference to the paragraph rather than the line — cite `05` §7's `refusal-sample` paragraph by name — so that it survives the next insertion above it. A corrected line number would rot on the next edit, which is the same conclusion this repository reached about pinned line numbers in prose.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
   },
   {
     "id": "F6W-07",
@@ -1571,11 +1571,11 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (05 §5 wording)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed.",
     "issue": "\"These ten strings\" against eight members and one field name",
     "proposed_repair": "State the ten explicitly, or correct the count to match the enumeration — eight enum members plus `contested_refs`.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
   },
   {
     "id": "F6W-08",
@@ -1584,9 +1584,126 @@
     "source": "planning/reviews/F2-06-recheck-03.md",
     "review_subject": "ee86480",
     "owner": "prose lane C (05 §5 table, fixture 4 row)",
-    "status": "Repaired by r7-prose-c (author-recorded, commits 09f9ab8..e952bdd); independent recheck owed. Not blocking under protocol §8.",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-04b, subject 3e51a9e, 2026-09-14); every stated number recomputed.",
     "issue": "The closed `boundary_kind` set claims one member per transfer the six fixtures name, and fixture 4 is cited by no row",
     "proposed_repair": "Name the member covering F-4's delivery to the checker — `delegation` and `acceptance_submission` are the candidates — or state in the paragraph that F-4 introduces no transfer of its own because the checker receives its inputs through the loader rather than through a constraint-set boundary.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": "F2-06-recheck-04b (3e51a9e)"
+  },
+  {
+    "id": "F6Z-01",
+    "class": "a",
+    "severity": "medium",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "The chapter states in four places that MD-02 is open and in two that it is answered",
+    "proposed_repair": "Reconcile all four sites in one edit: state at `05:386` and `05:407` whether the founder's answer closes the earlier finding, the earlier finding and the earlier finding or which of them survive it, correct the packet count if it falls to five, and amend `05:3`'s *\"None is closed here\"* with the date and the packet. If the three (d)s survive the answer, say what each still needs — the same sentence then stops reading as though the answer never happened.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-02",
+    "class": "a",
+    "severity": "medium",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "R-X09's universal sentence was not amended, and 32 roles now contradict it",
+    "proposed_repair": "Amend `05:350` in the package's own supersession form — quote the universal text, date it, and restate the rule over the set the answer leaves standing — so that the sentence introducing R-X09 and the sentence narrowing it cannot be read independently.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-03",
+    "class": "a",
+    "severity": "medium",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "\"Of the 46 … the other 32\" is 41, and five capability ids receive no disposition",
+    "proposed_repair": "State the fourth category in the chapter — name CAP-04, CAP-14 and CAP-39 as merged residues into CAP-22 and CAP-42 as the re-run has them, name CAP-16, and keep CAP-17 as UNKNOWN — so that 3 + 6 + 32 + 5 = 46 closes on the page, or say plainly that the answer covers 41 of 46 and which 5 it does not reach.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-04",
+    "class": "a",
+    "severity": "medium",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "AD-021 is quoted as \"correctly\" recording a fact the quoting paragraph falsifies",
+    "proposed_repair": "Put the quotation in the past tense and date it — *\"recorded, correctly at the time, that …\"* — naming this landing as what ended it; and record that AD-021's `epistemic_basis` is owed a corresponding update by whoever owns the register, since the prose lane cannot make it.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-05",
+    "class": "a",
+    "severity": "medium",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "The parking behaviour is cited to §5, which does not carry it, and it answers what the table records as unanswered",
+    "proposed_repair": "Repoint the citation to §2's per-class disposition and R-X09 and state which reached classes park and which refuse with a packet, since the three roles held as exceptions are data-rights, grievance and continuity; or, if the behaviour is new, label it DECISION, define \"recorded bounded state\" where it is first used, and say what it does and does not settle of MD-03's third clause.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-06",
+    "class": "a",
+    "severity": "low",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "The honest limit understates itself, in the paragraph whose purpose is not to",
+    "proposed_repair": "State it as the re-run does: **all 41** still need a human at acceptance time, and 37 to 38 are additionally released from waiting on a pre-staffed office. Cite `planning/F2/09-q017-conjunction-rerun.md` §4 by path, which no passage in §12 currently does.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-07",
+    "class": "a",
+    "severity": "low",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "\"Every row is SPECIFICATION\" now sits above three rows carrying founder DECISIONs",
+    "proposed_repair": "Amend the preamble to *\"every row is SPECIFICATION except the founder decisions marked DECISION\"*, or move the three decisions out of the rows and into the DECISION paragraph at `:378` that already carries the same fact.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-08",
+    "class": "a",
+    "severity": "low",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "Two chapters say \"an admitted procedure version\"; the guard admits `admitted` or `restricted`",
+    "proposed_repair": "Say \"an admitted or restricted procedure version\" at `05:402` and `07:113`, in one edit, so the two chapters and the registry state one rule.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6Z-09",
+    "class": "a",
+    "severity": "low",
+    "source": "planning/reviews/F2-06-recheck-04b.md",
+    "review_subject": "3e51a9e",
+    "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
+    "status": "Open; found by F2-06-recheck-04b §3 (2026-09-14) on the Q-017 holder-table amendment. Not blocking under protocol §8.",
+    "issue": "R-X07's heading quantifies over \"every standing structure\"; its body names two",
+    "proposed_repair": "State the closure explicitly — *\"the standing structures are exactly `StandingHolder` and the acceptance-owner role record; `StandingInterest` binds no capability and is out of scope\"* — or, if the set is open, say what admits a new member to it.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
     "independent_recheck": null
   }

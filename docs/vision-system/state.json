@@ -193,7 +193,15 @@
       "engine": "reviewer",
       "kind": "independent recheck of r7-prose-c (F6W-01..08 + Q-017 holder table) at 3e51a9e",
       "dispatched": "2026-09-14",
-      "status": "running; archive verbatim as planning/reviews/F2-06-recheck-04b.md"
+      "status": "RETURNED and archived verbatim as planning/reviews/F2-06-recheck-04b.md: F6W-01..08 CLOSED at specification level; Q-017 holder-table amendment PARTIAL (F6Z-01/02/03/05/06/07); F6Z-01..09 registered, none blocking"
+    },
+    {
+      "lane": "r7-prose-d",
+      "engine": "builder",
+      "kind": "prose lane for F6Z-01..09 (chapter 05 §12 and its joins, 02, 07)",
+      "base": "35f0710",
+      "dispatched": "2026-09-14",
+      "status": "running"
     }
   ],
   "next_actions": [
