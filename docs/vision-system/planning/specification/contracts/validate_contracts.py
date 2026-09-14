@@ -1463,6 +1463,23 @@ def pin_row_matches(node, row):
 #
 # --- RC5-01: AND THE SET ITSELF IS A CLOSED LITERAL HERE, NOT A JSON BLOCK. -----
 #
+# F6R-02, and it is about THIS FILE rather than about the contracts. Several comments in
+# here treat editing `validate_contracts.py` as a heavyweight act -- two edits a reviewer
+# sees, a decision that should read like one. That expense is real and it is worth keeping.
+# But be exact about what enforces it: MEASURED 2026-09-14 with
+# `node scripts/classify.mjs docs/vision-system/planning/specification/contracts/
+# validate_contracts.py` -> `tier=trivial - enforcement=shadow`, matched `docs/**`,
+# `floor=trivial`. Every path in this package is `docs/**`, so the risk tier this file's
+# own edits attract is TRIVIAL, and the oracle that computes it does not block.
+#
+# So the cost of editing this file is a REVIEW CONVENTION, not an enforced tier. That is
+# not an argument for weakening it -- the convention is why the literals below are worth
+# writing -- it is an argument against citing it as though something outside this file
+# guaranteed it. A rule enforced only by the sentence asserting it is a wish, and a
+# package whose whole subject is the difference between the two should not confuse them in
+# its own margin. Raising the tier is a `.claude/qa-tier-floor.yml` change, which is
+# outside this package's scope and belongs to whoever owns that file.
+#
 # The fifth recheck measured the price of leaving it in JSON. ONE hunk -- register
 # `every_linked_obligation` with `argument_positions.predicate: "demanded"`, add it to
 # `#/admissible_ancestors` with a plausible sentence, re-pin `argument_positions_digest`

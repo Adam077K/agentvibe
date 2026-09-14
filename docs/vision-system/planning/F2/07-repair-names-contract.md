@@ -568,6 +568,32 @@ validator recomputes it, so adding one without re-deriving fails the run, which 
 caught rather than noticed.
 
 ---
+## F6R-02 --- the cost of editing `validate_contracts.py` is a convention, and now says so
+
+No new name. One note in the RC5-01 comment block, and it is about **this file** rather than
+about the contracts.
+
+Several comments in `validate_contracts.py` treat editing it as a heavyweight act --- *two edits a
+reviewer sees*, *a decision that should read like one*. **Measured 2026-09-14 rather than
+asserted:**
+
+```
+node scripts/classify.mjs docs/vision-system/planning/specification/contracts/validate_contracts.py
+  -> tier=trivial - enforcement=shadow, matched docs/**, floor=trivial
+```
+
+Every path in this package is `docs/**`, so the risk tier this file's own edits attract is
+**trivial**, and the oracle that computes it **does not block**. The expense is a **review
+convention, not an enforced tier.**
+
+That is not an argument for weakening it --- the convention is why the literals in this file are
+worth writing. It is an argument against **citing** it as though something outside the file
+guaranteed it. **A rule enforced only by the sentence asserting it is a wish**, and a package whose
+whole subject is the difference between those two should not confuse them in its own margin.
+Raising the tier is a `.claude/qa-tier-floor.yml` change, outside this package's scope; that file
+was **not** touched.
+
+---
 ## Decisions returned to the orchestrator --- not taken by this lane
 
 Each of these is a choice about what the system IS, not a repair. A builder that takes one of them
