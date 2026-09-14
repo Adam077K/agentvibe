@@ -104,7 +104,7 @@
       "worktree": "harness-managed (Agent isolation=worktree); branch reported by the builder on return",
       "scope": "18 findings: F6A-09, F6A-10, F6C-06, F6C-10, F6C-11, F6C-12, F6C-13, F6D-05, F6D-08, F6D-09, F6D-12, F6X-01, F6X-02, F6R-01..04, RC4-07; writes only planning/specification/** and planning/F2/07-repair-names-contract.md",
       "dispatched": "2026-09-14",
-      "status": "running via repeated 30-turn resumes; F6A-10 and F6D-12 committed on builder/f2-r7-contracts; Write/Edit refused in the harness worktree (root-scoped hook) so the builder writes through Bash"
+      "status": "RETURNED PARTIAL at aa63875 (7 commits): repaired F6A-10, F6D-12; partial F6D-09 (determinism conjunct owed — implementation_status single-valued, tripwire added), F6C-11 (retention_span not tied to retention_until − landed_at; needs instant-offset primitive), F6C-10 (park phase owed — edge predicates not tool-authored), F6R-01 (structural half: answered_elsewhere / not_answered partition with two ceilings; 32 reclassifications remain), F6R-04 (acted on in F6C-11; F6D-07 note remains); not-done F6C-13, F6X-01, F6X-02, F6A-09, F6C-06, F6C-12, F6D-08, F6D-05, RC4-07, F6R-03, F6R-02. Full validator NOT run by the lane (only CONTRACTS_FIXTURE_RUN=1 mode, green, 100/61 fixtures declared); orchestrator running the full validator on aa63875 now; no chapter file touched"
     },
     {
       "lane": "f2-06-recheck-02",
@@ -126,12 +126,22 @@
       "deferred_to_prose_b": "F6A-02, F6A-05, F6A-12, F6B-08, F6C-05, F6C-18, F6V-01 (07 §6), F6V-03 (05 §124) — chapters 05/07, after r7-contracts merges",
       "dispatched": "2026-09-14",
       "status": "RETURNED COMPLETE and merged (14d8838 → merge into ceo-4): 7 findings repaired, author-recorded; recheck owed"
+    },
+    {
+      "lane": "r7-prose-b",
+      "engine": "builder",
+      "kind": "prose repair lane, chapters 05 and 07 only",
+      "base": "8cc1683",
+      "worktree": "harness-managed; branch builder/f2-r7-prose-b",
+      "scope": "F6A-02, F6A-05, F6A-12, F6B-08, F6C-05, F6C-18, F6V-01 (07 half), F6V-03 (05 half), F6X-02 (chapter half — states boundary_kind set and contested-refs field; names to planning/F2/08-repair-names-prose-b.md), F6C-12",
+      "dispatched": "2026-09-14",
+      "status": "running; author-recorded until rechecked"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work below",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words (his 2026-09-14 re-invocation with the directive did not lift it)",
-    "When r7-contracts returns: verify branch/head/validator tally against the branch itself, merge into ceo-4-1789314685, then dispatch the prose lane (F6A-02, F6A-04, F6A-05, F6A-11, F6A-12, F6B-04, F6B-08, F6C-05, F6C-18, F6C-19) citing planning/F2/07-repair-names-contract.md",
+    "When the full validator on aa63875 is green: merge builder/f2-r7-contracts; then dispatch r7-contracts-b (fresh builder, off the merge) for F6C-13, F6X-01, F6X-02 (registering the names prose-b stated), F6A-09, F6C-06, F6C-12 (if any registry alias), F6D-08, F6D-05, RC4-07, F6R-03, F6R-02, F6R-01 reclassification, F6R-04 F6D-07 note, and the three owed residues (F6D-09 determinism conjunct, F6C-11 instant-offset, F6C-10 park phase)",
     "recheck-02 DONE (archived). Residues owed: F6B-03 checker-binding (contracts lane), F6V-01/F6C-04 divergence wording or conjunct, F6V-02 (contracts), F6V-03/F6V-04 (prose lane); F6C-07 residue repaired in open-questions.json (Q-020/Q-021 → Q-022), recheck owed",
     "Then: narrow independent recheck of the r7 and prose repairs (F2-06-recheck-03); update PLANNING-REPORT.md §8 counts, README, site, founder page; history.jsonl; session file",
     "Founder: read the note and the seven packets Q-016..Q-022 (Q-022 first); decide whether the five-criteria list is closed; say whether the 2026-09-14 agent thought goes into inputs/"
