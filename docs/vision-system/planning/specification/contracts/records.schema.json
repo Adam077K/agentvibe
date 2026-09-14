@@ -4684,7 +4684,7 @@
               "additionalProperties": false
             },
             "failed_predicate_id": {
-              "$ref": "values.schema.json#/$defs/string"
+              "$ref": "values.schema.json#/$defs/PredicateId"
             },
             "acceptance_owner_ref": {
               "type": "object",
@@ -198111,11 +198111,15 @@
             "precondition_predicate_ids": {
               "type": "array",
               "items": {
-                "$ref": "values.schema.json#/$defs/string"
+                "$ref": "values.schema.json#/$defs/PredicateId"
               }
             },
             "precondition_evaluator_kind": {
-              "$ref": "values.schema.json#/$defs/string"
+              "type": "string",
+              "enum": [
+                "deterministic",
+                "model"
+              ]
             },
             "required_trust_class": {
               "$ref": "values.schema.json#/$defs/string"

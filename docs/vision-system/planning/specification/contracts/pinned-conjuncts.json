@@ -3421,6 +3421,10 @@
     "F6A-10": {
       "file": "planning/specification/contracts/validate_contracts.py",
       "check": "REGISTRY AND SCHEMA DISAGREE ABOUT A CLOSED ENUM'S MEMBERS (57 pairs, with a floor under the walk) and THE ORDERED CUSTODY RESOLVER CANNOT RECORD A REASON THE CHAPTERS INSTRUCT (the hand-written CUSTODY_TIE_BREAK_REASONS literal). Fixtures: negative/r20-custody-tie-break-enum-omits-the-admitter-exclusion, positive/r20-custody-tie-break-enum-reordered-benign."
+    },
+    "F6D-09": {
+      "file": "planning/specification/contracts/validate_contracts.py",
+      "check": "A FIELD THAT NAMES A PREDICATE IS A FREE STRING (the PREDICATE_BEARING_FIELDS literal) and THE EVALUATOR KIND A GUARD COMPARES IS AN OPEN STRING. The review's third clause -- a conjunct on each named predicate's `implementation_status` -- is OWED, not delivered: that field holds one value across all 2,397 predicates, so the conjunct would be vacuous. The check THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS fails the moment that stops being true. Fixtures: negative/r22-refusal-names-a-predicate-that-is-only-a-string, positive/r22-precondition-ids-reordered-benign."
     }
   },
   "not_answered": {
@@ -3456,7 +3460,6 @@
     "F6C-19": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-05": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-08": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
-    "F6D-09": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "G2-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion."
   }

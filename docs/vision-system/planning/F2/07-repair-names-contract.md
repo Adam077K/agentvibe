@@ -142,6 +142,65 @@ thing to reconcile it against.
 
 ---
 
+## F6D-09 — the two predicate-bearing fields are typed
+
+*Required contract (D:391–434): `failed_predicate_id: PredicateId`; `precondition_predicate_ids:
+PredicateId[]` (**or** `TypedPredicate[]`); a conjunct asserting each named predicate's registered
+`implementation_status` is deterministic; adverse fixture + paired benign.*
+
+**Branch taken on the "or": `PredicateId[]`, not `TypedPredicate[]`.** `TypedPredicate` is a `oneOf`
+carrying a `const predicate_id` **and a matching `arguments` schema**, and a standing interest names
+preconditions it does not supply arguments for — the arguments arrive with the arriving job, not with
+the interest. Typing the field `TypedPredicate[]` would force every interest to commit to argument
+values at registration, which is a different contract from the one `05` §7 states. `PredicateId[]` is
+the derived, ratcheted enum and carries the whole of what this finding is about.
+
+| name | kind | where |
+|---|---|---|
+| `PredicateId` | payload type | `record-registry.json` `AdmissionRecord.failed_predicate_id` (both halves) + `records.schema.json` `$ref values.schema.json#/$defs/PredicateId` |
+| `PredicateId[]` | payload type | the same two places for `StandingInterest.precondition_predicate_ids` (schema: `array` of `$ref`) |
+| `Enum<deterministic,model>` | payload type | `StandingInterest.precondition_evaluator_kind`, both halves + a closed schema `enum` |
+| `PREDICATE_BEARING_FIELDS` | hand-written literal (2 rows) | `validate_contracts.py` |
+| `A FIELD THAT NAMES A PREDICATE IS A FREE STRING` | check | `validate_contracts.py` |
+| `THE EVALUATOR KIND A GUARD COMPARES IS AN OPEN STRING` | check | `validate_contracts.py` |
+| `THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS` | check (a tripwire — see below) | `validate_contracts.py` |
+| `r22-refusal-names-a-predicate-that-is-only-a-string` | negative fixture | `fixtures/negative/` |
+| `r22-precondition-ids-reordered-benign` | positive fixture | `fixtures/positive/` |
+
+**A third field was closed that the finding mentioned only in passing, and it is the same defect one
+field over.** `guard.interest.precondition_invokes_no_model` compares `precondition_evaluator_kind` to
+`"deterministic"` and to `"model"` — and the field's type admitted **every other string in the world**,
+so an interest declaring `"heuristic"` passed a guard whose entire subject is that value. The two
+members are read off the guard's own body; nothing was invented.
+
+### OWED — the determinism conjunct, and why it was not written
+
+The third clause asked for a conjunct asserting each named predicate's registered
+`implementation_status` is deterministic. **Measured before writing it: `implementation_status` takes
+exactly ONE value across all 2,397 registered predicates** — `"specified; conformance interpreter only,
+no production binding implemented"`. There is no deterministic/model classification in the registry to
+read. A conjunct over it would be **true of every predicate by construction** — "a guard that collects
+the evidence for the ceiling and never applies it", which is the anti-shape the package's own fixture
+`r16-08` exists to name, and writing it would have let this lane report the clause closed.
+
+So the clause is **owed**, and the absence is instrumented rather than noted: the check
+`THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS` **fails the moment a second value
+appears**, and its message says what to do — write the conjunct, type `precondition_predicate_ids`
+against the deterministic subset, delete the tripwire. A note in a markdown file rots; a check that
+fires when its own premise expires does not.
+
+**Whoever picks this up:** the right shape is probably a derived `DeterministicPredicateId` — the same
+derive-and-ratchet treatment `PredicateId` already gets — so that a model-invoking precondition is
+**unwritable** rather than merely refused. That is stronger than the conjunct the review asked for, and
+it needs the classification first.
+
+**Floors moved.** `NEGATIVE_FIXTURE_FLOOR` 97 → 98, `POSITIVE_FIXTURE_FLOOR` 58 → 59.
+
+**Under F6R-01:** `answered_elsewhere["F6D-09"]`, whose `check` row states the owed clause explicitly —
+so the partition does not record this finding as wholly answered. `not_answered` 35 → 34.
+
+---
+
 ## What this lane did NOT land, and exactly where it stopped
 
 The lane was dispatched against **18** findings and landed **two** — F6A-10 and F6D-12 — plus

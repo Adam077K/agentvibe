@@ -264,6 +264,73 @@ for name, record in RECORDS.items():
                     ("one record declares one payload field at two types", name, field,
                      {"type_fields": declared_type, "fields": added[field]["type"]}))
 
+# --- F6D-09: A FIELD THAT NAMES A PREDICATE IS TYPED AS ONE. -------------------
+#
+# `values.schema.json` defines `PredicateId` as an enum of all registry keys. It is derived
+# and ratcheted -- tools/run_negative_fixtures.py re-derives it inside every scratch tree
+# and r12-predicate-id-enum-drifts-from-the-registry proves the drift check works. And
+# ZERO record fields used it: thirty-two predicate-bearing fields are typed
+# `TypedPredicate` and the two WORK-1.1 added were `values.schema.json#/$defs/string`.
+#
+# The consequence was not theoretical. `guard.admission.refusal_names_failed_predicate`
+# asserts the field is nonempty and `!= ""`, so a refusal whose `failed_predicate_id` is
+# the text `unfamiliar wording` SATISFIED the guard -- and the guard's own `meaning` says
+# "unfamiliar wording is not a predicate". Adverse case 13 and its paired benign case 17
+# turn on exactly that distinction and the type did not carry it. `05` section 2's F-7
+# narrowing accepted a higher `no_match` rate to buy DETERMINISTIC refusal; the determinism
+# has to be in the contract to have been bought.
+#
+# `precondition_evaluator_kind` is closed here too, and it is the same defect one field
+# over: `guard.interest.precondition_invokes_no_model` compares it to `"deterministic"` and
+# to `"model"`, and the field admitted every other string in the world -- so an interest
+# declaring `precondition_evaluator_kind: "heuristic"` passed a guard whose whole subject
+# is that value. The two members are read off the guard's own body, not invented.
+PREDICATE_BEARING_FIELDS = {
+    ("AdmissionRecord", "failed_predicate_id"): "PredicateId",
+    ("StandingInterest", "precondition_predicate_ids"): "PredicateId[]",
+}
+for (_record, _field), _wanted in sorted(PREDICATE_BEARING_FIELDS.items()):
+    _body = SCHEMAS["records.schema.json"]["$defs"][_record]["properties"]["payload"]["properties"][_field]
+    _leaf = _body.get("items", _body)
+    checked(str(_leaf.get("$ref", "")).endswith("/PredicateId"),
+            ("A FIELD THAT NAMES A PREDICATE IS A FREE STRING: `PredicateId` is a derived, "
+             "ratcheted enum of every registry key and this field does not use it, so the "
+             "text `unfamiliar wording` is an admissible predicate id -- which is the "
+             "phrase `guard.admission.refusal_names_failed_predicate`'s own meaning says "
+             "is NOT a predicate. A nonempty check cannot tell the two apart and the type "
+             "can (F6D-09)",
+             _record, _field, {"declared": _body, "required": _wanted}))
+checked(set(SCHEMAS["records.schema.json"]["$defs"]["StandingInterest"]["properties"]["payload"]
+            ["properties"]["precondition_evaluator_kind"].get("enum") or [])
+        == {"deterministic", "model"},
+        ("THE EVALUATOR KIND A GUARD COMPARES IS AN OPEN STRING: "
+         "`guard.interest.precondition_invokes_no_model` reads this field and compares it "
+         "to `deterministic` and to `model`, and every other string in the world satisfied "
+         "the field's type -- so Layer 3's foundational rule was held by a declaration "
+         "beside the thing it describes, and the declaration was unconstrained (F6D-09). "
+         "The two members are the guard's own two comparands",
+         SCHEMAS["records.schema.json"]["$defs"]["StandingInterest"]["properties"]["payload"]
+         ["properties"]["precondition_evaluator_kind"].get("enum")))
+# OWED, and recorded rather than faked. The review also asked for "a conjunct asserting
+# each named predicate's registered `implementation_status` is deterministic". Measured
+# here before writing it: `implementation_status` takes exactly ONE value across all 2,397
+# registered predicates -- "specified; conformance interpreter only, no production binding
+# implemented". There is no deterministic/model classification in the registry to read, so
+# that conjunct would be TRUE OF EVERY PREDICATE by construction: a guard that collects the
+# evidence for the ceiling and never applies it, which is the anti-shape fixture r16-08
+# exists to name. The classification has to exist before the conjunct can mean anything.
+# This assertion is what makes the absence visible instead of silent.
+_statuses = {predicate.get("implementation_status") for predicate in PREDICATES.values()}
+checked(len(_statuses) == 1,
+        ("THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS and F6D-09's third "
+         "clause is no longer unwritable: it asked for a conjunct asserting each named "
+         "precondition predicate's registered `implementation_status` is deterministic, "
+         "and that was declined because the field held ONE value across all of them, which "
+         "would have made the conjunct vacuous. More than one value exists now -- write "
+         "the conjunct, type `precondition_predicate_ids` against the deterministic subset, "
+         "and delete this check (F6D-09, owed clause)",
+         {"distinct_statuses": sorted(_statuses)[:6], "predicates": len(PREDICATES)}))
+
 # --- F6D-12: THE SIX ADMITTED REASONS, AS A LITERAL, AND THE PAIRING. -----------
 #
 # `ExistenceJustification.reason_kind` and `reason_unit` were `values.schema.json#/$defs/
@@ -1393,8 +1460,8 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # finding out of it. `answered_elsewhere` has a ceiling rather than a floor for the reason
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
-ANSWERED_ELSEWHERE_CEILING = 1
-NOT_ANSWERED_CEILING = 35
+ANSWERED_ELSEWHERE_CEILING = 2
+NOT_ANSWERED_CEILING = 34
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -2473,12 +2540,14 @@ checked(version_rows >= 14,
 #   negative: 95 -> 96 and positive 56 -> 57 (F6A-10): the closed-enum membership
 #             pair -- one adverse removing a member, one benign reordering them.
 #   negative: 96 -> 97 and positive 57 -> 58 (F6D-12): the seventh-reason pair.
+#   negative: 97 -> 98 and positive 58 -> 59 (F6D-09): the predicate-bearing type
+#             pair -- one adverse untyping a field, one benign reordering an enum.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 97
-POSITIVE_FIXTURE_FLOOR = 58
+NEGATIVE_FIXTURE_FLOOR = 98
+POSITIVE_FIXTURE_FLOOR = 59
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

@@ -3220,7 +3220,7 @@
           "counterparty_subcap": "UInt64",
           "intake_refused": "boolean",
           "acceptance_holder_ref": "Ref<StandingHolder>",
-          "failed_predicate_id": "string",
+          "failed_predicate_id": "PredicateId",
           "acceptance_owner_ref": "Ref<ResponsibilityAssignment>",
           "overflow_destination_ref": "Ref<CasePool>",
           "overflow_alarm_reader_ref": "Ref<ResponsibilityAssignment>",
@@ -3297,7 +3297,7 @@
             "required": false
           },
           "failed_predicate_id": {
-            "type": "string",
+            "type": "PredicateId",
             "required": false
           },
           "acceptance_owner_ref": {
@@ -75762,8 +75762,8 @@
         "type_fields": {
           "interest_id": "string",
           "interest_version": "string",
-          "precondition_predicate_ids": "string[]",
-          "precondition_evaluator_kind": "string",
+          "precondition_predicate_ids": "PredicateId[]",
+          "precondition_evaluator_kind": "Enum<deterministic,model>",
           "required_trust_class": "string",
           "effect_class_id": "string",
           "self_declared_writer_keys": "string[]",
@@ -75808,11 +75808,11 @@
             "required": true
           },
           "precondition_predicate_ids": {
-            "type": "string[]",
+            "type": "PredicateId[]",
             "required": true
           },
           "precondition_evaluator_kind": {
-            "type": "string",
+            "type": "Enum<deterministic,model>",
             "required": true
           },
           "required_trust_class": {
