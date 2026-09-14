@@ -73991,7 +73991,8 @@
             "type": "string",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           },
           "tool_set_source": {
             "type": "string",
@@ -74009,19 +74010,22 @@
             "type": "boolean",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           },
           "grant_stripping_probe_ref": {
             "type": "Ref<ArtifactVersion>",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           },
           "grant_stripping_probe_result": {
             "type": "string",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           }
         }
       }
@@ -75821,7 +75825,9 @@
           },
           "precondition_evaluator_kind": {
             "type": "Enum<deterministic,model>",
-            "required": true
+            "required": true,
+            "owner": "S1-C04",
+            "note": "F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed."
           },
           "required_trust_class": {
             "type": "string",

@@ -2947,8 +2947,9 @@ checked(version_rows >= 14,
 #             everything passes every adverse row.
 #   negative: 108 -> 109 and positive 69 -> 70 (F6C-13): the critical-fields authority pair.
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
-NEGATIVE_FIXTURE_FLOOR = 110
-POSITIVE_FIXTURE_FLOOR = 71
+#   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
+NEGATIVE_FIXTURE_FLOOR = 111
+POSITIVE_FIXTURE_FLOOR = 72
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
@@ -3064,6 +3065,52 @@ checked(_flagged == set(_declared_projections),
          "may. A projection added without saying is the state F6D-08 found ArmedSet in",
          dict(flagged_not_declared=sorted(_flagged - set(_declared_projections)),
               declared_not_flagged=sorted(set(_declared_projections) - _flagged))))
+
+
+# --- F6D-05: A POSITIVE CONTROL MAY NOT BE OWNED BY THE PARTY IT CONTROLS. ---------
+#
+# Measured by the review: 29 of 30 guards read only fields on their own subject record,
+# and in 26 the guard's owner is the component that writes that record. Two of them are
+# load-bearing -- the grant-inertness and grant-stripping controls both read SkillVersion,
+# owned by S1-C03, the producing executor. The check below is the half that is decidable
+# offline: the FIELD-level owner of each declared control differs from the record's own
+# owner_component, and the guard named actually reads that field path. The other half --
+# rebinding the guard to a record the producer cannot author, through IdentityBinding --
+# is recorded OWED in F2/07-repair-names-contract.md, because it needs a chapter to fix
+# the binding and inventing one here would be specification by side effect.
+checked(bool(str(PINNED.get("producer_unauthorable_fields_why", "")).strip()),
+        ("the producer-unauthorable table states no reason",))
+UNAUTHORABLE_FIELDS = PINNED["producer_unauthorable_fields"]
+UNAUTHORABLE_FIELD_FLOOR = 5   # new (F6D-05): four SkillVersion controls and the interest's
+UNAUTHORABLE_FIELD_KEYS = set(["record", "field", "owner", "guard", "why"])
+checked(len(UNAUTHORABLE_FIELDS) >= UNAUTHORABLE_FIELD_FLOOR,
+        ("the producer-unauthorable table has shrunk below its floor",
+         dict(rows=len(UNAUTHORABLE_FIELDS), floor=UNAUTHORABLE_FIELD_FLOOR)))
+for _row in UNAUTHORABLE_FIELDS:
+    checked(set(_row) == UNAUTHORABLE_FIELD_KEYS,
+            ("producer-unauthorable row shape", _row.get("field"),
+             sorted(set(_row) ^ UNAUTHORABLE_FIELD_KEYS)))
+    checked(bool(_row["why"].strip()), ("a producer-unauthorable row states no reason", _row["field"]))
+    _rec = RECORDS[_row["record"]]
+    _field = _rec["fields"]["payload"]["fields"][_row["field"]]
+    checked(_field.get("owner") == _row["owner"],
+            ("a producer-unauthorable field's owner differs from the pinned one; the owner is "
+             "declared in two places so handing it back is a two-place edit a reviewer sees",
+             _row["field"], dict(registry=_field.get("owner"), pinned=_row["owner"])))
+    checked(_field.get("owner") != _rec["owner_component"],
+            ("A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS: the field this guard "
+             "reads is written by the producer of the record it sits on, so the control is "
+             "the controlled party's own assertion about itself (F6D-05, `05` section 1: the "
+             "consequence class is computed from records the acting party cannot author)",
+             _row["field"], dict(field_owner=_field.get("owner"),
+                                 record_owner=_rec["owner_component"],
+                                 guard=_row["guard"], why_it_matters=_row["why"])))
+    checked(_row["guard"] in PREDICATES,
+            ("a producer-unauthorable row names no such guard", _row["guard"]))
+    checked("/payload/" + _row["field"] in json.dumps(PREDICATES[_row["guard"]]["body"]),
+            ("A DECLARED CONTROL FIELD IS NOT READ BY THE GUARD THAT DECLARES IT: the row "
+             "would then pin an ownership nothing evaluates",
+             _row["field"], _row["guard"]))
 
 NEGATIVE_FIXTURES_DECLARED = len(json.loads(
     (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text(encoding="utf-8"))["fixtures"])
@@ -3391,7 +3438,8 @@ checked(CENSUS_KEYS_PINNED == CENSUS_KEYS,
 # the DATA is; every bound named here is a literal in validate_contracts.py, which is the
 # terminal rule of this lineage -- widening any of them is an edit to the checker.
 HAND_WRITTEN_CONTROL_KEYS = {"pins", "require_rows", "pinned_transitions",
-                             "pinned_attachments", "computed_projections", "finding_sources",
+                             "pinned_attachments", "computed_projections",
+                             "producer_unauthorable_fields", "finding_sources",
                              "unanswered_findings",
                              "out_of_reach_findings", "disjoined_rows", "admissible_ancestors",
                              "argument_positions_digest", "negative_fixtures",
@@ -3409,6 +3457,9 @@ HAND_WRITTEN_CONTROLS = {
     "computed_projections": dict(count=len(COMPUTED_PROJECTIONS),
                                  floor=COMPUTED_PROJECTION_FLOOR,
                                  file="pinned-conjuncts.json#/computed_projections"),
+    "producer_unauthorable_fields": dict(count=len(UNAUTHORABLE_FIELDS),
+                                         floor=UNAUTHORABLE_FIELD_FLOOR,
+                                         file="pinned-conjuncts.json#/producer_unauthorable_fields"),
     "finding_sources": {"count": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR,
                         "file": "pinned-conjuncts.json#/finding_sources"},
     "unanswered_findings": {"count": len(unanswered), "ceiling": UNANSWERED_CEILING,

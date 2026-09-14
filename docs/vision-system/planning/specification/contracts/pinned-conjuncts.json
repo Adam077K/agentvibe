@@ -3656,5 +3656,43 @@
       ],
       "why": "The same shape, plus `knowledge.index.record`. Same reading: listed so the exception is declared rather than discovered by a later mutation that passes."
     }
+  ],
+  "producer_unauthorable_fields_why": "F6D-05: twenty-nine of thirty guards read only fields on their own subject record, and in twenty-six the guard's owning component is the component that writes that record. `05` section 1 requires the consequence class to be computed from records the ACTING PARTY CANNOT AUTHOR. Two of the thirty are load-bearing -- guard.skill.declared_grant_inert and guard.launcher.stripping_positive_control both take Ref<SkillVersion>, whose owner_component is S1-C03, THE PRODUCING EXECUTOR, so the positive control on grant removal was a field on the record whose grants are being removed. guard.interest.precondition_invokes_no_model has the same shape over StandingInterest (S1-C02). WHAT THIS TABLE IS AND IS NOT. It fixes the field-level OWNER of each control field to a component that is not the record's producer, and refuses the edit that hands it back. It does NOT make the guard read a record the producer cannot author -- that is the IdentityBinding rebinding the finding asks for, it needs a ref field and a phase the chapters have not fixed, and it is recorded OWED in F2/07-repair-names-contract.md rather than invented here. The finding classifies itself (b), 'recorded with its verification owed', and this is the half that is checkable offline. S1-C04 is chosen because it owns IdentityBinding (`02` section 4), which is the binding the finding names; it is a reading of the chapters, not a decision the chapters state, and a recheck should look at it as such. It also resolves the registry side of the contradiction the finding names separately: `05` section 1 says C03 executors remain outside writable registry state while the registry gave SkillVersion owner_component S1-C03 with write 'only named owner'. The probe-result fields are no longer C03's. The record-level owner is untouched, and the chapter sentence is owed.",
+  "producer_unauthorable_fields": [
+    {
+      "record": "SkillVersion",
+      "field": "declared_tool_grant_effect",
+      "owner": "S1-C04",
+      "guard": "guard.skill.declared_grant_inert",
+      "why": "R-X15 argues the rule must be structural rather than asserted; while this field belonged to the producer it was the producer asserting its own grant inert."
+    },
+    {
+      "record": "SkillVersion",
+      "field": "grant_stripping_probe_result",
+      "owner": "S1-C04",
+      "guard": "guard.launcher.stripping_positive_control",
+      "why": "The positive control on grant removal. Owned by the producer, it was the record whose grants are removed reporting that they were."
+    },
+    {
+      "record": "SkillVersion",
+      "field": "grant_stripping_probe_ref",
+      "owner": "S1-C04",
+      "guard": "guard.launcher.stripping_positive_control",
+      "why": "The probe the result comes from, owned by the party that runs it."
+    },
+    {
+      "record": "SkillVersion",
+      "field": "content_hash_rechecked_at_use",
+      "owner": "S1-C04",
+      "guard": "guard.skill.declared_grant_inert",
+      "why": "A recheck AT USE is a statement by the enforcement point at use time, not by the content that is rechecked."
+    },
+    {
+      "record": "StandingInterest",
+      "field": "precondition_evaluator_kind",
+      "owner": "S1-C04",
+      "guard": "guard.interest.precondition_invokes_no_model",
+      "why": "The guard checks a string on the interest saying its evaluator invokes no model. Owned by C02, that is the party with the interest classifying its own evaluator."
+    }
   ]
 }

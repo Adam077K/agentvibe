@@ -957,3 +957,82 @@ manifests too) · new `COMPUTED_PROJECTION_FLOOR` = 5.
 
 **Owed: nothing else for this finding.** The two fixtures are declared and were **not executed** by
 this lane.
+
+---
+## F6D-05 — a positive control may not be owned by the party it controls (PARTIAL, and the remainder is named)
+
+*Required contract (D:230–272): rebind `guard.skill.declared_grant_inert`,
+`guard.launcher.stripping_positive_control` and `guard.interest.precondition_invokes_no_model` so the
+field each reads is written by a party the producer cannot author — IdentityBinding / `current_owner`;
+and resolve the `05` §1 vs `SkillVersion.owner_component` contradiction.*
+
+**What landed: the field-level ownership half.** Each control field now declares an `owner` that is
+**not** the record's producer, in the registry and in a pinned table, and a check refuses the edit that
+hands it back.
+
+| name | kind | where |
+|---|---|---|
+| `owner: "S1-C04"` on `declared_tool_grant_effect`, `grant_stripping_probe_result`, `grant_stripping_probe_ref`, `content_hash_rechecked_at_use` | per-field owner (was absent) | `record-registry.json` → `SkillVersion.fields.payload.fields` (record owner `S1-C03`) |
+| `owner: "S1-C04"` on `precondition_evaluator_kind` | per-field owner | `StandingInterest` (record owner `S1-C02`) |
+| `producer_unauthorable_fields_why` · `producer_unauthorable_fields` (5 rows) | JSON keys | `pinned-conjuncts.json` |
+| `record` · `field` · `owner` · `guard` · `why` | row keys, others refused | the same table |
+| `UNAUTHORABLE_FIELDS` · `UNAUTHORABLE_FIELD_FLOOR` (5) · `UNAUTHORABLE_FIELD_KEYS` | validator names | `validate_contracts.py` |
+| `A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS` | check | the finding's sentence, as a refusal |
+| `A DECLARED CONTROL FIELD IS NOT READ BY THE GUARD THAT DECLARES IT` | check | so a row cannot pin an ownership nothing evaluates |
+| `producer_unauthorable_fields` | `HAND_WRITTEN_CONTROLS` row | count and floor in the verdict |
+| `r35-grant-stripping-probe-owned-by-the-skill-it-probes` | negative fixture | `fixtures/negative/` |
+| `r35-control-ownership-table-reordered-benign` | positive fixture | `fixtures/positive/` |
+
+**Why S1-C04, and it is a reading rather than a chapter statement.** `02` §4's IdentityBinding is what
+the finding names as the expressible binding, and `IdentityBinding.owner_component` is **S1-C04** — so
+the enforcement point that runs the probe is C04 and the skill that is probed is C03. A recheck should
+treat the component choice as this lane's inference, not as something the chapters say.
+
+**The registry side of the contradiction is resolved; the record-level owner is untouched.** `05` §1
+says C03 executors remain outside writable registry state while `SkillVersion.owner_component` is
+`S1-C03` with `authorization.write: "only named owner"`. The **probe-result fields are no longer
+C03's**, which is the half a field-level owner can carry. Changing the record's owner would decide who
+owns skill records — a decision this lane does not own.
+
+**OWED, and stated as owed rather than faked.**
+1. **The guard-body rebinding itself.** The three guards still read scalars on their own subject
+   record; what changed is who the registry says writes those scalars. Expressing *"this field was
+   written by C04"* as a **predicate** needs an `IdentityBinding` ref on `SkillVersion` /
+   `StandingInterest` and a phase to bind it in, and neither the ref nor the phase is fixed by any
+   chapter. Inventing them is specification by side effect. The finding classifies itself **(b) —
+   "recorded with its verification owed"** — and this is exactly that residue.
+2. **`current_owner` in these three guards.** The operator exists and is used on edges; using it here
+   asserts the *acting party* is the current owner, which is a different claim from non-authorability
+   of a field. Not added rather than added decoratively.
+
+**Chapter sentences owed** (this lane owns no chapter file — 04/05/07 are another lane's):
+- **`05` §1.** State that the grant-stripping probe result and the grant-inertness flag are written by
+  the **enforcement point**, not by the skill record's producer, so that "C03 executors remain outside
+  writable registry state" and `SkillVersion.owner_component: S1-C03` stop contradicting each other.
+  One sentence; the contracts now hold the other end of it.
+- **`05` §7.** The `ArmedSet` custodial sentence from F6D-08 above.
+
+**Floors moved.** `NEGATIVE_FIXTURE_FLOOR` 110 → 111 · `POSITIVE_FIXTURE_FLOOR` 71 → 72 (both
+manifests) · new `UNAUTHORABLE_FIELD_FLOOR` = 5.
+
+---
+## Decisions returned to the orchestrator by lane r7-contracts-c
+
+- **F6D-09's determinism conjunct — untouched, as briefed.** It stays where the previous lane left it.
+- **Which component owns `SkillVersion`.** F6D-05's contradiction has a second resolution — move the
+  record's `owner_component` off S1-C03 — which this lane did not take. That is a decision about who
+  owns skill records.
+- **`ArmedSet.owner_component`.** Same shape: the custodial reading was taken because the alternative
+  assigns the record to a different component.
+
+## What lane r7-contracts-c did NOT land
+
+**F6R-01's remainder (the 32 `not_answered` rows), F6C-10's park phase, F6C-11's `retention_span`
+primitive and F6B-03's `checker_identity_ref` were NOT started.** The lane spent its budget on the
+three findings above. `not_answered` stands at **38** (F6C-13 left it by being pinned); every other
+row a resumer finds there is untouched and is still the right place to start.
+
+**Verification, stated narrowly.** `CONTRACTS_FIXTURE_RUN=1 python3 validate_contracts.py` — the
+deterministic suite with the **fixture runs skipped** — exited 0 after each of the three commits.
+**The six new fixtures have never been executed.** The full `python3 validate_contracts.py` was not
+run by this lane, and neither were the node verifiers.
