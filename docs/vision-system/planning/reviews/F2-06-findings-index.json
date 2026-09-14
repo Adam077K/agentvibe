@@ -151,11 +151,16 @@
       "repaired_by": [
         "6ae17ca"
       ],
-      "repair_status": "repaired (author-recorded): r7-contracts-b: ConsequenceVector alias deleted, CapacityState defended, refusal widened to value-registry names; prose-identifier half declined with reason",
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
       "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "Wrong row deleted to `not_aliases`, refusal widened to value-registry names, false gloss repaired; second option declined with a checkable reason."
+      }
     }
   },
   "F6A-10": {
@@ -166,11 +171,16 @@
       "repaired_by": [
         "0daf679"
       ],
-      "repair_status": "repaired (author-recorded): r7-contracts: admitter_excluded in both enum declarations; closed-enum membership check; paired fixtures",
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
       "f2_06_recheck_01": "§5 OPEN — neither branch of the required contract taken",
-      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
       "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "`admitter_excluded` in both declarations, a general 61-pair enum comparison with a floor, plus a hand literal for the member itself."
+      }
     }
   },
   "F6A-11": {
@@ -530,11 +540,17 @@
       "repaired_by": [
         "cc26cf9"
       ],
-      "repair_status": "repaired (author-recorded): r7-contracts-b: CapacityMeasure registered with cache_lifetime; 07 §5 pointer; reverse check; paired fixtures",
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): A `CapacityMeasure` vocabulary now names `cache_lifetime` and is held to the chapters, but no field or predicate uses it.",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
       "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "A `CapacityMeasure` vocabulary now names `cache_lifetime` and is held to the chapters, but no field or predicate uses it."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
     }
   },
   "F6C-07": {
@@ -605,11 +621,17 @@
       "repaired_by": [
         "32c18de"
       ],
-      "repair_status": "PARTIAL (author-recorded): r7-contracts: attempt_ceiling required on WorkOrder; ltCount conjunct on FailureRecord retry edge; pinned; paired fixtures. RESIDUE: park phase owed (edge predicates not tool-authored)",
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): Ceiling required on `WorkOrder` and genuinely compared at `* → retry_admitted`; the park clause is owed, with a tripwire and a stated reason.",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
       "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "Ceiling required on `WorkOrder` and genuinely compared at `* → retry_admitted`; the park clause is owed, with a tripwire and a stated reason."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
     }
   },
   "F6C-11": {
@@ -620,11 +642,17 @@
       "repaired_by": [
         "fdef870"
       ],
-      "repair_status": "PARTIAL (author-recorded): r7-contracts: ltF Duration comparison conjunct, pinned, paired fixtures. RESIDUE: retention_span not tied to retention_until − landed_at (instant-offset primitive owed)",
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): A real `lt` over two typed `Duration` operands, pinned; nothing ties `retention_span` to `retention_until` minus `landed_at`, and the note says so.",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
       "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "A real `lt` over two typed `Duration` operands, pinned; nothing ties `retention_span` to `retention_until` minus `landed_at`, and the note says so."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
     }
   },
   "F6C-12": {
@@ -655,11 +683,16 @@
       "repaired_by": [
         "558f6c4"
       ],
-      "repair_status": "repaired (author-recorded): r7-contracts-c: critical_fields + critical_fields_authority_ref required on WorkOrder; guard excluding the resuming attempt on the admission edge; pinned; paired fixtures",
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
       "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "Both fields required on `WorkOrder`, a guard refusing equality with the order's own owner, attached to the admission edge, pinned twice."
+      }
     }
   },
   "F6C-14": {
@@ -842,11 +875,17 @@
       "repaired_by": [
         "398f8d7"
       ],
-      "repair_status": "PARTIAL (author-recorded): r7-contracts-c (partial): five control fields re-owned to S1-C04 and pinned as producer-unauthorable; two checks; paired fixtures. RESIDUE: guard-body rebinding through IdentityBinding owed; 05 §1 sentence owed",
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): Field-level owners fixed and cross-pinned, but the annotation is read by no predicate and the record still grants the producer write.",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
       "owner": "contracts/ (schema, registry, pins)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "Field-level owners fixed and cross-pinned, but the annotation is read by no predicate and the record still grants the producer write."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
     }
   },
   "F6D-06": {
@@ -887,11 +926,17 @@
       "repaired_by": [
         "b3ea337"
       ],
-      "repair_status": "repaired (author-recorded): r7-contracts-c: computed-projection partition pinned (empty permitted_commands, pinned transition counts, registered evaluator modules); ArmedSet owner_component stated custodial; m4 fixture pair",
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): Containment and the custodial reading are both closed and checked; the evaluator binding resolves to the record's own module.",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
       "owner": "contracts/ (schema, registry, pins)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "Containment and the custodial reading are both closed and checked; the evaluator binding resolves to the record's own module."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
     }
   },
   "F6D-09": {
@@ -902,11 +947,16 @@
       "repaired_by": [
         "69c4004"
       ],
-      "repair_status": "PARTIAL (author-recorded): r7-contracts: failed_predicate_id and precondition_predicate_ids typed PredicateId; evaluator kind closed; tripwire narrowed by r7-contracts-b. RESIDUE: determinism conjunct returned as a decision (implementation_status single-valued)",
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
       "f2_06_recheck_01": "§5 OPEN — PredicateId used by 0 record fields",
-      "disposition_2026_09_14": "PARTIAL — repaired in part by the author, residue named; not independently rechecked",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
       "owner": "contracts/ (schema, registry, pins)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "Both fields typed `PredicateId`, evaluator kind closed to two members, third clause returned as a decision with an equality tripwire."
+      }
     }
   },
   "F6D-10": {
@@ -946,11 +996,17 @@
       "repaired_by": [
         "ed50c84"
       ],
-      "repair_status": "repaired (author-recorded): r7-contracts: reason_kind / reason_unit closed enums of six, pairing conjunct, pinned, paired fixtures",
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): The six pairs are exactly right in the data; the check that guards them cannot tell them from a shuffle.",
       "f2_06_recheck_01": "§5 OPEN — both fields still free strings",
-      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
       "owner": "contracts/ (schema, registry, pins)",
-      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes"
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "The six pairs are exactly right in the data; the check that guards them cannot tell them from a shuffle."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
     }
   }
 }

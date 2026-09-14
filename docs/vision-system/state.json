@@ -186,7 +186,7 @@
       "engine": "reviewer",
       "kind": "independent recheck of the contracts-side repairs (17 items) at 3e51a9e; no validator run",
       "dispatched": "2026-09-14",
-      "status": "running; archive verbatim as planning/reviews/F2-06-recheck-04a.md"
+      "status": "RETURNED and archived verbatim as planning/reviews/F2-06-recheck-04a.md: 10 CLOSED, 7 PARTIAL, 0 OPEN, 0 REGRESSED; F6Y-01..08 registered (F6Y-01 live: sweep omits F6W); S1-C04 reading defensible, citation wrong; F6D-09 decision honest"
     },
     {
       "lane": "f2-06-recheck-04b",
@@ -202,6 +202,14 @@
       "base": "35f0710",
       "dispatched": "2026-09-14",
       "status": "RETURNED COMPLETE at 44a317c and merged: F6Z-01..09 repaired (05 reconciled with the Q-017 decision: MD-02 partially closed — AC-M4-02 closed by the answer, AC-M3-02 and AC-M4-01 survive with what they still need; buckets 3+6+32+5=46); recheck owed"
+    },
+    {
+      "lane": "r7-contracts-e",
+      "engine": "builder",
+      "kind": "contracts lane for F6Y-01, F6Y-02, F6Y-06, F6Y-07, F6Y-08",
+      "base": "740764c",
+      "dispatched": "2026-09-14",
+      "status": "running"
     }
   ],
   "next_actions": [
