@@ -2586,7 +2586,83 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
 # checker. It makes ONE deletion cost more than three checks and a plausible-looking pass.
 CENSUS_KEYS = {"predicate_positions", "value_positions", "slots_classified", "refused",
                "under_quantifier", "under_disjunction", "under_negation", "operators"}
-VERDICT = {"status":"passed","checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"negative_fixtures_declared":NEGATIVE_FIXTURES_DECLARED,"negative_fixture_floor":NEGATIVE_FIXTURE_FLOOR,"positive_fixtures_passed":FIXTURES_PASSED,"positive_fixtures_declared":POSITIVE_FIXTURES_DECLARED,"positive_fixture_floor":POSITIVE_FIXTURE_FLOOR,"limits":"Offline schema/ref/AST/source-inventory/registry checks plus paired negative and positive fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."}
+
+# --- RC5-01 + RC5-02: EVERY HAND-WRITTEN CONTROL, COUNTED, IN ONE BLOCK. --------
+#
+# The fifth recheck found two unbudgeted hand-written tables by reading the file for them.
+# It found them because they were the two that DID NOT APPEAR IN THE VERDICT -- every other
+# budget in the package prints its count beside its floor, and those two printed nothing.
+# So the honest instrument is not another floor: it is one block naming EVERY hand-written
+# control, its count, the literal that bounds it and the file it lives in, so a reviewer
+# reads a list rather than reconstructs one. A control absent from this block is a control
+# nobody was told to look for, and a missing key FAILS below.
+#
+# `floor` is a lower bound, `ceiling` an upper one, `literal` an exact set. `file` is where
+# the DATA is; every bound named here is a literal in validate_contracts.py, which is the
+# terminal rule of this lineage -- widening any of them is an edit to the checker.
+HAND_WRITTEN_CONTROL_KEYS = {"pins", "require_rows", "pinned_transitions",
+                             "pinned_attachments", "finding_sources", "unanswered_findings",
+                             "out_of_reach_findings", "disjoined_rows", "admissible_ancestors",
+                             "argument_positions_digest", "negative_fixtures",
+                             "positive_fixtures", "demand_walk_census"}
+HAND_WRITTEN_CONTROLS = {
+    "pins": {"count": len(PINNED["pins"]), "floor": PIN_FLOOR,
+             "file": "pinned-conjuncts.json#/pins"},
+    "require_rows": {"count": sum(len(pin["require"]) for pin in PINNED["pins"]),
+                     "floor": PIN_ROW_FLOOR, "file": "pinned-conjuncts.json#/pins/*/require"},
+    "pinned_transitions": {"count": len(PINNED["pinned_transitions"]),
+                           "floor": PIN_TRANSITION_FLOOR,
+                           "file": "pinned-conjuncts.json#/pinned_transitions"},
+    "pinned_attachments": {"count": len(ATTACHMENTS), "floor": PIN_ATTACHMENT_FLOOR,
+                           "file": "pinned-conjuncts.json#/pinned_attachments"},
+    "finding_sources": {"count": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR,
+                        "file": "pinned-conjuncts.json#/finding_sources"},
+    "unanswered_findings": {"count": len(unanswered), "ceiling": UNANSWERED_CEILING,
+                            "file": "pinned-conjuncts.json#/finding_sources minus the pins"},
+    "out_of_reach_findings": {"count": len(out_of_reach), "ceiling": OUT_OF_REACH_CEILING,
+                              "file": "registers/review-findings.json"},
+    "disjoined_rows": {"count": len(disjoined_rows), "ceiling": 4,
+                       "file": "pinned-conjuncts.json#/pins/*/require/*/disjoined"},
+    "admissible_ancestors": {"count": len(ADMISSIBLE_LITERAL),
+                             "literal": {_operator: _rule["admits"]
+                                         for _operator, _rule in sorted(ADMISSIBLE_LITERAL.items())},
+                             "file": "validate_contracts.py#ADMISSIBLE_LITERAL, declared in "
+                                     "pinned-conjuncts.json#/admissible_ancestors"},
+    "argument_positions_digest": {"count": len(ARGUMENT_POSITIONS),
+                                  "literal": PINNED["argument_positions_digest"],
+                                  "file": "pinned-conjuncts.json#/argument_positions_digest"},
+    "negative_fixtures": {"count": NEGATIVE_FIXTURES_DECLARED, "floor": NEGATIVE_FIXTURE_FLOOR,
+                          "file": "fixtures/negative/MANIFEST.json"},
+    "positive_fixtures": {"count": POSITIVE_FIXTURES_DECLARED, "floor": POSITIVE_FIXTURE_FLOOR,
+                          "file": "fixtures/positive/MANIFEST.json"},
+    "demand_walk_census": {"count": WALK_CENSUS["slots_classified"], "floor": 8000,
+                           "file": "validate_contracts.py#WALK_CENSUS, printed as "
+                                   "`conjunct_walk`"},
+}
+VERDICT = {"status":"passed","hand_written_controls":HAND_WRITTEN_CONTROLS,"checks":COUNT,"records":len(RECORDS),"values":len(INVENTORY["canonical_values"]),"commands":len(COMMANDS),"predicates":len(PREDICATES),"edges":len(all_edges),"conjunct_walk":CONJUNCT_WALK,"source_work_edges":len(INVENTORY["source_work_edges"]),"required_subjects":46,"negative_fixtures_rejected":FIXTURES_RUN and FIXTURES_RUN["passed_as_required"],"negative_fixtures_declared":NEGATIVE_FIXTURES_DECLARED,"negative_fixture_floor":NEGATIVE_FIXTURE_FLOOR,"positive_fixtures_passed":FIXTURES_PASSED,"positive_fixtures_declared":POSITIVE_FIXTURES_DECLARED,"positive_fixture_floor":POSITIVE_FIXTURE_FLOOR,"limits":"Offline schema/ref/AST/source-inventory/registry checks plus paired negative and positive fixtures. No production handler, source truth, crypto custody, native gateway, recovery, provider or business-effect test executed; no runtime of any kind exists yet."}
+_controls = VERDICT.get("hand_written_controls")
+checked(isinstance(_controls, dict) and set(_controls) == HAND_WRITTEN_CONTROL_KEYS,
+        ("THE VERDICT DOES NOT CARRY EVERY HAND-WRITTEN CONTROL: the two tables the fifth "
+         "recheck walked through -- the admissible-ancestor set and the pin floors -- were "
+         "found by reading, and what made them findable-only-by-reading is that neither "
+         "appeared in the verdict. A control that prints no count is a control a reviewer "
+         "has to know to go looking for (RC5-01, RC5-02)",
+         {"present": sorted(_controls) if isinstance(_controls, dict) else type(_controls).__name__,
+          "required": sorted(HAND_WRITTEN_CONTROL_KEYS),
+          "missing": sorted(HAND_WRITTEN_CONTROL_KEYS - set(_controls))
+                     if isinstance(_controls, dict) else sorted(HAND_WRITTEN_CONTROL_KEYS)}))
+for _control, _row in _controls.items():
+    checked(isinstance(_row, dict) and "count" in _row and "file" in _row
+            and ("floor" in _row or "ceiling" in _row or "literal" in _row),
+            ("a hand-written control is reported without its count, its bound or the file "
+             "it lives in; the block is only an instrument while every row carries all "
+             "three (RC5-01, RC5-02)", _control, sorted(_row) if isinstance(_row, dict) else _row))
+    if "floor" in _row:
+        checked(_row["count"] >= _row["floor"],
+                ("a hand-written control is reported below its own floor", _control, _row))
+    if "ceiling" in _row:
+        checked(_row["count"] <= _row["ceiling"],
+                ("a hand-written control is reported above its own ceiling", _control, _row))
 _census = VERDICT.get("conjunct_walk")
 checked(isinstance(_census, dict) and set(_census) == CENSUS_KEYS,
         ("THE VERDICT DOES NOT CARRY THE DEMAND WALK'S CENSUS: every `demanded` in this "
