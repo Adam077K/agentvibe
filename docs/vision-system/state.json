@@ -115,6 +115,17 @@
       "constraints": "no validator or fixture-runner runs (contracts lane holds the validator); producer accounts off-limits; one family",
       "dispatched": "2026-09-14",
       "status": "RETURNED and archived verbatim as planning/reviews/F2-06-recheck-02.md; 13 CLOSED at specification level, 5 PARTIAL (F6B-02, F6B-03, F6C-04, F6C-07, F6C-14), 0 OPEN, 0 REGRESSED; F6V-01..04 registered (none blocking); index and registers updated"
+    },
+    {
+      "lane": "r7-prose-a",
+      "engine": "builder",
+      "kind": "prose repair lane, files disjoint from r7-contracts",
+      "base": "7f8ada5",
+      "worktree": "harness-managed; branch builder/f2-r7-prose-a",
+      "scope": "F6A-04, F6A-11, F6B-04, F6C-19, F6V-01 (02 half), F6V-03 (02 half), F6V-04; writes only planning/02-architecture-selection.md, specification/04, specification/06, registers/decisions.json, F2/04-attack-consolidation.md",
+      "deferred_to_prose_b": "F6A-02, F6A-05, F6A-12, F6B-08, F6C-05, F6C-18, F6V-01 (07 §6), F6V-03 (05 §124) — chapters 05/07, after r7-contracts merges",
+      "dispatched": "2026-09-14",
+      "status": "running; author-recorded until rechecked"
     }
   ],
   "next_actions": [
