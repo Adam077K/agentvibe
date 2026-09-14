@@ -623,3 +623,28 @@ between two reviews is resolved. Every row is traceable to a finding id in one o
 frozen subject `c6d62a3`. The standing caveat in the header applies to every line.*
 
 
+
+---
+
+## Amendment, 2026-09-14 — a reporting inconsistency in this consolidation's own matrix (F6C-19)
+
+**SOURCE CLAIM — computed from the matrix above, not from any new reading of a candidate.** Two cells report a
+dimension verdict of *sufficient* on a candidate that carries a (d)-class finding on that same dimension.
+**M1 on W7 reads `S`** while **AT-M1-02 and AT-M1-03**, both class (d), are recorded against M1 on W7.
+**M3 on W7 reads `S²`** — "sufficient (strongest in the round)" — while **AT-M3-03**, class (d), is recorded
+against M3 on W2/W7.
+
+**SPECIFICATION — what this note is, and the limit on it.** It records an inconsistency **in the reporting**, and
+it is **not** a defect found in any subject and **not** a change to any disposition. **No matrix cell is edited,
+no verdict is restated and no finding is reclassified**; the amendment's disposition stands exactly as written,
+and it already lists AT-M3-03 among its five open (d)s. A reader who takes the matrix row and the finding list
+together gets the correct picture today; a reader who takes the matrix row alone does not, and that is the whole
+of the defect.
+
+**UNKNOWN — which of the two the matrix means.** The consolidation does not state whether a dimension verdict
+summarises the *blocking* findings only or *all* findings on that dimension, so it cannot be settled here whether
+these two cells are wrong or merely under-specified. Resolving it means stating the summarisation rule once and
+re-reading every cell against it — a change to this artifact's method, **owed and not done**, owner the
+consolidating lane. Until then the finding list governs wherever the two disagree.
+
+*Raised by F6C-19 in [`../reviews/F2-06-C-capacity-reliability-changeability-alternatives.md`](../reviews/F2-06-C-capacity-reliability-changeability-alternatives.md), whose own confidence note reads "High for the counts; the inconsistency reading is mine."*

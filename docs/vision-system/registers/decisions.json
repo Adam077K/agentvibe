@@ -546,7 +546,7 @@
       "planning/F2/reviews/A-security-adversarial.md (AS-X-01)",
       "planning/F2/reviews/A-context-evidence.md (AX, W5)"
     ],
-    "epistemic_basis": "Specification closing a blocking finding. The reconciliation of AS-X-01 against AX's W5 is an inference from the acceptance protocol's own classification rule and not a measurement. Whether the fourth channel changes any verification verdict is UNKNOWN until the fourth F-4 arm runs — owner C06, at the first F-4 execution, whenever a runtime exists. Independence of ERROR is not claimed at all: it is unreachable inside one model family and is disclaimed in every acceptance that rests on a same-family checker.",
+    "epistemic_basis": "Specification closing a blocking finding. The reconciliation of AS-X-01 against AX's W5 is an inference from the acceptance protocol's own classification rule and not a measurement. Whether the fourth channel changes any verification verdict is UNKNOWN until the fourth F-4 arm runs — owner C06, at the first F-4 execution, whenever a runtime exists. Independence of ERROR is not claimed at all: it is unreachable inside one model family and is disclaimed in every acceptance that rests on a same-family checker. R-G02, the one rule this record cites that appears nowhere in the specification (F6A-11, 2026-09-14): the selection record's rule table records R-G02 as \"= R-D11\", and the rule landed under that id at 06-knowledge-evidence-evaluation.md section 7. The ID did not land; the RULE did, and nothing is outstanding behind it.",
     "accepted_design_costs": [
       "A criterion must exist and be frozen before production starts, so a capability owner sits on the critical path of every procedure admission",
       "The fourth F-4 arm is owed and cannot run without a runtime: this decision closes the finding in specification and leaves the measurement open",
@@ -579,9 +579,13 @@
       "planning/F2/05-selection-record.md#13-evidence-ledger (rows 13-16: R5-01, R5-02, R3 F33, R8 B-7, AG-08, R1 F-10, F-11, R2 F-09, AS-M5-01)",
       "research/F2/R5-routing.md",
       "research/F2/R1-context.md (F-10: a no-instruction poisoning attack passed a four-stage screen 360 of 360)",
-      "planning/F2/reviews/A-security-adversarial.md (AS-M5-01, AS-M5-03, AS-M5-04)"
+      "planning/F2/reviews/A-security-adversarial.md (AS-M5-01, AS-M5-03, AS-M5-04)",
+      "planning/specification/05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps (R-L3: StandingInterest, the armed set as a computed projection nobody writes, and the hard rules of layer 3)",
+      "planning/specification/05-work-agents-skills.md#9-positive-adverse-and-capacity-limited-conformance (row 5: an untrusted entry promoted to attested by the investigating activation)",
+      "planning/specification/05-work-agents-skills.md#10-registered-lifecycle-phases-named-only-in-the-registry (StandingInterest.trial)",
+      "planning/specification/11-schemas-state-contracts.md"
     ],
-    "epistemic_basis": "Source claim plus decision. Deterministic arming and the no-model precondition rest on R5-01, R5-02, R3 F33 and R8 B-7. The SPECIFIC five admission verbs and five prohibitions are a marked design proposal with no finding behind them (§13, row 14): the prohibitions are evidenced, the choice of five is not. The layer's admissibility turns on the deterministic-predicate fraction (U-6), which is unmeasured and is the layer's own sharpest falsifier.",
+    "epistemic_basis": "Source claim plus decision. Deterministic arming and the no-model precondition rest on R5-01, R5-02, R3 F33 and R8 B-7. The SPECIFIC five admission verbs and five prohibitions are a marked design proposal with no finding behind them (§13, row 14): the prohibitions are evidenced, the choice of five is not. The layer's admissibility turns on the deterministic-predicate fraction (U-6), which is unmeasured and is the layer's own sharpest falsifier. R-D15, the one rule this record cites that no specification text names by that id (F6A-11, 2026-09-14): both halves landed without the id. The no-promotion half is 05-work-agents-skills.md section 9, row 5 - an untrusted entry promoted to attested by the investigating activation is the adverse case, repaired by a new attested fact from an out-of-band corroborant. The trust-class prerequisite is section 7, cited there as \"D-15\". The floor half landed as an executable predicate under the id R-X13 in the contracts predicate registry, not as prose.",
     "accepted_design_costs": [
       "If the deterministic-predicate fraction is low, arming needs a model and this becomes the most expensive arrangement in the round — the response is withdrawal, not relaxation (R-X25)",
       "The unmatched pool's residue is real and recorded as undetected: an entry that armed the wrong interest is not caught by it",
@@ -614,7 +618,10 @@
       "planning/F2/05-selection-record.md#64-the-two-control-cell-questions-the-consolidation-says-the-synthesis-must-answer",
       "planning/F2/05-selection-record.md#13-evidence-ledger (rows 17-19, 68: R2 F-09, F-10, F-20, F-21, R6 F6, X11, control 4, AC-M1-06, R8 W-4, MG-11)",
       "research/F2/R2-agent-existence.md",
-      "research/F2/R6-skills.md"
+      "research/F2/R6-skills.md",
+      "planning/specification/05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning (R-L4: ExistenceJustification, the six reasons with their units, and the removal criterion in falsifier form)",
+      "planning/specification/05-work-agents-skills.md#10-registered-lifecycle-phases-named-only-in-the-registry (ExistenceJustification.admitted)",
+      "planning/specification/11-schemas-state-contracts.md"
     ],
     "epistemic_basis": "Inference on source claims. R2 F-20 supplies the unit-and-test requirement; the EXACT field list of the existence record is the selection record's own marked design proposal (§13, row 19). The six admitted reasons rest on R2 F-09, F-10, F-21 and R6 F6. Whether worker profiles converge over a month (U-8) is unmeasured and is the only honest test of whether this is a roster discovered rather than declared.",
     "accepted_design_costs": [
@@ -649,9 +656,12 @@
       "planning/F2/05-selection-record.md#64-the-two-control-cell-questions-the-consolidation-says-the-synthesis-must-answer",
       "planning/F2/05-selection-record.md#13-evidence-ledger (rows 20-23, 50, 55-56: R8 A-4, A-5, A-7, AC §7.4, AC-M3-02, AC-M4-01, AC-M4-05, AC-M5-02, AE-M4-05)",
       "research/F2/R8-contrarian.md",
-      "planning/F2/reviews/A-company-human.md"
+      "planning/F2/reviews/A-company-human.md",
+      "planning/specification/05-work-agents-skills.md#12-standing-accountability (R-L5: StandingHolder as a record with an address, mandate, reservation, alternate and review date)",
+      "planning/specification/05-work-agents-skills.md#10-registered-lifecycle-phases-named-only-in-the-registry (StandingHolder.suspended)",
+      "planning/specification/11-schemas-state-contracts.md"
     ],
-    "epistemic_basis": "Inference on review findings, with one part explicitly unevidenced: the three-part conjunction AS a conjunction is marked unevidenced in the originating candidate's own ledger and this record inherits the mark (§13, row 21). Refusing carried model memory is a source claim — two deployments refusing to support it. The reserved-lane holder is justified by fixture F-2, which is NOT executable at the current concurrency pin, so that one structure rests on an unrunnable fixture and is recorded as OWED rather than passed.",
+    "epistemic_basis": "Inference on review findings, with one part explicitly unevidenced: the three-part conjunction AS a conjunction is marked unevidenced in the originating candidate's own ledger and this record inherits the mark (§13, row 21). Refusing carried model memory is a source claim — two deployments refusing to support it. The reserved-lane holder is justified by fixture F-2, which is NOT executable at the current concurrency pin, so that one structure rests on an unrunnable fixture and is recorded as OWED rather than passed. R-X07, cited by this record, DID NOT LAND (F6A-11, 2026-09-14): neither the string R-X07, nor capability_refs, nor the per-capability-never-grouped rule appears anywhere under the specification directory. That coverage discipline is carried by the F2 selection record alone, and is recorded here as outstanding, not as specified.",
     "accepted_design_costs": [
       "Staffing, and the figure is carried rather than summarised: a person is the acceptor on 37 of 46 capabilities in the consequence-class candidate and on every action in the 26 that floor at the economic/contractual class or above. This decision does not reduce that load; it makes it visible before work is admitted rather than after it is owed",
       "Admission stops in any duty class whose acceptance role is unfilled, which in a one-person company is most of the economic/contractual classes",
