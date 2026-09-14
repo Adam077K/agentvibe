@@ -89,17 +89,13 @@
     "Step 5b complete at 8f6c2c2: chapters (WORK-1.1, E1.2, seven joins), registers (AD-015..022, Q-016..021, 135 question rows, 9 package rows), contracts (15 records 173->188, 7 changed, 30 guards, 57 pins/119 rows, 17 adverse + 17 benign fixtures, aliases 26, capabilities.json version check); validator 299,177 checks exit 0, 53/53 negative, 17/17 positive; all verifiers exit 0. Author-recorded.",
     "Step 6 reviews archived (planning/reviews/F2-06-A..D.md) at subject 8f6c2c2: sufficient W5 W9 W11 W13; insufficient W1 W2 W3 W4 W6 W7 W8 W10 W12 W14 W15. Six (d): F6A-01 middle-band recipient, F6A-06 floor mapping absent, F6B-05 acceptance-sampling rule, F6D declared_grants/grant policy, C5 control objects unrepresented, EffectIdentity join optional. Measured headline: 30/30 new guards detachable silently; two guards wrong as written. Repair round dispatched by file partition; narrow recheck after.",
     "Step 6 prose repairs landed (22743bf..6337505; 12 commits; all verifiers 0; Q-022 added for X14). RC4-01..07 repaired (6dcbc1b..bcfd658): pin-side admissible_ancestors, pinned table digest, fixture floors 56/17, census floored; validator 299,379 exit 0 (author-recorded).",
-    "G-02-recheck-05 archived (subject bcfd658): RC4-01/03/04/05/06 CLOSED, RC4-07 closed for the measured move, RC4-02 closed against the registry author; structural claim holds under every probe; RC5-01/02/03 registered (the allowlist is uncounted; the coverage sweep misses newer id families)."
+    "G-02-recheck-05 archived (subject bcfd658): RC4-01/03/04/05/06 CLOSED, RC4-07 closed for the measured move, RC4-02 closed against the registry author; structural claim holds under every probe; RC5-01/02/03 registered (the allowlist is uncounted; the coverage sweep misses newer id families).",
+    "Step 6 contracts repairs landed (6b7a799..9d60596, 13 commits): pinned attachments (30+ guards to edges) and 32 pinned transitions, set-equality guards, declared_grants refs + guard, ProtectedChange control-object enum + guard, EffectIdentity natural key, class-mapping-table.json + declared floors, registry/schema drift check, manifest/ConstraintSet/calibration guards, Obligation.production_mode, ExhaustionDecision, launch-count guard, lapse/FailureRecord/supersession fixes; fixtures 56->92 adverse, 17->53 benign; validator 304,041 checks exit 0 (author-recorded). Residue F6X-01/02 registered."
   ],
   "active_work": [
     {
-      "agent": "builder (r6-contracts)",
-      "scope": "Step 6 contracts repairs per F2-06-* and the names contract",
-      "status": "dispatched 2026-09-14"
-    },
-    {
-      "agent": "reviewer (recheck-05)",
-      "scope": "G-02-recheck-05 at frozen bcfd658",
+      "agent": "builder (rc5-repair)",
+      "scope": "RC5-01..03 terminal repair in contracts/",
       "status": "dispatched 2026-09-14"
     }
   ],

@@ -1345,5 +1345,33 @@
     "required_contract": "Either read the block (refuse an operator present in both) or delete it; prose that names an attack and is enforced by nothing is the decorative-declaration class the package names.",
     "independent_recheck": null,
     "implementation_evidence": null
+  },
+  {
+    "id": "F6X-01",
+    "source": "r6-contracts builder return, 2026-09-14",
+    "review_subject": "9d60596",
+    "title": "Three records declaring an exclusive factory name a command the command registry does not contain",
+    "class": "b",
+    "severity": "low",
+    "owner": "contracts author; independent recheck after",
+    "status": "Open; pre-existing, found while adding EffectIdentity's natural key; recorded rather than widened",
+    "issue": "Three of the nine records that already declare an exclusive factory name a command absent from command-registry.json.",
+    "required_contract": "Register the commands or retire the declarations; add a validator check that every exclusive_factory resolves.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6X-02",
+    "source": "r6-contracts builder return, 2026-09-14",
+    "review_subject": "9d60596",
+    "title": "ConstraintSet.boundary_kind is a free string and OperatorProjection has no contested-refs field (F6B-02 residue)",
+    "class": "b",
+    "severity": "low",
+    "owner": "chapters + contracts authors",
+    "status": "Open; the enum members would have been invented rather than derived — needs the chapter to state them first",
+    "issue": "Two clauses of F6B-02's required contract not implemented for that reason.",
+    "required_contract": "05 §5 states the closed boundary_kind set and the contested-refs field; contracts then register them.",
+    "independent_recheck": null,
+    "implementation_evidence": null
   }
 ]
