@@ -1,0 +1,17 @@
+{
+  "id": "r23-retention-field-note-edited-benign",
+  "repair": "R23",
+  "finding": "F6C-11; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-11), benign column",
+  "case": "The prose note beside `retention_span` in the registry is rewritten. The field, its type and the comparison are untouched, and this must pass.",
+  "paired_adverse_fixture": "fixtures/negative/r23-retention-ceiling-collected-and-never-applied.json",
+  "why": "The adverse case removes the comparison. The benign case is what stops the repair overshooting into a byte comparison of the registry entry: the control is on the CONJUNCT and on the two operands' type, not on the prose beside them. A checker that refused an edited note would make every documentation improvement a contract change, which is how a control stops being read.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/UnmatchedPoolEntry/fields/payload/fields/retention_span/note",
+      "op": "replace",
+      "value": "The retention window this entry holds, as a span in the same unit as the stated outage, so the two can be compared rather than merely recorded beside each other (F6C-11)."
+    }
+  ]
+}

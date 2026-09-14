@@ -2250,11 +2250,6 @@
         "s1:resource_equation(not defined for ExternalAttempt)"
       ]
     },
-    "FailureRecord": {
-      "retry_admitted": [
-        "s1:resource_equation(not defined for FailureRecord)"
-      ]
-    },
     "IdentityBinding": {
       "suspended": [
         "rp"

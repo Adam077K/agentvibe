@@ -22973,6 +22973,7 @@
         "guard.supersession.walks_derived_closure",
         "guard.trust.derived_is_floor_of_inputs",
         "guard.trust.promotion_is_an_effect_with_a_non_model_discriminator",
+        "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
         "identity.current.v1",
         "mandate.current_scope.v1",
         "proof.exact_receipt.v1",
@@ -520126,6 +520127,12 @@
         }
       ],
       "description": "Whether external burden on customers, applicants or contractors was observed in a stated window. `none_observed` is a POSITIVE finding and carries its reason, its window and the assignment answerable for it; it is not the absence of evidence, which is what an empty observation array is and why an empty array cannot establish it."
+    },
+    "CapacityMeasure": {
+      "type": "string",
+      "enum": [
+        "cache_lifetime"
+      ]
     }
   }
 }

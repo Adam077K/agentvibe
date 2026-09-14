@@ -2,15 +2,16 @@
   "schema_version": "1.0",
   "kind": "candidate-era name -> registry record name",
   "why": "R-X02, and it is the amendment-and-migration contract's own table rather than documentation beside it. The F2 round produced five candidate designs, four of which proposed RENAMING existing registry records -- WorkRecord, Procedure, Step, Journal and others -- which at irreversible tier would have left roughly a hundred dangling registry references with no migration. NOTHING IS RENAMED. New content lands as fields on existing records, and every candidate-era name resolves here instead. The load-bearing half is the REFUSAL: a candidate-era name is never admitted AS a record name, exactly as kernel.record.register rejects any arbitrary record name, and an alias resolves to its registry name FOR READING ONLY. Unknown or ambiguous alias mappings remain restricted -- the rule 11-schemas-state-contracts.md already states for migration, applied here unchanged.",
-  "how_to_read": "Every key is a name a candidate wrote and this registry does not have. Every value is a name this registry does have. A key that became a real record name (AdmissionRecord, ConsequenceDerivation, ConstraintSet, EffectIdentity, ExistenceJustification, FieldAuthority, GrantDeliveryReceipt, InstrumentCalibration, ProjectionGrant, ShedDecision, StandingHolder) is deliberately ABSENT from this table: it is not an alias, it is a record, and listing it would make the refusal below reject the registry's own name.",
+  "how_to_read": "Every key is a name a candidate wrote and this registry does not have AS A RECORD. Every value is a name this registry does have as a record. A key that became a real record name (AdmissionRecord, ConsequenceDerivation, ConstraintSet, EffectIdentity, ExistenceJustification, FieldAuthority, GrantDeliveryReceipt, InstrumentCalibration, ProjectionGrant, ShedDecision, StandingHolder) is deliberately ABSENT from this table: it is not an alias, it is a record, and listing it would make the refusal below reject the registry's own name. CORRECTED BY F6A-09, and the correction is narrow on purpose: this line read \"a name a candidate wrote AND THIS REGISTRY DOES NOT HAVE\", full stop, which was false of two keys at once and false in two different ways. `ConsequenceVector` is a name this package DOES have, as a registered VALUE type -- that row was a wrong mapping and is deleted, see not_aliases. `CapacityState` is a name no registry has and the SPECIFICATION PROSE does: `05` section 7 uses it normatively for the object that records remaining-or-unknown. Its row STAYS, because its mapping is substantively correct -- `CapacityObservation.measurement` is a `MeasuredQuantity`, a oneOf carrying an `observed` variant, which is the observed-or-unknown shape section 7 asks for -- and because F6D-10 withdrew half a finding on the ground that this row exists. Deleting it to satisfy a sentence would reopen that.",
   "checked_by": [
-    "validate_contracts.py: no alias name is a record name, every alias target IS a record name, no alias maps to itself, and the table cannot shrink below its declared floor",
+    "validate_contracts.py: no alias name is a record name, NO ALIAS NAME IS A REGISTERED VALUE TYPE (F6A-09), every alias target IS a record name, no alias maps to itself, and the table cannot shrink below its declared floor",
     "11-schemas-state-contracts.md#amendment-and-migration-contract states the rule this file implements"
   ],
   "not_aliases": {
     "Ref": "a type constructor in the candidates' prose (`Ref<X>`), not a record name",
     "PreToolUse": "the name of a runtime hook in the harness the candidates cite, not a record",
-    "SmallCaps": "typography in one candidate's own formatting note"
+    "SmallCaps": "typography in one candidate's own formatting note",
+    "ConsequenceVector": "F6A-09. REMOVED FROM THE TABLE, not merely explained. It is a LIVE VALUE TYPE -- registered in value-registry.json and values.schema.json, declared by `Grant.payload.consequence_bounds` in 02-authority-recovery.md section 4 and defined in section 96 as separate money, duty-scope and recipient-population dimensions. The table mapped it to `ConsequenceDerivation`, which is a DIFFERENT OBJECT: a per-operation derivation record. A reader following the row read a grant's consequence bounds as that record. This was a wrong mapping, not a missing caveat, and the correct repair is deletion."
   },
   "floor": 20,
   "floor_why": "A literal, for the reason every other floor in this package is a literal: a count derived from the table it measures is satisfied by the empty table. Emptying this file would turn the refusal below into a rule with nothing to refuse, and it would pass exactly as loudly as a full one. Lowering this number is a decision and should read like one.",
@@ -24,7 +25,6 @@
     "CapacityState": "CapacityObservation",
     "CarriedRecord": "ContextManifest",
     "Charter": "StandingHolder",
-    "ConsequenceVector": "ConsequenceDerivation",
     "ConsultationRequest": "WorkMessage",
     "Contradiction": "ContradictionSet",
     "Decision": "DecisionRecord",

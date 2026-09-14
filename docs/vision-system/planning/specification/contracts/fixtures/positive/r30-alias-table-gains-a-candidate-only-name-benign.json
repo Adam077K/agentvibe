@@ -1,0 +1,17 @@
+{
+  "id": "r30-alias-table-gains-a-candidate-only-name-benign",
+  "repair": "R30",
+  "finding": "F6A-09; reviews/F2-06-A-authority-boundaries-adversarial.md (F6A-09), benign column",
+  "case": "A genuine candidate-era name -- held by neither registry -- added to the table, mapping to a real record.",
+  "paired_adverse_fixture": "fixtures/negative/r30-alias-key-is-a-registered-value-type.json",
+  "why": "The table must stay ADDABLE. It exists because four of the five F2 candidates proposed renaming existing records, and the whole point is that a candidate-era name resolves here for reading instead of being admitted as a record name. A check that refused new rows would make publishing a correspondence more expensive than leaving a reader to guess, which inverts what the file is for. The widened refusal must key on `this name is one the package HAS`, not on `this row is new`.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "aliases.json",
+      "pointer": "/aliases/CapabilityLedger",
+      "op": "add",
+      "value": "StandingHolder"
+    }
+  ]
+}

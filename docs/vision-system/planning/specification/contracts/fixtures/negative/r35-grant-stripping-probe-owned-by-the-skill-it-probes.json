@@ -1,0 +1,17 @@
+{
+  "id": "r35-grant-stripping-probe-owned-by-the-skill-it-probes",
+  "repair": "R35",
+  "finding": "F6D-05; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-05)",
+  "case": "`grant_stripping_probe_result`'s owner is handed back to S1-C03, the producing executor whose grants the probe is about.",
+  "paired_benign_fixture": "fixtures/positive/r35-control-ownership-table-reordered-benign.json",
+  "why": "F6D-05: the committed state the finding measured. The positive control on grant removal was a field on the record whose grants are being removed, and R-X15's own argument is that the rule must be structural rather than asserted. One word restores it, and nothing but this check notices.",
+  "expect_failure_contains": "A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/SkillVersion/fields/payload/fields/grant_stripping_probe_result/owner",
+      "op": "replace",
+      "value": "S1-C03"
+    }
+  ]
+}

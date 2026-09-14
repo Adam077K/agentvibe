@@ -1,0 +1,20 @@
+{
+  "id": "r31-capacity-measure-invented-in-the-registry",
+  "repair": "R31",
+  "finding": "F6C-06; reviews/F2-06-C-capacity-integration-adversarial.md (F6C-06)",
+  "case": "A capacity measure added to the registered vocabulary that no chapter names.",
+  "paired_benign_fixture": "fixtures/positive/r31-capacity-measure-documentation-edited-benign.json",
+  "why": "F6C-06 is prose pointing at a capacity row with no measure behind it. The opposite failure is the one this fixture holds: a measure with no prose behind it -- a name invented in the registry and then cited as though the specification had asked for it. That is the more dangerous direction, because a registered row LOOKS like evidence. `07` section 6 observes allowances without ever naming what they measure, so inventing plausible names for them is a live temptation and exactly what F6X-02 was refused for through two lanes. The vocabulary grows when a chapter names something, never before.",
+  "expect_failure_contains": "A REGISTERED CAPACITY MEASURE IS NAMED BY NO CHAPTER",
+  "patch": [
+    {
+      "file": "value-registry.json",
+      "pointer": "/CapacityMeasure/members",
+      "op": "replace",
+      "value": [
+        "cache_lifetime",
+        "allowance_headroom_ratio"
+      ]
+    }
+  ]
+}

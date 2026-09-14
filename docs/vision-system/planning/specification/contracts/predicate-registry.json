@@ -54498,6 +54498,209 @@
           ]
         },
         {
+          "op": "any",
+          "predicates": [
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "permission_scope"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "permission_scope"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "input_provenance"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "input_set"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "consequence_class"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "effect_class"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "confidentiality_boundary"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "context_boundary"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "named_partition"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "partition"
+                }
+              ]
+            },
+            {
+              "op": "all",
+              "predicates": [
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_kind"
+                  },
+                  "right": "verification_relation"
+                },
+                {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/reason_unit"
+                  },
+                  "right": "attempt_relation"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "op": "accepted_for",
           "subject_ref": {
             "arg": "subject_ref"
@@ -54520,7 +54723,7 @@
         }
       ]
     },
-    "meaning": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here. Phase assessed: admitted.",
+    "meaning": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here. The reason named is one of the six admitted reasons AND is paired with the unit that reason predicates on, so a seventh reason and a mismatched unit are both refused here. Phase assessed: admitted.",
     "owner_component": "S1-C02",
     "source": "05-work-agents-skills.md#4-temporary-workers-model-choice-and-bounded-reasoning",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -54612,7 +54815,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here.",
+    "requires": "A decidable test is recorded and it can return false, the admitting mandate is currently accepted, an attributable identity is bound, the approval carries an expiry and a current accepted judgment on this criterion exists. A justification naming a capability is uncheckable and is refused here. The reason named is one of the six admitted reasons AND is paired with the unit that reason predicates on, so a seventh reason and a mismatched unit are both refused here.",
     "derived_from": [
       {
         "file": "05-work-agents-skills.md",
@@ -58666,24 +58869,37 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/work_order_ref",
             "/payload/attempt_refs",
-            "/payload/work_order_ref"
+            "/payload/attempt_ceiling",
+            "/payload/next_discriminator"
           ]
         },
         {
-          "op": "release_contract",
-          "subject_ref": {
-            "arg": "subject_ref"
+          "op": "lt",
+          "left": {
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/attempt_refs"
+            }
           },
-          "phase": "retry_admitted"
-        },
-        {
-          "op": "fresh_interval",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "start_path": "/effective_from",
-          "end_path": "/effective_until"
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/attempt_ceiling"
+          }
         },
         {
           "op": "attested_result",
@@ -58708,7 +58924,7 @@
         }
       ]
     },
-    "meaning": "A new current attempt within the remaining count and budget and the ORIGINAL business conflict; the deadline is newly authorized, never replayed. Phase assessed: retry_admitted.",
+    "meaning": "A retry names the work order it belongs to, the attempts already made, the ceiling those attempts are measured against and the new discriminator that makes this attempt different. The attempts made are STRICTLY FEWER than the ceiling: the ceiling is compared here, not merely recorded, and a retry at the ceiling is refused rather than admitted. Phase assessed: retry_admitted.",
     "owner_component": "S1-C02",
     "source": "work-knowledge-contracts.json#/records/FailureRecord",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -58800,7 +59016,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "A new current attempt within the remaining count and budget and the ORIGINAL business conflict; the deadline is newly authorized, never replayed.",
+    "requires": "A retry names the work order it belongs to, the attempts already made, the ceiling those attempts are measured against and the new discriminator that makes this attempt different. The attempts made are STRICTLY FEWER than the ceiling: the ceiling is compared here, not merely recorded, and a retry at the ceiling is refused rather than admitted.",
     "derived_from": [
       {
         "file": "02-authority-recovery.md",
@@ -133876,8 +134092,33 @@
             "/payload/longest_plausible_outage",
             "/payload/alarm_reader_ref",
             "/payload/alarm_raised_at",
-            "/payload/residue_note"
+            "/payload/residue_note",
+            "/payload/landed_at",
+            "/payload/retention_span"
           ]
+        },
+        {
+          "op": "lt",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/longest_plausible_outage"
+          },
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/retention_span"
+          }
         },
         {
           "op": "attested_result",
@@ -133902,7 +134143,7 @@
         }
       ]
     },
-    "meaning": "A work record armed no interest, its retention exceeds the longest plausible outage, the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this. Phase assessed: landed.",
+    "meaning": "A work record armed no interest, its retention STRICTLY EXCEEDS the longest plausible outage -- the two compared as spans in one unit, not merely recorded beside each other -- the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this. Phase assessed: landed.",
     "owner_component": "S1-C05",
     "source": "05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -133994,7 +134235,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "A work record armed no interest, its retention exceeds the longest plausible outage, the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this.",
+    "requires": "A work record armed no interest, its retention STRICTLY EXCEEDS the longest plausible outage -- the two compared as spans in one unit, not merely recorded beside each other -- the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this.",
     "derived_from": [
       {
         "file": "05-work-agents-skills.md",
@@ -136579,6 +136820,7 @@
           },
           "field_paths": [
             "/provenance_refs",
+            "/payload/critical_fields_authority_ref",
             "/payload/outcome_ref",
             "/payload/stop_predicates"
           ]
@@ -136591,6 +136833,13 @@
           "bindings": [
             {
               "field_path": "/provenance_refs",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
               "states": [
                 "accepted"
               ],
@@ -136745,6 +136994,7 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/critical_fields_authority_ref",
             "/payload/capability_contract_ref",
             "/payload/input_refs",
             "/payload/acceptance_contract_ref",
@@ -136762,6 +137012,13 @@
           "bindings": [
             {
               "field_path": "/payload/acceptance_owner_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
               "states": [
                 "accepted"
               ],
@@ -137565,6 +137822,7 @@
           },
           "field_paths": [
             "/payload/stop_predicates",
+            "/payload/attempt_ceiling",
             "/payload/duty_refs",
             "/payload/unfinished_obligation_refs"
           ]
@@ -384406,6 +384664,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.WorkOrder.admitted.v1",
           "arguments": {
             "subject_ref": {
@@ -399348,6 +399615,105 @@
       "required": [
         "account_ref",
         "requested"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<WorkOrder>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/critical_fields",
+            "/payload/critical_fields_authority_ref"
+          ]
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "eq",
+            "left": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/critical_fields_authority_ref"
+            },
+            "right": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/owner_assignment_ref"
+            }
+          }
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        }
+      ]
+    },
+    "meaning": "The fields whose change forces a re-decision are marked by the capability owner at procedure admission, in an accepted responsibility assignment, and never by the work order's own current owner -- the resuming attempt, which is the party with an interest in the answer (R-D18, AT-M1-02).",
+    "owner_component": "S1-C02",
+    "source": "05-work-agents-skills.md#3-instructions-and-reusable-skills",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "WorkOrder"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
       ],
       "additionalProperties": false
     }

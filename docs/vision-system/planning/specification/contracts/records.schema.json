@@ -4684,7 +4684,7 @@
               "additionalProperties": false
             },
             "failed_predicate_id": {
-              "$ref": "values.schema.json#/$defs/string"
+              "$ref": "values.schema.json#/$defs/PredicateId"
             },
             "acceptance_owner_ref": {
               "type": "object",
@@ -29875,7 +29875,17 @@
               }
             },
             "boundary_kind": {
-              "$ref": "values.schema.json#/$defs/string"
+              "type": "string",
+              "enum": [
+                "delegation",
+                "machine_handoff",
+                "consultation_return",
+                "continuation",
+                "acceptance_submission",
+                "founder_brief",
+                "custody_transfer",
+                "stage_import"
+              ]
             },
             "producing_structure_ref": {
               "type": "object",
@@ -51599,10 +51609,26 @@
               "additionalProperties": false
             },
             "reason_kind": {
-              "$ref": "values.schema.json#/$defs/string"
+              "type": "string",
+              "enum": [
+                "permission_scope",
+                "input_provenance",
+                "consequence_class",
+                "confidentiality_boundary",
+                "named_partition",
+                "verification_relation"
+              ]
             },
             "reason_unit": {
-              "$ref": "values.schema.json#/$defs/string"
+              "type": "string",
+              "enum": [
+                "permission_scope",
+                "input_set",
+                "effect_class",
+                "context_boundary",
+                "partition",
+                "attempt_relation"
+              ]
             },
             "decidable_test": {
               "$ref": "values.schema.json#/$defs/string"
@@ -121013,11 +121039,226 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "contested_refs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "record_id": {
+                    "$ref": "values.schema.json#/$defs/UUID"
+                  },
+                  "record_type": {
+                    "type": "string",
+                    "enum": [
+                      "AcceptanceInterval",
+                      "AccessDescendant",
+                      "AccessGraph",
+                      "AccessPolicy",
+                      "Account",
+                      "AccountReconstruction",
+                      "AdapterProfile",
+                      "AdmissionRecord",
+                      "AgentInstance",
+                      "AgentTemplate",
+                      "ArmedSet",
+                      "ArtifactVersion",
+                      "AttemptReport",
+                      "BackupPolicy",
+                      "BillingProfile",
+                      "Blocker",
+                      "BrandGuide",
+                      "BuildArtifact",
+                      "BusinessAccount",
+                      "Campaign",
+                      "CandidateAssessment",
+                      "CapacityObservation",
+                      "CapacityStudy",
+                      "Case",
+                      "CasePool",
+                      "CashPosition",
+                      "CausalEpisode",
+                      "ChangeWatch",
+                      "Claim",
+                      "ClosurePlan",
+                      "Commitment",
+                      "ConfigurationVersion",
+                      "ConflictClaim",
+                      "ConsequenceClassDefinition",
+                      "ConsequenceDerivation",
+                      "Constraint",
+                      "ConstraintSet",
+                      "ContentAsset",
+                      "ContextManifest",
+                      "ContextTransformation",
+                      "Continuation",
+                      "ContinuityArrangement",
+                      "ContradictionSet",
+                      "Conversation",
+                      "DecisionChallenge",
+                      "DecisionPacket",
+                      "DecisionRecord",
+                      "Defect",
+                      "Delegation",
+                      "DeletionReceipt",
+                      "DeletionScope",
+                      "DeliveryCapacity",
+                      "DependencyClosure",
+                      "Deployment",
+                      "DisclosureContract",
+                      "DomainAssessment",
+                      "DomainAuthorityBinding",
+                      "DomainEvent",
+                      "DurabilityReceipt",
+                      "Economics",
+                      "EffectIdentity",
+                      "EvaluationCase",
+                      "EvaluationPlan",
+                      "EvaluationRun",
+                      "EvaluationTrial",
+                      "EvaluatorProfile",
+                      "EvidenceBaseVersion",
+                      "EvidenceJudgment",
+                      "ExecutionCapacity",
+                      "ExecutionSelection",
+                      "ExhaustionDecision",
+                      "ExistenceJustification",
+                      "ExperienceArtifact",
+                      "Experiment",
+                      "ExternalAttempt",
+                      "FailureRecord",
+                      "FieldAuthority",
+                      "ForgetRequest",
+                      "FormationReadiness",
+                      "Fulfillment",
+                      "GenerationSeal",
+                      "Goal",
+                      "Grant",
+                      "GrantDeliveryReceipt",
+                      "GrievanceCase",
+                      "HandoffAcceptance",
+                      "HumanResponse",
+                      "IdentityBinding",
+                      "ImprovementProposal",
+                      "Incident",
+                      "IndexSnapshot",
+                      "InstructionBundle",
+                      "InstrumentCalibration",
+                      "IntegrationConnection",
+                      "IntegrationInvocation",
+                      "IntegrationObservation",
+                      "IntentVersion",
+                      "InteractionDetermination",
+                      "InterventionRequest",
+                      "JournalBatch",
+                      "KeyManifest",
+                      "KnowledgeEntry",
+                      "KnowledgeQuestion",
+                      "LaunchReadiness",
+                      "LearningProposal",
+                      "LifecycleStatus",
+                      "Mandate",
+                      "MarketBrief",
+                      "MessageAcknowledgment",
+                      "MetricDefinition",
+                      "MetricSeries",
+                      "MigrationPlan",
+                      "Mission",
+                      "Obligation",
+                      "Observation",
+                      "ObservationSet",
+                      "Offer",
+                      "OperationIntent",
+                      "OperationStatus",
+                      "OperationalAdmission",
+                      "OperatorProjection",
+                      "Opportunity",
+                      "ParameterAuthority",
+                      "ParticipationEncounter",
+                      "ParticipationPlan",
+                      "Partnership",
+                      "PausePlan",
+                      "PivotPlan",
+                      "PrerequisiteSnapshot",
+                      "PriceProposal",
+                      "Principal",
+                      "Principle",
+                      "ProcessingUse",
+                      "ProductSpec",
+                      "ProfessionalDetermination",
+                      "ProfessionalRequest",
+                      "Project",
+                      "ProjectionGrant",
+                      "ProtectedChange",
+                      "ReasonRecord",
+                      "ReasoningPlan",
+                      "RecoveryEnvelope",
+                      "RecoveryPacket",
+                      "RegistryMembership",
+                      "Release",
+                      "ReleaseManifest",
+                      "ResearchPlan",
+                      "Reservation",
+                      "ResourceAccount",
+                      "ResponseDecision",
+                      "ResponsibilityAssignment",
+                      "RetentionPolicy",
+                      "RetrievalAttempt",
+                      "RetrievalProfile",
+                      "RetryContract",
+                      "Review",
+                      "RollbackPlan",
+                      "RolloutPlan",
+                      "RuntimeProfile",
+                      "SalesAgreement",
+                      "Schedule",
+                      "ScheduleOccurrence",
+                      "ScopeRegistry",
+                      "SecurityCase",
+                      "SemanticMappingVersion",
+                      "SendClaim",
+                      "ShedDecision",
+                      "SkillSelection",
+                      "SkillVersion",
+                      "SourceCursor",
+                      "SourceRecord",
+                      "StandingHolder",
+                      "StandingInterest",
+                      "StepExecution",
+                      "SummaryLoss",
+                      "SupplierEngagement",
+                      "SupportCase",
+                      "Suppression",
+                      "TransferPlan",
+                      "UnmatchedPoolEntry",
+                      "ValidityEpoch",
+                      "Venture",
+                      "WorkDependency",
+                      "WorkMessage",
+                      "WorkOrder",
+                      "WorkflowDefinition",
+                      "WorkflowRun",
+                      "WorkspaceAssignment",
+                      "Workstream"
+                    ]
+                  },
+                  "revision": {
+                    "$ref": "values.schema.json#/$defs/Revision"
+                  }
+                },
+                "required": [
+                  "record_id",
+                  "record_type",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": [
             "actor_scope_ref",
             "constraint_set_ref",
+            "contested_refs",
             "freshness",
             "included_refs",
             "omission_manifest_ref",
@@ -185158,7 +185399,8 @@
                 "narrowest_sufficient_scope",
                 "alternate_available",
                 "earliest_acceptance",
-                "no_overlap"
+                "no_overlap",
+                "admitter_excluded"
               ]
             }
           },
@@ -198094,11 +198336,15 @@
             "precondition_predicate_ids": {
               "type": "array",
               "items": {
-                "$ref": "values.schema.json#/$defs/string"
+                "$ref": "values.schema.json#/$defs/PredicateId"
               }
             },
             "precondition_evaluator_kind": {
-              "$ref": "values.schema.json#/$defs/string"
+              "type": "string",
+              "enum": [
+                "deterministic",
+                "model"
+              ]
             },
             "required_trust_class": {
               "$ref": "values.schema.json#/$defs/string"
@@ -202773,7 +203019,7 @@
               "$ref": "values.schema.json#/$defs/UTC"
             },
             "longest_plausible_outage": {
-              "$ref": "values.schema.json#/$defs/string"
+              "$ref": "values.schema.json#/$defs/Duration"
             },
             "alarm_reader_ref": {
               "type": "object",
@@ -202852,6 +203098,9 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "retention_span": {
+              "$ref": "values.schema.json#/$defs/Duration"
             }
           },
           "required": [
@@ -202861,7 +203110,8 @@
             "longest_plausible_outage",
             "alarm_reader_ref",
             "alarm_raised_at",
-            "residue_note"
+            "residue_note",
+            "retention_span"
           ],
           "additionalProperties": false
         }
@@ -206588,6 +206838,38 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "attempt_ceiling": {
+              "$ref": "values.schema.json#/$defs/UInt64"
+            },
+            "critical_fields": {
+              "type": "array",
+              "items": {
+                "$ref": "values.schema.json#/$defs/JsonPointer"
+              }
+            },
+            "critical_fields_authority_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ResponsibilityAssignment"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -206606,7 +206888,10 @@
             "checkpoint_contract_ref",
             "stop_predicates",
             "unfinished_obligation_refs",
-            "report_refs"
+            "report_refs",
+            "attempt_ceiling",
+            "critical_fields",
+            "critical_fields_authority_ref"
           ],
           "additionalProperties": false
         }

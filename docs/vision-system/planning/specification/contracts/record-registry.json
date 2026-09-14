@@ -3220,7 +3220,7 @@
           "counterparty_subcap": "UInt64",
           "intake_refused": "boolean",
           "acceptance_holder_ref": "Ref<StandingHolder>",
-          "failed_predicate_id": "string",
+          "failed_predicate_id": "PredicateId",
           "acceptance_owner_ref": "Ref<ResponsibilityAssignment>",
           "overflow_destination_ref": "Ref<CasePool>",
           "overflow_alarm_reader_ref": "Ref<ResponsibilityAssignment>",
@@ -3297,7 +3297,7 @@
             "required": false
           },
           "failed_predicate_id": {
-            "type": "string",
+            "type": "PredicateId",
             "required": false
           },
           "acceptance_owner_ref": {
@@ -4489,7 +4489,7 @@
       ]
     },
     "owner_component": "S1-C02",
-    "owner_assignment": "Exact envelope owner_assignment_ref; actual current accepted custodian/mandate and scope required at each transition. Naming the component does not establish human competence.",
+    "owner_assignment": "Exact envelope owner_assignment_ref; actual current accepted custodian/mandate and scope required at each transition. Naming the component does not establish human competence. On a DERIVED PROJECTION this field names the CUSTODIAN, never a writer: `ArmedSet` is computed, `permitted_commands` is empty, it has no lifecycle transition, and nothing writes it. F6D-08: the record's own invariant excludes the admission authority from writing any precondition-bearing kind, and `owner_component` names that same component -- the two only contradict if `owner_component` is read as write authority. It is not, and this sentence is where that is said rather than assumed.",
     "source_of_truth": {
       "authority": "kernel immutable business and lifecycle heads, with native facts attributed through explicit DomainAuthorityBinding",
       "external_fact_rule": "Derived, not written. It is the deterministic evaluation of every admitted interest against one journal position, and no component may prevent membership."
@@ -15801,7 +15801,7 @@
         "type_fields": {
           "content_digest": "string",
           "typed_members": "string[]",
-          "boundary_kind": "string",
+          "boundary_kind": "Enum<delegation,machine_handoff,consultation_return,continuation,acceptance_submission,founder_brief,custody_transfer,stage_import>",
           "producing_structure_ref": "Ref<ResponsibilityAssignment>",
           "validated_at_boundary": "boolean",
           "prose_delivery": "string",
@@ -15828,8 +15828,10 @@
             "required": true
           },
           "boundary_kind": {
-            "type": "string",
-            "required": true
+            "type": "Enum<delegation,machine_handoff,consultation_return,continuation,acceptance_submission,founder_brief,custody_transfer,stage_import>",
+            "required": true,
+            "added_by": "WORK-1.1-F6X02",
+            "note": "F6X-02. Closed set, eight members, stated as specification in `05` section 5 and listed member-by-member with its derivation in planning/F2/08-repair-names-prose-b.md. A transfer whose boundary kind is not a member is REFUSED at the boundary, never defaulted -- which is why the schema carries no `default` beside this enum and validate_contracts.py asserts the absence. The field was a free string until this repair, so `boundary_kind: \"whatever\"` was admissible on a record whose whole subject is which boundary was crossed."
           },
           "producing_structure_ref": {
             "type": "Ref<ResponsibilityAssignment>",
@@ -31756,8 +31758,8 @@
       "payload": {
         "type_fields": {
           "agent_instance_ref": "Ref<AgentInstance>",
-          "reason_kind": "string",
-          "reason_unit": "string",
+          "reason_kind": "Enum<permission_scope,input_provenance,consequence_class,confidentiality_boundary,named_partition,verification_relation>",
+          "reason_unit": "Enum<permission_scope,input_set,effect_class,context_boundary,partition,attempt_relation>",
           "decidable_test": "string",
           "test_can_return_false": "boolean",
           "alternative_considered": "string",
@@ -31791,11 +31793,11 @@
             "required": true
           },
           "reason_kind": {
-            "type": "string",
+            "type": "Enum<permission_scope,input_provenance,consequence_class,confidentiality_boundary,named_partition,verification_relation>",
             "required": true
           },
           "reason_unit": {
-            "type": "string",
+            "type": "Enum<permission_scope,input_set,effect_class,context_boundary,partition,attempt_relation>",
             "required": true
           },
           "decidable_test": {
@@ -53400,6 +53402,12 @@
             "required": true,
             "added_by": "WORK-1.1-F6B",
             "note": "F6B-02. The other operator-facing carrier. `omission_manifest_ref` was already required here and is credited; a constraint set is the half that says what may not be done with what was rendered."
+          },
+          "contested_refs": {
+            "type": "Ref<Record>[]",
+            "required": true,
+            "added_by": "WORK-1.1-F6X02",
+            "note": "F6X-02. The second limb of `04` DELTA 1 -- \"what was omitted AND WHAT WAS CONTESTED\" -- whose first limb `omission_manifest_ref` already carries. REQUIRED, not optional, and that is the whole design: an EMPTY ARRAY states that nothing was contested, which is a different fact from an absent field. An optional field collapses `nothing was contested` and `nobody looked` into one absence, and an operator reading a projection cannot tell them apart."
           }
         }
       }
@@ -65837,7 +65845,7 @@
           "unresolved_scope": "ScopeSelector",
           "contesting_mandate_refs": "Ref<Mandate>[]",
           "custody_basis": "Enum<promise_sponsor,service_mandate,maintenance_custodian,provisional_overlap_resolution>",
-          "custody_tie_break_reason": "Enum<narrowest_sufficient_scope,alternate_available,earliest_acceptance,no_overlap>"
+          "custody_tie_break_reason": "Enum<narrowest_sufficient_scope,alternate_available,earliest_acceptance,no_overlap,admitter_excluded>"
         },
         "required_fields": [
           "principal_ref",
@@ -73983,7 +73991,8 @@
             "type": "string",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           },
           "tool_set_source": {
             "type": "string",
@@ -74001,19 +74010,22 @@
             "type": "boolean",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           },
           "grant_stripping_probe_ref": {
             "type": "Ref<ArtifactVersion>",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           },
           "grant_stripping_probe_result": {
             "type": "string",
             "required": false,
             "added_by": "WORK-1.1",
-            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution"
+            "note": "optional at registration and demanded at the exact edge whose guard reads it; making it required would rewrite every criterion of this record through tools/phase_content.py's role resolution F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed.",
+            "owner": "S1-C04"
           }
         }
       }
@@ -75762,8 +75774,8 @@
         "type_fields": {
           "interest_id": "string",
           "interest_version": "string",
-          "precondition_predicate_ids": "string[]",
-          "precondition_evaluator_kind": "string",
+          "precondition_predicate_ids": "PredicateId[]",
+          "precondition_evaluator_kind": "Enum<deterministic,model>",
           "required_trust_class": "string",
           "effect_class_id": "string",
           "self_declared_writer_keys": "string[]",
@@ -75808,12 +75820,14 @@
             "required": true
           },
           "precondition_predicate_ids": {
-            "type": "string[]",
+            "type": "PredicateId[]",
             "required": true
           },
           "precondition_evaluator_kind": {
-            "type": "string",
-            "required": true
+            "type": "Enum<deterministic,model>",
+            "required": true,
+            "owner": "S1-C04",
+            "note": "F6D-05: this field is a POSITIVE CONTROL over the party whose record carries it. `05` section 1 requires the consequence class to be computed from records the acting party cannot author, and `05` section 1 also states that C03 executors remain outside writable registry state -- so the producer (S1-C03) is not the owner of this field. Owned by S1-C04, the component that owns IdentityBinding (`02` section 4), i.e. the enforcement point that runs the probe rather than the skill that is probed."
           },
           "required_trust_class": {
             "type": "string",
@@ -79166,13 +79180,14 @@
           "work_record_ref": "Ref<WorkOrder>",
           "landed_at": "UTC",
           "retention_until": "UTC",
-          "longest_plausible_outage": "string",
+          "longest_plausible_outage": "Duration",
           "alarm_reader_ref": "Ref<ResponsibilityAssignment>",
           "alarm_raised_at": "UTC",
           "residue_note": "string",
           "claiming_interest_ref": "Ref<StandingInterest>",
           "refusal_reason": "string",
-          "escalation_holder_ref": "Ref<StandingHolder>"
+          "escalation_holder_ref": "Ref<StandingHolder>",
+          "retention_span": "Duration"
         },
         "required_fields": [
           "work_record_ref",
@@ -79200,8 +79215,9 @@
             "required": true
           },
           "longest_plausible_outage": {
-            "type": "string",
-            "required": true
+            "type": "Duration",
+            "required": true,
+            "note": "F6C-11: was `string`. The rule compares this against the entry's retention, and a comparison between two free strings is not one. `Duration` is milliseconds and is an established field type in this registry."
           },
           "alarm_reader_ref": {
             "type": "Ref<ResponsibilityAssignment>",
@@ -79226,6 +79242,12 @@
           "escalation_holder_ref": {
             "type": "Ref<StandingHolder>",
             "required": false
+          },
+          "retention_span": {
+            "type": "Duration",
+            "required": true,
+            "added_by": "WORK-1.1",
+            "note": "F6C-11, new: the retention window this entry actually holds, in the same unit as `longest_plausible_outage`, so `criterion.UnmatchedPoolEntry.landed.v1` can COMPARE them. `retention_until` is an instant and the outage is a span; the operator set has no instant-plus-duration primitive, so the comparison is made between two spans. OWED: nothing yet ties this span to `retention_until` minus `landed_at`."
           }
         }
       }
@@ -81399,7 +81421,10 @@
           "stop_predicates": "TypedPredicate[]",
           "unfinished_obligation_refs": "Ref<Obligation>[]",
           "report_refs": "Ref<AttemptReport>[]",
-          "parking_closure_account_ref": "Ref<ReasonRecord>?"
+          "parking_closure_account_ref": "Ref<ReasonRecord>?",
+          "attempt_ceiling": "UInt64",
+          "critical_fields": "JsonPointer[]",
+          "critical_fields_authority_ref": "Ref<ResponsibilityAssignment>"
         },
         "required_fields": [
           "case_ref",
@@ -81417,9 +81442,34 @@
           "checkpoint_contract_ref",
           "stop_predicates",
           "unfinished_obligation_refs",
-          "report_refs"
+          "report_refs",
+          "critical_fields",
+          "critical_fields_authority_ref"
         ],
-        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting"
+        "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
+        "fields": {
+          "attempt_ceiling": {
+            "type": "UInt64",
+            "required": true,
+            "added_by": "WORK-1.1",
+            "owner": "S1-C02",
+            "note": "F6C-10: `05` section 6 R-X10 -- \"a work order carries a maximum attempt count with a named owner, C02, and a stated behaviour at the ceiling: park\". It existed on FailureRecord alone and optional, so a work order carried no ceiling until it had already failed. AE-M1-04, AE-M2-06 and AE-M4-04 each asked for this against a different candidate."
+          },
+          "critical_fields": {
+            "type": "JsonPointer[]",
+            "required": true,
+            "added_by": "WORK-1.1",
+            "owner": "S1-C02",
+            "note": "F6C-13: `05` section 3 R-D18 -- \"the marking authority is the capability owner at procedure admission, never the resuming attempt\". AT-M1-02 asked for the marking to be recorded on the `WorkOrder` or the `FieldAuthority`; it was on neither, and `critical_fields` was optional on WorkflowDefinition/StepExecution and read by zero predicates. Required here so a work order cannot be admitted without saying which fields are critical."
+          },
+          "critical_fields_authority_ref": {
+            "type": "Ref<ResponsibilityAssignment>",
+            "required": true,
+            "added_by": "WORK-1.1",
+            "owner": "S1-C02",
+            "note": "F6C-13: the authority that marked them, as a ResponsibilityAssignment ref. This is the field that makes R-D18 checkable: guard.workorder.critical_fields_authority_excludes_the_resuming_attempt requires it to differ from the order's own owner_assignment_ref and to resolve to an assignment in `accepted`."
+          }
+        }
       }
     },
     "lifecycle": {

@@ -147,7 +147,17 @@
     "RC-05": "planning/reviews/G-02-recheck-01.md",
     "RC-06": "planning/reviews/G-02-recheck-01.md",
     "RC-07": "planning/reviews/G-02-recheck-01.md",
-    "RC-08": "planning/reviews/G-02-recheck-01.md"
+    "RC-08": "planning/reviews/G-02-recheck-01.md",
+    "F6R-01": "planning/reviews/F2-06-recheck-01.md",
+    "F6R-02": "planning/reviews/F2-06-recheck-01.md",
+    "F6R-03": "planning/reviews/F2-06-recheck-01.md",
+    "F6R-04": "planning/reviews/F2-06-recheck-01.md",
+    "F6V-01": "planning/reviews/F2-06-recheck-02.md",
+    "F6V-02": "planning/reviews/F2-06-recheck-02.md",
+    "F6V-03": "planning/reviews/F2-06-recheck-02.md",
+    "F6V-04": "planning/reviews/F2-06-recheck-02.md",
+    "F6X-01": "planning/reviews/F2-06-recheck-01.md",
+    "F6X-02": "planning/reviews/F2-06-recheck-01.md"
   },
   "unpinnable": [
     {
@@ -2367,6 +2377,136 @@
           "why": "and the route is an assignment that is currently `accepted`. A route nobody holds is not a route, which is the same failure the `production_mode: none` refusal catches one record earlier"
         }
       ]
+    },
+    {
+      "predicate_id": "criterion.ExistenceJustification.admitted.v1",
+      "kind": "criterion",
+      "findings": [
+        "F6D-12"
+      ],
+      "decisions": [
+        "R-L4"
+      ],
+      "why": "F6D-12: the load-bearing transition really is mechanical -- `test_can_return_false == true` is checked, which is what `05` section 4 says makes the existence gate mechanical rather than rhetorical -- and the one typed field the six-reason table needs was missing, so a seventh reason was admissible on the record built to refuse it. This pin holds the two halves the derivation must keep: the test that can fail, and the reason paired with its unit. The criterion body is authored by tools/phase_content.py and this table is not, which is the point: weakening the derivation and regenerating cannot satisfy these rows.",
+      "require": [
+        {
+          "op": "any",
+          "contains_pointers": [
+            "/payload/reason_kind",
+            "/payload/reason_unit"
+          ],
+          "why": "the reason and the unit it predicates on are decided TOGETHER, as a disjunction over the six pairs `05` section 4 tabulates. Collapsing it to two independent enums admits a reason applied to another reason's unit, which returns undecidable -- and undecidable reads as satisfied"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/decidable_test",
+            "/payload/admitting_mandate_ref",
+            "/payload/attributable_identity_ref",
+            "/payload/approval_expires_at"
+          ],
+          "why": "and the three structural conjuncts the review credited stay: a decidable test is recorded, the admitting mandate is named and the approval carries an expiry. A justification naming a capability is uncheckable"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.UnmatchedPoolEntry.landed.v1",
+      "kind": "criterion",
+      "findings": [
+        "F6C-11"
+      ],
+      "decisions": [],
+      "why": "F6C-11: the one case in the amendment where a rule's own words state a comparison and the criterion carrying it makes none. 33 of the 46 criteria on the fifteen new records contain no comparison operator and that is disclosed rather than hidden -- the substantive comparisons live in the 30 guards. This one is different because `05` section 6 states the comparison in the sentence the criterion exists to carry. Pinned so that regenerating a weakened derivation cannot quietly return it to collecting both operands and comparing neither.",
+      "require": [
+        {
+          "op": "lt",
+          "why": "retention STRICTLY EXCEEDS the longest plausible outage. `lte` would admit an entry whose retention ends exactly at the outage horizon, which is the boundary the rule is about -- and `exceeds` is the chapter's own word"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/work_record_ref",
+            "/payload/retention_until",
+            "/payload/longest_plausible_outage",
+            "/payload/retention_span",
+            "/payload/landed_at",
+            "/payload/alarm_reader_ref",
+            "/payload/alarm_raised_at",
+            "/payload/residue_note"
+          ],
+          "why": "and the operands stay REQUIRED. Requiring `longest_plausible_outage` as a per-entry field is the right answer to `stated, not assumed` and is more than the prose promised; the comparison is what it was missing, not the collection"
+        }
+      ]
+    },
+    {
+      "predicate_id": "criterion.FailureRecord.retry_admitted.v1",
+      "kind": "criterion",
+      "findings": [
+        "F6C-10"
+      ],
+      "decisions": [
+        "R-X10"
+      ],
+      "why": "F6C-10: `attempt_ceiling` was on `FailureRecord` alone, optional, and in zero predicates, so a retry was admitted without anything comparing the attempts already made against the bound that exists to stop them. The generic `retry_admitted` phase spec is shared by many records and was NOT edited -- this criterion comes from a FailureRecord override, and this pin is what stops that override being quietly returned to the generic one.",
+      "require": [
+        {
+          "op": "lt",
+          "why": "the attempts already made are STRICTLY FEWER than the ceiling. `lte` would admit the attempt that reaches it, which is the one the ceiling exists to refuse"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/work_order_ref",
+            "/payload/attempt_refs",
+            "/payload/attempt_ceiling",
+            "/payload/next_discriminator"
+          ],
+          "why": "and the ceiling, the attempts and the new discriminator are all named on the record. A retry with no discriminator repeats an unchanged failure, which is the record's own invariant"
+        }
+      ]
+    },
+    {
+      "predicate_id": "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
+      "kind": "guard",
+      "findings": [
+        "F6C-13"
+      ],
+      "decisions": [
+        "R-D18"
+      ],
+      "why": "F6C-13: `critical_fields` carried its authorship rule in prose (`05` section 3 R-D18) and in ZERO predicates -- optional on WorkflowDefinition and StepExecution, read by nothing. Pinned on the ADMISSION edge because R-D18 fixes the authority AT PROCEDURE ADMISSION; a guard that is not demanded on that edge lets the marking be written later, by the attempt that benefits from it. The pin is over the GUARD BODY; that the admission edge DEMANDS it is the second half, pinned in `pinned_attachments` -- F6D-01 measured thirty detachments undetected by conjunct pins alone.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/critical_fields",
+            "/payload/critical_fields_authority_ref"
+          ],
+          "why": "a work order names the fields whose change forces re-decision AND the authority that marked them. AT-M1-02 asked for the marking to be recorded on the WorkOrder or the FieldAuthority and it was on neither, so the rule was prose only"
+        },
+        {
+          "op": "eq",
+          "negated": true,
+          "contains_pointers": [
+            "/payload/critical_fields_authority_ref",
+            "/owner_assignment_ref"
+          ],
+          "why": "and that authority is NOT the order's own owner_assignment_ref. The envelope owner is the party resuming the work; R-D18's whole content is that the marking authority is never the resuming attempt, and equality here is that failure"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and it resolves to an assignment actually in `accepted` at admission. A ref to a proposed or expired assignment names a marking authority that does not hold"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -3383,6 +3523,179 @@
         "F6D-01"
       ],
       "why": "Detached, an activation re-reading its own output promotes it -- section 9 row 5, and the guard is the only thing that makes promotion an effect rather than a re-read."
+    },
+    {
+      "guard": "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
+      "edges": [
+        "edge.WorkOrder.proposed.admitted.v1"
+      ],
+      "findings": [
+        "F6C-13"
+      ],
+      "why": "Detached, a work order is admitted with no marking authority fixed at admission, and R-D18's rule -- the capability owner at procedure admission, never the resuming attempt -- holds in prose only, which is the state F6C-13 measured: `critical_fields` in ZERO predicates. The refusal has to happen at admission, because after the attempt resumes the party with an interest in the answer is the one still able to write the marking."
+    }
+  ],
+  "unanswered_split_why": "F6R-01. `unanswered` counted correctly and its gloss said something else: the comment above UNANSWERED_CEILING read `Step 6 findings whose repair landed as a check rather than as a conjunct`, and the recheck measured F6A-10, F6D-09 and F6D-12 inside that 37 with NO repair anywhere -- not a pin, not a check, not a chapter amendment. One number cannot carry two meanings. The set is declared as a partition now: `answered_elsewhere` names the file AND the check that answers each entry, so the claim is falsifiable by opening the file; `not_answered` says nothing is recorded. Each half has its own bound, because a single ceiling lets an entry cross from one meaning to the other for free -- which is the move that produced this finding. The partition is CHECKED: every unanswered finding is in exactly one half, and a finding in neither fails.",
+  "answered_elsewhere": {
+    "F6A-10": {
+      "file": "planning/specification/contracts/validate_contracts.py",
+      "check": "REGISTRY AND SCHEMA DISAGREE ABOUT A CLOSED ENUM'S MEMBERS (57 pairs, with a floor under the walk) and THE ORDERED CUSTODY RESOLVER CANNOT RECORD A REASON THE CHAPTERS INSTRUCT (the hand-written CUSTODY_TIE_BREAK_REASONS literal). Fixtures: negative/r20-custody-tie-break-enum-omits-the-admitter-exclusion, positive/r20-custody-tie-break-enum-reordered-benign."
+    },
+    "F6D-09": {
+      "file": "planning/specification/contracts/validate_contracts.py",
+      "check": "A FIELD THAT NAMES A PREDICATE IS A FREE STRING (the PREDICATE_BEARING_FIELDS literal) and THE EVALUATOR KIND A GUARD COMPARES IS AN OPEN STRING. The review's third clause -- a conjunct on each named predicate's `implementation_status` -- is OWED, not delivered: that field holds one value across all 2,397 predicates, so the conjunct would be vacuous. The check THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS fails the moment that stops being true. Fixtures: negative/r22-refusal-names-a-predicate-that-is-only-a-string, positive/r22-precondition-ids-reordered-benign."
+    },
+    "F6R-03": {
+      "file": "planning/specification/contracts/validate_contracts.py",
+      "check": "A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW, plus the floor under its own sweep (STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING)."
+    },
+    "F6D-08": {
+      "file": "planning/specification/contracts/validate_contracts.py",
+      "check": "A COMPUTED PROJECTION HAS A PERMITTED COMMAND (mutation m4's refusal, over the hand-written computed_projections table), A COMPUTED PROJECTION GAINED A LIFECYCLE TRANSITION, A PROJECTION'S EVALUATOR IS NOT A REGISTERED MODULE (the evaluator binding), A DECLARED PROJECTION WRITER SET CHANGED IN ONE PLACE and A PROJECTION RECORD IS IN NEITHER HALF OF THE PARTITION (completeness over lifecycle.projection). The custodial reading of owner_component is stated in record-registry.json at ArmedSet.owner_assignment and in pinned-conjuncts.json#/computed_projections_why; the 05 section 7 sentence is OWED and recorded in F2/07-repair-names-contract.md. Fixtures: negative/r34-armed-set-gains-the-three-kernel-record-commands, positive/r34-computed-projection-table-reordered-benign."
+    }
+  },
+  "not_answered": {
+    "F6A-01": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-02": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-03": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-04": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-05": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-07": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-08": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-09": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-11": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6A-12": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-04": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-05": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-07": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-08": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-09": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6B-11": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-05": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-07": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-12": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-16": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-17": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-18": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6C-19": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6D-05": "PARTIALLY answered, and it stays here for that reason. The field-level ownership half IS checked -- A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS and A DECLARED CONTROL FIELD IS NOT READ BY THE GUARD THAT DECLARES IT in validate_contracts.py, over pinned-conjuncts.json#/producer_unauthorable_fields, with fixtures r35. What the review ASKED FOR is the rebinding of three guard BODIES to a record the producer cannot author, through IdentityBinding or `current_owner`; that needs a ref field and a phase no chapter fixes, and inventing them would be specification by side effect. A row moves to answered_elsewhere when the check answers the finding, not when it answers part of it. Residue and the two owed chapter sentences are in F2/07-repair-names-contract.md.",
+    "F6D-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "G2-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6R-01": "The structural half landed in the previous lane and the reclassification half is only partly done. This entry is what remains: the conservative `not_answered` rows this lane did not personally verify a file-and-check pair for. Moving one across is cheap and must be earned by reading the check, which is the whole discipline the split exists for.",
+    "F6R-02": "ANSWERED BY A NOTE, NOT BY A CHECK, and recorded here rather than in answered_elsewhere because that distinction is the finding's own subject. The measurement (classify.mjs -> tier=trivial, enforcement=shadow) is written into the RC5-01 comment block of validate_contracts.py. Nothing executes it. Claiming a `check` for it would commit the exact error F6R-02 is about: treating a convention as an enforced tier.",
+    "F6R-04": "ANSWERED BY A NOTE, NOT BY A CHECK. The F6D-07 block now records that a hand edit to either enum surfaces as derivation drift before it surfaces as the concrete rule, and names F6C-11's cure (place the concrete check above the oracle). Applying that cure to F6D-07 is a reordering of validate_contracts.py with no fixture behind it, which this lane refused. Owed, with the remedy named.",
+    "F6V-01": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these.",
+    "F6V-02": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these.",
+    "F6V-03": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these.",
+    "F6V-04": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these."
+  },
+  "census_keys_why": "RC4-07. `CENSUS_KEYS` was a literal in validate_contracts.py and nothing else, so the set of fields the demand walk's census must carry was declared exactly once, in the file that also decides whether it carries them. One edit dropped a field from the requirement and from the check simultaneously, and the verdict went on printing a census that looked complete. Every `demanded` in the contracts means whatever that walk decided, and the census is the only thing in the verdict that says how far the walk reached -- so a quietly narrowed census is a quietly narrowed coverage claim. Pinned HERE and compared there, which is the shape `admissible_ancestors` already uses: two declarations in two files, so narrowing the set takes two edits a reviewer sees and the diff says what was dropped.",
+  "census_keys": [
+    "operators",
+    "predicate_positions",
+    "refused",
+    "slots_classified",
+    "under_disjunction",
+    "under_negation",
+    "under_quantifier",
+    "value_positions"
+  ],
+  "computed_projections_why": "F6D-08, and it is a REGISTRY-LEVEL pin rather than a conjunct one: `ArmedSet.registration.permitted_commands` is `[]`, it has zero transitions, and mutation m4 -- replacing that empty list with the three kernel record commands -- was exit 0, UNDETECTED. The one structural containment the record has was one JSON line from gone and nothing compared it to anything. Seven records declare `lifecycle.projection: true`; FIVE have no permitted command and TWO (DependencyClosure, IndexSnapshot) do, so a blanket rule over the flag would be false about the tree it is written against. The partition below is hand-written for that reason and is checked in both directions -- a new projection record belongs in exactly one list, and adding one without saying which is what the completeness half refuses. SECOND, and this is the other half of F6D-08: on a derived projection `owner_component` names the CUSTODIAN, not a writer. `ArmedSet.owner_component` is S1-C02, the admission authority its own invariant excludes from writing precondition-bearing kinds; those two statements only contradict if the field is read as write authority. The custodial reading is now written into `ArmedSet.owner_assignment` in record-registry.json as well, because a reader of the record does not come here first. THIRD: `evaluator_module` was a free string with no binding to anything -- W8, nothing creates an `ArmedSet` either. `evaluator_modules` below states the closed set, each member of which must be a `planned_module` actually registered on some record. FOURTH, and it is a correction this lane made after its own first draft was refused: the no-transition clause was written as `transitions == []` for all five and AccessGraph has edges, so the rule was false about the tree in front of it. `transition_count` states each record's current count and the check compares it -- an edge ADDED to a projection is a second write path and is what this refuses; an edge that already exists is recorded, not pretended away.",
+  "computed_projections": [
+    {
+      "record": "ArmedSet",
+      "evaluator_modules": [
+        "system/packages/work/armed-set"
+      ],
+      "why": "`05` section 7: a computed projection with no lifecycle that nobody writes, and in particular the admission authority holds no write access to any precondition-bearing kind. m4 is the mutation this row refuses.",
+      "transition_count": 0
+    },
+    {
+      "record": "AccessGraph",
+      "evaluator_modules": [],
+      "why": "The reachability closure over access grants is derived from the grants; a command that wrote it would let a component grant itself reach.",
+      "transition_count": 8
+    },
+    {
+      "record": "DomainEvent",
+      "evaluator_modules": [],
+      "why": "Events are emitted by the kernel commit path, never registered through a record command; a permitted command here would let a party author its own history.",
+      "transition_count": 0
+    },
+    {
+      "record": "OperationStatus",
+      "evaluator_modules": [],
+      "why": "Status is read off the operation's own lifecycle. A writable status is a report of success for work that stopped, which is W7's failure condition verbatim.",
+      "transition_count": 6
+    },
+    {
+      "record": "OperatorProjection",
+      "evaluator_modules": [],
+      "why": "The operator's view is computed from the records it projects; writing it directly would make the view and the thing disagree with nothing noticing.",
+      "transition_count": 12
+    }
+  ],
+  "computed_projections_with_writers": [
+    {
+      "record": "DependencyClosure",
+      "permitted_commands": [
+        "kernel.record.register",
+        "kernel.record.revise",
+        "kernel.record.transition"
+      ],
+      "why": "Declared `projection: true` AND carries the three kernel record commands. Recorded rather than hidden: this is either a projection that is written or a flag that is wrong, and F6D-08 is about exactly that kind of disagreement. Naming it here means the next edit to it is a two-place edit a reviewer sees."
+    },
+    {
+      "record": "IndexSnapshot",
+      "permitted_commands": [
+        "kernel.record.register",
+        "kernel.record.revise",
+        "kernel.record.transition",
+        "knowledge.index.record"
+      ],
+      "why": "The same shape, plus `knowledge.index.record`. Same reading: listed so the exception is declared rather than discovered by a later mutation that passes."
+    }
+  ],
+  "producer_unauthorable_fields_why": "F6D-05: twenty-nine of thirty guards read only fields on their own subject record, and in twenty-six the guard's owning component is the component that writes that record. `05` section 1 requires the consequence class to be computed from records the ACTING PARTY CANNOT AUTHOR. Two of the thirty are load-bearing -- guard.skill.declared_grant_inert and guard.launcher.stripping_positive_control both take Ref<SkillVersion>, whose owner_component is S1-C03, THE PRODUCING EXECUTOR, so the positive control on grant removal was a field on the record whose grants are being removed. guard.interest.precondition_invokes_no_model has the same shape over StandingInterest (S1-C02). WHAT THIS TABLE IS AND IS NOT. It fixes the field-level OWNER of each control field to a component that is not the record's producer, and refuses the edit that hands it back. It does NOT make the guard read a record the producer cannot author -- that is the IdentityBinding rebinding the finding asks for, it needs a ref field and a phase the chapters have not fixed, and it is recorded OWED in F2/07-repair-names-contract.md rather than invented here. The finding classifies itself (b), 'recorded with its verification owed', and this is the half that is checkable offline. S1-C04 is chosen because it owns IdentityBinding (`02` section 4), which is the binding the finding names; it is a reading of the chapters, not a decision the chapters state, and a recheck should look at it as such. It also resolves the registry side of the contradiction the finding names separately: `05` section 1 says C03 executors remain outside writable registry state while the registry gave SkillVersion owner_component S1-C03 with write 'only named owner'. The probe-result fields are no longer C03's. The record-level owner is untouched, and the chapter sentence is owed.",
+  "producer_unauthorable_fields": [
+    {
+      "record": "SkillVersion",
+      "field": "declared_tool_grant_effect",
+      "owner": "S1-C04",
+      "guard": "guard.skill.declared_grant_inert",
+      "why": "R-X15 argues the rule must be structural rather than asserted; while this field belonged to the producer it was the producer asserting its own grant inert."
+    },
+    {
+      "record": "SkillVersion",
+      "field": "grant_stripping_probe_result",
+      "owner": "S1-C04",
+      "guard": "guard.launcher.stripping_positive_control",
+      "why": "The positive control on grant removal. Owned by the producer, it was the record whose grants are removed reporting that they were."
+    },
+    {
+      "record": "SkillVersion",
+      "field": "grant_stripping_probe_ref",
+      "owner": "S1-C04",
+      "guard": "guard.launcher.stripping_positive_control",
+      "why": "The probe the result comes from, owned by the party that runs it."
+    },
+    {
+      "record": "SkillVersion",
+      "field": "content_hash_rechecked_at_use",
+      "owner": "S1-C04",
+      "guard": "guard.skill.declared_grant_inert",
+      "why": "A recheck AT USE is a statement by the enforcement point at use time, not by the content that is rechecked."
+    },
+    {
+      "record": "StandingInterest",
+      "field": "precondition_evaluator_kind",
+      "owner": "S1-C04",
+      "guard": "guard.interest.precondition_invokes_no_model",
+      "why": "The guard checks a string on the interest saying its evaluator invokes no model. Owned by C02, that is the party with the interest classifying its own evaluator."
     }
   ]
 }

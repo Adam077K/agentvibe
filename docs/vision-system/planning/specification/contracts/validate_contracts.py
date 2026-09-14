@@ -264,6 +264,485 @@ for name, record in RECORDS.items():
                     ("one record declares one payload field at two types", name, field,
                      {"type_fields": declared_type, "fields": added[field]["type"]}))
 
+# --- F6C-10: THE ATTEMPT CEILING IS ON THE WORK ORDER AND IS COMPARED. ---------
+#
+# `05` section 6 R-X10: "A work order carries a maximum attempt count with a named owner,
+# C02, and a stated behaviour at the ceiling: park." `attempt_ceiling` existed on
+# `FailureRecord` ALONE, optional, and appeared in ZERO predicates -- so a work order
+# carried no ceiling until it had already failed, and `observed -> retry_admitted` carried
+# no guard comparing attempts against it. AE-M1-04, AE-M2-06 and AE-M4-04 each asked for
+# this in near-identical words against three different candidates.
+checked("attempt_ceiling" in SCHEMAS["records.schema.json"]["$defs"]["WorkOrder"]["properties"]["payload"]["required"],
+        ("THE WORK ORDER CARRIES NO ATTEMPT CEILING: R-X10 puts the maximum attempt count "
+         "on the work order, and it lived on `FailureRecord` alone -- so the bound existed "
+         "only after the thing it bounds had already happened (F6C-10)",
+         {"required": len(SCHEMAS["records.schema.json"]["$defs"]["WorkOrder"]["properties"]["payload"]["required"])}))
+_retry_body = json.dumps(PREDICATES["criterion.FailureRecord.retry_admitted.v1"]["body"])
+checked('"op": "count"' in _retry_body and '"/payload/attempt_ceiling"' in _retry_body
+        and '"op": "lt"' in _retry_body,
+        ("A RETRY IS ADMITTED WITHOUT COMPARING ATTEMPTS AGAINST THE CEILING: the ceiling "
+         "is recorded and the transition into `retry_admitted` does not read it, which is "
+         "the same anti-shape as F6C-11 one record over -- the evidence for a ceiling "
+         "collected and never applied (F6C-10)",
+         {"needs": ["count(/payload/attempt_refs)", "lt", "/payload/attempt_ceiling"]}))
+# OWED, and instrumented rather than noted. R-X10's third clause is "a stated behaviour at
+# the ceiling: park", and `FailureRecord` has no phase in which to record it. This lane
+# WROTE that phase and WITHDREW it: adding it needs three `edge.FailureRecord.*.parked.v1`
+# predicates, and tools/author_phase_content.py authors criteria and not edge predicates,
+# so the validator refused all three transitions at `edge predicate`. Authoring an edge
+# predicate by hand is the move this package's oracles exist to catch. The check below
+# fails when the phase arrives, so the owed clause cannot land half-done and silent.
+checked("parked" not in RECORDS["FailureRecord"]["lifecycle"]["phases"],
+        ("FAILURERECORD NOW HAS A PARK PHASE and F6C-10's third clause can be finished: "
+         "each `* -> parked` transition needs its own `edge.FailureRecord.*.parked.v1` "
+         "predicate, and the criterion spec that belongs with it is written out in full in "
+         "tools/phase_content.py beside the FailureRecord overrides. Restore it, then "
+         "delete this check (F6C-10, owed clause)",
+         {"phases": RECORDS["FailureRecord"]["lifecycle"]["phases"]}))
+
+# --- F6C-11: A RULE THAT STATES A COMPARISON MAKES ONE. ------------------------
+#
+# `05` section 6's silent-drop counter (3) reads: "retention on any holding destination
+# EXCEEDS the longest plausible outage, and the outage figure is stated, not assumed."
+# `criterion.UnmatchedPoolEntry.landed.v1` demanded `work_record_ref`, `retention_until`,
+# `longest_plausible_outage`, `alarm_reader_ref`, `alarm_raised_at` and `residue_note` all
+# nonempty and contained NO COMPARISON OPERATOR AT ALL -- so an entry with a one-day
+# retention and a thirty-day stated outage satisfied it. The package names that exact
+# anti-shape in its own fixture r16-08: "a guard that collects the evidence for the ceiling
+# and never applies it."
+#
+# Read HERE, off the criterion body, and deliberately BEFORE the derivation oracle further
+# down. F6R-04 is the reason: a hand edit of a criterion surfaces as DRIFT first, and drift
+# tells a reader a table moved rather than which rule stopped being checked. On a mutation
+# that trips both, the reader should be told the concrete thing.
+_pool_body = json.dumps(PREDICATES["criterion.UnmatchedPoolEntry.landed.v1"]["body"])
+checked('"op": "lt"' in _pool_body
+        and '"/payload/longest_plausible_outage"' in _pool_body
+        and '"/payload/retention_span"' in _pool_body,
+        ("THE RETENTION CEILING IS COLLECTED AND NEVER APPLIED: the rule this criterion "
+         "carries states that retention EXCEEDS the longest plausible outage, and the "
+         "criterion holds both operands and compares neither -- which admits a one-day "
+         "retention beside a thirty-day stated outage. Requiring the outage per entry is "
+         "the right answer to `stated, not assumed`; it is not the comparison (F6C-11)",
+         {"needs": ["lt", "/payload/longest_plausible_outage", "/payload/retention_span"],
+          "note": "the conjunct is authored by tools/phase_content.py as "
+                  "('ltF', '/payload/longest_plausible_outage', '/payload/retention_span'); "
+                  "weakening the derivation and regenerating does not satisfy this."}))
+# And both operands are SPANS in one unit. `lt` is a checked comparison of the same operand
+# type, so this is what makes the comparison meaningful rather than merely present: an
+# instant compared against a duration is exactly the incomparable-units case `lt` fails on,
+# and `retention_until` is an instant.
+for _field in ("longest_plausible_outage", "retention_span"):
+    checked(str(SCHEMAS["records.schema.json"]["$defs"]["UnmatchedPoolEntry"]["properties"]
+                ["payload"]["properties"][_field].get("$ref", "")).endswith("/Duration"),
+            ("AN OPERAND OF THE RETENTION COMPARISON IS NOT A DURATION: the two sides are "
+             "compared as spans in one unit, and a comparison between two free strings is "
+             "not a comparison (F6C-11)", _field))
+
+# --- F6D-09: A FIELD THAT NAMES A PREDICATE IS TYPED AS ONE. -------------------
+#
+# `values.schema.json` defines `PredicateId` as an enum of all registry keys. It is derived
+# and ratcheted -- tools/run_negative_fixtures.py re-derives it inside every scratch tree
+# and r12-predicate-id-enum-drifts-from-the-registry proves the drift check works. And
+# ZERO record fields used it: thirty-two predicate-bearing fields are typed
+# `TypedPredicate` and the two WORK-1.1 added were `values.schema.json#/$defs/string`.
+#
+# The consequence was not theoretical. `guard.admission.refusal_names_failed_predicate`
+# asserts the field is nonempty and `!= ""`, so a refusal whose `failed_predicate_id` is
+# the text `unfamiliar wording` SATISFIED the guard -- and the guard's own `meaning` says
+# "unfamiliar wording is not a predicate". Adverse case 13 and its paired benign case 17
+# turn on exactly that distinction and the type did not carry it. `05` section 2's F-7
+# narrowing accepted a higher `no_match` rate to buy DETERMINISTIC refusal; the determinism
+# has to be in the contract to have been bought.
+#
+# `precondition_evaluator_kind` is closed here too, and it is the same defect one field
+# over: `guard.interest.precondition_invokes_no_model` compares it to `"deterministic"` and
+# to `"model"`, and the field admitted every other string in the world -- so an interest
+# declaring `precondition_evaluator_kind: "heuristic"` passed a guard whose whole subject
+# is that value. The two members are read off the guard's own body, not invented.
+PREDICATE_BEARING_FIELDS = {
+    ("AdmissionRecord", "failed_predicate_id"): "PredicateId",
+    ("StandingInterest", "precondition_predicate_ids"): "PredicateId[]",
+}
+for (_record, _field), _wanted in sorted(PREDICATE_BEARING_FIELDS.items()):
+    _body = SCHEMAS["records.schema.json"]["$defs"][_record]["properties"]["payload"]["properties"][_field]
+    _leaf = _body.get("items", _body)
+    checked(str(_leaf.get("$ref", "")).endswith("/PredicateId"),
+            ("A FIELD THAT NAMES A PREDICATE IS A FREE STRING: `PredicateId` is a derived, "
+             "ratcheted enum of every registry key and this field does not use it, so the "
+             "text `unfamiliar wording` is an admissible predicate id -- which is the "
+             "phrase `guard.admission.refusal_names_failed_predicate`'s own meaning says "
+             "is NOT a predicate. A nonempty check cannot tell the two apart and the type "
+             "can (F6D-09)",
+             _record, _field, {"declared": _body, "required": _wanted}))
+checked(set(SCHEMAS["records.schema.json"]["$defs"]["StandingInterest"]["properties"]["payload"]
+            ["properties"]["precondition_evaluator_kind"].get("enum") or [])
+        == {"deterministic", "model"},
+        ("THE EVALUATOR KIND A GUARD COMPARES IS AN OPEN STRING: "
+         "`guard.interest.precondition_invokes_no_model` reads this field and compares it "
+         "to `deterministic` and to `model`, and every other string in the world satisfied "
+         "the field's type -- so Layer 3's foundational rule was held by a declaration "
+         "beside the thing it describes, and the declaration was unconstrained (F6D-09). "
+         "The two members are the guard's own two comparands",
+         SCHEMAS["records.schema.json"]["$defs"]["StandingInterest"]["properties"]["payload"]
+         ["properties"]["precondition_evaluator_kind"].get("enum")))
+# OWED, and recorded rather than faked. The review also asked for "a conjunct asserting
+# each named predicate's registered `implementation_status` is deterministic". Measured
+# here before writing it: `implementation_status` takes exactly ONE value across all 2,397
+# registered predicates -- "specified; conformance interpreter only, no production binding
+# implemented". There is no deterministic/model classification in the registry to read, so
+# that conjunct would be TRUE OF EVERY PREDICATE by construction: a guard that collects the
+# evidence for the ceiling and never applies it, which is the anti-shape fixture r16-08
+# exists to name. The classification has to exist before the conjunct can mean anything.
+# This assertion is what makes the absence visible instead of silent.
+#
+# IT MEASURES THE CONTRACT, NOT A SCRATCH TREE. A negative fixture runs this file over a
+# patched copy of the registries, and a fixture that ADDS a predicate must give it a
+# status. `r3-lifecycle-status-as-judgment-subject` does exactly that, and its status
+# literal says what it is -- the sentinel below, whose own words are "never part of the
+# contract". Without the exclusion, that fixture -- which exists to exercise the
+# primitive-argument record-type comparison -- was refused HERE instead, and a negative
+# fixture refused by a check other than its own is a wrong_reason leak: the suite reports
+# a rejection while the control it was written to prove is never reached. The exclusion is
+# keyed on the STATUS VALUE and not on where the predicate came from, so a fixture that
+# introduces a genuine second classification still trips this, which is what
+# fixtures/negative/r25-predicate-status-gains-a-second-classification exists to show and
+# what fixtures/positive/r25-predicate-status-fixture-sentinel-ignored-benign holds the
+# exclusion itself to.
+#
+# And it is an EQUALITY against a named literal now, not a count. `len(_statuses) == 1`
+# is satisfied by any single value, so a registry-wide rewrite of the status to some other
+# single string would have passed the tripwire whose entire subject is what that string
+# says -- the same defect shape as counting a set instead of comparing its members, which
+# F6A-10 is about two hundred lines below.
+FIXTURE_ONLY_PREDICATE_STATUS = "negative fixture; never part of the contract"
+CONTRACT_PREDICATE_STATUS = ("specified; conformance interpreter only, "
+                             "no production binding implemented")
+_statuses = {predicate.get("implementation_status") for predicate in PREDICATES.values()
+             if predicate.get("implementation_status") != FIXTURE_ONLY_PREDICATE_STATUS}
+checked(_statuses == {CONTRACT_PREDICATE_STATUS},
+        ("THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS and F6D-09's third "
+         "clause is no longer unwritable: it asked for a conjunct asserting each named "
+         "precondition predicate's registered `implementation_status` is deterministic, "
+         "and that was declined because the field held ONE value across all of them, which "
+         "would have made the conjunct vacuous. More than one value exists now -- write "
+         "the conjunct, type `precondition_predicate_ids` against the deterministic subset, "
+         "and delete this check (F6D-09, owed clause)",
+         {"distinct_statuses": sorted(_statuses)[:6], "predicates": len(PREDICATES),
+          "the one contract status": CONTRACT_PREDICATE_STATUS,
+          "excluded fixture sentinel": FIXTURE_ONLY_PREDICATE_STATUS}))
+
+# --- F6D-12: THE SIX ADMITTED REASONS, AS A LITERAL, AND THE PAIRING. -----------
+#
+# `ExistenceJustification.reason_kind` and `reason_unit` were `values.schema.json#/$defs/
+# string`, and `criterion.ExistenceJustification.admitted.v1` -- five conjuncts, three of
+# them structural -- never constrained either. So `reason_kind: "specialized marketing
+# knowledge"`, `reason_unit: "the marketing function"`, `decidable_test: "does the worker
+# know marketing"`, `test_can_return_false: true` was ADMISSIBLE: negative control 8, a
+# job-title roster relabelled as capabilities, passing the record built to catch it, on a
+# chapter whose own words are "Specialized knowledge is refused as a reason".
+#
+# `05` section 4 states the six as a two-column table -- the reason and THE UNIT IT
+# PREDICATES ON -- so the contract is six PAIRS and not two independent enums. Two enums
+# alone admit `consequence_class` predicating on `a partition`, which is a reason applied
+# to a unit where it returns undecidable, and R2 F-20's finding is that undecidable reads
+# as satisfied. The pairing is a conjunct on the load-bearing transition, authored through
+# tools/phase_content.py like every other criterion body; this literal is what that
+# derivation is held to, and it is hand-written HERE for the reason every other literal in
+# this file is: a table derived from the file it measures is satisfied by the empty file.
+EXISTENCE_REASON_PAIRS = {
+    "permission_scope": "permission_scope",
+    "input_provenance": "input_set",
+    "consequence_class": "effect_class",
+    "confidentiality_boundary": "context_boundary",
+    "named_partition": "partition",
+    "verification_relation": "attempt_relation",
+}
+_ej_payload = SCHEMAS["records.schema.json"]["$defs"]["ExistenceJustification"]["properties"]["payload"]["properties"]
+checked(set(_ej_payload["reason_kind"].get("enum") or []) == set(EXISTENCE_REASON_PAIRS),
+        ("A SEVENTH ADMITTED REASON IS WRITABLE, or one of the six is not: `05` section 4 "
+         "admits exactly six reasons and refuses a seventh by name -- specialized "
+         "knowledge, attributable identity, provider or account separation are each "
+         "refused in that section's own words -- so this enum is the six and nothing else "
+         "(F6D-12)",
+         {"declared": sorted(_ej_payload["reason_kind"].get("enum") or []),
+          "the six": sorted(EXISTENCE_REASON_PAIRS)}))
+checked(set(_ej_payload["reason_unit"].get("enum") or []) == set(EXISTENCE_REASON_PAIRS.values()),
+        ("THE UNIT AN ADMITTED REASON PREDICATES ON IS NOT ONE OF THE SIX `05` section 4 "
+         "names (F6D-12)",
+         {"declared": sorted(_ej_payload["reason_unit"].get("enum") or []),
+          "the six": sorted(set(EXISTENCE_REASON_PAIRS.values()))}))
+# And the PAIRING, in the criterion, by reading the body rather than by trusting the
+# derivation: every one of the six pairs is stated somewhere under the criterion's
+# disjunction, and a pair that is not is a reason admitted with no unit it can predicate
+# on. This is the clause neither enum can carry alone.
+_ej_body = json.dumps(PREDICATES["criterion.ExistenceJustification.admitted.v1"]["body"])
+for _kind, _unit in sorted(EXISTENCE_REASON_PAIRS.items()):
+    checked('"%s"' % _kind in _ej_body and '"%s"' % _unit in _ej_body,
+            ("AN ADMITTED REASON IS NOT PAIRED WITH ITS UNIT IN THE CRITERION: `05` "
+             "section 4 is a two-column table, so the contract is six PAIRS. Two "
+             "independent enums admit `consequence_class` predicating on `a partition` -- "
+             "a criterion applied to a unit where it returns undecidable, which R2 F-20 "
+             "names and which reads as SATISFIED (F6D-12)",
+             {"reason": _kind, "unit": _unit}))
+
+# --- F6C-06: THE CACHE-LIFETIME COLLAPSE BINDS TO A REGISTERED MEASURE. --------------
+#
+# `07` section 5 R-G07 says enabling credits drops the prompt-cache lifetime from an hour to
+# five minutes, and that the drop "is carried in the capacity row that the metered observation
+# writes". `CapacityObservation.payload` requires `measure`, `unit`, `measurement` and
+# `freshness_until`, so it was always EXPRESSIVE ENOUGH to hold it -- and that is exactly what
+# made the gap invisible. `cache_lifetime` occurred ZERO times across every registry in this
+# package and no vocabulary named it, so R-G07's close was an instruction to a future
+# implementer wearing the grammar of a settled contract. Class (b): the mechanism documented,
+# the binding unverified.
+#
+# ONE MEMBER IS THE HONEST COUNT. It is the only capacity measure the specification names AS a
+# measure; section 6's allowance observations are written about without ever naming what they
+# measure. Inventing names for those here is the fabrication F6X-02 was refused for through two
+# lanes, so the vocabulary grows when a chapter names something and not before -- which is what
+# the second check enforces, against the chapters themselves.
+CAPACITY_MEASURES = FILES["value-registry.json"].get("CapacityMeasure") or {}
+_measures = CAPACITY_MEASURES.get("members") or []
+checked("cache_lifetime" in _measures,
+        ("THE CACHE-LIFETIME COLLAPSE BINDS TO NO REGISTERED MEASURE: `07` section 5 prices "
+         "the metered flip as a capacity event and says the drop is carried in a capacity row. "
+         "A row needs a measure that exists. Without this member the chapter's close is an "
+         "instruction to a future implementer in the grammar of a settled contract (F6C-06)",
+         {"members": sorted(_measures)}))
+_chapter_text = "".join(
+    _p.read_text(encoding="utf-8") for _p in sorted(ROOT.parent.glob("*.md")))
+for _measure in sorted(_measures):
+    checked(_measure in _chapter_text,
+            ("A REGISTERED CAPACITY MEASURE IS NAMED BY NO CHAPTER: this vocabulary exists "
+             "because F6C-06 found prose pointing at a row with no measure behind it, and the "
+             "opposite failure is a measure with no prose behind it -- a name invented in the "
+             "registry and then cited as though the specification had asked for it. The "
+             "vocabulary grows when a chapter names something, never before (F6C-06)",
+             _measure, {"members": sorted(_measures)}))
+checked(len(_measures) >= 1 and CAPACITY_MEASURES.get("schema_ref")
+        == "values.schema.json#/$defs/CapacityMeasure",
+        ("THE CAPACITY-MEASURE VOCABULARY IS EMPTY OR UNSCHEMA'D: an empty vocabulary passes "
+         "the per-member walk above exactly as loudly as a full one, and a registry entry "
+         "whose `schema_ref` resolves nowhere is a row no reader can follow (F6C-06)",
+         {"members": len(_measures), "schema_ref": CAPACITY_MEASURES.get("schema_ref")}))
+# --- F6X-01: EVERY EXCLUSIVE FACTORY RESOLVES, AND THE KERNEL SURFACE IS A LITERAL. ---
+#
+# `registration.exclusive_factory` says: this record has exactly one creation path and nothing
+# else may make one. Nine records declare it. Before this check `exclusive_factory` was read
+# ZERO TIMES by this file -- the string was never resolved against anything -- so a record could
+# name a creation path that does not exist and the containment it claims to state was a comment.
+# Three of the nine do exactly that: DomainEvent names `kernel.commit_group`, DurabilityReceipt
+# names `witness.store_group`, LifecycleStatus names `kernel.apply_transition`, and none of the
+# three is in command-registry.json's 105.
+#
+# THE REVIEW OFFERED TWO OPTIONS AND BOTH ARE WRONG, WHICH IS WHY THIS TOOK THREE LANES.
+# "Register the commands" means authoring three command contracts -- argument schema, guard,
+# authority, destination -- for paths nobody has specified, which is inventing contract and is the
+# thing every refusal in this package exists to prevent. "Retire the declarations" means deleting
+# the sentence `only the kernel may create a DomainEvent`, which is a REAL containment and one of
+# the load-bearing ones: a domain event a record-level command can forge is not an audit trail.
+# Taking either option to make a check pass would have traded a true statement for a green run.
+#
+# So the third thing, and it is the narrow one: the kernel and witness surfaces are declared HERE,
+# by name, as a CLOSED literal of exactly three paths, and an exclusive factory resolves if it is
+# a registered command OR a member of that literal. The declarations keep saying what is true; no
+# command contract is invented; and every one of the nine now resolves to something a reader can
+# find. What this does NOT do is specify those three paths -- see the names contract, where it is
+# recorded as the open question it still is.
+#
+# The literal is what keeps this from being an escape hatch. Without "exactly these three", the
+# exemption is a hole any record can climb through by naming something kernel-shaped, so the
+# membership test is EXACT and not a `kernel.` PREFIX: `kernel.anything_at_all` is refused, and
+# fixtures/negative/r29-exclusive-factory-invents-a-kernel-path is what holds that open.
+KERNEL_FACTORY_PATHS = {
+    "kernel.commit_group": "DomainEvent -- the commit that makes a group of events durable as one",
+    "witness.store_group": "DurabilityReceipt -- the witness side of that same commit",
+    "kernel.apply_transition": "LifecycleStatus -- the transition applier every edge guard runs through",
+}
+_factories = []
+for _name, _record in sorted(RECORDS.items()):
+    _factory = (_record.get("registration") or {}).get("exclusive_factory")
+    if _factory is None:
+        continue
+    _factories.append((_name, _factory))
+    checked(_factory in COMMANDS or _factory in KERNEL_FACTORY_PATHS,
+            ("AN EXCLUSIVE FACTORY RESOLVES TO NOTHING: `registration.exclusive_factory` says "
+             "this record has exactly ONE creation path and nothing else may make one, and the "
+             "path it names is in neither command-registry.json nor the declared kernel surface. "
+             "An unresolvable creation path is a containment written as a comment -- it reads "
+             "like a rule and constrains nobody, which is worse than no declaration because a "
+             "reader stops looking (F6X-01)",
+             _name, {"names": _factory, "registered commands": len(COMMANDS),
+                     "declared kernel paths": sorted(KERNEL_FACTORY_PATHS)}))
+checked(len(_factories) >= 9,
+        ("THE EXCLUSIVE-FACTORY WALK MET ALMOST NO DECLARATIONS: nine records declare one, and a "
+         "walk that reached none of them reports a pass over an empty required set. The loop is "
+         "guarded by a `continue` that a narrowing edit could widen into a skip of everything "
+         "(F6X-01)", {"declarations": len(_factories), "floor": 9}))
+checked(not (set(KERNEL_FACTORY_PATHS) & set(COMMANDS)),
+        ("A DECLARED KERNEL PATH IS ALSO A REGISTERED COMMAND, so the exemption is now hiding a "
+         "path that HAS a command contract and should be held to it. The two surfaces are "
+         "disjoint by construction: the literal exists only for paths command-registry.json does "
+         "not carry, and a path it does carry must resolve the ordinary way (F6X-01)",
+         {"in both": sorted(set(KERNEL_FACTORY_PATHS) & set(COMMANDS))}))
+checked(set(KERNEL_FACTORY_PATHS) == {"kernel.commit_group", "witness.store_group",
+                                      "kernel.apply_transition"},
+        ("THE KERNEL FACTORY SURFACE WAS WIDENED: it is exactly three paths, and it is a literal "
+         "rather than a `kernel.` prefix rule precisely so that adding a fourth is an edit to "
+         "this line that a reviewer sees. A prefix rule would let any record exempt itself from "
+         "the command registry by choosing a name (F6X-01)", sorted(KERNEL_FACTORY_PATHS)))
+# --- F6X-02: THE EIGHT BOUNDARY KINDS, AND THE FACT THAT NOTHING WAS CONTESTED. ------
+#
+# F6X-02 sat unrepaired through two lanes with the same reason recorded each time, and the
+# reason was a good one: `registers/review-findings.json` says the members "would have been
+# INVENTED rather than derived -- needs the chapter to state them first", and
+# pinned-conjuncts.json repeats it, "a pin over an enum this package has not been given would
+# be exactly that invention". `05` section 5 states them now, and
+# planning/F2/08-repair-names-prose-b.md lists all eight with the transfer each is derived
+# from. These are those eight and no others: a member not on that list is a member the
+# chapter did not state, which is the thing both refusals were protecting against.
+#
+# `ConstraintSet.boundary_kind` was `values.schema.json#/$defs/string`, so `boundary_kind:
+# "whatever"` validated on the record whose entire subject is WHICH BOUNDARY WAS CROSSED --
+# and a constraint set is what says what may not be done with what was handed over. The set
+# is CLOSED and a transfer outside it is REFUSED, never defaulted, so the schema must carry
+# no `default` beside the enum: a default turns every unrecognised transfer into a silently
+# admitted one of the eight, which is worse than the free string it replaces because it reads
+# as a constrained field. That absence is asserted below rather than assumed.
+BOUNDARY_KINDS = ["delegation", "machine_handoff", "consultation_return", "continuation",
+                  "acceptance_submission", "founder_brief", "custody_transfer", "stage_import"]
+_cs_bk = SCHEMAS["records.schema.json"]["$defs"]["ConstraintSet"]["properties"]["payload"]["properties"]["boundary_kind"]
+checked(set(_cs_bk.get("enum") or []) == set(BOUNDARY_KINDS),
+        ("A BOUNDARY KIND OUTSIDE THE EIGHT `05` section 5 STATES IS WRITABLE, or one of the "
+         "eight is not: the set is closed and a transfer whose kind is not a member is refused "
+         "at the boundary. Before this repair the field was a free string, so a constraint set "
+         "could name a boundary nothing in the specification describes and still validate "
+         "(F6X-02)",
+         {"declared": sorted(_cs_bk.get("enum") or []), "the eight": sorted(BOUNDARY_KINDS),
+          "stated by": "05-work-agents-skills.md section 5; derivations in "
+                        "planning/F2/08-repair-names-prose-b.md"}))
+checked("default" not in _cs_bk,
+        ("THE CLOSED BOUNDARY-KIND SET HAS A DEFAULT, which is the one way to reopen it "
+         "without adding a member: a default admits every unrecognised transfer as one of the "
+         "eight instead of refusing it, and does so on a field that now READS as constrained. "
+         "`05` section 5 says refused, never defaulted (F6X-02)", _cs_bk))
+_cs_reg = RECORDS["ConstraintSet"]["fields"]["payload"]["fields"]["boundary_kind"]["type"]
+checked(_cs_reg.startswith("Enum<"),
+        ("THE REGISTRY STILL DECLARES `boundary_kind` AS A FREE STRING while the schema closes "
+         "it: two declarations of one field, one of which admits anything. The member-by-member "
+         "comparison below only runs on fields the REGISTRY declares as an enum, so a registry "
+         "left as `string` does not fail that walk -- it leaves it (F6X-02)", _cs_reg))
+#
+# And the second limb. `04` DELTA 1 asks an operator projection to carry "what was omitted AND
+# WHAT WAS CONTESTED"; `omission_manifest_ref` carried the first limb and nothing carried the
+# second. `contested_refs` is REQUIRED and not optional, and that is the whole of the design:
+# an EMPTY ARRAY states that nothing was contested, and an ABSENT FIELD states that nobody
+# looked. Optional collapses those two into one absence, and the operator reading the
+# projection -- who is the person this record exists for -- cannot tell them apart. Asserted in
+# BOTH declarations, because F6A-10 is the finding about a field that is right in one of them.
+_op_schema = SCHEMAS["records.schema.json"]["$defs"]["OperatorProjection"]["properties"]["payload"]
+_op_reg = RECORDS["OperatorProjection"]["fields"]["payload"]
+_op_reg_required = set(_op_reg.get("required_fields") or []) | {
+    _f for _f, _b in (_op_reg.get("fields") or {}).items() if _b.get("required")}
+checked("contested_refs" in (_op_schema.get("required") or [])
+        and "contested_refs" in _op_reg_required,
+        ("`contested_refs` IS OPTIONAL ON AN OPERATOR PROJECTION, so `nothing was contested` "
+         "and `nobody looked` are the same absence. `04` DELTA 1 asks for what was omitted AND "
+         "what was contested; the empty array is the answer to the first question and the "
+         "missing field is the answer to no question at all (F6X-02)",
+         {"schema required": "contested_refs" in (_op_schema.get("required") or []),
+          "registry required": "contested_refs" in _op_reg_required}))
+_cr = _op_schema["properties"].get("contested_refs", {})
+checked(_cr.get("type") == "array" and "record_type" in ((_cr.get("items") or {}).get("properties") or {}),
+        ("`contested_refs` IS NOT A LIST OF RECORD REFERENCES: the field names WHICH refs were "
+         "contested, so an untyped or scalar declaration answers `how many` and not `which` "
+         "(F6X-02)", {"declared": _cr}))
+# --- F6A-10: A CLOSED ENUM IS DECLARED TWICE, AND THE TWO DECLARATIONS ARE COMPARED. ---
+#
+# The rule above compares the registry's payload to the schema's as SETS OF FIELD NAMES,
+# and says nothing about a field's admissible VALUES. F6A-10 walked through that gap.
+# `05-work-agents-skills.md` section 7 (R-X06) and `11-schemas-state-contracts.md` both
+# instruct the ordered custody resolver to skip the admitting identity "recording
+# `custody_tie_break_reason = admitter_excluded`" -- and BOTH declarations of that enum,
+# record-registry.json's `Enum<...>` and records.schema.json's closed `enum`, held four
+# values, none of them that one. `edge.ResponsibilityAssignment.proposed.accepted.v1`
+# already compares the enum, so the chapters instructed an author to write a record the
+# guard rejects. A full run said nothing, because nothing read an enum's members.
+#
+# FIFTY-SEVEN payload fields carry a closed enum and the pairs agreed on every one of them
+# before this check existed -- which is the argument for the check rather than against it:
+# the invariant was true and unguarded, so the first drift would have been silent, and one
+# of the 57 had already drifted from the CHAPTERS in the direction no field comparison can
+# see.
+#
+# Compared as SETS, not as sequences. An enum's members are a set; `in` does not read
+# order, and no predicate in the registry does. A byte-comparison would refuse a
+# reordering that changes no admissible value, and a control that refuses harmless edits
+# is a control contributors learn to route around --
+# fixtures/positive/r20-custody-tie-break-enum-reordered-benign reorders one and MUST
+# pass, fixtures/negative/r20-custody-tie-break-enum-omits-the-admitter-exclusion removes
+# a member and must be refused.
+ENUM_PAIRS = 0
+for name, record in RECORDS.items():
+    schema_payload = SCHEMAS["records.schema.json"]["$defs"][name]["properties"].get("payload", {})
+    if "properties" not in schema_payload:
+        continue
+    payload = record["fields"]["payload"]
+    declared_types = dict(payload.get("type_fields") or {})
+    for field, body in (payload.get("fields") or {}).items():
+        declared_types[field] = body["type"]
+    for field, declared_type in declared_types.items():
+        text = declared_type[:-1] if str(declared_type).endswith("?") else str(declared_type)
+        if not (text.startswith("Enum<") and text.endswith(">")):
+            continue
+        ENUM_PAIRS += 1
+        members = {value.strip() for value in text[len("Enum<"):-1].split(",")}
+        subschema = schema_payload["properties"].get(field, {})
+        schema_members = subschema.get("enum")
+        checked(isinstance(schema_members, list) and set(schema_members) == members,
+                ("REGISTRY AND SCHEMA DISAGREE ABOUT A CLOSED ENUM'S MEMBERS: the payload "
+                 "rule above compares FIELD NAMES and is satisfied by two declarations of "
+                 "one field that admit different values. That is how F6A-10 happened -- "
+                 "the chapters instructed `custody_tie_break_reason = admitter_excluded` "
+                 "and neither declaration admitted it, so the instruction produced a "
+                 "record the edge guard rejects and nothing compared the members (F6A-10)",
+                 name, field,
+                 {"registry": sorted(members),
+                  "schema": sorted(schema_members) if isinstance(schema_members, list)
+                            else schema_members,
+                  "in registry only": sorted(members - set(schema_members or [])),
+                  "in schema only": sorted(set(schema_members or []) - members),
+                  "note": "an enum is declared in record-registry.json AND in "
+                          "records.schema.json; a value admitted by one and not the other "
+                          "is a rule with two answers. Edit both."}))
+# A floor under the walk, for the reason every floor here is a literal: a comparison that
+# met no enum passes exactly as loudly as one that met all of them, and the loop above is
+# guarded by two `continue`s that a narrowing edit could widen into a skip of everything.
+checked(ENUM_PAIRS >= 57,
+        ("THE CLOSED-ENUM COMPARISON MET ALMOST NO ENUMS: 57 payload fields declare one, "
+         "and a walk that reached none of them reports a pass over an empty required set "
+         "(F6A-10)", {"pairs": ENUM_PAIRS, "floor": 57}))
+# And the member this finding is about, by NAME, against a hand-written literal. The walk
+# above proves the two declarations AGREE; it cannot prove they agree with the chapters.
+# Both declarations losing `admitter_excluded` in one edit is exactly the shape the pin
+# floors exist to catch elsewhere: one hand writes both and the pair agrees with itself.
+CUSTODY_TIE_BREAK_REASONS = {"narrowest_sufficient_scope", "alternate_available",
+                             "earliest_acceptance", "no_overlap", "admitter_excluded"}
+checked(set(SCHEMAS["records.schema.json"]["$defs"]["ResponsibilityAssignment"]["properties"]
+            ["payload"]["properties"]["custody_tie_break_reason"]["enum"])
+        == CUSTODY_TIE_BREAK_REASONS,
+        ("THE ORDERED CUSTODY RESOLVER CANNOT RECORD A REASON THE CHAPTERS INSTRUCT: "
+         "`05` section 7 (R-X06) and `11-schemas-state-contracts.md` name the reasons this "
+         "enum must admit, and `admitter_excluded` -- the one recorded when the resolver "
+         "skips the admitting identity and continues to the next tier -- is the one that "
+         "was missing from both declarations (F6A-10). `guard.custody.admitter_excluded` "
+         "enforces the BEHAVIOUR; this enum is what lets the record say so",
+         {"declared": sorted(SCHEMAS["records.schema.json"]["$defs"]["ResponsibilityAssignment"]
+                             ["properties"]["payload"]["properties"]
+                             ["custody_tie_break_reason"]["enum"]),
+          "required": sorted(CUSTODY_TIE_BREAK_REASONS)}))
+
 # time-window-declares-two-utc-bounds
 time_window = SCHEMAS["values.schema.json"]["$defs"]["TimeWindow"]["properties"]
 for bound in ("starts_at", "ends_at"):
@@ -984,6 +1463,23 @@ def pin_row_matches(node, row):
 #
 # --- RC5-01: AND THE SET ITSELF IS A CLOSED LITERAL HERE, NOT A JSON BLOCK. -----
 #
+# F6R-02, and it is about THIS FILE rather than about the contracts. Several comments in
+# here treat editing `validate_contracts.py` as a heavyweight act -- two edits a reviewer
+# sees, a decision that should read like one. That expense is real and it is worth keeping.
+# But be exact about what enforces it: MEASURED 2026-09-14 with
+# `node scripts/classify.mjs docs/vision-system/planning/specification/contracts/
+# validate_contracts.py` -> `tier=trivial - enforcement=shadow`, matched `docs/**`,
+# `floor=trivial`. Every path in this package is `docs/**`, so the risk tier this file's
+# own edits attract is TRIVIAL, and the oracle that computes it does not block.
+#
+# So the cost of editing this file is a REVIEW CONVENTION, not an enforced tier. That is
+# not an argument for weakening it -- the convention is why the literals below are worth
+# writing -- it is an argument against citing it as though something outside this file
+# guaranteed it. A rule enforced only by the sentence asserting it is a wish, and a
+# package whose whole subject is the difference between the two should not confuse them in
+# its own margin. Raising the tier is a `.claude/qa-tier-floor.yml` change, which is
+# outside this package's scope and belongs to whoever owns that file.
+#
 # The fifth recheck measured the price of leaving it in JSON. ONE hunk -- register
 # `every_linked_obligation` with `argument_positions.predicate: "demanded"`, add it to
 # `#/admissible_ancestors` with a plausible sentence, re-pin `argument_positions_digest`
@@ -1164,8 +1660,13 @@ def inadmissible_ancestor(entry, row, boolean_op):
 # floor. `#/finding_sources` is the pin file's own declaration that this package answers a
 # finding and where that finding is stated -- 106 of them -- so the set of declared
 # findings that no pin cites and no `unpinnable` row excuses is a number this file can
-# hold, and every pin deletion moves it by name. 37 today, all F6A/F6B/F6C/F6D and G2-06:
-# Step 6 findings whose repair landed as a check rather than as a conjunct.
+# hold, and every pin deletion moves it by name. 37 today.
+#
+# THIS COMMENT USED TO CLAIM WHAT THE 37 WERE: "all F6A/F6B/F6C/F6D and G2-06: Step 6
+# findings whose repair landed as a check rather than as a conjunct." F6R-01 opened them
+# and found three -- F6A-10, F6D-09, F6D-12 -- with no repair anywhere, so the sentence
+# told a reader the list was repairs delivered elsewhere and it was not. The causal clause
+# is gone from here and the claim is made per finding, in data, by the partition below.
 #
 # This sits ABOVE the floors deliberately, for the reason RC4-01's block states about its
 # own ordering: on a mutation that trips both, the reader should be told the concrete
@@ -1174,7 +1675,7 @@ FINDING_SOURCES = PINNED["finding_sources"]
 covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
     | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
 unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
-UNANSWERED_CEILING = 37
+UNANSWERED_CEILING = 41
 unanswered = sorted(set(FINDING_SOURCES) - covered - set(unpinnable))
 checked(len(unanswered) <= UNANSWERED_CEILING,
         ("A PINNED FINDING LOST ITS LAST PIN: a finding declared in "
@@ -1193,6 +1694,78 @@ checked(len(unanswered) <= UNANSWERED_CEILING,
                   "ceiling is free and is the direction to move it; raising it is an edit "
                   "to validate_contracts.py."}))
 
+# --- F6R-01: `unanswered` IS A PARTITION, AND THE TWO HALVES MEAN DIFFERENT THINGS. ----
+#
+# The ceiling above counts correctly and the sentence beside it said something the count
+# does not support: "Step 6 findings whose repair landed as a check rather than as a
+# conjunct". The recheck opened the 37 and found F6A-10, F6D-09 and F6D-12 with no repair
+# ANYWHERE -- not a pin, not a check, not a chapter amendment -- while the gloss told a
+# reader the whole list was repairs delivered elsewhere. A count that carries two meanings
+# reports the safer one.
+#
+# So the set is DECLARED, as a partition, in pinned-conjuncts.json:
+#   `answered_elsewhere` -- the finding is answered, and the row NAMES the file and the
+#       check, so the claim is falsifiable by opening the file rather than by trusting a
+#       sentence. `file` must exist.
+#   `not_answered`       -- nothing here answers it, and the row says why not.
+# Each half carries its OWN bound. One ceiling over both would let an entry move from
+# "answered" to "not answered" at zero cost, which is exactly the ambiguity F6R-01 is
+# about; two ceilings make the crossing an edit to this file.
+#
+# `not_answered` is the CONSERVATIVE half: a finding whose answering file and check nobody
+# has named sits here, not in `answered_elsewhere`. That is deliberately pessimistic --
+# the failure this repair exists to prevent is a list of unverified entries wearing the
+# word "answered", and the cheap direction of error must be the one that understates.
+ANSWERED_ELSEWHERE = PINNED["answered_elsewhere"]
+NOT_ANSWERED = PINNED["not_answered"]
+checked(set(ANSWERED_ELSEWHERE) | set(NOT_ANSWERED) == set(unanswered),
+        ("THE UNANSWERED SET IS NOT PARTITIONED: a finding that no pin, no pinned "
+         "transition and no `unpinnable` row carries is either answered somewhere this "
+         "package can name or it is not answered, and every one of them must say which. "
+         "A finding in neither half is back in the single undifferentiated count F6R-01 "
+         "is about (F6R-01)",
+         {"unanswered": unanswered,
+          "in neither half": sorted(set(unanswered) - set(ANSWERED_ELSEWHERE) - set(NOT_ANSWERED)),
+          "declared but not unanswered": sorted((set(ANSWERED_ELSEWHERE) | set(NOT_ANSWERED))
+                                                - set(unanswered)),
+          "note": "add the finding to `#/answered_elsewhere` with the file and the check "
+                  "that answers it, or to `#/not_answered` with the reason nothing does."}))
+checked(not (set(ANSWERED_ELSEWHERE) & set(NOT_ANSWERED)),
+        ("a finding is declared BOTH answered elsewhere and not answered (F6R-01)",
+         sorted(set(ANSWERED_ELSEWHERE) & set(NOT_ANSWERED))))
+for _finding, _row in sorted(ANSWERED_ELSEWHERE.items()):
+    checked(isinstance(_row, dict) and str(_row.get("file", "")).strip()
+            and str(_row.get("check", "")).strip(),
+            ("A FINDING IS DECLARED ANSWERED WITH NO FILE AND NO CHECK NAMED: that is the "
+             "unfalsifiable sentence F6R-01 removed from the comment, moved into the data "
+             "(F6R-01)", _finding, _row))
+    _answering = ROOT.parents[2] / _row["file"] if "/" in _row["file"] else ROOT / _row["file"]
+    checked(_answering.exists(),
+            ("a finding is declared answered by a file that does not exist (F6R-01)",
+             _finding, _row["file"]))
+for _finding, _why in sorted(NOT_ANSWERED.items()):
+    checked(str(_why).strip(),
+            ("a finding is declared not answered with no reason (F6R-01)", _finding))
+# Two bounds, both CEILINGS, both literals. `not_answered` may only fall: a repair moves a
+# finding out of it. `answered_elsewhere` has a ceiling rather than a floor for the reason
+# every other ceiling here does -- a table where everything is declared answered passes as
+# loudly as one where nothing is, and the rows are the evidence, not the count.
+ANSWERED_ELSEWHERE_CEILING = 4
+NOT_ANSWERED_CEILING = 37
+checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
+        ("more findings are declared answered outside the pin machinery than when this "
+         "ceiling was set; each one is a claim that a named file and a named check carry "
+         "it, and raising this is an edit to validate_contracts.py (F6R-01)",
+         {"answered_elsewhere": len(ANSWERED_ELSEWHERE),
+          "ceiling": ANSWERED_ELSEWHERE_CEILING}))
+checked(len(NOT_ANSWERED) <= NOT_ANSWERED_CEILING,
+        ("MORE FINDINGS ARE DECLARED NOT ANSWERED than when this ceiling was set. This "
+         "number may only FALL: a finding leaves by being pinned or by being answered "
+         "with a file and a check named. It grows only when a new finding is declared in "
+         "`#/finding_sources` and nothing carries it (F6R-01)",
+         {"not_answered": len(NOT_ANSWERED), "ceiling": NOT_ANSWERED_CEILING,
+          "not_answered_findings": sorted(NOT_ANSWERED)}))
+
 # A floor, and it is a LITERAL for the same reason the sibling-collision budget is: a
 # count derived from the file it measures is satisfied by the empty file. The coverage
 # check below forces every registered finding to be pinned or excused, which an author
@@ -1208,10 +1781,11 @@ checked(len(unanswered) <= UNANSWERED_CEILING,
 # that does not move with the table it budgets is the denominator again, which is the rule
 # NEGATIVE_FIXTURE_FLOOR's own comment states and this file did not apply to itself.
 # RAISE THESE WHENEVER A PIN IS ADDED. Never lower one without writing the reason here.
-PIN_FLOOR = 67           # 25 -> 67 (RC5-02); was the committed count when it was set
-PIN_ROW_FLOOR = 148      # 44 -> 148 (RC5-02)
+PIN_FLOOR = 71           # 70 -> 71 (F6C-13): the critical-fields authority pin on the admission edge
+PIN_ROW_FLOOR = 157      # 154 -> 157 (F6C-13): three rows -- the two fields named, the authority
+                         # NOT equal to the order's own owner, and the assignment in `accepted`
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
-FINDING_SOURCE_FLOOR = 106  # new (RC5-02): the declaration the ceiling above reads
+FINDING_SOURCE_FLOOR = 116  # new (RC5-02): the declaration the ceiling above reads
 checked(len(PINNED["pins"]) >= PIN_FLOOR
         and len(PINNED["pinned_transitions"]) >= PIN_TRANSITION_FLOOR,
         ("the pinned table has shrunk; a pin table with no pins passes vacuously",
@@ -1754,6 +2328,22 @@ checked(len(SCHEMAS["records.schema.json"]["$defs"]["ProtectedChange"]["properti
          "objects. A seventh subject kind is a control object nobody enumerated, and the "
          "whole reason 08 section 1 lists them is that each reads as configuration rather "
          "than as a change (F6D-07)"))
+# F6R-04 --- WHAT A READER SEES FIRST WHEN ONE OF THESE IS EDITED BY HAND, and it is not
+# the rule above. Both enums are reachable from a derived artifact, so a hand edit to
+# either trips the DERIVATION ORACLE before it reaches these checks: the first failure a
+# contributor reads says the committed file differs from its derivation, which is true and
+# says nothing about control objects. They then re-run the authoring tool, the drift
+# clears, and the concrete rule fires second -- if they get that far.
+#
+# That ordering is a real cost and it has a real cure, which F6C-11 applied and this note
+# records so the pattern is findable from here: place the check that reads the CONCRETE
+# RULE physically ABOVE the derivation oracle, so a mutation reports what it broke rather
+# than that something moved. It is not applied to F6D-07 in this pass because moving these
+# two checks means moving the `_configuration` and `ProtectedChange` schema lookups they
+# depend on, which is a reordering of this file rather than an addition to it -- and this
+# lane's rule is that a reordering with no fixture behind it is a change nobody can review.
+# Recorded as owed, with the cure named, rather than left for the next reader to rediscover
+# from a confusing failure message (F6R-04).
 
 PIN_ATTACHMENT_KEYS = {"guard", "edges", "findings", "why"}
 checked(bool(str(PINNED.get("pinned_attachments_why", "")).strip()),
@@ -1764,7 +2354,7 @@ ATTACHMENTS = PINNED["pinned_attachments"]
 # satisfied by deleting guards rather than by attaching them.
 # RC5-02 raised it from 30 to the committed 39, for the reason the pin floors were raised:
 # the table grew by nine and the budget did not, so nine attachments sat below no control.
-PIN_ATTACHMENT_FLOOR = 39  # 30 -> 39 (RC5-02)
+PIN_ATTACHMENT_FLOOR = 40  # 39 -> 40 (F6C-13): the critical-fields authority guard
 checked(len(ATTACHMENTS) >= PIN_ATTACHMENT_FLOOR,
         ("the attachment table has shrunk; it is the only control that catches a guard "
          "DETACHED from the edge it guards, and 30 of 30 were undetected before it existed",
@@ -1878,6 +2468,50 @@ checked(len(register_findings) >= 30,
          "widened pattern finds 39 in the committed register and the narrow one found 10 "
          "-- a floor under 10 would have passed the whole of RC5-02",
          {"found": sorted(register_findings), "floor": 30}))
+# --- F6R-03: EVERY STEP 6 FINDING THE F2-06 REVIEWS RAISE HAS A SOURCE ROW. ----------
+#
+# `finding_sources` is what a pin's citation resolves against and what the unanswered
+# partition is computed from, so a finding MISSING from it is not counted as unanswered --
+# it is not counted at all. That is the quietest way for a review finding to disappear:
+# not refused, not deferred, absent.
+#
+# Measured before writing this: of the 64 Step 6 ids stated across the F2-06 review
+# documents, TEN had no row -- F6R-01..04, F6V-01..04, F6X-01, F6X-02. Two of those ten are
+# findings THIS LANE REPAIRED, which is the sharp part: the repair could have landed, the
+# verdict stayed green, and the coverage tables would never have mentioned the finding in
+# either direction.
+#
+# THE SHARED `FINDING_ID` PATTERN IS DELIBERATELY NOT WIDENED, and the reason is the same
+# one written above it -- a required set that is wrong is abandoned rather than fixed.
+# `FINDING_ID` drives pin-citation resolution and the unpinnable machinery, so adding
+# `F6R-` and `F6V-` to it would demand a pin or an `unpinnable` row for every one of them
+# in the same edit, and this lane has not established that for the F6V family, which is
+# raised against the PROSE layer. So the sweep here is its own pattern over its own corpus,
+# asserting the one thing the finding asks for: source-row coverage. The gap in the shared
+# pattern is recorded in the names contract rather than closed by a widening whose
+# consequences this lane cannot verify.
+STEP6_ID = re.compile(r"\b(F6[A-DRVX]-[0-9][0-9])\b")
+STEP6_CORPUS = sorted((ROOT.parents[2] / "planning" / "reviews").glob("F2-06-*.md"))
+_step6 = set()
+for _document in STEP6_CORPUS:
+    _step6 |= set(STEP6_ID.findall(_document.read_text(encoding="utf-8")))
+checked(len(_step6) >= 60,
+        ("THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING: the coverage "
+         "assertion below is over whatever this sweep found, so a sweep that found nothing "
+         "passes it vacuously -- which is the defect RC5-02 named about the other sweep in "
+         "this file. 64 ids were stated across those documents when this was written "
+         "(F6R-03)", {"found": len(_step6), "floor": 60,
+                      "documents": [_p.name for _p in STEP6_CORPUS]}))
+for _finding in sorted(_step6):
+    checked(_finding in FINDING_SOURCES,
+            ("A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW: "
+             "`finding_sources` is what a pin's citation resolves against and what the "
+             "unanswered partition is computed from, so a finding missing from it is not "
+             "counted as unanswered -- it is not counted at all, which is the quietest way "
+             "for a review finding to disappear. Add the row with the document that raises "
+             "it, then put the id in `answered_elsewhere` with a file and a check, or in "
+             "`not_answered` with the reason (F6R-03)",
+             _finding, {"source rows": len(FINDING_SOURCES)}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
 checked(register_findings <= covered | set(unpinnable),
@@ -2157,10 +2791,38 @@ checked(len(alias_table) >= ALIASES["floor"],
         ("the alias table has shrunk below its declared floor; a table with no aliases "
          "refuses nothing and passes exactly as loudly as a full one",
          {"aliases": len(alias_table), "floor": ALIASES["floor"]}))
+# F6A-09 extends the refusal below to the VALUE registry, and the reason is the whole
+# finding: the declared check compared alias keys against RECORD names only, so
+# `ConsequenceVector -> ConsequenceDerivation` passed it -- `ConsequenceVector` is a
+# registered VALUE type, live in a fixed-boundary chapter, and the row pointed a reader at a
+# per-operation derivation record when they were looking up a grant's consequence bounds.
+# Two different objects, and the table said they were one. A name this package HAS is not a
+# candidate-era name whatever registry holds it.
+#
+# The finding's other option -- extend the check to backticked identifiers in the
+# specification prose -- is NOT taken, and this is a judgement, not an omission. It would
+# refuse `CapacityState`, which `05` section 7 uses normatively; and `CapacityState`'s row
+# must stay, because its mapping is substantively correct and F6D-10 withdrew half a finding
+# on the ground that the row exists. So the two halves of that required contract point in
+# opposite directions on the only two keys it was raised about. The false sentence in
+# `how_to_read` is what is repaired for that key --- the prose claimed something untrue of
+# its own table, which is the defect a reader actually hits.
+ALIAS_VALUE_NAMES = set(FILES["value-registry.json"])
 for candidate_name, registry_name in alias_table.items():
     checked(candidate_name not in RECORDS,
             ("a candidate-era name is ALSO a record name, so the registry admits the very "
              "name this table exists to refuse (R-X02)", candidate_name))
+    checked(candidate_name not in ALIAS_VALUE_NAMES,
+            ("A CANDIDATE-ERA NAME IS A REGISTERED VALUE TYPE: the refusal below compares "
+             "alias keys against RECORD names and is satisfied by a key that names a live "
+             "VALUE. That is how F6A-09 happened -- `ConsequenceVector` is declared by "
+             "`Grant.payload.consequence_bounds` and defined in a fixed-boundary chapter, and "
+             "the table mapped it to a per-operation derivation record, a DIFFERENT OBJECT. "
+             "A name this package HAS is not a candidate-era name, whichever registry holds "
+             "it (F6A-09)", candidate_name,
+             {"maps to": registry_name,
+              "note": "if the name is genuinely not an alias, it belongs in `not_aliases` "
+                      "with the reason, not in the table with a mapping"}))
     checked(registry_name in RECORDS,
             ("an alias resolves to no registry record, so reading through it reaches "
              "nothing", candidate_name, registry_name))
@@ -2254,12 +2916,40 @@ checked(version_rows >= 14,
 #             benign fixture for the admissible-ancestor literal and for the
 #             not-admitted block.
 #   negative: 94 -> 95 and positive 55 -> 56 (RC5-02): the pin-coverage pair.
+#   negative: 95 -> 96 and positive 56 -> 57 (F6A-10): the closed-enum membership
+#             pair -- one adverse removing a member, one benign reordering them.
+#   negative: 96 -> 97 and positive 57 -> 58 (F6D-12): the seventh-reason pair.
+#   negative: 97 -> 98 and positive 58 -> 59 (F6D-09): the predicate-bearing type
+#             pair -- one adverse untyping a field, one benign reordering an enum.
+#   negative: 98 -> 99 and positive 59 -> 60 (F6C-11): the retention-comparison pair.
+#   negative: 99 -> 100 and positive 60 -> 61 (F6C-10): the attempt-ceiling pair.
+#   negative: 100 -> 101 and positive 61 -> 62 (F6D-09, the wrong_reason repair):
+#   the predicate-implementation-status pair. The adverse case gives one predicate a
+#   genuine second classification and must trip the F6D-09 tripwire; the benign case
+#   gives one predicate the NEGATIVE-FIXTURE SENTINEL and must not, because that is
+#   the exclusion which stopped r3-lifecycle-status-as-judgment-subject being refused
+#   by a check it was not written for.
+#   negative: 101 -> 103 and positive 62 -> 64 (F6X-02): the boundary-kind pair and the
+#   contested-refs pair. Both adverse cases are a one-line edit to a JSON list -- a ninth
+#   member added, a required field struck -- and both benign twins are a reordering of the
+#   same list, because a control that cannot tell a widening from a reordering is one
+#   contributors learn to route around.
+#   negative: 103 -> 105 and positive 64 -> 66 (F6X-01): the exclusive-factory resolution
+#   pair and the kernel-exemption pair. The second pair is not optional -- the repair adds an
+#   exemption, and an exemption whose edge no fixture holds is the hole it was meant to close.
+#   negative: 105 -> 106 and positive 66 -> 67 (F6A-09): the alias-key-is-a-value-type pair.
+#   The adverse case is the real row the review found, restored.
+#   negative: 106 -> 107 and positive 67 -> 68 (F6C-06): the invented-measure pair.
+#   negative: 107 -> 108 and positive 68 -> 69 (RC4-07): the census-key pin pair.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 95
-POSITIVE_FIXTURE_FLOOR = 56
+#   negative: 108 -> 109 and positive 69 -> 70 (F6C-13): the critical-fields authority pair.
+#   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
+#   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
+NEGATIVE_FIXTURE_FLOOR = 111
+POSITIVE_FIXTURE_FLOOR = 72
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
@@ -2293,6 +2983,135 @@ for _kind, _floor in (("negative", NEGATIVE_FIXTURE_FLOOR), ("positive", POSITIV
                      "note": "raising a floor is an edit to MANIFEST.json and to "
                              "validate_contracts.py; lowering one is that plus a written "
                              "reason in the constant's comment."}))
+
+# --- F6D-08: WHAT A COMPUTED PROJECTION MAY BE WRITTEN BY. HAND-WRITTEN. ----------
+#
+# `ArmedSet.registration.permitted_commands` is `[]` and that emptiness is the ONLY thing
+# standing between the admission authority and the precondition-bearing kind its own
+# invariant says it may not write. Mutation m4 -- replace the empty list with the three
+# kernel record commands -- ran at exit 0 and was undetected, because nothing in this file
+# compared a projection's command list to anything at all.
+#
+# The rule is NOT "every record with lifecycle.projection is empty": two of the seven carry
+# commands, and a rule that is false about its own tree is a rule someone deletes. So the
+# table is a hand-written PARTITION over the seven, checked in both directions.
+checked(bool(str(PINNED.get("computed_projections_why", "")).strip()),
+        ("the computed-projection table states no reason",))
+COMPUTED_PROJECTIONS = PINNED["computed_projections"]
+PROJECTIONS_WITH_WRITERS = PINNED["computed_projections_with_writers"]
+COMPUTED_PROJECTION_FLOOR = 5   # new (F6D-08): the five projections nothing may write
+COMPUTED_PROJECTION_KEYS = set(["record", "evaluator_modules", "transition_count", "why"])
+PROJECTION_WRITER_KEYS = set(["record", "permitted_commands", "why"])
+REGISTERED_MODULES = set(record["planned_module"] for record in RECORDS.values()
+                         if isinstance(record, dict) and record.get("planned_module"))
+checked(len(COMPUTED_PROJECTIONS) >= COMPUTED_PROJECTION_FLOOR,
+        ("the computed-projection table has shrunk below its floor; a row removed here is a "
+         "projection whose emptiness nothing checks any more",
+         dict(rows=len(COMPUTED_PROJECTIONS), floor=COMPUTED_PROJECTION_FLOOR)))
+for _row in COMPUTED_PROJECTIONS:
+    checked(set(_row) == COMPUTED_PROJECTION_KEYS,
+            ("computed-projection row shape", _row.get("record"),
+             sorted(set(_row) ^ COMPUTED_PROJECTION_KEYS)))
+    _name = _row["record"]
+    checked(_name in RECORDS, ("a computed-projection row names no such record", _name))
+    checked(bool(_row["why"].strip()), ("a computed-projection row states no reason", _name))
+    checked(RECORDS[_name]["lifecycle"].get("projection") is True,
+            ("a record pinned as a computed projection does not declare itself one", _name))
+    checked(RECORDS[_name]["registration"]["permitted_commands"] == [],
+            ("A COMPUTED PROJECTION HAS A PERMITTED COMMAND: nothing writes a derived "
+             "projection, and an empty command list is the whole of that containment. For "
+             "ArmedSet this is the admission authority acquiring write access to a "
+             "precondition-bearing kind its own invariant excludes it from (F6D-08, m4)",
+             _name, dict(permitted_commands=RECORDS[_name]["registration"]["permitted_commands"],
+                         why_it_matters=_row["why"])))
+    checked(len(RECORDS[_name]["lifecycle"]["transitions"]) == _row["transition_count"],
+            ("A COMPUTED PROJECTION GAINED A LIFECYCLE TRANSITION: the other half of the same "
+             "containment -- an edge is a second way to write what no command may write. The "
+             "count is pinned rather than asserted to be zero, because AccessGraph already "
+             "has edges and a rule false about its own tree is one someone deletes",
+             _name, dict(registry=len(RECORDS[_name]["lifecycle"]["transitions"]),
+                         pinned=_row["transition_count"])))
+    for _module in _row["evaluator_modules"]:
+        checked(_module in REGISTERED_MODULES,
+                ("A PROJECTION'S EVALUATOR IS NOT A REGISTERED MODULE: `evaluator_module` was "
+                 "a free string bound to nothing, so how the projection comes into existence "
+                 "was left to construction (F6D-08, the W8 half)",
+                 _name, _module))
+for _row in PROJECTIONS_WITH_WRITERS:
+    checked(set(_row) == PROJECTION_WRITER_KEYS,
+            ("projection-with-writer row shape", _row.get("record"),
+             sorted(set(_row) ^ PROJECTION_WRITER_KEYS)))
+    _name = _row["record"]
+    checked(_name in RECORDS, ("a projection-with-writer row names no such record", _name))
+    checked(bool(_row["why"].strip()), ("a projection-with-writer row states no reason", _name))
+    checked(sorted(RECORDS[_name]["registration"]["permitted_commands"])
+            == sorted(_row["permitted_commands"]),
+            ("A DECLARED PROJECTION WRITER SET CHANGED IN ONE PLACE: the exception is "
+             "declared here and in the registry, and widening it is meant to be a two-place "
+             "edit a reviewer sees",
+             _name, dict(registry=RECORDS[_name]["registration"]["permitted_commands"],
+                         pinned=_row["permitted_commands"])))
+_declared_projections = ([_row["record"] for _row in COMPUTED_PROJECTIONS]
+                         + [_row["record"] for _row in PROJECTIONS_WITH_WRITERS])
+checked(len(_declared_projections) == len(set(_declared_projections)),
+        ("a record is declared twice across the projection partition",
+         sorted(set(n for n in _declared_projections if _declared_projections.count(n) > 1))))
+_flagged = set(name for name, record in RECORDS.items()
+               if isinstance(record, dict) and isinstance(record.get("lifecycle"), dict)
+               and record["lifecycle"].get("projection") is True)
+checked(_flagged == set(_declared_projections),
+        ("A PROJECTION RECORD IS IN NEITHER HALF OF THE PARTITION: every record declaring "
+         "`lifecycle.projection` says which it is -- nothing may write it, or these commands "
+         "may. A projection added without saying is the state F6D-08 found ArmedSet in",
+         dict(flagged_not_declared=sorted(_flagged - set(_declared_projections)),
+              declared_not_flagged=sorted(set(_declared_projections) - _flagged))))
+
+
+# --- F6D-05: A POSITIVE CONTROL MAY NOT BE OWNED BY THE PARTY IT CONTROLS. ---------
+#
+# Measured by the review: 29 of 30 guards read only fields on their own subject record,
+# and in 26 the guard's owner is the component that writes that record. Two of them are
+# load-bearing -- the grant-inertness and grant-stripping controls both read SkillVersion,
+# owned by S1-C03, the producing executor. The check below is the half that is decidable
+# offline: the FIELD-level owner of each declared control differs from the record's own
+# owner_component, and the guard named actually reads that field path. The other half --
+# rebinding the guard to a record the producer cannot author, through IdentityBinding --
+# is recorded OWED in F2/07-repair-names-contract.md, because it needs a chapter to fix
+# the binding and inventing one here would be specification by side effect.
+checked(bool(str(PINNED.get("producer_unauthorable_fields_why", "")).strip()),
+        ("the producer-unauthorable table states no reason",))
+UNAUTHORABLE_FIELDS = PINNED["producer_unauthorable_fields"]
+UNAUTHORABLE_FIELD_FLOOR = 5   # new (F6D-05): four SkillVersion controls and the interest's
+UNAUTHORABLE_FIELD_KEYS = set(["record", "field", "owner", "guard", "why"])
+checked(len(UNAUTHORABLE_FIELDS) >= UNAUTHORABLE_FIELD_FLOOR,
+        ("the producer-unauthorable table has shrunk below its floor",
+         dict(rows=len(UNAUTHORABLE_FIELDS), floor=UNAUTHORABLE_FIELD_FLOOR)))
+for _row in UNAUTHORABLE_FIELDS:
+    checked(set(_row) == UNAUTHORABLE_FIELD_KEYS,
+            ("producer-unauthorable row shape", _row.get("field"),
+             sorted(set(_row) ^ UNAUTHORABLE_FIELD_KEYS)))
+    checked(bool(_row["why"].strip()), ("a producer-unauthorable row states no reason", _row["field"]))
+    _rec = RECORDS[_row["record"]]
+    _field = _rec["fields"]["payload"]["fields"][_row["field"]]
+    checked(_field.get("owner") == _row["owner"],
+            ("a producer-unauthorable field's owner differs from the pinned one; the owner is "
+             "declared in two places so handing it back is a two-place edit a reviewer sees",
+             _row["field"], dict(registry=_field.get("owner"), pinned=_row["owner"])))
+    checked(_field.get("owner") != _rec["owner_component"],
+            ("A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS: the field this guard "
+             "reads is written by the producer of the record it sits on, so the control is "
+             "the controlled party's own assertion about itself (F6D-05, `05` section 1: the "
+             "consequence class is computed from records the acting party cannot author)",
+             _row["field"], dict(field_owner=_field.get("owner"),
+                                 record_owner=_rec["owner_component"],
+                                 guard=_row["guard"], why_it_matters=_row["why"])))
+    checked(_row["guard"] in PREDICATES,
+            ("a producer-unauthorable row names no such guard", _row["guard"]))
+    checked("/payload/" + _row["field"] in json.dumps(PREDICATES[_row["guard"]]["body"]),
+            ("A DECLARED CONTROL FIELD IS NOT READ BY THE GUARD THAT DECLARES IT: the row "
+             "would then pin an ownership nothing evaluates",
+             _row["field"], _row["guard"]))
+
 NEGATIVE_FIXTURES_DECLARED = len(json.loads(
     (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text(encoding="utf-8"))["fixtures"])
 POSITIVE_FIXTURES_DECLARED = len(json.loads(
@@ -2586,6 +3405,24 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
 # checker. It makes ONE deletion cost more than three checks and a plausible-looking pass.
 CENSUS_KEYS = {"predicate_positions", "value_positions", "slots_classified", "refused",
                "under_quantifier", "under_disjunction", "under_negation", "operators"}
+# RC4-07: and the set is declared TWICE now, once here and once in
+# pinned-conjuncts.json#/census_keys, because a requirement declared only in the file that
+# checks it is satisfied by one edit to that file. Dropping `under_negation` from the
+# literal above and from the check below is a single hunk, after which the verdict prints a
+# census that looks complete and a reader has no way to see what left. Every `demanded` in
+# this package means whatever the demand walk decided, and the census is the only thing in
+# the verdict saying how far that walk reached -- so a quietly narrowed census is a quietly
+# narrowed coverage claim. Same shape as ADMISSIBLE_LITERAL against
+# #/admissible_ancestors: two files, two edits, and a diff that names what was dropped.
+CENSUS_KEYS_PINNED = set(PINNED["census_keys"])
+checked(CENSUS_KEYS_PINNED == CENSUS_KEYS,
+        ("THE CENSUS KEY SET IS DECLARED TWICE AND THE TWO DISAGREE: pinned-conjuncts.json "
+         "#/census_keys and `CENSUS_KEYS` in this file name different fields, so the census "
+         "the verdict is required to carry depends on which declaration you read (RC4-07)",
+         {"pinned only": sorted(CENSUS_KEYS_PINNED - CENSUS_KEYS),
+          "literal only": sorted(CENSUS_KEYS - CENSUS_KEYS_PINNED),
+          "note": "narrowing the census is a decision; make it in both files or not at "
+                  "all"}))
 
 # --- RC5-01 + RC5-02: EVERY HAND-WRITTEN CONTROL, COUNTED, IN ONE BLOCK. --------
 #
@@ -2601,10 +3438,12 @@ CENSUS_KEYS = {"predicate_positions", "value_positions", "slots_classified", "re
 # the DATA is; every bound named here is a literal in validate_contracts.py, which is the
 # terminal rule of this lineage -- widening any of them is an edit to the checker.
 HAND_WRITTEN_CONTROL_KEYS = {"pins", "require_rows", "pinned_transitions",
-                             "pinned_attachments", "finding_sources", "unanswered_findings",
+                             "pinned_attachments", "computed_projections",
+                             "producer_unauthorable_fields", "finding_sources",
+                             "unanswered_findings",
                              "out_of_reach_findings", "disjoined_rows", "admissible_ancestors",
                              "argument_positions_digest", "negative_fixtures",
-                             "positive_fixtures", "demand_walk_census"}
+                             "positive_fixtures", "demand_walk_census", "census_keys"}
 HAND_WRITTEN_CONTROLS = {
     "pins": {"count": len(PINNED["pins"]), "floor": PIN_FLOOR,
              "file": "pinned-conjuncts.json#/pins"},
@@ -2615,6 +3454,12 @@ HAND_WRITTEN_CONTROLS = {
                            "file": "pinned-conjuncts.json#/pinned_transitions"},
     "pinned_attachments": {"count": len(ATTACHMENTS), "floor": PIN_ATTACHMENT_FLOOR,
                            "file": "pinned-conjuncts.json#/pinned_attachments"},
+    "computed_projections": dict(count=len(COMPUTED_PROJECTIONS),
+                                 floor=COMPUTED_PROJECTION_FLOOR,
+                                 file="pinned-conjuncts.json#/computed_projections"),
+    "producer_unauthorable_fields": dict(count=len(UNAUTHORABLE_FIELDS),
+                                         floor=UNAUTHORABLE_FIELD_FLOOR,
+                                         file="pinned-conjuncts.json#/producer_unauthorable_fields"),
     "finding_sources": {"count": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR,
                         "file": "pinned-conjuncts.json#/finding_sources"},
     "unanswered_findings": {"count": len(unanswered), "ceiling": UNANSWERED_CEILING,
@@ -2635,6 +3480,8 @@ HAND_WRITTEN_CONTROLS = {
                           "file": "fixtures/negative/MANIFEST.json"},
     "positive_fixtures": {"count": POSITIVE_FIXTURES_DECLARED, "floor": POSITIVE_FIXTURE_FLOOR,
                           "file": "fixtures/positive/MANIFEST.json"},
+    "census_keys": {"count": len(CENSUS_KEYS), "literal": sorted(CENSUS_KEYS),
+                    "file": "pinned-conjuncts.json#/census_keys"},
     "demand_walk_census": {"count": WALK_CENSUS["slots_classified"], "floor": 8000,
                            "file": "validate_contracts.py#WALK_CENSUS, printed as "
                                    "`conjunct_walk`"},
