@@ -409,15 +409,15 @@ ul.plain{list-style:none;padding:0;display:flex;flex-direction:column;gap:7px;fo
 }
 </style>
 <header class="masthead wrap">
-<p class="kicker">Planning package · Phase G · prepared 13 September 2026</p>
+<p class="kicker">Planning package · Phase G · prepared 13 September 2026 · agents and work layer updated 14 September 2026</p>
 <h1>The Company Engine Plan</h1>
 <div class="meta">
-<span>Architecture <span class="mono">S1.0</span>, selected</span>
+<span>Architecture <span class="mono">S1.1</span>, selected</span>
 <span>Planning disposition <span class="mono">PENDING</span></span>
 <span>Implementation <span class="mono">not started</span></span>
 <span>Founder hold <span class="mono">in place</span></span>
 </div>
-</header><div class="page"><nav class="index" aria-label="Contents"><p class="idx-title">Contents</p><ol><li><a href="#what"><span class="n">01</span><span>What this is</span><span class="r">PLAIN</span></a></li><li><a href="#stands"><span class="n">02</span><span>Where it stands</span><span class="r">PLAIN</span></a></li><li><a href="#architecture"><span class="n">03</span><span>The architecture</span><span class="r">UNDERLAY</span></a></li><li><a href="#sale"><span class="n">04</span><span>One sale, start to finish</span><span class="r">PLAIN</span></a></li><li><a href="#records"><span class="n">05</span><span>Records and rules</span><span class="r">UNDERLAY</span></a></li><li><a href="#agents"><span class="n">06</span><span>Agents, skills, models</span><span class="r">UNDERLAY</span></a></li><li><a href="#decisions"><span class="n">07</span><span>Decisions only you can make</span><span class="r">PLAIN</span></a></li><li><a href="#chosen"><span class="n">08</span><span>How the design was chosen</span><span class="r">UNDERLAY</span></a></li><li><a href="#build"><span class="n">09</span><span>The build plan</span><span class="r">UNDERLAY</span></a></li><li><a href="#questions"><span class="n">10</span><span>Questions and answers</span><span class="r">UNDERLAY</span></a></li><li><a href="#limits"><span class="n">11</span><span>Honest limits</span><span class="r">PLAIN</span></a></li></ol></nav><main><section id="what">
+</header><div class="page"><nav class="index" aria-label="Contents"><p class="idx-title">Contents</p><ol><li><a href="#what"><span class="n">01</span><span>What this is</span><span class="r">PLAIN</span></a></li><li><a href="#stands"><span class="n">02</span><span>Where it stands</span><span class="r">PLAIN</span></a></li><li><a href="#architecture"><span class="n">03</span><span>The architecture</span><span class="r">UNDERLAY</span></a></li><li><a href="#sale"><span class="n">04</span><span>One sale, start to finish</span><span class="r">PLAIN</span></a></li><li><a href="#records"><span class="n">05</span><span>Records and rules</span><span class="r">UNDERLAY</span></a></li><li><a href="#agents"><span class="n">06</span><span>Agents, skills, models</span><span class="r">UNDERLAY</span></a></li><li><a href="#f2"><span class="n">07</span><span>Agents, work and context</span><span class="r">PLAIN</span></a></li><li><a href="#decisions"><span class="n">08</span><span>Decisions only you can make</span><span class="r">PLAIN</span></a></li><li><a href="#chosen"><span class="n">09</span><span>How the design was chosen</span><span class="r">UNDERLAY</span></a></li><li><a href="#build"><span class="n">10</span><span>The build plan</span><span class="r">UNDERLAY</span></a></li><li><a href="#questions"><span class="n">11</span><span>Questions and answers</span><span class="r">UNDERLAY</span></a></li><li><a href="#limits"><span class="n">12</span><span>Honest limits</span><span class="r">PLAIN</span></a></li></ol></nav><main><section id="what">
 <div class="sec-head">
 <p class="eyebrow eyebrow--plain">PLAIN</p>
 <h2>What this is</h2>
@@ -474,8 +474,14 @@ insufficient and now under an independent recheck. Recorded disposition: <b>none
 deployed.</span></div>
 <div class="pair"><span class="pk">Founder hold</span><span class="pv"><b>On, since 2026-09-13.</b>
 Your instruction: do not start building yet. It stays until you lift it explicitly.</span></div>
+<div class="pair"><span class="pk">One layer reopened</span><span class="pv"><b>Agents, work and
+context — done through its reviews, not signed off.</b> You reopened that one layer on
+13 September. Four of its fifteen review dimensions came back sufficient and eleven insufficient,
+six blocking findings were raised, and the repairs written against them have not yet been checked
+by anyone who did not write them. <a href="#f2">Read section 07</a> — it is later than everything
+above it.</span></div>
 </div>
-<p class="from">from: <b>state.json</b> · <b>planning/PLANNING-REPORT.md §8</b></p>
+<p class="from">from: <b>state.json</b> · <b>planning/PLANNING-REPORT.md §8</b> · <b>planning/PLANNING-REPORT.md §Agents, work and context</b></p>
 
 <div class="stack-s">
 <h3>The twelve-quality review</h3>
@@ -945,6 +951,389 @@ chosen, and the cost of handling grievances and closing down. <b>The single larg
 package is whether one person can afford to run this</b> — and the package says so.</span></div>
 </div>
 <p class="from">from: <b>specification/07-integrations-capacity.md §6–§7</b> · <b>planning/02-architecture-selection.md §8</b> · <b>planning/PLANNING-REPORT.md §1</b></p>
+</div>
+</section>
+<section id="f2">
+<div class="sec-head">
+<p class="eyebrow eyebrow--plain">PLAIN</p>
+<h2>Agents, work and context</h2>
+</div>
+<div class="prose">
+<p class="lede">This section is dated later than every section above it. On 13 September you
+reopened one layer of the plan — how work is admitted, who does it, what they are allowed to
+touch, what they are allowed to see, and who signs it off — and asked for your own account of it
+to be challenged rather than followed.</p>
+<p>Your words, kept verbatim in the package: <i>"It may be not named different agents, but agent
+that are different by the work, the authority, the tools, the skills, the context."</i>
+<i>"Agents should be added only when they introduce a real capability, such as parallel work,
+distinct tools or permissions, isolated context, specialized knowledge, or independent
+verification."</i> <i>"Instead of building a company of disconnected 'digital employees,' we
+should build coordinated capabilities around a shared source of truth."</i> And then:
+<i>"This is only a thesis … what I'm thinking is not, like, gold."</i></p>
+<p><b>What follows is the answer to that last sentence.</b> Nothing else in the plan was
+reopened, and nothing was built.</p>
+</div>
+<p class="from">from: <b>inputs/FOUNDER-THESIS-2026-09-13-agents.md</b></p>
+<hr class="rule">
+
+<div class="stack-s">
+<h3>How the round ran</h3>
+<div class="pairs">
+<div class="pair"><span class="pk">Rules first</span><span class="pv">The standard the round would
+be judged against was written and frozen <b>before anyone read a source and before any design
+existed</b>. Fifteen separate qualities, six test cases every design is put through in the same
+words, ten traps — each paired with an innocent case it must not catch — and one rule that matters
+most: a design earns nothing by agreeing with you and nothing by contradicting you.</span></div>
+<div class="pair"><span class="pk">Eight research tracks</span><span class="pv">Each formed its
+findings without seeing the others. Context and shared state · when an agent earns its existence ·
+frameworks and harnesses as evidence · authority as the boundary · work discovery and routing ·
+skills and knowledge · what "independent" can honestly mean · and one track paid to argue the
+opposite of everything.</span></div>
+<div class="pair"><span class="pk">Disagreements kept</span><span class="pv">The comparison across
+the eight records <b>16 disagreements it did not resolve</b>. It also examined 14 candidate reasons
+to reopen a settled part of the plan and found <b>none</b>, so nothing else was
+disturbed.</span></div>
+<div class="pair"><span class="pk">Five rival designs</span><span class="pv">Your thesis made
+concrete; a company of standing chartered agents; no agents at all, just a durable procedure with
+model calls as steps; a hybrid split by how much damage an action can do; and one where work
+becomes due when a typed standing interest fires.</span></div>
+<div class="pair"><span class="pk">Five attacks</span><span class="pv">Technical, company and
+human, economic, context and evidence, security — each by a reviewer shown no designer's own
+account of their work. <b>111 findings. 28 of them block.</b> Merged, those 28 are <b>24 decisions
+somebody had to make</b>. <b>No design came out clean</b>: one carried nine blockers, another
+eight, the best two carried four each.</span></div>
+<div class="pair"><span class="pk">The choice</span><span class="pv">No single design won. Each
+one's blockers clustered on its own central idea, so picking any of them would have inherited that
+idea's blind spot. The result takes each design apart and keeps the piece of it that survived its
+own attack.</span></div>
+</div>
+<p class="from">from: <b>planning/F2/00-acceptance-protocol.md</b> · <b>research/F2/cross-lane-comparison.md</b> · <b>planning/F2/04-attack-consolidation.md §H</b> · <b>planning/F2/05-selection-record.md §1</b></p>
+</div>
+
+<div class="stack-s">
+<h3>What was decided</h3>
+<p class="sub">Five layers, each answering a different question, with a fixed order: when two
+disagree, the earlier one wins.</p>
+<div class="pairs">
+<div class="pair"><span class="pk">1 · Who may act</span><span class="pv">How much damage an
+action can do decides who may perform it — and <b>that is computed from records the actor cannot
+write</b>, then recomputed at the moment the effect leaves the building. A mismatch stops the work;
+it never quietly resolves downward.</span></div>
+<div class="pair"><span class="pk">2 · How it runs</span><span class="pv">A declared procedure
+decides how work runs and <b>what each step is allowed to see</b>. The step declares what it needs,
+and the thing that fetches it records what it actually handed over. Nobody is taken at their word
+about what they read.</span></div>
+<div class="pair"><span class="pk">3 · When it is due</span><span class="pv">Work becomes due when
+a typed standing interest fires. The conditions are mechanical — <b>no model may sit inside
+one</b> — and nothing in the system can stop an interest firing.</span></div>
+<div class="pair"><span class="pk">4 · Whether a worker exists</span><span class="pv">A worker is
+created only against a written justification naming <b>one</b> reason, with a test that can come
+back false. If the test cannot come back false, it is refused. <b>There is still no permanent cast
+of named agents.</b></span></div>
+<div class="pair"><span class="pk">5 · Who is still there afterwards</span><span class="pv">For
+every duty that outlives the job that created it, <b>exactly one standing party exists</b> — a
+record with an address and reserved capacity. It never does the work, never releases anything,
+never judges a matter it is the subject of, and <b>carries no memory of its own</b>.</span></div>
+</div>
+<div class="prose narrow">
+<p>Four more rules worth knowing in plain terms:</p>
+</div>
+<ul class="ticks">
+<li class="pos"><b>Specialized knowledge is no longer a reason to create an agent.</b> It belongs
+to a written, tested, versioned procedure that an ordinary worker loads. Across four model
+families, 162 roles and 2,410 questions, giving a model a job title gave no benefit, and picking
+the best title was no better than picking at random. <b>Being identifiable is required of every
+worker and is never a reason to create one</b> — a thing everybody must have cannot justify making
+another one.</li>
+<li class="pos"><b>Whoever will judge the work writes the test first, and cannot be the one doing
+the work.</b> The criteria are written by the capability's owner, frozen before the work starts,
+and cannot be amended by the producing side afterwards.</li>
+<li class="pos"><b>Anything that crosses a boundary is typed — including the brief that reaches
+you.</b> A receiver may act only on what it can restate as a typed value; prose travelling
+alongside is evidence, never a substitute. This is the fix for your handoff worry, and it is aimed
+differently than you aimed it: ordinary facts survive a compressed handover about 97% of the time,
+but rules, deadlines and promises survive about 57% of the time. Typed constraints leaked <b>0 of
+48</b> where prose leaked <b>73%</b>. The answer is not to split less; it is to type what
+crosses.</li>
+<li class="pos"><b>Two rules about running out.</b> If a lane holds reserved capacity, the
+holder's stated minimum is <b>evidence, not permission</b> — there is no veto — and unused
+reservation is released on a timer, because under an allowance that resets whether you spend it or
+not, a reserve is waste rather than thrift. Separately, if the allowance is empty and something is
+genuinely due, a <b>named non-model way of doing it</b> performs it, a named person is alerted, and
+the choice between breaking the promise and performing it leaves a record. Fifty percent of an
+empty bucket is zero.</li>
+</ul>
+<p class="from">from: <b>registers/decisions.json AD-015…AD-022</b> · <b>specification/05-work-agents-skills.md</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Your five criteria, judged</h3>
+<div class="pairs">
+<div class="pair"><span class="pk">Distinct tools or permissions</span><span class="pv"><b>Confirmed
+— the strongest of the five.</b> The only one enforced outside the model and the only one with a
+published price: 77% of benchmark tasks solved with provable security, against 84% with no defence
+at all. It does not come free — in the runtime you would use, a helper inherits every tool by
+default. <b>It works, and it has to be built.</b></span></div>
+<div class="pair"><span class="pk">Isolated context</span><span class="pv"><b>Split in
+two.</b> Isolation to help a model concentrate keeps shrinking with each model generation.
+Isolation to keep a secret is structural and real — and it is the only sense any of your six test
+cases exercises, so only it may justify creating a worker. Even then, separating things cut
+disclosure violations by 20 to 50 points and <b>still left over 75%</b>.</span></div>
+<div class="pair"><span class="pk">Independent verification</span><span class="pv"><b>Half of it
+is out of reach.</b> You can stop the producer influencing the checker, and that is measurable.
+You cannot make their <i>mistakes</i> independent when both are the same kind of model, and no
+amount of blinding reaches it. The best independent reviewer anyone has measured found under a
+third of planted defects. <b>A model checker finds; a deterministic test or a person signs
+off.</b></span></div>
+<div class="pair"><span class="pk">Parallel work</span><span class="pv"><b>Nearly inert
+here.</b> Whether splitting pays depends on how you cut, not on the job — good cuts gained 11 to 14
+points, bad cuts made both speed and quality worse. And your current limit admits two slots that
+are not interchangeable, so at today's setting this buys nothing.</span></div>
+<div class="pair"><span class="pk">Specialized knowledge</span><span class="pv"><b>Overturned</b>
+as a reason to create a worker. It is a procedure, not a person.</span></div>
+</div>
+<div class="note note--found">
+<p><b>Your list of five is not closed, and closing it is yours.</b> Five more candidate reasons
+survived a deliberate hunt: where the input came from, which provider or account is involved, how
+much damage the action can do, being identifiable — and, for people only, being a genuinely
+different source of error. The chosen design uses the damage class as its top layer. <b>If you
+decide the list stops at five, this design fails your own gate and has to be rebuilt</b> — and one
+of the rival designs said exactly that about itself.</p>
+</div>
+<p class="from">from: <b>research/F2/cross-lane-comparison.md §I</b> · <b>planning/F2/05-selection-record.md §2</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Your four costs, judged</h3>
+<ul class="ticks">
+<li class="neg"><b>Handoffs lose things — confirmed, and aimed at the wrong target.</b> Facts
+survive; rules, deadlines and promises do not. Type what crosses.</li>
+<li class="neg"><b>Token cost — real in direction, folklore in size, and in the wrong unit.</b> The
+most-repeated multiple is a vendor's own report with no published method; five separate research
+tracks flagged it independently. Under a subscription, the shape of the system <b>does not change
+what you spend</b> — it changes the date the work stops, and unused allowance is destroyed rather
+than saved.</li>
+<li class="neg"><b>Latency — cannot even be signed.</b> A speed figure without a count of what
+actually ran at the same time cannot be read, and at your current limit thirty workers queue
+instead of multiplying.</li>
+<li class="neg"><b>Context loss — confirmed, and mis-assigned.</b> The single-worker version owes
+it too, and it is unavoidable: a job caps at roughly a six-minute window, so <b>even one worker
+hands off to itself</b> on every long job.</li>
+</ul>
+<div class="note note--acc">
+<p><b>On your central sentence, the largest part survives untouched.</b> Coordinated capabilities
+beat disconnected digital employees, and cutting the company up by job title buys nothing. Three
+things had to be refined, and the refinements <i>are</i> the design.</p>
+<p><b>One.</b> It cannot mean one big store everybody reads. A larger authoritative view makes
+every reader measurably worse — even one irrelevant item hurts. So it becomes <b>one authority per
+field, with what each attempt receives narrowed to what it needs</b>.</p>
+<p><b>Two.</b> Your five ingredients — goals, decisions, canonical files, verified knowledge,
+what happens next — are not enough. The failure that actually shows up in the evidence is
+<b>who may see and receive a fact</b>, which is none of the five. Three more are needed: when a
+fact stops being true, whether it is contradicted, and what the company still owes after a job
+ends.</p>
+<p><b>Three, and this one is adverse to you.</b> A shared view does not fix duplicated action and
+may amplify it. Eighteen of thirty workers chose the identical name for their work; a job queue
+took 2.4 million requests to hand out 117 jobs. The cause is <b>identical models behaving
+identically</b>, not divergent context — so deliberate de-correlation has to be designed alongside
+the shared record, not bolted on after.</p>
+</div>
+<p class="from">from: <b>research/F2/cross-lane-comparison.md §I</b> · <b>planning/F2/05-selection-record.md §2.3</b></p>
+</div>
+
+<div class="stack-s">
+<h3>The verdict, and it is not a pass</h3>
+<div class="prose">
+<p>Four independent reviewers read a frozen copy of the amended layer, wrote nothing in the round,
+and judged fifteen qualities separately with no overall score. <b>Four came back sufficient.
+Eleven came back insufficient.</b></p>
+</div>
+<div class="pairs">
+<div class="pair"><span class="pk"><span class="tag t-suf">sufficient</span></span><span class="pv">Vision
+preservation · independence of verification · changeability · alternative depth and comparator
+honesty.</span></div>
+<div class="pair"><span class="pk"><span class="tag t-open">insufficient</span></span><span class="pv">Completeness
+for unknown jobs · coherence with the fixed boundaries · capability binding · context integrity
+across a handover · your attention and competence · the quality of the round's own evidence · cost
+and capacity · reliability and durable work state · authority as a boundary · buildability ·
+adversarial robustness.</span></div>
+</div>
+<div class="note note--open">
+<p><b>The sharpest single result, and it was measured rather than argued.</b> One reviewer ran the
+contract checker to completion, then detached each of the thirty new safety rules from every place
+that calls it. <b>All thirty detached with the checker still reporting success</b>, and three
+load-bearing routes could be deleted silently. The rules were pinned; their <i>attachment</i> was
+not.</p>
+<p><b>Six of the findings block.</b> Repairs have been written against all of them — the escalation
+ladder was given a recipient that actually exists, the safety rules were pinned to the places that
+must call them, two rules that said "contains everything and is the same size" instead of "is the
+same set" were corrected, and the missing record for <i>we broke the promise, or we performed
+it</i> now exists. <b>Those repairs were written by the same people who wrote the thing being
+repaired.</b> A narrow independent recheck by someone who wrote none of it has not run.</p>
+</div>
+<p class="from">from: <b>planning/reviews/F2-06-A…D</b> · <b>planning/reviews/F2-06-findings-index.json</b> · <b>registers/review-findings.json</b></p>
+</div>
+
+<div class="stack-s">
+<h3>Seven decisions this round added for you</h3>
+<p class="sub">They join the thirteen in the next section rather than replacing them. Read the
+last line of each card first: <b>none of them blocks construction starting</b>, and each says what
+happens if you never answer.</p>
+<div class="cards"><article class="card">
+<span class="cid">Q-016</span>
+<p class="cq">Who is the terminal owner of a duty or a harm that nobody's mandate covers — and does that party exist as a record?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>It is a staffing decision and a delegation of authority. Software cannot appoint the person who ends up holding a harm nobody planned for.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first work is admitted in a class whose harm no existing mandate covers. It does not block the specification or a builder — the chain is written with its last slot marked unfilled.</dd></div>
+<div><dt>If you do not answer</dt><dd>Admission stops in every class whose harm nobody's mandate covers. That is a visible, recorded narrowing, not a silent gap.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-017</span>
+<p class="cq">Which standing roles are filled by someone other than you before work is admitted in that class — and what happens in a class where nobody is?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>Staffing and money. The load was counted rather than asserted: in one of the rival designs a person has to sign off 37 of the 46 capabilities, and every action in the 26 that sit at the money-and-contract level or above.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before work is admitted in any affected class. It does not block a builder — the requirement is written and the slots are declared empty.</dd></div>
+<div><dt>If you do not answer</dt><dd>Admission stops in every duty class whose sign-off role is unfilled. In a one-person company that leaves the reversible internal classes only.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-018</span>
+<p class="cq">Who may approve creating a new capability, and what happens while you are away?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>Delegating authority with a ceiling on how much damage it may do. Every design in the round conceded that creating a capability for genuinely new work needs a human approver; they differed only on what may proceed while approval is pending.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first declared absence.</dd></div>
+<div><dt>If you do not answer</dt><dd>Creating capabilities that act outwards parks during absences. Read-only and internal trials continue.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-019</span>
+<p class="cq">Who signs off the assessment of your own competence?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>Naming an assessor is staffing, and it is personal. The mechanism is already fixed elsewhere in the plan — a competent assessor states the exact factual claim and its limits, and you may contest it or ask for a second. Only the occupant is open, and it is the one seat you may not fill yourself.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first competence cycle runs.</dd></div>
+<div><dt>If you do not answer</dt><dd>The cycle runs and the assessment is recorded as <b>unperformed</b> — never as passed.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-020</span>
+<p class="cq">May anything halt or reverse a capacity cut in the moment, and who decides when a protected lane's holder refuses?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>Who holds authority under pressure is a delegation of authority. The evidence does not settle this one — the round kept the disagreement rather than resolving it, and two blocking findings fail in opposite directions from the same question.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before anything raises the concurrency limit. <b>Not urgent</b> — the cut this asks about cannot happen at today's limit, so it sits behind a cheaper question below.</dd></div>
+<div><dt>If you do not answer</dt><dd>No cut can be halted. Since no cut can occur at today's limit, nothing happens.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-021</span>
+<p class="cq">How large is each reserved lane, what is its stated minimum, and when does unused reservation lapse?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>These decide what the company gives up under pressure, which is a statement about what it is for rather than an engineering setting. Shares are expressed as fractions of whatever allowance is observed, because no provider publishes the number that would make the arithmetic.</dd></div>
+<div><dt>Latest responsible time</dt><dd>Before the first capacity negotiation. <b>Not urgent</b>, for the same reason as the card above.</dd></div>
+<div><dt>If you do not answer</dt><dd>No negotiation can run. Since none can occur at today's limit, nothing happens.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article><article class="card">
+<span class="cid">Q-022</span>
+<p class="cq">Is the one-job-at-a-time limit the provider's constraint or our own policy — what does the account actually say?</p>
+<dl>
+<div><dt>Why this is yours</dt><dd>Only you hold the provider account, so reading it is an act on a credential nobody else has. This is a read, not an experiment — and raising the limit to find out would be circular.</dd></div>
+<div><dt>Latest responsible time</dt><dd><b>Answer this one first of the three capacity questions.</b> The other two defer to it by name, and it is the highest-leverage item in the round per unit of effort.</dd></div>
+<div><dt>If you do not answer</dt><dd>The limit stands, the four-times-demand test stays unrunnable, the reserved-lane structure stays owed rather than passed, and the two cards above stay not-urgent behind it.</dd></div>
+</dl>
+<p class="cont">Unrelated work continues: yes</p>
+</article></div>
+<p class="from">from: <b>registers/open-questions.json Q-016…Q-022</b> · <b>planning/F2/05-selection-record.md §6.5</b></p>
+</div>
+
+<div class="stack-s">
+<h3>What nobody knows yet</h3>
+<p class="sub">Twelve quantities are unmeasured. <b>The four cheapest cost approximately nothing
+and none of them has been done.</b> Two of the four are reads, not experiments.</p>
+<ul class="ticks">
+<li class="neg"><b>How often genuinely new kinds of work turn up.</b> Every design in this round is
+tuned against a rate nobody has counted. Counting admitted work over a past period against what
+you already knew how to do needs no software at all, and it is the cheapest thing in the
+round.</li>
+<li class="neg"><b>Whether the one-job limit is the provider's or ours.</b> One read of the
+account. It decides four separate cost questions.</li>
+<li class="neg"><b>How often a producer and a checker of the same model family are wrong together
+on planted defects.</b> This is the number that decides whether separating the checker buys
+anything at all, and nobody has measured it.</li>
+<li class="neg"><b>What one context compaction actually loses.</b> The provider reports how much
+was dropped, not <i>which facts</i> were dropped.</li>
+<li class="neg"><b>And four honest admissions:</b> four cost claims cannot be measured at your
+current limit at all; no provider publishes a capacity denominator, so every figure here is a
+ratio between two arrangements and never a fraction of your week; the human judgement the design
+leans on is an instrument with an unmeasured error rate, since human reviewers agree with each
+other between 5% and 65% of the time; and nobody has tested whether a shared view raises or lowers
+duplicated action — the question most adverse to your own idea.</li>
+</ul>
+<p class="from">from: <b>planning/F2/05-selection-record.md §10</b></p>
+</div>
+
+<div class="stack-s">
+<h3>What would reopen it</h3>
+<ul class="ticks">
+<li class="neg"><b>The simple version matching this one</b> on all six test cases at equal or lower
+demand on your attention and capacity. Then the right answer is a smaller system, and the plan
+already commits to shrinking it. <b>That condition is live at today's level of demand.</b></li>
+<li class="neg"><b>The worker shapes converging.</b> If a small stable set keeps recurring over a
+month, this design has a roster it discovered rather than declared, and the honest response is to
+stop calling them temporary and design the standing form properly.</li>
+<li class="neg"><b>A missing prerequisite.</b> If the runtime turns out to hold no credential that
+can be narrowed at the boundary, the whole release layer has to be built a different way. If
+nobody but you can be reached inside a duty's real deadline, the staffing answer above becomes the
+permanent operating state rather than a temporary one.</li>
+<li class="neg"><b>A sign-off that turns out to be misleading</b> — in particular a pass rate that
+<i>rises</i> as the load rises, which is the registered tell that checking is being starved.</li>
+<li class="neg"><b>Changed provider terms</b>, a missed material duty, or a shutdown that completed
+while the complaints route had no owner.</li>
+</ul>
+<p class="from">from: <b>planning/F2/05-selection-record.md §11</b> · <b>planning/02-architecture-selection.md §9</b></p>
+</div>
+
+<div class="stack-s">
+<h3>One defect chased through five rechecks</h3>
+<div class="prose">
+<p>A single weakness in the contract checker was pursued by five independent reviewers in a row,
+each one reading a frozen copy and none of them having written the repair they were checking or
+the recheck before them. <b>Every one of them closed the attack it was given. Every time, the next
+layer out leaked.</b> The named edit was refused, so a sibling edit passed. That was closed, so
+moving the same conditions inside a wrapper the checker did not follow passed. That was closed, so
+registering a new building block that vouched for itself passed. That was closed, and the
+hand-written list the fix introduced turned out to have no ceiling, no protection and no line in
+the final report.</p>
+<p>The last control is now <b>written into the checker itself as a fixed list</b>, compared both
+ways against its data file and printed in the verdict. <b>That placement is deliberate, and its
+weakness is stated rather than left to be discovered:</b> this repository's own risk classifier
+treats everything under the documentation tree as trivial, so editing that checker is a review
+convention here, not something enforced. The last repair reports 304,168 checks, 95 of 95 adverse
+cases correctly rejected and 56 of 56 innocent cases correctly passed — <b>recorded by its own
+author, and waiting on the same independent recheck as everything else above.</b></p>
+</div>
+<p class="from">from: <b>planning/reviews/G-02-recheck-02…05</b> · <b>registers/review-findings.json</b></p>
+</div>
+
+<div class="note note--open">
+<p><b>No verdict on this round is recorded.</b> It goes here when the independent recheck comes
+back.</p>
+<!-- F2-DISPOSITION: inserted by the orchestrator after F2-06-recheck-01 -->
+</div>
+
+<div class="hold">
+<p class="h">Where this leaves the build</p>
+<p><b>Building has not started and your hold stands.</b> No construction stage has been dispatched,
+and nothing has been written, bought or sent. The round's own frozen rules forbid its outputs from
+claiming that the system works, that the design was confirmed, that the architecture was
+established, or that construction may start — and they say the hold stays until you lift it in
+your own words.</p>
+<p>Every author and every reviewer in this round shares one model family. Independence here is
+<b>procedural</b> — separate context, reviewers who wrote none of the work, and a discipline of
+computing rather than trusting — not statistical. <b>No runtime exists.</b> Every "sufficient"
+above is about behaviour as specified on paper, checked offline. The security reviewer put the
+sharpest version of it: five designs formed blind of each other agreed on a dozen mechanisms, and
+<i>"the correct reading of the convergence is one source with five copies."</i></p>
 </div>
 </section>
 <section id="decisions">
