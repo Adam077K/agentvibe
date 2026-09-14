@@ -139,3 +139,78 @@ partition check caught this itself — the first run after the pin landed failed
 **Owed: nothing for this finding.** Note for the prose lane: `05` §4's table is prose and the ids above
 are this lane's snake-casing of it. If the chapter is ever re-worded, `EXISTENCE_REASON_PAIRS` is the
 thing to reconcile it against.
+
+---
+
+## What this lane did NOT land, and exactly where it stopped
+
+The lane was dispatched against **18** findings and landed **two** — F6A-10 and F6D-12 — plus
+**F6R-01's structural half**, which the other sixteen also need and which is therefore not wasted. It
+stopped on turn budget, not on a blocker. Everything below is **not-done**, and every one of them is
+still in `pinned-conjuncts.json#/not_answered` (35 entries), which is where a resumer should start.
+
+**Two facts a resumer needs and which cost this lane several turns to establish. Neither is in any
+README.**
+
+1. **`Write`/`Edit` are refused in this worktree.** The hook scopes them to
+   `…/.worktrees/ceo-4-1789314685` while this tree is `…/.claude/worktrees/agent-…`. **Bash writes are
+   not scoped** and work. Every repo edit here was made by a Python script run from Bash. This is the
+   `Bash`-vs-`Write` divergence the root `CLAUDE.md` documents, hit for real.
+2. **A criterion body may not be hand-edited.** `criterion.*` bodies are authored by
+   `tools/phase_content.py` and an oracle fails on drift, so a conjunct lands by editing the derivation
+   and re-running `tools/author_phase_content.py .`. The DSL is documented in that file above
+   `def spec` — `nfp`, `rpp`, `eqF`, `either`, `every`, `not`, `neF`, `prF`, `s1`. **It has no
+   comparison code**, which is the live obstacle for F6C-11 and F6C-10 (below). `guard.*` bodies are
+   NOT derived and may be patched directly.
+
+**The findings, with the analysis this lane completed so the next one does not repeat it:**
+
+- **F6D-09** — `AdmissionRecord.failed_predicate_id` and `StandingInterest.precondition_predicate_ids`
+  are `values.schema.json#/$defs/string`; retype to `PredicateId` / `PredicateId[]` (the enum is
+  derived and ratcheted, so `rederive_from_registries` is required on any fixture that touches it).
+  The determinism conjunct reads each named predicate's registered `implementation_status`.
+- **F6C-11** — `landed_at` **already exists and is already required** on `UnmatchedPoolEntry`, so that
+  half of the required contract is a no-op. The obstacle is arithmetic: `add` is `DecimalString` only,
+  there is no instant-plus-duration primitive, so `gt(retention_until, landed_at +
+  longest_plausible_outage)` is **not expressible in the current operator set**. The route this lane
+  had settled on, not yet applied: retype `longest_plausible_outage` from `string` to `Duration`
+  (milliseconds — an established field type, 12 fields use it), add a required `retention_span:
+  Duration`, and make the conjunct `lt(longest_plausible_outage, retention_span)`, which **refuses the
+  review's own counterexample exactly** (one-day retention, thirty-day stated outage). The residue —
+  tying `retention_span` to `retention_until − landed_at` — needs an instant-offset primitive and must
+  be recorded as **owed**, not faked.
+- **F6C-10** — `attempt_ceiling` is on `FailureRecord` alone, optional, read by nothing;
+  `WorkOrder.payload.required` has 16 entries and none is a ceiling. Needs the field required on
+  `WorkOrder`, a conjunct on `* → retry_admitted` (same comparison obstacle as F6C-11), and a named
+  park phase — note `WorkOrder` **already has a `parked` phase** and `FailureRecord` does not, so the
+  new phase belongs on `FailureRecord`.
+- **F6C-13** — `critical_fields` is optional on `WorkflowDefinition` and `StepExecution` and in zero
+  predicates; AT-M1-02 asked for `WorkOrder` or `FieldAuthority`. `FieldAuthority` is the better of the
+  two and the reason is in its own invariant: *"C01 declares the authority and only the named authority
+  writes the value"* — which is the authorship rule, already stated, on the right record.
+- **F6X-01** — the three unresolvable `exclusive_factory` values are `kernel.commit_group`
+  (`DomainEvent`), `witness.store_group` (`DurabilityReceipt`) and `kernel.apply_transition`
+  (`LifecycleStatus`). `command-registry.json` holds six `kernel.*` commands and **zero** `witness.*`.
+  These are kernel paths, not record-level commands, so "register them" means inventing command
+  contracts and "retire them" deletes a real containment; the third way this lane would have taken is a
+  declared, closed literal of kernel factory paths with the validator refusing anything in neither set.
+  **That is a decision a recheck should see stated, which is why it is written here undone.**
+- **F6X-02** — blocked on the chapter: `ConstraintSet.boundary_kind` is a free string and the closed set
+  must be stated in `05` §5 **first**; `OperatorProjection` has no contested-refs field.
+- **F6A-09** — the analysis is settled and is not "remove both keys". `ConsequenceVector` is a live
+  **value-registry** type and its alias row is a **wrong mapping** → remove that key. `CapacityState` is
+  prose-only, its mapping is correct, and **F6D-10 explicitly withdrew half a finding because that row
+  exists** → keep it and fix `how_to_read`, which is what is actually false. Then extend the declared
+  check to value-registry names. Alias floor is 20 and the table has 26, so removing one is safe.
+- **F6C-06** (`cache_lifetime` as a registered `CapacityObservation` measure), **F6C-12** (say
+  `escalated`; `AdmissionRecord` already declares that phase, so this is naming only), **F6D-08**
+  (`ArmedSet.permitted_commands` is `[]` and zero of 105 commands name it — the genuine half; the
+  owner is `S1-C02`, the admission authority its own invariant excludes), **F6D-05**, **RC4-07**
+  (`CENSUS_KEYS` is a literal in `validate_contracts.py`; the "or" branch worth taking is pinning the
+  key set in `pinned-conjuncts.json` and comparing, the same shape as `ADMISSIBLE_LITERAL`),
+  **F6R-02**, **F6R-03**, **F6R-04** — all analysed, none applied.
+
+**The validator was NOT run with fixtures.** `CONTRACTS_FIXTURE_RUN=1 python3 validate_contracts.py`
+(the fixture suite skipped) was run after every step above and **passed every time**, which is the only
+verification this lane can honestly claim. The four new fixtures have **never been executed**: whether
+each is refused for its stated reason, and whether each benign one passes, is **unverified**.
