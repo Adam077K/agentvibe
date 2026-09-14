@@ -306,73 +306,88 @@ were behind it — so no prose edit was owed for the two clauses that landed. If
 
 ## What this lane did NOT land, and exactly where it stopped
 
-The lane was dispatched against **18** findings and landed **two** — F6A-10 and F6D-12 — plus
-**F6R-01's structural half**, which the other sixteen also need and which is therefore not wasted. It
-stopped on turn budget, not on a blocker. Everything below is **not-done**, and every one of them is
-still in `pinned-conjuncts.json#/not_answered` (35 entries), which is where a resumer should start.
+Dispatched against **18** findings. Landed **five** — F6A-10, F6D-12, F6D-09, F6C-11, F6C-10 — plus
+**F6R-01's structural half**, which the other thirteen also need. It stopped on turn budget, not on a
+blocker. Every finding below is **not-done** and every one is still in
+`pinned-conjuncts.json#/not_answered` (32 entries), which is where a resumer starts.
 
-**Two facts a resumer needs and which cost this lane several turns to establish. Neither is in any
-README.**
+**Verification actually performed, stated narrowly.** `CONTRACTS_FIXTURE_RUN=1 python3
+validate_contracts.py` — the full deterministic suite with the **fixture runs skipped** — was run after
+every step above and passed every time. **The ten new fixtures have never been executed.** Whether each
+adverse one is refused *for its stated reason*, and whether each benign one passes, is **unverified**.
+The full `python3 validate_contracts.py` was not run.
+
+### Three facts a resumer needs, none of them in any README, each of which cost this lane turns
 
 1. **`Write`/`Edit` are refused in this worktree.** The hook scopes them to
-   `…/.worktrees/ceo-4-1789314685` while this tree is `…/.claude/worktrees/agent-…`. **Bash writes are
-   not scoped** and work. Every repo edit here was made by a Python script run from Bash. This is the
+   `…/.worktrees/ceo-4-1789314685`; this tree is `…/.claude/worktrees/agent-…`. **Bash writes are not
+   scoped.** Every repo edit here was made by a Python script invoked from Bash. This is the
    `Bash`-vs-`Write` divergence the root `CLAUDE.md` documents, hit for real.
-2. **A criterion body may not be hand-edited.** `criterion.*` bodies are authored by
-   `tools/phase_content.py` and an oracle fails on drift, so a conjunct lands by editing the derivation
-   and re-running `tools/author_phase_content.py .`. The DSL is documented in that file above
-   `def spec` — `nfp`, `rpp`, `eqF`, `either`, `every`, `not`, `neF`, `prF`, `s1`. **It has no
-   comparison code**, which is the live obstacle for F6C-11 and F6C-10 (below). `guard.*` bodies are
-   NOT derived and may be patched directly.
+2. **A `criterion.*` body may not be hand-edited.** Criteria are authored by `tools/phase_content.py`
+   behind a drift oracle; a conjunct lands by editing the derivation and re-running
+   `tools/author_phase_content.py .`. The DSL is documented above `def spec`. This lane added two codes
+   to it — `ltF` (F6C-11) and `ltCount` (F6C-10) — because **it had no comparison operator at all**,
+   which is most of why 33 of the 46 criteria on the fifteen new records compare nothing.
+   **`guard.*` bodies are NOT derived** and may be patched directly.
+3. **`author_phase_content.py` authors CRITERIA, not EDGE PREDICATES.** Adding a lifecycle phase
+   therefore needs `edge.<Record>.<from>.<to>.v1` written by hand, which the oracles are built to
+   refuse. This is what stopped F6C-10's park phase, and it will stop any other new phase.
 
-**The findings, with the analysis this lane completed so the next one does not repeat it:**
+### The thirteen, with the analysis already done
 
-- **F6D-09** — `AdmissionRecord.failed_predicate_id` and `StandingInterest.precondition_predicate_ids`
-  are `values.schema.json#/$defs/string`; retype to `PredicateId` / `PredicateId[]` (the enum is
-  derived and ratcheted, so `rederive_from_registries` is required on any fixture that touches it).
-  The determinism conjunct reads each named predicate's registered `implementation_status`.
-- **F6C-11** — `landed_at` **already exists and is already required** on `UnmatchedPoolEntry`, so that
-  half of the required contract is a no-op. The obstacle is arithmetic: `add` is `DecimalString` only,
-  there is no instant-plus-duration primitive, so `gt(retention_until, landed_at +
-  longest_plausible_outage)` is **not expressible in the current operator set**. The route this lane
-  had settled on, not yet applied: retype `longest_plausible_outage` from `string` to `Duration`
-  (milliseconds — an established field type, 12 fields use it), add a required `retention_span:
-  Duration`, and make the conjunct `lt(longest_plausible_outage, retention_span)`, which **refuses the
-  review's own counterexample exactly** (one-day retention, thirty-day stated outage). The residue —
-  tying `retention_span` to `retention_until − landed_at` — needs an instant-offset primitive and must
-  be recorded as **owed**, not faked.
-- **F6C-10** — `attempt_ceiling` is on `FailureRecord` alone, optional, read by nothing;
-  `WorkOrder.payload.required` has 16 entries and none is a ceiling. Needs the field required on
-  `WorkOrder`, a conjunct on `* → retry_admitted` (same comparison obstacle as F6C-11), and a named
-  park phase — note `WorkOrder` **already has a `parked` phase** and `FailureRecord` does not, so the
-  new phase belongs on `FailureRecord`.
-- **F6C-13** — `critical_fields` is optional on `WorkflowDefinition` and `StepExecution` and in zero
-  predicates; AT-M1-02 asked for `WorkOrder` or `FieldAuthority`. `FieldAuthority` is the better of the
-  two and the reason is in its own invariant: *"C01 declares the authority and only the named authority
-  writes the value"* — which is the authorship rule, already stated, on the right record.
-- **F6X-01** — the three unresolvable `exclusive_factory` values are `kernel.commit_group`
-  (`DomainEvent`), `witness.store_group` (`DurabilityReceipt`) and `kernel.apply_transition`
-  (`LifecycleStatus`). `command-registry.json` holds six `kernel.*` commands and **zero** `witness.*`.
-  These are kernel paths, not record-level commands, so "register them" means inventing command
-  contracts and "retire them" deletes a real containment; the third way this lane would have taken is a
-  declared, closed literal of kernel factory paths with the validator refusing anything in neither set.
-  **That is a decision a recheck should see stated, which is why it is written here undone.**
-- **F6X-02** — blocked on the chapter: `ConstraintSet.boundary_kind` is a free string and the closed set
-  must be stated in `05` §5 **first**; `OperatorProjection` has no contested-refs field.
-- **F6A-09** — the analysis is settled and is not "remove both keys". `ConsequenceVector` is a live
-  **value-registry** type and its alias row is a **wrong mapping** → remove that key. `CapacityState` is
-  prose-only, its mapping is correct, and **F6D-10 explicitly withdrew half a finding because that row
-  exists** → keep it and fix `how_to_read`, which is what is actually false. Then extend the declared
-  check to value-registry names. Alias floor is 20 and the table has 26, so removing one is safe.
-- **F6C-06** (`cache_lifetime` as a registered `CapacityObservation` measure), **F6C-12** (say
-  `escalated`; `AdmissionRecord` already declares that phase, so this is naming only), **F6D-08**
-  (`ArmedSet.permitted_commands` is `[]` and zero of 105 commands name it — the genuine half; the
-  owner is `S1-C02`, the admission authority its own invariant excludes), **F6D-05**, **RC4-07**
-  (`CENSUS_KEYS` is a literal in `validate_contracts.py`; the "or" branch worth taking is pinning the
-  key set in `pinned-conjuncts.json` and comparing, the same shape as `ADMISSIBLE_LITERAL`),
-  **F6R-02**, **F6R-03**, **F6R-04** — all analysed, none applied.
+- **F6C-13** — take `WorkOrder` (the review's first branch). `critical_fields` is optional on
+  `WorkflowDefinition`/`StepExecution` and in zero predicates. The two fields to add are
+  `critical_fields: JsonPointer[]` and `critical_fields_authority_ref: Ref<ResponsibilityAssignment>`,
+  both required. The authorship rule — *"the capability owner at procedure admission, never the
+  resuming attempt"* — is expressible today as `neq(critical_fields_authority_ref,
+  owner_assignment_ref)` plus `related_phases(critical_fields_authority_ref → accepted)`; the envelope
+  `owner_assignment_ref` is the work order's own current owner, i.e. the party resuming it. That needs
+  a `neqF` DSL code, a two-line mirror of `eqF`.
+- **F6X-01** — the three unresolvable values are `kernel.commit_group` (`DomainEvent`),
+  `witness.store_group` (`DurabilityReceipt`), `kernel.apply_transition` (`LifecycleStatus`).
+  `command-registry.json` has six `kernel.*` commands and **zero** `witness.*`. These are kernel paths,
+  not record-level commands: "register them" invents command contracts, "retire them" deletes a real
+  containment. **A recheck should see that tension stated**, which is why it is written here undone.
+- **F6X-02** — blocked on the chapter. `05` §5 must state the closed `boundary_kind` set first;
+  `ConstraintSet.boundary_kind` is a free string and `OperatorProjection` has no contested-refs field.
+- **F6A-09** — the analysis is settled and **is not "remove both keys"**. `ConsequenceVector` is a live
+  **value-registry** type and its alias row is a genuinely **wrong mapping** → remove that key.
+  `CapacityState` is prose-only, its mapping is correct, and **F6D-10 withdrew half a finding because
+  that row exists** → keep it and fix `how_to_read`, which is the thing that is actually false. Then
+  extend the declared check to value-registry names. Alias floor is 20, the table has 26.
+- **F6C-06** — `cache_lifetime` as a registered `CapacityObservation` measure in `value-registry.json`,
+  plus the `07` §5 pointer.
+- **F6C-12** — naming only. `AdmissionRecord` **already declares** the `escalated` phase, so this is
+  one sentence in `05` §6 plus a check that "awaiting-principal" appears nowhere in the chapters.
+- **F6D-08** — the genuine half is real and should be credited: `ArmedSet.registration.
+  permitted_commands` is `[]` and **zero of 105 commands name `ArmedSet`**. The other half stands:
+  `owner_component` is `S1-C02`, the admission authority its own invariant excludes.
+- **F6D-05** — the two load-bearing guards and `guard.interest.precondition_invokes_no_model`. Note
+  that F6D-09 has already closed part of the third one: `precondition_evaluator_kind` is now a closed
+  enum, so the guard's comparand is constrained even though the rebinding to `current_owner` is not
+  done. **The `05` §1 vs `SkillVersion.owner_component` contradiction is untouched.**
+- **RC4-07** — `CENSUS_KEYS` is a literal in `validate_contracts.py`. The "or" branch worth taking is
+  pinning the key set in `pinned-conjuncts.json` and comparing the two, exactly the shape
+  `ADMISSIBLE_LITERAL` already uses, and adding a `census_keys` row to `HAND_WRITTEN_CONTROLS`.
+- **F6R-03** — assert every Step 6 id swept out of the `F2-06-*` review documents is a key of
+  `finding_sources`. The sweep machinery already exists (`swept_findings`, `FINDING_ID`,
+  `FINDING_CORPUS`); the regex covers `F6[A-D]-\d{2}` and `F6X-\d{2}` and **not** `F6R-\d{2}`.
+- **F6R-01** — the structural half **is done**. What remains is reclassification: 32 findings sit in
+  `not_answered` conservatively, because this lane would only write `answered_elsewhere` rows whose
+  file and check it had actually verified. Each one a later lane verifies moves across and lowers
+  `NOT_ANSWERED_CEILING`.
+- **F6R-02** — one sentence in the RC5-01 comment block recording that
+  `validate_contracts.py` is `trivial` under `.claude/qa-tier-floor.yml` and that the expense of
+  editing it is a **review convention, not an enforced tier**. Do not edit the tier floor.
+- **F6R-04** — **already acted on, in F6C-11.** That finding's check reads the criterion body and is
+  placed ABOVE the derivation oracle precisely so a mutation reports the concrete rule rather than the
+  drift. What remains is the note in the F6D-07 block saying a hand edit surfaces as drift first.
 
-**The validator was NOT run with fixtures.** `CONTRACTS_FIXTURE_RUN=1 python3 validate_contracts.py`
-(the fixture suite skipped) was run after every step above and **passed every time**, which is the only
-verification this lane can honestly claim. The four new fixtures have **never been executed**: whether
-each is refused for its stated reason, and whether each benign one passes, is **unverified**.
+### Owed beyond the eighteen, recorded on request and NOT acted on
+
+- **F6B-03 (owed).** The independent recheck found that **nothing binds an acceptance's calibration to
+  the checker that produced the verdict** — `AcceptanceInterval` carries no checker identity. So an
+  acceptance can be written against a calibration belonging to a different checker, and
+  `r18-acceptance-on-an-uncalibrated-checker` does not reach it: that fixture is about a calibration
+  being absent, not about it belonging to someone else. Recorded here so it is a known gap rather than
+  a future discovery; no change was made for it.
