@@ -171,7 +171,7 @@
       "kind": "fresh contracts lane off 41c51c7",
       "scope": "F6C-13, F6D-08, F6D-05, F6R-01 32 rows, residues F6C-10/F6C-11/F6B-03; no chapter edits",
       "dispatched": "2026-09-14",
-      "status": "running"
+      "status": "RETURNED PARTIAL at a41b62b (5 commits): F6C-13 repaired; F6D-08 repaired; F6D-05 partial (control fields re-owned to S1-C04 and pinned; guard-body rebinding through IdentityBinding owed); F6R-01 1 of 32 rows moved (30 unverified, said so); residues F6C-10/F6C-11/F6B-03 not started; 6 new fixtures (r33–r35 pairs) never executed; S1-C04 choice is the lane's reading of 02 §4 — recheck should treat it as such"
     },
     {
       "lane": "r7-prose-c",
@@ -179,7 +179,7 @@
       "kind": "prose lane off 41c51c7, chapters 04/05/07 only",
       "scope": "F6W-01..08 and the Q-017 holder-table update in 05 §12",
       "dispatched": "2026-09-14",
-      "status": "running"
+      "status": "RETURNED COMPLETE at bd5d103 (8 commits, on top of 41c51c7): F6W-01..08 repaired; Q-017 holder table in 05 §12 carries the founder's decision; verifiers green; merge waits on the validator for 41c51c7"
     }
   ],
   "next_actions": [
