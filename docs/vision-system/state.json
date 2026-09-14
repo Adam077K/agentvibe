@@ -154,7 +154,7 @@
       "base": "aa63875 + merge of 3d09545",
       "worktree": "harness-managed; branch builder/f2-r7-contracts-b",
       "dispatched": "2026-09-14",
-      "status": "running via 30-turn resumes"
+      "status": "RETURNED PARTIAL at 41c51c7 (11 commits): repaired step-0 (two fixture leaks), F6X-02, F6X-01, F6A-09, F6C-06, F6R-02, RC4-07, F6R-04, F6R-03; partial F6R-01 (32 rows unmoved); not-done F6C-13, F6D-08, F6D-05, residues; F6D-09 conjunct returned as a decision (implementation_status single-valued). 14 new fixtures never executed; full validator running on 41c51c7 (orchestrator); scope clean; one chapter sentence (07 §5)"
     },
     {
       "lane": "q017-conjunction-rerun",
@@ -164,6 +164,22 @@
       "output": "planning/F2/09-q017-conjunction-rerun.md (orchestrator commits)",
       "dispatched": "2026-09-14",
       "status": "RETURNED; file committed at 311c302; founder answered on the reduced list"
+    },
+    {
+      "lane": "r7-contracts-c",
+      "engine": "builder",
+      "kind": "fresh contracts lane off 41c51c7",
+      "scope": "F6C-13, F6D-08, F6D-05, F6R-01 32 rows, residues F6C-10/F6C-11/F6B-03; no chapter edits",
+      "dispatched": "2026-09-14",
+      "status": "running"
+    },
+    {
+      "lane": "r7-prose-c",
+      "engine": "builder",
+      "kind": "prose lane off 41c51c7, chapters 04/05/07 only",
+      "scope": "F6W-01..08 and the Q-017 holder-table update in 05 §12",
+      "dispatched": "2026-09-14",
+      "status": "running"
     }
   ],
   "next_actions": [
