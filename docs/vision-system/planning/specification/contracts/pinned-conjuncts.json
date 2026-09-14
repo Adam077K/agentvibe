@@ -129,7 +129,7 @@
     "F6D-10": "planning/reviews/F2-06-D-authority-buildability-adversarial.md",
     "F6D-11": "planning/reviews/F2-06-D-authority-buildability-adversarial.md",
     "F6D-12": "planning/reviews/F2-06-D-authority-buildability-adversarial.md",
-    "G1-06b": "planning/reviews/G-01-completeness-vision-coverage.md",
+    "G1-06b": "registers/review-findings.json",
     "G2-01": "planning/reviews/G-02-coherence-buildability-changeability.md",
     "G2-02": "planning/reviews/G-02-coherence-buildability-changeability.md",
     "G2-05": "planning/reviews/G-02-coherence-buildability-changeability.md",
@@ -173,6 +173,118 @@
     {
       "finding": "RC-07",
       "why": "A prose gap: `terminated_with_residuals` appears in no specification chapter. The phase-meaning row in chapter 03 closes it; no conjunct can."
+    },
+    {
+      "finding": "XSR-R-01",
+      "why": "The subject is the cross-scope residue lane (docs/vision-xsr-residue): bindings, answers and verification_family_refs, none of which this package registers. No conjunct here can carry a statement about a document tree these contracts do not describe. Registered so the coverage check records the boundary rather than passing over it in silence."
+    },
+    {
+      "finding": "XSR-R-02",
+      "why": "Same boundary as XSR-R-01: per-subcase positive controls and execution boundaries live in the cross-scope residue lane's verification tables. Nothing in record-registry.json or predicate-registry.json holds a subcase, so there is no predicate body a pin could name."
+    },
+    {
+      "finding": "XSR-R-03",
+      "why": "Same boundary as XSR-R-01. `selected_route_ids` and `candidate_route_ids` are fields of the residue lane's route profiles, not of any record this package registers."
+    },
+    {
+      "finding": "XSR-R-04",
+      "why": "Same boundary as XSR-R-01, and STILL OPEN by the register's own status: seven assertions are bound by no answer. A pin cannot carry it for the same reason -- the assertions are in the residue lane, not in this registry."
+    },
+    {
+      "finding": "GR-01",
+      "why": "prose contract: the required contract is nine specification sentences kept verbatim under a supersession note. That is chapter prose, and a conjunct pin states what a predicate body must demand. What is mechanical about GR-01 -- that the note cites a predicate id that exists -- is already carried by the citation checks over the chapters."
+    },
+    {
+      "finding": "GR-02",
+      "why": "OPEN AND ONLY PARTLY IMPLEMENTED, which is why no pin carries it: of the seven parked records the finding names, `Mission`, `Project`, `WorkflowRun` and `Case` now hold `parking_closure_account_ref` and `Goal`, `KnowledgeQuestion` and `Opportunity` do not. A pin over the four that have it would cite GR-02 and cover four sevenths of it, which reads as coverage of the whole. The finding is answered by pinning the parked criteria of all seven, or by the register recording why the other three need no closure account -- neither has happened. Deliberately NOT excused as prose: the contract names records this package registers."
+    },
+    {
+      "finding": "GR-03",
+      "why": "Open by design, and it is the one finding whose required contract this package cannot hold at all: a predicate EVALUATOR over the 57 primitives, executing instance fixtures. Every check here is offline and structural -- no interpreter exists, and the verdict's own `limits` string says so. A pin asserts what a body demands; GR-03 asks for something that RUNS a body."
+    },
+    {
+      "finding": "GR-04",
+      "why": "Implemented as a DERIVATION, not as a conjunct: values.schema.json's PredicateId enum is recomputed from predicate-registry.json and drift fails, and fixtures/negative/r12-predicate-id-enum-drifts-from-the-registry.json is the control. A pin over a schema enum would restate the derivation in the file the derivation writes."
+    },
+    {
+      "finding": "RP-01",
+      "why": "Open, and a property of values.schema.json's TypedPredicate branches against each predicate's argument_schema -- a schema-to-schema comparison, not a demand any criterion body makes. The repair named in the contract is a derivation plus a negative fixture, in the shape GR-04 already took; neither is a pin."
+    },
+    {
+      "finding": "RC2-01",
+      "why": "A property of how the runner resolves the fixture directories, closed by the symlink refusal in tools/run_negative_fixtures.py and tools/run_positive_fixtures.py. Same class as RC-05, which is declared unpinnable here for the same reason: no registry content is involved."
+    },
+    {
+      "finding": "RC2-02",
+      "why": "The repair is the `disjoined` key on every `require` row, the `any`-ancestry tracking in the walker and the ceiling of four opted-in rows -- all of them properties of THIS FILE and of validate_contracts.py, not of any criterion body. fixtures/negative/r14-pinned-conjunct-disjoined-with-a-tautology is the control. A pin citing RC2-02 would be a pin about the shape of pins."
+    },
+    {
+      "finding": "RC2-03",
+      "why": "A statement about the SCOPE of the RC-03 requires-rule, recorded in `#/requires_waivers_why` with its measured population. It is a limit this file publishes about a check, not a requirement a predicate body can demand."
+    },
+    {
+      "finding": "RC2-04",
+      "why": "A branch in validate_contracts.py on the runner's payload, so a fixture count mismatch reports under the ratchet headline instead of the leak headline. A property of two checkers agreeing about a message; no conjunct can carry it."
+    },
+    {
+      "finding": "RC3-01",
+      "why": "Closed by making the demand table derived: primitive-registry.json declares which child slots are demanding and the walker refuses any slot it does not recognise. The controls are fixtures/negative/r15-pinned-conjunct-inside-a-vacuous-forall and r15-unregistered-operator-in-a-predicate-position. The repair is the walker itself, so pinning a conjunct 'for RC3-01' would be circular in the way RC-02's row describes."
+    },
+    {
+      "finding": "RC3-02",
+      "why": "Same root cause and same answer as RC3-01: the walker descends only into declared predicate positions and never into value slots. fixtures/negative/r15-pinned-conjunct-buried-in-a-value-slot is the control. A property of the walk, not of a body."
+    },
+    {
+      "finding": "RC3-03",
+      "why": "A property of how the leak wrapper attaches the runner's structured payload instead of a stdout tail. Implemented in validate_contracts.py and tools/run_negative_fixtures.py; nothing in any registry expresses it."
+    },
+    {
+      "finding": "RC4-01",
+      "why": "Implemented as `#/argument_positions_digest` in this file, compared against a hash of primitive-registry.json's argument_positions on every run, with fixtures/negative/r17-registry-flips-forall-to-demanded.json as the control. The digest IS the answer; a conjunct cannot carry a hash of the table that decides what a conjunct means."
+    },
+    {
+      "finding": "RC4-02",
+      "why": "Implemented as the admissible-ancestor table -- now the closed literal ADMISSIBLE_LITERAL in validate_contracts.py with `#/admissible_ancestors` as its checked declaration (RC5-01) -- plus fixtures/negative/r17-self-declared-demanding-primitive-wraps-a-pin. It is the rule that decides which pins are satisfied, so no pin can be the rule."
+    },
+    {
+      "finding": "RC4-03",
+      "why": "A property of the fixture suite's denominator: literal floors in validate_contracts.py compared against the floor declared in each MANIFEST.json, printed in the verdict beside the count. Same class as RC-04, declared unpinnable here already."
+    },
+    {
+      "finding": "RC4-04",
+      "why": "A property of a REFUSAL MESSAGE -- that the remedy it advertises is one the checker accepts, and that the one it disclaims is refused. Verified by mutation, not by any registry content: the quantifier refusal states both outcomes in its `accepted` and `not_accepted` fields."
+    },
+    {
+      "finding": "RC4-05",
+      "why": "A property of the leak headlines in validate_contracts.py: four kinds, four sentences, and an unknown kind refused rather than folded into another headline. Nothing in a criterion body distinguishes 'not rejected' from 'rejected for the wrong reason'."
+    },
+    {
+      "finding": "RC4-06",
+      "why": "A property of tools/run_negative_fixtures.py: a per-fixture exception is that fixture's failure, with its id and file:line, and the suite completes. No conjunct can carry the control flow of the runner."
+    },
+    {
+      "finding": "RC4-07",
+      "why": "A property of the VERDICT: the census keys are required on the object about to be printed, with floors under the counts. Pinning the census in this file was the alternative the contract offered and was not taken -- a pin file the checker reads cannot be what proves the checker measured anything."
+    },
+    {
+      "finding": "RC5-01",
+      "why": "This finding's repair is the closed literal ADMISSIBLE_LITERAL in validate_contracts.py and the equality check against `#/admissible_ancestors`. Pinning it would be circular in the exact way RC-02's row describes: the allowlist decides which pins are satisfied, so a pin cannot decide the allowlist. The controls are fixtures/negative/r19-allowlist-widened-in-json and its benign twin."
+    },
+    {
+      "finding": "RC5-02",
+      "why": "This finding's repair is the widened FINDING_ID, the sweep over the register and the F2 reviews, the unanswered-finding ceiling and the raised floors -- all in validate_contracts.py, and this very row is one of the 28 declarations it forced. A coverage rule cannot be covered by the table it measures. The controls are fixtures/negative/r19-pin-citing-a-review-finding-deleted and its benign twin."
+    },
+    {
+      "finding": "RC5-03",
+      "why": "This finding's repair is reading `#/admissible_ancestors_not_admitted`: nothing may be both admitted and not admitted, every name must be a registered primitive, and an operator taking the `quantified` escape must be declared here. The block is now data; a pin over it would be a pin about the pin file. The controls are fixtures/negative/r19-not-admitted-operator-is-also-admitted and its benign twin."
+    },
+    {
+      "finding": "F6X-01",
+      "why": "Open residue. The contract is a reference between two registries -- every `exclusive_factory` a record declares must resolve in command-registry.json -- plus a validator check for it. A pin states what a predicate body demands; a dangling factory reference is in no body."
+    },
+    {
+      "finding": "F6X-02",
+      "why": "prose contract: 05 section 5 must state the closed `boundary_kind` set and the contested-refs field before contracts can register either. The register's own note is that the enum members would have been invented rather than derived, which is why nothing here registers them yet -- and a pin over an enum this package has not been given would be exactly that invention."
     }
   ],
   "pins": [

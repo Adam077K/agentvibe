@@ -1,0 +1,18 @@
+{
+  "id": "r19-pin-citing-a-review-finding-deleted-benign",
+  "repair": "RC5-02",
+  "case": "declaring an unanswered finding unpinnable, with a reason",
+  "why": "The benign twin of r19-pin-citing-a-review-finding-deleted, moving the same control in the other direction. F6A-01 is one of the 37 findings this package declares a source for and says nothing about; adding an `unpinnable` row with a reason takes that set to 36, under the ceiling of 37. This must PASS: the ceiling exists to refuse a pin deletion, not to freeze the pin file, and the legitimate way to stop answering a finding -- say so, in writing, in the table a reviewer reads -- has to remain cheaper than the illegitimate one. A checker that refused this would be refusing every future declaration, which would teach an author to delete the finding_sources row instead and leave nothing behind at all.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/unpinnable/0",
+      "op": "add",
+      "value": {
+        "finding": "F6A-01",
+        "why": "Declared here by fixtures/positive/r19-pin-citing-a-review-finding-deleted-benign.json as the benign half of the unanswered-finding ceiling: the finding's repair landed as a check rather than as a conjunct, and this row is the record of that."
+      }
+    }
+  ]
+}

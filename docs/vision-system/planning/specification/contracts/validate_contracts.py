@@ -1151,21 +1151,83 @@ def inadmissible_ancestor(entry, row, boolean_op):
     return None
 
 
+# --- RC5-02: WHICH FINDING LOST ITS LAST PIN. NAMED, AND BEFORE ANY COUNT. ------
+#
+# The floors below are the bulk control and they were the ONLY control over 32 of 57 pins:
+# the coverage check reads finding ids out of registers/review-findings.json, its regex
+# matched `G#-##` and `RC-##` alone, and every one of those 32 pins cites `AT-M2-03`,
+# `AC-M4-05`, `AS-M5-01` and the rest of the F2 selection-record work, which that regex has
+# no opinion about. p6a of the fifth recheck deleted all 32 and 72 of 119 require rows:
+# exit 0, 297,520 checks, 0.6% below the baseline.
+#
+# A count cannot say WHICH finding went dark, and the count is what a reader gets from a
+# floor. `#/finding_sources` is the pin file's own declaration that this package answers a
+# finding and where that finding is stated -- 106 of them -- so the set of declared
+# findings that no pin cites and no `unpinnable` row excuses is a number this file can
+# hold, and every pin deletion moves it by name. 37 today, all F6A/F6B/F6C/F6D and G2-06:
+# Step 6 findings whose repair landed as a check rather than as a conjunct.
+#
+# This sits ABOVE the floors deliberately, for the reason RC4-01's block states about its
+# own ordering: on a mutation that trips both, the reader should be told the concrete
+# thing -- which finding is now carried by nothing -- and not merely that a table moved.
+FINDING_SOURCES = PINNED["finding_sources"]
+covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
+    | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
+unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
+UNANSWERED_CEILING = 37
+unanswered = sorted(set(FINDING_SOURCES) - covered - set(unpinnable))
+checked(len(unanswered) <= UNANSWERED_CEILING,
+        ("A PINNED FINDING LOST ITS LAST PIN: a finding declared in "
+         "`pinned-conjuncts.json#/finding_sources` is cited by no pin, no pinned "
+         "transition and no `unpinnable` row, so this package still names the review that "
+         "stated it and no longer states anything about it. Deleting a pin whose findings "
+         "are cited nowhere else is exactly the move the pin FLOOR cannot name and the "
+         "coverage check below cannot see, because the coverage check reads the register "
+         "and these findings are stated in the F2 reviews (RC5-02)",
+         {"unanswered": unanswered, "count": len(unanswered), "ceiling": UNANSWERED_CEILING,
+          "note": "every name in `unanswered` is a finding this package declares a source "
+                  "for and says nothing about; the one that is not in the committed 37 is "
+                  "the pin that was just deleted. "
+                  "Retiring a pin is a decision: cite its findings on another pin, or add "
+                  "an `unpinnable` row saying why no conjunct can carry it. LOWERING this "
+                  "ceiling is free and is the direction to move it; raising it is an edit "
+                  "to validate_contracts.py."}))
+
 # A floor, and it is a LITERAL for the same reason the sibling-collision budget is: a
 # count derived from the file it measures is satisfied by the empty file. The coverage
 # check below forces every registered finding to be pinned or excused, which an author
-# could satisfy by moving all 25 pins into `unpinnable` one reason at a time; this is what
+# could satisfy by moving the pins into `unpinnable` one reason at a time; this is what
 # stops that being quiet. Lowering these numbers is a decision, and it should read like one.
 # The transition floor was 6 and is 32 (F6D-04). The six were all on `Fulfillment` and
 # `SalesAgreement`; not one of the fifteen WORK-1.1 records had a pinned transition, and
 # three measured edge deletions on those records passed at exit 0.
-checked(len(PINNED["pins"]) >= 25 and len(PINNED["pinned_transitions"]) >= 32,
+#
+# RC5-02 RAISED ALL FOUR TO THE COMMITTED COUNTS, and that is the whole finding: 25/44 were
+# set when the table held 25 pins and 44 rows, the table grew to 67 and 148, and the floors
+# tracked neither -- so more than half the pin table sat below no control at all. A floor
+# that does not move with the table it budgets is the denominator again, which is the rule
+# NEGATIVE_FIXTURE_FLOOR's own comment states and this file did not apply to itself.
+# RAISE THESE WHENEVER A PIN IS ADDED. Never lower one without writing the reason here.
+PIN_FLOOR = 67           # 25 -> 67 (RC5-02); was the committed count when it was set
+PIN_ROW_FLOOR = 148      # 44 -> 148 (RC5-02)
+PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
+FINDING_SOURCE_FLOOR = 106  # new (RC5-02): the declaration the ceiling above reads
+checked(len(PINNED["pins"]) >= PIN_FLOOR
+        and len(PINNED["pinned_transitions"]) >= PIN_TRANSITION_FLOOR,
         ("the pinned table has shrunk; a pin table with no pins passes vacuously",
-         {"pins": len(PINNED["pins"]), "floor": 25,
-          "pinned_transitions": len(PINNED["pinned_transitions"]), "transition_floor": 32}))
-checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= 44,
+         {"pins": len(PINNED["pins"]), "floor": PIN_FLOOR,
+          "pinned_transitions": len(PINNED["pinned_transitions"]),
+          "transition_floor": PIN_TRANSITION_FLOOR}))
+checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= PIN_ROW_FLOOR,
         ("the pinned table kept its pins and lost its requirements",
-         sum(len(pin["require"]) for pin in PINNED["pins"])))
+         {"rows": sum(len(pin["require"]) for pin in PINNED["pins"]),
+          "floor": PIN_ROW_FLOOR}))
+checked(len(FINDING_SOURCES) >= FINDING_SOURCE_FLOOR,
+        ("the finding-source table has shrunk, and it is the denominator the unanswered "
+         "ceiling above is measured against: deleting a pin AND the `finding_sources` row "
+         "that declares its finding keeps that ceiling satisfied while answering one "
+         "finding fewer (RC5-02)",
+         {"finding_sources": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR}))
 # And a CEILING, for the mirror-image reason. `disjoined: true` excuses a row from demanding
 # its conjunct, so a table where every row is excused passes as loudly as one where none is
 # -- the floors above cannot tell 44 rows from 44 inert ones, which is precisely the gap
@@ -1700,10 +1762,13 @@ ATTACHMENTS = PINNED["pinned_attachments"]
 # A floor, a LITERAL, and the same argument as every other floor here: a table derived from
 # what it measures is satisfied by the empty table, and the completeness rule below could be
 # satisfied by deleting guards rather than by attaching them.
-checked(len(ATTACHMENTS) >= 30,
+# RC5-02 raised it from 30 to the committed 39, for the reason the pin floors were raised:
+# the table grew by nine and the budget did not, so nine attachments sat below no control.
+PIN_ATTACHMENT_FLOOR = 39  # 30 -> 39 (RC5-02)
+checked(len(ATTACHMENTS) >= PIN_ATTACHMENT_FLOOR,
         ("the attachment table has shrunk; it is the only control that catches a guard "
          "DETACHED from the edge it guards, and 30 of 30 were undetected before it existed",
-         {"rows": len(ATTACHMENTS), "floor": 30}))
+         {"rows": len(ATTACHMENTS), "floor": PIN_ATTACHMENT_FLOOR}))
 attached_guards = set()
 for row in ATTACHMENTS:
     checked(set(row) == PIN_ATTACHMENT_KEYS,
@@ -1766,31 +1831,136 @@ for row in PINNED["pinned_transitions"]:
 # Coverage: a finding the register knows about is pinned here, or is declared unpinnable
 # WITH A REASON. Derived from registers/review-findings.json at check time, so a finding
 # added to the register tomorrow cannot be silently unpinned today.
+#
+# --- RC5-02: THE REGEX IS THE COVERAGE CHECK'S REAL DENOMINATOR. ----------------
+#
+# It matched `G#-##` and `RC-##` and nothing else, so it saw 10 findings in a register of
+# 71 entries and had no opinion about `RC2-*`, `RC3-*`, `RC4-*`, `RC5-*`, `GR-*`, `RP-*`,
+# `F6X-*` or `XSR-R-*` -- 29 more, every one of them a finding with a REQUIRED CONTRACT
+# somebody wrote. A coverage check is exactly as wide as the pattern that builds its
+# required set, and that pattern is the least visible line in the block.
+#
+# Widened to every family a pin may cite. The families are listed rather than collapsed
+# into `[A-Z]+-\d+` on purpose: a pattern that matches any capitalised token would sweep
+# record names, component ids and section labels out of the prose around a finding and
+# demand pins for them, and a required set that is wrong is abandoned rather than fixed.
 import re  # noqa: E402
 REGISTER = ROOT.parents[2] / "registers" / "review-findings.json"
-FINDING_ID = re.compile(r"\b(?:G\d-\d{2}[a-z]?|RC-\d{2})\b")
+FINDING_ID = re.compile(
+    r"\b(?:G\d-\d{2}[a-z]?"          # G-01 .. G-04 review findings
+    r"|RC\d?-\d{2}"                  # the recheck lineage: RC-, RC2- .. RC5-
+    r"|A[TCEXS]-(?:M[1-5]|X|ALL|ROUND)-\d{2}"  # F2 selection-record attack cases
+    r"|F6[A-D]-\d{2}|F6X-\d{2}"      # Step 6 lane findings and the residue lane
+    r"|RP-\d{2}|GR-\d{2}|XSR-R-\d{2}"  # repair, gap-review and cross-scope rechecks
+    r")\b")
+# And the sweep is over the register AND the review documents the pins cite, because the
+# 32 pins this finding is about cite ids that are STATED in the F2 reviews and never
+# entered the register. A pin's citation resolves against the same corpus its coverage is
+# measured against, or the two disagree about what a finding is.
+FINDING_CORPUS = [REGISTER]
+FINDING_CORPUS += sorted((ROOT.parents[2] / "planning" / "F2" / "reviews").glob("*.md"))
+FINDING_CORPUS += sorted((ROOT.parents[2] / "planning" / "reviews").glob("F2-06-*.md"))
+FINDING_CORPUS += sorted((ROOT.parents[2] / "planning" / "reviews").glob("G-02-recheck-0*.md"))
+checked(len(FINDING_CORPUS) >= 15,
+        ("the finding corpus is smaller than the documents this package cites; a sweep "
+         "over a corpus that lost its reviews resolves nothing and refuses nothing "
+         "(RC5-02)",
+         {"documents": len(FINDING_CORPUS), "floor": 15,
+          "found": [str(path.name) for path in FINDING_CORPUS]}))
+swept_findings = {}
+for _document in FINDING_CORPUS:
+    for _finding in FINDING_ID.findall(_document.read_text(encoding="utf-8")):
+        swept_findings.setdefault(_finding, str(_document.name))
 register_findings = set(FINDING_ID.findall(REGISTER.read_text(encoding="utf-8")))
-checked(len(register_findings) >= 8,
+checked(len(register_findings) >= 30,
         ("the finding sweep of review-findings.json returned almost nothing; a coverage "
-         "check with an empty required set passes vacuously", sorted(register_findings)))
-unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
+         "check with an empty required set passes vacuously. The floor is 30 because the "
+         "widened pattern finds 39 in the committed register and the narrow one found 10 "
+         "-- a floor under 10 would have passed the whole of RC5-02",
+         {"found": sorted(register_findings), "floor": 30}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
-covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
-    | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
 checked(register_findings <= covered | set(unpinnable),
         ("a registered finding is neither pinned nor declared unpinnable",
          sorted(register_findings - covered - set(unpinnable)),
          "add a pin to pinned-conjuncts.json, or an `unpinnable` entry saying why no "
          "conjunct can carry it"))
-# Rule 3 at the pin layer: every finding id these pins cite RESOLVES to a document that
-# names it. A pin citing a finding nobody can find is a pin justified by nothing.
-for finding in sorted(covered | set(unpinnable)):
-    if finding in register_findings:
+# And what `unpinnable` may say. A finding whose REQUIRED CONTRACT names a record or a
+# guard this package registers is a finding about DATA HELD HERE, so "this one is prose"
+# is not available for it: that reason is reserved for the findings whose contract asks
+# for a sentence in a chapter, and a reason that fits everything excuses everything.
+PROSE_CONTRACT_REASON = "prose contract"
+_register_entries = json.loads(REGISTER.read_text(encoding="utf-8"))
+_guard_names = {name for name in PREDICATES if name.startswith("guard.")}
+# Which entries this rule reaches, stated rather than left to the regex. An entry is in
+# reach when a pin could cite its id (the families above) OR when its required contract
+# names a record or a guard this package registers -- the second clause is what makes the
+# rule about the CONTRACT rather than about the id family, so a finding recorded under a
+# family no pin uses is still demanded if it asks for something held here.
+#
+# Everything else is OUT OF REACH and is COUNTED. The D-review repair families
+# (`EAS-R*`, `T-R*`, `FIR-*`, `EPT-*`, `XSR-*`) ask for separations and reconciliations in
+# documents this package does not register, and a silent `continue` over them is the
+# vacuous pass this finding is about. Thirteen today; a fourteenth is a decision.
+OUT_OF_REACH_CEILING = 13
+out_of_reach = []
+for _entry in _register_entries:
+    _contract = _entry.get("required_contract")
+    if not _contract:
         continue
-    source = PINNED["finding_sources"].get(finding)
-    checked(source is not None,
-            ("a pin cites a finding that is in no register and names no source", finding))
+    _names_data = sorted({record for record in RECORDS
+                          if re.search(r"\b%s\b" % re.escape(record), _contract)}
+                         | {guard for guard in _guard_names if guard in _contract})
+    if not _names_data and not FINDING_ID.fullmatch(_entry["id"]):
+        out_of_reach.append(_entry["id"])
+        continue
+    checked(_entry["id"] in covered or _entry["id"] in unpinnable,
+            ("A REGISTERED FINDING WITH A REQUIRED CONTRACT IS NEITHER PINNED NOR DECLARED "
+             "UNPINNABLE: the register states what this finding requires and the pin file "
+             "says nothing about it either way, so whether the contracts answer it is not "
+             "recorded anywhere (RC5-02)",
+             _entry["id"], _contract[:160],
+             {"names records or guards": _names_data,
+              "note": "pin it, or add an `unpinnable` row. A finding whose required "
+                      "contract asks for prose in a chapter is unpinnable BY NATURE and "
+                      "its reason may say so -- `%s` -- which is why that reason is "
+                      "refused for the ones that name data." % PROSE_CONTRACT_REASON}))
+    if _names_data and _entry["id"] not in covered:
+        checked(not unpinnable[_entry["id"]].strip().lower().startswith(PROSE_CONTRACT_REASON),
+                ("A FINDING WHOSE CONTRACT NAMES REGISTERED DATA IS EXCUSED AS PROSE: the "
+                 "required contract names a record or guard this package registers, so "
+                 "the reason it cannot be pinned is not that it is prose. `%s` is the "
+                 "cheap reason and it must not fit everything (RC5-02)"
+                 % PROSE_CONTRACT_REASON,
+                 _entry["id"], _names_data, unpinnable[_entry["id"]][:160]))
+checked(len(out_of_reach) <= OUT_OF_REACH_CEILING,
+        ("A REGISTERED FINDING WITH A REQUIRED CONTRACT IS OUT OF THIS RULE'S REACH: its id "
+         "is in no family a pin may cite and its contract names no record and no guard this "
+         "package registers, so the coverage rule above says nothing about it. That is a "
+         "real boundary and it is COUNTED rather than skipped, because a `continue` is how "
+         "a coverage check comes to have an empty required set (RC5-02)",
+         {"out_of_reach": sorted(out_of_reach), "count": len(out_of_reach),
+          "ceiling": OUT_OF_REACH_CEILING,
+          "note": "if the new finding does ask for something this package holds, its "
+                  "required contract should name the record or the guard and the rule "
+                  "picks it up; if it does not, raise this ceiling deliberately."}))
+# Rule 3 at the pin layer: every finding id these pins cite RESOLVES to a document that
+# names it. A pin citing a finding nobody can find is a pin justified by nothing. Two
+# resolvers, and neither is weaker than the rule this replaced: the swept corpus above, or
+# an explicit `finding_sources` row whose file exists and mentions the id. Every declared
+# row is checked whether or not the sweep already found it, so a source that rots is a
+# failure even when the finding resolves elsewhere.
+for finding in sorted(covered | set(unpinnable)):
+    source = FINDING_SOURCES.get(finding)
+    if source is None:
+        checked(finding in swept_findings,
+                ("a pin cites a finding that no swept document names and that names no "
+                 "source of its own (RC5-02)", finding,
+                 {"documents swept": len(FINDING_CORPUS),
+                  "note": "add the id to `#/finding_sources` with the path of the review "
+                          "that states it, or cite the finding the register actually "
+                          "carries."}))
+        continue
     document = ROOT.parents[2] / source
     checked(document.exists(), ("finding_sources names a file that does not exist", finding, source))
     checked(finding in document.read_text(encoding="utf-8"),
@@ -2083,12 +2253,13 @@ checked(version_rows >= 14,
 #   negative: 92 -> 94 and positive 53 -> 55 (RC5-01, RC5-03): one adverse and one
 #             benign fixture for the admissible-ancestor literal and for the
 #             not-admitted block.
+#   negative: 94 -> 95 and positive 55 -> 56 (RC5-02): the pin-coverage pair.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 94
-POSITIVE_FIXTURE_FLOOR = 55
+NEGATIVE_FIXTURE_FLOOR = 95
+POSITIVE_FIXTURE_FLOOR = 56
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
