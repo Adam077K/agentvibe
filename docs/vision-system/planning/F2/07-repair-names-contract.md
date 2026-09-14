@@ -1036,3 +1036,33 @@ row a resumer finds there is untouched and is still the right place to start.
 deterministic suite with the **fixture runs skipped** — exited 0 after each of the three commits.
 **The six new fixtures have never been executed.** The full `python3 validate_contracts.py` was not
 run by this lane, and neither were the node verifiers.
+
+---
+## F6R-01 remainder — TWO rows moved, THIRTY left, and the thirty are left deliberately
+
+*Asked of this lane: for each of the 32 pre-existing `not_answered` rows, either move it to
+`answered_elsewhere` with the file and the check that answers it — **only where you can point at the
+check** — or leave it and say so.*
+
+**Moved: one.** `F6D-08` → `answered_elsewhere`, citing
+`planning/specification/contracts/validate_contracts.py` and the five checks this lane wrote for it by
+name, plus the r34 fixture pair. The row is honest about what is NOT in it: the `05` §7 custodial
+sentence is owed.
+
+**Annotated and deliberately NOT moved: one.** `F6D-05` keeps its `not_answered` row, rewritten to say
+that the ownership half is checked and the guard-body rebinding the review actually asked for is not.
+**A row moves when the check answers the finding, not when it answers part of it** — the alternative is
+a coverage table that reads as closed over work that stopped halfway, which is the failure mode this
+whole partition exists to prevent.
+
+**F6C-13 left the set earlier, by being pinned** — the partition refuses a pin-carried id, so pinning
+it was the move.
+
+**Left, with the reason: the other thirty.** This lane verified no check for them. The rule the previous
+lane set — *write `answered_elsewhere` only for a file and a check you have actually verified* — is the
+right rule, and the honest report is that thirty rows did not get that verification rather than that
+thirty findings are unanswered. A resumer starts there.
+
+**Ceilings moved to match, in the direction the work went:** `ANSWERED_ELSEWHERE_CEILING` 3 → 4,
+`NOT_ANSWERED_CEILING` 39 → 38 → **37**. `UNANSWERED_CEILING` stays at 41: `unanswered` is computed
+from pin coverage, and moving a row between the two halves of the partition does not change it.

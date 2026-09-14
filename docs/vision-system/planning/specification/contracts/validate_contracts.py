@@ -1750,8 +1750,8 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # finding out of it. `answered_elsewhere` has a ceiling rather than a floor for the reason
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
-ANSWERED_ELSEWHERE_CEILING = 3
-NOT_ANSWERED_CEILING = 38
+ANSWERED_ELSEWHERE_CEILING = 4
+NOT_ANSWERED_CEILING = 37
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
