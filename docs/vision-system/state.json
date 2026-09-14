@@ -90,19 +90,24 @@
     "Step 6 reviews archived (planning/reviews/F2-06-A..D.md) at subject 8f6c2c2: sufficient W5 W9 W11 W13; insufficient W1 W2 W3 W4 W6 W7 W8 W10 W12 W14 W15. Six (d): F6A-01 middle-band recipient, F6A-06 floor mapping absent, F6B-05 acceptance-sampling rule, F6D declared_grants/grant policy, C5 control objects unrepresented, EffectIdentity join optional. Measured headline: 30/30 new guards detachable silently; two guards wrong as written. Repair round dispatched by file partition; narrow recheck after.",
     "Step 6 prose repairs landed (22743bf..6337505; 12 commits; all verifiers 0; Q-022 added for X14). RC4-01..07 repaired (6dcbc1b..bcfd658): pin-side admissible_ancestors, pinned table digest, fixture floors 56/17, census floored; validator 299,379 exit 0 (author-recorded).",
     "G-02-recheck-05 archived (subject bcfd658): RC4-01/03/04/05/06 CLOSED, RC4-07 closed for the measured move, RC4-02 closed against the registry author; structural claim holds under every probe; RC5-01/02/03 registered (the allowlist is uncounted; the coverage sweep misses newer id families).",
-    "Step 6 contracts repairs landed (6b7a799..9d60596, 13 commits): pinned attachments (30+ guards to edges) and 32 pinned transitions, set-equality guards, declared_grants refs + guard, ProtectedChange control-object enum + guard, EffectIdentity natural key, class-mapping-table.json + declared floors, registry/schema drift check, manifest/ConstraintSet/calibration guards, Obligation.production_mode, ExhaustionDecision, launch-count guard, lapse/FailureRecord/supersession fixes; fixtures 56->92 adverse, 17->53 benign; validator 304,041 checks exit 0 (author-recorded). Residue F6X-01/02 registered."
+    "Step 6 contracts repairs landed (6b7a799..9d60596, 13 commits): pinned attachments (30+ guards to edges) and 32 pinned transitions, set-equality guards, declared_grants refs + guard, ProtectedChange control-object enum + guard, EffectIdentity natural key, class-mapping-table.json + declared floors, registry/schema drift check, manifest/ConstraintSet/calibration guards, Obligation.production_mode, ExhaustionDecision, launch-count guard, lapse/FailureRecord/supersession fixes; fixtures 56->92 adverse, 17->53 benign; validator 304,041 checks exit 0 (author-recorded). Residue F6X-01/02 registered.",
+    "RC5-01..03 repaired (96416a5..0ea10c1): admissible ancestors a closed literal in the checker; finding sweep over all id families; floors 67/148/50/39; one verdict block for every hand-written control; ExhaustionDecision anchor fixed; all verifiers exit 0 (author-recorded). Classifier measured: validate_contracts.py is trivial/shadow under docs/** — the terminal control is a review convention, not an enforced tier."
   ],
   "active_work": [
     {
-      "agent": "builder (rc5-repair)",
-      "scope": "RC5-01..03 terminal repair in contracts/",
+      "agent": "reviewer (f2-06-recheck-01)",
+      "scope": "final narrow recheck at frozen 0ea10c1: six Step 6 (d)s, detachment headline, set-equality guards, RC5-01..03, regressions",
+      "status": "dispatched 2026-09-14"
+    },
+    {
+      "agent": "builder (b7-report)",
+      "scope": "PLANNING-REPORT.md F2 section + index rows, README.md, planning/site/index.html; disposition placeholder",
       "status": "dispatched 2026-09-14"
     }
   ],
   "next_actions": [
-    "Verify r6-contracts; then rc5-repair (allowlist literal in validator; FINDING_ID sweep over all id families; floors 57/119; RC5-03)",
-    "Final narrow recheck (F2-06-recheck-01) over the Step 6 contracts repairs and RC5; then the whole-package scoped planning disposition",
-    "PLANNING-REPORT + README + founder page + session file + plain-language note; HELD BY FOUNDER: no build stage may be dispatched"
+    "Archive F2-06-recheck-01; record the whole-package scoped planning disposition; fill the placeholder; republish the founder page; session file; plain-language note to the founder",
+    "HELD BY FOUNDER: no build stage may be dispatched"
   ],
   "dependencies": [
     {
