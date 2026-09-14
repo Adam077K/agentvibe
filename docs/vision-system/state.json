@@ -136,6 +136,16 @@
       "scope": "F6A-02, F6A-05, F6A-12, F6B-08, F6C-05, F6C-18, F6V-01 (07 half), F6V-03 (05 half), F6X-02 (chapter half — states boundary_kind set and contested-refs field; names to planning/F2/08-repair-names-prose-b.md), F6C-12",
       "dispatched": "2026-09-14",
       "status": "RETURNED COMPLETE and merged (7de43ce): 10 items repaired, author-recorded; names for the contracts lane in planning/F2/08-repair-names-prose-b.md; recheck owed"
+    },
+    {
+      "lane": "f2-06-recheck-03",
+      "engine": "reviewer",
+      "kind": "independent recheck of the 15 prose-side repairs from r7-prose-a and r7-prose-b",
+      "subject": "ee86480",
+      "scope": "F6A-02, F6A-04, F6A-05, F6A-11, F6A-12, F6B-04, F6B-08, F6C-05, F6C-12, F6C-18, F6C-19, F6V-01, F6V-03, F6V-04, F6X-02 (chapter half)",
+      "constraints": "no validator; producer accounts off-limits; one family",
+      "dispatched": "2026-09-14",
+      "status": "running; archive verbatim as planning/reviews/F2-06-recheck-03.md on return"
     }
   ],
   "next_actions": [
