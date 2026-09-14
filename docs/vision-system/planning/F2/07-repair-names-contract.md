@@ -492,6 +492,43 @@ unwritten, and no check in this package can supply it. See below.
 
 ---
 
+## F6A-09 --- one row deleted, one row defended, and the check widened to values
+
+**The required contract says "remove both keys, or extend the check". The answer is neither, and
+it is different for each key** --- which is why the previous lane recorded the analysis as settled
+and explicitly *not* "remove both keys".
+
+| key | disposition | why |
+|---|---|---|
+| `ConsequenceVector` | **deleted from the table**, moved to `not_aliases` with the reasoning | It is a **live registered value type**. `Grant.payload.consequence_bounds` declares it; `02` section 96 defines it. The table mapped it to `ConsequenceDerivation`, a per-operation derivation record --- **a different object**. This was a wrong mapping, not a missing caveat |
+| `CapacityState` | **kept** | Its mapping is substantively correct --- `CapacityObservation.measurement` is a `MeasuredQuantity`, a `oneOf` with an `observed` variant, which is the observed-or-unknown shape `05` section 7 asks for --- and **F6D-10 withdrew half a finding on the ground that this row exists.** Deleting it to satisfy a sentence would reopen that |
+
+**What was false was the prose, and that is what is repaired for the second key.** `how_to_read`
+claimed *"every key is a name a candidate wrote **and this registry does not have**"*, full stop.
+That was untrue of two keys in two different ways: one name this package **does** have (as a value),
+one name no registry has and the **specification prose** does. The sentence now says which registry
+and records both exceptions by name.
+
+### The check is extended to the value registry --- and NOT to prose identifiers
+
+`ALIAS_VALUE_NAMES`, and the new refusal **A CANDIDATE-ERA NAME IS A REGISTERED VALUE TYPE**. The
+declared check compared alias keys against **record** names only, which is exactly why
+`ConsequenceVector` passed for the whole of its life.
+
+**The prose half of the required contract is declined, and this is a judgement rather than an
+omission.** Extending the refusal to backticked identifiers in the chapters would refuse
+`CapacityState` --- and `CapacityState`'s row must stay. **The two halves of that required contract
+point in opposite directions on the only two keys it was raised about.** A lane that implemented
+both would have had to delete the row F6D-10 depends on in order to satisfy a check it had just
+written.
+
+Fixtures: `negative/r30-alias-key-is-a-registered-value-type` **restores the real row**, because it
+passed every check in this package for its whole life and a fixture built from an invented case
+would not prove that; and `positive/r30-alias-table-gains-a-candidate-only-name-benign`, which keeps
+the table addable --- the refusal must key on *this name is one the package HAS*, never on *this row
+is new*. Floors: negative 105 -> 106, positive 66 -> 67. Alias floor stays **20**; the table is 25.
+
+---
 ## Decisions returned to the orchestrator --- not taken by this lane
 
 Each of these is a choice about what the system IS, not a repair. A builder that takes one of them

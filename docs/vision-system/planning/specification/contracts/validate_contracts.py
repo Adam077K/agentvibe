@@ -2673,10 +2673,38 @@ checked(len(alias_table) >= ALIASES["floor"],
         ("the alias table has shrunk below its declared floor; a table with no aliases "
          "refuses nothing and passes exactly as loudly as a full one",
          {"aliases": len(alias_table), "floor": ALIASES["floor"]}))
+# F6A-09 extends the refusal below to the VALUE registry, and the reason is the whole
+# finding: the declared check compared alias keys against RECORD names only, so
+# `ConsequenceVector -> ConsequenceDerivation` passed it -- `ConsequenceVector` is a
+# registered VALUE type, live in a fixed-boundary chapter, and the row pointed a reader at a
+# per-operation derivation record when they were looking up a grant's consequence bounds.
+# Two different objects, and the table said they were one. A name this package HAS is not a
+# candidate-era name whatever registry holds it.
+#
+# The finding's other option -- extend the check to backticked identifiers in the
+# specification prose -- is NOT taken, and this is a judgement, not an omission. It would
+# refuse `CapacityState`, which `05` section 7 uses normatively; and `CapacityState`'s row
+# must stay, because its mapping is substantively correct and F6D-10 withdrew half a finding
+# on the ground that the row exists. So the two halves of that required contract point in
+# opposite directions on the only two keys it was raised about. The false sentence in
+# `how_to_read` is what is repaired for that key --- the prose claimed something untrue of
+# its own table, which is the defect a reader actually hits.
+ALIAS_VALUE_NAMES = set(FILES["value-registry.json"])
 for candidate_name, registry_name in alias_table.items():
     checked(candidate_name not in RECORDS,
             ("a candidate-era name is ALSO a record name, so the registry admits the very "
              "name this table exists to refuse (R-X02)", candidate_name))
+    checked(candidate_name not in ALIAS_VALUE_NAMES,
+            ("A CANDIDATE-ERA NAME IS A REGISTERED VALUE TYPE: the refusal below compares "
+             "alias keys against RECORD names and is satisfied by a key that names a live "
+             "VALUE. That is how F6A-09 happened -- `ConsequenceVector` is declared by "
+             "`Grant.payload.consequence_bounds` and defined in a fixed-boundary chapter, and "
+             "the table mapped it to a per-operation derivation record, a DIFFERENT OBJECT. "
+             "A name this package HAS is not a candidate-era name, whichever registry holds "
+             "it (F6A-09)", candidate_name,
+             {"maps to": registry_name,
+              "note": "if the name is genuinely not an alias, it belongs in `not_aliases` "
+                      "with the reason, not in the table with a mapping"}))
     checked(registry_name in RECORDS,
             ("an alias resolves to no registry record, so reading through it reaches "
              "nothing", candidate_name, registry_name))
@@ -2791,12 +2819,14 @@ checked(version_rows >= 14,
 #   negative: 103 -> 105 and positive 64 -> 66 (F6X-01): the exclusive-factory resolution
 #   pair and the kernel-exemption pair. The second pair is not optional -- the repair adds an
 #   exemption, and an exemption whose edge no fixture holds is the hole it was meant to close.
+#   negative: 105 -> 106 and positive 66 -> 67 (F6A-09): the alias-key-is-a-value-type pair.
+#   The adverse case is the real row the review found, restored.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 105
-POSITIVE_FIXTURE_FLOOR = 66
+NEGATIVE_FIXTURE_FLOOR = 106
+POSITIVE_FIXTURE_FLOOR = 67
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
