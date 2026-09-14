@@ -2327,6 +2327,22 @@ checked(len(SCHEMAS["records.schema.json"]["$defs"]["ProtectedChange"]["properti
          "objects. A seventh subject kind is a control object nobody enumerated, and the "
          "whole reason 08 section 1 lists them is that each reads as configuration rather "
          "than as a change (F6D-07)"))
+# F6R-04 --- WHAT A READER SEES FIRST WHEN ONE OF THESE IS EDITED BY HAND, and it is not
+# the rule above. Both enums are reachable from a derived artifact, so a hand edit to
+# either trips the DERIVATION ORACLE before it reaches these checks: the first failure a
+# contributor reads says the committed file differs from its derivation, which is true and
+# says nothing about control objects. They then re-run the authoring tool, the drift
+# clears, and the concrete rule fires second -- if they get that far.
+#
+# That ordering is a real cost and it has a real cure, which F6C-11 applied and this note
+# records so the pattern is findable from here: place the check that reads the CONCRETE
+# RULE physically ABOVE the derivation oracle, so a mutation reports what it broke rather
+# than that something moved. It is not applied to F6D-07 in this pass because moving these
+# two checks means moving the `_configuration` and `ProtectedChange` schema lookups they
+# depend on, which is a reordering of this file rather than an addition to it -- and this
+# lane's rule is that a reordering with no fixture behind it is a change nobody can review.
+# Recorded as owed, with the cure named, rather than left for the next reader to rediscover
+# from a confusing failure message (F6R-04).
 
 PIN_ATTACHMENT_KEYS = {"guard", "edges", "findings", "why"}
 checked(bool(str(PINNED.get("pinned_attachments_why", "")).strip()),

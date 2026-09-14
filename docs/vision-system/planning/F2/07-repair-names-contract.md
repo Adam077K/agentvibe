@@ -626,6 +626,27 @@ what was invisible before; `positive/r32-census-key-set-reordered-benign` keeps 
 **set** comparison. Floors: negative 107 -> 108, positive 68 -> 69.
 
 ---
+## F6R-04 --- the F6D-07 note: a hand edit surfaces as drift first
+
+No new name. One note at the end of the F6D-07 block, recording **what a reader actually sees**
+when either of those two enums is edited by hand.
+
+Both are reachable from a derived artifact, so a hand edit trips the **derivation oracle before it
+reaches the concrete checks**. The first failure a contributor reads says *the committed file
+differs from its derivation* --- true, and silent about control objects. They re-run the authoring
+tool, the drift clears, and the rule that actually matters fires second. **If they get that far.**
+
+The cure is known and already applied once: **F6C-11 placed its check physically above the
+derivation oracle**, so a mutation reports the rule it broke rather than that something moved. The
+note names that pattern at the site where the next reader will need it.
+
+**Not applied to F6D-07 in this pass, and the reason is a rule rather than fatigue:** moving those
+two checks means moving the `_configuration` and `ProtectedChange` schema lookups they depend on,
+which is a **reordering of the file rather than an addition to it**, and a reordering with no
+fixture behind it is a change nobody can review. Recorded as owed with the cure named --- which is
+strictly better than leaving the next reader to rediscover it from a confusing failure message.
+
+---
 ## Decisions returned to the orchestrator --- not taken by this lane
 
 Each of these is a choice about what the system IS, not a repair. A builder that takes one of them
