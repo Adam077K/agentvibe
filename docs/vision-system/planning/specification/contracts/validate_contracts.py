@@ -1675,7 +1675,7 @@ FINDING_SOURCES = PINNED["finding_sources"]
 covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
     | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
 unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
-UNANSWERED_CEILING = 37
+UNANSWERED_CEILING = 42
 unanswered = sorted(set(FINDING_SOURCES) - covered - set(unpinnable))
 checked(len(unanswered) <= UNANSWERED_CEILING,
         ("A PINNED FINDING LOST ITS LAST PIN: a finding declared in "
@@ -1750,8 +1750,8 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # finding out of it. `answered_elsewhere` has a ceiling rather than a floor for the reason
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
-ANSWERED_ELSEWHERE_CEILING = 2
-NOT_ANSWERED_CEILING = 32
+ANSWERED_ELSEWHERE_CEILING = 3
+NOT_ANSWERED_CEILING = 39
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -1784,7 +1784,7 @@ checked(len(NOT_ANSWERED) <= NOT_ANSWERED_CEILING,
 PIN_FLOOR = 70           # 69 -> 70 (F6C-10): the attempt-ceiling pin
 PIN_ROW_FLOOR = 154      # 152 -> 154 (F6C-10): two rows on the attempt-ceiling pin
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
-FINDING_SOURCE_FLOOR = 106  # new (RC5-02): the declaration the ceiling above reads
+FINDING_SOURCE_FLOOR = 116  # new (RC5-02): the declaration the ceiling above reads
 checked(len(PINNED["pins"]) >= PIN_FLOOR
         and len(PINNED["pinned_transitions"]) >= PIN_TRANSITION_FLOOR,
         ("the pinned table has shrunk; a pin table with no pins passes vacuously",
@@ -2467,6 +2467,50 @@ checked(len(register_findings) >= 30,
          "widened pattern finds 39 in the committed register and the narrow one found 10 "
          "-- a floor under 10 would have passed the whole of RC5-02",
          {"found": sorted(register_findings), "floor": 30}))
+# --- F6R-03: EVERY STEP 6 FINDING THE F2-06 REVIEWS RAISE HAS A SOURCE ROW. ----------
+#
+# `finding_sources` is what a pin's citation resolves against and what the unanswered
+# partition is computed from, so a finding MISSING from it is not counted as unanswered --
+# it is not counted at all. That is the quietest way for a review finding to disappear:
+# not refused, not deferred, absent.
+#
+# Measured before writing this: of the 64 Step 6 ids stated across the F2-06 review
+# documents, TEN had no row -- F6R-01..04, F6V-01..04, F6X-01, F6X-02. Two of those ten are
+# findings THIS LANE REPAIRED, which is the sharp part: the repair could have landed, the
+# verdict stayed green, and the coverage tables would never have mentioned the finding in
+# either direction.
+#
+# THE SHARED `FINDING_ID` PATTERN IS DELIBERATELY NOT WIDENED, and the reason is the same
+# one written above it -- a required set that is wrong is abandoned rather than fixed.
+# `FINDING_ID` drives pin-citation resolution and the unpinnable machinery, so adding
+# `F6R-` and `F6V-` to it would demand a pin or an `unpinnable` row for every one of them
+# in the same edit, and this lane has not established that for the F6V family, which is
+# raised against the PROSE layer. So the sweep here is its own pattern over its own corpus,
+# asserting the one thing the finding asks for: source-row coverage. The gap in the shared
+# pattern is recorded in the names contract rather than closed by a widening whose
+# consequences this lane cannot verify.
+STEP6_ID = re.compile(r"\b(F6[A-DRVX]-[0-9][0-9])\b")
+STEP6_CORPUS = sorted((ROOT.parents[2] / "planning" / "reviews").glob("F2-06-*.md"))
+_step6 = set()
+for _document in STEP6_CORPUS:
+    _step6 |= set(STEP6_ID.findall(_document.read_text(encoding="utf-8")))
+checked(len(_step6) >= 60,
+        ("THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING: the coverage "
+         "assertion below is over whatever this sweep found, so a sweep that found nothing "
+         "passes it vacuously -- which is the defect RC5-02 named about the other sweep in "
+         "this file. 64 ids were stated across those documents when this was written "
+         "(F6R-03)", {"found": len(_step6), "floor": 60,
+                      "documents": [_p.name for _p in STEP6_CORPUS]}))
+for _finding in sorted(_step6):
+    checked(_finding in FINDING_SOURCES,
+            ("A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW: "
+             "`finding_sources` is what a pin's citation resolves against and what the "
+             "unanswered partition is computed from, so a finding missing from it is not "
+             "counted as unanswered -- it is not counted at all, which is the quietest way "
+             "for a review finding to disappear. Add the row with the document that raises "
+             "it, then put the id in `answered_elsewhere` with a file and a check, or in "
+             "`not_answered` with the reason (F6R-03)",
+             _finding, {"source rows": len(FINDING_SOURCES)}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
 checked(register_findings <= covered | set(unpinnable),

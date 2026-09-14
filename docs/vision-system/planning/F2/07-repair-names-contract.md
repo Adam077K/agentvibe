@@ -647,6 +647,56 @@ fixture behind it is a change nobody can review. Recorded as owed with the cure 
 strictly better than leaving the next reader to rediscover it from a confusing failure message.
 
 ---
+## F6R-03 --- `STEP6_ID`, and the ten findings that were in no table at all
+
+| name | where |
+|---|---|
+| `STEP6_ID` · `STEP6_CORPUS` | `validate_contracts.py` |
+| **A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW** | the per-finding check |
+| **THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING** | the floor under it (60; 64 found) |
+
+**Measured before writing the check: of the 64 Step 6 ids stated across the F2-06 review documents,
+TEN had no `finding_sources` row** --- `F6R-01`..`04`, `F6V-01`..`04`, `F6X-01`, `F6X-02`.
+
+**Why that is worse than being unanswered.** `finding_sources` is what a pin's citation resolves
+against *and* what the unanswered partition is computed from. A finding missing from it is **not
+counted as unanswered --- it is not counted at all.** Not refused, not deferred, absent. And two of
+the ten are findings **this lane repaired two commits earlier**: the repair could have landed, the
+verdict stayed green, and no coverage table would have mentioned the finding in either direction.
+
+### The shared `FINDING_ID` pattern is deliberately NOT widened
+
+`FINDING_ID` drives pin-citation resolution and the `unpinnable` machinery, so adding `F6R-` and
+`F6V-` to it demands a pin or an `unpinnable` row for each in the same edit. This lane has not
+established that for the **F6V** family, which is raised against the *prose* layer. The comment
+above `FINDING_ID` already says why this matters --- *a required set that is wrong is abandoned
+rather than fixed* --- so the sweep here is **its own pattern over its own corpus**, asserting the
+one thing F6R-03 asks for. **The gap in the shared pattern is recorded, not closed**, because
+closing it has consequences this lane cannot verify.
+
+### Where the ten landed, and one correction worth reading
+
+`F6X-01` and `F6X-02` were first put in `answered_elsewhere` --- and **the partition check refused
+them**, reporting them *declared but not unanswered*. They are carried by pins, so they are not in
+the unanswered set at all, and the partition is over exactly that set. **The instrument caught a
+wrong classification by its author in the same session.** They keep their source rows and hold no
+partition row.
+
+| bucket | added | total |
+|---|---|---|
+| `answered_elsewhere` | `F6R-03` | 3 |
+| `not_answered` | `F6R-01`, `F6R-02`, `F6R-04`, `F6V-01`..`04` | 39 |
+
+**`F6R-02` and `F6R-04` are in `not_answered` although this lane answered both.** Each is answered
+by a **note, not by a check**, and writing a `check` value for a comment would commit F6R-02's own
+error --- treating a convention as an enforced thing. The reason string says so.
+
+Ceilings moved with the set: `FINDING_SOURCE_FLOOR` 106 -> 116, `UNANSWERED_CEILING` 37 -> 42,
+`NOT_ANSWERED_CEILING` 32 -> 39, `ANSWERED_ELSEWHERE_CEILING` 2 -> 3. **The unanswered count going
+UP is the honest result here:** ten findings that were invisible are now counted, and most of them
+are counted as not answered.
+
+---
 ## Decisions returned to the orchestrator --- not taken by this lane
 
 Each of these is a choice about what the system IS, not a repair. A builder that takes one of them

@@ -147,7 +147,17 @@
     "RC-05": "planning/reviews/G-02-recheck-01.md",
     "RC-06": "planning/reviews/G-02-recheck-01.md",
     "RC-07": "planning/reviews/G-02-recheck-01.md",
-    "RC-08": "planning/reviews/G-02-recheck-01.md"
+    "RC-08": "planning/reviews/G-02-recheck-01.md",
+    "F6R-01": "planning/reviews/F2-06-recheck-01.md",
+    "F6R-02": "planning/reviews/F2-06-recheck-01.md",
+    "F6R-03": "planning/reviews/F2-06-recheck-01.md",
+    "F6R-04": "planning/reviews/F2-06-recheck-01.md",
+    "F6V-01": "planning/reviews/F2-06-recheck-02.md",
+    "F6V-02": "planning/reviews/F2-06-recheck-02.md",
+    "F6V-03": "planning/reviews/F2-06-recheck-02.md",
+    "F6V-04": "planning/reviews/F2-06-recheck-02.md",
+    "F6X-01": "planning/reviews/F2-06-recheck-01.md",
+    "F6X-02": "planning/reviews/F2-06-recheck-01.md"
   },
   "unpinnable": [
     {
@@ -3481,6 +3491,10 @@
     "F6D-09": {
       "file": "planning/specification/contracts/validate_contracts.py",
       "check": "A FIELD THAT NAMES A PREDICATE IS A FREE STRING (the PREDICATE_BEARING_FIELDS literal) and THE EVALUATOR KIND A GUARD COMPARES IS AN OPEN STRING. The review's third clause -- a conjunct on each named predicate's `implementation_status` -- is OWED, not delivered: that field holds one value across all 2,397 predicates, so the conjunct would be vacuous. The check THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS fails the moment that stops being true. Fixtures: negative/r22-refusal-names-a-predicate-that-is-only-a-string, positive/r22-precondition-ids-reordered-benign."
+    },
+    "F6R-03": {
+      "file": "planning/specification/contracts/validate_contracts.py",
+      "check": "A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW, plus the floor under its own sweep (STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING)."
     }
   },
   "not_answered": {
@@ -3515,7 +3529,14 @@
     "F6D-05": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-08": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
-    "G2-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion."
+    "G2-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
+    "F6R-01": "The structural half landed in the previous lane and the reclassification half is only partly done. This entry is what remains: the conservative `not_answered` rows this lane did not personally verify a file-and-check pair for. Moving one across is cheap and must be earned by reading the check, which is the whole discipline the split exists for.",
+    "F6R-02": "ANSWERED BY A NOTE, NOT BY A CHECK, and recorded here rather than in answered_elsewhere because that distinction is the finding's own subject. The measurement (classify.mjs -> tier=trivial, enforcement=shadow) is written into the RC5-01 comment block of validate_contracts.py. Nothing executes it. Claiming a `check` for it would commit the exact error F6R-02 is about: treating a convention as an enforced tier.",
+    "F6R-04": "ANSWERED BY A NOTE, NOT BY A CHECK. The F6D-07 block now records that a hand edit to either enum surfaces as derivation drift before it surfaces as the concrete rule, and names F6C-11's cure (place the concrete check above the oracle). Applying that cure to F6D-07 is a reordering of validate_contracts.py with no fixture behind it, which this lane refused. Owed, with the remedy named.",
+    "F6V-01": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these.",
+    "F6V-02": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these.",
+    "F6V-03": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these.",
+    "F6V-04": "Raised by the second recheck against the PROSE layer, not the contracts layer. Lane r7-prose-b reports repairing halves of F6V-01 and F6V-03 in chapters 05 and 07. This lane did not read those chapters against those findings and will not record a file-and-check pair it has not verified -- which is the rule that made the previous lane's 32 rows conservative, applied to itself. A prose-side recheck is what moves these."
   },
   "census_keys_why": "RC4-07. `CENSUS_KEYS` was a literal in validate_contracts.py and nothing else, so the set of fields the demand walk's census must carry was declared exactly once, in the file that also decides whether it carries them. One edit dropped a field from the requirement and from the check simultaneously, and the verdict went on printing a census that looked complete. Every `demanded` in the contracts means whatever that walk decided, and the census is the only thing in the verdict that says how far the walk reached -- so a quietly narrowed census is a quietly narrowed coverage claim. Pinned HERE and compared there, which is the shape `admissible_ancestors` already uses: two declarations in two files, so narrowing the set takes two edits a reviewer sees and the diff says what was dropped.",
   "census_keys": [
