@@ -13,6 +13,9 @@
 ## Lanes of the day (all merged unless marked)
 r7-prose-a (7), r7-prose-b (10), r7-contracts (2 + partials), r7-contracts-b (10), r7-contracts-c (3 + fixture fixes), r7-prose-c (9), r7-prose-d (9). **r7-contracts-e** (F6Y-01/02/06/07/08) — check `state.json.active_work`; if still running or returned, merge its branch `builder/f2-r7-contracts-e`, run the split suite on the merged head, record.
 
+## FIRST ACTION
+Run the split validator suite on HEAD before anything else (see `state.json.next_actions[2]`): the merged head `7114f19` carries r7-contracts-e's F6Y-01 repair executed only by the light validator; the split run was killed for memory. Ask the founder to free memory on the machine first — four kills today.
+
 ## What remains (none of it is building)
 1. **Contracts residues, owed to a later contracts lane:** F6C-10 park phase; F6C-11 retention-span binding; F6B-03 checker-identity binding; F6D-05 / F6Y-04 guard-body rebinding via FieldAuthority; F6Y-03 a field typed `CapacityMeasure`; F6V-02 resolve-or-create on `kernel.record.register`; F6W-01 `capability_refs` registration; F6R-01's ~30 unclassified rows; F6D-09 determinism conjunct — a returned DECISION (implementation_status single-valued), judged honest by two rechecks; F6Y-05 citation (S1-C04 reading defensible, cited section wrong).
 2. **Prose residues:** 05 §1 and 05 §7 sentences the contracts lanes named as owed (names contract, "Chapter sentences owed"); the link from 05 §12 to `planning/F2/09-q017-conjunction-rerun.md`; F6Z-01..09 and the F6Y prose halves need an independent recheck (author-recorded).

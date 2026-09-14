@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "F2 dispositioned (SCOPED); all r7 repair lanes merged and validated green at 1573593/3e51a9e; final rechecks 04a/04b running; founder hold on building in force",
+  "phase": "F2 dispositioned (SCOPED); all r7 lanes merged at 7114f19; split suite on that head owed (killed for memory); founder hold on building in force",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-4-1789314685",
@@ -215,7 +215,7 @@
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-14-after-r7.md, then active_work",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
-    "Run the split suite on the merged head after r7-contracts-e (light validator + adverse runner + benign runner, sequential, background); record in validator_last_full_run",
+    "FIRST in the next session: run the split suite on HEAD (light validator, then tools/run_negative_fixtures.py, then tools/run_positive_fixtures.py, sequential, background, python subprocess timeout — no `timeout` binary). It was killed for memory 4 times today; ask the founder to free memory on the Mac (close apps / quit idle Claude sessions) before starting. Record in validator_last_full_run.",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
     "Owed after that (contracts): F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05 guard-body rebinding, F6D-09 determinism conjunct (decision), F6V-02, F6W-01 capability_refs registration, F6R-01's 30 rows; (prose) 05 §1 and 05 §7 sentences the contracts lanes named as owed; the link from 05 §12 to planning/F2/09-q017-conjunction-rerun.md; six paired conformance cases for the flagged roles (Q-017)",
     "Founder: perform the Q-022 entitlement read and report the observed limit, source and date"
@@ -380,6 +380,7 @@
     "date": "2026-09-14",
     "mode": "split: light validator (structural, 17 s) + tools/run_negative_fixtures.py (1,941 s) + tools/run_positive_fixtures.py (1,461 s), sequential — the single-process full run was killed for memory three times",
     "result": "checks 305,223; negative 111/111 rejected for their own reason, leaked []; positive 72/72 passed, falsely_excluded []",
-    "note": "first execution of all 20 fixture pairs the three contracts lanes wrote today"
+    "note": "first execution of all 20 fixture pairs the three contracts lanes wrote today",
+    "superseded_note": "Head 7114f19 (after r7-contracts-e) has NOT had a full or split run complete: the split suite was killed by the OS for low memory before its first stage reported (log empty). The only contracts changes since the green run at 1573593/3e51a9e are r7-contracts-e's (F6Y-01: sweep widened, 25 source rows, fixture pair R36), which passed the light validator in-lane (305,267 checks; floors 112/73). Treat the R36 pair and the widened sweep as UNEXECUTED until a split run completes."
   }
 }
