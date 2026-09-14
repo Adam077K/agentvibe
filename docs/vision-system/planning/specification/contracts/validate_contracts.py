@@ -486,6 +486,72 @@ for _kind, _unit in sorted(EXISTENCE_REASON_PAIRS.items()):
              "names and which reads as SATISFIED (F6D-12)",
              {"reason": _kind, "unit": _unit}))
 
+# --- F6X-01: EVERY EXCLUSIVE FACTORY RESOLVES, AND THE KERNEL SURFACE IS A LITERAL. ---
+#
+# `registration.exclusive_factory` says: this record has exactly one creation path and nothing
+# else may make one. Nine records declare it. Before this check `exclusive_factory` was read
+# ZERO TIMES by this file -- the string was never resolved against anything -- so a record could
+# name a creation path that does not exist and the containment it claims to state was a comment.
+# Three of the nine do exactly that: DomainEvent names `kernel.commit_group`, DurabilityReceipt
+# names `witness.store_group`, LifecycleStatus names `kernel.apply_transition`, and none of the
+# three is in command-registry.json's 105.
+#
+# THE REVIEW OFFERED TWO OPTIONS AND BOTH ARE WRONG, WHICH IS WHY THIS TOOK THREE LANES.
+# "Register the commands" means authoring three command contracts -- argument schema, guard,
+# authority, destination -- for paths nobody has specified, which is inventing contract and is the
+# thing every refusal in this package exists to prevent. "Retire the declarations" means deleting
+# the sentence `only the kernel may create a DomainEvent`, which is a REAL containment and one of
+# the load-bearing ones: a domain event a record-level command can forge is not an audit trail.
+# Taking either option to make a check pass would have traded a true statement for a green run.
+#
+# So the third thing, and it is the narrow one: the kernel and witness surfaces are declared HERE,
+# by name, as a CLOSED literal of exactly three paths, and an exclusive factory resolves if it is
+# a registered command OR a member of that literal. The declarations keep saying what is true; no
+# command contract is invented; and every one of the nine now resolves to something a reader can
+# find. What this does NOT do is specify those three paths -- see the names contract, where it is
+# recorded as the open question it still is.
+#
+# The literal is what keeps this from being an escape hatch. Without "exactly these three", the
+# exemption is a hole any record can climb through by naming something kernel-shaped, so the
+# membership test is EXACT and not a `kernel.` PREFIX: `kernel.anything_at_all` is refused, and
+# fixtures/negative/r29-exclusive-factory-invents-a-kernel-path is what holds that open.
+KERNEL_FACTORY_PATHS = {
+    "kernel.commit_group": "DomainEvent -- the commit that makes a group of events durable as one",
+    "witness.store_group": "DurabilityReceipt -- the witness side of that same commit",
+    "kernel.apply_transition": "LifecycleStatus -- the transition applier every edge guard runs through",
+}
+_factories = []
+for _name, _record in sorted(RECORDS.items()):
+    _factory = (_record.get("registration") or {}).get("exclusive_factory")
+    if _factory is None:
+        continue
+    _factories.append((_name, _factory))
+    checked(_factory in COMMANDS or _factory in KERNEL_FACTORY_PATHS,
+            ("AN EXCLUSIVE FACTORY RESOLVES TO NOTHING: `registration.exclusive_factory` says "
+             "this record has exactly ONE creation path and nothing else may make one, and the "
+             "path it names is in neither command-registry.json nor the declared kernel surface. "
+             "An unresolvable creation path is a containment written as a comment -- it reads "
+             "like a rule and constrains nobody, which is worse than no declaration because a "
+             "reader stops looking (F6X-01)",
+             _name, {"names": _factory, "registered commands": len(COMMANDS),
+                     "declared kernel paths": sorted(KERNEL_FACTORY_PATHS)}))
+checked(len(_factories) >= 9,
+        ("THE EXCLUSIVE-FACTORY WALK MET ALMOST NO DECLARATIONS: nine records declare one, and a "
+         "walk that reached none of them reports a pass over an empty required set. The loop is "
+         "guarded by a `continue` that a narrowing edit could widen into a skip of everything "
+         "(F6X-01)", {"declarations": len(_factories), "floor": 9}))
+checked(not (set(KERNEL_FACTORY_PATHS) & set(COMMANDS)),
+        ("A DECLARED KERNEL PATH IS ALSO A REGISTERED COMMAND, so the exemption is now hiding a "
+         "path that HAS a command contract and should be held to it. The two surfaces are "
+         "disjoint by construction: the literal exists only for paths command-registry.json does "
+         "not carry, and a path it does carry must resolve the ordinary way (F6X-01)",
+         {"in both": sorted(set(KERNEL_FACTORY_PATHS) & set(COMMANDS))}))
+checked(set(KERNEL_FACTORY_PATHS) == {"kernel.commit_group", "witness.store_group",
+                                      "kernel.apply_transition"},
+        ("THE KERNEL FACTORY SURFACE WAS WIDENED: it is exactly three paths, and it is a literal "
+         "rather than a `kernel.` prefix rule precisely so that adding a fourth is an edit to "
+         "this line that a reviewer sees. A prefix rule would let any record exempt itself from "
+         "the command registry by choosing a name (F6X-01)", sorted(KERNEL_FACTORY_PATHS)))
 # --- F6X-02: THE EIGHT BOUNDARY KINDS, AND THE FACT THAT NOTHING WAS CONTESTED. ------
 #
 # F6X-02 sat unrepaired through two lanes with the same reason recorded each time, and the
@@ -2722,12 +2788,15 @@ checked(version_rows >= 14,
 #   member added, a required field struck -- and both benign twins are a reordering of the
 #   same list, because a control that cannot tell a widening from a reordering is one
 #   contributors learn to route around.
+#   negative: 103 -> 105 and positive 64 -> 66 (F6X-01): the exclusive-factory resolution
+#   pair and the kernel-exemption pair. The second pair is not optional -- the repair adds an
+#   exemption, and an exemption whose edge no fixture holds is the hole it was meant to close.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 103
-POSITIVE_FIXTURE_FLOOR = 64
+NEGATIVE_FIXTURE_FLOOR = 105
+POSITIVE_FIXTURE_FLOOR = 66
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

@@ -445,6 +445,85 @@ at the close of this lane is what settles that, and step 0 above is what a lane 
 costs.
 
 ---
+## F6X-01 --- `KERNEL_FACTORY_PATHS`, and why neither option the review offered was taken
+
+`registration.exclusive_factory` says: **this record has exactly one creation path and nothing else
+may make one.** Nine records declare it. Measured before touching anything: `exclusive_factory`
+appeared in `validate_contracts.py` **zero times**. Not once. So the string was never resolved
+against anything, and three of the nine name a path that does not exist --- `kernel.commit_group`
+(`DomainEvent`), `witness.store_group` (`DurabilityReceipt`), `kernel.apply_transition`
+(`LifecycleStatus`) --- against a `command-registry.json` of 105 commands carrying none of them.
+
+**Both options in the finding's `required_contract` are wrong, which is why this took three lanes.**
+
+| option | what it actually costs |
+|---|---|
+| *Register the commands* | authoring three command contracts --- argument schema, guard, authority, destination --- for paths nobody has specified. That is **inventing contract**, the thing every refusal in this package exists to prevent |
+| *Retire the declarations* | deleting the sentence *only the kernel may create a `DomainEvent`*. That is a **real containment**, and a load-bearing one: a domain event a record-level command can forge is not an audit trail |
+
+Either would have traded a true statement for a green run. **The third option is the narrow one:**
+the kernel and witness surfaces are declared in `validate_contracts.py` as `KERNEL_FACTORY_PATHS`,
+a closed literal of exactly three paths, each annotated with the record it creates. An exclusive
+factory resolves if it is a registered command **or** a member of that literal. The declarations go
+on saying what is true, no command contract is invented, and all nine now resolve to something a
+reader can find.
+
+**What keeps this from being an escape hatch is that membership is EXACT and not a `kernel.`
+prefix.** A prefix rule would let any record exempt itself from the command registry by choosing a
+name. Four checks, each failing for its own reason:
+
+1. **AN EXCLUSIVE FACTORY RESOLVES TO NOTHING** --- per declaration, against commands and the literal.
+2. **THE EXCLUSIVE-FACTORY WALK MET ALMOST NO DECLARATIONS** --- floor of 9, because the loop has a
+   `continue` a narrowing edit could widen into a skip of everything.
+3. **A DECLARED KERNEL PATH IS ALSO A REGISTERED COMMAND** --- the two surfaces are disjoint by
+   construction; an overlap means the exemption is hiding a path that HAS a contract to be held to.
+4. **THE KERNEL FACTORY SURFACE WAS WIDENED** --- exactly three, by name.
+
+Fixtures: `negative/r28-exclusive-factory-names-an-unregistered-command` (a well-formed command name
+that resolves to nothing --- well-formed on purpose, so it fails the resolution and not a spelling
+rule) with `positive/r28-…-repointed-to-a-registered-command-benign`; and the pair that holds the
+exemption's edge, `negative/r29-exclusive-factory-invents-a-kernel-path` against
+`positive/r29-…-uses-a-declared-kernel-path-benign`. **An exemption whose edge no fixture holds is
+the hole it was meant to close.** Floors: negative 103 -> 105, positive 64 -> 66.
+
+**Still open, and stated rather than closed:** this makes the three paths *resolvable*, not
+*specified*. What the kernel commit group and the witness store group actually guarantee is
+unwritten, and no check in this package can supply it. See below.
+
+---
+
+## Decisions returned to the orchestrator --- not taken by this lane
+
+Each of these is a choice about what the system IS, not a repair. A builder that takes one of them
+to turn a check green has written specification by side effect, and the check will then be cited as
+evidence for it.
+
+### 1. F6D-09's determinism conjunct --- needs a classification that does not exist
+
+The review asks for *"a conjunct asserting each named precondition predicate's registered
+`implementation_status` is deterministic"*, and for `precondition_predicate_ids` to be typed against
+the deterministic subset. **Measured, twice, by two lanes: `implementation_status` takes exactly ONE
+value across all 2,397 predicates** --- `specified; conformance interpreter only, no production
+binding implemented`. There is no deterministic subset because there is no classification at all.
+Writing the conjunct now makes it true of every predicate by construction (the `r16-08` anti-shape:
+a guard that collects the evidence and never applies it), and typing a field against a subset that
+is the whole set constrains nothing.
+
+**The decision required:** whether every registered predicate is to be classified
+deterministic-or-model, and by whom. That is 2,397 judgements about what the registry means.
+**Until it is taken, the F6D-09 tripwire is the right artifact** --- it fires the moment a second
+value appears, which is the moment the conjunct becomes writable, and step 0 above narrowed it at
+the value and strengthened it rather than deleting it.
+
+### 2. F6X-01's three kernel paths --- resolvable is not specified
+
+`KERNEL_FACTORY_PATHS` makes the three declarations resolve and deliberately does not say what they
+guarantee. **The decision required:** whether the kernel and witness surfaces get specified as
+contracts of their own, or stay a named boundary this package points at. Registering them as
+commands to close the finding would invent three contracts; the literal is the smallest honest
+placeholder, and it is loud rather than silent.
+
+---
 ## What this lane did NOT land, and exactly where it stopped
 
 Dispatched against **18** findings. Landed **five** — F6A-10, F6D-12, F6D-09, F6C-11, F6C-10 — plus
