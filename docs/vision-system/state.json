@@ -104,7 +104,7 @@
       "worktree": "harness-managed (Agent isolation=worktree); branch reported by the builder on return",
       "scope": "18 findings: F6A-09, F6A-10, F6C-06, F6C-10, F6C-11, F6C-12, F6C-13, F6D-05, F6D-08, F6D-09, F6D-12, F6X-01, F6X-02, F6R-01..04, RC4-07; writes only planning/specification/** and planning/F2/07-repair-names-contract.md",
       "dispatched": "2026-09-14",
-      "status": "running; author-recorded until rechecked"
+      "status": "running via repeated 30-turn resumes; F6A-10 and F6D-12 committed on builder/f2-r7-contracts; Write/Edit refused in the harness worktree (root-scoped hook) so the builder writes through Bash"
     },
     {
       "lane": "f2-06-recheck-02",
@@ -114,14 +114,14 @@
       "scope": "F6A-03, F6A-07, F6B-02, F6B-03, F6B-06, F6B-07, F6B-09, F6B-10, F6B-11, F6C-01, F6C-03, F6C-04, F6C-07, F6C-08, F6C-09, F6C-14, F6C-15, F6C-17",
       "constraints": "no validator or fixture-runner runs (contracts lane holds the validator); producer accounts off-limits; one family",
       "dispatched": "2026-09-14",
-      "status": "running; archive verbatim as planning/reviews/F2-06-recheck-02.md on return"
+      "status": "RETURNED and archived verbatim as planning/reviews/F2-06-recheck-02.md; 13 CLOSED at specification level, 5 PARTIAL (F6B-02, F6B-03, F6C-04, F6C-07, F6C-14), 0 OPEN, 0 REGRESSED; F6V-01..04 registered (none blocking); index and registers updated"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work below",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words (his 2026-09-14 re-invocation with the directive did not lift it)",
     "When r7-contracts returns: verify branch/head/validator tally against the branch itself, merge into ceo-4-1789314685, then dispatch the prose lane (F6A-02, F6A-04, F6A-05, F6A-11, F6A-12, F6B-04, F6B-08, F6C-05, F6C-18, F6C-19) citing planning/F2/07-repair-names-contract.md",
-    "When f2-06-recheck-02 returns: extract the full report from the subagent transcript, archive verbatim with a provenance header, update F2-06-findings-index.json dispositions and registers/review-findings.json",
+    "recheck-02 DONE (archived). Residues owed: F6B-03 checker-binding (contracts lane), F6V-01/F6C-04 divergence wording or conjunct, F6V-02 (contracts), F6V-03/F6V-04 (prose lane); F6C-07 residue repaired in open-questions.json (Q-020/Q-021 → Q-022), recheck owed",
     "Then: narrow independent recheck of the r7 and prose repairs (F2-06-recheck-03); update PLANNING-REPORT.md §8 counts, README, site, founder page; history.jsonl; session file",
     "Founder: read the note and the seven packets Q-016..Q-022 (Q-022 first); decide whether the five-criteria list is closed; say whether the 2026-09-14 agent thought goes into inputs/"
   ],

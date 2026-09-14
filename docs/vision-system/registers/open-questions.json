@@ -737,7 +737,8 @@
       "reversibility": "High as software. A shed that strands a due obligation is not reversible.",
       "recommendation": "(a) with a named after-the-fact reverser, until the negotiation-time question is measured. The nearest instrument is cheap: run one shed decision twice on a tabletop, once asking named holders and once applying the class reservations with no holder, and count founder reversals and breached minimums. It runs at the current pin, because it is a decision procedure and not a capacity experiment.",
       "if_no_answer": "No shed can be halted. Since no shed can occur at the current pin, nothing happens.",
-      "unrelated_work_continues": true
+      "unrelated_work_continues": true,
+      "prerequisite_ref": "Q-022 — the account-entitlement read owns the inspection this packet's timing defers to; recorded 2026-09-14 from F2-06-recheck-02's residue on F6C-07 (packets previously deferred to the act, not the work item)"
     },
     "overlaps": [
       "Q-021 — the lane sizes, minimums and lapse point are the parameters this authority would act on; they are the same capacity decision seen from the other side and are blocked behind the same account inspection.",
@@ -778,7 +779,8 @@
       "reversibility": "High. Shares are data.",
       "recommendation": "Adopt 07-integrations-capacity.md §6's existing class shares unchanged as the starting values, set the lapse point at 20% of the window remaining, and treat both as measurements to revise rather than as decisions. The structure is what matters; the numbers are placeholders and must be labelled as such.",
       "if_no_answer": "No shed negotiation can run. Since none can occur at the current pin, nothing happens.",
-      "unrelated_work_continues": true
+      "unrelated_work_continues": true,
+      "prerequisite_ref": "Q-022 — the account-entitlement read owns the inspection this packet's timing defers to; recorded 2026-09-14 from F2-06-recheck-02's residue on F6C-07 (packets previously deferred to the act, not the work item)"
     },
     "overlaps": [
       "Q-020 — who may halt a shed is the authority half of this same capacity decision, and both are blocked behind the same account inspection.",
