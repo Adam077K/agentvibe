@@ -1075,3 +1075,12 @@ and the full suite stood at **107 of 108 as required** on `41c51c7`. The patch n
 `required: true` flag the F6X-02 check unions in — so the fixture is refused by the check it exists to
 exercise. The old shape is recorded in the fixture's own `why`, because a fixture that passes for the
 wrong reason reads exactly like one that passes.
+
+**`r35-grant-stripping-probe-owned-by-the-skill-it-probes` — the same leak, in this lane's own fixture.**
+It patched the registry owner alone, so the mirror check ("a producer-unauthorable field's owner differs
+from the pinned one") fired first and `A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS` never ran.
+The patch is now a **two-place mutation** — registry field owner and `producer_unauthorable_fields/1/owner`
+both handed back to `S1-C03` — which is what a determined editor would actually do, and it puts the
+fixture in front of its own check; the mirror keeps its separate value because it makes that edit
+**visible**, not because it refuses it. Old shape recorded in the fixture's `why`. Note for a recheck: the
+pinned-row pointer is positional, so a reorder of that table moves which row this fixture mutates.
