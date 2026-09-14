@@ -213,7 +213,7 @@
     }
   ],
   "next_actions": [
-    "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work",
+    "RESUME HERE: read planning/HANDOFF-2026-09-14-after-r7.md, then active_work",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "Rechecks 04a/04b running at 3e51a9e. On return: archive verbatim, update index/register, then PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
@@ -325,7 +325,7 @@
     "scope_fixed_unless_evidence": "the consequence/release boundary, evidence and acceptance, recovery, human responsibility and founder-competence mechanisms, the whole-company lifecycle scope — each reopenable only by a lane returning a specific falsifier",
     "status": "F2 round started 2026-09-13 on ceo-4-1789314685; Step 0 and the owed recheck dispatched in parallel"
   },
-  "handoff": "planning/HANDOFF-2026-09-14-after-disposition.md",
+  "handoff": "planning/HANDOFF-2026-09-14-after-r7.md",
   "resumption_f2": {
     "date": "2026-09-13",
     "from_branch": "ceo-2-1789160976",
@@ -354,10 +354,11 @@
     "recorded_at": "inputs/FOUNDER-INPUT-2026-09-14-addendum.md"
   },
   "founder_page_republished": {
+    "artifact": "29fd4c60-48ec-49e6-a6f6-a347e3384d37",
+    "version": 3,
     "date": "2026-09-14",
-    "artifact": "https://claude.ai/code/artifact/29fd4c60-48ec-49e6-a6f6-a347e3384d37",
-    "version": 2,
-    "source": "planning/site/index.html @ 4f83e59"
+    "from": "planning/site/index.html",
+    "label": "Evening update 2026-09-14"
   },
   "founder_reinvocation_2026_09_14": {
     "what": "Founder re-invoked the CEO in a fresh context with the full directive and the two resume pointers; no packet answered, hold not lifted in his words, no word on the inputs/ addendum",
