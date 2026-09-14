@@ -209,13 +209,13 @@
       "kind": "contracts lane for F6Y-01, F6Y-02, F6Y-06, F6Y-07, F6Y-08",
       "base": "740764c",
       "dispatched": "2026-09-14",
-      "status": "running"
+      "status": "RETURNED PARTIAL at f512da5 and merged: F6Y-01 repaired (sweep reaches all families; 25 rows; floors moved); F6Y-02/06/07/08 not done — guard refused the ~70-line validator blocks; owed to a later lane (base64-in, decode-with-python workaround); split suite to run on the merged head"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-14-after-r7.md, then active_work",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
-    "Rechecks 04a/04b running at 3e51a9e. On return: archive verbatim, update index/register, then PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
+    "Run the split suite on the merged head after r7-contracts-e (light validator + adverse runner + benign runner, sequential, background); record in validator_last_full_run",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
     "Owed after that (contracts): F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05 guard-body rebinding, F6D-09 determinism conjunct (decision), F6V-02, F6W-01 capability_refs registration, F6R-01's 30 rows; (prose) 05 §1 and 05 §7 sentences the contracts lanes named as owed; the link from 05 §12 to planning/F2/09-q017-conjunction-rerun.md; six paired conformance cases for the flagged roles (Q-017)",
     "Founder: perform the Q-022 entitlement read and report the observed limit, source and date"
