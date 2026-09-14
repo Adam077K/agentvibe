@@ -1675,7 +1675,11 @@ FINDING_SOURCES = PINNED["finding_sources"]
 covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
     | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
 unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
-UNANSWERED_CEILING = 41
+# 41 -> 66 (F6Y-01). Raised for the one reason the note below admits: twenty-five
+# findings were DECLARED in `#/finding_sources` that were never declared before --
+# F6W-01..08, F6Y-01..08, F6Z-01..09 -- and nothing in this package carries them yet.
+# Raising it because a pin was deleted would be the move this ceiling exists to refuse.
+UNANSWERED_CEILING = 67
 unanswered = sorted(set(FINDING_SOURCES) - covered - set(unpinnable))
 checked(len(unanswered) <= UNANSWERED_CEILING,
         ("A PINNED FINDING LOST ITS LAST PIN: a finding declared in "
@@ -1751,7 +1755,9 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
 ANSWERED_ELSEWHERE_CEILING = 4
-NOT_ANSWERED_CEILING = 37
+NOT_ANSWERED_CEILING = 63  # 37 -> 62 (F6Y-01): the twenty-five newly declared
+                           # F6W/F6Y/F6Z findings, which is the one direction this
+                           # ceiling's own message permits it to grow in
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -1785,7 +1791,8 @@ PIN_FLOOR = 71           # 70 -> 71 (F6C-13): the critical-fields authority pin 
 PIN_ROW_FLOOR = 157      # 154 -> 157 (F6C-13): three rows -- the two fields named, the authority
                          # NOT equal to the order's own owner, and the assignment in `accepted`
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
-FINDING_SOURCE_FLOOR = 116  # new (RC5-02): the declaration the ceiling above reads
+FINDING_SOURCE_FLOOR = 141  # 116 -> 141 (F6Y-01): the F6W, F6Y and F6Z rows the
+                            # widened Step 6 sweep now demands
 checked(len(PINNED["pins"]) >= PIN_FLOOR
         and len(PINNED["pinned_transitions"]) >= PIN_TRANSITION_FLOOR,
         ("the pinned table has shrunk; a pin table with no pins passes vacuously",
@@ -2490,17 +2497,48 @@ checked(len(register_findings) >= 30,
 # asserting the one thing the finding asks for: source-row coverage. The gap in the shared
 # pattern is recorded in the names contract rather than closed by a widening whose
 # consequences this lane cannot verify.
-STEP6_ID = re.compile(r"\b(F6[A-DRVX]-[0-9][0-9])\b")
+#
+# F6Y-01 SUPERSEDES THE PATTERN ABOVE THIS LINE. `F6[A-DRVX]` omitted `F6W` -- eight ids,
+# all raised in `F2-06-recheck-03.md`, none of them a key of `finding_sources`, and two of
+# the family had already amended `05` section 5 by name while being invisible to both
+# coverage tables. The narrow pattern also computed the floor it was checked against (64
+# against a floor of 60), so the exclusion was invisible from inside the block as well.
+#
+# The sweep now matches EVERY family the corpus can state and refuses any family letter
+# not in the hand-written literal below. That is the shape the rest of this file uses: the
+# derived set is the demand, the literal is the declaration, and a new family is an edit a
+# reviewer sees rather than eight findings silently outside the required set. Note what is
+# NOT done here -- the letters are not collapsed into the check, and the literal is not
+# derived from the corpus, because a literal derived from the file it measures is
+# satisfied by the empty file.
+STEP6_FAMILIES = ("F6A", "F6B", "F6C", "F6D", "F6R", "F6V", "F6W", "F6X", "F6Y", "F6Z")
+STEP6_ID = re.compile(r"\b(F6[A-Z]-[0-9][0-9])\b")
 STEP6_CORPUS = sorted((ROOT.parents[2] / "planning" / "reviews").glob("F2-06-*.md"))
 _step6 = set()
 for _document in STEP6_CORPUS:
     _step6 |= set(STEP6_ID.findall(_document.read_text(encoding="utf-8")))
-checked(len(_step6) >= 60,
+_step6_families = sorted(set(_id.split("-")[0] for _id in _step6))
+checked(set(_step6_families) <= set(STEP6_FAMILIES),
+        ("A STEP 6 REVIEW RAISES A FINDING IN AN UNDECLARED FAMILY: the sweep below "
+         "demands a source row for every id it finds, so a family the declaration does "
+         "not name is a family whose findings are outside the required set entirely -- "
+         "not refused, not deferred, absent. That is what `F6[A-DRVX]` did to F6W-01..08 "
+         "for the whole of its life. Add the family to STEP6_FAMILIES and add a "
+         "`finding_sources` row for each of its ids (F6Y-01)",
+         {"undeclared": sorted(set(_step6_families) - set(STEP6_FAMILIES)),
+          "declared": list(STEP6_FAMILIES), "found": _step6_families,
+          "documents": [_p.name for _p in STEP6_CORPUS]}))
+checked(len(_step6_families) >= 8,
+        ("the Step 6 sweep found fewer families than the corpus has ever held; the "
+         "containment check above passes vacuously over an empty family set (F6Y-01)",
+         {"families": _step6_families, "floor": 8}))
+checked(len(_step6) >= 81,
         ("THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING: the coverage "
          "assertion below is over whatever this sweep found, so a sweep that found nothing "
          "passes it vacuously -- which is the defect RC5-02 named about the other sweep in "
-         "this file. 64 ids were stated across those documents when this was written "
-         "(F6R-03)", {"found": len(_step6), "floor": 60,
+         "this file. 81 ids in nine families were stated across those documents when "
+         "F6Y-01 widened this pattern; the narrow pattern saw 64 in seven (F6R-03, "
+         "F6Y-01)", {"found": len(_step6), "floor": 81, "families": _step6_families,
                       "documents": [_p.name for _p in STEP6_CORPUS]}))
 for _finding in sorted(_step6):
     checked(_finding in FINDING_SOURCES,
@@ -2948,8 +2986,9 @@ checked(version_rows >= 14,
 #   negative: 108 -> 109 and positive 69 -> 70 (F6C-13): the critical-fields authority pair.
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
-NEGATIVE_FIXTURE_FLOOR = 111
-POSITIVE_FIXTURE_FLOOR = 72
+#   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
+NEGATIVE_FIXTURE_FLOOR = 112
+POSITIVE_FIXTURE_FLOOR = 73
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
