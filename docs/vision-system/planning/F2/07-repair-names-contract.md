@@ -1115,3 +1115,14 @@ widened sweep buys its coverage by making the honest move an edit to `validate_c
 
 **Name taken: repair id `R36`,** fixtures `negative/r36-step-6-finding-loses-its-source-row` and
 `positive/r36-a-declared-family-gains-a-finding-benign`. Negative floor 111 → 112, positive 72 → 73.
+
+**Remainder of lane r7-contracts-e, stated rather than left to a recheck to find.** F6Y-02, F6Y-06, F6Y-07
+and F6Y-08 are NOT repaired and no name was taken for them. `R37` is therefore FREE. Two things a later
+lane should know before starting them. First, F6Y-02's benign twin as the review words it — *the six
+branches in a different order, which must pass* — is **not expressible as a negative/positive fixture**:
+the applier patches JSON only, and any edit to the criterion body alone is refused by the
+`author_phase_content.py` derivation oracle before the pairing check is reached. The nearest expressible
+benign is the two `records.schema.json` enums reordered, which exercises set-comparison at the enum layer
+and not at the branch layer; say which of the two is being shipped. Second, F6Y-01's ceilings hold exactly
+one slot of headroom, and F6Y-08 moving two rows from `not_answered` to `answered_elsewhere` does not free
+any — it moves them between halves whose totals are bounded separately.
