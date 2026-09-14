@@ -520126,6 +520126,12 @@
         }
       ],
       "description": "Whether external burden on customers, applicants or contractors was observed in a stated window. `none_observed` is a POSITIVE finding and carries its reason, its window and the assignment answerable for it; it is not the absence of evidence, which is what an empty observation array is and why an empty array cannot establish it."
+    },
+    "CapacityMeasure": {
+      "type": "string",
+      "enum": [
+        "cache_lifetime"
+      ]
     }
   }
 }

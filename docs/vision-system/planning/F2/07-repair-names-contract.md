@@ -529,6 +529,45 @@ the table addable --- the refusal must key on *this name is one the package HAS*
 is new*. Floors: negative 105 -> 106, positive 66 -> 67. Alias floor stays **20**; the table is 25.
 
 ---
+## F6C-06 --- `CapacityMeasure`, and why it has exactly one member
+
+| name | where | what it is |
+|---|---|---|
+| `CapacityMeasure` | `value-registry.json`, `values.schema.json#/$defs/CapacityMeasure` | the capacity measures the specification NAMES |
+| `cache_lifetime` | its one member | the measure `07` section 5 R-G07's capacity row carries |
+
+**What made this gap invisible is worth stating.** `CapacityObservation.payload` already required
+`measure`, `unit`, `measurement` and `freshness_until` --- it was **expressive enough all along**.
+So the chapter's close read like a settled contract while `cache_lifetime` occurred **zero times**
+in every registry in this package. A record that *could* carry the fact is not a fact anything
+carries. Class (b): mechanism documented, binding unverified.
+
+**One member is the honest count, not an oversight.** It is the only capacity measure the
+specification names *as a measure*; `07` section 6's allowance observations are written about
+without ever naming what they measure. Inventing names for those is precisely the fabrication
+F6X-02 was refused for through two lanes. The vocabulary grows when a chapter names something, and
+**the check enforces that direction too** --- **A REGISTERED CAPACITY MEASURE IS NAMED BY NO
+CHAPTER** scans the chapters for every member, because a name invented in a registry and then cited
+as though the specification asked for it is the more dangerous failure: a registered row *looks*
+like evidence.
+
+`07` section 5 gains **one sentence** naming the registered measure --- which is the whole of the
+prose change, and the reason the finding needed one: the passage bound to no measure at all.
+
+Fixtures: `negative/r31-capacity-measure-invented-in-the-registry` and
+`positive/r31-capacity-measure-documentation-edited-benign`. **The benign one is deliberately
+modest and says so in its own `why`:** it proves the check reads the member list and not the
+entry's bytes. It does **not** prove a chapter-named member is accepted --- there is only one real
+measure today, and adding a fake one to demonstrate acceptance would be the fabrication its adverse
+twin exists to refuse. When a chapter names a second measure, that is the benign case to write.
+Floors: negative 106 -> 107, positive 67 -> 68.
+
+`coverage-inventory.json` was re-derived (`tools/repair_r7_derive_inventory.py`); `canonical_values`
+moved 185 -> 186. **A new value type is not a hand edit** --- the inventory is derived and the
+validator recomputes it, so adding one without re-deriving fails the run, which is how this was
+caught rather than noticed.
+
+---
 ## Decisions returned to the orchestrator --- not taken by this lane
 
 Each of these is a choice about what the system IS, not a repair. A builder that takes one of them
@@ -552,6 +591,14 @@ deterministic-or-model, and by whom. That is 2,397 judgements about what the reg
 value appears, which is the moment the conjunct becomes writable, and step 0 above narrowed it at
 the value and strengthened it rather than deleting it.
 
+### 3. F6C-06 --- whether `CapacityObservation.payload.measure` gets typed
+
+The field is still `string`. Retyping it to `CapacityMeasure` would assert that `cache_lifetime` is
+the **only** capacity measure, which is false --- `07` section 6 observes allowances too, it simply
+never names what they measure. **The decision required:** whether the chapters state the full set of
+capacity measures, at which point the field is typed against it and the vocabulary becomes a closed
+enum like `boundary_kind`. Until then a registered, chapter-checked vocabulary that the field is not
+yet typed against is the most that can be said without inventing the rest.
 ### 2. F6X-01's three kernel paths --- resolvable is not specified
 
 `KERNEL_FACTORY_PATHS` makes the three declarations resolve and deliberately does not say what they

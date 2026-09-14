@@ -486,6 +486,46 @@ for _kind, _unit in sorted(EXISTENCE_REASON_PAIRS.items()):
              "names and which reads as SATISFIED (F6D-12)",
              {"reason": _kind, "unit": _unit}))
 
+# --- F6C-06: THE CACHE-LIFETIME COLLAPSE BINDS TO A REGISTERED MEASURE. --------------
+#
+# `07` section 5 R-G07 says enabling credits drops the prompt-cache lifetime from an hour to
+# five minutes, and that the drop "is carried in the capacity row that the metered observation
+# writes". `CapacityObservation.payload` requires `measure`, `unit`, `measurement` and
+# `freshness_until`, so it was always EXPRESSIVE ENOUGH to hold it -- and that is exactly what
+# made the gap invisible. `cache_lifetime` occurred ZERO times across every registry in this
+# package and no vocabulary named it, so R-G07's close was an instruction to a future
+# implementer wearing the grammar of a settled contract. Class (b): the mechanism documented,
+# the binding unverified.
+#
+# ONE MEMBER IS THE HONEST COUNT. It is the only capacity measure the specification names AS a
+# measure; section 6's allowance observations are written about without ever naming what they
+# measure. Inventing names for those here is the fabrication F6X-02 was refused for through two
+# lanes, so the vocabulary grows when a chapter names something and not before -- which is what
+# the second check enforces, against the chapters themselves.
+CAPACITY_MEASURES = FILES["value-registry.json"].get("CapacityMeasure") or {}
+_measures = CAPACITY_MEASURES.get("members") or []
+checked("cache_lifetime" in _measures,
+        ("THE CACHE-LIFETIME COLLAPSE BINDS TO NO REGISTERED MEASURE: `07` section 5 prices "
+         "the metered flip as a capacity event and says the drop is carried in a capacity row. "
+         "A row needs a measure that exists. Without this member the chapter's close is an "
+         "instruction to a future implementer in the grammar of a settled contract (F6C-06)",
+         {"members": sorted(_measures)}))
+_chapter_text = "".join(
+    _p.read_text(encoding="utf-8") for _p in sorted(ROOT.parent.glob("*.md")))
+for _measure in sorted(_measures):
+    checked(_measure in _chapter_text,
+            ("A REGISTERED CAPACITY MEASURE IS NAMED BY NO CHAPTER: this vocabulary exists "
+             "because F6C-06 found prose pointing at a row with no measure behind it, and the "
+             "opposite failure is a measure with no prose behind it -- a name invented in the "
+             "registry and then cited as though the specification had asked for it. The "
+             "vocabulary grows when a chapter names something, never before (F6C-06)",
+             _measure, {"members": sorted(_measures)}))
+checked(len(_measures) >= 1 and CAPACITY_MEASURES.get("schema_ref")
+        == "values.schema.json#/$defs/CapacityMeasure",
+        ("THE CAPACITY-MEASURE VOCABULARY IS EMPTY OR UNSCHEMA'D: an empty vocabulary passes "
+         "the per-member walk above exactly as loudly as a full one, and a registry entry "
+         "whose `schema_ref` resolves nowhere is a row no reader can follow (F6C-06)",
+         {"members": len(_measures), "schema_ref": CAPACITY_MEASURES.get("schema_ref")}))
 # --- F6X-01: EVERY EXCLUSIVE FACTORY RESOLVES, AND THE KERNEL SURFACE IS A LITERAL. ---
 #
 # `registration.exclusive_factory` says: this record has exactly one creation path and nothing
@@ -2821,12 +2861,13 @@ checked(version_rows >= 14,
 #   exemption, and an exemption whose edge no fixture holds is the hole it was meant to close.
 #   negative: 105 -> 106 and positive 66 -> 67 (F6A-09): the alias-key-is-a-value-type pair.
 #   The adverse case is the real row the review found, restored.
+#   negative: 106 -> 107 and positive 67 -> 68 (F6C-06): the invented-measure pair.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 106
-POSITIVE_FIXTURE_FLOOR = 67
+NEGATIVE_FIXTURE_FLOOR = 107
+POSITIVE_FIXTURE_FLOOR = 68
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

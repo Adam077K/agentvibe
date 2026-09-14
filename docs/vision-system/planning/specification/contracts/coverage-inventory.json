@@ -3336,6 +3336,7 @@
     "BusinessResult",
     "CalendarRule",
     "CanonicalBusinessKey",
+    "CapacityMeasure",
     "CaseState",
     "ChangeProposalBinding",
     "ChangeScope",

@@ -2588,5 +2588,24 @@
     "version": "2.0 representation except predicate/primitive registry version1.0; explicit source field mapping",
     "relations": "every Ref target is closed and validated by schema resolver",
     "implementation_status": "specified; not implemented"
+  },
+  "CapacityMeasure": {
+    "kind": "closed vocabulary; the capacity measures the specification NAMES",
+    "schema_ref": "values.schema.json#/$defs/CapacityMeasure",
+    "identity": "by exact containing canonical bytes; no independent Ref/head",
+    "owner_component": "S1-C05",
+    "source_of_truth": "named canonical fields and authenticated sources in containing record/response; value alone grants no authority",
+    "lifecycle": "inherits containing business revision or ephemeral response lifetime; no separate lifecycle record",
+    "authorization": "current containing AccessPolicy/principal/purpose; signed/fresh responses additionally verify their nonce/issuer; composite projections never authorize",
+    "retention_deletion": "inherit sensitivity, scope and all physical-copy rules of containing record; value type/size does not justify plaintext",
+    "audit": "exact enclosing command/event/source and schema version; cryptographic proof outside its own unsigned subject",
+    "version": "2.0 representation except predicate/primitive registry version1.0; explicit source field mapping",
+    "relations": "every Ref target is closed and validated by schema resolver",
+    "implementation_status": "specified; not implemented",
+    "members": [
+      "cache_lifetime"
+    ],
+    "members_why": "F6C-06. `07` section 5 R-G07 says the metered flip drops the prompt-cache lifetime from an hour to five minutes and that the drop 'is carried in the capacity row that the metered observation writes'. `CapacityObservation.payload` requires `measure`, `unit`, `measurement` and `freshness_until` and is expressive enough to hold it -- but `cache_lifetime` occurred ZERO times anywhere in the registries and no value-registry vocabulary named it, so R-G07's close was an instruction to a future implementer and not a registered row. This is the row. ONE MEMBER IS THE HONEST COUNT, not an oversight: it is the only capacity measure the specification names as a measure. `07` section 6's allowance observations are written about without ever naming the measure they write, and inventing names for them here would be exactly the fabrication F6X-02 was refused for through two lanes. A member is added when a chapter names it, and validate_contracts.py refuses a member no chapter names.",
+    "field_binding": "NOT YET TYPED ONTO THE FIELD, and that is recorded rather than quietly skipped. `CapacityObservation.payload.measure` remains `string`. Retyping it to this vocabulary would assert that `cache_lifetime` is the ONLY capacity measure, which is false -- section 6 observes allowances too. Closing the set needs the chapters to state it, which is the same precondition F6X-02 waited two lanes for. See the names contract, decisions returned to the orchestrator."
   }
 }
