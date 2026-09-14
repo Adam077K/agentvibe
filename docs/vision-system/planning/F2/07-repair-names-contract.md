@@ -1066,3 +1066,12 @@ thirty findings are unanswered. A resumer starts there.
 **Ceilings moved to match, in the direction the work went:** `ANSWERED_ELSEWHERE_CEILING` 3 → 4,
 `NOT_ANSWERED_CEILING` 39 → 38 → **37**. `UNANSWERED_CEILING` stays at 41: `unanswered` is computed
 from pin coverage, and moving a row between the two halves of the partition does not change it.
+
+**`r27-contested-refs-made-optional` — a wrong_reason leak fixed, no new name registered.** The fixture
+struck `contested_refs` from the SCHEMA's `required` only, so F6A-07's "REGISTRY AND SCHEMA DISAGREE
+ABOUT WHICH PAYLOAD FIELDS ARE REQUIRED" fired before F6X-02's `IS OPTIONAL ON AN OPERATOR PROJECTION`
+and the full suite stood at **107 of 108 as required** on `41c51c7`. The patch now drops the field from
+**both** declarations — schema `required`, registry `required_fields`, and the per-field
+`required: true` flag the F6X-02 check unions in — so the fixture is refused by the check it exists to
+exercise. The old shape is recorded in the fixture's own `why`, because a fixture that passes for the
+wrong reason reads exactly like one that passes.
