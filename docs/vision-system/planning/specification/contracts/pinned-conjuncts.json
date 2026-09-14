@@ -3516,5 +3516,16 @@
     "F6D-08": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6D-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "G2-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion."
-  }
+  },
+  "census_keys_why": "RC4-07. `CENSUS_KEYS` was a literal in validate_contracts.py and nothing else, so the set of fields the demand walk's census must carry was declared exactly once, in the file that also decides whether it carries them. One edit dropped a field from the requirement and from the check simultaneously, and the verdict went on printing a census that looked complete. Every `demanded` in the contracts means whatever that walk decided, and the census is the only thing in the verdict that says how far the walk reached -- so a quietly narrowed census is a quietly narrowed coverage claim. Pinned HERE and compared there, which is the shape `admissible_ancestors` already uses: two declarations in two files, so narrowing the set takes two edits a reviewer sees and the diff says what was dropped.",
+  "census_keys": [
+    "operators",
+    "predicate_positions",
+    "refused",
+    "slots_classified",
+    "under_disjunction",
+    "under_negation",
+    "under_quantifier",
+    "value_positions"
+  ]
 }

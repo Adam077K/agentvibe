@@ -594,6 +594,38 @@ Raising the tier is a `.claude/qa-tier-floor.yml` change, outside this package's
 was **not** touched.
 
 ---
+## RC4-07 --- `census_keys`, declared twice on purpose
+
+| name | kind | where |
+|---|---|---|
+| `census_keys` | JSON key (string array, 8 members) | `pinned-conjuncts.json` |
+| `census_keys_why` | JSON key (string) | `pinned-conjuncts.json` |
+| `CENSUS_KEYS_PINNED` | derived set | `validate_contracts.py` |
+| `census_keys` | `HAND_WRITTEN_CONTROLS` row, `literal` form | reported in the verdict |
+
+**The "or" branch the previous lane identified, taken.** `CENSUS_KEYS` was a literal in
+`validate_contracts.py` and nowhere else --- the set of fields the demand walk's census must carry,
+declared exactly once, **in the file that also decides whether it carries them.** Dropping
+`under_negation` from the literal and from the check is a single hunk, after which the verdict goes
+on printing a census that looks complete.
+
+**Why this one matters more than its size suggests:** every `demanded` in this package means
+whatever the demand walk decided, and the census is **the only thing in the verdict that says how
+far that walk reached**. A quietly narrowed census is a quietly narrowed coverage claim, wearing a
+pass. Same shape as `ADMISSIBLE_LITERAL` against `#/admissible_ancestors`: two files, two edits, and
+a diff that names what was dropped.
+
+It also joins `HAND_WRITTEN_CONTROLS` --- **RC5-01's whole point is that the two unbudgeted tables
+were found by reading, and what made them findable-only-by-reading is that neither appeared in the
+verdict.** A control that prints no count is one a reviewer has to know to go looking for.
+`HAND_WRITTEN_CONTROL_KEYS` gains `census_keys`, so a future deletion of the row **fails** rather
+than going quiet.
+
+Fixtures: `negative/r32-census-key-set-narrowed-in-the-pin` narrows one side only, which is exactly
+what was invisible before; `positive/r32-census-key-set-reordered-benign` keeps the comparison a
+**set** comparison. Floors: negative 107 -> 108, positive 68 -> 69.
+
+---
 ## Decisions returned to the orchestrator --- not taken by this lane
 
 Each of these is a choice about what the system IS, not a repair. A builder that takes one of them

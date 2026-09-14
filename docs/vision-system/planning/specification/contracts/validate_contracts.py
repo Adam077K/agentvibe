@@ -2879,12 +2879,13 @@ checked(version_rows >= 14,
 #   negative: 105 -> 106 and positive 66 -> 67 (F6A-09): the alias-key-is-a-value-type pair.
 #   The adverse case is the real row the review found, restored.
 #   negative: 106 -> 107 and positive 67 -> 68 (F6C-06): the invented-measure pair.
+#   negative: 107 -> 108 and positive 68 -> 69 (RC4-07): the census-key pin pair.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 107
-POSITIVE_FIXTURE_FLOOR = 68
+NEGATIVE_FIXTURE_FLOOR = 108
+POSITIVE_FIXTURE_FLOOR = 69
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
@@ -3211,6 +3212,24 @@ if not os.environ.get("CONTRACTS_FIXTURE_RUN"):
 # checker. It makes ONE deletion cost more than three checks and a plausible-looking pass.
 CENSUS_KEYS = {"predicate_positions", "value_positions", "slots_classified", "refused",
                "under_quantifier", "under_disjunction", "under_negation", "operators"}
+# RC4-07: and the set is declared TWICE now, once here and once in
+# pinned-conjuncts.json#/census_keys, because a requirement declared only in the file that
+# checks it is satisfied by one edit to that file. Dropping `under_negation` from the
+# literal above and from the check below is a single hunk, after which the verdict prints a
+# census that looks complete and a reader has no way to see what left. Every `demanded` in
+# this package means whatever the demand walk decided, and the census is the only thing in
+# the verdict saying how far that walk reached -- so a quietly narrowed census is a quietly
+# narrowed coverage claim. Same shape as ADMISSIBLE_LITERAL against
+# #/admissible_ancestors: two files, two edits, and a diff that names what was dropped.
+CENSUS_KEYS_PINNED = set(PINNED["census_keys"])
+checked(CENSUS_KEYS_PINNED == CENSUS_KEYS,
+        ("THE CENSUS KEY SET IS DECLARED TWICE AND THE TWO DISAGREE: pinned-conjuncts.json "
+         "#/census_keys and `CENSUS_KEYS` in this file name different fields, so the census "
+         "the verdict is required to carry depends on which declaration you read (RC4-07)",
+         {"pinned only": sorted(CENSUS_KEYS_PINNED - CENSUS_KEYS),
+          "literal only": sorted(CENSUS_KEYS - CENSUS_KEYS_PINNED),
+          "note": "narrowing the census is a decision; make it in both files or not at "
+                  "all"}))
 
 # --- RC5-01 + RC5-02: EVERY HAND-WRITTEN CONTROL, COUNTED, IN ONE BLOCK. --------
 #
@@ -3229,7 +3248,7 @@ HAND_WRITTEN_CONTROL_KEYS = {"pins", "require_rows", "pinned_transitions",
                              "pinned_attachments", "finding_sources", "unanswered_findings",
                              "out_of_reach_findings", "disjoined_rows", "admissible_ancestors",
                              "argument_positions_digest", "negative_fixtures",
-                             "positive_fixtures", "demand_walk_census"}
+                             "positive_fixtures", "demand_walk_census", "census_keys"}
 HAND_WRITTEN_CONTROLS = {
     "pins": {"count": len(PINNED["pins"]), "floor": PIN_FLOOR,
              "file": "pinned-conjuncts.json#/pins"},
@@ -3260,6 +3279,8 @@ HAND_WRITTEN_CONTROLS = {
                           "file": "fixtures/negative/MANIFEST.json"},
     "positive_fixtures": {"count": POSITIVE_FIXTURES_DECLARED, "floor": POSITIVE_FIXTURE_FLOOR,
                           "file": "fixtures/positive/MANIFEST.json"},
+    "census_keys": {"count": len(CENSUS_KEYS), "literal": sorted(CENSUS_KEYS),
+                    "file": "pinned-conjuncts.json#/census_keys"},
     "demand_walk_census": {"count": WALK_CENSUS["slots_classified"], "floor": 8000,
                            "file": "validate_contracts.py#WALK_CENSUS, printed as "
                                    "`conjunct_walk`"},
