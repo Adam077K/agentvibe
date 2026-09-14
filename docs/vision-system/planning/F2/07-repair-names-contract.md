@@ -1084,3 +1084,15 @@ both handed back to `S1-C03` — which is what a determined editor would actuall
 fixture in front of its own check; the mirror keeps its separate value because it makes that edit
 **visible**, not because it refuses it. Old shape recorded in the fixture's `why`. Note for a recheck: the
 pinned-row pointer is positional, so a reorder of that table moves which row this fixture mutates.
+
+**Three BENIGN fixtures were falsely excluded on the merged head, and all three are one class.** Each
+froze a snapshot of a table a later lane grew: `r19-pin-citing-a-review-finding-deleted-benign` added
+`F6A-01` to `unpinnable` and left it in `not_answered`, which F6R-01's partition refuses as *declared but
+not unanswered* — the patch now trims `#/not_answered` in the same edit (a `replace` with the trimmed map,
+since the fixture applier supports only `add` and `replace`); `r24-attempt-ceiling-required-benign` carried
+a WorkOrder required list written before F6C-13 added two required fields, so F6A-07 refused it with
+*required by registry only* — regenerated from the current tree; and
+`r34-computed-projection-table-reordered-benign` predated `transition_count`, so a reordered row was
+missing a key the row-shape check refuses — rebuilt with the full current shape. **A benign fixture that
+fails reads exactly like a repair that broke something**, which is why each one's `why` now records the
+old shape rather than being silently rewritten.
