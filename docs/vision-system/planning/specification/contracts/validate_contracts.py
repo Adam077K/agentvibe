@@ -1675,7 +1675,7 @@ FINDING_SOURCES = PINNED["finding_sources"]
 covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
     | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
 unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
-UNANSWERED_CEILING = 42
+UNANSWERED_CEILING = 41
 unanswered = sorted(set(FINDING_SOURCES) - covered - set(unpinnable))
 checked(len(unanswered) <= UNANSWERED_CEILING,
         ("A PINNED FINDING LOST ITS LAST PIN: a finding declared in "
@@ -1751,7 +1751,7 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
 ANSWERED_ELSEWHERE_CEILING = 3
-NOT_ANSWERED_CEILING = 39
+NOT_ANSWERED_CEILING = 38
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -1781,8 +1781,9 @@ checked(len(NOT_ANSWERED) <= NOT_ANSWERED_CEILING,
 # that does not move with the table it budgets is the denominator again, which is the rule
 # NEGATIVE_FIXTURE_FLOOR's own comment states and this file did not apply to itself.
 # RAISE THESE WHENEVER A PIN IS ADDED. Never lower one without writing the reason here.
-PIN_FLOOR = 70           # 69 -> 70 (F6C-10): the attempt-ceiling pin
-PIN_ROW_FLOOR = 154      # 152 -> 154 (F6C-10): two rows on the attempt-ceiling pin
+PIN_FLOOR = 71           # 70 -> 71 (F6C-13): the critical-fields authority pin on the admission edge
+PIN_ROW_FLOOR = 157      # 154 -> 157 (F6C-13): three rows -- the two fields named, the authority
+                         # NOT equal to the order's own owner, and the assignment in `accepted`
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
 FINDING_SOURCE_FLOOR = 116  # new (RC5-02): the declaration the ceiling above reads
 checked(len(PINNED["pins"]) >= PIN_FLOOR
@@ -2353,7 +2354,7 @@ ATTACHMENTS = PINNED["pinned_attachments"]
 # satisfied by deleting guards rather than by attaching them.
 # RC5-02 raised it from 30 to the committed 39, for the reason the pin floors were raised:
 # the table grew by nine and the budget did not, so nine attachments sat below no control.
-PIN_ATTACHMENT_FLOOR = 39  # 30 -> 39 (RC5-02)
+PIN_ATTACHMENT_FLOOR = 40  # 39 -> 40 (F6C-13): the critical-fields authority guard
 checked(len(ATTACHMENTS) >= PIN_ATTACHMENT_FLOOR,
         ("the attachment table has shrunk; it is the only control that catches a guard "
          "DETACHED from the edge it guards, and 30 of 30 were undetected before it existed",
@@ -2944,8 +2945,9 @@ checked(version_rows >= 14,
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 108
-POSITIVE_FIXTURE_FLOOR = 69
+#   negative: 108 -> 109 and positive 69 -> 70 (F6C-13): the critical-fields authority pair.
+NEGATIVE_FIXTURE_FLOOR = 109
+POSITIVE_FIXTURE_FLOOR = 70
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

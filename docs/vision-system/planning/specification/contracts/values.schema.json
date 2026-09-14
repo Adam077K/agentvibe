@@ -22973,6 +22973,7 @@
         "guard.supersession.walks_derived_closure",
         "guard.trust.derived_is_floor_of_inputs",
         "guard.trust.promotion_is_an_effect_with_a_non_model_discriminator",
+        "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
         "identity.current.v1",
         "mandate.current_scope.v1",
         "proof.exact_receipt.v1",

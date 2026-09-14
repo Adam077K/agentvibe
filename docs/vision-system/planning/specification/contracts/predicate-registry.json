@@ -136820,6 +136820,7 @@
           },
           "field_paths": [
             "/provenance_refs",
+            "/payload/critical_fields_authority_ref",
             "/payload/outcome_ref",
             "/payload/stop_predicates"
           ]
@@ -136832,6 +136833,13 @@
           "bindings": [
             {
               "field_path": "/provenance_refs",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
               "states": [
                 "accepted"
               ],
@@ -136986,6 +136994,7 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/critical_fields_authority_ref",
             "/payload/capability_contract_ref",
             "/payload/input_refs",
             "/payload/acceptance_contract_ref",
@@ -137003,6 +137012,13 @@
           "bindings": [
             {
               "field_path": "/payload/acceptance_owner_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
               "states": [
                 "accepted"
               ],
@@ -384648,6 +384664,15 @@
         },
         {
           "op": "call",
+          "predicate_id": "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
+          "arguments": {
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          }
+        },
+        {
+          "op": "call",
           "predicate_id": "criterion.WorkOrder.admitted.v1",
           "arguments": {
             "subject_ref": {
@@ -399590,6 +399615,105 @@
       "required": [
         "account_ref",
         "requested"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt": {
+    "version": "1.0",
+    "argument_types": {
+      "subject_ref": "Ref<WorkOrder>"
+    },
+    "body": {
+      "op": "all",
+      "predicates": [
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/critical_fields",
+            "/payload/critical_fields_authority_ref"
+          ]
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "eq",
+            "left": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/critical_fields_authority_ref"
+            },
+            "right": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/owner_assignment_ref"
+            }
+          }
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        }
+      ]
+    },
+    "meaning": "The fields whose change forces a re-decision are marked by the capability owner at procedure admission, in an accepted responsibility assignment, and never by the work order's own current owner -- the resuming attempt, which is the party with an interest in the answer (R-D18, AT-M1-02).",
+    "owner_component": "S1-C02",
+    "source": "05-work-agents-skills.md#3-instructions-and-reusable-skills",
+    "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
+    "implementation_status": "specified; conformance interpreter only, no production binding implemented",
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "subject_ref": {
+          "type": "object",
+          "properties": {
+            "record_id": {
+              "$ref": "values.schema.json#/$defs/UUID"
+            },
+            "record_type": {
+              "type": "string",
+              "enum": [
+                "WorkOrder"
+              ]
+            },
+            "revision": {
+              "$ref": "values.schema.json#/$defs/Revision"
+            }
+          },
+          "required": [
+            "record_id",
+            "record_type",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subject_ref"
       ],
       "additionalProperties": false
     }

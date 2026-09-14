@@ -1,0 +1,69 @@
+{
+  "id": "r33-critical-fields-guard-conjuncts-reordered-benign",
+  "repair": "R33",
+  "finding": "F6C-13; the F2-06 C review, benign column",
+  "case": "The same three conjuncts of the critical-fields authority guard, in reverse order.",
+  "paired_adverse_fixture": "fixtures/negative/r33-critical-fields-authority-may-be-the-resuming-attempt.json",
+  "why": "The pin is structural CONTAINMENT, not a byte comparison: what R-D18 requires is that the three conjuncts are demanded on the admission edge, not the order they are written in. A control that refuses a harmless reordering is one contributors learn to route around, which is the argument this package makes at every other pinned set.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.workorder.critical_fields_authority_excludes_the_resuming_attempt/body/predicates",
+      "op": "replace",
+      "value": [
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "eq",
+            "left": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/critical_fields_authority_ref"
+            },
+            "right": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/owner_assignment_ref"
+            }
+          }
+        },
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/critical_fields",
+            "/payload/critical_fields_authority_ref"
+          ]
+        }
+      ]
+    }
+  ]
+}

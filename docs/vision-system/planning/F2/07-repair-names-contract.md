@@ -824,3 +824,71 @@ The full `python3 validate_contracts.py` was not run.
   `r18-acceptance-on-an-uncalibrated-checker` does not reach it: that fixture is about a calibration
   being absent, not about it belonging to someone else. Recorded here so it is a known gap rather than
   a future discovery; no change was made for it.
+
+
+---
+# Lane r7-contracts-c — resumed at `41c51c7` on `builder/f2-r7-contracts-c`
+
+Same standing caveat as the head of this file: author-recorded, one model family, no runtime, every
+"check" is offline over the committed registries. The light validator
+(`CONTRACTS_FIXTURE_RUN=1 python3 validate_contracts.py`) was run after every finding below and
+exited 0; **the full validator, which executes the fixtures, was NOT run by this lane** — so each new
+fixture is declared and unexecuted, exactly as the previous lane recorded of its ten.
+
+## F6C-13 — `critical_fields` and the authority that marked them
+
+*Required contract (C:359–366): record the marking on the `WorkOrder` **or** the `FieldAuthority`, with
+the authorship rule — capability owner at procedure admission, never the resuming attempt — as a
+predicate rather than prose.*
+
+**Branch taken: `WorkOrder`.** `FieldAuthority` is not a registered record kind; `WorkOrder` is, it is
+the subject AT-M1-02 names first, and admission is the moment R-D18 fixes the authority at. Putting it
+on a new record would have invented a kind to hold one field.
+
+| name | kind | where |
+|---|---|---|
+| `critical_fields` | payload field, `JsonPointer[]`, **required** | `record-registry.json` → `WorkOrder.fields.payload` (`type_fields`, `required_fields` and `fields`) **and** `records.schema.json#/$defs/WorkOrder/properties/payload` |
+| `critical_fields_authority_ref` | payload field, `Ref<ResponsibilityAssignment>`, **required** | the same two halves |
+| `guard.workorder.critical_fields_authority_excludes_the_resuming_attempt` | guard predicate (3 conjuncts) | `predicate-registry.json`, and in `values.schema.json#/$defs/PredicateId` (2,397 → 2,398) |
+| the `call` on the admission edge | edge conjunct | `edge.WorkOrder.proposed.admitted.v1`, demanded, beside the criterion call |
+| pin on the guard body (3 require rows) | pin | `pinned-conjuncts.json#/pins` |
+| the attachment row | pinned attachment | `pinned-conjuncts.json#/pinned_attachments` — guard → `[edge.WorkOrder.proposed.admitted.v1]` |
+| `r33-critical-fields-authority-may-be-the-resuming-attempt` | negative fixture | `fixtures/negative/` |
+| `r33-critical-fields-guard-conjuncts-reordered-benign` | positive fixture | `fixtures/positive/` |
+
+**The rule, as three conjuncts rather than one sentence.** `nonempty_fields` on both new pointers (the
+marking and its author are named at all); `not(eq(critical_fields_authority_ref,
+owner_assignment_ref))` — the envelope owner is the party resuming the work, so equality here IS
+"marked by the resuming attempt"; and `related_phases(critical_fields_authority_ref → accepted)` — a
+ref to a `proposed` or `expired` assignment names an authority that does not hold. The middle one is
+the finding's whole content and is the one the adverse fixture removes.
+
+**Pinned on the GUARD BODY, attached on the EDGE — two pins, deliberately.** The first draft pinned the
+three conjuncts on `edge.WorkOrder.proposed.admitted.v1` and the validator refused it with
+`PINNED CONJUNCT MISSING`: pin rows are matched against the named predicate's **own** body and calls
+are not inlined. That refusal is the instrument being right — F6D-01 already measured that a conjunct
+pin says nothing about whether any edge calls the guard (thirty detachments, thirty undetected), which
+is why `pinned_attachments` exists and why this repair uses both halves.
+
+**Fixture pair, and why the adverse one unwraps a `not`.** Removing the call would be caught by the
+attachment table, which is F6D-01's control and not this finding's. The adverse fixture instead
+replaces `not(eq(…))` with `eq(…)`: the guard still reads both fields, still looks like enforcement,
+and admits exactly the party R-D18 excludes. The benign fixture reverses the three conjuncts and must
+pass — the pin is containment, not byte order.
+
+**Derived surfaces re-run, not hand-edited:** `tools/repair_r7_derive_inventory.py` (the new guard
+enters `coverage-inventory.json`) and `tools/author_phase_content.py .` — two WorkOrder criteria
+(`admitted`, `accepted`) drift the moment a required payload field is added, and the drift oracle
+caught it before this lane thought to.
+
+**Floors moved.** `PIN_FLOOR` 70 → 71 · `PIN_ROW_FLOOR` 154 → 157 · `PIN_ATTACHMENT_FLOOR` 39 → 40 ·
+`NEGATIVE_FIXTURE_FLOOR` 108 → 109 · `POSITIVE_FIXTURE_FLOOR` 69 → 70 (both also in the two
+`MANIFEST.json` files, with the reason in `floor_why`) · `UNANSWERED_CEILING` 42 → 41 ·
+`NOT_ANSWERED_CEILING` 39 → 38, because F6C-13 is now pin-carried and the partition check refuses a
+pinned id in `not_answered`.
+
+**Chapters: nothing owed.** `05` §3 R-D18 already states the rule in the words the guard now encodes;
+the contracts were behind the chapter, and this closes that direction.
+
+**Owed: nothing for this finding.** Stated narrowly: the two fixtures are declared and **have never
+been executed** — whether the adverse one fails for its stated reason is unverified by this lane.

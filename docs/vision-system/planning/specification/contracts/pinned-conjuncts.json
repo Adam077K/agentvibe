@@ -2464,6 +2464,49 @@
           "why": "and the ceiling, the attempts and the new discriminator are all named on the record. A retry with no discriminator repeats an unchanged failure, which is the record's own invariant"
         }
       ]
+    },
+    {
+      "predicate_id": "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
+      "kind": "guard",
+      "findings": [
+        "F6C-13"
+      ],
+      "decisions": [
+        "R-D18"
+      ],
+      "why": "F6C-13: `critical_fields` carried its authorship rule in prose (`05` section 3 R-D18) and in ZERO predicates -- optional on WorkflowDefinition and StepExecution, read by nothing. Pinned on the ADMISSION edge because R-D18 fixes the authority AT PROCEDURE ADMISSION; a guard that is not demanded on that edge lets the marking be written later, by the attempt that benefits from it. The pin is over the GUARD BODY; that the admission edge DEMANDS it is the second half, pinned in `pinned_attachments` -- F6D-01 measured thirty detachments undetected by conjunct pins alone.",
+      "require": [
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/critical_fields",
+            "/payload/critical_fields_authority_ref"
+          ],
+          "why": "a work order names the fields whose change forces re-decision AND the authority that marked them. AT-M1-02 asked for the marking to be recorded on the WorkOrder or the FieldAuthority and it was on neither, so the rule was prose only"
+        },
+        {
+          "op": "eq",
+          "negated": true,
+          "contains_pointers": [
+            "/payload/critical_fields_authority_ref",
+            "/owner_assignment_ref"
+          ],
+          "why": "and that authority is NOT the order's own owner_assignment_ref. The envelope owner is the party resuming the work; R-D18's whole content is that the marking authority is never the resuming attempt, and equality here is that failure"
+        },
+        {
+          "op": "related_phases",
+          "bindings": [
+            {
+              "field_path": "/payload/critical_fields_authority_ref",
+              "states_exactly": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ],
+          "why": "and it resolves to an assignment actually in `accepted` at admission. A ref to a proposed or expired assignment names a marking authority that does not hold"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -3480,6 +3523,16 @@
         "F6D-01"
       ],
       "why": "Detached, an activation re-reading its own output promotes it -- section 9 row 5, and the guard is the only thing that makes promotion an effect rather than a re-read."
+    },
+    {
+      "guard": "guard.workorder.critical_fields_authority_excludes_the_resuming_attempt",
+      "edges": [
+        "edge.WorkOrder.proposed.admitted.v1"
+      ],
+      "findings": [
+        "F6C-13"
+      ],
+      "why": "Detached, a work order is admitted with no marking authority fixed at admission, and R-D18's rule -- the capability owner at procedure admission, never the resuming attempt -- holds in prose only, which is the state F6C-13 measured: `critical_fields` in ZERO predicates. The refusal has to happen at admission, because after the attempt resumes the party with an interest in the answer is the one still able to write the marking."
     }
   ],
   "unanswered_split_why": "F6R-01. `unanswered` counted correctly and its gloss said something else: the comment above UNANSWERED_CEILING read `Step 6 findings whose repair landed as a check rather than as a conjunct`, and the recheck measured F6A-10, F6D-09 and F6D-12 inside that 37 with NO repair anywhere -- not a pin, not a check, not a chapter amendment. One number cannot carry two meanings. The set is declared as a partition now: `answered_elsewhere` names the file AND the check that answers each entry, so the claim is falsifiable by opening the file; `not_answered` says nothing is recorded. Each half has its own bound, because a single ceiling lets an entry cross from one meaning to the other for free -- which is the move that produced this finding. The partition is CHECKED: every unanswered finding is in exactly one half, and a finding in neither fails.",
@@ -3521,7 +3574,6 @@
     "F6C-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-07": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-12": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
-    "F6C-13": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-16": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-17": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-18": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",

@@ -206841,6 +206841,35 @@
             },
             "attempt_ceiling": {
               "$ref": "values.schema.json#/$defs/UInt64"
+            },
+            "critical_fields": {
+              "type": "array",
+              "items": {
+                "$ref": "values.schema.json#/$defs/JsonPointer"
+              }
+            },
+            "critical_fields_authority_ref": {
+              "type": "object",
+              "properties": {
+                "record_id": {
+                  "$ref": "values.schema.json#/$defs/UUID"
+                },
+                "record_type": {
+                  "type": "string",
+                  "enum": [
+                    "ResponsibilityAssignment"
+                  ]
+                },
+                "revision": {
+                  "$ref": "values.schema.json#/$defs/Revision"
+                }
+              },
+              "required": [
+                "record_id",
+                "record_type",
+                "revision"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -206860,7 +206889,9 @@
             "stop_predicates",
             "unfinished_obligation_refs",
             "report_refs",
-            "attempt_ceiling"
+            "attempt_ceiling",
+            "critical_fields",
+            "critical_fields_authority_ref"
           ],
           "additionalProperties": false
         }

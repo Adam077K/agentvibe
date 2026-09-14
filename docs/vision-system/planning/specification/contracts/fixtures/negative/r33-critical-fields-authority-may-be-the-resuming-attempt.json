@@ -1,0 +1,39 @@
+{
+  "id": "r33-critical-fields-authority-may-be-the-resuming-attempt",
+  "repair": "R33",
+  "finding": "F6C-13; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-13)",
+  "case": "The guard stops refusing equality, so the marking authority may be the work order's own owner -- the resuming attempt.",
+  "paired_benign_fixture": "fixtures/positive/r33-critical-fields-guard-conjuncts-reordered-benign.json",
+  "why": "F6C-13: R-D18's entire content is WHO may mark the critical fields -- the capability owner at procedure admission, never the resuming attempt. Unwrapping the `not` leaves a guard that still reads both fields and still looks like enforcement while admitting exactly the party the rule excludes. The rule was in prose and zero predicates when the review measured it; this is the one-line edit that puts it back.",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.workorder.critical_fields_authority_excludes_the_resuming_attempt/body/predicates/1",
+      "op": "replace",
+      "value": {
+        "op": "eq",
+        "left": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/critical_fields_authority_ref"
+        },
+        "right": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/owner_assignment_ref"
+        }
+      }
+    }
+  ]
+}

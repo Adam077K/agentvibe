@@ -81416,7 +81416,9 @@
           "unfinished_obligation_refs": "Ref<Obligation>[]",
           "report_refs": "Ref<AttemptReport>[]",
           "parking_closure_account_ref": "Ref<ReasonRecord>?",
-          "attempt_ceiling": "UInt64"
+          "attempt_ceiling": "UInt64",
+          "critical_fields": "JsonPointer[]",
+          "critical_fields_authority_ref": "Ref<ResponsibilityAssignment>"
         },
         "required_fields": [
           "case_ref",
@@ -81434,7 +81436,9 @@
           "checkpoint_contract_ref",
           "stop_predicates",
           "unfinished_obligation_refs",
-          "report_refs"
+          "report_refs",
+          "critical_fields",
+          "critical_fields_authority_ref"
         ],
         "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
         "fields": {
@@ -81444,6 +81448,20 @@
             "added_by": "WORK-1.1",
             "owner": "S1-C02",
             "note": "F6C-10: `05` section 6 R-X10 -- \"a work order carries a maximum attempt count with a named owner, C02, and a stated behaviour at the ceiling: park\". It existed on FailureRecord alone and optional, so a work order carried no ceiling until it had already failed. AE-M1-04, AE-M2-06 and AE-M4-04 each asked for this against a different candidate."
+          },
+          "critical_fields": {
+            "type": "JsonPointer[]",
+            "required": true,
+            "added_by": "WORK-1.1",
+            "owner": "S1-C02",
+            "note": "F6C-13: `05` section 3 R-D18 -- \"the marking authority is the capability owner at procedure admission, never the resuming attempt\". AT-M1-02 asked for the marking to be recorded on the `WorkOrder` or the `FieldAuthority`; it was on neither, and `critical_fields` was optional on WorkflowDefinition/StepExecution and read by zero predicates. Required here so a work order cannot be admitted without saying which fields are critical."
+          },
+          "critical_fields_authority_ref": {
+            "type": "Ref<ResponsibilityAssignment>",
+            "required": true,
+            "added_by": "WORK-1.1",
+            "owner": "S1-C02",
+            "note": "F6C-13: the authority that marked them, as a ResponsibilityAssignment ref. This is the field that makes R-D18 checkable: guard.workorder.critical_fields_authority_excludes_the_resuming_attempt requires it to differ from the order's own owner_assignment_ref and to resolve to an assignment in `accepted`."
           }
         }
       }
