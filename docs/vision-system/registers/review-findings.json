@@ -1,1437 +1,1489 @@
 [
- {
-  "id": "T01",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC09",
-   "AC11",
-   "AC12",
-   "AC13",
-   "AC14",
-   "AC28",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T01",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC09",
+      "AC11",
+      "AC12",
+      "AC13",
+      "AC14",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "T02",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC10",
-   "AC13",
-   "AC14",
-   "AC15",
-   "AC16",
-   "AC28"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T02",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC10",
+      "AC13",
+      "AC14",
+      "AC15",
+      "AC16",
+      "AC28"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "T03",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC09",
-   "AC10",
-   "AC13",
-   "AC14",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T03",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC09",
+      "AC10",
+      "AC13",
+      "AC14",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "T04",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC01",
-   "AC02",
-   "AC03",
-   "AC04",
-   "AC13",
-   "AC16",
-   "AC22"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T04",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC01",
+      "AC02",
+      "AC03",
+      "AC04",
+      "AC13",
+      "AC16",
+      "AC22"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "T05",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC04",
-   "AC05",
-   "AC06",
-   "AC20",
-   "AC22",
-   "AC28",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T05",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC04",
+      "AC05",
+      "AC06",
+      "AC20",
+      "AC22",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "T06",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC03",
-   "AC06",
-   "AC07",
-   "AC08",
-   "AC11",
-   "AC12",
-   "AC21",
-   "AC26",
-   "AC30",
-   "AC31",
-   "AC32",
-   "AC33"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T06",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC03",
+      "AC06",
+      "AC07",
+      "AC08",
+      "AC11",
+      "AC12",
+      "AC21",
+      "AC26",
+      "AC30",
+      "AC31",
+      "AC32",
+      "AC33"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "T07",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC11",
-   "AC17",
-   "AC18",
-   "AC19",
-   "AC20",
-   "AC23",
-   "AC25",
-   "AC26",
-   "AC27"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T07",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC11",
+      "AC17",
+      "AC18",
+      "AC19",
+      "AC20",
+      "AC23",
+      "AC25",
+      "AC26",
+      "AC27"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "T08",
-  "source": "planning/reviews/D-technical.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC13",
-   "AC14",
-   "AC15",
-   "AC16",
-   "AC28",
-   "AC32",
-   "AC33"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-technical.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "T08",
+    "source": "planning/reviews/D-technical.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC13",
+      "AC14",
+      "AC15",
+      "AC16",
+      "AC28",
+      "AC32",
+      "AC33"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-technical.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-01",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC11",
-   "AC12",
-   "AC20",
-   "AC23",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-01",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC11",
+      "AC12",
+      "AC20",
+      "AC23",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-02",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC02",
-   "AC03",
-   "AC06",
-   "AC18",
-   "AC20",
-   "AC21",
-   "AC23"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-02",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC02",
+      "AC03",
+      "AC06",
+      "AC18",
+      "AC20",
+      "AC21",
+      "AC23"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-03",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC11",
-   "AC12",
-   "AC23",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-03",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC11",
+      "AC12",
+      "AC23",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-04",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
-  "attack_cases": [
-   "AC05",
-   "AC11",
-   "AC12",
-   "AC20",
-   "AC22",
-   "AC23",
-   "AC31"
-  ],
-  "resolution": "Semantic-maintenance scale and total labor must be measured; maintenance response and falsification protocol now specified.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-04",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
+    "attack_cases": [
+      "AC05",
+      "AC11",
+      "AC12",
+      "AC20",
+      "AC22",
+      "AC23",
+      "AC31"
+    ],
+    "resolution": "Semantic-maintenance scale and total labor must be measured; maintenance response and falsification protocol now specified.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-05",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC13",
-   "AC14",
-   "AC18",
-   "AC20"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-05",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC13",
+      "AC14",
+      "AC18",
+      "AC20"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-06",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
-  "attack_cases": [
-   "AC13",
-   "AC23",
-   "AC25",
-   "AC27",
-   "AC28",
-   "AC29"
-  ],
-  "resolution": "Actual accepted competent continuity, funding and joint-failure exercises remain deployment prerequisites and empirical feasibility risks.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-06",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
+    "attack_cases": [
+      "AC13",
+      "AC23",
+      "AC25",
+      "AC27",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": "Actual accepted competent continuity, funding and joint-failure exercises remain deployment prerequisites and empirical feasibility risks.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-07",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
-  "attack_cases": [
-   "AC06",
-   "AC08",
-   "AC21",
-   "AC22",
-   "AC23",
-   "AC24"
-  ],
-  "resolution": "Contestable adverse sampling and domain-specific competence response specified; longitudinal transfer and burden unproved.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-07",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
+    "attack_cases": [
+      "AC06",
+      "AC08",
+      "AC21",
+      "AC22",
+      "AC23",
+      "AC24"
+    ],
+    "resolution": "Contestable adverse sampling and domain-specific competence response specified; longitudinal transfer and burden unproved.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-08",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC05",
-   "AC11",
-   "AC12",
-   "AC28",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-08",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC05",
+      "AC11",
+      "AC12",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "CH-09",
-  "source": "planning/reviews/D-company-human.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
-  "attack_cases": [
-   "AC12",
-   "AC20",
-   "AC21",
-   "AC23"
-  ],
-  "resolution": "Business usefulness, economics and external human burden added to evaluation; actual benefit remains unmeasured.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+  {
+    "id": "CH-09",
+    "source": "planning/reviews/D-company-human.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "empirical or deployment obligation open; no remaining foundational synthesis blocker",
+    "attack_cases": [
+      "AC12",
+      "AC20",
+      "AC21",
+      "AC23"
+    ],
+    "resolution": "Business usefulness, economics and external human burden added to evaluation; actual benefit remains unmeasured.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation; CH reassessment by architecture reviewer, not original company reviewer signoff"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "EAS-01",
-  "source": "planning/reviews/D-architecture-evidence.md",
-  "review_subject": "595f931",
-  "owner": "repair_technical_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC09",
-   "AC11",
-   "AC12",
-   "AC13",
-   "AC14",
-   "AC28",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "EAS-01",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_technical_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC09",
+      "AC11",
+      "AC12",
+      "AC13",
+      "AC14",
+      "AC28",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "EAS-02",
-  "source": "planning/reviews/D-architecture-evidence.md",
-  "review_subject": "595f931",
-  "owner": "repair_alternative_depth",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC20",
-   "AC21",
-   "AC23",
-   "AC32"
-  ],
-  "resolution": "C2 establishes nonoptional inquiry initiation, bounded work and separate retirement rights. Original C1 remains A-compatible. No blackboard or business benefit established; EAS-R1 comparator obligation retained.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "EAS-02",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_alternative_depth",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC20",
+      "AC21",
+      "AC23",
+      "AC32"
+    ],
+    "resolution": "C2 establishes nonoptional inquiry initiation, bounded work and separate retirement rights. Original C1 remains A-compatible. No blackboard or business benefit established; EAS-R1 comparator obligation retained.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/AC-foundational-distinction.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/AC-foundational-distinction.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "EAS-03",
-  "source": "planning/reviews/D-architecture-evidence.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC04",
-   "AC06",
-   "AC20",
-   "AC22",
-   "AC29"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "EAS-03",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC04",
+      "AC06",
+      "AC20",
+      "AC22",
+      "AC29"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/technical-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "EAS-04",
-  "source": "planning/reviews/D-architecture-evidence.md",
-  "review_subject": "595f931",
-  "owner": "repair_company_foundations",
-  "status": "closed conceptually; specification, conformance and deployment obligations remain",
-  "attack_cases": [
-   "AC23",
-   "AC24"
-  ],
-  "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
-  "independent_recheck": {
-   "source": "planning/reviews/D2-architecture-evidence-company.md",
-   "subject": "4182ead431220dc94ce61335170a798815aaf02c",
-   "scope": "Phase E synthesis readiness only",
-   "independence": "separate reviewer from repair authors; procedural tool isolation"
+  {
+    "id": "EAS-04",
+    "source": "planning/reviews/D-architecture-evidence.md",
+    "review_subject": "595f931",
+    "owner": "repair_company_foundations",
+    "status": "closed conceptually; specification, conformance and deployment obligations remain",
+    "attack_cases": [
+      "AC23",
+      "AC24"
+    ],
+    "resolution": "Versioned candidate repairs defeat the original counterexample at the contract level within declared assumptions; see independent reassessment for exact scope and retained falsifier.",
+    "independent_recheck": {
+      "source": "planning/reviews/D2-architecture-evidence-company.md",
+      "subject": "4182ead431220dc94ce61335170a798815aaf02c",
+      "scope": "Phase E synthesis readiness only",
+      "independence": "separate reviewer from repair authors; procedural tool isolation"
+    },
+    "implementation_evidence": null,
+    "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
+    "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
+    "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
   },
-  "implementation_evidence": null,
-  "note": "Source review controls severity, classification and required timing; registry does not reinterpret a verdict.",
-  "proposed_repair": "planning/candidates/company-foundation-repairs-v1.md",
-  "repair_subject": "4182ead431220dc94ce61335170a798815aaf02c"
- },
- {
-  "id": "EAS-R1",
-  "source": "planning/reviews/D2-architecture-evidence-company.md",
-  "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
-  "title": "Comparator integrity",
-  "owner": "S04",
-  "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
-  "attack_cases": [
-   "AC20",
-   "AC21",
-   "AC23"
-  ],
-  "resolution": null,
-  "required_contract": "Separate own-rights conformance, business outcomes, rights-equivalent case-engine control and fully adaptive simpler policy. Match external duties/resources/information without forcing equal internal inquiry deadlines or rewarding C2 by definition.",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
- },
- {
-  "id": "T-R1",
-  "source": "planning/reviews/D2-technical.md",
-  "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
-  "title": "Fenced changes of alias, scope and required participants",
-  "owner": "S05",
-  "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
-  "attack_cases": [
-   "AC09",
-   "AC10",
-   "AC13",
-   "AC14",
-   "AC28"
-  ],
-  "resolution": null,
-  "required_contract": "Migrate existing uncertain holds; invalidate obsolete unreleased preparations; order the union of overlapping scopes before resumption. Test alias merges, added issuers and cross-scope discoveries under partition/recovery.",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
- },
- {
-  "id": "T-R2",
-  "source": "planning/reviews/D2-technical.md",
-  "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
-  "title": "Independent durability proof for status after lost acknowledgment",
-  "owner": "S05",
-  "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
-  "attack_cases": [
-   "AC09",
-   "AC11",
-   "AC12",
-   "AC13",
-   "AC28"
-  ],
-  "resolution": null,
-  "required_contract": "A locally committed release/status row cannot authorize dispatch without exact independent durability evidence/frontier. Interrupt every commit/replication/ack/status/failover boundary and lose primary.",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
- },
- {
-  "id": "T-R3",
-  "source": "planning/reviews/D2-technical.md",
-  "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
-  "title": "Delayed first transmission and revocation exposure",
-  "owner": "S03/S05/S06",
-  "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
-  "attack_cases": [
-   "AC09",
-   "AC13",
-   "AC14",
-   "AC16",
-   "AC28"
-  ],
-  "resolution": null,
-  "required_contract": "Specify gateway-generation fencing, first-transport deadline and cancellation/expiry separately from retry and delayed provider acceptance; grants and operator stop state disclose residual window.",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
- },
- {
-  "id": "FIR-01",
-  "source": "planning/reviews/F-integration-01.md",
-  "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
-  "title": "Pre-sale capacity route requires an existing sale",
-  "severity": "medium",
-  "owner": "repair_company_foundations",
-  "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
-  "required_contract": "Declare actual pre-sale capacity assessment inputs, responsible acceptance, output and verified-state transition without a customer agreement.",
-  "resolution": {
-   "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
-   "integrated_commit": "86bb9ef",
-   "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+  {
+    "id": "EAS-R1",
+    "source": "planning/reviews/D2-architecture-evidence-company.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Comparator integrity",
+    "owner": "S04",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC20",
+      "AC21",
+      "AC23"
+    ],
+    "resolution": null,
+    "required_contract": "Separate own-rights conformance, business outcomes, rights-equivalent case-engine control and fully adaptive simpler policy. Match external duties/resources/information without forcing equal internal inquiry deadlines or rewarding C2 by definition.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
   },
-  "independent_recheck": {
-   "source": "planning/reviews/F-integration-02.md",
-   "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
-   "archive_commit": "23adbe7",
-   "runtime_verification": false
+  {
+    "id": "T-R1",
+    "source": "planning/reviews/D2-technical.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Fenced changes of alias, scope and required participants",
+    "owner": "S05",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC09",
+      "AC10",
+      "AC13",
+      "AC14",
+      "AC28"
+    ],
+    "resolution": null,
+    "required_contract": "Migrate existing uncertain holds; invalidate obsolete unreleased preparations; order the union of overlapping scopes before resumption. Test alias merges, added issuers and cross-scope discoveries under partition/recovery.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
   },
-  "implementation_evidence": null
- },
- {
-  "id": "FIR-02",
-  "source": "planning/reviews/F-integration-01.md",
-  "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
-  "title": "Pilot pricing conflicts with actual-demand acceptance",
-  "severity": "medium",
-  "owner": "repair_company_foundations",
-  "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
-  "required_contract": "Separate unknown-demand bounded price experiment acceptance from evidence-dependent adoption and scale decisions; preserve actual authority, reserves and capacity.",
-  "resolution": {
-   "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
-   "integrated_commit": "86bb9ef",
-   "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+  {
+    "id": "T-R2",
+    "source": "planning/reviews/D2-technical.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Independent durability proof for status after lost acknowledgment",
+    "owner": "S05",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC09",
+      "AC11",
+      "AC12",
+      "AC13",
+      "AC28"
+    ],
+    "resolution": null,
+    "required_contract": "A locally committed release/status row cannot authorize dispatch without exact independent durability evidence/frontier. Interrupt every commit/replication/ack/status/failover boundary and lose primary.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
   },
-  "independent_recheck": {
-   "source": "planning/reviews/F-integration-02.md",
-   "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
-   "archive_commit": "23adbe7",
-   "runtime_verification": false
+  {
+    "id": "T-R3",
+    "source": "planning/reviews/D2-technical.md",
+    "review_subject": "4182ead431220dc94ce61335170a798815aaf02c",
+    "title": "Delayed first transmission and revocation exposure",
+    "owner": "S03/S05/S06",
+    "status": "mandatory Phase F specification and conformance obligation; non-blocking for synthesis",
+    "attack_cases": [
+      "AC09",
+      "AC13",
+      "AC14",
+      "AC16",
+      "AC28"
+    ],
+    "resolution": null,
+    "required_contract": "Specify gateway-generation fencing, first-transport deadline and cancellation/expiry separately from retry and delayed provider acceptance; grants and operator stop state disclose residual window.",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "note": "New counterexample sharpens an already selected invariant; it does not require another organizing architecture. Source review controls severity and exact scope."
   },
-  "implementation_evidence": null
- },
- {
-  "id": "FIR-03",
-  "source": "planning/reviews/F-integration-01.md",
-  "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
-  "title": "Recovery packet references a query response as a record",
-  "severity": "medium",
-  "owner": "repair_company_foundations",
-  "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
-  "required_contract": "Capture signed frontier response bytes and attribution as historical evidence; require a fresh nonce-bound query for authority-dependent recovery.",
-  "resolution": {
-   "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
-   "integrated_commit": "86bb9ef",
-   "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+  {
+    "id": "FIR-01",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Pre-sale capacity route requires an existing sale",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
+    "required_contract": "Declare actual pre-sale capacity assessment inputs, responsible acceptance, output and verified-state transition without a customer agreement.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-integration-02.md",
+      "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
+      "archive_commit": "23adbe7",
+      "runtime_verification": false
+    },
+    "implementation_evidence": null
   },
-  "independent_recheck": {
-   "source": "planning/reviews/F-integration-02.md",
-   "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
-   "archive_commit": "23adbe7",
-   "runtime_verification": false
+  {
+    "id": "FIR-02",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Pilot pricing conflicts with actual-demand acceptance",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
+    "required_contract": "Separate unknown-demand bounded price experiment acceptance from evidence-dependent adoption and scale decisions; preserve actual authority, reserves and capacity.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-integration-02.md",
+      "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
+      "archive_commit": "23adbe7",
+      "runtime_verification": false
+    },
+    "implementation_evidence": null
   },
-  "implementation_evidence": null
- },
- {
-  "id": "FIR-04",
-  "source": "planning/reviews/F-integration-01.md",
-  "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
-  "title": "Quality procedure promises verdict absent from canonical judgment",
-  "severity": "medium",
-  "owner": "repair_company_foundations",
-  "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
-  "required_contract": "Represent completed inconclusive assessment separately from proposed, rejected, contested and exact subject acceptance; preserve historical reassessment.",
-  "resolution": {
-   "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
-   "integrated_commit": "86bb9ef",
-   "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+  {
+    "id": "FIR-03",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Recovery packet references a query response as a record",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
+    "required_contract": "Capture signed frontier response bytes and attribution as historical evidence; require a fresh nonce-bound query for authority-dependent recovery.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-integration-02.md",
+      "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
+      "archive_commit": "23adbe7",
+      "runtime_verification": false
+    },
+    "implementation_evidence": null
   },
-  "independent_recheck": {
-   "source": "planning/reviews/F-integration-02.md",
-   "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
-   "archive_commit": "23adbe7",
-   "runtime_verification": false
+  {
+    "id": "FIR-04",
+    "source": "planning/reviews/F-integration-01.md",
+    "review_subject": "e7530ff2c9458920c0374551508d8e47c5f30fb7",
+    "title": "Quality procedure promises verdict absent from canonical judgment",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Closed at specification level by independent reassessment; conformance tests unexecuted",
+    "required_contract": "Represent completed inconclusive assessment separately from proposed, rejected, contested and exact subject acceptance; preserve historical reassessment.",
+    "resolution": {
+      "source_commit": "845a29b81bdb9f7eae443cb40b0a6a77223b206b",
+      "integrated_commit": "86bb9ef",
+      "scope": "01-contract-kernel.md, 03-company-capabilities.md, capabilities.json"
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-integration-02.md",
+      "subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
+      "archive_commit": "23adbe7",
+      "runtime_verification": false
+    },
+    "implementation_evidence": null
   },
-  "implementation_evidence": null
- },
- {
-  "id": "FIR-05",
-  "source": "planning/reviews/F-integration-02.md",
-  "review_subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
-  "title": "Singular launch acceptance reference cannot match distinct required subjects",
-  "severity": "medium",
-  "owner": "repair_company_foundations",
-  "status": "Closed at specification level by independent recheck; positive, negative and concurrency conformance tests unexecuted",
-  "required_contract": "Map admitted exact requirement IDs, subjects, versions and predicates to current accepted child judgments; complete valid multi-subject launch succeeds, missing/wrong/stale child cannot pass.",
-  "resolution": {
-   "source_commit": "2c7a4a3fcb6a25eba90785a19a181e8ed7b8ed3a",
-   "integrated_commit": "ef676de",
-   "scope": "03-company-capabilities.md and capabilities.json: requirements manifest and JudgmentBinding collection"
+  {
+    "id": "FIR-05",
+    "source": "planning/reviews/F-integration-02.md",
+    "review_subject": "86bb9ef84a1f3d91d3c0123586c6f322c470eaf0",
+    "title": "Singular launch acceptance reference cannot match distinct required subjects",
+    "severity": "medium",
+    "owner": "repair_company_foundations",
+    "status": "Closed at specification level by independent recheck; positive, negative and concurrency conformance tests unexecuted",
+    "required_contract": "Map admitted exact requirement IDs, subjects, versions and predicates to current accepted child judgments; complete valid multi-subject launch succeeds, missing/wrong/stale child cannot pass.",
+    "resolution": {
+      "source_commit": "2c7a4a3fcb6a25eba90785a19a181e8ed7b8ed3a",
+      "integrated_commit": "ef676de",
+      "scope": "03-company-capabilities.md and capabilities.json: requirements manifest and JudgmentBinding collection"
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-integration-03.md",
+      "subject": "ef676def08e4074cfa2d5db812039b3c5cbf2255",
+      "archive_commit": "7ea26e6",
+      "runtime_verification": false
+    },
+    "implementation_evidence": null
   },
-  "independent_recheck": {
-   "source": "planning/reviews/F-integration-03.md",
-   "subject": "ef676def08e4074cfa2d5db812039b3c5cbf2255",
-   "archive_commit": "7ea26e6",
-   "runtime_verification": false
+  {
+    "id": "EPT-01",
+    "source": "research/reviews/2026-09-12-epistemic-traceability.md",
+    "review_subject": "b9aee22a6589df5037573b172292b49c0abb64e5",
+    "title": "New substrate assertions lack explicit complete claim-maintenance scope",
+    "severity": "low",
+    "owner": "orchestrator evidence register",
+    "status": "Closed at planning evidence-map level by independent recheck; runtime/source-refresh mechanisms unimplemented",
+    "required_contract": "Explicit shared source/date/type/confidence/incentive/corroboration and source-claim expiry/invalidation treatment, including upstream changes without a package upgrade.",
+    "resolution": {
+      "commit": "12e4f8c",
+      "artifact": "research/substrate-claims.json",
+      "scope": "26 source claim groups, SC-POLICY-1 and explicit inheritance in01/02/06"
+    },
+    "independent_recheck": {
+      "source": "research/reviews/2026-09-12-epistemic-recheck.md",
+      "subject": "12e4f8c99cdc0bc3c6e9b325c9a61ab75667d9b4",
+      "archive_commit": "b7902b2"
+    },
+    "implementation_evidence": null
   },
-  "implementation_evidence": null
- },
- {
-  "id": "EPT-01",
-  "source": "research/reviews/2026-09-12-epistemic-traceability.md",
-  "review_subject": "b9aee22a6589df5037573b172292b49c0abb64e5",
-  "title": "New substrate assertions lack explicit complete claim-maintenance scope",
-  "severity": "low",
-  "owner": "orchestrator evidence register",
-  "status": "Closed at planning evidence-map level by independent recheck; runtime/source-refresh mechanisms unimplemented",
-  "required_contract": "Explicit shared source/date/type/confidence/incentive/corroboration and source-claim expiry/invalidation treatment, including upstream changes without a package upgrade.",
-  "resolution": {
-   "commit": "12e4f8c",
-   "artifact": "research/substrate-claims.json",
-   "scope": "26 source claim groups, SC-POLICY-1 and explicit inheritance in01/02/06"
+  {
+    "id": "XSR-01",
+    "source": "planning/reviews/F-cross-scope-01.md",
+    "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
+    "title": "First-contact scope overlay permits incompatible discovery prerequisites",
+    "severity": "medium",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "status": "Closed at specification level by independent recheck; two-implementer/runtime cases unexecuted",
+    "required_contract": "Bind prerequisites to actual contact/promise; distinguish research/inbound/pilot/standing offer, conditional professional determinations and actual interview control.",
+    "resolution": {
+      "commit": "d199316",
+      "scope": "Activity-specific12and35sector/first-contact clarification; no new permission or operating evidence"
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-cross-scope-02.md",
+      "subject": "d199316922cfd49934aa6094f9c03a3b74074659",
+      "source_archive_commit": "1c54e006dfee5b886530cfd87e18dbe7e29f6364",
+      "limit": "XSR01only; no other finding/fullG/runtime acceptance"
+    },
+    "implementation_evidence": null
   },
-  "independent_recheck": {
-   "source": "research/reviews/2026-09-12-epistemic-recheck.md",
-   "subject": "12e4f8c99cdc0bc3c6e9b325c9a61ab75667d9b4",
-   "archive_commit": "b7902b2"
+  {
+    "id": "XSR-02",
+    "source": "planning/reviews/F-cross-scope-01.md",
+    "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
+    "title": "Question verification references do not exercise distinctive exit/reopening claims",
+    "severity": "medium",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "status": "Independent recheck at cb4bf52: PARTIALLY CLOSED with named residue (394/394 joins resolve, 0 answers unbound, both original exemplars answered, 22 of 24 sampled cases discriminate). Both named residue items are now AUTHOR-REPAIRED on docs/vision-xsr-residue: F50-Q08 binds new subcase WK-V55 (challenge supply without a standing adversary) and F33-Q04 binds new subcase WK-V56 (allocation between standing instruction and WorkOrder). Each new subcase varies the one thing the reviewer showed the old stimulus held fixed, so the reviewer's non-conforming implementation produces a different observation. Repaired on paper only: every subcase is still specified-unexecuted and no runtime test exists. Independent review of the repair pending.",
+    "required_contract": "Semantic question→contract→verification reconciliation; precise vendor-exit and equivalent-reopening subcases plus other affected joins, not test-family labels alone.",
+    "resolution": {
+      "source_commit": "5349c3f089ac6652d194db52e4d956e336468001",
+      "root_commit": "dd17e17",
+      "artifact": "planning/specification/work-knowledge-contracts.json#/verification_subcases",
+      "scope": "54 shared subcases, 159 observations and 394 joins for 268 unchanged answers; structural validation and root subcase inspection, without independent semantic closure."
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-cross-scope-03.md",
+      "subject": "cb4bf52",
+      "disposition": "partially closed with named residue",
+      "residue": [
+        "F50-Q08",
+        "F33-Q04"
+      ],
+      "computed": "394 bindings, 0 broken; 152/159 assertions used, max reuse 8; 268/268 root rows match source"
+    },
+    "implementation_evidence": null,
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "residue_closed": [
+        "F50-Q08 -> WK-V55-A1, WK-V55-A2",
+        "F33-Q04 -> WK-V56-A1, WK-V56-A2"
+      ],
+      "computed": "56 subcases, 163 assertions, 398 bindings, 0 broken, 0 answers unbound, 0 root projection divergences",
+      "recompute": "node scripts/vision-wk-bindings.mjs verify",
+      "independent_review": "not performed; the repair author is not the reviewer and shares a model family with both"
+    }
   },
-  "implementation_evidence": null
- },
- {
-  "id": "XSR-01",
-  "source": "planning/reviews/F-cross-scope-01.md",
-  "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
-  "title": "First-contact scope overlay permits incompatible discovery prerequisites",
-  "severity": "medium",
-  "owner": "orchestrator integration; isolated author and independent reviewer",
-  "status": "Closed at specification level by independent recheck; two-implementer/runtime cases unexecuted",
-  "required_contract": "Bind prerequisites to actual contact/promise; distinguish research/inbound/pilot/standing offer, conditional professional determinations and actual interview control.",
-  "resolution": {
-   "commit": "d199316",
-   "scope": "Activity-specific12and35sector/first-contact clarification; no new permission or operating evidence"
+  {
+    "id": "XSR-03",
+    "source": "planning/reviews/F-cross-scope-01.md",
+    "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
+    "title": "Fulfillment routes retain unresolved vendor choice after selection",
+    "severity": "low",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "status": "Independent recheck at cb4bf52: CLOSED at specification level with one named residue (R-NATIVE, tracked as XSR-R-03). 0 placeholder phrases; 150/150 capability route refs resolve; all 11 routes carry admission checks; R-PERSON/R-REMEDY correctly preserve the human performer as unknown.",
+    "required_contract": "R-routes delegate to selected versioned IC contracts; preserve unimplemented and actual-account/endpoint/funding/engagement unknowns.",
+    "resolution": {
+      "source_commit": "d9652586a35940615cfa278f6cfaeca8df1e1124",
+      "root_commit": "a66f2ae",
+      "artifact": "planning/specification/capabilities.json#/fulfillment_routes",
+      "scope": "11 routes delegate to selected specification contracts and explicit remaining admission facts; no actual availability or provider authorization."
+    },
+    "independent_recheck": {
+      "source": "planning/reviews/F-cross-scope-03.md",
+      "subject": "cb4bf52",
+      "disposition": "closed at specification level",
+      "residue": [
+        "XSR-R-03"
+      ],
+      "computed": "11 routes × (performer, admission, unavailable-state) table in the archived report"
+    },
+    "implementation_evidence": null
   },
-  "independent_recheck": {
-   "source": "planning/reviews/F-cross-scope-02.md",
-   "subject": "d199316922cfd49934aa6094f9c03a3b74074659",
-   "source_archive_commit": "1c54e006dfee5b886530cfd87e18dbe7e29f6364",
-   "limit": "XSR01only; no other finding/fullG/runtime acceptance"
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-01",
+    "title": "Bindings cite a subcase whose family_ref is absent from the answer's declared verification_family_refs",
+    "severity": "medium",
+    "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. All 88 bindings were examined against their question text: in every one the BINDING was the semantically right subcase and the DECLARED FAMILY was the stale artifact — verification_family_refs held a coarse three-family block assigned by source field (work answers WK-T01/02/03, knowledge answers WK-T04/05/06(+07)), not the module that exercises the answer. The declared field is therefore derived from the bindings now: exactly the families of the subcases the answer binds. 268 of 268 answers were corrected (the 88-binding metric and the stricter set-equality metric are both 0). No family was added to any answer that does not bind it.",
+    "required_contract": "Every binding's subcase family must appear in its answer's verification_family_refs, or the declared families must be corrected; a planned test module must be the one that actually exercises the answer.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "decision": "binding right, declaration wrong, in all 88",
+      "bindings_outside_declared_before": 88,
+      "bindings_outside_declared_after": 0,
+      "answers_corrected": 268,
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
   },
-  "implementation_evidence": null
- },
- {
-  "id": "XSR-02",
-  "source": "planning/reviews/F-cross-scope-01.md",
-  "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
-  "title": "Question verification references do not exercise distinctive exit/reopening claims",
-  "severity": "medium",
-  "owner": "orchestrator integration; isolated author and independent reviewer",
-  "status": "Independent recheck at cb4bf52: PARTIALLY CLOSED with named residue (394/394 joins resolve, 0 answers unbound, both original exemplars answered, 22 of 24 sampled cases discriminate). Both named residue items are now AUTHOR-REPAIRED on docs/vision-xsr-residue: F50-Q08 binds new subcase WK-V55 (challenge supply without a standing adversary) and F33-Q04 binds new subcase WK-V56 (allocation between standing instruction and WorkOrder). Each new subcase varies the one thing the reviewer showed the old stimulus held fixed, so the reviewer's non-conforming implementation produces a different observation. Repaired on paper only: every subcase is still specified-unexecuted and no runtime test exists. Independent review of the repair pending.",
-  "required_contract": "Semantic question→contract→verification reconciliation; precise vendor-exit and equivalent-reopening subcases plus other affected joins, not test-family labels alone.",
-  "resolution": {
-   "source_commit": "5349c3f089ac6652d194db52e4d956e336468001",
-   "root_commit": "dd17e17",
-   "artifact": "planning/specification/work-knowledge-contracts.json#/verification_subcases",
-   "scope": "54 shared subcases, 159 observations and 394 joins for 268 unchanged answers; structural validation and root subcase inspection, without independent semantic closure."
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-02",
+    "title": "procedure, positive_control and execution_boundary are one identical string across all 54 subcases",
+    "severity": "low",
+    "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. positive_control and execution_boundary are now per subcase: 56 distinct strings each, every one naming its own stimulus's ordinary authorized counterpart and the specific observation that must come out of it, so applying one to a different subcase observes the wrong thing or nothing. procedure remains ONE shared text and now says so: shared_control_groups declares SCG-REGISTRATION-PROCEDURE over all 56 with the reason that procedure states a registration discipline identical in every case, and records that the other two fields are covered by no group. Undeclared sharing is now a failure (C1/C2) rather than a default.",
+    "required_contract": "Per-subcase positive control and execution boundary that would be observably wrong for a different subcase, or an explicit statement of why one shared control is sufficient for a named group.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "distinct_positive_control": 56,
+      "distinct_execution_boundary": 56,
+      "shared_groups": [
+        "SCG-REGISTRATION-PROCEDURE (procedure, all 56, reason recorded)"
+      ],
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
   },
-  "independent_recheck": {
-   "source": "planning/reviews/F-cross-scope-03.md",
-   "subject": "cb4bf52",
-   "disposition": "partially closed with named residue",
-   "residue": [
-    "F50-Q08",
-    "F33-Q04"
-   ],
-   "computed": "394 bindings, 0 broken; 152/159 assertions used, max reuse 8; 268/268 root rows match source"
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-03",
+    "title": "R-NATIVE selected_route_ids lists three profiles while its version string selects one",
+    "severity": "low",
+    "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. R-NATIVE.selected_route_ids is [N-CLAUDE-SUPPLIED/v1]; N-CLAUDE-MEDIATED/v1 and N-CODEX-SUPPLIED/v1 moved to a new candidate_route_ids field with a candidate_admission sentence saying they are defined, unselected and each awaiting its own exact-profile admission. The version string is now IC1.0 / N-CLAUDE-SUPPLIED/v1 and names no unselected profile, so both views derive the same set. capabilities.json had no prior candidate convention; candidate_route_ids is added to all 11 routes (empty where none) so a consumer never reads undefined. implementation_boundary was rewritten to name the selection rather than list all three. 07-integrations-capacity.md, which DEFINES the three profiles, is unchanged - another lane owns it, and defining a profile is not selecting it.",
+    "required_contract": "One selected profile in selected_route_ids with the other two as candidate_route_ids awaiting admission, or the version string widened to match; consumers of either field must derive the same set.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "selected": [
+        "N-CLAUDE-SUPPLIED/v1"
+      ],
+      "candidates": [
+        "N-CLAUDE-MEDIATED/v1",
+        "N-CODEX-SUPPLIED/v1"
+      ],
+      "enforced_by": "vision-wk-bindings.mjs verify check R1: selected and candidate sets disjoint, and any profile id named in a selected_contracts.version string equals the selected set",
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
   },
-  "implementation_evidence": null,
-  "author_repair": {
-   "branch": "docs/vision-xsr-residue",
-   "residue_closed": [
-    "F50-Q08 -> WK-V55-A1, WK-V55-A2",
-    "F33-Q04 -> WK-V56-A1, WK-V56-A2"
-   ],
-   "computed": "56 subcases, 163 assertions, 398 bindings, 0 broken, 0 answers unbound, 0 root projection divergences",
-   "recompute": "node scripts/vision-wk-bindings.mjs verify",
-   "independent_review": "not performed; the repair author is not the reviewer and shares a model family with both"
+  {
+    "source": "planning/reviews/F-cross-scope-03.md",
+    "review_subject": "cb4bf52",
+    "owner": "orchestrator integration; isolated author and independent reviewer",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "XSR-R-04",
+    "title": "Seven assertions bound by no answer",
+    "severity": "informational",
+    "status": "STILL OPEN, deliberately untouched. The XSR-02/R-01/R-02/R-03 repairs bound none of the seven: WK-V04-A3, WK-V09-A3, WK-V20-A3, WK-V23-A3, WK-V26-A2, WK-V33-A3 and WK-V43-A1 are still defined and unused, and the count is still 7 after the repair (the four assertions added with WK-V55/WK-V56 are all bound). Each of the seven would need a judgement about which answer it verifies, which is a new authoring decision rather than a consequence of these repairs. Reported by the same command that computes the rest.",
+    "required_contract": "Bind each to the answer it verifies, or remove it with a reason; an unused assertion is either a missed join or dead weight.",
+    "author_repair": {
+      "branch": "docs/vision-xsr-residue",
+      "action": "none - no repair naturally bound one",
+      "unbound_before": 7,
+      "unbound_after": 7,
+      "recompute": "node scripts/vision-wk-bindings.mjs verify"
+    }
+  },
+  {
+    "id": "G1-06b",
+    "source": "scripts/vision-record-registry.mjs verify (g1-coverage lane census, 2026-09-13)",
+    "review_subject": "docs/vision-g1-coverage head",
+    "title": "Eleven further record types named nowhere outside contracts/ under the stricter census",
+    "severity": "low",
+    "class": "a",
+    "owner": "canonical contract author; independent reviewer after repair",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. Census at 755c59c (after the g1 and g-prose merges) finds 8 further contract-only records: EvaluationCase, IndexSnapshot, ExperienceArtifact, BuildArtifact, Partnership, ContinuityArrangement, Constraint, AccessGraph. Was 11 at eb6eb66; the prose lane named SecurityCase, CandidateAssessment and Defect while writing phase meanings.",
+    "required_contract": "Each carries a justification object: a source concern whose meaning requires it, or derived_control_machinery with the owning record and obligation. Constraint and Defect are directive §8.11 subjects and can cite DIRECTIVE.md.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "source": "build-guard-repair lane return, 2026-09-13",
+    "owner": "orchestrator; next prose pass / B01",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "GR-01",
+    "title": "Nine specification sentences now contradicted by the guard repair need supersession notes",
+    "severity": "low",
+    "class": "a",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. 01-contract-kernel.md (disputed presentation; parked closure account), 02-architecture-selection.md §3 (surviving dispute), 03-company-capabilities.md (goal review; registry phase-meaning table lacks Fulfillment.delivering/delivered/failed/refunded and SalesAgreement.terminated_with_residuals; SalesAgreement.terminated wording; tie-break JSON sentence; CAP-42 routing and remedy_authorized row), 10-components-authority-traceability.md Removal rows.",
+    "required_contract": "Each sentence kept verbatim under a > **Superseded 2026-09-13.** note stating what the registry now enforces and citing the predicate id."
+  },
+  {
+    "source": "build-guard-repair lane return, 2026-09-13",
+    "owner": "orchestrator; next prose pass / B01",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "GR-02",
+    "title": "Seven other parked records lack the closure-account field Case gained",
+    "severity": "low",
+    "class": "a",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. Goal, Mission, Project, WorkflowRun, KnowledgeQuestion, Opportunity, WorkOrder have a parked phase whose criterion cannot require a closure account because no field exists.",
+    "required_contract": "Add parking_closure_account_ref → ReasonRecord to each, required by its parked criterion, mirroring Case; or record why parking that record needs no closure account."
+  },
+  {
+    "source": "build-guard-repair lane return, 2026-09-13",
+    "owner": "orchestrator; next prose pass / B01",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "GR-03",
+    "title": "No conformance evaluator: counterexamples are registry-level mutations, not executed instances",
+    "severity": "medium",
+    "class": "a",
+    "status": "Open by design. \"Paid with Fulfillment proposed must be rejected\" is asserted by guard content, not executed; no predicate interpreter exists. First B01 deliverable (~200 lines over the ops these criteria use) so every G counterexample becomes an executable instance fixture.",
+    "required_contract": "B01: a predicate evaluator over the 57 primitives plus instance fixtures for every G2/G4 counterexample, positive and negative, run by validate_contracts.py."
+  },
+  {
+    "source": "build-guard-repair lane return, 2026-09-13",
+    "owner": "orchestrator; next prose pass / B01",
+    "independent_recheck": null,
+    "implementation_evidence": null,
+    "id": "GR-04",
+    "title": "Pre-existing values.schema PredicateId drift",
+    "severity": "low",
+    "class": "a",
+    "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. 9 registry predicates absent from the PredicateId enum, 6 enum entries with no predicate; nothing checks either. Not introduced by the repair.",
+    "required_contract": "PredicateId enum derived from predicate-registry.json by the validator; drift fails."
+  },
+  {
+    "id": "RC-01",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "Fulfillment:failed reachable only via delivered->failed while its criterion demands not(native_correlated deli",
+    "class": "a",
+    "severity": "medium",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Edge delivering->failed with guard predicate, shared criterion consistent with both inbound edges; refunded reachable from failed and delivered; three of four routes pinned. Scope note: criterion.Fulfillment.refunded.v1 is a declared content gap, so the route exists and is attributable but a refund of an undelivered sale is not yet evidenced.",
+    "issue": "Fulfillment:failed reachable only via delivered->failed while its criterion demands not(native_correlated delivered); delivering exits only to delivered/superseded; refund of an undelivered sale unrepresentable. Introduced by the guard repair.",
+    "required_contract": "delivering->failed edge with its own criterion; refunded reachable from failed and from delivered; failed criterion consistent with its inbound edges.",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC-02",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "Criterion-content oracle pins registry to tools/phase_content.py (author-controlled), not to the corpus; one-h",
+    "class": "a",
+    "severity": "medium",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "OPEN (class a) after independent recheck G-02-recheck-02 (subject 3579cc2, 2026-09-13). The brief's exact attack (weaken the derivation, regenerate) is refused by name in 18 s by the pin containment check, and RC-03 catches it independently. But a sibling of the same one-hunk edit — each pinned conjunct disjoined with present(/payload/agreed_terms), a schema-required field — passes at exit 0, 269,592 checks, 31/31 fixtures rejecting, pin file untouched. See RC2-02.",
+    "issue": "Criterion-content oracle pins registry to tools/phase_content.py (author-controlled), not to the corpus; one-hunk weakening of the derivation plus author_phase_content.py reintroduces the whole G2-01 defect at exit 0 with 27/27 fixtures still rejecting.",
+    "required_contract": "Pin the G-class conjuncts as invariants that do not consult phase_content.py: a fixed assertion table (predicate id → required ops/bindings) checked by validate_contracts.py, with a negative fixture that mutates phase_content.py and must be rejected.",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC-03",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "spec() requires prose and conjuncts are never compared; a criterion can state one requirement and demand anoth",
+    "class": "b",
+    "severity": "low",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Check exists (validate_contracts.py requires/conjuncts agreement), refuses a real over-promise by name, 17 waivers narrow and individually justified. Stated limit: PATHS rule has a live population of 0 of 774; PHASES rule sees only backticked tokens (RC2-03).",
+    "issue": "spec() requires prose and conjuncts are never compared; a criterion can state one requirement and demand another.",
+    "required_contract": "A check that every noun in requires binding a field/phase appears in the conjuncts, or an explicit per-criterion waiver with reason.",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC-04",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "Negative-fixture suite has no count ratchet: 1 of 27 present → exit 0.",
+    "class": "b",
+    "severity": "low",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Both directions (declared-but-absent, present-but-undeclared) refused by name in the runner and in the validator. Denominator location is RC2-01.",
+    "issue": "Negative-fixture suite has no count ratchet: 1 of 27 present → exit 0.",
+    "required_contract": "Declared fixture count (or manifest) in the runner; fewer fixtures than declared fails.",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC-05",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "run_negative_fixtures.ROOT uses .resolve(), so a symlinked tools/ measures the symlink target.",
+    "class": "b",
+    "severity": "low",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Both symlink forms (tools/, contracts dir) refused. fixtures/negative is outside the guard (RC2-01).",
+    "issue": "run_negative_fixtures.ROOT uses .resolve(), so a symlinked tools/ measures the symlink target.",
+    "required_contract": "Use the un-resolved path or assert ROOT is not a symlink.",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC-06",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "Three *->performed edges carry no transition_basis and still carry native_correlated(\"performed\"); none pinned",
+    "class": "b",
+    "severity": "low",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). All three *->performed edges carry transition_basis(record.performed) and native_correlated(delivered); all three pinned citing RC-06 and AD-013.",
+    "issue": "Three *->performed edges carry no transition_basis and still carry native_correlated(\"performed\"); none pinned in REQUIRED_GUARD_OPS.",
+    "required_contract": "transition_basis on all three; native_correlated result delivered; pin them.",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC-07",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "terminated_with_residuals appears in no specification chapter.",
+    "class": "b",
+    "severity": "low",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Phase-meaning row at 03-company-capabilities.md:199 plus AD-014 supersession note at :205.",
+    "issue": "terminated_with_residuals appears in no specification chapter.",
+    "required_contract": "Prose row in 03 (GR-01 already owes the phase-meaning rows; include this one).",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC-08",
+    "source": "planning/reviews/G-02-recheck-01.md",
+    "review_subject": "f27c22e",
+    "title": "Fulfillment generic validated branch disjoint from the delivery branch; proposed->validated base-only.",
+    "class": "b",
+    "severity": "low",
+    "owner": "ratchet-pin lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Fulfillment:validated->delivering exists (edge.Fulfillment.validated.delivering.v1), pinned citing RC-08.",
+    "issue": "Fulfillment generic validated branch disjoint from the delivery branch; proposed->validated base-only.",
+    "required_contract": "validated->delivering edge, or retire validated for Fulfillment with a reason.",
+    "independent_recheck": "planning/reviews/G-02-recheck-02.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RP-01",
+    "source": "build-ratchet-pin lane return, 2026-09-13",
+    "review_subject": "docs/vision-ratchet-pin head",
+    "title": "TypedPredicate enum branches disagree with their predicate argument_schema; nothing compares them",
+    "severity": "medium",
+    "class": "a",
+    "owner": "contracts author; independent recheck after",
+    "status": "Open. 1,680 of 2,270 values.schema.json TypedPredicate branches disagree with the argument_schema of the predicate they name. Not introduced by the repair; found while pinning. A branch that admits arguments the predicate does not declare is a schema that validates instances the predicate cannot evaluate.",
+    "required_contract": "Derive TypedPredicate branches from predicate-registry.json argument_schema (as PredicateId now is) and fail on drift; negative fixture: one branch with an extra property → rejected.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC2-02",
+    "source": "planning/reviews/G-02-recheck-02.md",
+    "review_subject": "3579cc2",
+    "title": "A pinned conjunct is satisfied from inside a disjunction, so a pin can be emptied without being removed",
+    "class": "a",
+    "severity": "medium",
+    "owner": "contracts repair lane; independent recheck after",
+    "status": "OPEN (class a) after G-02-recheck-03 (subject 1bef187). Every stated element shipped: `disjoined` key, any-ancestry, ceiling 4, r14 fixture, refusal message names disjunction. The contract it serves is not met: RC3-01 shows `forall` is a further non-demanding context; RC3-02 shows a JsonValue slot is walked as if demanding. See RC3-01/02. | RC3-01/02 repaired at cfccbc8 (author-recorded); pending G-02-recheck-04. | recheck-04: RC3-01/02 closed; class continues as RC4-01/02 (the primitive table is the attack surface). | RC4-01/02 repaired at 6dcbc1b (pin-side ancestor allowlist + table digest); pending G-02-recheck-05. | recheck-05: closed against the registry author; the class continues as RC5-01/02 (the hand-written allowlist and the pin-coverage sweep).",
+    "issue": "polarised_nodes (validate_contracts.py:645-663) tracks only `not` ancestry; pin_row_matches (671-685) accepts a node inside an `any` as containment. One hunk in tools/phase_content.py disjoining each of the three pinned conjuncts of criterion.SalesAgreement.performed.v1 with present(/payload/agreed_terms) regenerates and validates at exit 0 with pins, fixtures and prose untouched; the criterion then demands nothing about delivery. 11 of 842 criteria carry an `any`; 4 of 44 live require rows (two on edge.GrievanceCase.received.triaged.v1, two on edge.ResponsibilityAssignment.proposed.accepted.v1) are today satisfied only under a disjunction, intentionally. RC-03's stated_paths_and_states (822-833) has the same blind spot.",
+    "required_contract": "Each `require` row states whether the conjunct must be demanded unconditionally or may sit under a disjunction (default unconditional), in the same shape as the existing `negated` key; polarised_nodes tracks `any` ancestry alongside `not`; a match under `any` is refused unless the row opts in; the four intentional rows opt in with a reason; a negative fixture carrying probe 9's hunk expects a message naming disjunction; apply the same to RC-03's walker or record in writing that it is containment-only by choice.",
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC2-01",
+    "source": "planning/reviews/G-02-recheck-02.md",
+    "review_subject": "3579cc2",
+    "title": "The fixture denominator lives inside the directory it measures; a symlinked fixtures/negative carries its own MANIFEST",
+    "class": "b",
+    "severity": "low",
+    "owner": "contracts repair lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). runner and validator both refuse a symlinked fixtures/negative; --self-test fails when the guard is reverted and takes the validator with it.",
+    "issue": "RC-05's guard covers tools/ and tools/.. only. fixtures/negative symlinked to a directory holding one fixture and a manifest declaring one: runner reports fixtures 1, declared 1, exit 0 — RC-04's original reading reproduced.",
+    "required_contract": "Extend the RC-05 symlink guard to FIXTURES (fixtures/negative must be a real directory) in the same loop, so one guard covers every path the runner derives a count from.",
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC2-03",
+    "source": "planning/reviews/G-02-recheck-02.md",
+    "review_subject": "3579cc2",
+    "title": "RC-03's phase rule is switched off by removing backticks; its path rule has a live population of zero",
+    "class": "b",
+    "severity": "low",
+    "owner": "contracts repair lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). all seven recorded scope numbers reproduce under the reviewer's own sweep (774 / 0 / 19 / 22 / 17 / 17-of-17 / 5-across-2).",
+    "issue": "PROSE_TOKEN requires backticks; removing three pairs from the requires sentence leaves it identical to a reader and invisible to the check (probe 10: 19 s stop became 662 s pass-through to the fixture stage). Corpus sweep: 0 of 774 criteria carry a field path in requires prose; 19 carry a related-record phase token, 17 waived.",
+    "required_contract": "State the rule's real scope (backticked tokens and literal /payload/ paths; live population 2 unwaived criteria) in pinned-conjuncts.json#/requires_waivers_why, then either widen it to the unbackticked phase vocabulary with a waiver list for false positives, or record the narrow scope as the accepted limit with its number.",
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC2-04",
+    "source": "planning/reviews/G-02-recheck-02.md",
+    "review_subject": "3579cc2",
+    "title": "A fixture count mismatch is reported under the wrong headline",
+    "class": "c",
+    "severity": "low",
+    "owner": "contracts repair lane",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). a count mismatch now reports under the ratchet headline; a genuinely leaking fixture still gets the generic wrapper.",
+    "issue": "When the runner exits non-zero the generic wrapper at validate_contracts.py:891 fires before the dedicated ratchet comparison at :903, so a manifest mismatch surfaces as 'a negative fixture was not rejected; the check it names is gone' with the correct JSON only as detail.",
+    "required_contract": "Branch on the runner payload before asserting: if it carries check = 'negative fixture count ratchet (RC-04)', raise the ratchet message.",
+    "independent_recheck": "planning/reviews/G-02-recheck-03.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC3-01",
+    "source": "planning/reviews/G-02-recheck-03.md",
+    "review_subject": "1bef187",
+    "title": "`forall` is a non-demanding context the pin walker does not track; three pinned conjuncts moved inside a vacuous forall validate at exit 0",
+    "class": "a",
+    "severity": "medium",
+    "owner": "contracts repair lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-04, subject a41bf73, 2026-09-13). The named hunks are refused; the defect class continues one layer out as RC4-01/02.",
+    "issue": "Four primitives take a boolean child (all, any, not, forall); polarised_nodes handles three. Moving the three pinned conjuncts of criterion.SalesAgreement.performed.v1 verbatim inside forall(items=path(/payload/obligation_refs)) — a field records.schema.json requires with no minItems, so [] is valid — regenerates and validates at exit 0, 269,708 checks, 33/33 fixtures, pin file and requires prose untouched; the walker reports all three negated=False disjoined=False. RC-03 shares the walker and is blind too.",
+    "required_contract": "Derive demanding positions from primitive-registry.json (each primitive declares which child slots are demanding, and under what condition — e.g. forall is demanding only when the collection is demanded non-empty) and refuse any operator or slot the table does not recognise, the rule the same file applies at lines ~290 and ~752; negative fixture carrying the forall hunk expecting a message naming the quantifier; apply to RC-03's walker.",
+    "independent_recheck": "planning/reviews/G-02-recheck-04.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC3-02",
+    "source": "planning/reviews/G-02-recheck-03.md",
+    "review_subject": "1bef187",
+    "title": "A conjunct buried in a JsonValue slot (e.g. present's `value`) is walked as if demanded",
+    "class": "a",
+    "severity": "medium",
+    "owner": "contracts repair lane; independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-04, subject a41bf73, 2026-09-13). The named hunks are refused; the defect class continues one layer out as RC4-01/02.",
+    "issue": "The walker reaches every dict value, so a pinned op placed inside a value slot that is data, not a predicate position, satisfies the pin; registry-level exit 0 on that arm.",
+    "required_contract": "Same root cause as RC3-01: walk only the predicate positions the primitive registry declares; never descend into value slots; fixture for the buried-op form.",
+    "independent_recheck": "planning/reviews/G-02-recheck-04.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC3-03",
+    "source": "planning/reviews/G-02-recheck-03.md",
+    "review_subject": "1bef187",
+    "title": "The leak wrapper attaches a blind stdout[-2000:] so the first fixture's 'failed for the wrong reason' line is truncated out",
+    "class": "c",
+    "severity": "low",
+    "owner": "contracts repair lane",
+    "status": "CLOSED by independent recheck (G-02-recheck-04). Residual RC4-05/06 registered separately.",
+    "issue": "Measured: 0 occurrences of the diagnostic line survive the truncation on a multi-fixture leak.",
+    "required_contract": "Attach the runner's structured payload (leaked list with reasons) rather than a byte-sliced stdout tail.",
+    "independent_recheck": "planning/reviews/G-02-recheck-04.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC4-02",
+    "source": "planning/reviews/G-02-recheck-04.md",
+    "review_subject": "a41bf73",
+    "title": "A newly registered primitive declaring its own boolean child `demanded` wraps the pinned conjuncts and validates at exit 0",
+    "class": "a",
+    "severity": "high",
+    "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
+    "status": "CLOSED against the registry author by G-02-recheck-05 (the pin consults nothing a registry author controls, under every probe); OPEN one layer out as RC5-01 (the allowlist itself). | F2-06-recheck-01 (0ea10c1): RC5-01 closed — the lineage terminates at a closed literal in the checker; the residual is the review tier of that file (trivial/shadow), stated in the disposition.",
+    "issue": "Register a primitive with argument_positions marking its predicate child demanded; wrap the three pinned conjuncts of criterion.SalesAgreement.performed.v1 in it; regenerate: exit 0, 288,665 checks, 36/36 fixtures. obligation_refs has no minItems so the sale reaches performed naming no Fulfillment. The walker trusts whatever the registry declares.",
+    "required_contract": "Pin-side allowlist: pinned-conjuncts.json declares, per pinned row, the exact set of ancestor operators under which the conjunct counts as demanded (default: {all} only, `not` per polarity), and the walker refuses any other ancestor regardless of the registry's declaration. The registry's argument_positions may classify slots but may never widen what satisfies a pin. Negative fixture: the RC4-02 primitive, expecting a message naming the ancestor operator.",
+    "independent_recheck": "planning/reviews/G-02-recheck-05.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC4-01",
+    "source": "planning/reviews/G-02-recheck-04.md",
+    "review_subject": "a41bf73",
+    "title": "One string in primitive-registry.json (`forall` predicate position → `demanded`) makes the RC3-01 body pass every pin; nothing pins the table",
+    "class": "a",
+    "severity": "high",
+    "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
+    "issue": "288,646 checks, pins satisfied, RC-03 silent, census under_quantifier 0 because the census reads the same table; caught only by the single fixture that names forall, and the message names the fixture not the table.",
+    "required_contract": "Record a content hash of primitive-registry.json's argument_positions in pinned-conjuncts.json (hand-maintained) and fail with a message naming the table when it drifts; with RC4-02's allowlist the table edit becomes non-widening by construction, and the hash makes the edit visible.",
+    "independent_recheck": "planning/reviews/G-02-recheck-05.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC4-03",
+    "source": "planning/reviews/G-02-recheck-04.md",
+    "review_subject": "a41bf73",
+    "title": "The fixture suite has a declared denominator and no floor",
+    "class": "b",
+    "severity": "medium-high",
+    "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
+    "issue": "Moving 34 of 36 fixtures out of the tree and out of MANIFEST.json in one edit: exit 0, checks 288,620, byte-identical verdict with negative_fixtures_rejected: 2.",
+    "required_contract": "A hand-written floor on the manifest count in validate_contracts.py (as the pins have 25/44/6), raised whenever a fixture is added and never lowered without a recorded reason; the verdict must print the floor beside the count.",
+    "independent_recheck": "planning/reviews/G-02-recheck-05.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC4-04",
+    "source": "planning/reviews/G-02-recheck-04.md",
+    "review_subject": "a41bf73",
+    "title": "The quantifier refusal advises demanding the collection non-empty on the same path; doing exactly that is refused with the same message",
+    "class": "b",
+    "severity": "medium",
+    "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
+    "issue": "Measured both ways.",
+    "required_contract": "Either accept a forall whose items path is demanded non-empty by a sibling nonempty_fields/count conjunct on the same path (and say so in the table), or change the message to say what is actually accepted.",
+    "independent_recheck": "planning/reviews/G-02-recheck-05.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC4-05",
+    "source": "planning/reviews/G-02-recheck-04.md",
+    "review_subject": "a41bf73",
+    "title": "The leak headline is false for a wrong-reason leak",
+    "class": "b",
+    "severity": "medium",
+    "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
+    "issue": "Measured both ways: a fixture rejected for the wrong reason is reported under the 'not rejected' headline.",
+    "required_contract": "Distinguish 'not rejected' from 'rejected for the wrong reason' in the headline; the payload already carries the reason.",
+    "independent_recheck": "planning/reviews/G-02-recheck-05.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC4-06",
+    "source": "planning/reviews/G-02-recheck-04.md",
+    "review_subject": "a41bf73",
+    "title": "An exception in run_fixture kills the suite after 17 fixtures reported ok and re-enters the blind-tail path RC3-03 removed",
+    "class": "b",
+    "severity": "medium",
+    "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
+    "issue": "Reproduced by raising inside run_fixture.",
+    "required_contract": "Catch per-fixture exceptions as that fixture's failure with its id and the exception text; never fall back to a transcript tail.",
+    "independent_recheck": "planning/reviews/G-02-recheck-05.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC4-07",
+    "source": "planning/reviews/G-02-recheck-04.md",
+    "review_subject": "a41bf73",
+    "title": "Deleting the census and its three floors costs 3 checks and exits 0",
+    "class": "c",
+    "severity": "low",
+    "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
+    "status": "CLOSED for the measured move by G-02-recheck-05; a plausible hand-written census literal still passes (24 checks' cost) and the file admits that class.",
+    "issue": "",
+    "required_contract": "Floor the census presence the way pins are floored, or pin the census keys in pinned-conjuncts.json.",
+    "independent_recheck": "planning/reviews/G-02-recheck-05.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC5-01",
+    "source": "planning/reviews/G-02-recheck-05.md",
+    "review_subject": "bcfd658",
+    "title": "admissible_ancestors has no ceiling, no pinned membership and no verdict line; one hunk registering a demanding primitive, admitting it, and re-pinning the digest restores G2-01 at exit 0",
+    "class": "a",
+    "severity": "high",
+    "owner": "contracts repair lane (after r6-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-01, subject 0ea10c1, 2026-09-14): replay of the exact hunk exits 1 naming the literal in validate_contracts.py. Standing note from the recheck: the classifier tiers validate_contracts.py trivial/shadow under docs/**, so the terminal control is a review convention, not an enforced tier.",
+    "issue": "299,409 checks, 30 more than baseline, 56/56 fixtures.",
+    "required_contract": "Make the admissible-ancestor set a closed literal in validate_contracts.py (exactly {all, not-per-polarity, any-per-disjoined}); the JSON block becomes documentation checked for equality against that literal, so widening it requires editing the validator — a harness self-edit the repository classifies as a blocking tier requiring human review; print the set in the verdict; fixture for the RC5-01 hunk expecting a message naming the literal.",
+    "independent_recheck": "planning/reviews/F2-06-recheck-01.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC5-02",
+    "source": "planning/reviews/G-02-recheck-05.md",
+    "review_subject": "bcfd658",
+    "title": "32 of 57 pins and 72 of 119 rows can be deleted at exit 0 because the coverage sweep reads only G#-## and RC-## ids",
+    "class": "a",
+    "severity": "high",
+    "owner": "contracts repair lane (after r6-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-01, subject 0ea10c1, 2026-09-14): bulk deletion of 37 of 67 pins refused BY NAME before any count (A PINNED FINDING LOST ITS LAST PIN). Standing note from the recheck: the classifier tiers validate_contracts.py trivial/shadow under docs/**, so the terminal control is a review convention, not an enforced tier.",
+    "issue": "The pins citing A*-M*, AS-X-*, F6*-* ids are guarded only by the 25/44 floor set when the table was 25/44.",
+    "required_contract": "Extend FINDING_ID to every id family a pin may cite (G, RC, RCn, AT/AC/AE/AX/AS, F6A-D) and require every registered finding in planning/F2/reviews/*.md and planning/reviews/F2-06-*.md that a pin claims to be pinned or declared unpinnable; raise the floors to the current 57/119 and make the floor a value the verdict prints beside the count; fixture: delete one A*-cited pin → refused by name.",
+    "independent_recheck": "planning/reviews/F2-06-recheck-01.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "RC5-03",
+    "source": "planning/reviews/G-02-recheck-05.md",
+    "review_subject": "bcfd658",
+    "title": "admissible_ancestors_not_admitted is read by nothing",
+    "class": "b",
+    "severity": "medium",
+    "owner": "contracts repair lane (after r6-contracts lands); independent recheck after",
+    "status": "CLOSED at specification level by independent recheck (F2-06-recheck-01, subject 0ea10c1, 2026-09-14): forall in both tables refused by the sibling key even with the checker literal widened. Standing note from the recheck: the classifier tiers validate_contracts.py trivial/shadow under docs/**, so the terminal control is a review convention, not an enforced tier.",
+    "issue": "Adding forall to the admitting key while that block still forbids it passes at exit 0.",
+    "required_contract": "Either read the block (refuse an operator present in both) or delete it; prose that names an attack and is enforced by nothing is the decorative-declaration class the package names.",
+    "independent_recheck": "planning/reviews/F2-06-recheck-01.md",
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6X-01",
+    "source": "r6-contracts builder return, 2026-09-14",
+    "review_subject": "9d60596",
+    "title": "Three records declaring an exclusive factory name a command the command registry does not contain",
+    "class": "b",
+    "severity": "low",
+    "owner": "contracts author; independent recheck after",
+    "status": "Open; pre-existing, found while adding EffectIdentity's natural key; recorded rather than widened",
+    "issue": "Three of the nine records that already declare an exclusive factory name a command absent from command-registry.json.",
+    "required_contract": "Register the commands or retire the declarations; add a validator check that every exclusive_factory resolves.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6X-02",
+    "source": "r6-contracts builder return, 2026-09-14",
+    "review_subject": "9d60596",
+    "title": "ConstraintSet.boundary_kind is a free string and OperatorProjection has no contested-refs field (F6B-02 residue)",
+    "class": "b",
+    "severity": "low",
+    "owner": "chapters + contracts authors",
+    "status": "Chapter half repaired by r7-prose-b (8deb320): 05 §5 states the closed 8-member boundary_kind set and the required contested_refs field (names in planning/F2/08-repair-names-prose-b.md); contracts half owed to the next contracts lane, which registers exactly those strings. Author-recorded; recheck owed.",
+    "issue": "Two clauses of F6B-02's required contract not implemented for that reason.",
+    "required_contract": "05 §5 states the closed boundary_kind set and the contested-refs field; contracts then register them.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6R-01",
+    "source": "planning/reviews/F2-06-recheck-01.md",
+    "review_subject": "0ea10c1",
+    "title": "`unanswered`'s gloss claims repairs that do not exist",
+    "class": "a",
+    "severity": "medium",
+    "owner": "contracts lane (checker); orchestrator (register entries)",
+    "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
+    "issue": "The comment above UNANSWERED_CEILING = 37 says the 37 are Step 6 findings whose repair landed as a check rather than a conjunct; measured, three of them (named in the recheck §5/§9) have no repair anywhere. The ceiling correctly stops the list growing; the sentence beside it tells a reader the list is a list of repairs delivered elsewhere.",
+    "proposed_repair": "Split `unanswered` into two declared sets in pinned-conjuncts.json — answered outside the pin machinery (with the file and the check that answers it) and not answered — each with its own bound, or drop the causal clause from the comment and say only what the count is.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6R-02",
+    "source": "planning/reviews/F2-06-recheck-01.md",
+    "review_subject": "0ea10c1",
+    "title": "The terminal control sits at the repository's lowest review tier, and the block that argues from that fact does not name it",
+    "class": "b",
+    "severity": "medium",
+    "owner": "contracts lane (checker); orchestrator (register entries)",
+    "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
+    "issue": "RC5-01's repair argues that editing validate_contracts.py is 'the expensive act by construction'. Measured: node scripts/classify.mjs tiers that file trivial · shadow (matched docs/**). No risk label is required and the binding gate asks for a session file, not a tier. The package states the tier fact once, in HANDOFF-F2-agents-work-layer.md line 141, not in the block that depends on it.",
+    "proposed_repair": "One sentence in the RC5-01 comment block recording that the file is trivial under .claude/qa-tier-floor.yml and that the expense is a review convention rather than an enforced tier — or a tier-floor entry naming docs/vision-system/planning/specification/contracts/validate_contracts.py.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6R-03",
+    "source": "planning/reviews/F2-06-recheck-01.md",
+    "review_subject": "0ea10c1",
+    "title": "The coverage rule's register denominator holds 2 of 54 Step 6 findings",
+    "class": "b",
+    "severity": "low",
+    "owner": "contracts lane (checker); orchestrator (register entries)",
+    "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
+    "issue": "The rule that demands a finding be pinned or excused iterates registers/review-findings.json, which carries the two residue findings of the 54 Step 6 findings. The other 52 are reached only because finding_sources happens to declare all 54, and no check asserts that it does.",
+    "proposed_repair": "Assert that every Step 6 finding id appearing in the swept F2-06 review documents is a key of finding_sources, so the unanswered ceiling's denominator cannot silently shrink; or register the Step 6 findings (each then needs a pin or an honest unpinnable row).",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6R-04",
+    "source": "planning/reviews/F2-06-recheck-01.md",
+    "review_subject": "0ea10c1",
+    "title": "A hand mutation of a control-object required list is caught by the drift oracle, not by the rule written for it",
+    "class": "c",
+    "severity": "low",
+    "owner": "contracts lane (checker); orchestrator (register entries)",
+    "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
+    "issue": "Removing protected_change_ref from ConsequenceClassDefinition's required_fields and schema required by hand exits 1 at 'criterion content drifts from its derivation', never reaching the control-object message (recheck §1); the committed fixture reaches it only because it declares regenerate_from_derivation and rederive_from_registries. Refused either way — message quality, not a bypass.",
+    "proposed_repair": "None required. If acted on, note in the control-object block that a hand edit surfaces as drift and that the named message is reachable only after re-derivation.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
+    "independent_recheck": null,
+    "implementation_evidence": null
+  },
+  {
+    "id": "F6V-01",
+    "class": "a",
+    "severity": "medium",
+    "source": "planning/reviews/F2-06-recheck-02.md",
+    "review_subject": "38a3421",
+    "owner": "prose lane (07 §6, 02 §9 line ~188) or contracts lane (comparison conjunct + divergence field)",
+    "status": "Repaired, author-recorded: 02 half by r7-prose-a (cbc9d72), 07 §6 half by r7-prose-b (c5e60d0) — both say the divergence is readable, not stored; 05 §13 row 9 wording still owed (noted by prose-b); independent recheck owed. Not blocking under protocol §8.",
+    "issue": "07 §6 states that the launch-count conjunct on the run's * → accepted edge records the divergence; pinned-conjuncts.json states that the divergence is deliberately NOT stored, with a reason. Two artifacts describe one conjunct and disagree about what it does; guard.launch.actual_compared_to_expected contains no comparison operator.",
+    "proposed_repair": "Amend 07 §6 to say that both counts are demanded at run close and the divergence is readable from the record rather than stored, carrying the pin's reason; or add the comparison conjunct and the divergence field the chapter currently promises. 02 line ~188's 'checked against actual' moves with it.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6V-02",
+    "class": "b",
+    "severity": "low",
+    "source": "planning/reviews/F2-06-recheck-02.md",
+    "review_subject": "38a3421",
+    "owner": "contracts lane",
+    "status": "Open; found by F2-06-recheck-02 §3 (2026-09-14). Not blocking under protocol §8.",
+    "issue": "record-registry.json declares EffectIdentity's identity.natural_key_rule as RESOLVE-OR-CREATE on the triple, but kernel.record.register in command-registry.json says nothing about natural keys or resolution; the create path is specified identically to every other record's.",
+    "proposed_repair": "Either set EffectIdentity.registration.exclusive_factory to a command that performs resolve-or-create, or state in kernel.record.register's contract that a registration against a record declaring identity.natural_key resolves to the existing head rather than creating a second — and add a check that every record with a natural key names a create path that honours it.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6V-03",
+    "class": "a",
+    "severity": "medium",
+    "source": "planning/reviews/F2-06-recheck-02.md",
+    "review_subject": "38a3421",
+    "owner": "prose lane (02 §8 row, 05 §124)",
+    "status": "Repaired, author-recorded: 02 §8 row by r7-prose-a (cbc9d72), 05 §124 by r7-prose-b (d734124), identical threshold wording, DESIGN PROPOSAL placeholder owned by the founder; independent recheck owed. Not blocking under protocol §8.",
+    "issue": "02 §9 foundation 6 quantifies the reopen condition (at most five distinct worker shapes account for 90% or more of admitted work orders over one month) while the layer-4 removal criterion it inherits from still reads 'a small stable set over a month' in 02 §8 and 05 §124 — one observable, two thresholds; the unquantified one is the pre-declared negative control against the design's own thesis.",
+    "proposed_repair": "Carry foundation 6's five-shapes-at-90%-over-one-month into the layer-4 removal criterion at 02 §8 and 05 §124, with the same DESIGN PROPOSAL placeholder label and owner; or mark the removal criterion UNKNOWN — founder parameter with a packet id and state that the reopen condition's numbers do not govern it.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6V-04",
+    "class": "b",
+    "severity": "low",
+    "source": "planning/reviews/F2-06-recheck-02.md",
+    "review_subject": "38a3421",
+    "owner": "prose lane (04 §117, 05 §192)",
+    "status": "Repaired by r7-prose-a (a42c5d7, author-recorded): 04 §117 restates the two properties as SPECIFICATION; independent recheck owed. Not blocking under protocol §8.",
+    "issue": "The refusal-sample disposition rests on encounter-stratum properties (adverse/abandoned/underserved stratum; recorded seed; write-authority exclusion; empty-strata rule) that are stated only in 04 §107, a DESIGN PROPOSAL paragraph; 04 §117 (SPECIFICATION) adopts the four encounter kinds but does not restate the strata or the sampling rule.",
+    "proposed_repair": "Restate in 04 §117, as SPECIFICATION, the two properties the refusal-sample disposition depends on — that the customer-material encounter carries an adverse/abandoned/underserved stratum, and that selection within strata uses the recorded seed outside the producing path — or have 05 §192 cite §117 rather than the proposal.",
+    "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
   }
- },
- {
-  "id": "XSR-03",
-  "source": "planning/reviews/F-cross-scope-01.md",
-  "review_subject": "51de3b46ace20ede0d6eee47aab34a2678c314d2",
-  "title": "Fulfillment routes retain unresolved vendor choice after selection",
-  "severity": "low",
-  "owner": "orchestrator integration; isolated author and independent reviewer",
-  "status": "Independent recheck at cb4bf52: CLOSED at specification level with one named residue (R-NATIVE, tracked as XSR-R-03). 0 placeholder phrases; 150/150 capability route refs resolve; all 11 routes carry admission checks; R-PERSON/R-REMEDY correctly preserve the human performer as unknown.",
-  "required_contract": "R-routes delegate to selected versioned IC contracts; preserve unimplemented and actual-account/endpoint/funding/engagement unknowns.",
-  "resolution": {
-   "source_commit": "d9652586a35940615cfa278f6cfaeca8df1e1124",
-   "root_commit": "a66f2ae",
-   "artifact": "planning/specification/capabilities.json#/fulfillment_routes",
-   "scope": "11 routes delegate to selected specification contracts and explicit remaining admission facts; no actual availability or provider authorization."
-  },
-  "independent_recheck": {
-   "source": "planning/reviews/F-cross-scope-03.md",
-   "subject": "cb4bf52",
-   "disposition": "closed at specification level",
-   "residue": [
-    "XSR-R-03"
-   ],
-   "computed": "11 routes × (performer, admission, unavailable-state) table in the archived report"
-  },
-  "implementation_evidence": null
- },
- {
-  "source": "planning/reviews/F-cross-scope-03.md",
-  "review_subject": "cb4bf52",
-  "owner": "orchestrator integration; isolated author and independent reviewer",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "XSR-R-01",
-  "title": "Bindings cite a subcase whose family_ref is absent from the answer's declared verification_family_refs",
-  "severity": "medium",
-  "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. All 88 bindings were examined against their question text: in every one the BINDING was the semantically right subcase and the DECLARED FAMILY was the stale artifact — verification_family_refs held a coarse three-family block assigned by source field (work answers WK-T01/02/03, knowledge answers WK-T04/05/06(+07)), not the module that exercises the answer. The declared field is therefore derived from the bindings now: exactly the families of the subcases the answer binds. 268 of 268 answers were corrected (the 88-binding metric and the stricter set-equality metric are both 0). No family was added to any answer that does not bind it.",
-  "required_contract": "Every binding's subcase family must appear in its answer's verification_family_refs, or the declared families must be corrected; a planned test module must be the one that actually exercises the answer.",
-  "author_repair": {
-   "branch": "docs/vision-xsr-residue",
-   "decision": "binding right, declaration wrong, in all 88",
-   "bindings_outside_declared_before": 88,
-   "bindings_outside_declared_after": 0,
-   "answers_corrected": 268,
-   "recompute": "node scripts/vision-wk-bindings.mjs verify"
-  }
- },
- {
-  "source": "planning/reviews/F-cross-scope-03.md",
-  "review_subject": "cb4bf52",
-  "owner": "orchestrator integration; isolated author and independent reviewer",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "XSR-R-02",
-  "title": "procedure, positive_control and execution_boundary are one identical string across all 54 subcases",
-  "severity": "low",
-  "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. positive_control and execution_boundary are now per subcase: 56 distinct strings each, every one naming its own stimulus's ordinary authorized counterpart and the specific observation that must come out of it, so applying one to a different subcase observes the wrong thing or nothing. procedure remains ONE shared text and now says so: shared_control_groups declares SCG-REGISTRATION-PROCEDURE over all 56 with the reason that procedure states a registration discipline identical in every case, and records that the other two fields are covered by no group. Undeclared sharing is now a failure (C1/C2) rather than a default.",
-  "required_contract": "Per-subcase positive control and execution boundary that would be observably wrong for a different subcase, or an explicit statement of why one shared control is sufficient for a named group.",
-  "author_repair": {
-   "branch": "docs/vision-xsr-residue",
-   "distinct_positive_control": 56,
-   "distinct_execution_boundary": 56,
-   "shared_groups": [
-    "SCG-REGISTRATION-PROCEDURE (procedure, all 56, reason recorded)"
-   ],
-   "recompute": "node scripts/vision-wk-bindings.mjs verify"
-  }
- },
- {
-  "source": "planning/reviews/F-cross-scope-03.md",
-  "review_subject": "cb4bf52",
-  "owner": "orchestrator integration; isolated author and independent reviewer",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "XSR-R-03",
-  "title": "R-NATIVE selected_route_ids lists three profiles while its version string selects one",
-  "severity": "low",
-  "status": "AUTHOR-REPAIRED on docs/vision-xsr-residue. R-NATIVE.selected_route_ids is [N-CLAUDE-SUPPLIED/v1]; N-CLAUDE-MEDIATED/v1 and N-CODEX-SUPPLIED/v1 moved to a new candidate_route_ids field with a candidate_admission sentence saying they are defined, unselected and each awaiting its own exact-profile admission. The version string is now IC1.0 / N-CLAUDE-SUPPLIED/v1 and names no unselected profile, so both views derive the same set. capabilities.json had no prior candidate convention; candidate_route_ids is added to all 11 routes (empty where none) so a consumer never reads undefined. implementation_boundary was rewritten to name the selection rather than list all three. 07-integrations-capacity.md, which DEFINES the three profiles, is unchanged - another lane owns it, and defining a profile is not selecting it.",
-  "required_contract": "One selected profile in selected_route_ids with the other two as candidate_route_ids awaiting admission, or the version string widened to match; consumers of either field must derive the same set.",
-  "author_repair": {
-   "branch": "docs/vision-xsr-residue",
-   "selected": [
-    "N-CLAUDE-SUPPLIED/v1"
-   ],
-   "candidates": [
-    "N-CLAUDE-MEDIATED/v1",
-    "N-CODEX-SUPPLIED/v1"
-   ],
-   "enforced_by": "vision-wk-bindings.mjs verify check R1: selected and candidate sets disjoint, and any profile id named in a selected_contracts.version string equals the selected set",
-   "recompute": "node scripts/vision-wk-bindings.mjs verify"
-  }
- },
- {
-  "source": "planning/reviews/F-cross-scope-03.md",
-  "review_subject": "cb4bf52",
-  "owner": "orchestrator integration; isolated author and independent reviewer",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "XSR-R-04",
-  "title": "Seven assertions bound by no answer",
-  "severity": "informational",
-  "status": "STILL OPEN, deliberately untouched. The XSR-02/R-01/R-02/R-03 repairs bound none of the seven: WK-V04-A3, WK-V09-A3, WK-V20-A3, WK-V23-A3, WK-V26-A2, WK-V33-A3 and WK-V43-A1 are still defined and unused, and the count is still 7 after the repair (the four assertions added with WK-V55/WK-V56 are all bound). Each of the seven would need a judgement about which answer it verifies, which is a new authoring decision rather than a consequence of these repairs. Reported by the same command that computes the rest.",
-  "required_contract": "Bind each to the answer it verifies, or remove it with a reason; an unused assertion is either a missed join or dead weight.",
-  "author_repair": {
-   "branch": "docs/vision-xsr-residue",
-   "action": "none - no repair naturally bound one",
-   "unbound_before": 7,
-   "unbound_after": 7,
-   "recompute": "node scripts/vision-wk-bindings.mjs verify"
-  }
- },
- {
-  "id": "G1-06b",
-  "source": "scripts/vision-record-registry.mjs verify (g1-coverage lane census, 2026-09-13)",
-  "review_subject": "docs/vision-g1-coverage head",
-  "title": "Eleven further record types named nowhere outside contracts/ under the stricter census",
-  "severity": "low",
-  "class": "a",
-  "owner": "canonical contract author; independent reviewer after repair",
-  "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. Census at 755c59c (after the g1 and g-prose merges) finds 8 further contract-only records: EvaluationCase, IndexSnapshot, ExperienceArtifact, BuildArtifact, Partnership, ContinuityArrangement, Constraint, AccessGraph. Was 11 at eb6eb66; the prose lane named SecurityCase, CandidateAssessment and Defect while writing phase meanings.",
-  "required_contract": "Each carries a justification object: a source concern whose meaning requires it, or derived_control_machinery with the owning record and obligation. Constraint and Defect are directive §8.11 subjects and can cite DIRECTIVE.md.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- },
- {
-  "source": "build-guard-repair lane return, 2026-09-13",
-  "owner": "orchestrator; next prose pass / B01",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "GR-01",
-  "title": "Nine specification sentences now contradicted by the guard repair need supersession notes",
-  "severity": "low",
-  "class": "a",
-  "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. 01-contract-kernel.md (disputed presentation; parked closure account), 02-architecture-selection.md §3 (surviving dispute), 03-company-capabilities.md (goal review; registry phase-meaning table lacks Fulfillment.delivering/delivered/failed/refunded and SalesAgreement.terminated_with_residuals; SalesAgreement.terminated wording; tie-break JSON sentence; CAP-42 routing and remedy_authorized row), 10-components-authority-traceability.md Removal rows.",
-  "required_contract": "Each sentence kept verbatim under a > **Superseded 2026-09-13.** note stating what the registry now enforces and citing the predicate id."
- },
- {
-  "source": "build-guard-repair lane return, 2026-09-13",
-  "owner": "orchestrator; next prose pass / B01",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "GR-02",
-  "title": "Seven other parked records lack the closure-account field Case gained",
-  "severity": "low",
-  "class": "a",
-  "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. Goal, Mission, Project, WorkflowRun, KnowledgeQuestion, Opportunity, WorkOrder have a parked phase whose criterion cannot require a closure account because no field exists.",
-  "required_contract": "Add parking_closure_account_ref → ReasonRecord to each, required by its parked criterion, mirroring Case; or record why parking that record needs no closure account."
- },
- {
-  "source": "build-guard-repair lane return, 2026-09-13",
-  "owner": "orchestrator; next prose pass / B01",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "GR-03",
-  "title": "No conformance evaluator: counterexamples are registry-level mutations, not executed instances",
-  "severity": "medium",
-  "class": "a",
-  "status": "Open by design. \"Paid with Fulfillment proposed must be rejected\" is asserted by guard content, not executed; no predicate interpreter exists. First B01 deliverable (~200 lines over the ops these criteria use) so every G counterexample becomes an executable instance fixture.",
-  "required_contract": "B01: a predicate evaluator over the 57 primitives plus instance fixtures for every G2/G4 counterexample, positive and negative, run by validate_contracts.py."
- },
- {
-  "source": "build-guard-repair lane return, 2026-09-13",
-  "owner": "orchestrator; next prose pass / B01",
-  "independent_recheck": null,
-  "implementation_evidence": null,
-  "id": "GR-04",
-  "title": "Pre-existing values.schema PredicateId drift",
-  "severity": "low",
-  "class": "a",
-  "status": "Repaired on docs/vision-residue, merged 2026-09-13; pending independent recheck. Open. 9 registry predicates absent from the PredicateId enum, 6 enum entries with no predicate; nothing checks either. Not introduced by the repair.",
-  "required_contract": "PredicateId enum derived from predicate-registry.json by the validator; drift fails."
- },
- {
-  "id": "RC-01",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "Fulfillment:failed reachable only via delivered->failed while its criterion demands not(native_correlated deli",
-  "class": "a",
-  "severity": "medium",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Edge delivering->failed with guard predicate, shared criterion consistent with both inbound edges; refunded reachable from failed and delivered; three of four routes pinned. Scope note: criterion.Fulfillment.refunded.v1 is a declared content gap, so the route exists and is attributable but a refund of an undelivered sale is not yet evidenced.",
-  "issue": "Fulfillment:failed reachable only via delivered->failed while its criterion demands not(native_correlated delivered); delivering exits only to delivered/superseded; refund of an undelivered sale unrepresentable. Introduced by the guard repair.",
-  "required_contract": "delivering->failed edge with its own criterion; refunded reachable from failed and from delivered; failed criterion consistent with its inbound edges.",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC-02",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "Criterion-content oracle pins registry to tools/phase_content.py (author-controlled), not to the corpus; one-h",
-  "class": "a",
-  "severity": "medium",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "OPEN (class a) after independent recheck G-02-recheck-02 (subject 3579cc2, 2026-09-13). The brief's exact attack (weaken the derivation, regenerate) is refused by name in 18 s by the pin containment check, and RC-03 catches it independently. But a sibling of the same one-hunk edit — each pinned conjunct disjoined with present(/payload/agreed_terms), a schema-required field — passes at exit 0, 269,592 checks, 31/31 fixtures rejecting, pin file untouched. See RC2-02.",
-  "issue": "Criterion-content oracle pins registry to tools/phase_content.py (author-controlled), not to the corpus; one-hunk weakening of the derivation plus author_phase_content.py reintroduces the whole G2-01 defect at exit 0 with 27/27 fixtures still rejecting.",
-  "required_contract": "Pin the G-class conjuncts as invariants that do not consult phase_content.py: a fixed assertion table (predicate id → required ops/bindings) checked by validate_contracts.py, with a negative fixture that mutates phase_content.py and must be rejected.",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC-03",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "spec() requires prose and conjuncts are never compared; a criterion can state one requirement and demand anoth",
-  "class": "b",
-  "severity": "low",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Check exists (validate_contracts.py requires/conjuncts agreement), refuses a real over-promise by name, 17 waivers narrow and individually justified. Stated limit: PATHS rule has a live population of 0 of 774; PHASES rule sees only backticked tokens (RC2-03).",
-  "issue": "spec() requires prose and conjuncts are never compared; a criterion can state one requirement and demand another.",
-  "required_contract": "A check that every noun in requires binding a field/phase appears in the conjuncts, or an explicit per-criterion waiver with reason.",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC-04",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "Negative-fixture suite has no count ratchet: 1 of 27 present → exit 0.",
-  "class": "b",
-  "severity": "low",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Both directions (declared-but-absent, present-but-undeclared) refused by name in the runner and in the validator. Denominator location is RC2-01.",
-  "issue": "Negative-fixture suite has no count ratchet: 1 of 27 present → exit 0.",
-  "required_contract": "Declared fixture count (or manifest) in the runner; fewer fixtures than declared fails.",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC-05",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "run_negative_fixtures.ROOT uses .resolve(), so a symlinked tools/ measures the symlink target.",
-  "class": "b",
-  "severity": "low",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Both symlink forms (tools/, contracts dir) refused. fixtures/negative is outside the guard (RC2-01).",
-  "issue": "run_negative_fixtures.ROOT uses .resolve(), so a symlinked tools/ measures the symlink target.",
-  "required_contract": "Use the un-resolved path or assert ROOT is not a symlink.",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC-06",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "Three *->performed edges carry no transition_basis and still carry native_correlated(\"performed\"); none pinned",
-  "class": "b",
-  "severity": "low",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). All three *->performed edges carry transition_basis(record.performed) and native_correlated(delivered); all three pinned citing RC-06 and AD-013.",
-  "issue": "Three *->performed edges carry no transition_basis and still carry native_correlated(\"performed\"); none pinned in REQUIRED_GUARD_OPS.",
-  "required_contract": "transition_basis on all three; native_correlated result delivered; pin them.",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC-07",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "terminated_with_residuals appears in no specification chapter.",
-  "class": "b",
-  "severity": "low",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Phase-meaning row at 03-company-capabilities.md:199 plus AD-014 supersession note at :205.",
-  "issue": "terminated_with_residuals appears in no specification chapter.",
-  "required_contract": "Prose row in 03 (GR-01 already owes the phase-meaning rows; include this one).",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC-08",
-  "source": "planning/reviews/G-02-recheck-01.md",
-  "review_subject": "f27c22e",
-  "title": "Fulfillment generic validated branch disjoint from the delivery branch; proposed->validated base-only.",
-  "class": "b",
-  "severity": "low",
-  "owner": "ratchet-pin lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-02, subject 3579cc2, 2026-09-13). Fulfillment:validated->delivering exists (edge.Fulfillment.validated.delivering.v1), pinned citing RC-08.",
-  "issue": "Fulfillment generic validated branch disjoint from the delivery branch; proposed->validated base-only.",
-  "required_contract": "validated->delivering edge, or retire validated for Fulfillment with a reason.",
-  "independent_recheck": "planning/reviews/G-02-recheck-02.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RP-01",
-  "source": "build-ratchet-pin lane return, 2026-09-13",
-  "review_subject": "docs/vision-ratchet-pin head",
-  "title": "TypedPredicate enum branches disagree with their predicate argument_schema; nothing compares them",
-  "severity": "medium",
-  "class": "a",
-  "owner": "contracts author; independent recheck after",
-  "status": "Open. 1,680 of 2,270 values.schema.json TypedPredicate branches disagree with the argument_schema of the predicate they name. Not introduced by the repair; found while pinning. A branch that admits arguments the predicate does not declare is a schema that validates instances the predicate cannot evaluate.",
-  "required_contract": "Derive TypedPredicate branches from predicate-registry.json argument_schema (as PredicateId now is) and fail on drift; negative fixture: one branch with an extra property → rejected.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- },
- {
-  "id": "RC2-02",
-  "source": "planning/reviews/G-02-recheck-02.md",
-  "review_subject": "3579cc2",
-  "title": "A pinned conjunct is satisfied from inside a disjunction, so a pin can be emptied without being removed",
-  "class": "a",
-  "severity": "medium",
-  "owner": "contracts repair lane; independent recheck after",
-  "status": "OPEN (class a) after G-02-recheck-03 (subject 1bef187). Every stated element shipped: `disjoined` key, any-ancestry, ceiling 4, r14 fixture, refusal message names disjunction. The contract it serves is not met: RC3-01 shows `forall` is a further non-demanding context; RC3-02 shows a JsonValue slot is walked as if demanding. See RC3-01/02. | RC3-01/02 repaired at cfccbc8 (author-recorded); pending G-02-recheck-04. | recheck-04: RC3-01/02 closed; class continues as RC4-01/02 (the primitive table is the attack surface). | RC4-01/02 repaired at 6dcbc1b (pin-side ancestor allowlist + table digest); pending G-02-recheck-05. | recheck-05: closed against the registry author; the class continues as RC5-01/02 (the hand-written allowlist and the pin-coverage sweep).",
-  "issue": "polarised_nodes (validate_contracts.py:645-663) tracks only `not` ancestry; pin_row_matches (671-685) accepts a node inside an `any` as containment. One hunk in tools/phase_content.py disjoining each of the three pinned conjuncts of criterion.SalesAgreement.performed.v1 with present(/payload/agreed_terms) regenerates and validates at exit 0 with pins, fixtures and prose untouched; the criterion then demands nothing about delivery. 11 of 842 criteria carry an `any`; 4 of 44 live require rows (two on edge.GrievanceCase.received.triaged.v1, two on edge.ResponsibilityAssignment.proposed.accepted.v1) are today satisfied only under a disjunction, intentionally. RC-03's stated_paths_and_states (822-833) has the same blind spot.",
-  "required_contract": "Each `require` row states whether the conjunct must be demanded unconditionally or may sit under a disjunction (default unconditional), in the same shape as the existing `negated` key; polarised_nodes tracks `any` ancestry alongside `not`; a match under `any` is refused unless the row opts in; the four intentional rows opt in with a reason; a negative fixture carrying probe 9's hunk expects a message naming disjunction; apply the same to RC-03's walker or record in writing that it is containment-only by choice.",
-  "independent_recheck": "planning/reviews/G-02-recheck-03.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC2-01",
-  "source": "planning/reviews/G-02-recheck-02.md",
-  "review_subject": "3579cc2",
-  "title": "The fixture denominator lives inside the directory it measures; a symlinked fixtures/negative carries its own MANIFEST",
-  "class": "b",
-  "severity": "low",
-  "owner": "contracts repair lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). runner and validator both refuse a symlinked fixtures/negative; --self-test fails when the guard is reverted and takes the validator with it.",
-  "issue": "RC-05's guard covers tools/ and tools/.. only. fixtures/negative symlinked to a directory holding one fixture and a manifest declaring one: runner reports fixtures 1, declared 1, exit 0 — RC-04's original reading reproduced.",
-  "required_contract": "Extend the RC-05 symlink guard to FIXTURES (fixtures/negative must be a real directory) in the same loop, so one guard covers every path the runner derives a count from.",
-  "independent_recheck": "planning/reviews/G-02-recheck-03.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC2-03",
-  "source": "planning/reviews/G-02-recheck-02.md",
-  "review_subject": "3579cc2",
-  "title": "RC-03's phase rule is switched off by removing backticks; its path rule has a live population of zero",
-  "class": "b",
-  "severity": "low",
-  "owner": "contracts repair lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). all seven recorded scope numbers reproduce under the reviewer's own sweep (774 / 0 / 19 / 22 / 17 / 17-of-17 / 5-across-2).",
-  "issue": "PROSE_TOKEN requires backticks; removing three pairs from the requires sentence leaves it identical to a reader and invisible to the check (probe 10: 19 s stop became 662 s pass-through to the fixture stage). Corpus sweep: 0 of 774 criteria carry a field path in requires prose; 19 carry a related-record phase token, 17 waived.",
-  "required_contract": "State the rule's real scope (backticked tokens and literal /payload/ paths; live population 2 unwaived criteria) in pinned-conjuncts.json#/requires_waivers_why, then either widen it to the unbackticked phase vocabulary with a waiver list for false positives, or record the narrow scope as the accepted limit with its number.",
-  "independent_recheck": "planning/reviews/G-02-recheck-03.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC2-04",
-  "source": "planning/reviews/G-02-recheck-02.md",
-  "review_subject": "3579cc2",
-  "title": "A fixture count mismatch is reported under the wrong headline",
-  "class": "c",
-  "severity": "low",
-  "owner": "contracts repair lane",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-03, subject 1bef187, 2026-09-13). a count mismatch now reports under the ratchet headline; a genuinely leaking fixture still gets the generic wrapper.",
-  "issue": "When the runner exits non-zero the generic wrapper at validate_contracts.py:891 fires before the dedicated ratchet comparison at :903, so a manifest mismatch surfaces as 'a negative fixture was not rejected; the check it names is gone' with the correct JSON only as detail.",
-  "required_contract": "Branch on the runner payload before asserting: if it carries check = 'negative fixture count ratchet (RC-04)', raise the ratchet message.",
-  "independent_recheck": "planning/reviews/G-02-recheck-03.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC3-01",
-  "source": "planning/reviews/G-02-recheck-03.md",
-  "review_subject": "1bef187",
-  "title": "`forall` is a non-demanding context the pin walker does not track; three pinned conjuncts moved inside a vacuous forall validate at exit 0",
-  "class": "a",
-  "severity": "medium",
-  "owner": "contracts repair lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-04, subject a41bf73, 2026-09-13). The named hunks are refused; the defect class continues one layer out as RC4-01/02.",
-  "issue": "Four primitives take a boolean child (all, any, not, forall); polarised_nodes handles three. Moving the three pinned conjuncts of criterion.SalesAgreement.performed.v1 verbatim inside forall(items=path(/payload/obligation_refs)) — a field records.schema.json requires with no minItems, so [] is valid — regenerates and validates at exit 0, 269,708 checks, 33/33 fixtures, pin file and requires prose untouched; the walker reports all three negated=False disjoined=False. RC-03 shares the walker and is blind too.",
-  "required_contract": "Derive demanding positions from primitive-registry.json (each primitive declares which child slots are demanding, and under what condition — e.g. forall is demanding only when the collection is demanded non-empty) and refuse any operator or slot the table does not recognise, the rule the same file applies at lines ~290 and ~752; negative fixture carrying the forall hunk expecting a message naming the quantifier; apply to RC-03's walker.",
-  "independent_recheck": "planning/reviews/G-02-recheck-04.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC3-02",
-  "source": "planning/reviews/G-02-recheck-03.md",
-  "review_subject": "1bef187",
-  "title": "A conjunct buried in a JsonValue slot (e.g. present's `value`) is walked as if demanded",
-  "class": "a",
-  "severity": "medium",
-  "owner": "contracts repair lane; independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-04, subject a41bf73, 2026-09-13). The named hunks are refused; the defect class continues one layer out as RC4-01/02.",
-  "issue": "The walker reaches every dict value, so a pinned op placed inside a value slot that is data, not a predicate position, satisfies the pin; registry-level exit 0 on that arm.",
-  "required_contract": "Same root cause as RC3-01: walk only the predicate positions the primitive registry declares; never descend into value slots; fixture for the buried-op form.",
-  "independent_recheck": "planning/reviews/G-02-recheck-04.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC3-03",
-  "source": "planning/reviews/G-02-recheck-03.md",
-  "review_subject": "1bef187",
-  "title": "The leak wrapper attaches a blind stdout[-2000:] so the first fixture's 'failed for the wrong reason' line is truncated out",
-  "class": "c",
-  "severity": "low",
-  "owner": "contracts repair lane",
-  "status": "CLOSED by independent recheck (G-02-recheck-04). Residual RC4-05/06 registered separately.",
-  "issue": "Measured: 0 occurrences of the diagnostic line survive the truncation on a multi-fixture leak.",
-  "required_contract": "Attach the runner's structured payload (leaked list with reasons) rather than a byte-sliced stdout tail.",
-  "independent_recheck": "planning/reviews/G-02-recheck-04.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC4-02",
-  "source": "planning/reviews/G-02-recheck-04.md",
-  "review_subject": "a41bf73",
-  "title": "A newly registered primitive declaring its own boolean child `demanded` wraps the pinned conjuncts and validates at exit 0",
-  "class": "a",
-  "severity": "high",
-  "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
-  "status": "CLOSED against the registry author by G-02-recheck-05 (the pin consults nothing a registry author controls, under every probe); OPEN one layer out as RC5-01 (the allowlist itself). | F2-06-recheck-01 (0ea10c1): RC5-01 closed — the lineage terminates at a closed literal in the checker; the residual is the review tier of that file (trivial/shadow), stated in the disposition.",
-  "issue": "Register a primitive with argument_positions marking its predicate child demanded; wrap the three pinned conjuncts of criterion.SalesAgreement.performed.v1 in it; regenerate: exit 0, 288,665 checks, 36/36 fixtures. obligation_refs has no minItems so the sale reaches performed naming no Fulfillment. The walker trusts whatever the registry declares.",
-  "required_contract": "Pin-side allowlist: pinned-conjuncts.json declares, per pinned row, the exact set of ancestor operators under which the conjunct counts as demanded (default: {all} only, `not` per polarity), and the walker refuses any other ancestor regardless of the registry's declaration. The registry's argument_positions may classify slots but may never widen what satisfies a pin. Negative fixture: the RC4-02 primitive, expecting a message naming the ancestor operator.",
-  "independent_recheck": "planning/reviews/G-02-recheck-05.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC4-01",
-  "source": "planning/reviews/G-02-recheck-04.md",
-  "review_subject": "a41bf73",
-  "title": "One string in primitive-registry.json (`forall` predicate position → `demanded`) makes the RC3-01 body pass every pin; nothing pins the table",
-  "class": "a",
-  "severity": "high",
-  "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
-  "issue": "288,646 checks, pins satisfied, RC-03 silent, census under_quantifier 0 because the census reads the same table; caught only by the single fixture that names forall, and the message names the fixture not the table.",
-  "required_contract": "Record a content hash of primitive-registry.json's argument_positions in pinned-conjuncts.json (hand-maintained) and fail with a message naming the table when it drifts; with RC4-02's allowlist the table edit becomes non-widening by construction, and the hash makes the edit visible.",
-  "independent_recheck": "planning/reviews/G-02-recheck-05.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC4-03",
-  "source": "planning/reviews/G-02-recheck-04.md",
-  "review_subject": "a41bf73",
-  "title": "The fixture suite has a declared denominator and no floor",
-  "class": "b",
-  "severity": "medium-high",
-  "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
-  "issue": "Moving 34 of 36 fixtures out of the tree and out of MANIFEST.json in one edit: exit 0, checks 288,620, byte-identical verdict with negative_fixtures_rejected: 2.",
-  "required_contract": "A hand-written floor on the manifest count in validate_contracts.py (as the pins have 25/44/6), raised whenever a fixture is added and never lowered without a recorded reason; the verdict must print the floor beside the count.",
-  "independent_recheck": "planning/reviews/G-02-recheck-05.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC4-04",
-  "source": "planning/reviews/G-02-recheck-04.md",
-  "review_subject": "a41bf73",
-  "title": "The quantifier refusal advises demanding the collection non-empty on the same path; doing exactly that is refused with the same message",
-  "class": "b",
-  "severity": "medium",
-  "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
-  "issue": "Measured both ways.",
-  "required_contract": "Either accept a forall whose items path is demanded non-empty by a sibling nonempty_fields/count conjunct on the same path (and say so in the table), or change the message to say what is actually accepted.",
-  "independent_recheck": "planning/reviews/G-02-recheck-05.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC4-05",
-  "source": "planning/reviews/G-02-recheck-04.md",
-  "review_subject": "a41bf73",
-  "title": "The leak headline is false for a wrong-reason leak",
-  "class": "b",
-  "severity": "medium",
-  "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
-  "issue": "Measured both ways: a fixture rejected for the wrong reason is reported under the 'not rejected' headline.",
-  "required_contract": "Distinguish 'not rejected' from 'rejected for the wrong reason' in the headline; the payload already carries the reason.",
-  "independent_recheck": "planning/reviews/G-02-recheck-05.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC4-06",
-  "source": "planning/reviews/G-02-recheck-04.md",
-  "review_subject": "a41bf73",
-  "title": "An exception in run_fixture kills the suite after 17 fixtures reported ok and re-enters the blind-tail path RC3-03 removed",
-  "class": "b",
-  "severity": "medium",
-  "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (G-02-recheck-05, subject bcfd658, 2026-09-14).",
-  "issue": "Reproduced by raising inside run_fixture.",
-  "required_contract": "Catch per-fixture exceptions as that fixture's failure with its id and the exception text; never fall back to a transcript tail.",
-  "independent_recheck": "planning/reviews/G-02-recheck-05.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC4-07",
-  "source": "planning/reviews/G-02-recheck-04.md",
-  "review_subject": "a41bf73",
-  "title": "Deleting the census and its three floors costs 3 checks and exits 0",
-  "class": "c",
-  "severity": "low",
-  "owner": "contracts repair lane (after b5-contracts lands); independent recheck after",
-  "status": "CLOSED for the measured move by G-02-recheck-05; a plausible hand-written census literal still passes (24 checks' cost) and the file admits that class.",
-  "issue": "",
-  "required_contract": "Floor the census presence the way pins are floored, or pin the census keys in pinned-conjuncts.json.",
-  "independent_recheck": "planning/reviews/G-02-recheck-05.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC5-01",
-  "source": "planning/reviews/G-02-recheck-05.md",
-  "review_subject": "bcfd658",
-  "title": "admissible_ancestors has no ceiling, no pinned membership and no verdict line; one hunk registering a demanding primitive, admitting it, and re-pinning the digest restores G2-01 at exit 0",
-  "class": "a",
-  "severity": "high",
-  "owner": "contracts repair lane (after r6-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (F2-06-recheck-01, subject 0ea10c1, 2026-09-14): replay of the exact hunk exits 1 naming the literal in validate_contracts.py. Standing note from the recheck: the classifier tiers validate_contracts.py trivial/shadow under docs/**, so the terminal control is a review convention, not an enforced tier.",
-  "issue": "299,409 checks, 30 more than baseline, 56/56 fixtures.",
-  "required_contract": "Make the admissible-ancestor set a closed literal in validate_contracts.py (exactly {all, not-per-polarity, any-per-disjoined}); the JSON block becomes documentation checked for equality against that literal, so widening it requires editing the validator — a harness self-edit the repository classifies as a blocking tier requiring human review; print the set in the verdict; fixture for the RC5-01 hunk expecting a message naming the literal.",
-  "independent_recheck": "planning/reviews/F2-06-recheck-01.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC5-02",
-  "source": "planning/reviews/G-02-recheck-05.md",
-  "review_subject": "bcfd658",
-  "title": "32 of 57 pins and 72 of 119 rows can be deleted at exit 0 because the coverage sweep reads only G#-## and RC-## ids",
-  "class": "a",
-  "severity": "high",
-  "owner": "contracts repair lane (after r6-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (F2-06-recheck-01, subject 0ea10c1, 2026-09-14): bulk deletion of 37 of 67 pins refused BY NAME before any count (A PINNED FINDING LOST ITS LAST PIN). Standing note from the recheck: the classifier tiers validate_contracts.py trivial/shadow under docs/**, so the terminal control is a review convention, not an enforced tier.",
-  "issue": "The pins citing A*-M*, AS-X-*, F6*-* ids are guarded only by the 25/44 floor set when the table was 25/44.",
-  "required_contract": "Extend FINDING_ID to every id family a pin may cite (G, RC, RCn, AT/AC/AE/AX/AS, F6A-D) and require every registered finding in planning/F2/reviews/*.md and planning/reviews/F2-06-*.md that a pin claims to be pinned or declared unpinnable; raise the floors to the current 57/119 and make the floor a value the verdict prints beside the count; fixture: delete one A*-cited pin → refused by name.",
-  "independent_recheck": "planning/reviews/F2-06-recheck-01.md",
-  "implementation_evidence": null
- },
- {
-  "id": "RC5-03",
-  "source": "planning/reviews/G-02-recheck-05.md",
-  "review_subject": "bcfd658",
-  "title": "admissible_ancestors_not_admitted is read by nothing",
-  "class": "b",
-  "severity": "medium",
-  "owner": "contracts repair lane (after r6-contracts lands); independent recheck after",
-  "status": "CLOSED at specification level by independent recheck (F2-06-recheck-01, subject 0ea10c1, 2026-09-14): forall in both tables refused by the sibling key even with the checker literal widened. Standing note from the recheck: the classifier tiers validate_contracts.py trivial/shadow under docs/**, so the terminal control is a review convention, not an enforced tier.",
-  "issue": "Adding forall to the admitting key while that block still forbids it passes at exit 0.",
-  "required_contract": "Either read the block (refuse an operator present in both) or delete it; prose that names an attack and is enforced by nothing is the decorative-declaration class the package names.",
-  "independent_recheck": "planning/reviews/F2-06-recheck-01.md",
-  "implementation_evidence": null
- },
- {
-  "id": "F6X-01",
-  "source": "r6-contracts builder return, 2026-09-14",
-  "review_subject": "9d60596",
-  "title": "Three records declaring an exclusive factory name a command the command registry does not contain",
-  "class": "b",
-  "severity": "low",
-  "owner": "contracts author; independent recheck after",
-  "status": "Open; pre-existing, found while adding EffectIdentity's natural key; recorded rather than widened",
-  "issue": "Three of the nine records that already declare an exclusive factory name a command absent from command-registry.json.",
-  "required_contract": "Register the commands or retire the declarations; add a validator check that every exclusive_factory resolves.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- },
- {
-  "id": "F6X-02",
-  "source": "r6-contracts builder return, 2026-09-14",
-  "review_subject": "9d60596",
-  "title": "ConstraintSet.boundary_kind is a free string and OperatorProjection has no contested-refs field (F6B-02 residue)",
-  "class": "b",
-  "severity": "low",
-  "owner": "chapters + contracts authors",
-  "status": "Open; the enum members would have been invented rather than derived — needs the chapter to state them first",
-  "issue": "Two clauses of F6B-02's required contract not implemented for that reason.",
-  "required_contract": "05 §5 states the closed boundary_kind set and the contested-refs field; contracts then register them.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- },
- {
-  "id": "F6R-01",
-  "source": "planning/reviews/F2-06-recheck-01.md",
-  "review_subject": "0ea10c1",
-  "title": "`unanswered`'s gloss claims repairs that do not exist",
-  "class": "a",
-  "severity": "medium",
-  "owner": "contracts lane (checker); orchestrator (register entries)",
-  "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
-  "issue": "The comment above UNANSWERED_CEILING = 37 says the 37 are Step 6 findings whose repair landed as a check rather than a conjunct; measured, three of them (named in the recheck §5/§9) have no repair anywhere. The ceiling correctly stops the list growing; the sentence beside it tells a reader the list is a list of repairs delivered elsewhere.",
-  "proposed_repair": "Split `unanswered` into two declared sets in pinned-conjuncts.json — answered outside the pin machinery (with the file and the check that answers it) and not answered — each with its own bound, or drop the causal clause from the comment and say only what the count is.",
-  "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- },
- {
-  "id": "F6R-02",
-  "source": "planning/reviews/F2-06-recheck-01.md",
-  "review_subject": "0ea10c1",
-  "title": "The terminal control sits at the repository's lowest review tier, and the block that argues from that fact does not name it",
-  "class": "b",
-  "severity": "medium",
-  "owner": "contracts lane (checker); orchestrator (register entries)",
-  "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
-  "issue": "RC5-01's repair argues that editing validate_contracts.py is 'the expensive act by construction'. Measured: node scripts/classify.mjs tiers that file trivial · shadow (matched docs/**). No risk label is required and the binding gate asks for a session file, not a tier. The package states the tier fact once, in HANDOFF-F2-agents-work-layer.md line 141, not in the block that depends on it.",
-  "proposed_repair": "One sentence in the RC5-01 comment block recording that the file is trivial under .claude/qa-tier-floor.yml and that the expense is a review convention rather than an enforced tier — or a tier-floor entry naming docs/vision-system/planning/specification/contracts/validate_contracts.py.",
-  "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- },
- {
-  "id": "F6R-03",
-  "source": "planning/reviews/F2-06-recheck-01.md",
-  "review_subject": "0ea10c1",
-  "title": "The coverage rule's register denominator holds 2 of 54 Step 6 findings",
-  "class": "b",
-  "severity": "low",
-  "owner": "contracts lane (checker); orchestrator (register entries)",
-  "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
-  "issue": "The rule that demands a finding be pinned or excused iterates registers/review-findings.json, which carries the two residue findings of the 54 Step 6 findings. The other 52 are reached only because finding_sources happens to declare all 54, and no check asserts that it does.",
-  "proposed_repair": "Assert that every Step 6 finding id appearing in the swept F2-06 review documents is a key of finding_sources, so the unanswered ceiling's denominator cannot silently shrink; or register the Step 6 findings (each then needs a pin or an honest unpinnable row).",
-  "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- },
- {
-  "id": "F6R-04",
-  "source": "planning/reviews/F2-06-recheck-01.md",
-  "review_subject": "0ea10c1",
-  "title": "A hand mutation of a control-object required list is caught by the drift oracle, not by the rule written for it",
-  "class": "c",
-  "severity": "low",
-  "owner": "contracts lane (checker); orchestrator (register entries)",
-  "status": "Open; found by F2-06-recheck-01 §9 (2026-09-14). Not blocking under protocol §8.",
-  "issue": "Removing protected_change_ref from ConsequenceClassDefinition's required_fields and schema required by hand exits 1 at 'criterion content drifts from its derivation', never reaching the control-object message (recheck §1); the committed fixture reaches it only because it declares regenerate_from_derivation and rederive_from_registries. Refused either way — message quality, not a bypass.",
-  "proposed_repair": "None required. If acted on, note in the control-object block that a hand edit surfaces as drift and that the named message is reachable only after re-derivation.",
-  "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13. This finding asks for a checker comment, a tier-floor entry or register entries, so it is out of that rule's reach by construction; raising the ceiling is the checker edit the rule itself calls 'a decision', owed to the contracts lane. The contract is stated verbatim in proposed_repair so it is not lost. Class letter assigned by the orchestrator from the recheck's description; the recheck stated severity, not class.",
-  "independent_recheck": null,
-  "implementation_evidence": null
- }
 ]
