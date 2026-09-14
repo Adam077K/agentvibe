@@ -1096,3 +1096,33 @@ a WorkOrder required list written before F6C-13 added two required fields, so F6
 missing a key the row-shape check refuses — rebuilt with the full current shape. **A benign fixture that
 fails reads exactly like a repair that broke something**, which is why each one's `why` now records the
 old shape rather than being silently rewritten.
+
+## Lane r7-contracts-e — the F6Y contract findings
+
+**`STEP6_FAMILIES` (F6Y-01), new.** A hand-written tuple of the ten Step 6 family prefixes, beside a sweep
+widened from `F6[A-DRVX]-\d\d` to `F6[A-Z]-\d\d`. The letters are a *declaration* checked against the
+derived family set, not a pattern: the old range silently excluded `F6W-01..08` from the required set, and
+because the floor of 60 was computed over the same narrow output, nothing inside the block could see it.
+Branch taken, and it is the one that costs something: the demand is derived and the declaration is written,
+so a new family FAILS until someone names it — rather than the reverse, where a literal derived from the
+corpus it measures is satisfied by the empty corpus. Twenty-five `finding_sources` rows follow from it
+(`F6W-01..08`, `F6Y-01..08`, `F6Z-01..09`), all in the conservative half of the partition.
+
+**The ceilings carry exactly one slot of headroom (F6Y-01, F6Y-08).** `UNANSWERED_CEILING` is 67 against 66
+declared and `NOT_ANSWERED_CEILING` 63 against 62. Not slack: `positive/r36-a-declared-family-gains-a-finding-benign`
+occupies that slot and would fail without it. Declaring a newly raised finding must be a data edit, or the
+widened sweep buys its coverage by making the honest move an edit to `validate_contracts.py`.
+
+**Name taken: repair id `R36`,** fixtures `negative/r36-step-6-finding-loses-its-source-row` and
+`positive/r36-a-declared-family-gains-a-finding-benign`. Negative floor 111 → 112, positive 72 → 73.
+
+**Remainder of lane r7-contracts-e, stated rather than left to a recheck to find.** F6Y-02, F6Y-06, F6Y-07
+and F6Y-08 are NOT repaired and no name was taken for them. `R37` is therefore FREE. Two things a later
+lane should know before starting them. First, F6Y-02's benign twin as the review words it — *the six
+branches in a different order, which must pass* — is **not expressible as a negative/positive fixture**:
+the applier patches JSON only, and any edit to the criterion body alone is refused by the
+`author_phase_content.py` derivation oracle before the pairing check is reached. The nearest expressible
+benign is the two `records.schema.json` enums reordered, which exercises set-comparison at the enum layer
+and not at the branch layer; say which of the two is being shipped. Second, F6Y-01's ceilings hold exactly
+one slot of headroom, and F6Y-08 moving two rows from `not_answered` to `answered_elsewhere` does not free
+any — it moves them between halves whose totals are bounded separately.
