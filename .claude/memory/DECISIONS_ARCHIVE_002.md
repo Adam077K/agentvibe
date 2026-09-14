@@ -247,3 +247,54 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 **Reversibility:** hard-to-reverse (git history holds the file; the roster count is referenced in four docs)
 **Owner:** ceo
 **Affects:** every engine consumer, schema-lint's ENGINES registry, AGENTS.md, README counts, the claim ledger
+
+## 2026-08-11 — "Subagents cannot spawn subagents" is false; delete the dispatch-packet layer
+
+**Context:** The operating instructions state nested Task spawning is blocked. The entire dispatch-packet ceremony and much of the CEO→C-suite→worker layering exists to route around it.
+**Options considered:** Trust the stated constraint / Probe it.
+**Decision:** Probed live — **false**. A subagent had `Agent` in its primary tool list, called it, and the nested agent returned `NESTED_OK` in 1.8s. Depth-2 confirmed. The dispatch-packet machinery is deleted once write-capable nesting is confirmed outside plan mode (Phase 1 task).
+**Rationale:** A capability constraint not re-tested this quarter is a rumour. This one shaped the architecture. It is also the canonical example for the ledger: a global-scope claim, true once, carrying no expiry, silently rotted while the whole system obeyed it.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** topology, roster, every C-suite agent definition, CLAUDE.md layer contract
+
+## 2026-08-11 — Every gate ships in shadow mode before it blocks
+
+**Context:** The source spec admits its single largest unpriced variable is what friction costs when an agent hits a denial mid-task. Nobody in 24 studied systems measured it.
+**Options considered:** Block on unrecoverable and advise elsewhere (skips the measurement) / Block by default with a named escape hatch (highest friction, unpriced) / Shadow mode first.
+**Decision:** Every gate ships computing `would_block` and logging it, blocking nothing, for a fixed window. Promote to real blocking only rules that fired correctly and rarely. **Exception:** outbound send, deploy, migration and harness self-edit block from day one, no shadow period.
+**Rationale:** It is the only design that prices the unknown instead of guessing at it, and it has live prior art. The exception covers the class where being wrong is unrecoverable.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** all resolvers, the pre-tool hook, CI, the outbound queue
+
+## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
+
+**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
+mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
+stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
+**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
+no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
+launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
+missing and had to be recovered from a session file it wrote before being blocked.
+**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
+polarity backwards — the claim says nesting *works*, and the probe agrees.
+**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
+subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
+the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
+orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
+**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
+**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`
+
+## 2026-08-16 — The eleven shims stay until nothing references their names
+
+**Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different
+content**, and 33 more are absent from a clean clone. Deleting a repo shim **un-shadows** its global twin, so
+the name keeps working and quietly means the older definition. Nothing errors — the worst failure shape.
+**Decision:** Keep the 11 shims through the roster migration. They are occupying the name, which is their
+job. Delete only once nothing references those names.
+**The constraint that decided it:** those globals are **live in two other projects**
+(`obsidian-claude-code-mcp`, `overstory`), measured 2026-08-11. Archiving them fixes Agentvibe and reaches
+into work that is not Agentvibe, so it is not this repo's call to make unilaterally.
+**Reversibility:** fully reversible — nothing is deleted.
+**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`

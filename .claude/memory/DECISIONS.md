@@ -69,14 +69,9 @@ having run none. Required checks govern the PR route only.
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — "Subagents cannot spawn subagents" is false; delete the dispatch-packet layer
-
-**Context:** The operating instructions state nested Task spawning is blocked. The entire dispatch-packet ceremony and much of the CEO→C-suite→worker layering exists to route around it.
-**Options considered:** Trust the stated constraint / Probe it.
-**Decision:** Probed live — **false**. A subagent had `Agent` in its primary tool list, called it, and the nested agent returned `NESTED_OK` in 1.8s. Depth-2 confirmed. The dispatch-packet machinery is deleted once write-capable nesting is confirmed outside plan mode (Phase 1 task).
-**Rationale:** A capability constraint not re-tested this quarter is a rumour. This one shaped the architecture. It is also the canonical example for the ledger: a global-scope claim, true once, carrying no expiry, silently rotted while the whole system obeyed it.
-**Reversibility:** reversible
-**Owner:** ceo
-**Affects:** topology, roster, every C-suite agent definition, CLAUDE.md layer contract
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
+***Cited in prose by 23 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/AGENT-ARCHITECTURE-REDIVE.md:67` (title-phrase), `docs/03-system-design/AGENT-ARCHITECTURE.md:396` (title-phrase), `docs/03-system-design/AGENT-SYSTEM-REBUILD.md:44` (title-phrase), `docs/03-system-design/CLAIM-LEDGER.md:19` (title-phrase), `docs/03-system-design/CLAIM-LEDGER.md:904` (title-phrase), `docs/03-system-design/IMPLEMENTATION-PLAN.md:243` (date), and 17 more.*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — Roster collapses from 60 agent files to 7 engines, derived from a 38-job inventory
 *Archived to `DECISIONS_ARCHIVE_002.md` (2026-08-26). Executed. The roster is seven engines of eighteen files; the operative record is CLAUDE.md, `AGENTS.md`, and the `ENGINES` list in `.claude/hooks/schema-lint.js`, none of which reads this entry.*
@@ -84,14 +79,9 @@ having run none. Required checks govern the PR route only.
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — Every gate ships in shadow mode before it blocks
-
-**Context:** The source spec admits its single largest unpriced variable is what friction costs when an agent hits a denial mid-task. Nobody in 24 studied systems measured it.
-**Options considered:** Block on unrecoverable and advise elsewhere (skips the measurement) / Block by default with a named escape hatch (highest friction, unpriced) / Shadow mode first.
-**Decision:** Every gate ships computing `would_block` and logging it, blocking nothing, for a fixed window. Promote to real blocking only rules that fired correctly and rarely. **Exception:** outbound send, deploy, migration and harness self-edit block from day one, no shadow period.
-**Rationale:** It is the only design that prices the unknown instead of guessing at it, and it has live prior art. The exception covers the class where being wrong is unrecoverable.
-**Reversibility:** reversible
-**Owner:** ceo
-**Affects:** all resolvers, the pre-tool hook, CI, the outbound queue
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
+***Cited in prose by 9 location(s)**, which the heading above keeps resolvable: `.claude/mcp-policy.json:4` (title-phrase), `.claude/qa-tier-floor.yml:45` (title-phrase), `.github/workflows/qa-lead-pass.yml:5` (title-phrase), `docs/03-system-design/CLAIM-LEDGER.md:84` (title-phrase), `docs/03-system-design/IMPLEMENTATION-PLAN.md:243` (date), `docs/06-codebase/2026-08-11-FLEET-BASELINE.md:128` (date), and 3 more.*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — Playbooks declare work graphs and exit gates, never method
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in `.claude/playbooks/` and CLAUDE.md. **Checked by title-phrase grep only, and none found** — the rule itself is restated in `schema-lint.js:1428` and `ci.yml:148`, but neither references this record.*
@@ -121,22 +111,9 @@ having run none. Required checks govern the PR route only.
 *Not checked: paraphrase, global-scope-claims, title-too-generic — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
-
-**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
-mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
-stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
-**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
-no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
-launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
-missing and had to be recovered from a session file it wrote before being blocked.
-**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
-polarity backwards — the claim says nesting *works*, and the probe agrees.
-**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
-subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
-the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
-orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
-**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
-**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
+***Cited in prose by 2 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/IMPLEMENTATION-PLAN.md:198` (date), `docs/08-agents_work/sessions/2026-08-13-ceo-phase-8a-status.md:9` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-15 — RCEs closed by allowlist, not by an Origin check; and the Origin check was a CEO error
 *Archived to `DECISIONS_ARCHIVE_002.md` (2026-08-26). Executed. The allowlist shipped and the Origin check was withdrawn as an error. Security history, preserved verbatim rather than summarised.*
@@ -156,17 +133,9 @@ orchestration tier rests on a false premise. Not changed here; flagged for the F
 ## 2026-08-16 — Ship five engines, defer the two that hold credentials
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Roster decision captured in AGENTS.md and docs. **Cited, and the original stub was wrong to say otherwise:** `docs/08-agents_work/handoffs/2026-08-15-implementation.md:112-114` — *“whether `operator`/`instrument` wait for the OS sandbox (recorded in `DECISIONS.md` as: ship five, defer two)”* — which is an item still open on the founder, not a closed one.*
 ## 2026-08-16 — The eleven shims stay until nothing references their names
-
-**Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different
-content**, and 33 more are absent from a clean clone. Deleting a repo shim **un-shadows** its global twin, so
-the name keeps working and quietly means the older definition. Nothing errors — the worst failure shape.
-**Decision:** Keep the 11 shims through the roster migration. They are occupying the name, which is their
-job. Delete only once nothing references those names.
-**The constraint that decided it:** those globals are **live in two other projects**
-(`obsidian-claude-code-mcp`, `overstory`), measured 2026-08-11. Archiving them fixes Agentvibe and reaches
-into work that is not Agentvibe, so it is not this repo's call to make unilaterally.
-**Reversibility:** fully reversible — nothing is deleted.
-**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
+***Cited in prose by 1 location(s)**, which the heading above keeps resolvable: `docs/08-agents_work/sessions/2026-08-16-builder-token-efficiency.md:9` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
 
@@ -422,3 +391,25 @@ admissible ancestors plus a pinned digest of the table.
 
 **Reversibility:** reversible — planning only; founder hold on building in force. **Owner:** orchestrator
 `ceo-4-1789314685` · **Affects:** `docs/vision-system/**`, every future dispatch that expects a long return
+
+## 2026-09-14 — Founder decisions on the agent layer; the F2 findings closed at specification level
+
+**Decisions (founder, 2026-09-14, via decision prompts; recorded in `registers/open-questions.json` and
+`inputs/FOUNDER-INPUT-2026-09-14-addendum.md`).** The five-reason list for creating an agent is **not
+closed** — consequence class is admitted, so S1.1/WORK-1.1 stands on the founder's own gate (TC-35). Q-016
+(d) founder as terminal owner, explicit exception. Q-017 (d) then, on the strict re-run that cut 46
+acceptance roles to **3 standing** (personal data/deletion, grievance/rights, continuity day-five arm): staff
+the three with the founder as declared exception; six flagged roles need a paired conformance case each
+before admission; 32 dissolve into per-case acceptance. Q-018 (b) parks. Q-019 (d) then (b). Q-020 (a).
+Q-021 placeholders. Q-022 stays with the founder (account read). The multi-field-agent thought is a dated
+founder input now.
+
+**State of the 54 Step 6 findings after five repair lanes and two independent rechecks** (recheck-02 on 18
+older repairs: 13 closed / 5 partial; recheck-03 on 15 prose repairs: 12 closed / 1 partial): 33 closed by
+recheck, 5 confirmed by reading, 6 author-recorded, 10 partial with named residues, **0 with no repair**.
+Contracts-side repairs of the day await recheck-04 on the validated merged head. Nothing here lifts the
+founder's hold; B01 not dispatched; one model family; no runtime exists.
+
+**Reversibility:** reversible — planning only. **Owner:** orchestrator `ceo-4-1789314685` ·
+**Affects:** `docs/vision-system/**`, `registers/open-questions.json`, every future lane's dispatch brief
+(see LONG-TERM.md 2026-09-14 for the mechanics)
