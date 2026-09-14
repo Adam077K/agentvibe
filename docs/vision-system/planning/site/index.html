@@ -413,7 +413,7 @@ ul.plain{list-style:none;padding:0;display:flex;flex-direction:column;gap:7px;fo
 <h1>The Company Engine Plan</h1>
 <div class="meta">
 <span>Architecture <span class="mono">S1.1</span>, selected</span>
-<span>Planning disposition <span class="mono">PENDING</span></span>
+<span>Planning disposition <span class="mono">SCOPED · 2026-09-14</span></span>
 <span>Implementation <span class="mono">not started</span></span>
 <span>Founder hold <span class="mono">in place</span></span>
 </div>
@@ -466,20 +466,19 @@ with the validator run recorded at commit <b>eaf5ada</b>.</p>
 <h2>Where it stands</h2>
 </div>
 <div class="pairs">
-<div class="pair"><span class="pk">Planning</span><span class="pv"><b>Complete and in final review.</b>
-Eleven of twelve review dimensions judged sufficient; one — internal coherence — judged
-insufficient and now under an independent recheck. Recorded disposition: <b>none yet</b>.</span></div>
+<div class="pair"><span class="pk">Planning</span><span class="pv"><b>Complete; a scoped disposition is recorded.</b>
+Eleven of twelve review dimensions judged sufficient; internal coherence was repaired and rechecked five
+times. Recorded disposition: <b>scoped</b> — see section 07. It is not an acceptance.</span></div>
 <div class="pair"><span class="pk">Building</span><span class="pv"><b>0 of 12 stages started.</b>
 <span class="mono">implementation_started: false</span>. Nothing has been written, bought or
 deployed.</span></div>
 <div class="pair"><span class="pk">Founder hold</span><span class="pv"><b>On, since 2026-09-13.</b>
 Your instruction: do not start building yet. It stays until you lift it explicitly.</span></div>
 <div class="pair"><span class="pk">One layer reopened</span><span class="pv"><b>Agents, work and
-context — done through its reviews, not signed off.</b> You reopened that one layer on
+context — reviewed, repaired, rechecked, not signed off.</b> You reopened that one layer on
 13 September. Four of its fifteen review dimensions came back sufficient and eleven insufficient,
-six blocking findings were raised, and the repairs written against them have not yet been checked
-by anyone who did not write them. <a href="#f2">Read section 07</a> — it is later than everything
-above it.</span></div>
+six blocking findings were raised, and a reviewer who wrote none of the repairs has now closed all six
+on paper. <a href="#f2">Read section 07</a> — it is later than everything above it.</span></div>
 </div>
 <p class="from">from: <b>state.json</b> · <b>planning/PLANNING-REPORT.md §8</b> · <b>planning/PLANNING-REPORT.md §Agents, work and context</b></p>
 
@@ -1169,7 +1168,8 @@ ladder was given a recipient that actually exists, the safety rules were pinned 
 must call them, two rules that said "contains everything and is the same size" instead of "is the
 same set" were corrected, and the missing record for <i>we broke the promise, or we performed
 it</i> now exists. <b>Those repairs were written by the same people who wrote the thing being
-repaired.</b> A narrow independent recheck by someone who wrote none of it has not run.</p>
+repaired.</b> A narrow independent recheck by someone who wrote none of it has now run — the
+verdict block below carries what it found.</p>
 </div>
 <p class="from">from: <b>planning/reviews/F2-06-A…D</b> · <b>planning/reviews/F2-06-findings-index.json</b> · <b>registers/review-findings.json</b></p>
 </div>
@@ -1310,15 +1310,33 @@ weakness is stated rather than left to be discovered:</b> this repository's own 
 treats everything under the documentation tree as trivial, so editing that checker is a review
 convention here, not something enforced. The last repair reports 304,168 checks, 95 of 95 adverse
 cases correctly rejected and 56 of 56 innocent cases correctly passed — <b>recorded by its own
-author, and waiting on the same independent recheck as everything else above.</b></p>
+author — and then rechecked: the exact edit exits 1 naming the literal, and the recheck measured the
+checker's own review tier at trivial.</b></p>
 </div>
 <p class="from">from: <b>planning/reviews/G-02-recheck-02…05</b> · <b>registers/review-findings.json</b></p>
 </div>
 
-<div class="note note--open">
-<p><b>No verdict on this round is recorded.</b> It goes here when the independent recheck comes
-back.</p>
-<!-- F2-DISPOSITION: inserted by the orchestrator after F2-06-recheck-01 -->
+<div class="note note--found">
+<p><b>Verdict on this round — recorded 14 September 2026 as a <i>scoped</i> planning disposition, not
+an acceptance.</b> The narrow independent recheck ran against a frozen copy at
+<span class="mono">0ea10c1</span>, by a reviewer who wrote none of it. <b>All six blocking findings are
+closed on paper</b> — each by a mutation the reviewer wrote and ran, each refused by name; two of the
+six are carried by prose with no executable control, and the report says so. The thirty detachable
+safety rules are now pinned to the places that must call them: eight detachments tried, eight refused,
+and both load-bearing route deletions refused. The two "same size" rules now mean "same set". The
+last layer of the checker defect is closed: the exact edit exits 1 naming the literal, deleting half
+the pins is refused by name, and removing one row from the verdict's own control table is refused naming the row.</p>
+<p><b>What it does not change.</b> The fifteen-quality verdict stands as written: four sufficient,
+eleven insufficient. The recheck answered whether anything still blocks, not whether the layer is
+good. It also found three of seven sampled ordinary findings untouched, four new findings about the
+checker's own bookkeeping and wording (none blocking), and confirmed by measurement that this repository files the checker under
+its lowest review tier. Twenty-one of the fifty-four findings have no repair at all; eighteen more
+are repaired but checked by nobody else. Every one is listed with an owner in the package.</p>
+<p><b>What this disposition says:</b> the layer's behaviour, as specified, was checked offline
+against the frozen rules; the named findings stay open with owners; nothing fixed elsewhere in the
+plan was reopened. <b>What it does not say:</b> that the system works, that the design is validated,
+that the architecture is proven, or that building may begin. <b>Your hold stands.</b></p>
+<p class="from">from: <b>planning/reviews/F2-06-recheck-01.md</b> · <b>planning/PLANNING-REPORT.md §8</b> · <b>planning/reviews/F2-06-findings-index.json</b> · <b>state.json planning_disposition</b></p>
 </div>
 
 <div class="hold">
@@ -2344,9 +2362,10 @@ deployment are not authorized</b> by the directive this package was written unde
 </div>
 </section><footer class="foot">
 <p>Every figure on this page was read from a file in
-<span class="mono">docs/vision-system/</span> or recomputed against it on 13 September 2026. Where
+<span class="mono">docs/vision-system/</span> or recomputed against it on 13 and 14 September 2026. Where
 a count came from an archived review rather than a live file, the review is named and the archive
 is not edited to agree with the present tree.</p>
-<p>Nothing on this page is an acceptance of the plan. No planning disposition exists. No
-construction stage has begun.</p>
+<p>Nothing on this page is an acceptance of the plan. The planning disposition recorded on
+14 September 2026 is scoped: specified behaviour checked offline, findings open with owners, nothing
+fixed reopened. No construction stage has begun, and the founder's hold stands.</p>
 </footer></main></div>
