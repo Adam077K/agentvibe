@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "F2 dispositioned (SCOPED); r7 repair lanes merged at 923d1ea; full validator running on 0d7578f; final recheck pending; founder hold on building in force",
+  "phase": "F2 dispositioned (SCOPED); all r7 repair lanes merged and validated green at 1573593/3e51a9e; final rechecks 04a/04b running; founder hold on building in force",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-4-1789314685",
@@ -180,12 +180,26 @@
       "scope": "F6W-01..08 and the Q-017 holder-table update in 05 §12",
       "dispatched": "2026-09-14",
       "status": "RETURNED COMPLETE at bd5d103 (8 commits, on top of 41c51c7): F6W-01..08 repaired; Q-017 holder table in 05 §12 carries the founder's decision; verifiers green; merge waits on the validator for 41c51c7 — MERGED into ceo-4 at 278e526 / 923d1ea"
+    },
+    {
+      "lane": "f2-06-recheck-04a",
+      "engine": "reviewer",
+      "kind": "independent recheck of the contracts-side repairs (17 items) at 3e51a9e; no validator run",
+      "dispatched": "2026-09-14",
+      "status": "running; archive verbatim as planning/reviews/F2-06-recheck-04a.md"
+    },
+    {
+      "lane": "f2-06-recheck-04b",
+      "engine": "reviewer",
+      "kind": "independent recheck of r7-prose-c (F6W-01..08 + Q-017 holder table) at 3e51a9e",
+      "dispatched": "2026-09-14",
+      "status": "running; archive verbatim as planning/reviews/F2-06-recheck-04b.md"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
-    "Full validator running on 0d7578f (merged head; first execution of the 20 fixture pairs from the three contracts lanes). Green → dispatch F2-06-recheck-04 (reviewer) on the contracts-side repairs of the day: F6A-09, F6A-10, F6C-06, F6C-10, F6C-11, F6C-13, F6D-05, F6D-08, F6D-09, F6D-12, F6X-01, F6X-02 (contracts half), F6R-01..04, RC4-07, and the r7-prose-c items F6W-01..08 + the Q-017 holder table. Red → one fix lane, then re-run",
+    "Rechecks 04a/04b running at 3e51a9e. On return: archive verbatim, update index/register, then PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
     "Owed after that (contracts): F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05 guard-body rebinding, F6D-09 determinism conjunct (decision), F6V-02, F6W-01 capability_refs registration, F6R-01's 30 rows; (prose) 05 §1 and 05 §7 sentences the contracts lanes named as owed; the link from 05 §12 to planning/F2/09-q017-conjunction-rerun.md; six paired conformance cases for the flagged roles (Q-017)",
     "Founder: perform the Q-022 entitlement read and report the observed limit, source and date"
@@ -343,5 +357,12 @@
     "Q-021": "placeholders adopted",
     "Q-022": "open; founder will read",
     "where": "inputs/FOUNDER-INPUT-2026-09-14-addendum.md and registers/open-questions.json"
+  },
+  "validator_last_full_run": {
+    "subject": "1573593 (contracts tree identical at 3e51a9e)",
+    "date": "2026-09-14",
+    "mode": "split: light validator (structural, 17 s) + tools/run_negative_fixtures.py (1,941 s) + tools/run_positive_fixtures.py (1,461 s), sequential — the single-process full run was killed for memory three times",
+    "result": "checks 305,223; negative 111/111 rejected for their own reason, leaked []; positive 72/72 passed, falsely_excluded []",
+    "note": "first execution of all 20 fixture pairs the three contracts lanes wrote today"
   }
 }
