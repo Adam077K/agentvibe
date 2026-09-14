@@ -2,14 +2,20 @@
   "id": "r35-grant-stripping-probe-owned-by-the-skill-it-probes",
   "repair": "R35",
   "finding": "F6D-05; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-05)",
-  "case": "`grant_stripping_probe_result`'s owner is handed back to S1-C03, the producing executor whose grants the probe is about.",
+  "case": "`grant_stripping_probe_result`'s owner is handed back to S1-C03 -- the producing executor whose grants the probe is about -- in BOTH places it is declared: the registry field and the pinned row.",
   "paired_benign_fixture": "fixtures/positive/r35-control-ownership-table-reordered-benign.json",
-  "why": "F6D-05: the committed state the finding measured. The positive control on grant removal was a field on the record whose grants are being removed, and R-X15's own argument is that the rule must be structural rather than asserted. One word restores it, and nothing but this check notices.",
+  "why": "F6D-05: the committed state the finding measured. The positive control on grant removal was a field on the record whose grants are being removed, and R-X15's own argument is that the rule must be structural rather than asserted. One word restores it, and nothing but this check notices. WRONG_REASON LEAK, FIXED IN THE SAME LANE THAT WROTE IT. The first version patched the REGISTRY ONLY, so the two declarations disagreed and the two-place guard fired first -- 'a producer-unauthorable field's owner differs from the pinned one' -- and the fixture was rejected without its own check ever running. A one-place mutation tests the mirror, not the rule; the rule is what a determined editor would do, which is edit both. Patching both puts A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS in front of it, and the mirror keeps its own separate value: it is what makes the two-place edit visible, not what refuses it.",
   "expect_failure_contains": "A POSITIVE CONTROL IS OWNED BY THE PARTY IT CONTROLS",
   "patch": [
     {
       "file": "record-registry.json",
       "pointer": "/SkillVersion/fields/payload/fields/grant_stripping_probe_result/owner",
+      "op": "replace",
+      "value": "S1-C03"
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/producer_unauthorable_fields/1/owner",
       "op": "replace",
       "value": "S1-C03"
     }
