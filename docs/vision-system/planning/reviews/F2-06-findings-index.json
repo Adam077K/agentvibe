@@ -19,11 +19,14 @@
     "class": "c",
     "heading": "### F6A-02 · class (c) · work triggered by an external state change with no inbound record has no entry path",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "f005276"
+      ],
+      "repair_status": "repaired by r7-prose-b (author-recorded): 05 §7 named world-change sweep (owner C02) + (c)-class test protocol",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b"
     }
   },
   "F6A-03": {
@@ -66,11 +69,14 @@
     "class": "b",
     "heading": "### F6A-05 · class (b) · MD-24 is neither closed nor listed open",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "d734124"
+      ],
+      "repair_status": "repaired by r7-prose-b (author-recorded): 05 header: MD-24 dissolved by non-adoption, §6 detector named as residue",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b"
     }
   },
   "F6A-06": {
@@ -167,11 +173,14 @@
     "class": "c",
     "heading": "### F6A-12 · class (c) · the founder-attention figure the design requires of itself is not produced",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "6d8ffa3"
+      ],
+      "repair_status": "repaired by r7-prose-b (author-recorded): 05 §12 priced holder review with denominator; both Q-017 branches with arithmetic; collision behaviour",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b"
     }
   },
   "F6B-01": {
@@ -303,11 +312,14 @@
     "class": "c",
     "heading": "### F6B-08 · (c) · X19 — the founder's own error rate — is named, routed into a packet's uncertainty field, and left off the owed-measurement list",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "a457be1"
+      ],
+      "repair_status": "repaired by r7-prose-b (author-recorded): 05 §13(2) X19 human-anchor error rate with stopping rule and interim reporting rule",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b"
     }
   },
   "F6B-09": {
@@ -453,11 +465,14 @@
     "class": "a",
     "heading": "**F6C-05 · (a) · The evaluation-capacity row is required against a table that does not exist, and the only",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "c5e60d0"
+      ],
+      "repair_status": "repaired by r7-prose-b (author-recorded): 07 §6 row split (6% maintenance / 4% evaluation, DESIGN PROPOSAL placeholders); 05 §7 made consistent",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b"
     }
   },
   "F6C-06": {
@@ -561,11 +576,14 @@
     "class": "a",
     "heading": "**F6C-12 · (a), low severity · Counter (4) names a state the registry does not have.**",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "d734124"
+      ],
+      "repair_status": "repaired by r7-prose-b (author-recorded): 05 §6 aligned to the registered AdmissionRecord.escalated",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b"
     }
   },
   "F6C-13": {
@@ -661,11 +679,14 @@
     "class": "b",
     "heading": "**F6C-18 · (b) · FAL-01 does not reach the chapter that carries the comparator.**",
     "disposition": {
-      "repaired_by": [],
-      "repair_status": "no landed repair commit names this finding",
+      "repaired_by": [
+        "c5e60d0"
+      ],
+      "repair_status": "repaired by r7-prose-b (author-recorded): 07 §7 SOURCE CLAIM carrying FAL-01 into the comparator",
       "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
-      "disposition_2026_09_14": "OPEN — no repair landed",
-      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+      "disposition_2026_09_14": "repaired, author-recorded, not independently rechecked; open until rechecked",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b"
     }
   },
   "F6C-19": {
