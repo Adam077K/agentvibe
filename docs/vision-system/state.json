@@ -151,10 +151,11 @@
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-14-after-disposition.md, then active_work below",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words (his 2026-09-14 re-invocation with the directive did not lift it)",
+    "Owed by Q-017 (d): re-run the three-part conjunction test more strictly over the 46 acceptance-owner roles (framer or reviewer lane, read-only, at a frozen SHA), then re-ask Q-017 on the reduced list",
     "When the full validator on aa63875 is green: merge builder/f2-r7-contracts; then dispatch r7-contracts-b (fresh builder, off the merge) for F6C-13, F6X-01, F6X-02 (registering the names prose-b stated), F6A-09, F6C-06, F6C-12 (if any registry alias), F6D-08, F6D-05, RC4-07, F6R-03, F6R-02, F6R-01 reclassification, F6R-04 F6D-07 note, and the three owed residues (F6D-09 determinism conjunct, F6C-11 instant-offset, F6C-10 park phase)",
     "recheck-02 DONE (archived). Residues owed: F6B-03 checker-binding (contracts lane), F6V-01/F6C-04 divergence wording or conjunct, F6V-02 (contracts), F6V-03/F6V-04 (prose lane); F6C-07 residue repaired in open-questions.json (Q-020/Q-021 → Q-022), recheck owed",
     "Then: narrow independent recheck of the r7 and prose repairs (F2-06-recheck-03); update PLANNING-REPORT.md §8 counts, README, site, founder page; history.jsonl; session file",
-    "Founder: read the note and the seven packets Q-016..Q-022 (Q-022 first); decide whether the five-criteria list is closed; say whether the 2026-09-14 agent thought goes into inputs/"
+    "Founder: perform the Q-022 entitlement read and report the observed limit, source and date"
   ],
   "dependencies": [
     {
@@ -284,9 +285,10 @@
   "founder_input_after_round": {
     "date": "2026-09-14",
     "channel": "conversation, after F2-06-recheck-01 returned",
-    "recorded_in_inputs": false,
+    "recorded_in_inputs": true,
     "gist": "Rethink the agent as a combination of fields (e.g. growth hacking with engineering principles) rather than a job title; one agent can be an expert in multiple fields and value may come from the combination.",
-    "orchestrator_assessment": "Consistent with AD-020 (a worker exists for one admitted work order and loads the procedures it needs) and with the round's finding that specialized knowledge is a procedure, not a person; does not combine permissions (consequence class still routes); cross-field synthesis as a value source is an untested empirical hypothesis (c-class) for a later round; not written into inputs/ pending the founder's word."
+    "orchestrator_assessment": "Consistent with AD-020 (a worker exists for one admitted work order and loads the procedures it needs) and with the round's finding that specialized knowledge is a procedure, not a person; does not combine permissions (consequence class still routes); cross-field synthesis as a value source is an untested empirical hypothesis (c-class) for a later round; not written into inputs/ pending the founder's word.",
+    "recorded_at": "inputs/FOUNDER-INPUT-2026-09-14-addendum.md"
   },
   "founder_page_republished": {
     "date": "2026-09-14",
@@ -297,5 +299,16 @@
   "founder_reinvocation_2026_09_14": {
     "what": "Founder re-invoked the CEO in a fresh context with the full directive and the two resume pointers; no packet answered, hold not lifted in his words, no word on the inputs/ addendum",
     "orchestrator_reading": "Directive §2 authorises repository-local planning work to continue; the hold covers building (B01). The owed contracts and verification lanes are planning work and were dispatched. Nothing was built."
+  },
+  "founder_decisions_2026_09_14": {
+    "tc35_five_criteria_closed": false,
+    "Q-016": "(d)",
+    "Q-017": "(d) re-run first; open",
+    "Q-018": "(b)",
+    "Q-019": "(d) then (b)",
+    "Q-020": "(a)",
+    "Q-021": "placeholders adopted",
+    "Q-022": "open; founder will read",
+    "where": "inputs/FOUNDER-INPUT-2026-09-14-addendum.md and registers/open-questions.json"
   }
 }

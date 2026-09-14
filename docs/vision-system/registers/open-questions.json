@@ -538,7 +538,7 @@
     "id": "Q-016",
     "kind": "Deferred question",
     "question": "Who is the terminal owner of an unowned duty or harm, and does that party exist as a record?",
-    "status": "Open",
+    "status": "Answered",
     "owner": "founder",
     "evidence": "Universal ownership and no ownership are one state [R5-11]. The national incident system defaults responsibility upward until delegated [R5-03]; this package defaults instead to the narrowest sufficient mandate, which leaves a residue with no holder. The subscription-activated candidate declared this gap against itself and routed it; the capability-differentiated candidate carried the same hole silently. The company/human review states the disposition in its own words: the resolution is a staffing decision and belongs to the founder.",
     "source_refs": [
@@ -575,13 +575,19 @@
     ],
     "origin": "F2 Step 5a-ii selection record §6.5, MD-01",
     "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
-    "asked": null
+    "asked": "2026-09-14",
+    "founder_answer": {
+      "date": "2026-09-14",
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
+      "option": "(d) Declare the founder the terminal element, as an explicit exception",
+      "note": "Founder chose (d) now; (a) or (b) owed before the first venture carries an outward obligation, per the packet's own recommendation."
+    }
   },
   {
     "id": "Q-017",
     "kind": "Deferred question",
     "question": "Which standing roles are staffed by a person other than the founder before work is admitted in that class, and what happens in a class where none is?",
-    "status": "Open",
+    "status": "Open; founder decided the method (d) — re-run owed, then re-ask",
     "owner": "founder",
     "evidence": "AC-M3-02, AC-M4-01, AC-M5-02 and AE-M4-05 — four reviews, four candidates, one gap. The staffing-precondition mechanism exists in one candidate and was not applied to that candidate's own acceptance table. The load is counted: a person is the acceptor on 37 of 46 capabilities in the consequence-class candidate and on every action in the 26 that floor at the economic/contractual class or above; in the workflow-first candidate 19 of 46 name the founder and 13 more an unspecified human, with every outward artifact needing a human acceptance.",
     "source_refs": [
@@ -620,13 +626,19 @@
     ],
     "origin": "F2 Step 5a-ii selection record §6.5, MD-02",
     "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
-    "asked": null
+    "asked": "2026-09-14",
+    "founder_answer": {
+      "date": "2026-09-14",
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
+      "option": "(d) Reduce the number of roles by re-running the three-part conjunction test more strictly",
+      "note": "Founder chose (d): re-run the test first, then decide who holds the roles that survive. Packet stays open until the re-run lands and the founder answers on the reduced list."
+    }
   },
   {
     "id": "Q-018",
     "kind": "Deferred question",
     "question": "Who may approve creation of a new capability, and what happens during a founder absence?",
-    "status": "Open",
+    "status": "Answered",
     "owner": "founder",
     "evidence": "Nothing located staffs a genuinely novel work kind without a pre-declared envelope, a pre-registered handler, or a human redeploy [R5-06, R5-08, R5-14]. The one counterexample writes a new skill and depends on an automatic success oracle that a business case does not supply [R5-21]. Every candidate in the round conceded that creating a capability for genuinely novel work requires a human approver; the differences were only in what may proceed while approval is pending, which R-G11 settles by effect class.",
     "source_refs": [
@@ -661,13 +673,19 @@
     ],
     "origin": "F2 Step 5a-ii selection record §6.5, MD-03",
     "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
-    "asked": null
+    "asked": "2026-09-14",
+    "founder_answer": {
+      "date": "2026-09-14",
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
+      "option": "(b) Outward-acting capability creation parks; read-only and internal-artifact capabilities proceed on the expiring bounded trial",
+      "note": "Arrival-rate count of genuinely novel work owed (U-1) before any standing approver is named."
+    }
   },
   {
     "id": "Q-019",
     "kind": "Deferred question",
     "question": "Who accepts the assessment of the founder's own competence?",
-    "status": "Open",
+    "status": "Answered",
     "owner": "founder",
     "evidence": "04-human-operation.md already fixes the opposite arrangement to the bare founder-accepts reading — a competent assessor states the exact factual proposition and its limits, and the owner may contest it or request a second assessment — and one candidate's own prohibition, that a holder may never decide the matter it is the subject of, forbids self-acceptance. Nothing in any lane's source set measures whether a system's operator remains competent [AG-10], and human evaluators agree with each other 5-65% [R7 F15].",
     "source_refs": [
@@ -703,13 +721,19 @@
     ],
     "origin": "F2 Step 5a-ii selection record §6.5, MD-04",
     "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
-    "asked": null
+    "asked": "2026-09-14",
+    "founder_answer": {
+      "date": "2026-09-14",
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
+      "option": "(d) Declare the capability unperformed and record it as such",
+      "note": "Then (b) an engaged professional once a venture carries an outward obligation. Assessment recorded as unperformed, never as passed."
+    }
   },
   {
     "id": "Q-020",
     "kind": "Deferred question",
     "question": "May anything halt or reverse a capacity shed in the moment, and who decides when a protected-lane holder refuses?",
-    "status": "Open",
+    "status": "Answered",
     "owner": "founder",
     "evidence": "This is an unresolved disagreement in the round and the evidence does not settle it (dissent F-1). Two candidates ask the holder and two apply a pre-endorsed order; the consolidation's words are that these are opposite and individually correct positions, and neither is refuted. Two live blocking findings fail in OPPOSITE directions from the one question: nothing can halt a shed, and nothing can override a refusal. The design already decides the second half — a holder's stated minimum is evidence, never consent.",
     "source_refs": [
@@ -746,13 +770,19 @@
     ],
     "origin": "F2 Step 5a-ii selection record §6.5, MD-07",
     "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
-    "asked": null
+    "asked": "2026-09-14",
+    "founder_answer": {
+      "date": "2026-09-14",
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
+      "option": "(a) Nobody may halt; the pre-endorsed order executes and is reviewed after",
+      "note": "With a named after-the-fact reverser; the tabletop rehearsal (one shed decision run both ways) is owed."
+    }
   },
   {
     "id": "Q-021",
     "kind": "Deferred question",
     "question": "What is the size of each reserved lane, its stated minimum and its lapse point?",
-    "status": "Open",
+    "status": "Answered",
     "owner": "founder",
     "evidence": "The session window resets on schedule whether consumed or not [R8 §3], so a reserve under a non-rolling allowance is waste rather than thrift — the one correct costing of a reservation anywhere in the round. No published denominator exists, so every figure this round can produce is a ratio between arms, and \"this design consumes 40% of the allowance\" is not a sentence anyone here can write [R8 W-6, MG-03].",
     "source_refs": [
@@ -789,13 +819,19 @@
     ],
     "origin": "F2 Step 5a-ii selection record §6.5, MD-08",
     "raised": "2026-09-13; written as a DIRECTIVE §3 packet in the F2 Step 5a-ii selection record and promoted into this register by the Step 5b amendment. Queued, not yet put to the founder.",
-    "asked": null
+    "asked": "2026-09-14",
+    "founder_answer": {
+      "date": "2026-09-14",
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
+      "option": "Adopt 07 §6's existing class shares unchanged as starting values; lapse point at 20% of the window remaining",
+      "note": "Both labelled DESIGN PROPOSAL placeholders owned by the founder; measurements to revise, not decisions."
+    }
   },
   {
     "id": "Q-022",
     "kind": "Deferred question",
     "question": "Is the one-concurrent-native-job pin a provider constraint or a self-imposed policy — what does the account entitlement say?",
-    "status": "Open",
+    "status": "Open; founder owns the read — not yet performed",
     "owner": "founder",
     "evidence": "X14. 07 section 6's capacity policy CP1 initializes at one native N job and one X job concurrently, and 05 section 12's reserved-lane holder is justified by fixture F-2, which requires 4× demand and therefore cannot be run at that pin — recorded there as owed, not as passed. The prerequisite is an account inspection, reading the account entitlement, and not an experiment: raising the pin to find out would be circular. The attack consolidation recorded this as G-04, \"the round's highest-leverage open question, gating four claim verdicts … and no owner\", and the F2 join reproduced it unchanged. 07 section 5 names an authenticated custodian for Claude usage and billing-UI observations and does not extend to the entitlement read. Q-020 and Q-021 each defer to this prerequisite by name in their latest_responsible_time.",
     "source_refs": [
@@ -831,6 +867,12 @@
     ],
     "origin": "F2 Step 6 review C, finding F6C-07 — X14 had no owner while both founder packets that depend on it deferred to it by name; recorded in the attack consolidation as G-04.",
     "raised": "2026-09-14; written as a DIRECTIVE §3 packet by the Step 6 prose repair and promoted into this register. Queued, not yet put to the founder.",
-    "asked": null
+    "asked": "2026-09-14",
+    "founder_answer": {
+      "date": "2026-09-14",
+      "channel": "conversation, answered through the orchestrator's decision prompts (AskUserQuestion), 2026-09-14",
+      "option": "Founder will read the entitlement himself; not yet read",
+      "note": "Owner: founder. Q-020 and Q-021 answered structurally but their timing still defers to this read."
+    }
   }
 ]
