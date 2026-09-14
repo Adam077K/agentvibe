@@ -256,6 +256,54 @@ it is written here instead of taken.
 
 ---
 
+## F6C-10 — the attempt ceiling, on the right record and compared
+
+*Required contract (C:313–324): `attempt_ceiling` required on `WorkOrder`; a conjunct on
+`FailureRecord: * → retry_admitted` refusing the transition at the ceiling; a named phase for the
+park; align `05` §6.*
+
+**Two of three clauses landed. The third was written, run, refused, and withdrawn — see OWED.**
+
+| name | kind | where |
+|---|---|---|
+| `attempt_ceiling` | **now required** payload field, `UInt64` | `record-registry.json` `WorkOrder` (`type_fields` + `fields`, `required: true`, owner `S1-C02`) and `records.schema.json` (`$ref …/UInt64`, added to `required`) |
+| `("ltCount", array_path, bound_path)` | **new conjunct DSL code** | `tools/phase_content.py`, composing to `lt(count(array), bound)` |
+| `("FailureRecord", "retry_admitted")` | **new RECORD_OVERRIDE** | `tools/phase_content.py` — the generic `retry_admitted` spec is shared by many records and was **not** edited |
+| `THE WORK ORDER CARRIES NO ATTEMPT CEILING` | check | `validate_contracts.py` |
+| `A RETRY IS ADMITTED WITHOUT COMPARING ATTEMPTS AGAINST THE CEILING` | check (reads the body) | `validate_contracts.py` |
+| `FAILURERECORD NOW HAS A PARK PHASE` | check (a tripwire) | `validate_contracts.py` |
+| pin on `criterion.FailureRecord.retry_admitted.v1` | pin (2 rows, one `op: lt`) | `pinned-conjuncts.json#/pins` |
+| `r24-work-order-carries-no-attempt-ceiling` | negative fixture | `fixtures/negative/` |
+| `r24-attempt-ceiling-required-benign` | positive fixture | `fixtures/positive/` |
+
+**`attempt_ceiling` stays OPTIONAL on `FailureRecord`, deliberately.** Its own note says making it
+required "would rewrite every criterion of this record through `tools/phase_content.py`'s role
+resolution". The override demands it through `nfp`, which names the exact path and disturbs no role.
+
+**`lt` and not `lte`** — the ceiling exists to refuse the attempt that reaches it.
+
+### OWED — the named park phase
+
+`parked` was added to `FailureRecord.lifecycle.phases` with three transitions, the criterion spec was
+written, and `author_phase_content.py` generated `criterion.FailureRecord.parked.v1` correctly. The
+validator then **refused all three transitions at `edge predicate`**: each `* → parked` edge needs its
+own `edge.FailureRecord.*.parked.v1` in `predicate-registry.json`, and the authoring tool writes
+**criteria, not edge predicates**. Authoring an edge predicate by hand is precisely the move this
+package's oracles exist to catch, so the phase was **withdrawn rather than half-added**.
+
+The full spec that carries it is written out, commented, in `tools/phase_content.py` beside the
+`FailureRecord` overrides, so the next lane restores rather than re-derives it. The check
+`FAILURERECORD NOW HAS A PARK PHASE` fails the moment the phase appears, which is what stops the owed
+clause landing silently incomplete.
+
+**`05` §6 alignment: not done.** The chapter sentence is already correct — it is the contracts that
+were behind it — so no prose edit was owed for the two clauses that landed. If the park phase lands,
+§6's "stated behaviour at the ceiling: park" should then name the registered phase.
+
+**Under F6R-01:** F6C-10 is **pinned**, so it leaves `not_answered` (33 → 32).
+
+---
+
 ## What this lane did NOT land, and exactly where it stopped
 
 The lane was dispatched against **18** findings and landed **two** — F6A-10 and F6D-12 — plus

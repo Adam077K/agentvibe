@@ -264,6 +264,42 @@ for name, record in RECORDS.items():
                     ("one record declares one payload field at two types", name, field,
                      {"type_fields": declared_type, "fields": added[field]["type"]}))
 
+# --- F6C-10: THE ATTEMPT CEILING IS ON THE WORK ORDER AND IS COMPARED. ---------
+#
+# `05` section 6 R-X10: "A work order carries a maximum attempt count with a named owner,
+# C02, and a stated behaviour at the ceiling: park." `attempt_ceiling` existed on
+# `FailureRecord` ALONE, optional, and appeared in ZERO predicates -- so a work order
+# carried no ceiling until it had already failed, and `observed -> retry_admitted` carried
+# no guard comparing attempts against it. AE-M1-04, AE-M2-06 and AE-M4-04 each asked for
+# this in near-identical words against three different candidates.
+checked("attempt_ceiling" in SCHEMAS["records.schema.json"]["$defs"]["WorkOrder"]["properties"]["payload"]["required"],
+        ("THE WORK ORDER CARRIES NO ATTEMPT CEILING: R-X10 puts the maximum attempt count "
+         "on the work order, and it lived on `FailureRecord` alone -- so the bound existed "
+         "only after the thing it bounds had already happened (F6C-10)",
+         {"required": len(SCHEMAS["records.schema.json"]["$defs"]["WorkOrder"]["properties"]["payload"]["required"])}))
+_retry_body = json.dumps(PREDICATES["criterion.FailureRecord.retry_admitted.v1"]["body"])
+checked('"op": "count"' in _retry_body and '"/payload/attempt_ceiling"' in _retry_body
+        and '"op": "lt"' in _retry_body,
+        ("A RETRY IS ADMITTED WITHOUT COMPARING ATTEMPTS AGAINST THE CEILING: the ceiling "
+         "is recorded and the transition into `retry_admitted` does not read it, which is "
+         "the same anti-shape as F6C-11 one record over -- the evidence for a ceiling "
+         "collected and never applied (F6C-10)",
+         {"needs": ["count(/payload/attempt_refs)", "lt", "/payload/attempt_ceiling"]}))
+# OWED, and instrumented rather than noted. R-X10's third clause is "a stated behaviour at
+# the ceiling: park", and `FailureRecord` has no phase in which to record it. This lane
+# WROTE that phase and WITHDREW it: adding it needs three `edge.FailureRecord.*.parked.v1`
+# predicates, and tools/author_phase_content.py authors criteria and not edge predicates,
+# so the validator refused all three transitions at `edge predicate`. Authoring an edge
+# predicate by hand is the move this package's oracles exist to catch. The check below
+# fails when the phase arrives, so the owed clause cannot land half-done and silent.
+checked("parked" not in RECORDS["FailureRecord"]["lifecycle"]["phases"],
+        ("FAILURERECORD NOW HAS A PARK PHASE and F6C-10's third clause can be finished: "
+         "each `* -> parked` transition needs its own `edge.FailureRecord.*.parked.v1` "
+         "predicate, and the criterion spec that belongs with it is written out in full in "
+         "tools/phase_content.py beside the FailureRecord overrides. Restore it, then "
+         "delete this check (F6C-10, owed clause)",
+         {"phases": RECORDS["FailureRecord"]["lifecycle"]["phases"]}))
+
 # --- F6C-11: A RULE THAT STATES A COMPARISON MAKES ONE. ------------------------
 #
 # `05` section 6's silent-drop counter (3) reads: "retention on any holding destination
@@ -1500,7 +1536,7 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
 ANSWERED_ELSEWHERE_CEILING = 2
-NOT_ANSWERED_CEILING = 33
+NOT_ANSWERED_CEILING = 32
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -1530,8 +1566,8 @@ checked(len(NOT_ANSWERED) <= NOT_ANSWERED_CEILING,
 # that does not move with the table it budgets is the denominator again, which is the rule
 # NEGATIVE_FIXTURE_FLOOR's own comment states and this file did not apply to itself.
 # RAISE THESE WHENEVER A PIN IS ADDED. Never lower one without writing the reason here.
-PIN_FLOOR = 69           # 68 -> 69 (F6C-11): the retention-comparison pin
-PIN_ROW_FLOOR = 152      # 150 -> 152 (F6C-11): two rows on the retention pin
+PIN_FLOOR = 70           # 69 -> 70 (F6C-10): the attempt-ceiling pin
+PIN_ROW_FLOOR = 154      # 152 -> 154 (F6C-10): two rows on the attempt-ceiling pin
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
 FINDING_SOURCE_FLOOR = 106  # new (RC5-02): the declaration the ceiling above reads
 checked(len(PINNED["pins"]) >= PIN_FLOOR
@@ -2582,12 +2618,13 @@ checked(version_rows >= 14,
 #   negative: 97 -> 98 and positive 58 -> 59 (F6D-09): the predicate-bearing type
 #             pair -- one adverse untyping a field, one benign reordering an enum.
 #   negative: 98 -> 99 and positive 59 -> 60 (F6C-11): the retention-comparison pair.
+#   negative: 99 -> 100 and positive 60 -> 61 (F6C-10): the attempt-ceiling pair.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 99
-POSITIVE_FIXTURE_FLOOR = 60
+NEGATIVE_FIXTURE_FLOOR = 100
+POSITIVE_FIXTURE_FLOOR = 61
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

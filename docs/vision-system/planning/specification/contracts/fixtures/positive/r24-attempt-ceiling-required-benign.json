@@ -1,0 +1,36 @@
+{
+  "id": "r24-attempt-ceiling-required-benign",
+  "repair": "R24",
+  "finding": "F6C-10; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-10), benign column",
+  "case": "The same required list with `attempt_ceiling` moved to the front, which requires exactly the same fields and must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r24-work-order-carries-no-attempt-ceiling.json",
+  "why": "The adverse case removes a required field. The benign case proves the control is about WHICH fields are required and not about the order they are listed in -- the registry half is a list and the schema half is a list, and comparing them as sequences would make a harmless reordering a contract change.",
+  "expect_pass": true,
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/WorkOrder/properties/payload/required",
+      "op": "replace",
+      "value": [
+        "attempt_ceiling",
+        "case_ref",
+        "duty_refs",
+        "capability_contract_ref",
+        "outcome_ref",
+        "input_refs",
+        "allowed_tool_profile_ref",
+        "acceptance_contract_ref",
+        "acceptance_owner_assignment_ref",
+        "executor_constraint_ref",
+        "causal_episode_id",
+        "reservation_refs",
+        "wall_deadline",
+        "checkpoint_contract_ref",
+        "stop_predicates",
+        "unfinished_obligation_refs",
+        "report_refs"
+      ]
+    }
+  ]
+}

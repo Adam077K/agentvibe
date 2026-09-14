@@ -58869,24 +58869,37 @@
             "arg": "subject_ref"
           },
           "field_paths": [
+            "/payload/work_order_ref",
             "/payload/attempt_refs",
-            "/payload/work_order_ref"
+            "/payload/attempt_ceiling",
+            "/payload/next_discriminator"
           ]
         },
         {
-          "op": "release_contract",
-          "subject_ref": {
-            "arg": "subject_ref"
+          "op": "lt",
+          "left": {
+            "op": "count",
+            "items": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/attempt_refs"
+            }
           },
-          "phase": "retry_admitted"
-        },
-        {
-          "op": "fresh_interval",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "start_path": "/effective_from",
-          "end_path": "/effective_until"
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/attempt_ceiling"
+          }
         },
         {
           "op": "attested_result",
@@ -58911,7 +58924,7 @@
         }
       ]
     },
-    "meaning": "A new current attempt within the remaining count and budget and the ORIGINAL business conflict; the deadline is newly authorized, never replayed. Phase assessed: retry_admitted.",
+    "meaning": "A retry names the work order it belongs to, the attempts already made, the ceiling those attempts are measured against and the new discriminator that makes this attempt different. The attempts made are STRICTLY FEWER than the ceiling: the ceiling is compared here, not merely recorded, and a retry at the ceiling is refused rather than admitted. Phase assessed: retry_admitted.",
     "owner_component": "S1-C02",
     "source": "work-knowledge-contracts.json#/records/FailureRecord",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -59003,7 +59016,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "A new current attempt within the remaining count and budget and the ORIGINAL business conflict; the deadline is newly authorized, never replayed.",
+    "requires": "A retry names the work order it belongs to, the attempts already made, the ceiling those attempts are measured against and the new discriminator that makes this attempt different. The attempts made are STRICTLY FEWER than the ceiling: the ceiling is compared here, not merely recorded, and a retry at the ceiling is refused rather than admitted.",
     "derived_from": [
       {
         "file": "02-authority-recovery.md",
@@ -137793,6 +137806,7 @@
           },
           "field_paths": [
             "/payload/stop_predicates",
+            "/payload/attempt_ceiling",
             "/payload/duty_refs",
             "/payload/unfinished_obligation_refs"
           ]

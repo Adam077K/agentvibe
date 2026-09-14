@@ -206613,6 +206613,9 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "attempt_ceiling": {
+              "$ref": "values.schema.json#/$defs/UInt64"
             }
           },
           "required": [
@@ -206631,7 +206634,8 @@
             "checkpoint_contract_ref",
             "stop_predicates",
             "unfinished_obligation_refs",
-            "report_refs"
+            "report_refs",
+            "attempt_ceiling"
           ],
           "additionalProperties": false
         }

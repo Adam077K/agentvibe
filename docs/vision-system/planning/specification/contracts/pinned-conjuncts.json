@@ -2427,6 +2427,33 @@
           "why": "and the operands stay REQUIRED. Requiring `longest_plausible_outage` as a per-entry field is the right answer to `stated, not assumed` and is more than the prose promised; the comparison is what it was missing, not the collection"
         }
       ]
+    },
+    {
+      "predicate_id": "criterion.FailureRecord.retry_admitted.v1",
+      "kind": "criterion",
+      "findings": [
+        "F6C-10"
+      ],
+      "decisions": [
+        "R-X10"
+      ],
+      "why": "F6C-10: `attempt_ceiling` was on `FailureRecord` alone, optional, and in zero predicates, so a retry was admitted without anything comparing the attempts already made against the bound that exists to stop them. The generic `retry_admitted` phase spec is shared by many records and was NOT edited -- this criterion comes from a FailureRecord override, and this pin is what stops that override being quietly returned to the generic one.",
+      "require": [
+        {
+          "op": "lt",
+          "why": "the attempts already made are STRICTLY FEWER than the ceiling. `lte` would admit the attempt that reaches it, which is the one the ceiling exists to refuse"
+        },
+        {
+          "op": "nonempty_fields",
+          "field_paths_include": [
+            "/payload/work_order_ref",
+            "/payload/attempt_refs",
+            "/payload/attempt_ceiling",
+            "/payload/next_discriminator"
+          ],
+          "why": "and the ceiling, the attempts and the new discriminator are all named on the record. A retry with no discriminator repeats an unchanged failure, which is the record's own invariant"
+        }
+      ]
     }
   ],
   "pinned_transitions_why": "A conjunct pin holds a guard to what it must DEMAND. It says nothing about whether the edge exists at all, and RC-01 was exactly that shape of defect: every guard was well formed, every criterion was sourced, and a delivery that failed in flight had nowhere to go. Deleting a transition is a one-line edit to record-registry.json that no check in this package noticed -- phase reachability is not checked, and a phase with fewer ways in is not a phase with fewer conjuncts. These rows are hand-written for the same reason the conjunct pins are: nothing derives them, so regenerating cannot satisfy them.\n\nF6D-04 extends this table from 6 rows to 32. The six it had were all on `Fulfillment` and `SalesAgreement`, and NOT ONE of the fifteen WORK-1.1 records had a pinned transition -- so the earlier repair pinned the instances it found and the new layer arrived with none. Measured: three edge deletions, `ConsequenceDerivation: recomputed_at_release -> parked_on_mismatch`, `AcceptanceInterval: in_acceptance -> rejected` and `StandingHolder: staffed -> suspended`, three validator runs, three exit 0. Every edge named in `pinned_attachments` is pinned here as well, because the two attacks are different: deleting the CALL leaves the route and removes the check, deleting the TRANSITION leaves the check and removes the route, and each control is blind to the other's attack.",
@@ -3479,7 +3506,6 @@
     "F6C-05": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-06": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-07": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
-    "F6C-10": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-12": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-13": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",
     "F6C-16": "No file-and-check pair is recorded here for it. Classified conservatively by F6R-01: the recheck measured that THREE of the committed 37 had no repair anywhere and did not establish that the other 34 did, so `answered_elsewhere` carries only the findings whose answering file and check this package can name. A finding moves out of this set by someone naming them, never by assertion.",

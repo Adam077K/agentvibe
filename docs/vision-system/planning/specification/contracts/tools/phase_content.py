@@ -1090,6 +1090,8 @@ ENVELOPE_FALLBACK = {
 #   ("eqF", path, literal)                      that path equals that exact literal
 #   ("ltF", path, path)                         the first path is strictly less
 #                                               than the second (F6C-11)
+#   ("ltCount", array_path, bound_path)         the array is strictly shorter
+#                                               than that bound (F6C-10)
 #   ("either", [item, ...])                     any over built conjuncts
 #   ("every", [item, ...])                      a nested all over built conjuncts
 #
@@ -2628,6 +2630,47 @@ DOMAIN_VALIDATOR_CITE = ("capabilities.json", "#/domain_validators")
 
 RECORD_OVERRIDES = {
 
+    # -- FailureRecord (S1-C02) ---------------------------
+    # F6C-10. `05` section 6 R-X10: "a work order carries a maximum attempt count with a
+    # named owner, C02, and a stated behaviour at the ceiling: park." `attempt_ceiling`
+    # existed on FailureRecord ALONE, optional, and appeared in zero predicates;
+    # `observed -> retry_admitted` carried no guard comparing attempts against it; and
+    # FailureRecord had no phase in which the stated behaviour could be recorded, so
+    # "terminal" had no registered meaning either. The generic `retry_admitted` and
+    # `parked` specs are shared by many records and are NOT edited -- these two overrides
+    # are what makes the ceiling load-bearing on the one record that holds it.
+    ("FailureRecord", "retry_admitted"): spec(
+        'A retry names the work order it belongs to, the attempts already made, the '
+        'ceiling those attempts are measured against and the new discriminator that makes '
+        'this attempt different. The attempts made are STRICTLY FEWER than the ceiling: '
+        'the ceiling is compared here, not merely recorded, and a retry at the ceiling is '
+        'refused rather than admitted.',
+        ['a-attempt-states', 'a-op-states'],
+        [('nfp', ['/payload/work_order_ref', '/payload/attempt_refs',
+                  '/payload/attempt_ceiling', '/payload/next_discriminator']),
+         ('ltCount', '/payload/attempt_refs', '/payload/attempt_ceiling'), AR],
+        hard=['nfp', 'ltCount']),
+    # OWED, and this is where it stops rather than where it is faked. F6C-10's third
+    # clause -- "a named phase for the park" -- was WRITTEN and WITHDRAWN in this lane.
+    # Adding `parked` to FailureRecord's phases needs three `edge.FailureRecord.*.parked.v1`
+    # predicates in predicate-registry.json, and tools/author_phase_content.py authors
+    # CRITERIA, not edge predicates: it generated `criterion.FailureRecord.parked.v1`
+    # correctly and the validator then refused all three transitions at `edge predicate`.
+    # Authoring an edge predicate by hand is the one move this package's own oracles are
+    # built to catch, so the phase is owed rather than half-added. The spec that would
+    # carry it, when the edge predicates exist, is:
+    #
+    #   ("FailureRecord", "parked"): spec(
+    #       'The ceiling has been REACHED -- the attempts made are not fewer than it -- and
+    #        the work order this failure belongs to is named. Park is the stated behaviour
+    #        at the ceiling and it is a recorded state, which is what makes stopping
+    #        different from an absence of further attempts.',
+    #       ['k-case-park', 'a-attempt-states'],
+    #       [('nfp', ['/payload/work_order_ref', '/payload/attempt_refs',
+    #                 '/payload/attempt_ceiling', '/payload/next_discriminator']),
+    #        ('not', ('ltCount', '/payload/attempt_refs', '/payload/attempt_ceiling')), AR],
+    #       hard=['nfp', 'not']),
+
     # -- R-C / AD-013: Fulfillment's domain lifecycle. ----------------------------
     #
     # `refunded` is deliberately ABSENT and becomes a registered gap. The corpus says
@@ -3813,6 +3856,15 @@ def build_conjunct(item, record, criterion_id, required_fields):
         return {"op": "present", "value": _subject_path(item[1])}
     if kind == "eqF":
         return {"op": "eq", "left": _subject_path(item[1]), "right": item[2]}
+    if kind == "ltCount":
+        # F6C-10. `attempt_refs` is an array and `attempt_ceiling` a UInt64, so the
+        # comparison the ceiling exists for is between the COUNT of the first and
+        # the second. `count` returns a canonical unsigned decimal string and
+        # `UInt64` is one, so `lt` compares them as the same operand type rather
+        # than failing on incomparable units.
+        return {"op": "lt",
+                "left": {"op": "count", "items": _subject_path(item[1])},
+                "right": _subject_path(item[2])}
     if kind == "ltF":
         # F6C-11. The DSL had no comparison at all, which is why 33 of the 46 criteria on
         # the fifteen new records contain no comparison operator: a rule whose own words
