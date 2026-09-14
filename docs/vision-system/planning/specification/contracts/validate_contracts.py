@@ -486,6 +486,72 @@ for _kind, _unit in sorted(EXISTENCE_REASON_PAIRS.items()):
              "names and which reads as SATISFIED (F6D-12)",
              {"reason": _kind, "unit": _unit}))
 
+# --- F6X-02: THE EIGHT BOUNDARY KINDS, AND THE FACT THAT NOTHING WAS CONTESTED. ------
+#
+# F6X-02 sat unrepaired through two lanes with the same reason recorded each time, and the
+# reason was a good one: `registers/review-findings.json` says the members "would have been
+# INVENTED rather than derived -- needs the chapter to state them first", and
+# pinned-conjuncts.json repeats it, "a pin over an enum this package has not been given would
+# be exactly that invention". `05` section 5 states them now, and
+# planning/F2/08-repair-names-prose-b.md lists all eight with the transfer each is derived
+# from. These are those eight and no others: a member not on that list is a member the
+# chapter did not state, which is the thing both refusals were protecting against.
+#
+# `ConstraintSet.boundary_kind` was `values.schema.json#/$defs/string`, so `boundary_kind:
+# "whatever"` validated on the record whose entire subject is WHICH BOUNDARY WAS CROSSED --
+# and a constraint set is what says what may not be done with what was handed over. The set
+# is CLOSED and a transfer outside it is REFUSED, never defaulted, so the schema must carry
+# no `default` beside the enum: a default turns every unrecognised transfer into a silently
+# admitted one of the eight, which is worse than the free string it replaces because it reads
+# as a constrained field. That absence is asserted below rather than assumed.
+BOUNDARY_KINDS = ["delegation", "machine_handoff", "consultation_return", "continuation",
+                  "acceptance_submission", "founder_brief", "custody_transfer", "stage_import"]
+_cs_bk = SCHEMAS["records.schema.json"]["$defs"]["ConstraintSet"]["properties"]["payload"]["properties"]["boundary_kind"]
+checked(set(_cs_bk.get("enum") or []) == set(BOUNDARY_KINDS),
+        ("A BOUNDARY KIND OUTSIDE THE EIGHT `05` section 5 STATES IS WRITABLE, or one of the "
+         "eight is not: the set is closed and a transfer whose kind is not a member is refused "
+         "at the boundary. Before this repair the field was a free string, so a constraint set "
+         "could name a boundary nothing in the specification describes and still validate "
+         "(F6X-02)",
+         {"declared": sorted(_cs_bk.get("enum") or []), "the eight": sorted(BOUNDARY_KINDS),
+          "stated by": "05-work-agents-skills.md section 5; derivations in "
+                        "planning/F2/08-repair-names-prose-b.md"}))
+checked("default" not in _cs_bk,
+        ("THE CLOSED BOUNDARY-KIND SET HAS A DEFAULT, which is the one way to reopen it "
+         "without adding a member: a default admits every unrecognised transfer as one of the "
+         "eight instead of refusing it, and does so on a field that now READS as constrained. "
+         "`05` section 5 says refused, never defaulted (F6X-02)", _cs_bk))
+_cs_reg = RECORDS["ConstraintSet"]["fields"]["payload"]["fields"]["boundary_kind"]["type"]
+checked(_cs_reg.startswith("Enum<"),
+        ("THE REGISTRY STILL DECLARES `boundary_kind` AS A FREE STRING while the schema closes "
+         "it: two declarations of one field, one of which admits anything. The member-by-member "
+         "comparison below only runs on fields the REGISTRY declares as an enum, so a registry "
+         "left as `string` does not fail that walk -- it leaves it (F6X-02)", _cs_reg))
+#
+# And the second limb. `04` DELTA 1 asks an operator projection to carry "what was omitted AND
+# WHAT WAS CONTESTED"; `omission_manifest_ref` carried the first limb and nothing carried the
+# second. `contested_refs` is REQUIRED and not optional, and that is the whole of the design:
+# an EMPTY ARRAY states that nothing was contested, and an ABSENT FIELD states that nobody
+# looked. Optional collapses those two into one absence, and the operator reading the
+# projection -- who is the person this record exists for -- cannot tell them apart. Asserted in
+# BOTH declarations, because F6A-10 is the finding about a field that is right in one of them.
+_op_schema = SCHEMAS["records.schema.json"]["$defs"]["OperatorProjection"]["properties"]["payload"]
+_op_reg = RECORDS["OperatorProjection"]["fields"]["payload"]
+_op_reg_required = set(_op_reg.get("required_fields") or []) | {
+    _f for _f, _b in (_op_reg.get("fields") or {}).items() if _b.get("required")}
+checked("contested_refs" in (_op_schema.get("required") or [])
+        and "contested_refs" in _op_reg_required,
+        ("`contested_refs` IS OPTIONAL ON AN OPERATOR PROJECTION, so `nothing was contested` "
+         "and `nobody looked` are the same absence. `04` DELTA 1 asks for what was omitted AND "
+         "what was contested; the empty array is the answer to the first question and the "
+         "missing field is the answer to no question at all (F6X-02)",
+         {"schema required": "contested_refs" in (_op_schema.get("required") or []),
+          "registry required": "contested_refs" in _op_reg_required}))
+_cr = _op_schema["properties"].get("contested_refs", {})
+checked(_cr.get("type") == "array" and "record_type" in ((_cr.get("items") or {}).get("properties") or {}),
+        ("`contested_refs` IS NOT A LIST OF RECORD REFERENCES: the field names WHICH refs were "
+         "contested, so an untyped or scalar declaration answers `how many` and not `which` "
+         "(F6X-02)", {"declared": _cr}))
 # --- F6A-10: A CLOSED ENUM IS DECLARED TWICE, AND THE TWO DECLARATIONS ARE COMPARED. ---
 #
 # The rule above compares the registry's payload to the schema's as SETS OF FIELD NAMES,
@@ -2651,12 +2717,17 @@ checked(version_rows >= 14,
 #   gives one predicate the NEGATIVE-FIXTURE SENTINEL and must not, because that is
 #   the exclusion which stopped r3-lifecycle-status-as-judgment-subject being refused
 #   by a check it was not written for.
+#   negative: 101 -> 103 and positive 62 -> 64 (F6X-02): the boundary-kind pair and the
+#   contested-refs pair. Both adverse cases are a one-line edit to a JSON list -- a ninth
+#   member added, a required field struck -- and both benign twins are a reordering of the
+#   same list, because a control that cannot tell a widening from a reordering is one
+#   contributors learn to route around.
 #   positive: 17 before R18, 52 now. The pairing rule that set 17 -- one benign case per
 #             adverse case of selection-record section 12.5 -- now also covers every guard,
 #             because F6C-16 measured 14 of 30 with a pair and a suite that refuses
 #             everything passes every adverse row.
-NEGATIVE_FIXTURE_FLOOR = 101
-POSITIVE_FIXTURE_FLOOR = 62
+NEGATIVE_FIXTURE_FLOOR = 103
+POSITIVE_FIXTURE_FLOOR = 64
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

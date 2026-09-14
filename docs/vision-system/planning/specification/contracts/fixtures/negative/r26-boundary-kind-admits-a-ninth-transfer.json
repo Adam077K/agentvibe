@@ -1,0 +1,27 @@
+{
+  "id": "r26-boundary-kind-admits-a-ninth-transfer",
+  "repair": "R26",
+  "finding": "F6X-02; reviews/F2-06-X-cross-cutting.md (F6X-02)",
+  "case": "A ninth boundary kind added to the closed set -- a transfer `05` section 5 does not state and planning/F2/08-repair-names-prose-b.md does not derive.",
+  "paired_benign_fixture": "fixtures/positive/r26-boundary-kind-eight-reordered-benign.json",
+  "why": "F6X-02 went unrepaired through two lanes for a reason worth preserving: the register said the members \"would have been INVENTED rather than derived\". The chapter states them now, so the enum is derivable -- and the moment it is derivable, the thing that can go wrong changes shape. It is no longer a free string admitting anything; it is a closed set that someone widens by one member in a diff that looks like a feature. This fixture is that diff. The set is closed and a transfer outside it is REFUSED at the boundary, so a ninth member is not an extension of the contract, it is a hole in it.",
+  "expect_failure_contains": "A BOUNDARY KIND OUTSIDE THE EIGHT",
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/ConstraintSet/properties/payload/properties/boundary_kind/enum",
+      "op": "replace",
+      "value": [
+        "delegation",
+        "machine_handoff",
+        "consultation_return",
+        "continuation",
+        "acceptance_submission",
+        "founder_brief",
+        "custody_transfer",
+        "stage_import",
+        "informal_handover"
+      ]
+    }
+  ]
+}

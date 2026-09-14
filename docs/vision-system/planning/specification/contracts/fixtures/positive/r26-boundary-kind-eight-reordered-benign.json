@@ -1,0 +1,26 @@
+{
+  "id": "r26-boundary-kind-eight-reordered-benign",
+  "repair": "R26",
+  "finding": "F6X-02; reviews/F2-06-X-cross-cutting.md (F6X-02), benign column",
+  "case": "The same eight boundary kinds in a different order, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r26-boundary-kind-admits-a-ninth-transfer.json",
+  "why": "The control keys on MEMBERSHIP. An enum's members are a set, `in` does not read order, and no predicate in the registry does either -- so a byte comparison would refuse a reordering that changes no admissible transfer, and a control that refuses harmless edits is one contributors learn to route around. This is the same argument r20 makes for the custody tie-break enum, and it is made again here rather than assumed to carry, because the assertion is a different literal in a different place.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/ConstraintSet/properties/payload/properties/boundary_kind/enum",
+      "op": "replace",
+      "value": [
+        "stage_import",
+        "custody_transfer",
+        "founder_brief",
+        "acceptance_submission",
+        "continuation",
+        "consultation_return",
+        "machine_handoff",
+        "delegation"
+      ]
+    }
+  ]
+}

@@ -375,6 +375,76 @@ than faked. The tripwire is what makes the absence loud, and it survives this st
 strengthened rather than deleted.
 
 ---
+## F6X-02 --- the eight boundary kinds, and `contested_refs`
+
+**Registered, not invented.** F6X-02 went unrepaired through two lanes with the same reason each
+time, and it was a good reason: the register records its status as *"the enum members would have
+been invented rather than derived --- needs the chapter to state them first"*, and
+`pinned-conjuncts.json` repeats it, *"a pin over an enum this package has not been given would be
+exactly that invention"*. `05` section 5 states them now. This lane registered **exactly the ten
+strings** in [`08-repair-names-prose-b.md`](08-repair-names-prose-b.md) and derived none of its own.
+**No chapter edit was needed** --- `05` section 5 already names all ten, including the field name,
+its type, its requiredness and the meaning of the empty case.
+
+### `ConstraintSet.payload.boundary_kind` --- closed, eight members, refused not defaulted
+
+| where | what changed |
+|---|---|
+| `record-registry.json` | `string` -> `Enum<delegation,machine_handoff,consultation_return,continuation,acceptance_submission,founder_brief,custody_transfer,stage_import>`, in `type_fields` **and** in `fields` |
+| `records.schema.json` | free `$ref` to `string` -> a closed `enum` of the same eight |
+| `validate_contracts.py` | `BOUNDARY_KINDS`, a hand-written literal, plus three checks |
+
+The three checks are separate on purpose, because they fail for three different reasons:
+
+1. **A BOUNDARY KIND OUTSIDE THE EIGHT** --- the schema's members compared **as a set** against
+   the literal. Membership, not order: an enum's members are a set, `in` does not read order, and
+   a control that refuses a harmless reordering is one contributors route around.
+2. **THE CLOSED BOUNDARY-KIND SET HAS A DEFAULT** --- the one way to reopen a closed set without
+   adding a member to it. A default admits every unrecognised transfer as one of the eight instead
+   of refusing it, **on a field that now reads as constrained**, which is worse than the free
+   string it replaces. `05` section 5 says refused, never defaulted; the absence is asserted.
+3. **THE REGISTRY STILL DECLARES `boundary_kind` AS A FREE STRING** --- and this one is the
+   subtle one. F6A-10's member-by-member walk only visits fields the **registry** declares as
+   `Enum<...>`. A registry left as `string` does not FAIL that walk; it silently leaves it, and
+   the schema's closed enum then stands alone against a registry that admits anything.
+
+### `OperatorProjection.payload.contested_refs` --- `Ref<Record>[]`, required
+
+Required, never optional, and that is the whole design rather than a strictness preference:
+**an empty array states that nothing was contested; an absent field states that nobody looked.**
+Optional collapses those two into one absence and the operator --- who is the person the record
+exists for --- cannot tell them apart. It carries the second limb of `04` DELTA 1, *"what was
+omitted **and what was contested**"*, whose first limb `omission_manifest_ref` already carried and
+whose second limb had no field on any operator-facing record.
+
+Asserted in **both** declarations, because F6A-10 is precisely the finding about a field that is
+right in one of them. A second check asserts the field is a **list of record references** and not
+a scalar: the field names *which* refs were contested, and a count answers a different question.
+
+### The four fixtures, and why each adverse case has a reordering beside it
+
+| fixture | proves |
+|---|---|
+| `negative/r26-boundary-kind-admits-a-ninth-transfer` | a ninth member, added in a diff that reads as a feature |
+| `positive/r26-boundary-kind-eight-reordered-benign` | the same eight reordered must PASS |
+| `negative/r27-contested-refs-made-optional` | one string struck from `required` |
+| `positive/r27-operator-projection-required-reordered-benign` | the same required set reordered must PASS |
+
+Both adverse cases are **one-line edits to a JSON list** --- the smallest possible diff for the
+largest possible change in what a passing record promises. That is exactly why each is paired with
+a reordering: a check that pins the bytes of a list cannot tell a widening from a reordering, fails
+on every unrelated field anyone ever adds, and gets deleted for it.
+
+Floors moved with them --- negative 101 -> 103, positive 62 -> 64, in both `MANIFEST.json` files
+and at `NEGATIVE_FIXTURE_FLOOR` / `POSITIVE_FIXTURE_FLOOR`, with the reason written at each.
+
+**Stated narrowly:** the four new fixtures were **not executed** in this commit. The light
+validator (`CONTRACTS_FIXTURE_RUN=1`) passes, which proves the checks are green on the real tree
+and says nothing about whether each adverse case is refused *for its stated reason*. The full run
+at the close of this lane is what settles that, and step 0 above is what a lane that never ran it
+costs.
+
+---
 ## What this lane did NOT land, and exactly where it stopped
 
 Dispatched against **18** findings. Landed **five** — F6A-10, F6D-12, F6D-09, F6C-11, F6C-10 — plus

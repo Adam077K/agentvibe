@@ -15801,7 +15801,7 @@
         "type_fields": {
           "content_digest": "string",
           "typed_members": "string[]",
-          "boundary_kind": "string",
+          "boundary_kind": "Enum<delegation,machine_handoff,consultation_return,continuation,acceptance_submission,founder_brief,custody_transfer,stage_import>",
           "producing_structure_ref": "Ref<ResponsibilityAssignment>",
           "validated_at_boundary": "boolean",
           "prose_delivery": "string",
@@ -15828,8 +15828,10 @@
             "required": true
           },
           "boundary_kind": {
-            "type": "string",
-            "required": true
+            "type": "Enum<delegation,machine_handoff,consultation_return,continuation,acceptance_submission,founder_brief,custody_transfer,stage_import>",
+            "required": true,
+            "added_by": "WORK-1.1-F6X02",
+            "note": "F6X-02. Closed set, eight members, stated as specification in `05` section 5 and listed member-by-member with its derivation in planning/F2/08-repair-names-prose-b.md. A transfer whose boundary kind is not a member is REFUSED at the boundary, never defaulted -- which is why the schema carries no `default` beside this enum and validate_contracts.py asserts the absence. The field was a free string until this repair, so `boundary_kind: \"whatever\"` was admissible on a record whose whole subject is which boundary was crossed."
           },
           "producing_structure_ref": {
             "type": "Ref<ResponsibilityAssignment>",
@@ -53400,6 +53402,12 @@
             "required": true,
             "added_by": "WORK-1.1-F6B",
             "note": "F6B-02. The other operator-facing carrier. `omission_manifest_ref` was already required here and is credited; a constraint set is the half that says what may not be done with what was rendered."
+          },
+          "contested_refs": {
+            "type": "Ref<Record>[]",
+            "required": true,
+            "added_by": "WORK-1.1-F6X02",
+            "note": "F6X-02. The second limb of `04` DELTA 1 -- \"what was omitted AND WHAT WAS CONTESTED\" -- whose first limb `omission_manifest_ref` already carries. REQUIRED, not optional, and that is the whole design: an EMPTY ARRAY states that nothing was contested, which is a different fact from an absent field. An optional field collapses `nothing was contested` and `nobody looked` into one absence, and an operator reading a projection cannot tell them apart."
           }
         }
       }
