@@ -280,10 +280,17 @@
       "base": "3351226",
       "dispatched": "2026-09-15",
       "status": "RETURNED at 2ec0e53 and MERGED at 6c11200; both pairs re-executed green"
+    },
+    {
+      "lane": "explorer-data",
+      "engine": "builder",
+      "kind": "data projection for the interactive system explorer (founder request 2026-09-15)",
+      "status": "RETURNED COMPLETE at f3da6fa and MERGED: scripts/vision-explorer-data.mjs build|check|stats; 28 files under planning/site/explorer/data/ (17.7 MB); check exit 0 (189/2398/105/186/58/27/11/65/46/12/22/22/33/17/566, graph 3,488 nodes / 28,759 edges). Known nulls: stages.phase_g_judgment, component flow labels (package states none)."
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md, then active_work",
+    "EXPLORER TRACK (founder request): designer lane `explorer-page` builds planning/site/explorer/index.html over data/; then a reviewer checks every id in data/ is reachable on the page; then publish as a NEW artifact (multi-file: index.html + data/*.json) named 'The Company Engine Explorer'",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "FOUNDER PACKET (in the handoff): lift the hold for B01 or not; re-run the fifteen-dimension review or not; Q-022 entitlement read; three structural decisions (edge predicates as derived artifact; runner copies fixture bodies; a CapabilityId/CheckerId vocabulary); F6AA-01/02 (the four layer-5 holders' staffing; absent-holder fallback); push the branch to origin as backup",
     "Owed (contracts): F6D-05/F6Y-04 registry half (R46 free; shape in planning/F2/13-repair-names-contracts-i.md); F6C-10 park phase (blocked on the edge-predicate decision); F6Y-06 check half (blocked on the runner decision)",
