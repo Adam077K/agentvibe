@@ -388,8 +388,9 @@ checked(set(SCHEMAS["records.schema.json"]["$defs"]["StandingInterest"]["propert
          ["properties"]["precondition_evaluator_kind"].get("enum")))
 # OWED, and recorded rather than faked. The review also asked for "a conjunct asserting
 # each named predicate's registered `implementation_status` is deterministic". Measured
-# here before writing it: `implementation_status` takes exactly ONE value across all 2,397
-# registered predicates -- "specified; conformance interpreter only, no production binding
+# here before writing it: `implementation_status` takes exactly ONE value across EVERY
+# registered predicate -- 2,397 of them when this was written and `len(PREDICATES)` today,
+# which is the figure to recount from because the registry grows (F6Y-07) -- "specified; conformance interpreter only, no production binding
 # implemented". There is no deterministic/model classification in the registry to read, so
 # that conjunct would be TRUE OF EVERY PREDICATE by construction: a guard that collects the
 # evidence for the ceiling and never applies it, which is the anti-shape fixture r16-08
@@ -670,11 +671,14 @@ checked(_cr.get("type") == "array" and "record_type" in ((_cr.get("items") or {}
 # already compares the enum, so the chapters instructed an author to write a record the
 # guard rejects. A full run said nothing, because nothing read an enum's members.
 #
-# FIFTY-SEVEN payload fields carry a closed enum and the pairs agreed on every one of them
-# before this check existed -- which is the argument for the check rather than against it:
-# the invariant was true and unguarded, so the first drift would have been silent, and one
-# of the 57 had already drifted from the CHAPTERS in the direction no field comparison can
-# see.
+# EVERY payload field carrying a closed enum agreed with its pair before this check existed
+# -- which is the argument for the check rather than against it: the invariant was true and
+# unguarded, so the first drift would have been silent, and one of them had already drifted
+# from the CHAPTERS in the direction no field comparison can see. The count was FIFTY-SEVEN
+# when that was written and the walk meets more now; the floor below is the bound and the
+# live figure is computed into the failure payload, so neither is frozen in this sentence.
+# A reader who recounts and finds a different number in a file whose whole subject is the
+# difference between a claim and what checks it has been told something false (F6Y-07).
 #
 # Compared as SETS, not as sequences. An enum's members are a set; `in` does not read
 # order, and no predicate in the registry does. A byte-comparison would refuse a
@@ -1675,11 +1679,20 @@ FINDING_SOURCES = PINNED["finding_sources"]
 covered = {finding for pin in PINNED["pins"] for finding in pin["findings"]} \
     | {finding for row in PINNED["pinned_transitions"] for finding in row["findings"]}
 unpinnable = {entry["finding"]: entry["why"] for entry in PINNED["unpinnable"]}
-# 41 -> 66 (F6Y-01). Raised for the one reason the note below admits: twenty-five
-# findings were DECLARED in `#/finding_sources` that were never declared before --
-# F6W-01..08, F6Y-01..08, F6Z-01..09 -- and nothing in this package carries them yet.
+# 41 -> 66 -> 77 COMMITTED, AND THE CONSTANT IS 78 (F6Y-01, F6AA-07). It rose because
+# findings were DECLARED in `#/finding_sources` that were never declared before and
+# nothing in this package pins them -- F6W-01..08, F6Y-01..08, F6Z-01..09, and now
+# F6AA-01..11 -- which is the one direction this ceiling permits itself to grow in.
+# THE ODD SLOT IS NOT SLACK. The committed count is 77 and the constant is 78 because
+# `positive/r36-a-declared-family-gains-a-finding-benign` adds exactly one row and
+# must pass: declaring a newly raised finding has to stay a DATA edit, or the widened
+# sweep buys its coverage by making the honest move an edit to this file. Tightening
+# 78 to 77 breaks that fixture. The reason is written here rather than only in the
+# fixture because the previous pair of ceilings stated 66 and 62 in their own comments
+# while holding 67 and 63, so a reader at the constant learned a number it did not
+# hold and no reason for the difference (F6AA-07).
 # Raising it because a pin was deleted would be the move this ceiling exists to refuse.
-UNANSWERED_CEILING = 67
+UNANSWERED_CEILING = 78
 unanswered = sorted(set(FINDING_SOURCES) - covered - set(unpinnable))
 checked(len(unanswered) <= UNANSWERED_CEILING,
         ("A PINNED FINDING LOST ITS LAST PIN: a finding declared in "
@@ -1711,7 +1724,12 @@ checked(len(unanswered) <= UNANSWERED_CEILING,
 #   `answered_elsewhere` -- the finding is answered, and the row NAMES the file and the
 #       check, so the claim is falsifiable by opening the file rather than by trusting a
 #       sentence. `file` must exist.
-#   `not_answered`       -- nothing here answers it, and the row says why not.
+#   `not_answered`       -- NO FILE AND CHECK HAS BEEN NAMED AND VERIFIED for it here, and
+#       the row says why not. That is narrower than "nothing here answers it", and the
+#       narrower sentence is the true one: F6A-09 and F6C-06 sat here for a lane while a
+#       check and a fixture pair existed for each, so this count OVERSTATES what is
+#       unrepaired -- which is the safe direction and is not the same as being accurate
+#       (F6Y-08). Both crossed over on the commit that wrote this line.
 # Each half carries its OWN bound. One ceiling over both would let an entry move from
 # "answered" to "not answered" at zero cost, which is exactly the ambiguity F6R-01 is
 # about; two ceilings make the crossing an edit to this file.
@@ -1754,10 +1772,27 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # finding out of it. `answered_elsewhere` has a ceiling rather than a floor for the reason
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
-ANSWERED_ELSEWHERE_CEILING = 4
-NOT_ANSWERED_CEILING = 63  # 37 -> 62 (F6Y-01): the twenty-five newly declared
-                           # F6W/F6Y/F6Z findings, which is the one direction this
-                           # ceiling's own message permits it to grow in
+# 3 -> 4 -> 9 COMMITTED, AND THE CONSTANT IS 10 (F6R-01, F6AA-07, F6Y-08). F6AA-08, F6AA-09
+# and F6Y-01 are answered by named checks and belong in this half; F6Y-01 comes ACROSS
+# from `not_answered`, whose row for it stated a condition the row itself met, and so do
+# F6A-09 and F6C-06, which F6Y-08 named. The constant is TWO above the committed count, not
+# one: one slot for the r39 benign twin, which moves a row across and must pass, and one so
+# that the next verified repair is a DATA edit. F6Y-08's whole argument is that the control
+# which lets a lane record a repair should not charge the price this file reserves for
+# weakening things. The odd slot is deliberate and is F6Y-08's direction: recording a repair that
+# a file and a check really do carry must be a DATA edit, and only the TOTAL above
+# stays a literal in this file.
+ANSWERED_ELSEWHERE_CEILING = 10
+# 37 -> 62 -> 71 COMMITTED, AND THE CONSTANT IS 72 (F6Y-01, F6AA-07). It grew by the
+# twenty-five F6W/F6Y/F6Z rows, then by the nine F6AA rows this package declares
+# and does not answer with a named check -- the one direction this ceiling's own
+# message permits. The odd slot is the same one UNANSWERED_CEILING holds and for the
+# same fixture: `r36-a-declared-family-gains-a-finding-benign` adds a `not_answered`
+# row as well as a source row. 68 is the committed count and 69 is what this constant
+# holds: F6A-09 and F6C-06 left this half for `answered_elsewhere` (F6Y-08), and a
+# ceiling that may only fall was lowered to match rather than left carrying slack
+# nobody had written a reason for. Tightening it to 68 breaks the benign fixture.
+NOT_ANSWERED_CEILING = 69
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -1791,8 +1826,11 @@ PIN_FLOOR = 71           # 70 -> 71 (F6C-13): the critical-fields authority pin 
 PIN_ROW_FLOOR = 157      # 154 -> 157 (F6C-13): three rows -- the two fields named, the authority
                          # NOT equal to the order's own owner, and the assignment in `accepted`
 PIN_TRANSITION_FLOOR = 50  # 32 -> 50 (RC5-02)
-FINDING_SOURCE_FLOOR = 141  # 116 -> 141 (F6Y-01): the F6W, F6Y and F6Z rows the
-                            # widened Step 6 sweep now demands
+# 116 -> 141 -> 152 (F6Y-01, F6AA-08). The F6W/F6Y/F6Z rows the widened sweep demanded,
+# then the eleven F6AA rows the two-letter widening demands. 152 is the committed
+# count exactly -- a floor takes no headroom, because a fixture that ADDS a row
+# satisfies it and only a deletion is at issue.
+FINDING_SOURCE_FLOOR = 152
 checked(len(PINNED["pins"]) >= PIN_FLOOR
         and len(PINNED["pinned_transitions"]) >= PIN_TRANSITION_FLOOR,
         ("the pinned table has shrunk; a pin table with no pins passes vacuously",
@@ -1803,12 +1841,10 @@ checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= PIN_ROW_FLOOR,
         ("the pinned table kept its pins and lost its requirements",
          {"rows": sum(len(pin["require"]) for pin in PINNED["pins"]),
           "floor": PIN_ROW_FLOOR}))
-checked(len(FINDING_SOURCES) >= FINDING_SOURCE_FLOOR,
-        ("the finding-source table has shrunk, and it is the denominator the unanswered "
-         "ceiling above is measured against: deleting a pin AND the `finding_sources` row "
-         "that declares its finding keeps that ceiling satisfied while answering one "
-         "finding fewer (RC5-02)",
-         {"finding_sources": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR}))
+# THE ASSERTION ON THIS FLOOR IS NOT HERE. It runs AFTER the Step 6 per-id sweep,
+# and the reason is written beside it there: a count that has fallen is the vaguest
+# thing this file can say about a deleted row, and the sweep says WHICH FINDING went
+# dark. Same ordering rule as the unanswered block three screens up (F6AA-10).
 # And a CEILING, for the mirror-image reason. `disjoined: true` excuses a row from demanding
 # its conjunct, so a table where every row is excused passes as loudly as one where none is
 # -- the floors above cannot tell 44 rows from 44 inert ones, which is precisely the gap
@@ -2511,13 +2547,96 @@ checked(len(register_findings) >= 30,
 # NOT done here -- the letters are not collapsed into the check, and the literal is not
 # derived from the corpus, because a literal derived from the file it measures is
 # satisfied by the empty file.
-STEP6_FAMILIES = ("F6A", "F6B", "F6C", "F6D", "F6R", "F6V", "F6W", "F6X", "F6Y", "F6Z")
-STEP6_ID = re.compile(r"\b(F6[A-Z]-[0-9][0-9])\b")
+STEP6_FAMILIES = ("F6A", "F6B", "F6C", "F6D", "F6R", "F6V", "F6W", "F6X", "F6Y", "F6Z", "F6AA")
+#
+# --- A MENTION IS NOT A RAISING, AND THE DEMAND IS OVER RAISINGS (F6R-03, F6Y-01). ----
+#
+# The sweep demanded a source row for every OCCURRENCE of a Step 6 id in the corpus.
+# `F2-06-recheck-05.md` then described the r36 BENIGN fixture -- whose entire purpose is
+# to add a SYNTHETIC id, `F6X-03`, to both tables and pass -- and the quotation put that
+# id into the required set. Measured at `ffeb072`: exit 1, `'F6X-03'`, 141 source rows,
+# against a review document that is a VERBATIM ARCHIVE and may not be edited to green a
+# check.
+#
+# BRANCH TAKEN, of the three on the table: (a). The per-id demand below is over the ids a
+# review RAISES -- a heading, a table row it opens, or a bolded finding line, which are
+# the three forms this corpus actually uses. Every MENTION is still swept, still counted,
+# still floored and still reported in the payloads, so nothing leaves the instrument's
+# view; only the DEMAND narrows, and it narrows onto exactly what the per-id check's own
+# message says it is about: "A STEP 6 FINDING IS RAISED IN A REVIEW".
+#
+# (b) -- give `F6X-03` a row and re-point the benign twin at an id no corpus can state --
+# was refused for the reason (b) would have had to write down beside itself: the next
+# review that quotes ANY id recreates this RED, so the repair would be owed again on
+# every quotation ever written. A rule whose counterexample is reachable by quoting it is
+# not a rule.
+#
+# The exemption is DATA -- declared by name, with a reason, in `#/step6_mention_only` --
+# and it must equal the difference EXACTLY. So a review that quotes a new id is a cheap
+# data edit, while a raising pattern that stops matching fails HERE, naming every id it
+# dropped, instead of silently shrinking the required set the way `F6[A-DRVX]` shrank it
+# for the whole of its life. The three raising forms are themselves a declaration:
+# widening them can only move ids OUT of the exemption and INTO the demand, and the
+# equality makes that movement an edit a reviewer sees.
+# ONE-LETTER FAMILIES WERE THE SAME EXCLUSION ONE LEVEL UP (F6Y-01 AGAIN). The pattern
+# read a single family letter, so `F6AA-01..11` -- eleven findings raised in
+# F2-06-recheck-05.md section 3 and registered in registers/review-findings.json --
+# matched nothing and sat outside the required set entirely. The reviewer who raised
+# them recorded the gap in that document's own provenance header rather than leaving
+# it to be found, and it is F6Y-01's class recurring inside F6Y-01's repair: a family
+# the sweep cannot name is a family whose findings are not refused, not deferred,
+# absent. The quantifier covers every family this corpus has ever stated; a
+# three-letter one is the next edit, and the STEP6_FAMILIES literal refuses it until
+# someone makes that edit, which is the whole point of the literal.
+STEP6_ID = re.compile(r"\b(F6[A-Z]{1,2}-[0-9][0-9])\b")
+STEP6_RAISED = (
+    re.compile(r"^#{2,6}\s+.{0,200}?\b(F6[A-Z]{1,2}-[0-9][0-9])\b"),   # ### F6W-04 - title
+    re.compile(r"^\|\s{0,4}\*{0,2}`?(F6[A-Z]{1,2}-[0-9][0-9])\b"),     # | F6W-04 | verdict |
+    re.compile(r"^(?:[-]\s{1,3})?\*{2}(F6[A-Z]{1,2}-[0-9][0-9])\b"),   # F6C-02 - (a) - title
+)
 STEP6_CORPUS = sorted((ROOT.parents[2] / "planning" / "reviews").glob("F2-06-*.md"))
 _step6 = set()
+_step6_raised = {}
 for _document in STEP6_CORPUS:
-    _step6 |= set(STEP6_ID.findall(_document.read_text(encoding="utf-8")))
-_step6_families = sorted(set(_id.split("-")[0] for _id in _step6))
+    _text = _document.read_text(encoding="utf-8")
+    _step6 |= set(STEP6_ID.findall(_text))
+    for _line in _text.splitlines():
+        for _pattern in STEP6_RAISED:
+            _hit = _pattern.match(_line)
+            if _hit:
+                _step6_raised.setdefault(_hit.group(1), _document.name)
+STEP6_MENTION_ONLY = PINNED["step6_mention_only"]
+# The concrete thing before the count, which is the ordering rule this file states about
+# itself three blocks above. An exemption naming a RAISED finding is the one way this
+# design could be used to do on purpose what `F6[A-DRVX]` did by accident, so it is
+# checked per row and before the set equality that would otherwise report it as arithmetic.
+for _finding, _why in sorted(STEP6_MENTION_ONLY.items()):
+    checked(str(_why).strip(),
+            ("a Step 6 id is excused from the source-row demand with no reason; the "
+             "exemption is data so that a reader can weigh it, and a blank reason is "
+             "nothing to weigh (F6R-03)", _finding))
+    checked(_finding not in _step6_raised,
+            ("AN EXEMPTION NAMES A FINDING THE CORPUS RAISES: `#/step6_mention_only` "
+             "excuses ids a review only MENTIONS -- quoted from a fixture, cited from "
+             "another document -- from the source-row demand below. An id a review RAISES "
+             "is a finding, and excusing it here is the disappearance this sweep exists "
+             "to refuse, done deliberately rather than by accident. Delete the exemption "
+             "and add the `finding_sources` row (F6R-03)",
+             _finding, {"raised in": _step6_raised.get(_finding)}))
+checked(_step6 - set(_step6_raised) == set(STEP6_MENTION_ONLY),
+        ("THE MENTION-ONLY EXEMPTION NO LONGER MATCHES THE CORPUS: every Step 6 id these "
+         "reviews mention is either RAISED in one of them -- and then it must hold a "
+         "`finding_sources` row -- or declared in `#/step6_mention_only` with the reason "
+         "it is only a mention. The two sets must be EQUAL: a review that quotes a new id "
+         "is then a data edit, and a raising pattern that stops matching fails here by "
+         "name rather than quietly narrowing the required set below (F6R-03)",
+         {"mentioned, neither raised nor declared":
+              sorted(_step6 - set(_step6_raised) - set(STEP6_MENTION_ONLY)),
+          "declared, but raised or absent from the corpus":
+              sorted(set(STEP6_MENTION_ONLY) - (_step6 - set(_step6_raised))),
+          "mentioned": len(_step6), "raised": len(_step6_raised),
+          "documents": [_p.name for _p in STEP6_CORPUS]}))
+_step6_families = sorted(set(_id.split("-")[0] for _id in _step6_raised))
 checked(set(_step6_families) <= set(STEP6_FAMILIES),
         ("A STEP 6 REVIEW RAISES A FINDING IN AN UNDECLARED FAMILY: the sweep below "
          "demands a source row for every id it finds, so a family the declaration does "
@@ -2528,19 +2647,34 @@ checked(set(_step6_families) <= set(STEP6_FAMILIES),
          {"undeclared": sorted(set(_step6_families) - set(STEP6_FAMILIES)),
           "declared": list(STEP6_FAMILIES), "found": _step6_families,
           "documents": [_p.name for _p in STEP6_CORPUS]}))
-checked(len(_step6_families) >= 8,
-        ("the Step 6 sweep found fewer families than the corpus has ever held; the "
-         "containment check above passes vacuously over an empty family set (F6Y-01)",
-         {"families": _step6_families, "floor": 8}))
-checked(len(_step6) >= 81,
-        ("THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING: the coverage "
-         "assertion below is over whatever this sweep found, so a sweep that found nothing "
-         "passes it vacuously -- which is the defect RC5-02 named about the other sweep in "
-         "this file. 81 ids in nine families were stated across those documents when "
-         "F6Y-01 widened this pattern; the narrow pattern saw 64 in seven (F6R-03, "
-         "F6Y-01)", {"found": len(_step6), "floor": 81, "families": _step6_families,
-                      "documents": [_p.name for _p in STEP6_CORPUS]}))
-for _finding in sorted(_step6):
+# THE THREE FLOORS ARE TIGHT AT THE COMMITTED CORPUS, and F6AA-08 is why they are stated
+# again rather than left: they read 81 ids and 8 families while the corpus at the subject
+# held 89 and 10, so eight ids and two families could have left it -- a review deleted or
+# renamed -- with no control firing. Measured at this commit over the ten F2-06 documents:
+# 101 ids mentioned, 100 of them raised, in 11 families -- re-measured when the
+# pattern widened to two-letter families and the eleven F6AA ids entered the sweep. RAISE ALL THREE WHENEVER A REVIEW
+# LANDS; lowering one is a decision and the reason belongs here.
+checked(len(_step6_families) >= 11,
+        ("the Step 6 sweep found fewer families than the corpus holds; the containment "
+         "check above passes vacuously over an empty family set (F6Y-01, F6AA-08)",
+         {"families": _step6_families, "floor": 11}))
+checked(len(_step6) >= 101,
+        ("THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING: every check in "
+         "this block is computed over what this sweep found, so a sweep that found "
+         "nothing passes all of them vacuously -- the defect RC5-02 named about the other "
+         "sweep in this file. This floor is over MENTIONS, which is why widening the "
+         "demand to raisings alone did not weaken it (F6R-03, F6Y-01, F6AA-08)",
+         {"found": len(_step6), "floor": 101, "families": _step6_families,
+          "documents": [_p.name for _p in STEP6_CORPUS]}))
+checked(len(_step6_raised) >= 100,
+        ("THE SET OF RAISED STEP 6 FINDINGS HAS SHRUNK: this is the required set the "
+         "per-id demand below is computed over, so it is the one number that decides how "
+         "much coverage this block actually asks for. It falls when a review leaves the "
+         "corpus and when a raising form stops being recognised, and the second is "
+         "invisible from anywhere else (F6R-03, F6AA-08)",
+         {"raised": len(_step6_raised), "floor": 100,
+          "mentioned": len(_step6), "documents": [_p.name for _p in STEP6_CORPUS]}))
+for _finding in sorted(_step6_raised):
     checked(_finding in FINDING_SOURCES,
             ("A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW: "
              "`finding_sources` is what a pin's citation resolves against and what the "
@@ -2549,7 +2683,31 @@ for _finding in sorted(_step6):
              "for a review finding to disappear. Add the row with the document that raises "
              "it, then put the id in `answered_elsewhere` with a file and a check, or in "
              "`not_answered` with the reason (F6R-03)",
-             _finding, {"source rows": len(FINDING_SOURCES)}))
+             _finding, {"raised in": _step6_raised[_finding],
+                        "source rows": len(FINDING_SOURCES)}))
+# --- AND ONLY NOW THE COUNT (F6AA-10). --------------------------------------------
+#
+# This assertion was declared beside FINDING_SOURCE_FLOOR, some seven hundred lines
+# above, which put it BEFORE the sweep. Measured 2026-09-15 on the first execution of
+# `negative/r36-step-6-finding-loses-its-source-row`: the fixture removes the
+# `finding_sources` row for F6W-04, the table goes 141 -> 140, and the floor rejected
+# it -- "the finding-source table has shrunk", 140 < 141 -- so the string the fixture
+# declares it expects never appeared and `run_negative_fixtures.py` classified it
+# `wrong_reason`. The tripwire held and the check it was written for had not run.
+#
+# A fixture that fails for the wrong reason reads exactly like one that fails for the
+# right one, so the specific message now precedes the count: the reader is told which
+# finding is carried by nothing, and only then that a table moved. That is this file's
+# own rule, stated in the RC5-02 block above the unanswered ceiling and not applied
+# here. NOTHING about the floor weakens: it is the same literal, the same comparison,
+# and every mutation it caught before it still catches -- including the one the sweep
+# cannot see, a row deleted for an id no review RAISES, which reaches this line alone.
+checked(len(FINDING_SOURCES) >= FINDING_SOURCE_FLOOR,
+        ("the finding-source table has shrunk, and it is the denominator the unanswered "
+         "ceiling above is measured against: deleting a pin AND the `finding_sources` row "
+         "that declares its finding keeps that ceiling satisfied while answering one "
+         "finding fewer (RC5-02)",
+         {"finding_sources": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
 checked(register_findings <= covered | set(unpinnable),
@@ -2987,8 +3145,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 112
-POSITIVE_FIXTURE_FLOOR = 73
+NEGATIVE_FIXTURE_FLOOR = 115
+POSITIVE_FIXTURE_FLOOR = 76
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

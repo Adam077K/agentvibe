@@ -6,7 +6,7 @@
     "tools/run_negative_fixtures.py: declared-but-absent and present-but-undeclared both fail",
     "validate_contracts.py: the fixture run's own count must equal this one, and every declared fixture must have been rejected"
   ],
-  "floor": 112,
+  "floor": 115,
   "floor_why": "RC4-03. A literal, for the reason every other floor in this package is a literal: a count derived from the file it measures is satisfied by the empty file. RC-04 gave this suite a DECLARED denominator, which catches a fixture deleted from the tree alone; it did not catch a fixture deleted from the tree AND from this list in one edit, because one hand writes both. Measured by the fourth recheck: 34 of 36 fixtures moved out of the directory and struck from this list together, full run exit 0, `checks: 288620` -- byte-identical to the baseline and to every conjunct_walk field -- with `negative_fixtures_rejected: 2`. Nothing compared that 2 to anything. It matters here more than anywhere: the only control that catches a mutation of the demand table is a fixture in this list. validate_contracts.py carries the same number as a literal and compares the two, so lowering it takes two edits a reviewer sees, and the reason goes in the constant's comment there. RAISED BY R18 (the Step 6 repair of the F2 layer): negative 56 -> 91, positive 17 -> 52. Thirty-five new adverse cases and thirty-five paired benign ones, one per finding the four Step 6 reviews raised against the contracts, plus one pair per guard that had none. F6C-16 measured 14 of 30 guards exercised by a paired fixture; every registered guard has one now, and the count is derived rather than quoted -- `comm -12 <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/negative | sort -u) <(grep -rhoE 'guard\\.[a-z0-9_.]+' fixtures/positive | sort -u) | wc -l`. Lowering either number is still two edits and a written reason. RAISED TO THE COMMITTED COUNT BY THE RC5 REPAIR: negative 92 -> 94 (RC5-01, RC5-03: the allowlist-literal pair and the not-admitted pair) and 94 -> 95 (RC5-02: the pin-coverage pair). R20 (F6A-10): 95 -> 96, the closed-enum membership pair. R21 (F6D-12): 96 -> 97, the seventh-reason pair. R22 (F6D-09): 97 -> 98, the predicate-bearing type pair. R23 (F6C-11): 98 -> 99, the retention-comparison pair. R24 (F6C-10): 99 -> 100, the attempt-ceiling pair. R25 (F6D-09, the wrong_reason repair): 100 -> 101, the predicate-implementation-status pair. The F6D-09 tripwire had to stop firing on the negative-fixture sentinel, because a fixture that adds a predicate must give that predicate a status and was tripping a check about the CONTRACT's classification inside its own scratch tree -- which is what refused r3-lifecycle-status-as-judgment-subject for a reason it was not written for. The pair is what bounds the exclusion: the adverse case gives a real predicate a real second classification and the tripwire must still fire; the benign case gives one the sentinel and it must not. R26 and R27 (F6X-02): negative 101 -> 103, positive 62 -> 64 -- the boundary-kind pair and the contested-refs pair. F6X-02 is the finding two lanes declined on the ground that the enum members would have been invented; `05` section 5 states them now, so the enum is derived and the failure mode moves from `the field admits anything` to `someone adds a ninth member in a diff that reads as a feature`. Both adverse cases are one-line edits to a list, which is why each has a reordering beside it: a control that cannot tell a widening from a reordering is one a contributor routes around. R28 and R29 (F6X-01): negative 103 -> 105, positive 64 -> 66 -- the exclusive-factory resolution pair and the kernel-exemption pair. Nine records declare an exclusive factory and validate_contracts.py resolved NONE of them until this repair, so three declarations naming no existing path had sat green. The second pair exists because the repair introduces an exemption, and an exemption with no adverse fixture is a hole: r29 refuses an invented kernel path and its benign twin accepts a declared one, so the exemption cannot quietly become a prefix rule. R30 (F6A-09): negative 105 -> 106, positive 66 -> 67 -- the alias-key-is-a-value-type pair. The adverse case is the REAL row the review found, restored, because it passed every check in this package for its whole life: the refusal compared alias keys against record names and the key was a registered value type. The benign twin keeps the table addable, which is what it is for. R31 (F6C-06): negative 106 -> 107, positive 67 -> 68 -- the invented-measure pair. The adverse case is a registry name no chapter has, which is the dangerous direction of this finding: a registered row LOOKS like evidence. The benign twin is deliberately modest and says so. R32 (RC4-07): negative 107 -> 108, positive 68 -> 69 -- the census-key pin pair. The census key set is declared in two files now; the adverse case narrows one of them, which was a single invisible hunk before the pin existed. F6C-13 raises it by one: the critical-fields authority pair -- adverse, the admission edge stops calling the guard; benign, the guard's three conjuncts reordered. F6D-08 raises it again: m4, the ArmedSet command list. F6D-05 raises it again: the control-ownership pair.",
   "fixtures": [
     "r1-edge-declares-an-argument-nothing-reads",
@@ -103,6 +103,13 @@
     "r30-alias-key-is-a-registered-value-type",
     "r31-capacity-measure-invented-in-the-registry",
     "r32-census-key-set-narrowed-in-the-pin",
+    "r33-critical-fields-authority-may-be-the-resuming-attempt",
+    "r34-armed-set-gains-the-three-kernel-record-commands",
+    "r35-grant-stripping-probe-owned-by-the-skill-it-probes",
+    "r36-step-6-finding-loses-its-source-row",
+    "r37-a-raised-finding-is-excused-as-a-mention",
+    "r38-a-two-letter-family-finding-loses-its-source-row",
+    "r39-a-finding-declared-answered-by-a-file-that-is-not-there",
     "r4-edge-routes-to-an-unregistered-command",
     "r5-destination-carries-prose",
     "r5-destination-names-a-field-that-does-not-exist",
@@ -116,11 +123,7 @@
     "r9-content-quotes-text-its-source-does-not-contain",
     "r9-criterion-content-with-no-source",
     "r9-gap-marker-with-no-registered-gap",
-    "r9-sibling-criteria-share-a-shape-undeclared",
-    "r33-critical-fields-authority-may-be-the-resuming-attempt",
-    "r34-armed-set-gains-the-three-kernel-record-commands",
-    "r35-grant-stripping-probe-owned-by-the-skill-it-probes",
-    "r36-step-6-finding-loses-its-source-row"
+    "r9-sibling-criteria-share-a-shape-undeclared"
   ],
   "shapes": {
     "<id>.json": "a JSON patch over the registries",

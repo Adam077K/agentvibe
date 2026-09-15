@@ -1,0 +1,17 @@
+{
+  "id": "r37-the-mention-only-exemption-is-restated-benign",
+  "repair": "R37",
+  "finding": "F6R-03; planning/reviews/F2-06-recheck-05.md (the F6X-03 RED), benign column",
+  "case": "The reason on the one mention-only exemption rewritten, the key set unchanged.",
+  "paired_adverse_fixture": "fixtures/negative/r37-a-raised-finding-is-excused-as-a-mention.json",
+  "why": "What binds is the KEY SET -- `#/step6_mention_only` must equal exactly the ids the corpus mentions and never raises -- and the reason is checked for presence, not for wording. Without this twin the adverse fixture above is consistent with a check that refuses any edit to the map at all, which would make restating a reason as expensive as excusing a finding and would teach the next lane to leave the reason stale.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/step6_mention_only/F6X-03",
+      "op": "replace",
+      "value": "A SYNTHETIC id, existing only inside the r36 benign fixture, which F2-06-recheck-05.md quotes when it describes that fixture. Restated here by the r37 benign fixture: the wording of a reason is not what this check reads."
+    }
+  ]
+}

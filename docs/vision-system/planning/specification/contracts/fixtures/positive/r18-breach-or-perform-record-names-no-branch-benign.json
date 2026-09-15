@@ -3,7 +3,7 @@
   "repair": "R18",
   "finding": "F6C-02, benign column; 07-integrations-capacity.md section 6",
   "case": "The record gains the exhausted dimension the alert carries, as an optional field, and is not refused for it.",
-  "paired_adverse_fixture": "fixtures/negative/r18-breach-or-perform-record-names-no-branch.json",
+  "paired_adverse_fixture": "fixtures/negative/r18-breach-or-perform-record-names-no-branch",
   "why": "The chapter says a named recipient is alerted with the exhausted dimension, the due duty and the route taken, so recording which dimension emptied is a legitimate extension of the same record. An optional field changes no conjunct -- a criterion names only required fields -- so this must pass, and a control that refused it would have frozen the record at the shape it was created with. The record's identity, its natural key `(obligation_ref, window)` and its single `written` phase are untouched.",
   "expect_pass": true,
   "patch": [
