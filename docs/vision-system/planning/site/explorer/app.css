@@ -114,3 +114,9 @@ a.chip:hover{border-color:var(--accent);color:var(--accent);background:var(--acc
 .filters select{max-width:230px}
 .detail .diagram svg{max-width:none}
 .kv dd>.chips{margin-top:2px}
+.edl{pointer-events:none}
+.edl text{fill:var(--ink-3);font-size:9.5px;font-family:"JetBrains Mono",monospace}
+.edl rect{fill:var(--raised);opacity:.92}
+.edl.on text{fill:var(--accent-ink);font-weight:600}
+.ed.on path{stroke:var(--accent)}
+.diagram svg.sysmap{margin:0 auto}
