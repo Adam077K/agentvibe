@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "F2 dispositioned (SCOPED); r8: recheck-05 archived, r8-prose-e merged; split suite on 95ca14d FAILED on two wrong-reason fixtures (one caused by a mid-run archive); HEAD red on the light validator pending r8-contracts-f; founder hold on building in force",
+  "phase": "F2 dispositioned (SCOPED); r8 lanes merged (recheck-05, prose-e, contracts-f/g/h/i); split suite on 3351226: 121/121 adverse, 80/82 benign (2 drifted benign fixtures, regeneration in flight); founder hold on building in force",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-1-1789446032",
@@ -440,12 +440,11 @@
     "where": "inputs/FOUNDER-INPUT-2026-09-14-addendum.md and registers/open-questions.json"
   },
   "validator_last_full_run": {
-    "subject": "95ca14d at launch; the live tree moved to 7e0545f during the adverse stage (orchestrator commits: register rows, findings index, F2-06-recheck-05.md)",
+    "subject": "3351226 (frozen; no commit under docs/vision-system between launch 14:33 and completion 16:00)",
     "date": "2026-09-15",
-    "mode": "split: light validator (17.5 s, rc 0, 305,275 checks, 112/73 fixtures declared) + tools/run_negative_fixtures.py (3,118 s, rc 1) — benign stage NOT reached",
-    "result": "adverse stage FAILED: two wrong_reason fixtures. r36 (F6Y-01's pair, first execution ever) — deleting a finding_sources row trips the RC5-02 floor (140 < 141) before the F6R-03 sweep, so the fixture is caught by the wrong control. r35 — caught by the F6R-03 sweep naming F6X-03, because the runner replicates planning/reviews/ into each scratch tree and the orchestrator archived F2-06-recheck-05.md (which states F6X-03, an id with no source row) while the stage was running; the same failure reproduces on the light validator at 7e0545f. Leaks and the summary block are unknown — the driver kept only the output tail.",
-    "consequence": "HEAD 7e0545f is RED on the light validator (F6X-03). Treat every fixture written since 1573593 as unexecuted until a split run completes on a frozen tree. The last complete green run is still 1573593/3e51a9e.",
-    "lesson": "FREEZE THE TREE while the split suite runs: the runner reads the live registers/review-findings.json and planning/reviews/F2-06-*.md at each fixture's scratch creation, so a commit mid-run changes the subject under the fixtures. Capture the runner's full stdout to a file, not a 2,500-char tail.",
+    "mode": "split, per fixture, resumable driver (scratchpad split3/driver3.py): light validator (34.3 s, rc 0) + 121 adverse fixtures one subprocess each (3,189 s) + 82 benign fixtures one subprocess each (1,769 s); every verdict recorded per fixture in negative.jsonl / positive.jsonl",
+    "result": "checks 305,513; adverse 121/121 refused for their own reason, 0 leaked, 0 wrong_reason; benign 80/82 passed, 2 FALSE EXCLUSIONS: r18-effect-identity-triple-unconstrained-benign (rejected by F6V-02's natural-key create-path table — the fixture predates R42/R45) and r19-allowlist-widened-in-json-benign (rejected by the argument_positions_digest re-pin — the fixture's digest predates R44's primitive). Both are the known drift class (benign fixture frozen against an older tree); regeneration dispatched to r8-fixtures-j.",
+    "earlier_today": "a first run on 3351226 launched 10:10 lost its driver to a harness low-memory kill at 10:32; its runner continued blind for 4+ hours and could not be observed or killed from the sandbox; superseded by the per-fixture run above",
     "previous_green": {
       "subject": "1573593 (contracts tree identical at 3e51a9e)",
       "date": "2026-09-14",
