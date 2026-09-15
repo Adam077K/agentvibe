@@ -1803,12 +1803,10 @@ checked(sum(len(pin["require"]) for pin in PINNED["pins"]) >= PIN_ROW_FLOOR,
         ("the pinned table kept its pins and lost its requirements",
          {"rows": sum(len(pin["require"]) for pin in PINNED["pins"]),
           "floor": PIN_ROW_FLOOR}))
-checked(len(FINDING_SOURCES) >= FINDING_SOURCE_FLOOR,
-        ("the finding-source table has shrunk, and it is the denominator the unanswered "
-         "ceiling above is measured against: deleting a pin AND the `finding_sources` row "
-         "that declares its finding keeps that ceiling satisfied while answering one "
-         "finding fewer (RC5-02)",
-         {"finding_sources": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR}))
+# THE ASSERTION ON THIS FLOOR IS NOT HERE. It runs AFTER the Step 6 per-id sweep,
+# and the reason is written beside it there: a count that has fallen is the vaguest
+# thing this file can say about a deleted row, and the sweep says WHICH FINDING went
+# dark. Same ordering rule as the unanswered block three screens up (F6AA-10).
 # And a CEILING, for the mirror-image reason. `disjoined: true` excuses a row from demanding
 # its conjunct, so a table where every row is excused passes as loudly as one where none is
 # -- the floors above cannot tell 44 rows from 44 inert ones, which is precisely the gap
@@ -2638,6 +2636,29 @@ for _finding in sorted(_step6_raised):
              "`not_answered` with the reason (F6R-03)",
              _finding, {"raised in": _step6_raised[_finding],
                         "source rows": len(FINDING_SOURCES)}))
+# --- AND ONLY NOW THE COUNT (F6AA-10). --------------------------------------------
+#
+# This assertion was declared beside FINDING_SOURCE_FLOOR, some seven hundred lines
+# above, which put it BEFORE the sweep. Measured 2026-09-15 on the first execution of
+# `negative/r36-step-6-finding-loses-its-source-row`: the fixture removes the
+# `finding_sources` row for F6W-04, the table goes 141 -> 140, and the floor rejected
+# it -- "the finding-source table has shrunk", 140 < 141 -- so the string the fixture
+# declares it expects never appeared and `run_negative_fixtures.py` classified it
+# `wrong_reason`. The tripwire held and the check it was written for had not run.
+#
+# A fixture that fails for the wrong reason reads exactly like one that fails for the
+# right one, so the specific message now precedes the count: the reader is told which
+# finding is carried by nothing, and only then that a table moved. That is this file's
+# own rule, stated in the RC5-02 block above the unanswered ceiling and not applied
+# here. NOTHING about the floor weakens: it is the same literal, the same comparison,
+# and every mutation it caught before it still catches -- including the one the sweep
+# cannot see, a row deleted for an id no review RAISES, which reaches this line alone.
+checked(len(FINDING_SOURCES) >= FINDING_SOURCE_FLOOR,
+        ("the finding-source table has shrunk, and it is the denominator the unanswered "
+         "ceiling above is measured against: deleting a pin AND the `finding_sources` row "
+         "that declares its finding keeps that ceiling satisfied while answering one "
+         "finding fewer (RC5-02)",
+         {"finding_sources": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
 checked(register_findings <= covered | set(unpinnable),
