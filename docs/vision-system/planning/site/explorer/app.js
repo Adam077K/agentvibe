@@ -89,7 +89,7 @@ function graph(nodes,edges,o){
   if(g.from===g.to){p="M"+(a.x+W*0.34)+","+a.y+" C"+(a.x-24)+","+(a.y-46)+" "+(a.x+W+24)+","+(a.y-46)+" "+(a.x+W*0.66)+","+a.y}
   else if(b.x>a.x){var x1=a.x+W,x2=b.x,mx=(x1+x2)/2;p="M"+x1+","+a.cy+" C"+mx+","+a.cy+" "+mx+","+b.cy+" "+x2+","+b.cy}
   else{var y1=a.y+a.h,y2=b.y+b.h,dy=42+((gi%3)*12);p="M"+a.cx+","+y1+" C"+a.cx+","+(y1+dy)+" "+b.cx+","+(y2+dy)+" "+b.cx+","+y2}
-  out.push("<g class=\"ed"+(g.cls?" "+g.cls:"")+"\""+(g.href?" data-h=\""+e(g.href)+"\"":" ")+"><title>"+e(g.title||"")+"</title><path d=\""+p+"\" marker-end=\"url(#ah)\"/></g>")});
+  out.push("<g class=\"ed"+(g.cls?" "+g.cls:"")+"\""+(g.href?" data-h=\""+e(g.href)+"\"":" ")+"><title>"+e(g.title||"")+"</title><path class=\"hit\" d=\""+p+"\"/><path d=\""+p+"\" marker-end=\"url(#ah)\"/></g>")});
  order.forEach(function(i){var m=N[i],n=m.n,ty=m.y+(n.sub?26:20);
   out.push("<g class=\"nd"+(n.cls?" "+n.cls:"")+"\""+(n.href?" data-h=\""+e(n.href)+"\"":"")+"><title>"+e(n.title||n.label)+"</title>"+
    "<rect x=\""+m.x+"\" y=\""+m.y+"\" width=\""+W+"\" height=\""+m.h+"\" rx=\"6\"/>"+

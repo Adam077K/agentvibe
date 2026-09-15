@@ -107,3 +107,10 @@ a.chip:hover{border-color:var(--accent);color:var(--accent);background:var(--acc
 .kv dd b{font-weight:600}
 .detail .diagram{padding:6px}
 .detail .tbl{font-size:.74rem}
+.ed .hit{stroke:transparent;stroke-width:16;fill:none}
+.nd rect{cursor:pointer}
+
+.chip,.pill{white-space:normal;overflow-wrap:anywhere;max-width:100%}
+.filters select{max-width:230px}
+.detail .diagram svg{max-width:none}
+.kv dd>.chips{margin-top:2px}
