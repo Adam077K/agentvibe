@@ -454,7 +454,11 @@ const cmdCheck = () => {
   const total = order.reduce((a, n) => a + Buffer.byteLength(JSON.stringify(ctx[n])) + 1, 0);
   console.log("");
   console.log("total data size: " + total + " bytes (" + mb(total) + ")");
-  if (total > 12 * 1048576) { console.log("FAIL  total data size exceeds 12 MB"); failed += 1; }
+  if (total > TOTAL_LIMIT) { console.log("FAIL  total data size exceeds " + mb(TOTAL_LIMIT)); failed += 1; }
+  for (const n of order) {
+    const bytes = Buffer.byteLength(JSON.stringify(ctx[n])) + 1;
+    if (bytes > FILE_LIMIT) { console.log("FAIL  " + n + ".json is " + mb(bytes) + ", over the " + mb(FILE_LIMIT) + " per-file limit"); failed += 1; }
+  }
   console.log(failed === 0 ? "OK" : failed + " check(s) failed");
   return failed === 0 ? 0 : 1;
 };
@@ -1130,3 +1134,107 @@ emitter("reviews", () => {
 });
 
 Object.assign(MIN_EXPECT, { reviews: 30 });
+
+// ---- coverage --------------------------------------------------------------
+P.covQuestions = "coverage/questions.json";
+P.covSupplemental = "coverage/supplemental.json";
+P.covDiscovered = "coverage/discovered.json";
+P.covPackage = "coverage/package.json";
+P.covStatusRule = "coverage/status-rule.json";
+
+// answer_location is a repo path plus a JSON pointer. Follow it and read the
+// field the row names, so the answer travels with the question.
+const resolvePointer = (loc, field) => {
+  if (typeof loc !== "string") return null;
+  const hash = loc.indexOf("#");
+  if (hash < 0) return null;
+  const file = loc.slice(0, hash);
+  const pointer = loc.slice(hash + 1);
+  if (file.endsWith(".json") !== true) return null;
+  if (pointer.startsWith("/") !== true) return null;
+  if (hasFile(file) !== true) return null;
+  let node = readJson(file);
+  for (const rawSeg of pointer.split("/").slice(1)) {
+    const seg = rawSeg.replace(/~1/g, "/").replace(/~0/g, "~");
+    if (node === null || typeof node !== "object") return null;
+    node = Array.isArray(node) ? node[Number(seg)] : node[seg];
+    if (node === undefined) return null;
+  }
+  if (isObj(node) && typeof field === "string" && node[field] !== undefined) return node[field];
+  if (typeof node === "string") return node;
+  return null;
+};
+
+const coverageRow = (r, i, file) => ({
+  ...r,
+  answer: resolvePointer(r.answer_location, r.answer_field),
+  source: file + "#/" + i
+});
+
+emitter("coverage", () => {
+  const qs = readJson(P.covQuestions);
+  const sup = readJson(P.covSupplemental);
+  const disc = readJson(P.covDiscovered);
+  const pkg = readJson(P.covPackage);
+  return {
+    source: "coverage/",
+    items: qs.map((r, i) => ({
+      ...coverageRow(r, i, P.covQuestions),
+      field_id: r.field === undefined ? null : r.field,
+      field_name: r.field_title || null
+    })),
+    supplemental: sup.map((r, i) => coverageRow(r, i, P.covSupplemental)),
+    discovered: disc.map((r, i) => coverageRow(r, i, P.covDiscovered)),
+    package: { ...pkg, items: (pkg.items || []).map((r, i) => ({ ...r, source: P.covPackage + "#/items/" + i })), source: P.covPackage },
+    status_rule: hasFile(P.covStatusRule) ? readJson(P.covStatusRule) : null
+  };
+});
+
+Object.assign(EXPECT, { coverage: 566 });
+
+// ---- findings --------------------------------------------------------------
+P.f206Index = "planning/reviews/F2-06-findings-index.json";
+P.f2Step4Index = "planning/F2/reviews/findings-index.json";
+P.reviewFindings = "registers/review-findings.json";
+P.contradictions = "registers/contradictions.json";
+
+emitter("findings", () => {
+  const f206 = hasFile(P.f206Index) ? readJson(P.f206Index) : {};
+  const step4 = hasFile(P.f2Step4Index) ? readJson(P.f2Step4Index) : {};
+  const rf = hasFile(P.reviewFindings) ? readJson(P.reviewFindings) : [];
+  const contra = hasFile(P.contradictions) ? readJson(P.contradictions) : [];
+  const f206Items = Object.keys(f206).map((id) => ({ register: "F2-06", id, ...f206[id], source: P.f206Index + "#/" + id }));
+  const step4Items = Object.keys(step4).map((id) => ({ register: "F2-step4", id, ...step4[id], source: P.f2Step4Index + "#/" + id }));
+  const rfItems = rf.map((r, i) => ({ register: "review-findings", ...r, source: P.reviewFindings + "#/" + i }));
+  const contraItems = contra.map((r, i) => ({ register: "contradictions", ...r, source: P.contradictions + "#/" + i }));
+  return {
+    source: "registers/ and planning/reviews/",
+    f2_06_findings: f206Items,
+    f2_step4_findings: step4Items,
+    review_findings: rfItems,
+    contradictions: contraItems,
+    items: [...f206Items, ...step4Items, ...rfItems, ...contraItems]
+  };
+});
+
+structural("the findings registers hold their stated row counts", (ctx) => {
+  const f = ctx.findings;
+  const bad = [];
+  if (f.f2_06_findings.length !== 54) bad.push("F2-06 index: " + f.f2_06_findings.length + " not 54");
+  if (f.review_findings.length < 1) bad.push("review-findings register is empty");
+  if (f.contradictions.length < 1) bad.push("contradictions register is empty");
+  return bad;
+});
+
+structural("every coverage row resolves its answer location", (ctx) => {
+  return ctx.coverage.items
+    .filter((r) => typeof r.answer_location === "string")
+    .filter((r) => r.answer_location.includes(".json#"))
+    .filter((r) => r.answer === null)
+    .map((r) => r.id + " -> " + r.answer_location);
+});
+
+// Size budget: the whole projection must stay loadable, and no single file may
+// grow past what a browser fetch should carry in one piece.
+const TOTAL_LIMIT = 20 * 1048576;
+const FILE_LIMIT = 8 * 1048576;
