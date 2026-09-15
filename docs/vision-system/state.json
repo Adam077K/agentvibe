@@ -5,7 +5,7 @@
   "phase": "F2 dispositioned (SCOPED); all r7 lanes merged at 7114f19; split suite on that head owed (killed for memory); founder hold on building in force",
   "status": "active",
   "base_commit": "b2cabad",
-  "branch": "ceo-4-1789314685",
+  "branch": "ceo-1-1789446032",
   "resumption": {
     "date": "2026-09-13",
     "from_branch": "ceo-3-1789160853",
@@ -210,10 +210,27 @@
       "base": "740764c",
       "dispatched": "2026-09-14",
       "status": "RETURNED PARTIAL at f512da5 and merged: F6Y-01 repaired (sweep reaches all families; 25 rows; floors moved); F6Y-02/06/07/08 not done — guard refused the ~70-line validator blocks; owed to a later lane (base64-in, decode-with-python workaround); split suite to run on the merged head"
+    },
+    {
+      "lane": "split-suite-95ca14d",
+      "engine": "orchestrator (subprocess)",
+      "kind": "the owed split validator suite on HEAD (first action of the handoff)",
+      "subject": "95ca14d",
+      "dispatched": "2026-09-15",
+      "status": "RUNNING: light validator rc 0 in 17.5 s (305,275 checks; 112 adverse / 73 benign declared, floors met); adverse runner in progress; memory 38-39% free at start"
+    },
+    {
+      "lane": "f2-06-recheck-05",
+      "engine": "reviewer",
+      "kind": "independent recheck of the two author-recorded repair sets left unrechecked: F6Z-01..09 (r7-prose-d, 35f0710..44a317c) and F6Y-01 (r7-contracts-e, 740764c..f512da5)",
+      "subject": "95ca14d",
+      "constraints": "no validator or tools/ execution (memory); producer accounts barred; one family; new findings numbered F6AA-nn",
+      "dispatched": "2026-09-15",
+      "status": "RUNNING"
     }
   ],
   "next_actions": [
-    "RESUME HERE: read planning/HANDOFF-2026-09-14-after-r7.md, then active_work",
+    "RESUME HERE: read planning/HANDOFF-2026-09-14-after-r7.md, then active_work (session ceo-1-1789446032 resumed 2026-09-15: split suite and recheck-05 in flight)",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "FIRST in the next session: run the split suite on HEAD (light validator, then tools/run_negative_fixtures.py, then tools/run_positive_fixtures.py, sequential, background, python subprocess timeout — no `timeout` binary). It was killed for memory 4 times today; ask the founder to free memory on the Mac (close apps / quit idle Claude sessions) before starting. Record in validator_last_full_run.",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
@@ -382,5 +399,13 @@
     "result": "checks 305,223; negative 111/111 rejected for their own reason, leaked []; positive 72/72 passed, falsely_excluded []",
     "note": "first execution of all 20 fixture pairs the three contracts lanes wrote today",
     "superseded_note": "Head 7114f19 (after r7-contracts-e) has NOT had a full or split run complete: the split suite was killed by the OS for low memory before its first stage reported (log empty). The only contracts changes since the green run at 1573593/3e51a9e are r7-contracts-e's (F6Y-01: sweep widened, 25 source rows, fixture pair R36), which passed the light validator in-lane (305,267 checks; floors 112/73). Treat the R36 pair and the widened sweep as UNEXECUTED until a split run completes."
+  },
+  "resumption_r8": {
+    "date": "2026-09-15",
+    "from_branch": "ceo-4-1789314685",
+    "from_head": "95ca14d",
+    "method": "fast-forward merge of ceo-4-1789314685 onto ceo-1-1789446032 (was at main b2cabad)",
+    "scan": "8 harness lane worktrees under .claude/worktrees scanned with git status --porcelain: each holds only two untracked copies of .claude/workflows/vision-round-1*.js, no lost work; ceo-4 root clean",
+    "executor": "orchestrator session ceo-1-1789446032 (ceo-vision-resume-r8)"
   }
 }
