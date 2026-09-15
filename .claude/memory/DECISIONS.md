@@ -380,3 +380,23 @@ founder's hold; B01 not dispatched; one model family; no runtime exists.
 **Reversibility:** reversible — planning only. **Owner:** orchestrator `ceo-4-1789314685` ·
 **Affects:** `docs/vision-system/**`, `registers/open-questions.json`, every future lane's dispatch brief
 (see LONG-TERM.md 2026-09-14 for the mechanics)
+
+## 2026-09-15 — r8: repairs stop at the residue, and three structural decisions are owed
+
+**Decisions (orchestrator `ceo-1-1789446032`).** (1) **Contract lanes stop for this round** after four
+(F/G/H/I) landed twenty-four items; F6D-05/F6Y-04 (R46) and F6C-10 stay owed rather than buy a fifth lane.
+(2) **The suite runs on a frozen tree, per fixture, with full stdout to files** — the runner replicates
+`registers/` and `planning/reviews/F2-06-*.md` per scratch tree, so a mid-run commit changed the subject
+under the fixtures (measured twice: F6X-03, and register status prose naming F6A-09/F6C-06). (3) **Register
+`status` prose is data**: never name another finding's id in it; run the light validator on HEAD before any
+record-keeping commit.
+
+**Owed to the founder or a framer lane, not decided here:** edge predicates as a derived artifact (no
+edge-predicate writer exists; F6C-10's park phase is blocked on it) · the fixture runner copying fixture
+bodies instead of symlinking manifests (F6Y-06's check half; lane G's packet in
+`planning/F2/11-repair-names-contracts-g.md`) · a `CapabilityId`/`CheckerId` vocabulary (two free strings
+now carry structural joins) · whether to re-run the fifteen-dimension review, which no repair moves.
+
+**Reversibility:** reversible — planning only. **Owner:** orchestrator · **Affects:** every future
+contracts lane brief, `docs/vision-system/**`, `.claude/memory/LONG-TERM.md` (2026-09-15 entries)
+
