@@ -221,6 +221,12 @@
             "required": true,
             "added_by": "WORK-1.1-F6B",
             "note": "F6B-03. 06 section 7: a verdict from an instrument whose refusal rate on clean cases is unrecorded is `unresolved` and MAY NOT SATISFY AN ACCEPTANCE GATE. No record related to InstrumentCalibration at all, so the clause naming the attachment point was the one clause with no attachment, and an acceptance could commit on a checker with no calibration in `run` -- the state every checker is in before its first calibration session."
+          },
+          "checker_id": {
+            "type": "string",
+            "required": true,
+            "added_by": "WORK-1.1-F6B",
+            "note": "F6B-03, second half. calibration_ref bound an acceptance to A calibration standing at run; nothing bound it to the calibration OF THE CHECKER THAT PRODUCED THIS VERDICT, so any instrument current calibration satisfied the gate. This field is the acceptance own statement of whose verdict it is accepting, and guard.calibration.current_for_checker compares it to InstrumentCalibration.checker_id, which is already required on that record."
           }
         }
       }
