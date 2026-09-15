@@ -102,3 +102,8 @@ a.chip:hover{border-color:var(--accent);color:var(--accent);background:var(--acc
  .kv{grid-template-columns:minmax(0,1fr);gap:1px} .kv dt{padding-top:7px}
  .diagram{padding:6px}
 }
+
+.pane pre,.kv pre{background:var(--sunk);border:1px solid var(--rule);border-radius:5px;padding:8px;overflow-x:auto;font-size:.72rem;line-height:1.45;margin:4px 0 0;max-height:340px}
+.kv dd b{font-weight:600}
+.detail .diagram{padding:6px}
+.detail .tbl{font-size:.74rem}

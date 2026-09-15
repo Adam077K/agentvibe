@@ -4,15 +4,15 @@
 "use strict";
 var $=function(i){return document.getElementById(i)};
 var RAIL=$("rail"),CANVAS=$("canvas"),DETAIL=$("detail"),CRUMBS=$("crumbs"),QBOX=$("q"),RES=$("results");
-var EM={"&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;"};
-function e(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return EM[c]})}
+var EM={"&":"&amp;","<":"&lt;",">":"&gt;","\u0022":"&quot;"};
+function e(s){return String(s==null?"":s).replace(/[&<>\u0022]/g,function(c){return EM[c]})}
 function T(s){return s==null?"":String(s)}
 function has(v){if(v==null||v==="")return false;if(Array.isArray(v))return v.length>0;if(typeof v==="object")return Object.keys(v).length>0;return true}
 function md(s){var t=e(T(s));t=t.replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");return t.replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>")}
 function lab(k){return T(k).replace(/_/g," ")}
 function cut(s,n){s=T(s);return s.length>n?s.slice(0,n)+"…":s}
-function pre(o){return "<pre class="mono">"+e(JSON.stringify(o,null,1))+"</pre>"}
-function none(t){return "<span class="none">"+e(t||"none stated")+"</span>"}
+function pre(o){return "<pre class=\"mono\">"+e(JSON.stringify(o,null,1))+"</pre>"}
+function none(t){return "<span class=\"none\">"+e(t||"none stated")+"</span>"}
 
 /* ---------- data ---------- */
 var C={},P={},IX={};
@@ -23,22 +23,22 @@ function byId(name,arr,key){key=key||"id";var k=name+":"+key;if(!IX[k]){var m={}
 
 /* ---------- links ---------- */
 function href(sec,id,sub){return "#/"+sec+(id!=null?"/"+encodeURIComponent(id):"")+(sub!=null?"/"+encodeURIComponent(sub):"")}
-function lk(sec,id,label,cls){return "<a class=""+(cls||"chip")+"" href=""+href(sec,id)+"">"+e(label==null?id:label)+"</a>"}
+function lk(sec,id,label,cls){return "<a class=\""+(cls||"chip")+"\" href=\""+href(sec,id)+"\">"+e(label==null?id:label)+"</a>"}
 var PAT=[[/^S1-C\d+$/,"component"],[/^L[1-5]$/,"layer"],[/^B\d\d$/,"stage"],[/^CAP-\d+$/,"capability"],[/^AD-\d+$/,"decision"],[/^Q-\d+$/,"question"],[/^RISK-\d+$/,"risk"],[/^AC\d+$/,"attack"],[/^D\d\d$/,"coverage"],[/^IC-[A-Z0-9-]+$/,"adapter"],[/^N-[A-Z0-9/-]+$/,"profile"],[/^[A-Z]\d\d-Q\d\d$/,"coverage"],[/^VISION-\d+$/,"coverage"]];
 function secOf(id){id=T(id);for(var i=0;i<PAT.length;i++){if(PAT[i][0].test(id))return PAT[i][1]}
  if(C.records&&byId("records",C.records)[id])return "record";
  if(C.predicates&&byId("predicates",C.predicates)[id])return "predicate";
  if(C.commands&&byId("commands",C.commands)[id])return "command";
  return null}
-function auto(id,label){var s=secOf(id);return s?lk(s,id,label):"<span class="chip">"+e(label==null?id:label)+"</span>"}
+function auto(id,label){var s=secOf(id);return s?lk(s,id,label):"<span class=\"chip\">"+e(label==null?id:label)+"</span>"}
 function chips(list,sec){if(!list||!list.length)return none();
- return "<div class="chips">"+list.map(function(x){return sec?lk(sec,x,x):auto(x)}).join("")+"</div>"}
+ return "<div class=\"chips\">"+list.map(function(x){return sec?lk(sec,x,x):auto(x)}).join("")+"</div>"}
 
 /* ---------- generic value rendering ---------- */
 function val(v,d){d=d||0;
  if(!has(v))return none(v===false?"no":null);
  if(typeof v==="string")return md(v);
- if(typeof v==="boolean")return "<span class="pill "+(v?"ok">yes":"no">no")+"</span>";
+ if(typeof v==="boolean")return "<span class=\"pill "+(v?"ok\">yes":"no\">no")+"</span>";
  if(typeof v!=="object")return e(String(v));
  if(Array.isArray(v)){
   var flat=v.every(function(x){return x==null||typeof x!=="object"});
@@ -49,17 +49,17 @@ function val(v,d){d=d||0;
  return kv(v,d+1)}
 function kv(o,d){if(!o)return none();
  var r=Object.keys(o).filter(function(k){return has(o[k])}).map(function(k){return "<dt>"+e(lab(k))+"</dt><dd>"+val(o[k],d||0)+"</dd>"}).join("");
- return r?"<dl class="kv">"+r+"</dl>":none()}
+ return r?"<dl class=\"kv\">"+r+"</dl>":none()}
 function rows(pairs){var r=pairs.filter(function(p){return p[1]}).map(function(p){return "<dt>"+e(p[0])+"</dt><dd>"+p[1]+"</dd>"}).join("");
- return r?"<dl class="kv">"+r+"</dl>":""}
-function sub(t){return "<div class="sub">"+e(t)+"</div>"}
-function pane(t,body,lede){return "<section class="pane">"+(t?"<h2>"+e(t)+"</h2>":"")+(lede?"<p class="lede">"+md(lede)+"</p>":"")+body+"</section>"}
+ return r?"<dl class=\"kv\">"+r+"</dl>":""}
+function sub(t){return "<div class=\"sub\">"+e(t)+"</div>"}
+function pane(t,body,lede){return "<section class=\"pane\">"+(t?"<h2>"+e(t)+"</h2>":"")+(lede?"<p class=\"lede\">"+md(lede)+"</p>":"")+body+"</section>"}
 function srcline(o){var s=o&&(o.source||o.source_doc||o.path);if(!s)return "";
  var extra=o.source_doc&&o.source&&o.source_doc!==o.source?"<br>stated in <code>"+e(o.source_doc)+"</code>":"";
- return "<div class="src"><b>where this is defined</b><br><code>"+e(s)+"</code>"+extra+"</div>"}
-function loading(what){return "<div class="loading">reading <code>data/"+e(what)+".json</code></div>"}
+ return "<div class=\"src\"><b>where this is defined</b><br><code>"+e(s)+"</code>"+extra+"</div>"}
+function loading(what){return "<div class=\"loading\">reading <code>data/"+e(what)+".json</code></div>"}
 function statusPill(s){s=T(s);var c=/^(Answered|closed|selected|accepted|complete|yes|PASS|SUFFICIENT)/i.test(s)?"ok":/founder|decision|external professional|open|not-started|INSUFFICIENT|FAIL/i.test(s)?"no":"wait";
- return "<span class="pill "+c+"">"+e(cut(s,60))+"</span>"}
+ return "<span class=\"pill "+c+"\">"+e(cut(s,60))+"</span>"}
 
 /* ---------- diagram engine: hand-drawn SVG, currentColor strokes ---------- */
 function wrapText(s,max){var w=T(s).split(/\s+/),out=[],cur="";
@@ -83,21 +83,21 @@ function graph(nodes,edges,o){
  ks.forEach(function(k,ci){var y=PAD+(maxH-colH[k])/2;
   cols[k].forEach(function(i){N[i].x=PAD+ci*(W+GAPX);N[i].y=y;N[i].cx=N[i].x+W/2;N[i].cy=y+N[i].h/2;y+=N[i].h+GAPY})});
  var sw=PAD*2+ks.length*(W+GAPX)-GAPX,sh=maxH+PAD*2+10;
- var out=["<svg viewBox="0 0 "+sw+" "+sh+"" width=""+sw+"" height=""+sh+"" role="img">",
-  "<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L7,4 L0,7 z" fill="currentColor"/></marker></defs>"];
+ var out=["<svg viewBox=\"0 0 "+sw+" "+sh+"\" width=\""+sw+"\" height=\""+sh+"\" role=\"img\">",
+  "<defs><marker id=\"ah\" viewBox=\"0 0 8 8\" refX=\"7\" refY=\"4\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto-start-reverse\"><path d=\"M0,1 L7,4 L0,7 z\" fill=\"currentColor\"/></marker></defs>"];
  edges.forEach(function(g,gi){var a=N[g.from],b=N[g.to];if(!a||!b)return;var p;
   if(g.from===g.to){p="M"+(a.x+W*0.34)+","+a.y+" C"+(a.x-24)+","+(a.y-46)+" "+(a.x+W+24)+","+(a.y-46)+" "+(a.x+W*0.66)+","+a.y}
   else if(b.x>a.x){var x1=a.x+W,x2=b.x,mx=(x1+x2)/2;p="M"+x1+","+a.cy+" C"+mx+","+a.cy+" "+mx+","+b.cy+" "+x2+","+b.cy}
   else{var y1=a.y+a.h,y2=b.y+b.h,dy=42+((gi%3)*12);p="M"+a.cx+","+y1+" C"+a.cx+","+(y1+dy)+" "+b.cx+","+(y2+dy)+" "+b.cx+","+y2}
-  out.push("<g class="ed"+(g.cls?" "+g.cls:"")+"""+(g.href?" data-h=""+e(g.href)+""":" ")+"><title>"+e(g.title||"")+"</title><path d=""+p+"" marker-end="url(#ah)"/></g>")});
+  out.push("<g class=\"ed"+(g.cls?" "+g.cls:"")+"\""+(g.href?" data-h=\""+e(g.href)+"\"":" ")+"><title>"+e(g.title||"")+"</title><path d=\""+p+"\" marker-end=\"url(#ah)\"/></g>")});
  order.forEach(function(i){var m=N[i],n=m.n,ty=m.y+(n.sub?26:20);
-  out.push("<g class="nd"+(n.cls?" "+n.cls:"")+"""+(n.href?" data-h=""+e(n.href)+""":"")+"><title>"+e(n.title||n.label)+"</title>"+
-   "<rect x=""+m.x+"" y=""+m.y+"" width=""+W+"" height=""+m.h+"" rx="6"/>"+
-   (n.sub?"<text class="id" x=""+(m.x+10)+"" y=""+(m.y+15)+"">"+e(n.sub)+"</text>":"")+
-   m.lines.map(function(t,li){return "<text x=""+(m.x+10)+"" y=""+(ty+li*14)+"">"+e(t)+"</text>"}).join("")+"</g>")});
+  out.push("<g class=\"nd"+(n.cls?" "+n.cls:"")+"\""+(n.href?" data-h=\""+e(n.href)+"\"":"")+"><title>"+e(n.title||n.label)+"</title>"+
+   "<rect x=\""+m.x+"\" y=\""+m.y+"\" width=\""+W+"\" height=\""+m.h+"\" rx=\"6\"/>"+
+   (n.sub?"<text class=\"id\" x=\""+(m.x+10)+"\" y=\""+(m.y+15)+"\">"+e(n.sub)+"</text>":"")+
+   m.lines.map(function(t,li){return "<text x=\""+(m.x+10)+"\" y=\""+(ty+li*14)+"\">"+e(t)+"</text>"}).join("")+"</g>")});
  out.push("</svg>");
  return out.join("")}
-function diagram(svg,caption,legend){return "<div class="diagram">"+svg+"</div>"+(legend?"<div class="legend">"+legend+"</div>":"")+(caption?"<p class="cap">"+md(caption)+"</p>":"")}
+function diagram(svg,caption,legend){return "<div class=\"diagram\">"+svg+"</div>"+(legend?"<div class=\"legend\">"+legend+"</div>":"")+(caption?"<p class=\"cap\">"+md(caption)+"</p>":"")}
 
 /* ---------- view registry ---------- */
 var V={},GROUPS=[];
@@ -117,9 +117,9 @@ function flowNodes(c){
   var id=f[p[0]];if(!seen[id]){seen[id]=1;ns.push({id:id,label:f[p[1]]||id,sub:id,cls:"ext",title:f[p[1]]||id})}})});
  return ns}
 function flowEdges(fl){return fl.map(function(f){return {from:f.from,to:f.to,title:(f.from_label||f.from)+" → "+(f.to_label||f.to)}})}
-function one(id,label){return /^S1-C/.test(id)?lk("component",id,label||id):"<span class="chip">"+e(label||id)+"</span>"}
-function flowList(fl){return "<div class="rows">"+fl.map(function(f){
- return "<div class="row"><div class="t">"+one(f.from,f.from_label)+"<span class="m">"+e(f.arrow)+(f.bidirectional?" (both ways)":"")+"</span>"+one(f.to,f.to_label)+"</div></div>"}).join("")+"</div>"}
+function one(id,label){return /^S1-C/.test(id)?lk("component",id,label||id):"<span class=\"chip\">"+e(label||id)+"</span>"}
+function flowList(fl){return "<div class=\"rows\">"+fl.map(function(f){
+ return "<div class=\"row\"><div class=\"t\">"+one(f.from,f.from_label)+"<span class=\"m\">"+e(f.arrow)+(f.bidirectional?" (both ways)":"")+"</span>"+one(f.to,f.to_label)+"</div></div>"}).join("")+"</div>"}
 
 X.view("home",{label:"System map",group:"The system",
  list:function(){return D("components").then(function(c){
@@ -127,7 +127,7 @@ X.view("home",{label:"System map",group:"The system",
   return pane("The nine logical components",
     diagram(svg,"Nine components of architecture S1.1, drawn from `components.json`: nine registry items and the fourteen edges of the logical flowchart in chapter 08 section 3. **The package states those edges without labels**, so each arrow carries its two endpoint labels as its tooltip and the list below names every edge in full. Dashed boxes are nodes the chapter names that are not components.",
       "<span>solid box · component</span><span>dashed box · external or non-component node</span><span>arrow · one declared flow</span>")+
-    "<p class="cap">Click a box for what that component owns, receives, returns and cannot do — with its records, commands, capabilities and predicates.</p>"+
+    "<p class=\"cap\">Click a box for what that component owns, receives, returns and cannot do — with its records, commands, capabilities and predicates.</p>"+
     sub("the fourteen logical flows")+flowList(c.flows)+
     sub("the eight trust and fault placement flows")+flowList(c.deployment_flows)+
     srcline(c))})},
@@ -135,9 +135,9 @@ X.view("home",{label:"System map",group:"The system",
 
 X.view("component",{label:"Components",group:"The system",n:9,
  list:function(sel){return D("components").then(function(c){
-  return pane("Nine components","<div class="cards">"+c.items.map(function(i){
-   return "<a class="card"+(i.id===sel?" on":"")+"" href=""+href("component",i.id)+""><span class="t">"+e(i.id)+" · "+e(i.short_name||i.name)+"</span><span class="s">"+e(cut(i.owns,110))+"</span></a>"}).join("")+"</div>"+
-   "<p class="cap">Record, command, predicate and capability counts on each detail are derived by the projection, not declared in the chapter.</p>"+srcline(c))})},
+  return pane("Nine components","<div class=\"cards\">"+c.items.map(function(i){
+   return "<a class=\"card"+(i.id===sel?" on":"")+"\" href=\""+href("component",i.id)+"\"><span class=\"t\">"+e(i.id)+" · "+e(i.short_name||i.name)+"</span><span class=\"s\">"+e(cut(i.owns,110))+"</span></a>"}).join("")+"</div>"+
+   "<p class=\"cap\">Record, command, predicate and capability counts on each detail are derived by the projection, not declared in the chapter.</p>"+srcline(c))})},
  detail:function(id){return Promise.all([D("components"),D("records"),D("commands"),D("capabilities"),D("chapters")]).then(function(a){
   var c=a[0],i=byId("components",c.items)[id];if(!i)return pane("Not found","<p>"+e(id)+" is not a component id.</p>");
   var recs=a[1].filter(function(r){return r.owner_component===id}),cmds=a[2].filter(function(x){return x.owner_component===id}),caps=a[3].filter(function(x){return x.owner_component===id});
@@ -153,7 +153,7 @@ X.view("component",{label:"Components",group:"The system",n:9,
    sub("the nineteen authority attributes")+kv(i.attributes)+
    (X.has(i.contract_refs)?sub("contract references")+val(i.contract_refs):"")+
    sub("chapter sections that mention it ("+secs.length+")")+
-   "<div class="rows">"+secs.map(function(p){return "<a class="row" href=""+href("chapter",p[0].id,p[1].id)+""><span class="t">"+e(p[1].heading)+"</span><span class="s">"+e(p[0].title)+"</span></a>"}).join("")+"</div>"+
+   "<div class=\"rows\">"+secs.map(function(p){return "<a class=\"row\" href=\""+href("chapter",p[0].id,p[1].id)+"\"><span class=\"t\">"+e(p[1].heading)+"</span><span class=\"s\">"+e(p[0].title)+"</span></a>"}).join("")+"</div>"+
    srcline(i))})}});
 
 X.view("layer",{label:"Five layers",group:"The system",n:5,
@@ -162,14 +162,14 @@ X.view("layer",{label:"Five layers",group:"The system",n:5,
   var es=[];for(var i=0;i<L.items.length-1;i++)es.push({from:L.items[i].id,to:L.items[i+1].id,title:"precedence"});
   return pane("The precedence ladder",
    diagram(graph(ns,es,{w:150,gapx:60,chars:19}),"L1 to L5 as tabled in chapter 02 section 3. The arrow is precedence, not data flow. "+md(L.precedence))+
-   "<p class="cap">Click a layer for its governing rule and the sections of <code>05-work-agents-skills.md</code> that specify it.</p>"+
+   "<p class=\"cap\">Click a layer for its governing rule and the sections of <code>05-work-agents-skills.md</code> that specify it.</p>"+
    sub("how the five layers were introduced")+"<p>"+md(L.introduction)+"</p>"+
-   sub("the criteria the selection record judged")+"<h4>"+e(L.selection_record_criteria.heading)+"</h4><div class="prose"><p>"+md(L.selection_record_criteria.text)+"</p></div>"+
+   sub("the criteria the selection record judged")+"<h4>"+e(L.selection_record_criteria.heading)+"</h4><div class=\"prose\"><p>"+md(L.selection_record_criteria.text)+"</p></div>"+
    srcline(L))})},
  detail:function(id){return D("layers").then(function(L){var l=byId("layers",L.items)[id];if(!l)return "";
   return pane(l.name,rows([["decides",md(l.decides)],["governing rule",md(l.governing_rule)],["where specified",md(l.where_specified)]])+
    sub("governing sections, in full")+
-   (l.rule_sections||[]).map(function(s){return "<h4>"+e(s.heading)+"</h4><div class="prose"><p>"+md(s.text)+"</p></div>"}).join("")+
+   (l.rule_sections||[]).map(function(s){return "<h4>"+e(s.heading)+"</h4><div class=\"prose\"><p>"+md(s.text)+"</p></div>"}).join("")+
    srcline(l))})}});
 })();
 
@@ -180,7 +180,7 @@ var X=window.__EX,D=X.D,e=X.e,md=X.md,kv=X.kv,val=X.val,rows=X.rows,sub=X.sub,pa
 var F=window.__F||(window.__F={});
 
 function lifecycle(r,edgeSel){
- var lc=r.lifecycle;if(!lc||!lc.phases||!lc.phases.length)return "<p class="none">This record declares no phased lifecycle.</p>";
+ var lc=r.lifecycle;if(!lc||!lc.phases||!lc.phases.length)return "<p class=\"none\">This record declares no phased lifecycle.</p>";
  var ns=lc.phases.map(function(p){return {id:p,label:p,sub:p===lc.initial?"initial":"",cls:p===lc.initial?"init":"",title:p}});
  var es=(lc.edges||[]).map(function(g){return {from:g.from,to:g.to,title:g.meaning||g.predicate,href:href("record",r.id,g.edge_id),cls:g.edge_id===edgeSel?"on":""}});
  return diagram(graph(ns,es,{w:136,gapx:78,chars:17}),
@@ -195,27 +195,27 @@ X.view("record",{label:"Records",group:"The contract",n:189,
   var by={};s2.forEach(function(r){(by[r.owner_component]=by[r.owner_component]||[]).push(r)});
   var opt=function(o,cur){return Object.keys(o).sort().map(function(k){return "<option"+(k===cur?" selected":"")+">"+e(k)+"</option>"}).join("")};
   return pane("189 records, grouped by the component that owns them",
-   "<div class="filters"><input id="f-rq" data-f="rq" placeholder="filter by id" value=""+e(F.rq||"")+"">"+
-   "<select id="f-rk" data-f="rk"><option value="">every kind</option>"+opt(kinds,kind)+"</select>"+
-   "<select id="f-rr" data-f="rr"><option value="">every representation</option>"+opt(reps,rep)+"</select>"+
-   "<span class="count">"+s2.length+" of "+R.length+"</span></div>"+
-   Object.keys(by).sort().map(function(c){return "<div class="groupname">"+e(c)+" · "+by[c].length+"</div><div class="rows">"+
-    by[c].map(function(r){return "<a class="row"+(r.id===sel?" on":"")+"" href=""+href("record",r.id)+""><span class="t">"+e(r.id)+"<span class="m">"+e(r.kind)+"</span></span><span class="s">"+e(cut(r.representation,120))+"</span></a>"}).join("")+"</div>"}).join(""))})},
+   "<div class=\"filters\"><input id=\"f-rq\" data-f=\"rq\" placeholder=\"filter by id\" value=\""+e(F.rq||"")+"\">"+
+   "<select id=\"f-rk\" data-f=\"rk\"><option value=\"\">every kind</option>"+opt(kinds,kind)+"</select>"+
+   "<select id=\"f-rr\" data-f=\"rr\"><option value=\"\">every representation</option>"+opt(reps,rep)+"</select>"+
+   "<span class=\"count\">"+s2.length+" of "+R.length+"</span></div>"+
+   Object.keys(by).sort().map(function(c){return "<div class=\"groupname\">"+e(c)+" · "+by[c].length+"</div><div class=\"rows\">"+
+    by[c].map(function(r){return "<a class=\"row"+(r.id===sel?" on":"")+"\" href=\""+href("record",r.id)+"\"><span class=\"t\">"+e(r.id)+"<span class=\"m\">"+e(r.kind)+"</span></span><span class=\"s\">"+e(cut(r.representation,120))+"</span></a>"}).join("")+"</div>"}).join(""))})},
  detail:function(id,edgeSel){return D("records").then(function(R){var r=byId("records",R)[id];if(!r)return pane("Not found","<p>"+e(id)+" is not a record id.</p>");
   var edge=null;((r.lifecycle&&r.lifecycle.edges)||[]).forEach(function(g){if(g.edge_id===edgeSel)edge=g});
-  var fields="<table class="tbl"><tr><th>path</th><th>type</th><th>req</th><th>owner</th><th>note</th></tr>"+
-   (r.fields||[]).map(function(f){return "<tr><td class="mono">"+e(f.path)+"</td><td class="mono">"+e(f.type)+"</td><td>"+(f.required?"yes":"")+"</td><td>"+e(cut(f.owner,44))+"</td><td>"+e(cut(f.note,110))+"</td></tr>"}).join("")+"</table>";
-  var rel=(r.relations||[]).map(function(x){return "<div class="row"><span class="t"><span class="m">"+e(x.field_path)+"</span>"+chips(x.targets,"record")+"</span><span class="s">cardinality: "+e(x.cardinality)+"</span></div>"}).join("");
+  var fields="<table class=\"tbl\"><tr><th>path</th><th>type</th><th>req</th><th>owner</th><th>note</th></tr>"+
+   (r.fields||[]).map(function(f){return "<tr><td class=\"mono\">"+e(f.path)+"</td><td class=\"mono\">"+e(f.type)+"</td><td>"+(f.required?"yes":"")+"</td><td>"+e(cut(f.owner,44))+"</td><td>"+e(cut(f.note,110))+"</td></tr>"}).join("")+"</table>";
+  var rel=(r.relations||[]).map(function(x){return "<div class=\"row\"><span class=\"t\"><span class=\"m\">"+e(x.field_path)+"</span>"+chips(x.targets,"record")+"</span><span class=\"s\">cardinality: "+e(x.cardinality)+"</span></div>"}).join("");
   return pane(r.id,
    rows([["kind",e(r.kind)],["representation",md(r.representation)],["owner",lk("component",r.owner_component,r.owner_component)],
      ["implementation status",statusPill(r.implementation_status)],["planned module","<code>"+e(r.planned_module)+"</code>"],["schema version",e(r.schema_version)]])+
    sub("lifecycle")+lifecycle(r,edgeSel)+
-   (edge?"<div class="pane" style="margin-top:10px"><h3>"+e(edge.from)+" → "+e(edge.to)+"</h3>"+
-     rows([["guard predicate",lk("predicate",edge.predicate,edge.predicate)+" <span class="m">v"+e(edge.predicate_version)+"</span>"],
+   (edge?"<div class=\"pane\" style=\"margin-top:10px\"><h3>"+e(edge.from)+" → "+e(edge.to)+"</h3>"+
+     rows([["guard predicate",lk("predicate",edge.predicate,edge.predicate)+" <span class=\"m\">v"+e(edge.predicate_version)+"</span>"],
       ["meaning",md(edge.meaning)],["owner",lk("component",edge.owner,edge.owner)],["mutates",md(edge.mutates)],
       ["on denial",md(edge.on_denial)],["allowed commands",chips(edge.allowed_command_ids,"command")],["criterion","<code>"+e(edge.criterion_id)+"</code>"]])+"</div>":"")+
    sub("fields ("+(r.fields||[]).length+")")+fields+
-   (rel?sub("relations")+"<div class="rows">"+rel+"</div>":"")+
+   (rel?sub("relations")+"<div class=\"rows\">"+rel+"</div>":"")+
    sub("identity")+kv(r.identity)+sub("source of truth")+kv(r.source_of_truth)+
    (r.owner_assignment?sub("owner assignment")+"<p>"+md(r.owner_assignment)+"</p>":"")+
    sub("registration")+kv(r.registration)+
@@ -243,13 +243,13 @@ window.__REG=function(key,o){
    var items=arr.filter(function(x){return (!q||o.text(x).toLowerCase().indexOf(q)>=0)&&(!own||x.owner_component===own)});
    var cap=o.cap||300,shown=items.slice(0,cap);
    return pane(o.title,
-    "<div class="filters"><input data-f=""+key+"" placeholder="filter" value=""+e(F[key]||"")+"">"+
-    (own?"<a class="chip" href=""+href(key,"@")+"">owner "+e(own)+" ×</a>":"")+
-    "<span class="count">"+items.length+" of "+arr.length+"</span></div>"+
-    "<div class="rows">"+shown.map(function(x){var id=x[o.idf||"id"];
-     return "<a class="row"+(id===sel?" on":"")+"" href=""+href(key,id)+""><span class="t">"+e(o.rowT?o.rowT(x):id)+"</span><span class="s">"+e(cut(o.rowS?o.rowS(x):"",190))+"</span></a>"}).join("")+"</div>"+
-    (items.length>shown.length?"<p class="cap">Showing the first "+cap+" of "+items.length+" matches. Narrow the filter, or use the search box above — every one of them is addressable.</p>":"")+
-    (o.note?"<p class="cap">"+md(o.note)+"</p>":""))})},
+    "<div class=\"filters\"><input data-f=\""+key+"\" placeholder=\"filter\" value=\""+e(F[key]||"")+"\">"+
+    (own?"<a class=\"chip\" href=\""+href(key,"@")+"\">owner "+e(own)+" ×</a>":"")+
+    "<span class=\"count\">"+items.length+" of "+arr.length+"</span></div>"+
+    "<div class=\"rows\">"+shown.map(function(x){var id=x[o.idf||"id"];
+     return "<a class=\"row"+(id===sel?" on":"")+"\" href=\""+href(key,id)+"\"><span class=\"t\">"+e(o.rowT?o.rowT(x):id)+"</span><span class=\"s\">"+e(cut(o.rowS?o.rowS(x):"",190))+"</span></a>"}).join("")+"</div>"+
+    (items.length>shown.length?"<p class=\"cap\">Showing the first "+cap+" of "+items.length+" matches. Narrow the filter, or use the search box above — every one of them is addressable.</p>":"")+
+    (o.note?"<p class=\"cap\">"+md(o.note)+"</p>":""))})},
   detail:function(id){return D(o.file).then(function(raw){
    var arr=o.pick?o.pick(raw):raw,f=o.idf||"id",x=null;
    arr.forEach(function(y){if(String(y[f])===String(id))x=y});
@@ -263,14 +263,14 @@ REG("predicate",{label:"Predicates",group:"The contract",n:2398,file:"predicates
  det:function(p){return rows([["meaning",md(p.meaning)],["owner",p.owner_component?lk("component",p.owner_component,p.owner_component):""],
   ["version",e(p.version)],["failure",md(p.failure)],["implementation status",statusPill(p.implementation_status)],
   ["argument types",X.has(p.argument_types)?val(p.argument_types):""],["stated in",p.source_doc?"<code>"+e(p.source_doc)+"</code>":""]])+
-  sub("body"+(p.truncated?" (truncated at 1,200 of "+p.body_bytes+" characters)":""))+"<pre class="mono">"+e(p.body_compact)+"</pre>"+
+  sub("body"+(p.truncated?" (truncated at 1,200 of "+p.body_bytes+" characters)":""))+"<pre class=\"mono\">"+e(p.body_compact)+"</pre>"+
   sub("used by ("+((p.used_by||[]).length)+") · derived by scanning, not declared")+chips(p.used_by||[])}});
 
 REG("command",{label:"Commands",group:"The contract",n:105,file:"commands",title:"105 commands",
  text:function(c){return c.id+" "+X.T(c.guard_meaning)},rowT:function(c){return c.id},rowS:function(c){return X.T(c.guard_meaning)},
  det:function(c){return rows([["owner",c.owner_component?lk("component",c.owner_component,c.owner_component):""],
-  ["read only",c.read_only?"<span class="pill ok">yes</span>":"<span class="pill wait">no</span>"],
-  ["targets",chips(c.target_types,"record")],["guard",c.guard_predicate_id?lk("predicate",c.guard_predicate_id,c.guard_predicate_id)+" <span class="m">v"+e(c.guard_version)+"</span>":""],
+  ["read only",c.read_only?"<span class=\"pill ok\">yes</span>":"<span class=\"pill wait\">no</span>"],
+  ["targets",chips(c.target_types,"record")],["guard",c.guard_predicate_id?lk("predicate",c.guard_predicate_id,c.guard_predicate_id)+" <span class=\"m\">v"+e(c.guard_version)+"</span>":""],
   ["guard means",md(c.guard_meaning)],["payload",X.has(c.payload)?val(c.payload):""],["source guard",md(c.source_guard)],
   ["transaction contract",X.has(c.transaction_contract)?val(c.transaction_contract):""],
   ["planned module","<code>"+e(c.planned_module)+"</code>"],["implementation status",statusPill(c.implementation_status)],
@@ -292,7 +292,7 @@ REG("pin",{label:"Pinned conjuncts",group:"The contract",n:23,file:"pins",pick:f
  note:"Hand-written assertions about the live registries, each paired with its own why prose.",
  det:function(x){return (x.why?"<p>"+md(x.why)+"</p>":"")+sub("value")+val(x.value)}});
 REG("classmap",{label:"Class mapping",group:"The contract",n:9,file:"class-mapping",title:"9 class-mapping rows",
- text:function(x){return x.id+" "+JSON.stringify(x.value)},rowT:function(x){return x.id},rowS:function(x){return typeof x.value==="string"?x.value:"table"},
+ text:function(x){return x.id+" "+JSON.stringify(x.value)},rowT:function(x){return x.id},rowS:function(x){return typeof x.value==="string\"?x.value:\"table"},
  det:function(x){return val(x.value)}});
 REG("adapter",{label:"Adapters",group:"Delivery",n:7,file:"adapters",title:"7 fulfillment adapters",
  text:function(x){return x.id+" "+X.T(x.implemented_target)},rowT:function(x){return x.id},rowS:function(x){return X.T(x.implemented_target||x.selected)}});
@@ -311,9 +311,9 @@ X.view("capability",{label:"Capabilities",group:"Delivery",n:46,
   var q=(F.cap||"").toLowerCase();
   var items=A.filter(function(c){return !q||(c.id+" "+c.name+" "+c.concern).toLowerCase().indexOf(q)>=0});
   return pane("46 capabilities",
-   "<div class="filters"><input data-f="cap" placeholder="filter" value=""+e(F.cap||"")+""><span class="count">"+items.length+" of "+A.length+"</span></div>"+
-   "<div class="cards">"+items.map(function(c){
-    return "<a class="card"+(c.id===sel?" on":"")+"" href=""+href("capability",c.id)+""><span class="t">"+e(c.id)+" · "+e(c.name||c.concern)+"</span><span class="s">"+e(cut(c.required_outcome||c.outcome,130))+"</span></a>"}).join("")+"</div>")})},
+   "<div class=\"filters\"><input data-f=\"cap\" placeholder=\"filter\" value=\""+e(F.cap||"")+"\"><span class=\"count\">"+items.length+" of "+A.length+"</span></div>"+
+   "<div class=\"cards\">"+items.map(function(c){
+    return "<a class=\"card"+(c.id===sel?" on":"")+"\" href=\""+href("capability",c.id)+"\"><span class=\"t\">"+e(c.id)+" · "+e(c.name||c.concern)+"</span><span class=\"s\">"+e(cut(c.required_outcome||c.outcome,130))+"</span></a>"}).join("")+"</div>")})},
  detail:function(id){return D("capabilities").then(function(A){var c=byId("capabilities",A)[id];
   if(!c)return pane("Not found","<p>"+e(id)+" is not a capability id.</p>");
   return pane(c.id+" · "+(c.name||c.concern),
@@ -333,9 +333,9 @@ X.view("capability",{label:"Capabilities",group:"Delivery",n:46,
    sub("requirements row")+kv(c.requirements_row)+
    sub("the source questions it answers ("+((c.questions||[]).length)+")")+chips(c.questions,"coverage")+
    sub("contract for each, in brief")+
-   "<div class="rows">"+(c.source_question_contracts||[]).map(function(s){
-     return "<a class="row" href=""+href("sourceq",s.question_id)+""><span class="t">"+e(s.question_id)+" "+statusPill(s.status)+"</span><span class="s">"+e(cut(s.question,150))+"</span><span class="s">"+e(cut(s.answer,220))+"</span></a>"}).join("")+"</div>"+
-   "<p class="cap">The full contracts live once in <code>source-question-contracts.json</code>; each row above opens its own.</p>"+
+   "<div class=\"rows\">"+(c.source_question_contracts||[]).map(function(s){
+     return "<a class=\"row\" href=\""+href("sourceq",s.question_id)+"\"><span class=\"t\">"+e(s.question_id)+" "+statusPill(s.status)+"</span><span class=\"s\">"+e(cut(s.question,150))+"</span><span class=\"s\">"+e(cut(s.answer,220))+"</span></a>"}).join("")+"</div>"+
+   "<p class=\"cap\">The full contracts live once in <code>source-question-contracts.json</code>; each row above opens its own.</p>"+
    srcline(c))})}});
 
 REG("sourceq",{label:"Source-question contracts",group:"Delivery",n:116,file:"source-question-contracts",idf:"question_id",
@@ -358,7 +358,7 @@ X.view("stage",{label:"Build plan B00-B11",group:"Delivery",n:12,
   return pane("The construction graph",
    diagram(graph(ns,es,{w:172,gapx:70,chars:22}),"B00 to B11 and their declared dependencies, read from `implementation-graph.json` with names from chapter 08 section 7. An arrow means the tail stage must complete before the head stage starts. **Every stage reads `not-started`.**",
     "<span>arrow · declared dependency</span>")+
-   "<p class="cap">Click a stage for what it builds, what completion evidence it requires, and what it does not prove.</p>")})},
+   "<p class=\"cap\">Click a stage for what it builds, what completion evidence it requires, and what it does not prove.</p>")})},
  detail:function(id){return D("stages").then(function(S){var s=byId("stages",S)[id];if(!s)return "";
   return pane(s.id+" · "+s.name,
    rows([["status",statusPill(s.status)],["depends on",chips(s.depends_on,"stage")],
@@ -396,8 +396,8 @@ REG("risk",{label:"Risks",group:"Judgement",n:17,file:"risks",title:"17 risks",
   ["accountable owner",md(r.accountable_owner)],["escalation requirement",md(r.escalation_requirement)],
   ["revalidation",md(r.revalidation)],["design evidence",val(r.design_evidence)],["implementation evidence",val(r.implementation_evidence)],
   ["attack cases",chips(r.attack_cases,"attack")]])+
-  sub("each attack case, resolved")+"<div class="rows">"+(r.attack_cases_joined||[]).map(function(a){
-   return "<a class="row" href=""+href("attack",a.id)+""><span class="t">"+e(a.id)+" "+statusPill(a.status)+"</span><span class="s">"+e(cut(a.case,200))+"</span></a>"}).join("")+"</div>"}});
+  sub("each attack case, resolved")+"<div class=\"rows\">"+(r.attack_cases_joined||[]).map(function(a){
+   return "<a class=\"row\" href=\""+href("attack",a.id)+"\"><span class=\"t\">"+e(a.id)+" "+statusPill(a.status)+"</span><span class=\"s\">"+e(cut(a.case,200))+"</span></a>"}).join("")+"</div>"}});
 
 REG("attack",{label:"Attack cases",group:"Judgement",n:33,file:"attacks",pick:function(r){return r.items},title:"33 attack cases",
  text:function(a){return a.id+" "+X.T(a.case)},rowT:function(a){return a.id},rowS:function(a){return X.T(a.case)},
@@ -415,10 +415,10 @@ var X=window.__EX,D=X.D,e=X.e,md=X.md,kv=X.kv,val=X.val,rows=X.rows,sub=X.sub,pa
  lk=X.lk,chips=X.chips,href=X.href,cut=X.cut,statusPill=X.statusPill,REG=window.__REG;
 var F=window.__F||(window.__F={});
 function selbar(key,label,opts,cur,n,total){
- return "<div class="filters"><input data-f=""+key+"" placeholder="filter" value=""+e(F[key]||"")+"">"+
-  "<select data-f=""+key+"s"><option value="">"+e(label)+"</option>"+
+ return "<div class=\"filters\"><input data-f=\""+key+"\" placeholder=\"filter\" value=\""+e(F[key]||"")+"\">"+
+  "<select data-f=\""+key+"s\"><option value=\"\">"+e(label)+"</option>"+
   opts.map(function(o){return "<option"+(o===cur?" selected":"")+">"+e(o)+"</option>"}).join("")+"</select>"+
-  "<span class="count">"+n+" of "+total+"</span></div>"}
+  "<span class=\"count\">"+n+" of "+total+"</span></div>"}
 
 REG("review",{label:"Reviews",group:"Judgement",n:39,file:"reviews",title:"39 archived reviews",
  text:function(r){return r.id+" "+X.T(r.title)+" "+X.T(r.verdict_line)+" "+X.T(r.precis)},
@@ -427,8 +427,8 @@ REG("review",{label:"Reviews",group:"Judgement",n:39,file:"reviews",title:"39 ar
  det:function(r){return rows([["verdict line",md(r.verdict_line)],["verdicts",chips(r.verdicts)],
   ["date",e(r.date)],["subject sha",r.subject_sha?"<code>"+e(r.subject_sha)+"</code>":X.none("this is the protocol, not a review of a subject")],
   ["class mentions",X.has(r.class_mentions)?val(r.class_mentions):""],["file","<code>"+e(r.path)+"</code>"],["bytes",e(String(r.bytes))]])+
-  sub("provenance, as the review opens")+"<div class="prose"><blockquote>"+md(r.provenance)+"</blockquote></div>"+
-  sub("précis — its first prose paragraph")+"<div class="prose"><p>"+md(r.precis)+"</p></div>"}});
+  sub("provenance, as the review opens")+"<div class=\"prose\"><blockquote>"+md(r.provenance)+"</blockquote></div>"+
+  sub("précis — its first prose paragraph")+"<div class=\"prose\"><p>"+md(r.precis)+"</p></div>"}});
 
 X.view("finding",{label:"Findings",group:"Judgement",n:286,
  list:function(sel){return D("findings").then(function(A){
@@ -439,9 +439,9 @@ X.view("finding",{label:"Findings",group:"Judgement",n:286,
   var shown=items.slice(0,250);
   return pane("286 findings across four registers",
    selbar("fnd","every register",regs,rg,items.length,all.length)+
-   "<div class="rows">"+shown.map(function(x){
-    return "<a class="row"+(x.key===sel?" on":"")+"" href=""+href("finding",x.key)+""><span class="t">"+e(x.id)+"<span class="m">"+e(x.register)+(x.class?" · class ("+e(x.class)+")":"")+"</span>"+(x.status?statusPill(x.status):"")+"</span><span class="s">"+e(cut(x.heading||x.review_subject||(x.positions||[]).join(" vs "),190))+"</span></a>"}).join("")+"</div>"+
-   (items.length>shown.length?"<p class="cap">Showing the first 250 of "+items.length+" matches.</p>":""))})},
+   "<div class=\"rows\">"+shown.map(function(x){
+    return "<a class=\"row"+(x.key===sel?" on":"")+"\" href=\""+href("finding",x.key)+"\"><span class=\"t\">"+e(x.id)+"<span class=\"m\">"+e(x.register)+(x.class?" · class ("+e(x.class)+")":"")+"</span>"+(x.status?statusPill(x.status):"")+"</span><span class=\"s\">"+e(cut(x.heading||x.review_subject||(x.positions||[]).join(" vs "),190))+"</span></a>"}).join("")+"</div>"+
+   (items.length>shown.length?"<p class=\"cap\">Showing the first 250 of "+items.length+" matches.</p>":""))})},
  detail:function(key){return D("findings").then(function(A){var x=null;
   A.items.forEach(function(y,i){if(y.register+"/"+y.id===key)x=y});
   if(!x)return pane("Not found","<p><code>"+e(key)+"</code> is not a finding.</p>");
@@ -458,9 +458,9 @@ X.view("coverage",{label:"Source questions",group:"Coverage",n:566,
   var shown=items.slice(0,250);
   return pane("566 directive questions, 62 supplemental, 15 discovered",
    selbar("cov","every status",sts,st,items.length,all.length)+
-   "<div class="rows">"+shown.map(function(x){
-    return "<a class="row"+(x.id===sel?" on":"")+"" href=""+href("coverage",x.id)+""><span class="t">"+e(x.id)+statusPill(x.status)+"<span class="m">"+e(x.reg)+"</span></span><span class="s">"+e(cut(x.question||x.concern,190))+"</span></a>"}).join("")+"</div>"+
-   (items.length>shown.length?"<p class="cap">Showing the first 250 of "+items.length+" matches.</p>":"")+
+   "<div class=\"rows\">"+shown.map(function(x){
+    return "<a class=\"row"+(x.id===sel?" on":"")+"\" href=\""+href("coverage",x.id)+"\"><span class=\"t\">"+e(x.id)+statusPill(x.status)+"<span class=\"m\">"+e(x.reg)+"</span></span><span class=\"s\">"+e(cut(x.question||x.concern,190))+"</span></a>"}).join("")+"</div>"+
+   (items.length>shown.length?"<p class=\"cap\">Showing the first 250 of "+items.length+" matches.</p>":"")+
    sub("how a status is computed")+kv(A.status_rule)+
    sub("the 24-item deliverable checklist")+val(A.package))})},
  detail:function(id){return D("coverage").then(function(A){var x=null;
@@ -478,8 +478,8 @@ X.view("coverage",{label:"Source questions",group:"Coverage",n:566,
 X.view("chapter",{label:"Chapters",group:"The writing",n:19,
  list:function(sel,secSel){return D("chapters").then(function(CH){
   if(!sel)return pane("19 documents, 340 sections",
-   "<div class="rows">"+CH.map(function(c){return "<a class="row" href=""+href("chapter",c.id)+""><span class="t">"+e(c.title)+"</span><span class="s"><span class="m">"+e(c.path)+"</span> · "+c.sections.length+" sections</span></a>"}).join("")+"</div>"+
-   "<p class="cap">Each section is rendered from the markdown the package carries, and every id it names below it is a link.</p>");
+   "<div class=\"rows\">"+CH.map(function(c){return "<a class=\"row\" href=\""+href("chapter",c.id)+"\"><span class=\"t\">"+e(c.title)+"</span><span class=\"s\"><span class=\"m\">"+e(c.path)+"</span> · "+c.sections.length+" sections</span></a>"}).join("")+"</div>"+
+   "<p class=\"cap\">Each section is rendered from the markdown the package carries, and every id it names below it is a link.</p>");
   var c=null;CH.forEach(function(x){if(x.id===sel)c=x});
   if(!c)return pane("Not found","<p><code>"+e(sel)+"</code> is not a chapter.</p>");
   var s=null;c.sections.forEach(function(x){if(x.id===secSel)s=x});
@@ -488,11 +488,11 @@ X.view("chapter",{label:"Chapters",group:"The writing",n:19,
   [["records","record"],["capabilities","capability"],["components","component"],["decisions","decision"],["questions","question"],["risks","risk"],["attacks","attack"],["stages","stage"],["adapters","adapter"]].forEach(function(p){
    if((m[p[0]]||[]).length)ml.push("<dt>"+e(p[0])+"</dt><dd>"+chips(m[p[0]],p[1])+"</dd>")});
   return pane(c.title,
-   "<div class="filters"><span class="m">"+e(c.path)+"</span><span class="count">"+c.sections.length+" sections</span></div>"+
-   "<div class="toc">"+c.sections.map(function(x){return "<a class="l"+x.level+(x.id===s.id?" on":"")+"" href=""+href("chapter",c.id,x.id)+"">"+e(x.heading)+"</a>"}).join("")+"</div>")+
-   pane(null,"<div class="prose">"+s.html+"</div>"+
-    (ml.length?sub("what this section names")+"<dl class="kv">"+ml.join("")+"</dl>":"")+
-    "<div class="src"><b>where this is defined</b><br><code>"+e(s.source)+"</code> · "+s.text_length+" characters of source text</div>")})},
+   "<div class=\"filters\"><span class=\"m\">"+e(c.path)+"</span><span class=\"count\">"+c.sections.length+" sections</span></div>"+
+   "<div class=\"toc\">"+c.sections.map(function(x){return "<a class=\"l"+x.level+(x.id===s.id?" on":"")+"\" href=\""+href("chapter",c.id,x.id)+"\">"+e(x.heading)+"</a>"}).join("")+"</div>")+
+   pane(null,"<div class=\"prose\">"+s.html+"</div>"+
+    (ml.length?sub("what this section names")+"<dl class=\"kv\">"+ml.join("")+"</dl>":"")+
+    "<div class=\"src\"><b>where this is defined</b><br><code>"+e(s.source)+"</code> · "+s.text_length+" characters of source text</div>")})},
  detail:null});
 })();
 
@@ -510,15 +510,15 @@ X.view("status",{label:"Package status",group:"The writing",
   return pane("What this projection is, and what it is not",
    rows([["project",md(p.project)],["directive date",e(p.directive_date)],["phase",md(p.phase)],["status",statusPill(p.status)],
     ["architecture version",md(p.architecture_version)],
-    ["planning accepted",p.planning_accepted?"<span class="pill ok">yes</span>":"<span class="pill no">no</span>"],
-    ["implementation started",p.implementation_started?"<span class="pill ok">yes</span>":"<span class="pill no">no</span>"],
+    ["planning accepted",p.planning_accepted?"<span class=\"pill ok\">yes</span>":"<span class=\"pill no\">no</span>"],
+    ["implementation started",p.implementation_started?"<span class=\"pill ok\">yes</span>":"<span class=\"pill no\">no</span>"],
     ["founder hold",kv(p.founder_hold)],["validator last full run",kv(p.validator_last_full_run)],
     ["generated from","<code>"+e(M.head)+"</code> · "+e(M.generated)],
     ["generator","<code>"+e(M.generator)+"</code>"],["package root","<code>"+e(M.package_root)+"</code>"],
     ["total bytes",e(String(M.total_bytes))]])+
    sub("every file in the projection")+
-   "<table class="tbl"><tr><th>file</th><th>rows</th><th>bytes</th></tr>"+
-   M.files.map(function(f){return "<tr><td class="mono">"+e(f.name)+"</td><td>"+e(String(f.count))+"</td><td>"+e(String(f.bytes))+"</td></tr>"}).join("")+"</table>"+
+   "<table class=\"tbl\"><tr><th>file</th><th>rows</th><th>bytes</th></tr>"+
+   M.files.map(function(f){return "<tr><td class=\"mono\">"+e(f.name)+"</td><td>"+e(String(f.count))+"</td><td>"+e(String(f.bytes))+"</td></tr>"}).join("")+"</table>"+
    srcline(M))})},detail:null});
 
 /* findings can be addressed by bare id as well as register/id */
@@ -533,17 +533,17 @@ var ORDER=["home","component","layer","record","predicate","command","value","pr
 function rail(sec){
  var g="",h="";
  ORDER.forEach(function(k){var v=V[k];if(!v)return;
-  if(v.group!==g){g=v.group;h+="<div class="grp">"+e(g)+"</div>"}
-  h+="<a class=""+(k===sec?"on":"")+"" href=""+href(k)+"">"+e(v.label)+(v.n?"<span class="n">"+v.n+"</span>":"")+"</a>"});
+  if(v.group!==g){g=v.group;h+="<div class=\"grp\">"+e(g)+"</div>"}
+  h+="<a class=\""+(k===sec?"on":"")+"\" href=\""+href(k)+"\">"+e(v.label)+(v.n?"<span class=\"n\">"+v.n+"</span>":"")+"</a>"});
  RAIL.innerHTML=h}
 
 /* ---- breadcrumb ---- */
 function crumbs(r){
- var p=["<a href="#/">System map</a>"];
- if(r.sec!=="home"){p.push("<a href=""+href(r.sec)+"">"+e(V[r.sec].label)+"</a>")}
+ var p=["<a href=\"#/\">System map</a>"];
+ if(r.sec!=="home"){p.push("<a href=\""+href(r.sec)+"\">"+e(V[r.sec].label)+"</a>")}
  if(r.id)p.push("<span>"+e(r.id)+"</span>");
  if(r.sub)p.push("<span>"+e(r.sub)+"</span>");
- CRUMBS.innerHTML=p.join("<span class="sep">/</span>")}
+ CRUMBS.innerHTML=p.join("<span class=\"sep\">/</span>")}
 
 /* ---- router ---- */
 var tick=0;
@@ -553,12 +553,12 @@ function render(keepScroll){
  var r=parse();if(!V[r.sec]){r.sec="home";r.id=null}
  var v=V[r.sec],t=++tick;
  rail(r.sec);crumbs(r);
- CANVAS.innerHTML="<div class="pane"><div class="loading">reading the package</div></div>";
+ CANVAS.innerHTML="<div class=\"pane\"><div class=\"loading\">reading the package</div></div>";
  Promise.resolve(v.list?v.list(r.id,r.sub):"").then(function(h){if(t!==tick)return;CANVAS.innerHTML=h;
   if(!keepScroll)window.scrollTo(0,0)}).catch(function(err){if(t===tick)CANVAS.innerHTML=pane("That did not load","<p>"+e(err.message)+"</p>")});
- if(r.id&&v.detail){DETAIL.innerHTML="<div class="pane"><div class="loading">reading the record</div></div>";
+ if(r.id&&v.detail){DETAIL.innerHTML="<div class=\"pane\"><div class=\"loading\">reading the record</div></div>";
   Promise.resolve(v.detail(r.id,r.sub)).then(function(h){if(t!==tick)return;
-   DETAIL.innerHTML="<div class="sheet-close"><span class="lbl">"+e(v.label)+"</span><a class="chip" href=""+href(r.sec)+"">close</a></div>"+h})
+   DETAIL.innerHTML="<div class=\"sheet-close\"><span class=\"lbl\">"+e(v.label)+"</span><a class=\"chip\" href=\""+href(r.sec)+"\">close</a></div>"+h})
    .catch(function(err){if(t===tick)DETAIL.innerHTML=pane("That did not load","<p>"+e(err.message)+"</p>")})}
  else DETAIL.innerHTML=""}
 window.addEventListener("hashchange",function(){render(false)});
@@ -570,7 +570,7 @@ function onFilter(ev){var t=ev.target;if(!t.getAttribute||!t.getAttribute("data-
  var k=t.getAttribute("data-f");F[k]=t.value;
  var id=t.getAttribute("data-f"),isText=t.tagName==="INPUT";
  render(true);
- if(isText)setTimeout(function(){var n=document.querySelector("[data-f=""+k+""]");if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},60)}
+ if(isText)setTimeout(function(){var n=document.querySelector("[data-f=\""+k+"\"]");if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},60)}
 document.addEventListener("input",onFilter);
 document.addEventListener("change",onFilter);
 
@@ -602,11 +602,11 @@ function search(q){
    if(sc>=0)hits.push([sc,x])}
   hits.sort(function(a,b){return a[0]-b[0]});
   hits=hits.slice(0,60);
-  if(!hits.length){RES.innerHTML="<div class="noneleft">nothing in the package matches that</div>";RES.hidden=false;return}
+  if(!hits.length){RES.innerHTML="<div class=\"noneleft\">nothing in the package matches that</div>";RES.hidden=false;return}
   var g="",h="";
   hits.forEach(function(p,i){var x=p[1],t=target(x);if(!t)return;
-   if(x.type!==g){g=x.type;h+="<div class="rgroup">"+e(g)+"</div>"}
-   h+="<a href=""+t+"""+(i===0?" class="on"":"")+"><span class="rt">"+e(cut(x.title||x.id,90))+"</span><span class="rs">"+e(x.id)+" · "+e(cut(x.snippet,140))+"</span></a>"});
+   if(x.type!==g){g=x.type;h+="<div class=\"rgroup\">"+e(g)+"</div>"}
+   h+="<a href=\""+t+"\""+(i===0?" class=\"on\"":"")+"><span class=\"rt\">"+e(cut(x.title||x.id,90))+"</span><span class=\"rs\">"+e(x.id)+" · "+e(cut(x.snippet,140))+"</span></a>"});
   RES.innerHTML=h;RES.hidden=false})}
 QBOX.addEventListener("input",function(){clearTimeout(timer);var v=QBOX.value;timer=setTimeout(function(){search(v)},130)});
 QBOX.addEventListener("keydown",function(ev){
