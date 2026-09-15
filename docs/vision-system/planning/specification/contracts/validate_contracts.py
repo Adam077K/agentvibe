@@ -487,6 +487,83 @@ for _kind, _unit in sorted(EXISTENCE_REASON_PAIRS.items()):
              "names and which reads as SATISFIED (F6D-12)",
              {"reason": _kind, "unit": _unit}))
 
+# --- F6Y-02: THE ADMITTED-REASON PAIRING, AS A SET OF PAIRS AND NOT AS TWELVE STRINGS.
+#
+# The six checks above ask whether each constant OCCURS in the serialised criterion. Swap
+# the `reason_unit` constants of the `input_provenance` and `consequence_class` branches
+# and all twelve constants are still present, so all six pass; the pin's `any` /
+# `contains_pointers` row names the two POINTERS and not their values, so it passes too;
+# and made in `tools/phase_content.py` rather than by hand, the criterion regenerates with
+# the swap, so the derivation oracle agrees with it. What survives every control in this
+# package is a criterion admitting `input_provenance` predicating on `effect_class` and
+# `consequence_class` on `input_set` -- a reason applied to a unit where it returns
+# undecidable, which R2 F-20 names and which reads as SATISFIED. That is the exact failure
+# the pairing clause was written to refuse, and until this block nothing refused it. It is
+# also the likeliest hand-edit error in a six-row table (F6Y-02).
+#
+# So walk the disjunction and compare the SET OF PAIRS against the literal above. TWO
+# checks, because a walk that finds nothing compares the empty set to the empty set and
+# passes loudly: the branch count is asserted first, against that same literal.
+def _reason_pair_constant(node, pointer):
+    # The constant a branch compares `pointer` against, or None if this leaf is not that
+    # comparison. Structural: `op`, `left.op`, `left.pointer`, never a substring.
+    if not isinstance(node, dict) or node.get("op") != "eq":
+        return None
+    left = node.get("left")
+    if not isinstance(left, dict) or left.get("op") != "path":
+        return None
+    if left.get("pointer") != pointer:
+        return None
+    return node.get("right")
+
+
+def _reason_pairs(body):
+    # Every (reason_kind, reason_unit) pair stated under any `any` node in the body. A
+    # branch that states only one of the two yields a pair with a None in it, which fails
+    # the set comparison rather than vanishing from the count -- a half-stated branch is
+    # the same defect as a wrongly-paired one and must not be silently dropped.
+    pairs, stack = [], [body]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, dict):
+            if node.get("op") == "any":
+                for branch in node.get("predicates") or []:
+                    inner = (branch.get("predicates") or []) if isinstance(branch, dict) else []
+                    kind = unit = None
+                    for leaf in inner:
+                        if kind is None:
+                            kind = _reason_pair_constant(leaf, "/payload/reason_kind")
+                        if unit is None:
+                            unit = _reason_pair_constant(leaf, "/payload/reason_unit")
+                    if kind is not None or unit is not None:
+                        pairs.append((kind, unit))
+            stack.extend(node.values())
+        elif isinstance(node, list):
+            stack.extend(node)
+    return pairs
+
+
+_ej_pairs = _reason_pairs(PREDICATES["criterion.ExistenceJustification.admitted.v1"]["body"])
+checked(len(_ej_pairs) == len(EXISTENCE_REASON_PAIRS),
+        ("THE ADMITTED-REASON DISJUNCTION NO LONGER WALKS AS SIX PAIRED BRANCHES: the set "
+         "comparison below is worth exactly as much as the walk that feeds it, and a walk "
+         "that finds nothing compares the empty set to the empty set and passes. `05` "
+         "section 4 states six pairs, so six paired branches is the structure this check "
+         "is about; a change to the criterion's shape must fail here rather than quietly "
+         "empty the comparison (F6Y-02)",
+         {"walked": len(_ej_pairs), "the six": len(EXISTENCE_REASON_PAIRS),
+          "pairs": sorted(repr(_p) for _p in _ej_pairs)}))
+checked(set(_ej_pairs) == set(EXISTENCE_REASON_PAIRS.items()),
+        ("AN ADMITTED REASON IS PAIRED WITH THE WRONG UNIT: `05` section 4 is a two-column "
+         "table, so the contract is six PAIRS. The six presence checks above pass on a "
+         "criterion whose units have been SWAPPED between branches -- all twelve constants "
+         "are still in the body -- and a swap made in the derivation regenerates into a "
+         "body the drift oracle and the pin both accept. A swapped pair admits a reason "
+         "predicating on a unit it cannot decide, which R2 F-20 names and which reads as "
+         "SATISFIED (F6Y-02)",
+         {"in the criterion": sorted("%s -> %s" % _p for _p in _ej_pairs),
+          "`05` section 4": sorted("%s -> %s" % _p
+                                   for _p in EXISTENCE_REASON_PAIRS.items())}))
 # --- F6C-06: THE CACHE-LIFETIME COLLAPSE BINDS TO A REGISTERED MEASURE. --------------
 #
 # `07` section 5 R-G07 says enabling credits drops the prompt-cache lifetime from an hour to
@@ -527,6 +604,37 @@ checked(len(_measures) >= 1 and CAPACITY_MEASURES.get("schema_ref")
          "the per-member walk above exactly as loudly as a full one, and a registry entry "
          "whose `schema_ref` resolves nowhere is a row no reader can follow (F6C-06)",
          {"members": len(_measures), "schema_ref": CAPACITY_MEASURES.get("schema_ref")}))
+# --- F6Y-03: AND THE FIELD IS TYPED AGAINST THE VOCABULARY, IN BOTH DECLARATIONS. ----
+#
+# The three checks above guard the vocabulary's MEMBERSHIP. None of them asks whether any
+# field is held to it, and until this block none was: `CapacityMeasure` occurred 0 times in
+# `records.schema.json`, 0 in `commands.schema.json`, 0 in `record-registry.json` and 0 in
+# `predicate-registry.json`, while `CapacityObservation.payload.measure` was a free string
+# in both declarations. So a capacity row could name any measure it liked, and R-G07's
+# close stayed an instruction to a future implementer -- which is what F6C-06 said, made
+# true again one registry over. It is F6D-09's shape exactly (`PredicateId`, a 2,387-entry
+# enum zero record fields used) and its cure is the same one: type the field (F6Y-03).
+#
+# TWO PLACES, ASSERTED SEPARATELY. The generic registry-versus-schema pair walk compares
+# the two declarations to EACH OTHER, so the edit that hands the field back to `string` in
+# both at once satisfies it -- which is the edit a determined author makes, and the one
+# R41's adverse half performs. A named check that reads each declaration against the
+# vocabulary is what refuses it, and it says which rule stopped being checked instead of
+# reporting that a table moved.
+_capacity_type = RECORDS["CapacityObservation"]["fields"]["payload"]["type_fields"].get("measure")
+_capacity_schema = (SCHEMAS["records.schema.json"]["$defs"]["CapacityObservation"]
+                    ["properties"]["payload"]["properties"].get("measure") or {})
+checked(_capacity_type == "CapacityMeasure"
+        and _capacity_schema.get("$ref") == "values.schema.json#/$defs/CapacityMeasure",
+        ("A CAPACITY ROW MAY NAME ANY MEASURE IT LIKES: `CapacityMeasure` is the only "
+         "closed vocabulary this package registers, and a vocabulary no field is held to "
+         "constrains nothing -- it is a name in a registry that reads like a contract. "
+         "`07` section 5 says the cache-lifetime drop `is carried in the capacity row the "
+         "metered observation writes`; the row carries it only if the measure it names is "
+         "one the specification names (F6Y-03, F6C-06)",
+         {"record-registry.json": _capacity_type,
+          "records.schema.json": _capacity_schema,
+          "wanted": "CapacityMeasure / values.schema.json#/$defs/CapacityMeasure"}))
 # --- F6X-01: EVERY EXCLUSIVE FACTORY RESOLVES, AND THE KERNEL SURFACE IS A LITERAL. ---
 #
 # `registration.exclusive_factory` says: this record has exactly one creation path and nothing
@@ -2710,10 +2818,30 @@ checked(len(FINDING_SOURCES) >= FINDING_SOURCE_FLOOR,
          {"finding_sources": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
-checked(register_findings <= covered | set(unpinnable),
-        ("a registered finding is neither pinned nor declared unpinnable",
-         sorted(register_findings - covered - set(unpinnable)),
-         "add a pin to pinned-conjuncts.json, or an `unpinnable` entry saying why no "
+# THE THIRD ARM IS `answered_elsewhere`, AND LEAVING IT OUT WAS A CONTRADICTION INSIDE
+# ONE FILE. This comparison knew two ways for a finding to be accounted for -- a pin, or
+# an `unpinnable` row -- while `pinned-conjuncts.json` maintains a third and checks it
+# harder than either: an `answered_elsewhere` row must name the FILE and the CHECK that
+# answers the finding, and both are verified to exist. Measured 2026-09-15 at `caceb7c`:
+# that commit rewrote a register `status` STRING so that it narrates `F6A-09` and
+# `F6C-06`; `register_findings` is a raw-text sweep, so a sentence ABOUT two findings
+# registered them; both were already declared `answered_elsewhere` with file and check;
+# and this line failed anyway, saying nothing in this package says whether they are
+# answered while the file three keys over said exactly that. The light validator was red
+# on a commit whose whole content was a record of a merge.
+#
+# Adding the arm does not widen the excuse. `unpinnable` is the weak arm -- a sentence
+# saying no conjunct can carry it -- and it is unchanged; `answered_elsewhere` is the
+# strong one and is the only arm here whose members are checked against something. What
+# is removed is a file disagreeing with itself (F6R-01, provenance in
+# `planning/F2/11-repair-names-contracts-g.md`).
+_accounted = covered | set(unpinnable) | set(ANSWERED_ELSEWHERE)
+checked(register_findings <= _accounted,
+        ("a registered finding is neither pinned, nor answered elsewhere with a file and "
+         "a check, nor declared unpinnable",
+         sorted(register_findings - _accounted),
+         "add a pin to pinned-conjuncts.json, an `#/answered_elsewhere` row naming the "
+         "file and the check that answers it, or an `unpinnable` entry saying why no "
          "conjunct can carry it"))
 # And what `unpinnable` may say. A finding whose REQUIRED CONTRACT names a record or a
 # guard this package registers is a finding about DATA HELD HERE, so "this one is prose"
@@ -3145,8 +3273,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 115
-POSITIVE_FIXTURE_FLOOR = 76
+NEGATIVE_FIXTURE_FLOOR = 117  # 116 -> 117 (F6Y-03): R41's adverse half. Holds 117.
+POSITIVE_FIXTURE_FLOOR = 78   # 77 -> 78 (F6Y-03): R41's benign twin. Holds 78.
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

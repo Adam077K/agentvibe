@@ -345,7 +345,7 @@
         "G4-08"
       ],
       "decisions": [],
-      "why": "G4-08: the schema omitted `competence_requirement_ref` from `required` while this criterion demanded it, so two implementers derive different packets from one contract -- and the stricter reading destroyed the case DIRECTIVE.md §1.6 most wants preserved, a pure taste decision with no competence prerequisite to name.",
+      "why": "G4-08: the schema omitted `competence_requirement_ref` from `required` while this criterion demanded it, so two implementers derive different packets from one contract -- and the stricter reading destroyed the case DIRECTIVE.md \u00a71.6 most wants preserved, a pure taste decision with no competence prerequisite to name.",
       "require": [
         {
           "op": "any",

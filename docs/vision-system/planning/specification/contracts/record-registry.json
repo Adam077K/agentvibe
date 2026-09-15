@@ -1229,7 +1229,7 @@
       "derived_control_machinery": true,
       "derived_from_record": "DeletionScope",
       "obligation": "Continuing restriction must cover late derivatives, offline rejoin and physical copies, and unknown copies must remain EXPLICIT residuals rather than absent ones. That obligation cannot be discharged without an enumeration of the descendant surface at a witnessed source frontier, with what it failed to reach declared on its face.",
-      "why": "It is a derived-projection record, not a business fact: nothing is decided by creating one, and it is the same shape as DependencyClosure for the same reason. Its invariant — actual enumeration proves the declared descendant surface, and incomplete or unknown access paths stay explicit — is a property of the enumeration rather than of any duty a person holds, which is why no source concern names it directly. The nearest concerns it serves are F16-Q07, \"how is access revoked quickly\", and F02-Q11, \"how is work stopped in the middle, and what is left behind\": both are answerable only if the leftovers can be named, and `incomplete` is a phase precisely so that an unfinished enumeration cannot be read as an empty one.",
+      "why": "It is a derived-projection record, not a business fact: nothing is decided by creating one, and it is the same shape as DependencyClosure for the same reason. Its invariant \u2014 actual enumeration proves the declared descendant surface, and incomplete or unknown access paths stay explicit \u2014 is a property of the enumeration rather than of any duty a person holds, which is why no source concern names it directly. The nearest concerns it serves are F16-Q07, \"how is access revoked quickly\", and F02-Q11, \"how is work stopped in the middle, and what is left behind\": both are answerable only if the leftovers can be named, and `incomplete` is a phase precisely so that an unfinished enumeration cannot be read as an empty one.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06b repaired, pending independent recheck"
     }
@@ -1585,8 +1585,8 @@
     "justification": {
       "source_concern": "F26-Q09",
       "source_concern_text": "Who can see what, and is that logged?",
-      "directive_subject": "Permission (§8.11)",
-      "why": "The question demands an answer per reader, purpose, field and destination, bound to live epochs rather than to a role name — and its load-bearing half is the invariant that an empty scope does not authorise a universal read. Every record in the registry carries access_policy_ref for this reason: without the record the answer to F26-Q09 would be a convention, not a check.",
+      "directive_subject": "Permission (\u00a78.11)",
+      "why": "The question demands an answer per reader, purpose, field and destination, bound to live epochs rather than to a role name \u2014 and its load-bearing half is the invariant that an empty scope does not authorise a universal read. Every record in the registry carries access_policy_ref for this reason: without the record the answer to F26-Q09 would be a convention, not a check.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
     }
@@ -7554,7 +7554,7 @@
     "justification": {
       "source_concern": "F14-Q05",
       "source_concern_text": "What cannot ship without review, and what can?",
-      "why": "The question is only answerable if \"reviewed\" and \"released\" are distinct states of a thing, rather than adjectives someone applies. BuildArtifact carries `draft → reviewed → released → withdrawn` over an exact source revision and environment, with its test refs and its maintenance procedure attached, and its invariant makes release require an actual reconciled deployment operation — so a release is a reconciled effect and not a status someone set. Without the record, \"this shipped\" and \"someone said this shipped\" are the same assertion.",
+      "why": "The question is only answerable if \"reviewed\" and \"released\" are distinct states of a thing, rather than adjectives someone applies. BuildArtifact carries `draft \u2192 reviewed \u2192 released \u2192 withdrawn` over an exact source revision and environment, with its test refs and its maintenance procedure attached, and its invariant makes release require an actual reconciled deployment operation \u2014 so a release is a reconciled effect and not a status someone set. Without the record, \"this shipped\" and \"someone said this shipped\" are the same assertion.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06b repaired, pending independent recheck"
     }
@@ -8769,7 +8769,7 @@
           "subject_ref": "Ref<Account,RuntimeProfile,ResourceAccount>",
           "source_ref": "Ref<Observation>",
           "interval": "TimeWindow",
-          "measure": "string",
+          "measure": "CapacityMeasure",
           "unit": "string",
           "measurement": "MeasuredQuantity",
           "freshness_until": "UTC",
@@ -13908,8 +13908,8 @@
     "justification": {
       "source_concern": "F41-Q08",
       "source_concern_text": "How is the system's own configuration versioned, and can you reproduce a past result?",
-      "directive_subject": "Configuration Version (§8.11)",
-      "why": "Reproducing a past result requires the exact closed configuration variant, its schema digest and meaning version, and the protected change that admitted it — the record's invariant that a protected change \"cannot enter as a plain file edit\" is what makes the reproduction claim survivable. A configuration that is only a file on disk answers the first half of the question and silently fails the second.",
+      "directive_subject": "Configuration Version (\u00a78.11)",
+      "why": "Reproducing a past result requires the exact closed configuration variant, its schema digest and meaning version, and the protected change that admitted it \u2014 the record's invariant that a protected change \"cannot enter as a plain file edit\" is what makes the reproduction claim survivable. A configuration that is only a file on disk answers the first half of the question and silently fails the second.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
     }
@@ -14904,8 +14904,8 @@
     "justification": {
       "source_concern": "F15-Q01",
       "source_concern_text": "What is the worst thing that could plausibly happen here?",
-      "directive_subject": "Consequence Class (§8.11)",
-      "why": "Consequence classes are the vocabulary every capability contract's consequence_classes field uses, so the question of what can plausibly go worst is answered by which class an action falls in. Defining a NEW class therefore cannot be a text edit: it needs an admitted classification predicate and the gates that class requires, \"without a universal risk score or invented founder tolerance\". F16-Q01 (on what basis permission is granted — person, task, risk, reversibility) rests on the same definitions.",
+      "directive_subject": "Consequence Class (\u00a78.11)",
+      "why": "Consequence classes are the vocabulary every capability contract's consequence_classes field uses, so the question of what can plausibly go worst is answered by which class an action falls in. Defining a NEW class therefore cannot be a text edit: it needs an admitted classification predicate and the gates that class requires, \"without a universal risk score or invented founder tolerance\". F16-Q01 (on what basis permission is granted \u2014 person, task, risk, reversibility) rests on the same definitions.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
     }
@@ -15665,8 +15665,8 @@
     "justification": {
       "source_concern": "F01-Q16",
       "source_concern_text": "What is off-limits entirely, and who wrote that list?",
-      "directive_subject": "Constraint (§8.11)",
-      "why": "Both halves of F01-Q16 need a record. \"What is off-limits\" is the `predicate` over an explicit `scope`; \"who wrote that list\" is the `issuer_mandate_ref` and the named `amendment_authority_ref`, and its invariant states the rule that matters — a constraint cannot be changed by whoever finds it inconvenient, and never \"inferred from easier implementation\". `effective_interval` keeps a withdrawn constraint from silently governing old work, and `superseded` is a phase rather than a deletion. Directive §8.11 names Constraint as a required schema subject, which says a schema must exist; F01-Q16 is what says what it must do.",
+      "directive_subject": "Constraint (\u00a78.11)",
+      "why": "Both halves of F01-Q16 need a record. \"What is off-limits\" is the `predicate` over an explicit `scope`; \"who wrote that list\" is the `issuer_mandate_ref` and the named `amendment_authority_ref`, and its invariant states the rule that matters \u2014 a constraint cannot be changed by whoever finds it inconvenient, and never \"inferred from easier implementation\". `effective_interval` keeps a withdrawn constraint from silently governing old work, and `superseded` is a phase rather than a deletion. Directive \u00a78.11 names Constraint as a required schema subject, which says a schema must exist; F01-Q16 is what says what it must do.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06b repaired, pending independent recheck"
     }
@@ -18173,7 +18173,7 @@
     "justification": {
       "source_concern": "CONSEQUENCE-SECTOR-04",
       "source_concern_text": "owner illness, succession, sale, vendor portability and retirement",
-      "why": "Every item in that concern is one event: the person the company depends on stops being available. An arrangement that is only a named alternate is a promise, so the record demands the evidence separately — independent access, competence, funded reservations, a reachable channel and an EXERCISE judgment that the ability was actually demonstrated inside the duty window. It declares `unavailable` as a phase of its own and carries `joint_failure_roots`, because the case that defeats a naive arrangement is the owner and the provider failing for the same reason. Nothing else in the registry holds the alternate's readiness as a checked fact rather than a plan.",
+      "why": "Every item in that concern is one event: the person the company depends on stops being available. An arrangement that is only a named alternate is a promise, so the record demands the evidence separately \u2014 independent access, competence, funded reservations, a reachable channel and an EXERCISE judgment that the ability was actually demonstrated inside the duty window. It declares `unavailable` as a phase of its own and carries `joint_failure_roots`, because the case that defeats a naive arrangement is the owner and the provider failing for the same reason. Nothing else in the registry holds the alternate's readiness as a checked fact rather than a plan.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06b repaired, pending independent recheck"
     }
@@ -19458,8 +19458,8 @@
       "source_concern": "F46-Q05",
       "source_concern_text": "Is there a difference between approving and merely not objecting?",
       "directive_subject": null,
-      "naming_hazard": "The name reads like directive §8.11's \"Disagreement\" and it is NOT that. This is a one-use authentication challenge bound to a DecisionPacket, an action digest and expected revisions, with an expiry. Filing it under Disagreement would leave §8.11's dissent subject looking covered while nothing implements it.",
-      "why": "The difference the question asks about is exactly what this record makes checkable: an approval is a positive, authenticated act on the exact packet and action digest, before expiry, replayable only to the original result. Silence produces no challenge response, and a stale approval cannot be replayed onto a changed subject — so \"merely not objecting\" cannot be recorded as approval.",
+      "naming_hazard": "The name reads like directive \u00a78.11's \"Disagreement\" and it is NOT that. This is a one-use authentication challenge bound to a DecisionPacket, an action digest and expected revisions, with an expiry. Filing it under Disagreement would leave \u00a78.11's dissent subject looking covered while nothing implements it.",
+      "why": "The difference the question asks about is exactly what this record makes checkable: an approval is a positive, authenticated act on the exact packet and action digest, before expiry, replayable only to the original result. Silence produces no challenge response, and a stale approval cannot be replayed onto a changed subject \u2014 so \"merely not objecting\" cannot be recorded as approval.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
     }
@@ -23880,8 +23880,8 @@
     "justification": {
       "derived_control_machinery": true,
       "derived_from_record": "AccountReconstruction",
-      "obligation": "An unfamiliar authorized reader must be able to reconstruct the consequential result and the next duty from the account — which requires enumerating the typed transitive edges at a witnessed frontier, with omissions declared rather than absent. DeletionScope carries the same obligation in the other direction: inheritance to known and late derivatives cannot be asserted without the closure that names them.",
-      "why": "It is a derived-projection record, not a business fact: nothing is decided by creating one. Its invariant — proof/source cycles and absent roots cannot supply their own evidence — is a property of the enumeration, which is why it is machinery and why no source concern names it directly. The nearest concern it serves is F35-Q09, \"how is a connection removed, and how do you know nothing still depends on it\".",
+      "obligation": "An unfamiliar authorized reader must be able to reconstruct the consequential result and the next duty from the account \u2014 which requires enumerating the typed transitive edges at a witnessed frontier, with omissions declared rather than absent. DeletionScope carries the same obligation in the other direction: inheritance to known and late derivatives cannot be asserted without the closure that names them.",
+      "why": "It is a derived-projection record, not a business fact: nothing is decided by creating one. Its invariant \u2014 proof/source cycles and absent roots cannot supply their own evidence \u2014 is a property of the enumeration, which is why it is machinery and why no source concern names it directly. The nearest concern it serves is F35-Q09, \"how is a connection removed, and how do you know nothing still depends on it\".",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
     }
@@ -27058,7 +27058,7 @@
     "justification": {
       "source_concern": "F47-Q03",
       "source_concern_text": "How is a proposed change evaluated before it is accepted?",
-      "why": "A change cannot be evaluated against a judgement made after seeing it. EvaluationCase is the predeclared case with its expected outcome AND expected process, its label provenance adjudicated independently, and a `synthetic` flag that is a declaration rather than an inference — its own invariant is that synthetic fixtures cannot establish actual market benefit. Two discovered failures are what the record blocks: D08, a benchmark change that erases distinctions without changing a displayed success state, and D11, an improvement candidate that changes evidence capture while its hidden evaluator remains intact. Both need the cases to be admitted BEFORE the candidate, and a record with `draft → labeled → admitted` phases is what makes \"before\" checkable.",
+      "why": "A change cannot be evaluated against a judgement made after seeing it. EvaluationCase is the predeclared case with its expected outcome AND expected process, its label provenance adjudicated independently, and a `synthetic` flag that is a declaration rather than an inference \u2014 its own invariant is that synthetic fixtures cannot establish actual market benefit. Two discovered failures are what the record blocks: D08, a benchmark change that erases distinctions without changing a displayed success state, and D11, an improvement candidate that changes evidence capture while its hidden evaluator remains intact. Both need the cases to be admitted BEFORE the candidate, and a record with `draft \u2192 labeled \u2192 admitted` phases is what makes \"before\" checkable.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06b repaired, pending independent recheck"
     }
@@ -32324,8 +32324,8 @@
     "implementation_status": "specified, not implemented; independent assessment pending",
     "justification": {
       "source_concern": "F25-Q01",
-      "source_concern_text": "Deciding what to build and for whom · designing how it looks and feels · building it · testing it · running it once it exists · … does each of these need its own worker, or is it a way of working that any worker can adopt?",
-      "why": "F25-Q01 names \"designing how it looks and feels\" as work the company does, and the record exists to keep that work from collapsing into an opinion. It holds the journey steps the prototype must actually complete, the accessibility results, and — separately — `user_observations` and `taste_decision`. The separation is the point and it is VISION-09's: taste is nondelegable, so a taste decision may be recorded as one and may never be presented as an observation of a user. Its invariant refuses a prototype that cannot complete the specified journey, which is what stops `validated` from meaning \"someone liked the mockup\".",
+      "source_concern_text": "Deciding what to build and for whom \u00b7 designing how it looks and feels \u00b7 building it \u00b7 testing it \u00b7 running it once it exists \u00b7 \u2026 does each of these need its own worker, or is it a way of working that any worker can adopt?",
+      "why": "F25-Q01 names \"designing how it looks and feels\" as work the company does, and the record exists to keep that work from collapsing into an opinion. It holds the journey steps the prototype must actually complete, the accessibility results, and \u2014 separately \u2014 `user_observations` and `taste_decision`. The separation is the point and it is VISION-09's: taste is nondelegable, so a taste decision may be recorded as one and may never be presented as an observation of a user. Its invariant refuses a prototype that cannot complete the specified journey, which is what stops `validated` from meaning \"someone liked the mockup\".",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06b repaired, pending independent recheck"
     }
@@ -55728,8 +55728,8 @@
     "implementation_status": "specified, not implemented; independent assessment pending",
     "justification": {
       "source_concern": "F51-Q01",
-      "source_concern_text": "What changes when a second person is involved — a partner, a contractor, someone hired?",
-      "why": "What changes is that outcomes stop being the owner's alone, and the record is where that is written down instead of assumed: distinct contributions both parties actually agreed to, explicit opportunity attribution, a named relationship owner, shared dependencies and — the load-bearing field — `exit_duties` with continuing ownership. A partnership that ends without a record of who owes what afterwards is precisely the case F51-Q01 asks about, and the ResponsibilityAssignment machinery cannot answer it, because it assigns duties INSIDE the company and both parties here are outside one another's.",
+      "source_concern_text": "What changes when a second person is involved \u2014 a partner, a contractor, someone hired?",
+      "why": "What changes is that outcomes stop being the owner's alone, and the record is where that is written down instead of assumed: distinct contributions both parties actually agreed to, explicit opportunity attribution, a named relationship owner, shared dependencies and \u2014 the load-bearing field \u2014 `exit_duties` with continuing ownership. A partnership that ends without a record of who owes what afterwards is precisely the case F51-Q01 asks about, and the ResponsibilityAssignment machinery cannot answer it, because it assigns duties INSIDE the company and both parties here are outside one another's.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06b repaired, pending independent recheck"
     }
@@ -57918,8 +57918,8 @@
     "justification": {
       "source_concern": "VISION-09",
       "source_concern_text": "nondelegable wanting and promises, relationships and taste",
-      "directive_subject": "Principle (§8.11)",
-      "why": "VISION-09 holds that wanting, promising and taste are not delegable to the system. A Principle record is how that survives contact with software: an owner-endorsed statement with concrete hard-decision examples, a named amendment authority and a review date, so the system may expose a contradiction with a principle and may never rewrite the principle. Directive §8.11 names Principle as a required schema subject; this is what it is FOR.",
+      "directive_subject": "Principle (\u00a78.11)",
+      "why": "VISION-09 holds that wanting, promising and taste are not delegable to the system. A Principle record is how that survives contact with software: an owner-endorsed statement with concrete hard-decision examples, a named amendment authority and a review date, so the system may expose a contradiction with a principle and may never rewrite the principle. Directive \u00a78.11 names Principle as a required schema subject; this is what it is FOR.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
     }
@@ -66495,7 +66495,7 @@
     "justification": {
       "source_concern": "F26-Q03",
       "source_concern_text": "How long is it kept, and what causes it to be deleted?",
-      "why": "Answering it requires a per-field, per-copy-class purpose, deadline and competent determination — \"no universal sector period invented\" is the record's own binding. A single retention number on the company would answer the question falsely, because the copy classes (wal, replica, index, backup, export, provider copy) do not expire together.",
+      "why": "Answering it requires a per-field, per-copy-class purpose, deadline and competent determination \u2014 \"no universal sector period invented\" is the record's own binding. A single retention number on the company would answer the question falsely, because the copy classes (wal, replica, index, backup, export, provider copy) do not expire together.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
     }
@@ -69323,7 +69323,7 @@
     "justification": {
       "source_concern": "F41-Q06",
       "source_concern_text": "How is it undone?",
-      "directive_subject": "Rollback (§8.11)",
+      "directive_subject": "Rollback (\u00a78.11)",
       "why": "Answering \"how is it undone\" honestly requires separating reverting software from reverting business history: the record carries the compensating operations, the preserved epochs, the retained holds and the remaining obligations, so that \"rolled back\" names a reconciled state rather than a label. It is also what makes F41-Q07 and F28-Q04 (\"which changes cannot be undone\") answerable, because what cannot be compensated is visible in the same place.",
       "recorded_by": "scripts/vision-record-registry.mjs",
       "repair_state": "G1-06 repaired, pending independent recheck"
