@@ -885,7 +885,8 @@
         "verdict": "PARTIAL",
         "line": "Field-level owners fixed and cross-pinned, but the annotation is read by no predicate and the record still grants the producer write."
       },
-      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "chapter_half_2026_09_15": "Landed by lane r8-prose-e (merged at 61f374c): the owed sentence is in 05 §1, citing record-registry.json; orchestrator confirmed the cited owner values by reading the registry; vision verifiers 4/4 exit 0; author-recorded, independent recheck owed. The registry half stays as the recheck-04a verdict left it."
     }
   },
   "F6D-06": {
@@ -936,7 +937,8 @@
         "verdict": "PARTIAL",
         "line": "Containment and the custodial reading are both closed and checked; the evaluator binding resolves to the record's own module."
       },
-      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "chapter_half_2026_09_15": "Landed by lane r8-prose-e (merged at 61f374c): the owed sentence is in 05 §7, citing record-registry.json; orchestrator confirmed the cited owner values by reading the registry; vision verifiers 4/4 exit 0; author-recorded, independent recheck owed. The registry half stays as the recheck-04a verdict left it."
     }
   },
   "F6D-09": {
