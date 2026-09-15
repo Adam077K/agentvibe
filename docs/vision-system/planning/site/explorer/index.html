@@ -1,0 +1,33 @@
+<title>The Company Engine Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="./app.css">
+
+<div class="app">
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="mast-id">
+        <a class="kicker" href="#/">The Company Engine Explorer</a>
+        <div class="statusline" id="statusline">reading <code>data/meta.json</code>&hellip;</div>
+      </div>
+      <div class="mast-tools">
+        <div class="searchbox">
+          <input id="q" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Search every id, name and meaning" aria-label="Search the package">
+          <div class="results" id="results" hidden></div>
+        </div>
+        <button id="themebtn" class="ghost" type="button" title="Switch light / dark">theme</button>
+      </div>
+    </div>
+    <div class="caveat" id="caveat"></div>
+  </header>
+
+  <div class="crumbs" id="crumbs"></div>
+
+  <nav class="rail" id="rail" aria-label="Sections"></nav>
+  <main class="canvas" id="canvas" tabindex="-1"></main>
+  <aside class="detail" id="detail" aria-live="polite"></aside>
+</div>
+
+<script src="./app.js" defer></script>
