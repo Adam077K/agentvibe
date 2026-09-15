@@ -3354,8 +3354,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 120  # 119 -> 120 (F6C-11): the R44 adverse half. Holds 120.
-POSITIVE_FIXTURE_FLOOR = 81   # 80 -> 81 (F6C-11): the R44 benign twin. Holds 81.
+NEGATIVE_FIXTURE_FLOOR = 121  # 120 -> 121 (F6B-03): the R45 adverse half. Holds 121.
+POSITIVE_FIXTURE_FLOOR = 82   # 81 -> 82 (F6B-03): the R45 benign twin. Holds 82.
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
@@ -3517,6 +3517,77 @@ for _row in UNAUTHORABLE_FIELDS:
             ("A DECLARED CONTROL FIELD IS NOT READ BY THE GUARD THAT DECLARES IT: the row "
              "would then pin an ownership nothing evaluates",
              _row["field"], _row["guard"]))
+
+# --- F6B-03: THE CALIBRATION MUST BE THE ONE OF THE CHECKER THAT PRODUCED THE VERDICT. -
+#
+# calibration_ref bound an acceptance to A calibration standing at `run`. It did not bind
+# it to the calibration OF THE INSTRUMENT THAT PRODUCED IT: the current calibration of any checker
+# satisfied the gate, and r18-acceptance-on-an-uncalibrated-checker does not reach it --
+# that fixture is about a calibration being ABSENT, not about it belonging to someone else.
+# InstrumentCalibration.checker_id was already required and the acceptance end of the join
+# did not exist, so there was nothing to compare it to.
+#
+# The comparison is read STRUCTURALLY, operand by operand, and not as two pointers
+# occurring somewhere in a serialised body. F6Y-02 is why: a check that asks whether two
+# pointers appear passes on a body whose sides were swapped or repointed, and the pin row
+# beside this one can say no more than that -- it says so about itself. R45 is that
+# counterexample made concrete: it leaves both pointers in place, repoints the right
+# operand at the subject so the guard compares the checker of the interval to itself, satisfies
+# the pin, and is refused here by name.
+CHECKER_IDENTITY_GUARD = "guard.calibration.current_for_checker"
+CHECKER_ID = "/payload/checker_id"
+CALIBRATION_REF = "/payload/calibration_ref"
+
+
+def _subject_field(pointer):
+    return {"op": "path", "value": {"op": "resolve", "ref": {"arg": "subject_ref"}},
+            "pointer": pointer}
+
+
+CHECKER_IDENTITY_CONJUNCT = {
+    "op": "eq",
+    "left": _subject_field(CHECKER_ID),
+    "right": {"op": "path",
+              "value": {"op": "resolve", "ref": _subject_field(CALIBRATION_REF)},
+              "pointer": CHECKER_ID},
+}
+checked(CHECKER_IDENTITY_GUARD in PREDICATES,
+        ("the guard F6B-03 pins is not registered", CHECKER_IDENTITY_GUARD))
+_checker_body = PREDICATES[CHECKER_IDENTITY_GUARD]["body"]
+checked(_checker_body["op"] == "all",
+        ("the calibration guard is no longer a conjunction, so nothing in it is demanded",
+         _checker_body["op"]))
+checked(CHECKER_IDENTITY_CONJUNCT in _checker_body["predicates"],
+        ("A VERDICT MAY BE ACCEPTED ON A CALIBRATION BOUND TO ANOTHER CHECKER: the guard "
+         "must equate the checker_id of the interval itself with the checker_id of the calibration "
+         "it names, read through calibration_ref. Compared as a STRUCTURE and not as "
+         "pointers in a string: an equality with the same two pointers on the wrong "
+         "operands is the F6Y-02 shape and passes every textual read (F6B-03)",
+         {"required": CHECKER_IDENTITY_CONJUNCT,
+          "registered": _checker_body["predicates"]}))
+checked(any(_c.get("op") == "nonempty_fields" and CHECKER_ID in _c.get("field_paths", [])
+            for _c in _checker_body["predicates"]),
+        ("AN ACCEPTANCE MAY NAME NO CHECKER AT ALL: the equality above is unresolved on an "
+         "absent operand, which is the right verdict, and the interval must still be "
+         "refused rather than left to resolve to it (F6B-03)", CHECKER_ID))
+# Two places, both directions, as calibration_ref itself is held: the registry is the
+# declared authority and the schema is what is enforced, so handing this field back is a
+# two-place edit a reviewer sees.
+for _side, _required in (("record-registry.json",
+                          RECORDS["AcceptanceInterval"]["fields"]["payload"]
+                          ["fields"].get("checker_id", {}).get("required")),
+                         ("records.schema.json",
+                          "checker_id" in SCHEMAS["records.schema.json"]["$defs"]
+                          ["AcceptanceInterval"]["properties"]["payload"]["required"])):
+    checked(_required is True,
+            ("THE ACCEPTANCE CHECKER IDENTITY IS OPTIONAL: an optional operand makes the "
+             "identity check unresolved on every interval that omits it, which is a gate "
+             "nobody has to satisfy (F6B-03)", _side))
+checked("checker_id" in RECORDS["InstrumentCalibration"]["fields"]["payload"]
+        ["required_fields"],
+        ("the other end of the checker join is gone: InstrumentCalibration.checker_id is "
+         "what the acceptance is compared TO, and an optional one makes the comparison "
+         "unresolved from the calibration side (F6B-03)",))
 
 # --- F6V-02: a natural key is a resolution rule, and the create path must honour it. ----
 # record-registry.json declares RESOLVE-OR-CREATE on the EffectIdentity triple -- the

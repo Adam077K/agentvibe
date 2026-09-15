@@ -395546,7 +395546,8 @@
             "arg": "subject_ref"
           },
           "field_paths": [
-            "/payload/calibration_ref"
+            "/payload/calibration_ref",
+            "/payload/checker_id"
           ]
         },
         {
@@ -395563,10 +395564,40 @@
               "optional": false
             }
           ]
+        },
+        {
+          "op": "eq",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/checker_id"
+          },
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "op": "path",
+                "value": {
+                  "op": "resolve",
+                  "ref": {
+                    "arg": "subject_ref"
+                  }
+                },
+                "pointer": "/payload/calibration_ref"
+              }
+            },
+            "pointer": "/payload/checker_id"
+          }
         }
       ]
     },
-    "meaning": "An acceptance names the calibration of the instrument that produced its verdict, and that calibration currently stands at `run` -- not `scheduled`, which has no refusal rate on correct artifacts yet, and not `superseded`, which is no longer current. A verdict from an uncalibrated instrument is `unresolved` and may not satisfy this gate (F6B-03).",
+    "meaning": "An acceptance names the checker whose verdict it is accepting and the calibration of that checker, and that calibration currently stands at run -- not scheduled, which has no refusal rate on correct artifacts yet, and not superseded, which is no longer current. The calibration own checker_id must be the interval checker_id: a calibration belonging to a different checker is not a calibration of this verdict instrument. A verdict from an uncalibrated instrument, or one whose interval names no checker, is unresolved and may not satisfy this gate (F6B-03).",
     "owner_component": "S1-C06",
     "source": "06-knowledge-evidence-evaluation.md#7-instruments-and-calibration",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",

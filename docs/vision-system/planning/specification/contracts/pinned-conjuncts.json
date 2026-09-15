@@ -2263,14 +2263,15 @@
       "decisions": [
         "AM-01"
       ],
-      "why": "06 section 7: a verdict from an instrument whose refusal rate on correct artifacts is unrecorded is `unresolved`, and it MAY NOT SATISFY AN ACCEPTANCE GATE. The calibration record itself is well built and is credited -- criterion.InstrumentCalibration.run.v1 requires a planted-defect detection rate AND a clean-case refusal rate AND session observations AND a protected change, so a calibration cannot reach `run` on a detection rate alone. What was missing was anything joining that record to a verdict. `run` and only `run`: `scheduled` has no refusal rate yet and `superseded` is not current.",
+      "why": "06 section 7: a verdict from an instrument whose refusal rate on correct artifacts is unrecorded is `unresolved`, and it MAY NOT SATISFY AN ACCEPTANCE GATE. The calibration record itself is well built and is credited -- criterion.InstrumentCalibration.run.v1 requires a planted-defect detection rate AND a clean-case refusal rate AND session observations AND a protected change, so a calibration cannot reach `run` on a detection rate alone. What was missing was anything joining that record to a verdict. `run` and only `run`: `scheduled` has no refusal rate yet and `superseded` is not current. Second half (F6B-03, lane r8-contracts-i): the join is now to the calibration OF THIS CHECKER. Before it an acceptance could name any instrument current calibration, and r18-acceptance-on-an-uncalibrated-checker does not reach that -- it is about a calibration being absent, not about it belonging to someone else.",
       "require": [
         {
           "op": "nonempty_fields",
           "field_paths_include": [
-            "/payload/calibration_ref"
+            "/payload/calibration_ref",
+            "/payload/checker_id"
           ],
-          "why": "the acceptance names the calibration of the instrument that produced its verdict"
+          "why": "the acceptance names the calibration of the instrument that produced its verdict, and names that instrument: an interval with no checker_id is unresolved, never pass"
         },
         {
           "op": "related_phases",
@@ -2284,6 +2285,13 @@
             }
           ],
           "why": "and that calibration stands at `run`. This is the conjunct that makes 'unresolved, never pass' a refusal rather than a sentence"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/checker_id"
+          ],
+          "why": "and the calibration it names belongs to that checker. This row is the BACKSTOP and not the control: it can say the conjunct mentions checker_id and cannot say which record each side of the equality reads, which is the F6Y-02 lesson stated against a check written in its shadow. The binding control is the structural comparison in validate_contracts.py, and the R45 adverse half is the counterexample that leaves this row satisfied and is refused anyway."
         }
       ]
     },

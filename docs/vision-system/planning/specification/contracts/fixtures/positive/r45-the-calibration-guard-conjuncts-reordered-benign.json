@@ -1,0 +1,73 @@
+{
+  "id": "r45-the-calibration-guard-conjuncts-reordered-benign",
+  "repair": "R45",
+  "finding": "F6B-03; the F2-06 recheck-02 benign column",
+  "case": "The same three conjuncts of the calibration guard, in reverse order.",
+  "paired_adverse_fixture": "fixtures/negative/r45-a-calibration-bound-to-another-checker-satisfies-the-gate.json",
+  "why": "The checker-identity check is structural CONTAINMENT of one conjunct in a conjunction, not a byte comparison of the body: what F6B-03 requires is that the equality is demanded, not the position it is written at. A control that refuses a harmless reordering is one contributors learn to route around, which is the argument this package makes at every other pinned set. The twin matters here in particular because the adverse half is a repointing of ONE operand -- a check strict enough to catch that could easily be strict about order too, and this is what says it is not.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.calibration.current_for_checker/body/predicates",
+      "op": "replace",
+      "value": [
+        {
+          "op": "eq",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/checker_id"
+          },
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "op": "path",
+                "value": {
+                  "op": "resolve",
+                  "ref": {
+                    "arg": "subject_ref"
+                  }
+                },
+                "pointer": "/payload/calibration_ref"
+              }
+            },
+            "pointer": "/payload/checker_id"
+          }
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/calibration_ref",
+              "states": [
+                "run"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/calibration_ref",
+            "/payload/checker_id"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -517,11 +517,15 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "checker_id": {
+              "$ref": "values.schema.json#/$defs/string"
             }
           },
           "required": [
             "acceptance_owner_ref",
             "calibration_ref",
+            "checker_id",
             "criteria_author_component_id",
             "criteria_frozen_at",
             "criteria_ref",
