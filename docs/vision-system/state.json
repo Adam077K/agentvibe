@@ -236,10 +236,20 @@
       "worktree": "harness-managed; branch docs/vision-r8-prose-e",
       "dispatched": "2026-09-15",
       "status": "RETURNED COMPLETE at 18f0b18 and MERGED: both sentences landed with registry citations the orchestrator confirmed by reading (SkillVersion payload fields owner S1-C04; ArmedSet.owner_assignment custodian clause); four verifiers exit 0; validator not run (prose only); author-recorded, recheck owed. Also: the 05 §12 link to planning/F2/09-q017-conjunction-rerun.md named as owed in the handoff was already present at 95ca14d (two citations) — discharged by inspection, no edit."
+    },
+    {
+      "lane": "r8-contracts-f",
+      "engine": "builder",
+      "kind": "contracts lane, validator/fixture side: item 0 the F6X-03 red light validator (recheck-05 quotes r36-benign's synthetic id), r36 wrong-reason ordering, F6AA family reach + 11 source rows + tight ceilings (F6AA-07), F6AA-08/09/10, F6Y-02/06/07/08 (base64 route), F6Y-05 citation",
+      "base": "ffeb072",
+      "worktree": "harness-managed; branch docs/vision-r8-contracts-f",
+      "dispatched": "2026-09-15",
+      "status": "RUNNING"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md when it exists, else HANDOFF-2026-09-14-after-r7.md, then active_work. HEAD is RED on the light validator (F6X-03) until r8-contracts-f merges; then split suite on a FROZEN tree with full stdout captured.",
+    "After r8-contracts-f merges: dispatch r8-contracts-g (registry side: F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05/F6Y-04 guard-body rebinding via FieldAuthority, F6Y-03 CapacityMeasure, F6V-02 resolve-or-create, F6W-01 capability_refs registration); then split suite on the FROZEN merged head with full stdout captured; then report §8 / README / site / founder page / session file / handoff",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "FIRST in the next session: run the split suite on HEAD (light validator, then tools/run_negative_fixtures.py, then tools/run_positive_fixtures.py, sequential, background, python subprocess timeout — no `timeout` binary). It was killed for memory 4 times today; ask the founder to free memory on the Mac (close apps / quit idle Claude sessions) before starting. Record in validator_last_full_run.",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
