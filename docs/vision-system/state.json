@@ -262,7 +262,7 @@
       "base": "f560f8d",
       "worktree": "harness-managed; branch docs/vision-r8-contracts-h",
       "dispatched": "2026-09-15",
-      "status": "PART 1 RETURNED at e0a9ba7 and MERGED at 076e872: F6V-02 (R42) and F6W-01 (R43) landed; two chapter sentences owed (05 §12: capability_refs typed string[] not Ref<Capability>[]; the acceptance-owner role record has no registry shape); CapabilityId vocabulary deliberately not added (decision). Light validator 305,359; 119/80. Lane resumed for F6C-11 (R44), F6B-03 (R45), F6D-05/F6Y-04 (R46)."
+      "status": "PART 1 RETURNED at e0a9ba7 and MERGED at 076e872: F6V-02 (R42) and F6W-01 (R43) landed; two chapter sentences owed (05 §12: capability_refs typed string[] not Ref<Capability>[]; the acceptance-owner role record has no registry shape); CapabilityId vocabulary deliberately not added (decision). Light validator 305,359; 119/80. Lane resumed for F6C-11 (R44), F6B-03 (R45), F6D-05/F6Y-04 (R46). PART 2 at bd00927 MERGED at d7df880: F6C-11 landed (R44). Lane context ~228k; F6B-03 (R45) and F6D-05/F6Y-04 (R46) go to a fresh lane r8-contracts-i."
     }
   ],
   "next_actions": [
