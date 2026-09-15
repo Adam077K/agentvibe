@@ -1,0 +1,25 @@
+{
+  "id": "r41-the-capacity-measure-field-is-handed-back-to-free-string",
+  "repair": "R41",
+  "finding": "F6Y-03; reviews/F2-06-recheck-04a.md (F6Y-03)",
+  "case": "`CapacityObservation.payload.measure` is retyped to a free string in BOTH declarations at once -- the registry's `type_fields` and the schema's `$ref` -- which is the committed state F6Y-03 measured.",
+  "paired_benign_fixture": "fixtures/positive/r41-capacity-payload-type-fields-reordered-benign.json",
+  "why": "Both places, not one, and that is the point: a one-place mutation is caught by the generic registry-versus-schema pair walk before this check runs, which tests the mirror rather than the rule. The rule is what a determined author does, which is edit both -- and with both edited every other control in the package is satisfied, because a vocabulary's membership checks say nothing about whether any field is held to it. That was the committed state: `CapacityMeasure` registered, and 0 occurrences of it across all four registries.",
+  "expect_failure_contains": "A CAPACITY ROW MAY NAME ANY MEASURE IT LIKES",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/CapacityObservation/fields/payload/type_fields/measure",
+      "op": "replace",
+      "value": "string"
+    },
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/CapacityObservation/properties/payload/properties/measure",
+      "op": "replace",
+      "value": {
+        "$ref": "values.schema.json#/$defs/string"
+      }
+    }
+  ]
+}

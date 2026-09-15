@@ -1,0 +1,27 @@
+{
+  "id": "r41-capacity-payload-type-fields-reordered-benign",
+  "repair": "R41",
+  "finding": "F6Y-03; reviews/F2-06-recheck-04a.md, benign column",
+  "case": "The same nine payload fields with the same nine types, written in reverse order in `record-registry.json`.",
+  "paired_adverse_fixture": "fixtures/negative/r41-the-capacity-measure-field-is-handed-back-to-free-string.json",
+  "why": "The review's benign column asks for `the vocabulary reordered`, and the vocabulary has ONE member, so reordering it is the identity edit and would prove nothing. The nearest twin that exercises the same distinction is the one shipped: a field's TYPE is not its POSITION, and a check that reads `type_fields` by iteration order rather than by name would fail here while every type is unchanged. The substitution is stated rather than silently made.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/CapacityObservation/fields/payload/type_fields",
+      "op": "replace",
+      "value": {
+        "capture_digest": "Digest",
+        "reset_at": "UTC?",
+        "freshness_until": "UTC",
+        "measurement": "MeasuredQuantity",
+        "unit": "string",
+        "measure": "CapacityMeasure",
+        "interval": "TimeWindow",
+        "source_ref": "Ref<Observation>",
+        "subject_ref": "Ref<Account,RuntimeProfile,ResourceAccount>"
+      }
+    }
+  ]
+}

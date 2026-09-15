@@ -13004,7 +13004,7 @@
               "$ref": "values.schema.json#/$defs/TimeWindow"
             },
             "measure": {
-              "$ref": "values.schema.json#/$defs/string"
+              "$ref": "values.schema.json#/$defs/CapacityMeasure"
             },
             "unit": {
               "$ref": "values.schema.json#/$defs/string"

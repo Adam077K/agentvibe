@@ -604,6 +604,37 @@ checked(len(_measures) >= 1 and CAPACITY_MEASURES.get("schema_ref")
          "the per-member walk above exactly as loudly as a full one, and a registry entry "
          "whose `schema_ref` resolves nowhere is a row no reader can follow (F6C-06)",
          {"members": len(_measures), "schema_ref": CAPACITY_MEASURES.get("schema_ref")}))
+# --- F6Y-03: AND THE FIELD IS TYPED AGAINST THE VOCABULARY, IN BOTH DECLARATIONS. ----
+#
+# The three checks above guard the vocabulary's MEMBERSHIP. None of them asks whether any
+# field is held to it, and until this block none was: `CapacityMeasure` occurred 0 times in
+# `records.schema.json`, 0 in `commands.schema.json`, 0 in `record-registry.json` and 0 in
+# `predicate-registry.json`, while `CapacityObservation.payload.measure` was a free string
+# in both declarations. So a capacity row could name any measure it liked, and R-G07's
+# close stayed an instruction to a future implementer -- which is what F6C-06 said, made
+# true again one registry over. It is F6D-09's shape exactly (`PredicateId`, a 2,387-entry
+# enum zero record fields used) and its cure is the same one: type the field (F6Y-03).
+#
+# TWO PLACES, ASSERTED SEPARATELY. The generic registry-versus-schema pair walk compares
+# the two declarations to EACH OTHER, so the edit that hands the field back to `string` in
+# both at once satisfies it -- which is the edit a determined author makes, and the one
+# R41's adverse half performs. A named check that reads each declaration against the
+# vocabulary is what refuses it, and it says which rule stopped being checked instead of
+# reporting that a table moved.
+_capacity_type = RECORDS["CapacityObservation"]["fields"]["payload"]["type_fields"].get("measure")
+_capacity_schema = (SCHEMAS["records.schema.json"]["$defs"]["CapacityObservation"]
+                    ["properties"]["payload"]["properties"].get("measure") or {})
+checked(_capacity_type == "CapacityMeasure"
+        and _capacity_schema.get("$ref") == "values.schema.json#/$defs/CapacityMeasure",
+        ("A CAPACITY ROW MAY NAME ANY MEASURE IT LIKES: `CapacityMeasure` is the only "
+         "closed vocabulary this package registers, and a vocabulary no field is held to "
+         "constrains nothing -- it is a name in a registry that reads like a contract. "
+         "`07` section 5 says the cache-lifetime drop `is carried in the capacity row the "
+         "metered observation writes`; the row carries it only if the measure it names is "
+         "one the specification names (F6Y-03, F6C-06)",
+         {"record-registry.json": _capacity_type,
+          "records.schema.json": _capacity_schema,
+          "wanted": "CapacityMeasure / values.schema.json#/$defs/CapacityMeasure"}))
 # --- F6X-01: EVERY EXCLUSIVE FACTORY RESOLVES, AND THE KERNEL SURFACE IS A LITERAL. ---
 #
 # `registration.exclusive_factory` says: this record has exactly one creation path and nothing
@@ -3242,8 +3273,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 116  # 115 -> 116 (F6Y-02): R40's adverse half. Holds 116.
-POSITIVE_FIXTURE_FLOOR = 77   # 76 -> 77 (F6Y-02): R40's benign twin. Holds 77.
+NEGATIVE_FIXTURE_FLOOR = 117  # 116 -> 117 (F6Y-03): R41's adverse half. Holds 117.
+POSITIVE_FIXTURE_FLOOR = 78   # 77 -> 78 (F6Y-03): R41's benign twin. Holds 78.
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
