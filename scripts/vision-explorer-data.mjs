@@ -1238,3 +1238,173 @@ structural("every coverage row resolves its answer location", (ctx) => {
 // grow past what a browser fetch should carry in one piece.
 const TOTAL_LIMIT = 20 * 1048576;
 const FILE_LIMIT = 8 * 1048576;
+
+// ---- graph -----------------------------------------------------------------
+// Node ids are namespaced by type, because a record and a value may share a
+// name. Each node keeps its natural id in ref, and every ref must exist in the
+// data file for its type -- asserted in check mode.
+emitter("graph", (ctx) => {
+  const nodes = [];
+  const seen = new Set();
+  const nid = (type, ref) => type + ":" + ref;
+  const node = (type, ref, label, component) => {
+    const id = nid(type, ref);
+    if (seen.has(id)) return id;
+    seen.add(id);
+    nodes.push({ id, ref, type, label: label === undefined || label === null ? ref : label, component: component === undefined ? null : component });
+    return id;
+  };
+  const edges = [];
+  const edge = (from, to, kind) => { edges.push({ from, to, kind }); };
+
+  for (const c of ctx.components.items) node("component", c.id, c.name, c.id);
+  for (const r of ctx.records) node("record", r.id, r.id, r.owner_component);
+  for (const p of ctx.predicates) node("predicate", p.id, p.meaning, p.owner_component);
+  for (const p of ctx.primitives) node("primitive", p.id, p.id, p.owner_component || null);
+  for (const c of ctx.commands) node("command", c.id, c.id, c.owner_component);
+  for (const c of ctx.capabilities) node("capability", c.id, c.name, c.owner_component);
+  for (const s of ctx.stages) node("stage", s.id, s.name, null);
+  for (const d of ctx.decisions) node("decision", d.id, d.title, null);
+  for (const r of ctx.risks) node("risk", r.id, r.title, null);
+  for (const a of ctx.attacks.items) node("attack", a.id, a.case, null);
+  for (const q of ctx.coverage.items) node("question", q.id, q.question, Array.isArray(q.component) ? q.component[0] : q.component);
+  for (const ch of ctx.chapters) node("chapter", ch.id, ch.title, null);
+  for (const l of ctx.layers.items) node("layer", l.id, l.name, null);
+  for (const a of ctx.adapters) node("adapter", a.id, a.selected, null);
+
+  const has = (type, ref) => seen.has(nid(type, ref));
+
+  for (const r of ctx.records) {
+    if (r.owner_component !== null && has("component", r.owner_component)) edge(nid("component", r.owner_component), nid("record", r.id), "owns");
+    for (const rel of r.relations) for (const t of rel.targets || []) if (has("record", t)) edge(nid("record", r.id), nid("record", t), "relates");
+    for (const e of r.lifecycle.edges) if (e.predicate !== null && has("predicate", e.predicate)) edge(nid("record", r.id), nid("predicate", e.predicate), "guards");
+  }
+  const primIds = new Set(ctx.primitives.map((p) => p.id));
+  const preds = readJson(P.predicates);
+  for (const p of ctx.predicates) {
+    const ops = new Set();
+    const walk = (n) => {
+      if (Array.isArray(n)) { for (const x of n) walk(x); return; }
+      if (isObj(n) === false) return;
+      if (typeof n.op === "string" && primIds.has(n.op)) ops.add(n.op);
+      for (const k of Object.keys(n)) walk(n[k]);
+    };
+    walk(preds[p.id] === undefined ? null : preds[p.id].body);
+    for (const op of ops) edge(nid("predicate", p.id), nid("primitive", op), "uses");
+  }
+  for (const c of ctx.commands) {
+    for (const t of c.target_types || []) if (has("record", t)) edge(nid("command", c.id), nid("record", t), "targets");
+    if (c.owner_component !== null && has("component", c.owner_component)) edge(nid("component", c.owner_component), nid("command", c.id), "owns");
+  }
+  for (const c of ctx.capabilities) {
+    for (const comp of c.components) if (has("component", comp)) edge(nid("capability", c.id), nid("component", comp), "route");
+    for (const q of c.questions) if (has("question", q)) { edge(nid("capability", c.id), nid("question", q), "answers"); edge(nid("question", q), nid("capability", c.id), "answered-by"); }
+  }
+  for (const s of ctx.stages) {
+    for (const d of s.depends_on) if (has("stage", d)) edge(nid("stage", s.id), nid("stage", d), "depends");
+    for (const comp of s.components) if (has("component", comp)) edge(nid("stage", s.id), nid("component", comp), "builds");
+  }
+  const recordIds = ctx.records.map((r) => r.id);
+  for (const d of ctx.decisions) {
+    const text = JSON.stringify(d);
+    const m = mentionsIn(text, recordIds);
+    for (const r of m.records) if (has("record", r)) edge(nid("decision", d.id), nid("record", r), "affects");
+    for (const ch of ctx.chapters) if (text.includes(ch.path)) edge(nid("decision", d.id), nid("chapter", ch.id), "affects");
+  }
+  for (const r of ctx.risks) for (const a of r.attack_cases || []) if (has("attack", a)) edge(nid("risk", r.id), nid("attack", a), "covers");
+  // The logical flowchart edges, with any non-component node kept as external.
+  for (const fl of ctx.components.flows) {
+    const from = has("component", fl.from) ? nid("component", fl.from) : node("external", fl.from, fl.from_label, null);
+    const to = has("component", fl.to) ? nid("component", fl.to) : node("external", fl.to, fl.to_label, null);
+    edge(from, to, "flow");
+    if (fl.bidirectional) edge(to, from, "flow");
+  }
+
+  return { source: "derived from every other file in this directory", nodes, edges };
+});
+
+structural("every graph edge endpoint resolves to a node", (ctx) => {
+  const ids = new Set(ctx.graph.nodes.map((n) => n.id));
+  const bad = [];
+  for (const e of ctx.graph.edges) {
+    if (ids.has(e.from) !== true) bad.push(e.kind + " from " + e.from);
+    if (ids.has(e.to) !== true) bad.push(e.kind + " to " + e.to);
+  }
+  return bad;
+});
+
+// A node id is only meaningful if the thing it names is in its own data file.
+const NODE_HOME = {
+  component: (ctx) => ctx.components.items.map((x) => x.id),
+  record: (ctx) => ctx.records.map((x) => x.id),
+  predicate: (ctx) => ctx.predicates.map((x) => x.id),
+  primitive: (ctx) => ctx.primitives.map((x) => x.id),
+  command: (ctx) => ctx.commands.map((x) => x.id),
+  capability: (ctx) => ctx.capabilities.map((x) => x.id),
+  stage: (ctx) => ctx.stages.map((x) => x.id),
+  decision: (ctx) => ctx.decisions.map((x) => x.id),
+  risk: (ctx) => ctx.risks.map((x) => x.id),
+  attack: (ctx) => ctx.attacks.items.map((x) => x.id),
+  question: (ctx) => ctx.coverage.items.map((x) => x.id),
+  chapter: (ctx) => ctx.chapters.map((x) => x.id),
+  layer: (ctx) => ctx.layers.items.map((x) => x.id),
+  adapter: (ctx) => ctx.adapters.map((x) => x.id),
+  external: () => null
+};
+
+structural("every graph node id exists in its own data file", (ctx) => {
+  const bad = [];
+  const cache = {};
+  for (const n of ctx.graph.nodes) {
+    const home = NODE_HOME[n.type];
+    if (home === undefined) { bad.push("no home file for node type " + n.type); continue; }
+    if (cache[n.type] === undefined) { const ids = home(ctx); cache[n.type] = ids === null ? null : new Set(ids); }
+    if (cache[n.type] === null) continue;
+    if (cache[n.type].has(n.ref) !== true) bad.push(n.type + " " + n.ref);
+  }
+  return bad;
+});
+
+// ---- search ----------------------------------------------------------------
+// One flat row per addressable thing in the projection. The snippet is the
+// first 200 characters of whatever prose the source already carries.
+const snip = (v) => {
+  if (v === null || v === undefined) return "";
+  const s = typeof v === "string" ? v : JSON.stringify(v);
+  const flat = s.replace(/\s+/g, " ").trim();
+  return flat.length > 200 ? flat.slice(0, 197) + "..." : flat;
+};
+
+emitter("search", (ctx) => {
+  const rows = [];
+  const add = (type, id, title, snippet) => { rows.push({ type, id, title: snip(title).slice(0, 200), snippet: snip(snippet) }); };
+  for (const c of ctx.components.items) add("component", c.id, c.name, c.owns);
+  for (const l of ctx.layers.items) add("layer", l.id, l.name, l.governing_rule);
+  for (const r of ctx.records) add("record", r.id, r.id, r.representation);
+  for (const p of ctx.predicates) add("predicate", p.id, p.id, p.meaning);
+  for (const c of ctx.commands) add("command", c.id, c.id, c.source_guard);
+  for (const v of ctx.values) add("value", v.id, v.id, v.identity || v.kind);
+  for (const p of ctx.primitives) add("primitive", p.id, p.id, p.semantics);
+  for (const c of ctx["control-contracts"]) add("control-contract", c.id, c.id, (c.clauses || [])[0]);
+  for (const e of ctx.endpoints) add("endpoint", e.id, e.id, e.authority);
+  for (const b of ctx["subject-bindings"]) add("subject-binding", b.id, b.id, b.kind);
+  for (const t of ctx.pins.items) add("pin", t.id, t.id, t.why);
+  for (const c of ctx.capabilities) add("capability", c.id, c.name, c.outcome);
+  for (const s of ctx.stages) add("stage", s.id, s.name, s.builds);
+  for (const d of ctx.decisions) add("decision", d.id, d.title, d.decision);
+  for (const q of ctx.questions) add("open-question", q.id, q.question, q.resolution);
+  for (const r of ctx.risks) add("risk", r.id, r.title, r.cause);
+  for (const a of ctx.attacks.items) add("attack", a.id, a.case, a.selected_architecture_response);
+  for (const a of ctx.adapters) add("adapter", a.id, a.selected, a.contract);
+  for (const e of ctx["execution-profiles"]) add("execution-profile", e.id, e.id, e.launch_interface);
+  for (const q of ctx.coverage.items) add("question", q.id, q.question, q.answer || q.answer_status);
+  for (const q of ctx.coverage.supplemental) add("supplemental", q.id, q.concern, q.answer || q.answer_location);
+  for (const q of ctx.coverage.discovered) add("discovered", q.id, q.concern, q.answer || q.note);
+  for (const f of ctx.findings.items) add("finding", f.id, f.heading || f.id, f.disposition || f.resolution || f.status);
+  for (const r of ctx.reviews) add("review", r.id, r.title, r.precis);
+  for (const c of ctx.chapters) for (const s of c.sections) add("section", c.id + "#" + s.id, s.heading || c.title, s.html.replace(/<[^>]*>/g, " "));
+  for (const s of ctx["source-question-contracts"]) add("source-question", s.question_id, s.question, s.answer);
+  return rows;
+});
+
+Object.assign(MIN_EXPECT, { search: 4000, graph: 2 });
