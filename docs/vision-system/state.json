@@ -293,13 +293,13 @@
       "kind": "interactive explorer page over planning/site/explorer/data/ (founder request 2026-09-15)",
       "branch": "docs/vision-explorer-page",
       "base": "d689baf",
-      "status": "DISPATCHED 2026-09-15 (worktree; 30-turn blocks; resume by message with 'commit first'). Brief: reuse plan-page tokens; rail+canvas+detail; system map C01-C09 with flows; layers; records with lifecycle state diagrams and guard meanings; predicates/commands/values/primitives/control contracts/endpoints/subject bindings/pins; capabilities with source-question contracts; build DAG B00-B11; decisions/questions/risks/attacks/adapters/profiles; chapter reader with mention links; reviews/findings/coverage; global search; hash routes; lazy-load data. Return JSON {status,branch,head,files,routes,views_looked_at,console_errors,not_done,session_file}.",
-      "next": "merge -> reviewer lane (every id in data/ reachable; no page text absent from the package) -> publish NEW multi-file artifact 'The Company Engine Explorer' (index.html + data/*.json via files) -> record in state/history/handoff"
+      "status": "RETURNED COMPLETE; merged through 6df39ae (commits feef061..e8bad8e). Independent review on af802d2 FAIL (6 findings: coverage detail threw on 381 rows; 527 dangling contract links; collapsed ternary printed 'false'; classmap/chapter ids absent from search; owner routes opened a Not-found pane); repaired at a9423e8; recheck on 2219d3c PASS (643/643 coverage, 0 dangling, every kind 100% rendered, 1,346 lifecycle sub-routes); one LOW (search augmentation race) and one nit (lost caveat) fixed at e8bad8e.",
+      "next": "published"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md, then active_work",
-    "EXPLORER TRACK (founder request): designer lane `explorer-page` builds planning/site/explorer/index.html over data/; then a reviewer checks every id in data/ is reachable on the page; then publish as a NEW artifact (multi-file: index.html + data/*.json) named 'The Company Engine Explorer'",
+    "EXPLORER PUBLISHED: https://claude.ai/artifact/Ufucbixckde8yhiLf3JDTZ (v1, from 6df39ae). Republish from this path after any data or page change: `node scripts/vision-explorer-data.mjs build && check`, then publish index.html with root=planning/site/explorer and the same files map.",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "FOUNDER PACKET (in the handoff): lift the hold for B01 or not; re-run the fifteen-dimension review or not; Q-022 entitlement read; three structural decisions (edge predicates as derived artifact; runner copies fixture bodies; a CapabilityId/CheckerId vocabulary); F6AA-01/02 (the four layer-5 holders' staffing; absent-holder fallback); push the branch to origin as backup",
     "Owed (contracts): F6D-05/F6Y-04 registry half (R46 free; shape in planning/F2/13-repair-names-contracts-i.md); F6C-10 park phase (blocked on the edge-predicate decision); F6Y-06 check half (blocked on the runner decision)",
@@ -482,5 +482,17 @@
     "method": "fast-forward merge of ceo-4-1789314685 onto ceo-1-1789446032 (was at main b2cabad)",
     "scan": "8 harness lane worktrees under .claude/worktrees scanned with git status --porcelain: each holds only two untracked copies of .claude/workflows/vision-round-1*.js, no lost work; ceo-4 root clean",
     "executor": "orchestrator session ceo-1-1789446032 (ceo-vision-resume-r8)"
+  },
+  "explorer_artifact": {
+    "url": "https://claude.ai/artifact/Ufucbixckde8yhiLf3JDTZ",
+    "version": 1,
+    "published": "2026-09-15",
+    "source_commit": "6df39ae",
+    "files": "index.html + app.css + app.js + 26 data/*.json (graph.json not fetched by the page, omitted)",
+    "known_limits": [
+      "map node text ~6px at 400px; full flow list below carries the text",
+      "long lists show first 250-300 per filter; every id reachable by route and search",
+      "Google Fonts rendering unverified in the capture harness"
+    ]
   }
 }
