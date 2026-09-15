@@ -1597,11 +1597,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): PARTIAL; raised F6AA-01, F6AA-04.",
     "issue": "The chapter states in four places that MD-02 is open and in two that it is answered",
     "proposed_repair": "Reconcile all four sites in one edit: state at `05:386` and `05:407` whether the founder's answer closes the earlier finding, the earlier finding and the earlier finding or which of them survive it, correct the packet count if it falls to five, and amend `05:3`'s *\"None is closed here\"* with the date and the packet. If the three (d)s survive the answer, say what each still needs — the same sentence then stops reading as though the answer never happened.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-02",
@@ -1610,11 +1610,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level.",
     "issue": "R-X09's universal sentence was not amended, and 32 roles now contradict it",
     "proposed_repair": "Amend `05:350` in the package's own supersession form — quote the universal text, date it, and restate the rule over the set the answer leaves standing — so that the sentence introducing R-X09 and the sentence narrowing it cannot be read independently.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-03",
@@ -1623,11 +1623,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level; raised F6AA-06, F6AA-11.",
     "issue": "\"Of the 46 … the other 32\" is 41, and five capability ids receive no disposition",
     "proposed_repair": "State the fourth category in the chapter — name CAP-04, CAP-14 and CAP-39 as merged residues into CAP-22 and CAP-42 as the re-run has them, name CAP-16, and keep CAP-17 as UNKNOWN — so that 3 + 6 + 32 + 5 = 46 closes on the page, or say plainly that the answer covers 41 of 46 and which 5 it does not reach.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-04",
@@ -1636,11 +1636,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level; raised F6AA-03.",
     "issue": "AD-021 is quoted as \"correctly\" recording a fact the quoting paragraph falsifies",
     "proposed_repair": "Put the quotation in the past tense and date it — *\"recorded, correctly at the time, that …\"* — naming this landing as what ended it; and record that AD-021's `epistemic_basis` is owed a corresponding update by whoever owns the register, since the prose lane cannot make it.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-05",
@@ -1649,11 +1649,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level; raised F6AA-02, F6AA-05.",
     "issue": "The parking behaviour is cited to §5, which does not carry it, and it answers what the table records as unanswered",
     "proposed_repair": "Repoint the citation to §2's per-class disposition and R-X09 and state which reached classes park and which refuse with a packet, since the three roles held as exceptions are data-rights, grievance and continuity; or, if the behaviour is new, label it DECISION, define \"recorded bounded state\" where it is first used, and say what it does and does not settle of MD-03's third clause.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-06",
@@ -1662,11 +1662,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level.",
     "issue": "The honest limit understates itself, in the paragraph whose purpose is not to",
     "proposed_repair": "State it as the re-run does: **all 41** still need a human at acceptance time, and 37 to 38 are additionally released from waiting on a pre-staffed office. Cite `planning/F2/09-q017-conjunction-rerun.md` §4 by path, which no passage in §12 currently does.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-07",
@@ -1675,11 +1675,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level.",
     "issue": "\"Every row is SPECIFICATION\" now sits above three rows carrying founder DECISIONs",
     "proposed_repair": "Amend the preamble to *\"every row is SPECIFICATION except the founder decisions marked DECISION\"*, or move the three decisions out of the rows and into the DECISION paragraph at `:378` that already carries the same fact.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-08",
@@ -1688,11 +1688,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level.",
     "issue": "Two chapters say \"an admitted procedure version\"; the guard admits `admitted` or `restricted`",
     "proposed_repair": "Say \"an admitted or restricted procedure version\" at `05:402` and `07:113`, in one edit, so the two chapters and the registry state one rule.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Z-09",
@@ -1701,11 +1701,11 @@
     "source": "planning/reviews/F2-06-recheck-04b.md",
     "review_subject": "3e51a9e",
     "owner": "prose lane D (chapter 05 §12 and its joins; 05 header/closing; 02/07 where cited)",
-    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-prose-d (author-recorded, base 35f0710, head 44a317c); independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level.",
     "issue": "R-X07's heading quantifies over \"every standing structure\"; its body names two",
     "proposed_repair": "State the closure explicitly — *\"the standing structures are exactly `StandingHolder` and the acceptance-owner role record; `StandingInterest` binds no capability and is out of scope\"* — or, if the set is open, say what admits a new member to it.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Y-01",
@@ -1714,11 +1714,11 @@
     "source": "planning/reviews/F2-06-recheck-04a.md",
     "review_subject": "3e51a9e",
     "owner": "contracts lane E (sweep pattern + F6W source rows)",
-    "status": "Repaired by r7-contracts-e (author-recorded, head f512da5): Step 6 sweep widened to every review family with the family set derived and checked; 25 source rows added (conservatively placed in not_answered); fixture pair R36. Independent recheck owed. Not blocking under protocol §8.",
+    "status": "Repaired by r7-contracts-e (author-recorded, head f512da5): Step 6 sweep widened to every review family with the family set derived and checked; 25 source rows added (conservatively placed in not_answered); fixture pair R36. Independent recheck owed. Not blocking under protocol §8. RECHECKED 2026-09-15 by F2-06-recheck-05 (subject 95ca14d): CLOSED at specification level; raised F6AA-07, F6AA-08, F6AA-09, F6AA-10.",
     "issue": "The F6R-03 sweep's own pattern does not reach one of the eight Step 6 families in the corpus it sweeps",
     "proposed_repair": "Derive the family set rather than writing it, or assert the pattern's own coverage: sweep `F6[A-Z]-\\d\\d` over the corpus and refuse any family letter not in a declared, hand-written literal, so adding a family is an edit a reviewer sees. Add `finding_sources` rows for `F6W-01…08` and place each in exactly one half of the partition. Adverse fixture: a review document raising a finding in an undeclared family. Paired benign: a review document raising a finding in a declared family that already has a row.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
-    "independent_recheck": null
+    "independent_recheck": "planning/reviews/F2-06-recheck-05.md"
   },
   {
     "id": "F6Y-02",
@@ -1809,6 +1809,149 @@
     "issue": "`not_answered` holds findings this package answers with a named check and a fixture pair, and its ceiling makes correcting that an edit to the validator",
     "proposed_repair": "Align the gloss with the rows, which already say the narrower thing, and set `ANSWERED_ELSEWHERE_CEILING` above its current size so that recording a verified repair is a data edit and only the total, `UNANSWERED_CEILING`, stays a validator edit. Adverse fixture: a row moved to `answered_elsewhere` with a file that does not exist. Paired benign: a row moved across with a file and check that resolve.",
     "note": "required_contract is deliberately absent: the RC5-02 rule counts every registered finding with a required_contract whose id is outside the pin families and whose contract names no record or guard, and its ceiling is 13 of 13; the contract is stated verbatim in proposed_repair so it is not lost. Class letter is the recheck's own.",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-01",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), medium-high. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "MD-02's question is restated with one of its two subjects removed, and the narrowed version is declared fully answered",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-02",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), medium. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "The disposition that closes AC-M4-02 escalates the middle two classes to the party whose non-answer triggered it",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-03",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), medium. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "The OWED clause the F6Z-04 repair added is false at its own subject commit",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-04",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "Two further MD-02 sites still state the packet in its pre-decision form",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-05",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "MD-03's third clause is characterised two ways in one section, and the repair's UNKNOWN rests on the narrower one",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-06",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "The fourth bucket is defined as \"neither … dissolve …\" and its member CAP-16 is then declared dissolved",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-07",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "Two new ceilings each state, in their own comment, a value the constant does not hold",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-08",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "The widened sweep's floors are eight ids and two families below the committed counts at the subject",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-09",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "F6Y-01's own `not_answered` row fails its own stated condition",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-10",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "The r36 negative fixture states a tripwire mechanism that another control pre-empts",
+    "independent_recheck": null
+  },
+  {
+    "id": "F6AA-11",
+    "class": "a",
+    "severity": "medium-high",
+    "source": "planning/reviews/F2-06-recheck-05.md §3",
+    "review_subject": "95ca14d",
+    "owner": "chapter-05 prose lane (F6AA-01..06, 11); contracts lane (F6AA-07..10)",
+    "status": "Open; found by F2-06-recheck-05 §3 (2026-09-15). Class (a), low. Not blocking under protocol §8. Outside the STEP6_ID sweep (two-letter family) until a contracts lane widens the pattern and adds a finding_sources row.",
+    "issue": "The the earlier finding pairing control cannot distinguish the six correct pairs from a shuffle, and its comment says it can",
+    "proposed_repair": null,
+    "note": "Two different 41s six lines apart, and the chapter never says they are different sets",
     "independent_recheck": null
   }
 ]

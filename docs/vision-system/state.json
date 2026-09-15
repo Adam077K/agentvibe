@@ -226,7 +226,7 @@
       "subject": "95ca14d",
       "constraints": "no validator or tools/ execution (memory); producer accounts barred; one family; new findings numbered F6AA-nn",
       "dispatched": "2026-09-15",
-      "status": "RUNNING"
+      "status": "RETURNED and archived verbatim as planning/reviews/F2-06-recheck-05.md (extracted from the subagent transcript, 53,838 chars): F6Z-02..09 and F6Y-01 CLOSED at specification level, F6Z-01 PARTIAL, 0 regressed; F6AA-01..11 registered, all (a), none blocking; F6AA ids are outside the STEP6_ID sweep (one-letter pattern) — owed to the contracts lane"
     },
     {
       "lane": "r8-prose-e",
