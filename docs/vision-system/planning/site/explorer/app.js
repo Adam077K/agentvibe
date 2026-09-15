@@ -31,8 +31,8 @@ function secOf(id){id=T(id);for(var i=0;i<PAT.length;i++){if(PAT[i][0].test(id))
  if(C.commands&&byId("commands",C.commands)[id])return "command";
  return null}
 function auto(id,label){var s=secOf(id);return s?lk(s,id,label):"<span class=\"chip\">"+e(label==null?id:label)+"</span>"}
-function chips(list,sec){if(!list||!list.length)return none();
- return "<div class=\"chips\">"+list.map(function(x){return sec?lk(sec,x,x):auto(x)}).join("")+"</div>"}
+function chips(list,sec){if(typeof list==="string")list=[list];if(!list||!list.length)return none();
+ return "<div class=\"chips\">"+list.map(function(x){var t=String(x);return sec==="component"&&!/^S1-C[0-9]+$/.test(t)?"<span class=\"chip\">"+e(t)+"</span>":(sec?lk(sec,t,t):auto(t))}).join("")+"</div>"}
 
 /* ---------- generic value rendering ---------- */
 function val(v,d){d=d||0;
@@ -292,7 +292,7 @@ REG("pin",{label:"Pinned conjuncts",group:"The contract",n:23,file:"pins",pick:f
  note:"Hand-written assertions about the live registries, each paired with its own why prose.",
  det:function(x){return (x.why?"<p>"+md(x.why)+"</p>":"")+sub("value")+val(x.value)}});
 REG("classmap",{label:"Class mapping",group:"The contract",n:9,file:"class-mapping",title:"9 class-mapping rows",
- text:function(x){return x.id+" "+JSON.stringify(x.value)},rowT:function(x){return x.id},rowS:function(x){return typeof x.value==="string\"?x.value:\"table"},
+ text:function(x){return x.id+" "+JSON.stringify(x.value)},rowT:function(x){return x.id},rowS:function(x){return typeof x.value==="string"?x.value:"table"},
  det:function(x){return val(x.value)}});
 REG("adapter",{label:"Adapters",group:"Delivery",n:7,file:"adapters",title:"7 fulfillment adapters",
  text:function(x){return x.id+" "+X.T(x.implemented_target)},rowT:function(x){return x.id},rowS:function(x){return X.T(x.implemented_target||x.selected)}});
@@ -463,7 +463,7 @@ X.view("coverage",{label:"Source questions",group:"Coverage",n:566,
    (items.length>shown.length?"<p class=\"cap\">Showing the first 250 of "+items.length+" matches.</p>":"")+
    sub("how a status is computed")+kv(A.status_rule)+
    sub("the 24-item deliverable checklist")+val(A.package))})},
- detail:function(id){return D("coverage").then(function(A){var x=null;
+ detail:function(id){return Promise.all([D("coverage"),D("source-question-contracts")]).then(function(AA){var A=AA[0],SQ=AA[1],x=null;
   [].concat(A.items,A.supplemental,A.discovered).forEach(function(y){if(y.id===id)x=y});
   if(!x)return pane("Not found","<p><code>"+e(id)+"</code> is not a coverage row.</p>");
   return pane(x.id,rows([["question",md(x.question||x.concern)],["status",statusPill(x.status)],
@@ -473,7 +473,7 @@ X.view("coverage",{label:"Source questions",group:"Coverage",n:566,
    ["component",chips(x.component,"component")],["evidence",val(x.evidence)],["decision",val(x.decision)],
    ["uncertainty",md(x.uncertainty)],["owner",md(x.owner)],
    ["implementation location",val(x.implementation_location)],["implementation status",statusPill(x.implementation_status)],
-   ["verification refs",val(x.verification_refs)],["the full contract",lk("sourceq",x.id,"open the source-question contract")]])+srcline(x))})}});
+   ["verification refs",val(x.verification_refs)],["the full contract",SQ.some(function(q){return q.question_id===x.id})?lk("sourceq",x.id,"open the source-question contract"):X.none("no source-question contract for this row")]])+srcline(x))})}});
 
 X.view("chapter",{label:"Chapters",group:"The writing",n:19,
  list:function(sel,secSel){return D("chapters").then(function(CH){
@@ -556,7 +556,7 @@ function render(keepScroll){
  CANVAS.innerHTML="<div class=\"pane\"><div class=\"loading\">reading the package</div></div>";
  Promise.resolve(v.list?v.list(r.id,r.sub):"").then(function(h){if(t!==tick)return;CANVAS.innerHTML=h;
   if(!keepScroll)window.scrollTo(0,0)}).catch(function(err){if(t===tick)CANVAS.innerHTML=pane("That did not load","<p>"+e(err.message)+"</p>")});
- if(r.id&&v.detail){DETAIL.innerHTML="<div class=\"pane\"><div class=\"loading\">reading the record</div></div>";
+ if(r.id&&r.id.charAt(0)!=="@"&&v.detail){DETAIL.innerHTML="<div class=\"pane\"><div class=\"loading\">reading the record</div></div>";
   Promise.resolve(v.detail(r.id,r.sub)).then(function(h){if(t!==tick)return;
    DETAIL.innerHTML="<div class=\"sheet-close\"><span class=\"lbl\">"+e(v.label)+"</span><a class=\"chip\" href=\""+href(r.sec)+"\">close</a></div>"+h})
    .catch(function(err){if(t===tick)DETAIL.innerHTML=pane("That did not load","<p>"+e(err.message)+"</p>")})}
@@ -583,7 +583,7 @@ try{var saved=localStorage.getItem("ex-theme");if(saved)setTheme(saved);else TH.
 TH.addEventListener("click",function(){var c=document.documentElement.getAttribute("data-theme");setTheme(c==="light"?"dark":c==="dark"?"":"light")});
 
 /* ---- search ---- */
-var SMAP={predicate:"predicate",question:"coverage",finding:"finding",record:"record",value:"value","source-question":"sourceq",
+var SMAP={classmap:"classmap",chapter:"chapter",predicate:"predicate",question:"coverage",finding:"finding",record:"record",value:"value","source-question":"sourceq",
  command:"command","subject-binding":"binding",supplemental:"coverage",primitive:"primitive",capability:"capability",review:"review",
  attack:"attack","control-contract":"contract",pin:"pin",decision:"decision","open-question":"question",risk:"risk",
  discovered:"coverage",stage:"stage",endpoint:"endpoint",component:"component",adapter:"adapter",layer:"layer","execution-profile":"profile"};
@@ -693,4 +693,19 @@ V.component.list=function(sel){return D("components").then(function(c){
   "<div class=\u0022groupname\u0022>every component</div><div class=\u0022cards\u0022>"+c.items.map(function(i){
    return "<a class=\u0022card"+(i.id===sel?" on":"")+"\u0022 href=\u0022"+href("component",i.id)+"\u0022><span class=\u0022t\u0022>"+e(i.id)+" \u00b7 "+e(i.short_name||i.name)+"</span><span class=\u0022s\u0022>"+e(cut(i.owns,110))+"</span></a>"}).join("")+"</div>"+srcline(c))})};
 window.dispatchEvent(new Event("hashchange"));
+})();
+
+/* ---- search reaches the class-mapping rows and the chapter documents.
+   search.json is generated, so it is left alone on disk and extended in memory. ---- */
+(function(){
+var X=window.__EX;
+Promise.all([X.D("search"),X.D("class-mapping"),X.D("chapters")]).then(function(a){
+ var S=a[0];
+ if(S.__augmented)return;
+ S.__augmented=true;
+ a[1].forEach(function(r){S.push({type:"classmap",id:r.id,title:r.id,
+  snippet:typeof r.value==="string"?r.value:"class mapping table"})});
+ a[2].forEach(function(c){S.push({type:"chapter",id:c.id,title:c.title,
+  snippet:c.path+" - "+c.sections.length+" sections"})});
+}).catch(function(){});
 })();
