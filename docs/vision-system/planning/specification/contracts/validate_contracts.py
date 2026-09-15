@@ -487,6 +487,83 @@ for _kind, _unit in sorted(EXISTENCE_REASON_PAIRS.items()):
              "names and which reads as SATISFIED (F6D-12)",
              {"reason": _kind, "unit": _unit}))
 
+# --- F6Y-02: THE ADMITTED-REASON PAIRING, AS A SET OF PAIRS AND NOT AS TWELVE STRINGS.
+#
+# The six checks above ask whether each constant OCCURS in the serialised criterion. Swap
+# the `reason_unit` constants of the `input_provenance` and `consequence_class` branches
+# and all twelve constants are still present, so all six pass; the pin's `any` /
+# `contains_pointers` row names the two POINTERS and not their values, so it passes too;
+# and made in `tools/phase_content.py` rather than by hand, the criterion regenerates with
+# the swap, so the derivation oracle agrees with it. What survives every control in this
+# package is a criterion admitting `input_provenance` predicating on `effect_class` and
+# `consequence_class` on `input_set` -- a reason applied to a unit where it returns
+# undecidable, which R2 F-20 names and which reads as SATISFIED. That is the exact failure
+# the pairing clause was written to refuse, and until this block nothing refused it. It is
+# also the likeliest hand-edit error in a six-row table (F6Y-02).
+#
+# So walk the disjunction and compare the SET OF PAIRS against the literal above. TWO
+# checks, because a walk that finds nothing compares the empty set to the empty set and
+# passes loudly: the branch count is asserted first, against that same literal.
+def _reason_pair_constant(node, pointer):
+    # The constant a branch compares `pointer` against, or None if this leaf is not that
+    # comparison. Structural: `op`, `left.op`, `left.pointer`, never a substring.
+    if not isinstance(node, dict) or node.get("op") != "eq":
+        return None
+    left = node.get("left")
+    if not isinstance(left, dict) or left.get("op") != "path":
+        return None
+    if left.get("pointer") != pointer:
+        return None
+    return node.get("right")
+
+
+def _reason_pairs(body):
+    # Every (reason_kind, reason_unit) pair stated under any `any` node in the body. A
+    # branch that states only one of the two yields a pair with a None in it, which fails
+    # the set comparison rather than vanishing from the count -- a half-stated branch is
+    # the same defect as a wrongly-paired one and must not be silently dropped.
+    pairs, stack = [], [body]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, dict):
+            if node.get("op") == "any":
+                for branch in node.get("predicates") or []:
+                    inner = (branch.get("predicates") or []) if isinstance(branch, dict) else []
+                    kind = unit = None
+                    for leaf in inner:
+                        if kind is None:
+                            kind = _reason_pair_constant(leaf, "/payload/reason_kind")
+                        if unit is None:
+                            unit = _reason_pair_constant(leaf, "/payload/reason_unit")
+                    if kind is not None or unit is not None:
+                        pairs.append((kind, unit))
+            stack.extend(node.values())
+        elif isinstance(node, list):
+            stack.extend(node)
+    return pairs
+
+
+_ej_pairs = _reason_pairs(PREDICATES["criterion.ExistenceJustification.admitted.v1"]["body"])
+checked(len(_ej_pairs) == len(EXISTENCE_REASON_PAIRS),
+        ("THE ADMITTED-REASON DISJUNCTION NO LONGER WALKS AS SIX PAIRED BRANCHES: the set "
+         "comparison below is worth exactly as much as the walk that feeds it, and a walk "
+         "that finds nothing compares the empty set to the empty set and passes. `05` "
+         "section 4 states six pairs, so six paired branches is the structure this check "
+         "is about; a change to the criterion's shape must fail here rather than quietly "
+         "empty the comparison (F6Y-02)",
+         {"walked": len(_ej_pairs), "the six": len(EXISTENCE_REASON_PAIRS),
+          "pairs": sorted(repr(_p) for _p in _ej_pairs)}))
+checked(set(_ej_pairs) == set(EXISTENCE_REASON_PAIRS.items()),
+        ("AN ADMITTED REASON IS PAIRED WITH THE WRONG UNIT: `05` section 4 is a two-column "
+         "table, so the contract is six PAIRS. The six presence checks above pass on a "
+         "criterion whose units have been SWAPPED between branches -- all twelve constants "
+         "are still in the body -- and a swap made in the derivation regenerates into a "
+         "body the drift oracle and the pin both accept. A swapped pair admits a reason "
+         "predicating on a unit it cannot decide, which R2 F-20 names and which reads as "
+         "SATISFIED (F6Y-02)",
+         {"in the criterion": sorted("%s -> %s" % _p for _p in _ej_pairs),
+          "`05` section 4": sorted("%s -> %s" % _p
+                                   for _p in EXISTENCE_REASON_PAIRS.items())}))
 # --- F6C-06: THE CACHE-LIFETIME COLLAPSE BINDS TO A REGISTERED MEASURE. --------------
 #
 # `07` section 5 R-G07 says enabling credits drops the prompt-cache lifetime from an hour to
@@ -3145,8 +3222,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 115
-POSITIVE_FIXTURE_FLOOR = 76
+NEGATIVE_FIXTURE_FLOOR = 116  # 115 -> 116 (F6Y-02): R40's adverse half. Holds 116.
+POSITIVE_FIXTURE_FLOOR = 77   # 76 -> 77 (F6Y-02): R40's benign twin. Holds 77.
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

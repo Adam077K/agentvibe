@@ -1,0 +1,19 @@
+{
+  "id": "r40-the-six-admitted-reason-branches-reordered-benign",
+  "repair": "R40",
+  "finding": "F6Y-02; reviews/F2-06-recheck-04a.md, benign column",
+  "case": "The same six pairs, branches written in reverse order, regenerated the same way.",
+  "paired_adverse_fixture": "fixtures/negative/r40-two-admitted-reasons-swap-the-units-they-predicate-on/fixture.json",
+  "why": "The review's benign twin verbatim -- `the six branches in a different order, which must pass`. A disjunction is a set and its branch order changes nothing it admits; a check that refuses a reordering is comparing serialisation rather than meaning, which is the defect the adverse half of this pair is about. Lane `r8-contracts-f` recorded this twin as NOT EXPRESSIBLE because the patch applier writes JSON only. That is true of `patch` and false of `tools_patch`, which ships a hunk of the derivation and regenerates -- the same mechanism the adverse half needs, so the nearer substitute it proposed is not required.",
+  "expect_pass": true,
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "('either', [('every', [('eqF', '/payload/reason_kind', 'permission_scope'), ('eqF', '/payload/reason_unit', 'permission_scope')]), ('every', [('eqF', '/payload/reason_kind', 'input_provenance'), ('eqF', '/payload/reason_unit', 'input_set')]), ('every', [('eqF', '/payload/reason_kind', 'consequence_class'), ('eqF', '/payload/reason_unit', 'effect_class')]), ('every', [('eqF', '/payload/reason_kind', 'confidentiality_boundary'), ('eqF', '/payload/reason_unit', 'context_boundary')]), ('every', [('eqF', '/payload/reason_kind', 'named_partition'), ('eqF', '/payload/reason_unit', 'partition')]), ('every', [('eqF', '/payload/reason_kind', 'verification_relation'), ('eqF', '/payload/reason_unit', 'attempt_relation')])])",
+      "block_end": ", AF, AR],",
+      "replacement": "reordered-either.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "patch": []
+}
