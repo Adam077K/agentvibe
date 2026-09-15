@@ -245,11 +245,20 @@
       "worktree": "harness-managed; branch docs/vision-r8-contracts-f",
       "dispatched": "2026-09-15",
       "status": "RETURNED PARTIAL at 984b130 and MERGED at 9ab0681: items 0,1,2,4a,4b(data),5 landed (7 commits); F6Y-02 not attempted (owed to r8-contracts-g, R40 free); F6Y-06 check half not shippable without changing the runner to copy fixture bodies (decision owed); light validator 305,306 checks, 115/76 declared; 16 fixtures executed singly, one false exclusion (r19 benign) found and regenerated; option (a) for the F6X-03 red: demand over RAISED ids, mentions floored, step6_mention_only pinned exactly. Full suites NOT run yet."
+    },
+    {
+      "lane": "r8-contracts-g",
+      "engine": "builder",
+      "kind": "contracts lane, registry side: F6Y-02 (R40), F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05/F6Y-04 guard-body rebinding, F6Y-03 CapacityMeasure use, F6V-02 resolve-or-create, F6W-01 capability_refs registration, F6Y-06 check-half decision packet",
+      "base": "caceb7c",
+      "worktree": "harness-managed; branch docs/vision-r8-contracts-g",
+      "dispatched": "2026-09-15",
+      "status": "RUNNING"
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md when it exists, else HANDOFF-2026-09-14-after-r7.md, then active_work. HEAD is RED on the light validator (F6X-03) until r8-contracts-f merges; then split suite on a FROZEN tree with full stdout captured.",
-    "After r8-contracts-f merges: dispatch r8-contracts-g (registry side: F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05/F6Y-04 guard-body rebinding via FieldAuthority, F6Y-03 CapacityMeasure, F6V-02 resolve-or-create, F6W-01 capability_refs registration); then split suite on the FROZEN merged head with full stdout captured; then report §8 / README / site / founder page / session file / handoff",
+    "After r8-contracts-g merges: split suite on the FROZEN merged head, full stdout to a file (driver at scratchpad/split/driver.py pattern); then report §8 / README / site / founder page / session file / handoff HANDOFF-2026-09-15-after-r8.md",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "FIRST in the next session: run the split suite on HEAD (light validator, then tools/run_negative_fixtures.py, then tools/run_positive_fixtures.py, sequential, background, python subprocess timeout — no `timeout` binary). It was killed for memory 4 times today; ask the founder to free memory on the Mac (close apps / quit idle Claude sessions) before starting. Record in validator_last_full_run.",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
