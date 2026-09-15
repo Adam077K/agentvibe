@@ -11,5 +11,6 @@
       "op": "add",
       "value": "`present(value: X)` type-checks X and asserts nothing about it, so its one argument is a value position and no conjunct inside it is demanded (RC3-02). Never admissible as an ancestor of a pinned conjunct."
     }
-  ]
+  ],
+  "finding": ""
 }
