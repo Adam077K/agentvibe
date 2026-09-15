@@ -1,0 +1,1 @@
+('nfp', ['/payload/retention_span', '/payload/landed_at', '/payload/residue_note', '/payload/alarm_raised_at', '/payload/alarm_reader_ref', '/payload/longest_plausible_outage', '/payload/retention_until', '/payload/work_record_ref'])

@@ -1092,6 +1092,8 @@ ENVELOPE_FALLBACK = {
 #                                               than the second (F6C-11)
 #   ("ltCount", array_path, bound_path)         the array is strictly shorter
 #                                               than that bound (F6C-10)
+#   ("eqOffset", span, later, earlier)          that span EQUALS the offset between
+#                                               those two instants (F6C-11)
 #   ("either", [item, ...])                     any over built conjuncts
 #   ("every", [item, ...])                      a nested all over built conjuncts
 #
@@ -3384,11 +3386,11 @@ RECORD_OVERRIDES = {
     ("UnmatchedPoolEntry", "landed"): spec(
         'A work record armed no interest, its retention STRICTLY EXCEEDS the longest '
         'plausible outage -- the two compared as spans in one unit, not merely recorded '
-        'beside each other -- the arrival alarm has reached a named reader, and the residue this '
+        'beside each other, and that span is the offset between `landed_at` and `retention_until` rather than a number stated independently of them -- the arrival alarm has reached a named reader, and the residue this '
         'pool cannot catch is recorded. A catch-all that caught everything is not this.',
         ['w-up-landed', 's-up'],
-        [('nfp', ['/payload/work_record_ref', '/payload/retention_until', '/payload/longest_plausible_outage', '/payload/alarm_reader_ref', '/payload/alarm_raised_at', '/payload/residue_note', '/payload/landed_at', '/payload/retention_span']), ('ltF', '/payload/longest_plausible_outage', '/payload/retention_span'), AR],
-        hard=['nfp', 'ltF']),
+        [('nfp', ['/payload/work_record_ref', '/payload/retention_until', '/payload/longest_plausible_outage', '/payload/alarm_reader_ref', '/payload/alarm_raised_at', '/payload/residue_note', '/payload/landed_at', '/payload/retention_span']), ('ltF', '/payload/longest_plausible_outage', '/payload/retention_span'), ('eqOffset', '/payload/retention_span', '/payload/retention_until', '/payload/landed_at'), AR],
+        hard=['nfp', 'ltF', 'eqOffset']),
     ("UnmatchedPoolEntry", "claimed"): spec(
         'An admitted interest has claimed the entry and that interest is named. Claiming '
         'is deterministic and by the pool interest, never by whoever noticed it first.',
@@ -3873,6 +3875,20 @@ def build_conjunct(item, record, criterion_id, required_fields):
         # and `lt` is checked exact decimal or canonical UTC comparison of the same operand
         # type, so two spans compare and a span against an instant does not.
         return {"op": "lt", "left": _subject_path(item[1]), "right": _subject_path(item[2])}
+    if kind == "eqOffset":
+        # F6C-11, the remainder. `ltF` compares a span against a ceiling and nothing tied
+        # the span to the instants it claims to measure, so a producer could state a
+        # thirty-day outage, a thirty-one-day `retention_span` and a `retention_until` one
+        # hour after `landed_at` and the criterion passed. The lane that shipped `ltF`
+        # recorded that hole as its own and named the cure: an instant-offset primitive.
+        # `instant_offset` is typed UTC - UTC -> Duration, so the equality below compares
+        # two Durations and the comparison `lt` already makes is now over a span the record
+        # cannot state independently of the two instants it is derived from.
+        return {"op": "eq",
+                "left": _subject_path(item[1]),
+                "right": {"op": "instant_offset",
+                          "later": _subject_path(item[2]),
+                          "earlier": _subject_path(item[3])}}
     if kind in ("either", "every"):
         built = []
         for inner_item in item[1]:

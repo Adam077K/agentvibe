@@ -40,7 +40,7 @@
     "anything else": "Any primitive not named in `admissible_ancestors` -- including one registered tomorrow that declares its own `boolean` child `demanded`. That is RC4-02, and it is the reason this table is a closed set of NAMES rather than a rule over roles."
   },
   "argument_positions_digest_why": "RC4-01. `primitive-registry.json` is written by tools/author_phase_content.py, tools/repair_r2_bootstrap_root.py and tools/repair_r3_intrinsic_subjects.py, and before this line nothing asserted a byte of it: the criterion-content drift oracle never compares the file, the guard ratchet only budgets sibling collisions, and there was no hash anywhere in the package. The fourth recheck flipped ONE string -- `/forall/argument_positions/predicate` from `\"quantified\"` to `\"demanded\"` -- and the vacuous-`forall` body validated at 288,646 checks with every pin satisfied, the census still reporting `under_quantifier: 0` because the census reads the same table. The only thing that refused it was a negative fixture naming `forall` by hand, and the sentence it printed named the FIXTURE rather than the table. This digest is sha256 over `{name: argument_positions}` for every primitive, sorted keys, compact separators, and it is MAINTAINED BY HAND: any edit to any argument position of any primitive fails the build until someone writes the new digest here, which is a line in a diff a reviewer sees. Recompute it with: python3 -c \"import json,hashlib; p=json.load(open('primitive-registry.json')); print(hashlib.sha256(json.dumps({k:v['argument_positions'] for k,v in sorted(p.items())},sort_keys=True,separators=(',',':')).encode()).hexdigest())\"",
-  "argument_positions_digest": "2d9087044d096206eeda54f1c1d4c9843c325acfa273f2a3c46fed465ebeab8e",
+  "argument_positions_digest": "c81e4dcb527a7137a61fa832490ad1cf9001b2d3ed4efa720f4e3cf12b59409e",
   "finding_sources": {
     "AC-M1-05": "planning/F2/reviews/A-company-human.md",
     "AC-M3-02": "planning/F2/reviews/A-company-human.md",
@@ -2475,6 +2475,15 @@
             "/payload/residue_note"
           ],
           "why": "and the operands stay REQUIRED. Requiring `longest_plausible_outage` as a per-entry field is the right answer to `stated, not assumed` and is more than the prose promised; the comparison is what it was missing, not the collection"
+        },
+        {
+          "op": "eq",
+          "contains_pointers": [
+            "/payload/retention_span",
+            "/payload/retention_until",
+            "/payload/landed_at"
+          ],
+          "why": "and the span the ceiling is applied to is the offset between the two instants, not a third number the producer states beside them. This row is the SHAPE half only: it says the equality mentions all three pointers, and a pointer set cannot say which side of the subtraction each one is on. The half that can is the structural read in validate_contracts.py under THE RETENTION SPAN IS NOT TIED TO THE INSTANTS IT MEASURES, and the two are deliberately not the same author (F6C-11, the remainder)"
         }
       ]
     },

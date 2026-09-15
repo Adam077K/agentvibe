@@ -3285,6 +3285,7 @@
     "fresh_interval",
     "frontier_current",
     "in",
+    "instant_offset",
     "judgment_matches",
     "launch_children",
     "lease_current",

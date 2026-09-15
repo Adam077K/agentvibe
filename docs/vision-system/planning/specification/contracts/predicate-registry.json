@@ -134121,6 +134121,42 @@
           }
         },
         {
+          "op": "eq",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/retention_span"
+          },
+          "right": {
+            "op": "instant_offset",
+            "later": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/retention_until"
+            },
+            "earlier": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/landed_at"
+            }
+          }
+        },
+        {
           "op": "attested_result",
           "subject_ref": {
             "arg": "subject_ref"
@@ -134143,7 +134179,7 @@
         }
       ]
     },
-    "meaning": "A work record armed no interest, its retention STRICTLY EXCEEDS the longest plausible outage -- the two compared as spans in one unit, not merely recorded beside each other -- the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this. Phase assessed: landed.",
+    "meaning": "A work record armed no interest, its retention STRICTLY EXCEEDS the longest plausible outage -- the two compared as spans in one unit, not merely recorded beside each other, and that span is the offset between `landed_at` and `retention_until` rather than a number stated independently of them -- the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this. Phase assessed: landed.",
     "owner_component": "S1-C05",
     "source": "05-work-agents-skills.md#7-durable-schedules-and-capacity-gaps",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -134235,7 +134271,7 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "A work record armed no interest, its retention STRICTLY EXCEEDS the longest plausible outage -- the two compared as spans in one unit, not merely recorded beside each other -- the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this.",
+    "requires": "A work record armed no interest, its retention STRICTLY EXCEEDS the longest plausible outage -- the two compared as spans in one unit, not merely recorded beside each other, and that span is the offset between `landed_at` and `retention_until` rather than a number stated independently of them -- the arrival alarm has reached a named reader, and the residue this pool cannot catch is recorded. A catch-all that caught everything is not this.",
     "derived_from": [
       {
         "file": "05-work-agents-skills.md",
