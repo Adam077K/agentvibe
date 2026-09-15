@@ -3788,5 +3788,49 @@
       "guard": "guard.interest.precondition_invokes_no_model",
       "why": "The guard checks a string on the interest saying its evaluator invokes no model. Owned by C02, that is the party with the interest classifying its own evaluator."
     }
+  ],
+  "natural_key_create_paths_why": "F6V-02. A natural key is a RESOLUTION RULE, not a comment: each record below declares one in record-registry.json under identity.natural_key, and until this table existed no create path carried it. Each row names the command that creates the record and the resolution that command must state -- structurally, as on_conflict and creates_second_record in the transaction_contract of the command, never as a sentence containing the word resolve. The table is the second place the semantics is written, so handing it back is a two-place edit a reviewer sees; and the row set is compared to the registry in both directions, so a new record declaring a natural key cannot be added unguarded. Adverse fixture R42.",
+  "natural_key_create_paths": [
+    {
+      "record": "AdmissionRecord",
+      "natural_key": [
+        "origin",
+        "arrival_seq"
+      ],
+      "create_path": "kernel.record.register",
+      "on_conflict": "resolve_to_existing_head",
+      "why": "05 section 2 gives the identity as origin plus arrival sequence, and the per-origin subcap that guard.intake.per_origin_subcap_preserves_intake protects is counted over exactly this key. A create path that made a second admission for one arrival would miscount the cap it is the subject of."
+    },
+    {
+      "record": "EffectIdentity",
+      "natural_key": [
+        "effect_class_id",
+        "counterparty_id",
+        "payload_digest"
+      ],
+      "create_path": "kernel.record.register",
+      "on_conflict": "resolve_to_existing_head",
+      "why": "05 section 6 answers the tenth (d)-class example of the protocol by having a second claimant JOIN the first and inherit its outcome. That answer is unreachable unless the create path resolves: two rows for one triple is a race and a second release."
+    },
+    {
+      "record": "ExhaustionDecision",
+      "natural_key": [
+        "obligation_ref",
+        "window"
+      ],
+      "create_path": "kernel.record.register",
+      "on_conflict": "resolve_to_existing_head",
+      "why": "One decision per obligation per window. A second row is two answers to whether the obligation was performed or breached, which is the question the record exists to have exactly one answer to."
+    },
+    {
+      "record": "FieldAuthority",
+      "natural_key": [
+        "field_path",
+        "epoch"
+      ],
+      "create_path": "kernel.record.register",
+      "on_conflict": "resolve_to_existing_head",
+      "why": "08 section 1 names a writer-key assignment as (field_path, epoch). Two records for one field path in one epoch are two answers to who may write this field -- and the whole of the F6D-05 repair reads that answer."
+    }
   ]
 }

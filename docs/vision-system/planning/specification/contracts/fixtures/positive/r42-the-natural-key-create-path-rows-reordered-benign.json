@@ -1,0 +1,59 @@
+{
+  "id": "r42-the-natural-key-create-path-rows-reordered-benign",
+  "repair": "R42",
+  "finding": "F6V-02; registers/review-findings.json (F6V-02), benign twin",
+  "case": "The same four natural-key create-path rows, in reverse order.",
+  "paired_adverse_fixture": "fixtures/negative/r42-a-natural-key-record-is-created-twice.json",
+  "why": "Every check over this table is a per-row comparison against the registry and against the command, plus a set comparison of the record names. The order the rows are written in changes no record identity and no create path. A control that refuses a harmless reordering is one contributors learn to route around.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/natural_key_create_paths",
+      "op": "replace",
+      "value": [
+        {
+          "record": "FieldAuthority",
+          "natural_key": [
+            "field_path",
+            "epoch"
+          ],
+          "create_path": "kernel.record.register",
+          "on_conflict": "resolve_to_existing_head",
+          "why": "08 section 1 names a writer-key assignment as (field_path, epoch). Two records for one field path in one epoch are two answers to who may write this field -- and the whole of the F6D-05 repair reads that answer."
+        },
+        {
+          "record": "ExhaustionDecision",
+          "natural_key": [
+            "obligation_ref",
+            "window"
+          ],
+          "create_path": "kernel.record.register",
+          "on_conflict": "resolve_to_existing_head",
+          "why": "One decision per obligation per window. A second row is two answers to whether the obligation was performed or breached, which is the question the record exists to have exactly one answer to."
+        },
+        {
+          "record": "EffectIdentity",
+          "natural_key": [
+            "effect_class_id",
+            "counterparty_id",
+            "payload_digest"
+          ],
+          "create_path": "kernel.record.register",
+          "on_conflict": "resolve_to_existing_head",
+          "why": "05 section 6 answers the tenth (d)-class example of the protocol by having a second claimant JOIN the first and inherit its outcome. That answer is unreachable unless the create path resolves: two rows for one triple is a race and a second release."
+        },
+        {
+          "record": "AdmissionRecord",
+          "natural_key": [
+            "origin",
+            "arrival_seq"
+          ],
+          "create_path": "kernel.record.register",
+          "on_conflict": "resolve_to_existing_head",
+          "why": "05 section 2 gives the identity as origin plus arrival sequence, and the per-origin subcap that guard.intake.per_origin_subcap_preserves_intake protects is counted over exactly this key. A create path that made a second admission for one arrival would miscount the cap it is the subject of."
+        }
+      ]
+    }
+  ]
+}

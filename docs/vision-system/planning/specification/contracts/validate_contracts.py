@@ -3273,8 +3273,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 117  # 116 -> 117 (F6Y-03): R41's adverse half. Holds 117.
-POSITIVE_FIXTURE_FLOOR = 78   # 77 -> 78 (F6Y-03): R41's benign twin. Holds 78.
+NEGATIVE_FIXTURE_FLOOR = 118  # 117 -> 118 (F6V-02): the R42 adverse half. Holds 118.
+POSITIVE_FIXTURE_FLOOR = 79   # 78 -> 79 (F6V-02): the R42 benign twin. Holds 79.
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
@@ -3436,6 +3436,86 @@ for _row in UNAUTHORABLE_FIELDS:
             ("A DECLARED CONTROL FIELD IS NOT READ BY THE GUARD THAT DECLARES IT: the row "
              "would then pin an ownership nothing evaluates",
              _row["field"], _row["guard"]))
+
+# --- F6V-02: a natural key is a resolution rule, and the create path must honour it. ----
+# record-registry.json declares RESOLVE-OR-CREATE on the EffectIdentity triple -- the
+# mechanism `05` section 6 needs for "a second claimant joins the first and inherits its
+# outcome" -- and a one-per-key rule on three more records. `kernel.record.register`, the
+# command that actually creates all four, said nothing about natural keys at all: the create
+# path was specified identically to every other record. So one file asserted a uniqueness
+# semantics no create path carried, and an implementer was left choosing between a
+# unique-index conflict, a read-then-join and two rows.
+#
+# The statement is STRUCTURED, not prose: `on_conflict` is compared to a constant and
+# `creates_second_record` must be False, so this check cannot be satisfied by a sentence
+# containing the word "resolve". The table below is the second place it is written, so
+# handing the semantics back is a two-place edit a reviewer sees -- the F6D-05 shape, reused.
+# And the row set is compared to the registry IN BOTH DIRECTIONS, because a floor alone would
+# let the next record declaring a natural key arrive unguarded. Adverse fixture R42.
+NATURAL_KEY_PATHS = PINNED["natural_key_create_paths"]
+NATURAL_KEY_PATH_FLOOR = 4   # new (F6V-02): AdmissionRecord, EffectIdentity,
+                             # ExhaustionDecision, FieldAuthority -- every record declaring
+                             # identity.natural_key today. Holds 4; the equality check below
+                             # is the binding one and this floor is the backstop under it.
+NATURAL_KEY_PATH_KEYS = {"record", "natural_key", "create_path", "on_conflict", "why"}
+RESOLVE_OR_CREATE = "resolve_to_existing_head"
+checked(bool(str(PINNED.get("natural_key_create_paths_why", "")).strip()),
+        ("the natural-key create-path table states no reason",))
+checked(len(NATURAL_KEY_PATHS) >= NATURAL_KEY_PATH_FLOOR,
+        ("the natural-key create-path table has shrunk below its floor",
+         dict(rows=len(NATURAL_KEY_PATHS), floor=NATURAL_KEY_PATH_FLOOR)))
+_natural_key_records = sorted(_name for _name, _record in RECORDS.items()
+                              if isinstance(_record, dict)
+                              and (_record.get("identity") or {}).get("natural_key"))
+checked(sorted(_row["record"] for _row in NATURAL_KEY_PATHS) == _natural_key_records,
+        ("A NATURAL-KEY RECORD NAMES NO CREATE PATH: a record declaring "
+         "identity.natural_key states a resolution rule, and this table is where the command "
+         "that honours it is named. Compared both ways, so neither a new natural-key record "
+         "nor a row for a record that no longer has one can sit here silently (F6V-02)",
+         dict(declared=sorted(_row["record"] for _row in NATURAL_KEY_PATHS),
+              registry=_natural_key_records)))
+for _row in NATURAL_KEY_PATHS:
+    checked(set(_row) == NATURAL_KEY_PATH_KEYS,
+            ("natural-key create-path row shape", _row.get("record"),
+             sorted(set(_row) ^ NATURAL_KEY_PATH_KEYS)))
+    checked(bool(_row["why"].strip()),
+            ("a natural-key create-path row states no reason", _row["record"]))
+    _rec = RECORDS[_row["record"]]
+    checked(list(_rec["identity"]["natural_key"]) == list(_row["natural_key"]),
+            ("a natural-key create-path row states a different key from the registry; the "
+             "key is declared in two places so narrowing it is a two-place edit",
+             _row["record"], dict(registry=_rec["identity"]["natural_key"],
+                                  pinned=_row["natural_key"])))
+    _factory = (_rec.get("registration") or {}).get("exclusive_factory")
+    checked(_row["create_path"] == (_factory or "kernel.record.register"),
+            ("a natural-key create-path row names a command that is not the create path the "
+             "record declares", _row["record"],
+             dict(row=_row["create_path"], exclusive_factory=_factory)))
+    checked(_row["create_path"] in COMMANDS or _row["create_path"] in KERNEL_FACTORY_PATHS,
+            ("a natural-key create-path row names an unregistered create path",
+             _row["record"], _row["create_path"]))
+    checked(_row["on_conflict"] == RESOLVE_OR_CREATE,
+            ("a natural-key create-path row states a resolution that is not "
+             "resolve-or-create", _row["record"], _row["on_conflict"]))
+    _rule = ((COMMANDS.get(_row["create_path"]) or {}).get("transaction_contract")
+             or {}).get("natural_key_resolution") or {}
+    checked(_rule.get("on_conflict") == RESOLVE_OR_CREATE,
+            ("THE CREATE PATH FOR A NATURAL-KEY RECORD DOES NOT RESOLVE TO THE EXISTING "
+             "HEAD: the record declares a natural key and the command that creates it says "
+             "the allocation makes a new record, so the uniqueness the registry asserts is "
+             "asserted by nothing that runs (F6V-02)",
+             _row["record"], dict(create_path=_row["create_path"],
+                                  states=_rule.get("on_conflict"),
+                                  required=RESOLVE_OR_CREATE,
+                                  why_it_matters=_row["why"])))
+    checked(_rule.get("creates_second_record") is False,
+            ("THE CREATE PATH FOR A NATURAL-KEY RECORD DOES NOT RESOLVE TO THE EXISTING "
+             "HEAD: creates_second_record is the half a reader checks without parsing prose, "
+             "and it must be exactly False rather than merely falsy (F6V-02)",
+             _row["record"], dict(states=_rule.get("creates_second_record"))))
+    checked(bool(str(_rule.get("applies_to", "")).strip()),
+            ("a create path states a natural-key resolution that names no scope",
+             _row["create_path"]))
 
 NEGATIVE_FIXTURES_DECLARED = len(json.loads(
     (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text(encoding="utf-8"))["fixtures"])
@@ -3764,7 +3844,8 @@ checked(CENSUS_KEYS_PINNED == CENSUS_KEYS,
 # terminal rule of this lineage -- widening any of them is an edit to the checker.
 HAND_WRITTEN_CONTROL_KEYS = {"pins", "require_rows", "pinned_transitions",
                              "pinned_attachments", "computed_projections",
-                             "producer_unauthorable_fields", "finding_sources",
+                             "producer_unauthorable_fields", "natural_key_create_paths",
+                             "finding_sources",
                              "unanswered_findings",
                              "out_of_reach_findings", "disjoined_rows", "admissible_ancestors",
                              "argument_positions_digest", "negative_fixtures",
@@ -3785,6 +3866,9 @@ HAND_WRITTEN_CONTROLS = {
     "producer_unauthorable_fields": dict(count=len(UNAUTHORABLE_FIELDS),
                                          floor=UNAUTHORABLE_FIELD_FLOOR,
                                          file="pinned-conjuncts.json#/producer_unauthorable_fields"),
+    "natural_key_create_paths": dict(count=len(NATURAL_KEY_PATHS),
+                                     floor=NATURAL_KEY_PATH_FLOOR,
+                                     file="pinned-conjuncts.json#/natural_key_create_paths"),
     "finding_sources": {"count": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR,
                         "file": "pinned-conjuncts.json#/finding_sources"},
     "unanswered_findings": {"count": len(unanswered), "ceiling": UNANSWERED_CEILING,
