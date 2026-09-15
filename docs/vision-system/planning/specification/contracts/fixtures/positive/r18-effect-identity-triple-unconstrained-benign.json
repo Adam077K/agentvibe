@@ -4,20 +4,38 @@
   "finding": "F6C-08, benign column",
   "case": "A record whose business identity is NOT a natural key declares none, and is not refused for it.",
   "paired_adverse_fixture": "fixtures/negative/r18-effect-identity-triple-unconstrained.json",
-  "why": "A natural key is an additional constraint on the records that have one, not a field every record owes. Fourteen of the fifteen new records have no natural business key and declaring one for them would invent an identity the design never stated. The patch declares a natural key on `AcceptanceInterval` over two fields that are both required -- `work_order_ref` is not among them, so this is a real key over real fields -- and it must pass, which is what shows the check reads the declaration rather than demanding one everywhere.",
+  "why": "A natural key is an additional constraint on the records that have one, not a field every record owes. Fourteen of the fifteen new records have no natural business key and declaring one for them would invent an identity the design never stated. The patch declares a natural key on `AcceptanceInterval` over two fields that are both required -- `work_order_ref` is not among them, so this is a real key over real fields -- and it must pass, which is what shows the check reads the declaration rather than demanding one everywhere. REGENERATED 2026-09-15 against the current registries. THE OLD SHAPE was the two record-registry ops below and nothing else, written before R42 added `pinned-conjuncts.json#/natural_key_create_paths`; from R42 onward those two ops alone produce a tree where AcceptanceInterval declares a natural key that no create-path row names, and F6V-02 REJECTED this benign case -- declared [AdmissionRecord, EffectIdentity, ExhaustionDecision, FieldAuthority] against registry [AcceptanceInterval, AdmissionRecord, EffectIdentity, ExhaustionDecision, FieldAuthority]. That was a false exclusion, not a finding: F6V-02 compares the row set to the registry in BOTH directions precisely so a new natural-key record arrives with its create path named, and a real author declaring this key would write the row in the same edit. The third op IS that row, so the case stays the same benign case rather than being narrowed away -- declaring a natural key over required fields passes -- and it now also exercises F6V-02's both-ways comparison in the direction that must not fire. Nothing R42 or R45 changed is frozen here: the patch names two pointers and appends one row, and reads the rest of AcceptanceInterval (R45's `payload.checker_id` included) as it stands.",
   "expect_pass": true,
   "patch": [
     {
       "file": "record-registry.json",
       "pointer": "/AcceptanceInterval/identity/natural_key",
       "op": "add",
-      "value": ["submission_seq", "acceptance_owner_ref"]
+      "value": [
+        "submission_seq",
+        "acceptance_owner_ref"
+      ]
     },
     {
       "file": "record-registry.json",
       "pointer": "/AcceptanceInterval/identity/natural_key_rule",
       "op": "add",
       "value": "One acceptance interval per submission per acceptance owner; a second submission is a new interval rather than a revision of the first."
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/natural_key_create_paths/0",
+      "op": "add",
+      "value": {
+        "record": "AcceptanceInterval",
+        "natural_key": [
+          "submission_seq",
+          "acceptance_owner_ref"
+        ],
+        "create_path": "kernel.record.register",
+        "on_conflict": "resolve_to_existing_head",
+        "why": "One acceptance interval per submission per acceptance owner. A second row for one submission is two intervals for one declared-done, so the producing structure's sponsor would hold two different answers to when acceptance was owed and from when the interval ran. `AcceptanceInterval` declares no exclusive_factory, so `kernel.record.register` is its create path, and that command already states resolve-or-create for any registration whose record_type declares a natural key."
+      }
     }
   ]
 }
