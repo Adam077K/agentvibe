@@ -858,3 +858,275 @@ emitter("execution-profiles", () => {
 
 Object.assign(EXPECT, { components: 9, layers: 5, adapters: 7 });
 Object.assign(MIN_EXPECT, { "execution-profiles": 1 });
+
+// ---- markdown to HTML ------------------------------------------------------
+// A minimal renderer: headings, paragraphs, bold, italic, inline code, links
+// with the href kept, bullet and numbered lists, tables, blockquotes and
+// fenced code. Text is escaped and otherwise preserved exactly.
+const esc = (s) => s
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;");
+
+const inlineHtml = (s) => s.split(/(`[^`]*`)/).map((p) => {
+  if (p.length > 1 && p.startsWith("`") && p.endsWith("`")) return "<code>" + esc(p.slice(1, -1)) + "</code>";
+  let t = esc(p);
+  t = t.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, (m, a, b) => "<img src=\"" + b + "\" alt=\"" + a + "\">");
+  t = t.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (m, a, b) => "<a href=\"" + b + "\">" + a + "</a>");
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  return t;
+}).join("");
+
+const listMark = (line) => {
+  const b = line.match(/^(\s*)([-*+]) +(.*)$/);
+  if (b !== null) return { indent: b[1].length, ordered: false, text: b[3] };
+  const o = line.match(/^(\s*)([0-9]+)[.)] +(.*)$/);
+  if (o !== null) return { indent: o[1].length, ordered: true, text: o[3] };
+  return null;
+};
+
+const renderMarkdown = (lines) => {
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.trim() === "") { i += 1; continue; }
+    const fence = line.match(/^ {0,3}(```|~~~)(.*)$/);
+    if (fence !== null) {
+      const body = [];
+      i += 1;
+      while (i < lines.length && lines[i].trim().startsWith(fence[1]) !== true) { body.push(lines[i]); i += 1; }
+      i += 1;
+      const lang = fence[2].trim();
+      const cls = lang === "" ? "" : " class=\"language-" + esc(lang) + "\"";
+      out.push("<pre><code" + cls + ">" + esc(body.join(String.fromCharCode(10))) + "</code></pre>");
+      continue;
+    }
+    if (/^ {0,3}(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) { out.push("<hr>"); i += 1; continue; }
+    if (line.trim().startsWith("|") && i + 1 < lines.length && /^\|[\s:|-]+\|$/.test(lines[i + 1].trim())) {
+      const headers = splitCells(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) { rows.push(splitCells(lines[i])); i += 1; }
+      const th = headers.map((h) => "<th>" + inlineHtml(h) + "</th>").join("");
+      const tb = rows.map((r) => "<tr>" + r.map((c) => "<td>" + inlineHtml(c) + "</td>").join("") + "</tr>").join("");
+      out.push("<table><thead><tr>" + th + "</tr></thead><tbody>" + tb + "</tbody></table>");
+      continue;
+    }
+    if (/^ {0,3}> ?/.test(line)) {
+      const body = [];
+      while (i < lines.length && (/^ {0,3}> ?/.test(lines[i]) || (lines[i].trim() !== "" && body.length > 0 && listMark(lines[i]) === null && lines[i].startsWith(">") === false && false))) {
+        body.push(lines[i].replace(/^ {0,3}> ?/, ""));
+        i += 1;
+      }
+      out.push("<blockquote>" + renderMarkdown(body) + "</blockquote>");
+      continue;
+    }
+    const mark = listMark(line);
+    if (mark !== null) {
+      const items = [];
+      const ordered = mark.ordered;
+      const baseIndent = mark.indent;
+      while (i < lines.length) {
+        const m = listMark(lines[i]);
+        if (m === null) break;
+        if (m.indent < baseIndent) break;
+        if (m.indent > baseIndent) {
+          const nested = [];
+          while (i < lines.length) {
+            const n = listMark(lines[i]);
+            if (n === null || n.indent <= baseIndent) break;
+            nested.push(lines[i]);
+            i += 1;
+          }
+          if (items.length > 0) items[items.length - 1] += renderMarkdown(nested);
+          continue;
+        }
+        items.push(inlineHtml(m.text));
+        i += 1;
+      }
+      const tag = ordered ? "ol" : "ul";
+      out.push("<" + tag + ">" + items.map((t) => "<li>" + t + "</li>").join("") + "</" + tag + ">");
+      continue;
+    }
+    const head = line.match(/^(#{1,6}) +(.*)$/);
+    if (head !== null) {
+      const lvl = head[1].length;
+      out.push("<h" + lvl + " id=\"" + slugify(head[2]) + "\">" + inlineHtml(head[2].trim()) + "</h" + lvl + ">");
+      i += 1;
+      continue;
+    }
+    const para = [];
+    while (i < lines.length && lines[i].trim() !== "" && listMark(lines[i]) === null && lines[i].trim().startsWith("|") === false && /^ {0,3}> ?/.test(lines[i]) === false && /^ {0,3}(```|~~~)/.test(lines[i]) === false && /^(#{1,6}) +/.test(lines[i]) === false) {
+      para.push(lines[i].trim());
+      i += 1;
+    }
+    if (para.length > 0) out.push("<p>" + inlineHtml(para.join(" ")) + "</p>");
+    else i += 1;
+  }
+  return out.join("");
+};
+
+// ---- chapters --------------------------------------------------------------
+const CHAPTER_PATHS = [
+  "planning/00-executive-guide.md",
+  "planning/01-understand.md",
+  "planning/02-architecture-selection.md",
+  "planning/PLANNING-REPORT.md",
+  "planning/specification/01-contract-kernel.md",
+  "planning/specification/02-authority-recovery.md",
+  "planning/specification/03-company-capabilities.md",
+  "planning/specification/04-human-operation.md",
+  "planning/specification/05-work-agents-skills.md",
+  "planning/specification/06-knowledge-evidence-evaluation.md",
+  "planning/specification/07-integrations-capacity.md",
+  "planning/specification/08-improvement-implementation.md",
+  "planning/specification/09-company-human-traceability.md",
+  "planning/specification/10-components-authority-traceability.md",
+  "planning/specification/11-schemas-state-contracts.md",
+  "planning/specification/12-scope-lifecycle-traceability.md",
+  "planning/F2/00-acceptance-protocol.md",
+  "planning/F2/04-attack-consolidation.md",
+  "planning/F2/05-selection-record.md"
+];
+
+const chapterId = (p) => p
+  .replace(/^planning\/specification\//, "spec/")
+  .replace(/^planning\/F2\//, "f2/")
+  .replace(/^planning\//, "")
+  .replace(/\.md$/, "");
+
+// One alternation over every record id, longest first, so Case does not shadow
+// CasePool. Word boundaries keep prose words out.
+let RECORD_RE = null;
+const recordRegex = (ids) => {
+  if (RECORD_RE !== null) return RECORD_RE;
+  const sorted = [...ids].sort((a, b) => b.length - a.length);
+  RECORD_RE = new RegExp("\\b(" + sorted.join("|") + ")\\b", "g");
+  return RECORD_RE;
+};
+
+const mentionsIn = (text, recordIds) => {
+  const uniq = (re) => [...new Set([...text.matchAll(re)].map((m) => m[0]))].sort();
+  const recs = [...new Set([...text.matchAll(recordRegex(recordIds))].map((m) => m[1]))].sort();
+  return {
+    records: recs,
+    capabilities: uniq(/CAP-[0-9]{2}/g),
+    components: [...new Set([...text.matchAll(/\b(?:S1-)?(C0[1-9])\b/g)].map((m) => "S1-" + m[1]))].sort(),
+    decisions: uniq(/AD-[0-9]{3}/g),
+    questions: uniq(/Q-[0-9]{3}/g),
+    risks: uniq(/RISK-[0-9]{2}/g),
+    attacks: uniq(/\bAC[0-9]{2}\b/g),
+    stages: uniq(/\bB[01][0-9]\b/g),
+    adapters: uniq(/\bIC-[A-Z-]+\b/g)
+  };
+};
+
+emitter("chapters", (ctx) => {
+  const recordIds = ctx.records.map((r) => r.id);
+  return CHAPTER_PATHS.filter(hasFile).map((p) => {
+    const text = readText(p);
+    const secs = splitSections(text);
+    const title = (secs.find((s) => s.level === 1) || {}).heading || chapterId(p);
+    const used = new Map();
+    const sections = secs.map((s, i) => {
+      const raw = s.lines.join(String.fromCharCode(10));
+      const base = s.heading === null ? "preamble" : (slugify(s.heading) || "section");
+      const n = (used.get(base) || 0) + 1;
+      used.set(base, n);
+      const id = n === 1 ? base : base + "-" + n;
+      const body = s.heading === null ? raw : "";
+      const head = s.heading === null ? "" : "<h" + s.level + " id=\"" + id + "\">" + inlineHtml(s.heading) + "</h" + s.level + ">";
+      const full = s.heading === null ? raw : s.heading + String.fromCharCode(10) + raw;
+      return {
+        id,
+        level: s.level,
+        heading: s.heading,
+        index: i,
+        html: head + renderMarkdown(s.lines),
+        text_length: full.length,
+        mentions: mentionsIn(full, recordIds),
+        source: p + (s.heading === null ? "" : "#" + slugify(s.heading))
+      };
+    });
+    return {
+      id: chapterId(p),
+      title: stripInline(title),
+      path: p,
+      bytes: text.length,
+      sections,
+      source: p
+    };
+  });
+});
+
+Object.assign(MIN_EXPECT, { chapters: 18 });
+
+structural("every chapter section id is unique within its chapter", (ctx) => {
+  const bad = [];
+  for (const ch of ctx.chapters) {
+    const seen = new Set();
+    for (const s of ch.sections) { if (seen.has(s.id)) bad.push(ch.id + " / " + s.id); seen.add(s.id); }
+  }
+  return bad;
+});
+
+// ---- reviews ---------------------------------------------------------------
+// Every archived review under planning/reviews/ and planning/F2/reviews/.
+// Each opens with a blockquote provenance line; the precis is the first prose
+// paragraph after it, and the verdict line is the bold summary that follows.
+const REVIEW_DIRS = ["planning/reviews", "planning/F2/reviews"];
+
+emitter("reviews", () => {
+  const out = [];
+  for (const dir of REVIEW_DIRS) {
+    if (hasFile(dir) !== true) continue;
+    const names = fs.readdirSync(path.join(SRC, dir)).filter((n) => n.endsWith(".md")).sort();
+    for (const n of names) {
+      const rel = dir + "/" + n;
+      const text = readText(rel);
+      const lines = text.split(/\r?\n/);
+      const provLines = [];
+      let i = 0;
+      while (i < lines.length && /^ {0,3}> ?/.test(lines[i])) { provLines.push(lines[i].replace(/^ {0,3}> ?/, "")); i += 1; }
+      const provenance = provLines.join(" ").trim() || null;
+      let precis = null;
+      let verdictLine = null;
+      const rest = lines.slice(i);
+      for (const l of rest) {
+        const t = l.trim();
+        if (t === "" || t === "---" || t.startsWith("#")) continue;
+        if (verdictLine === null && /^\*\*/.test(t)) { verdictLine = stripInline(t); continue; }
+        precis = t;
+        break;
+      }
+      if (precis === null) precis = verdictLine;
+      const head = text.slice(0, 6000);
+      const dateM = head.match(/([0-9]{4}-[0-9]{2}-[0-9]{2})/);
+      const shaM = head.match(/subject[^`]{0,40}`([0-9a-f]{7,40})`/i);
+      const titleM = text.match(/^# +(.*)$/m);
+      const verdicts = [...new Set([...(verdictLine || "").matchAll(/\b(SUFFICIENT|INSUFFICIENT|PASS|FAIL|BLOCK|ACCEPT|REJECT)\b/g)].map((m) => m[1]))];
+      const classCounts = {};
+      for (const m of (verdictLine || "").matchAll(/\(([a-d])\)-class/g)) classCounts[m[1]] = (classCounts[m[1]] || 0) + 1;
+      out.push({
+        id: (dir === "planning/F2/reviews" ? "f2/" : "") + n.replace(/\.md$/, ""),
+        title: titleM === null ? (verdictLine || n.replace(/\.md$/, "")) : stripInline(titleM[1]),
+        date: dateM === null ? null : dateM[1],
+        subject_sha: shaM === null ? null : shaM[1],
+        provenance,
+        precis,
+        verdict_line: verdictLine,
+        verdicts,
+        class_mentions: classCounts,
+        bytes: text.length,
+        path: rel,
+        source: rel
+      });
+    }
+  }
+  return out;
+});
+
+Object.assign(MIN_EXPECT, { reviews: 30 });
