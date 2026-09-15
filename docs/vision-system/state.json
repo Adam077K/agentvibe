@@ -217,7 +217,7 @@
       "kind": "the owed split validator suite on HEAD (first action of the handoff)",
       "subject": "95ca14d",
       "dispatched": "2026-09-15",
-      "status": "RUNNING: light validator rc 0 in 17.5 s (305,275 checks; 112 adverse / 73 benign declared, floors met); adverse runner in progress; memory 38-39% free at start"
+      "status": "RUNNING: stage 1 light validator rc 0 (305,275 checks, 17.5 s); stage 2 adverse runner in progress since 07:25; memory 38-44% free"
     },
     {
       "lane": "f2-06-recheck-05",
@@ -227,6 +227,15 @@
       "constraints": "no validator or tools/ execution (memory); producer accounts barred; one family; new findings numbered F6AA-nn",
       "dispatched": "2026-09-15",
       "status": "RUNNING"
+    },
+    {
+      "lane": "r8-prose-e",
+      "engine": "builder",
+      "kind": "the two chapter-05 sentences owed by the contracts lanes (F6D-05 05 §1, F6D-08 05 §7)",
+      "base": "9b5792a",
+      "worktree": "harness-managed; branch docs/vision-r8-prose-e",
+      "dispatched": "2026-09-15",
+      "status": "RETURNED COMPLETE at 18f0b18 and MERGED: both sentences landed with registry citations the orchestrator confirmed by reading (SkillVersion payload fields owner S1-C04; ArmedSet.owner_assignment custodian clause); four verifiers exit 0; validator not run (prose only); author-recorded, recheck owed. Also: the 05 §12 link to planning/F2/09-q017-conjunction-rerun.md named as owed in the handoff was already present at 95ca14d (two citations) — discharged by inspection, no edit."
     }
   ],
   "next_actions": [
