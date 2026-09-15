@@ -3273,8 +3273,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 118  # 117 -> 118 (F6V-02): the R42 adverse half. Holds 118.
-POSITIVE_FIXTURE_FLOOR = 79   # 78 -> 79 (F6V-02): the R42 benign twin. Holds 79.
+NEGATIVE_FIXTURE_FLOOR = 119  # 118 -> 119 (F6W-01): the R43 adverse half. Holds 119.
+POSITIVE_FIXTURE_FLOOR = 80   # 79 -> 80 (F6W-01): the R43 benign twin. Holds 80.
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
@@ -3516,6 +3516,61 @@ for _row in NATURAL_KEY_PATHS:
     checked(bool(str(_rule.get("applies_to", "")).strip()),
             ("a create path states a natural-key resolution that names no scope",
              _row["create_path"]))
+
+# --- F6W-01 / R-X07: the capability binding is registered, not only specified. ----------
+# `05` section 12 states that every standing structure owning a capability acceptance publishes
+# `capability_refs`, required and NON-EMPTY, and closes that set to two members by name. The
+# chapter says of itself that registering the field on the record shapes "has not landed, so this
+# rule is specified and unregistered, which is its honest status" -- and two consolidation
+# findings were recorded as repaired by a rule an implementer reading the contracts would never
+# meet. These checks read the field out of BOTH declarations, plus its cardinality, so handing the
+# binding back to optionality is a four-place edit. Adverse fixture R43.
+CAPABILITY_PUBLISHERS = PINNED["capability_publishing_structures"]
+CAPABILITY_PUBLISHER_FLOOR = 1   # new (F6W-01): StandingHolder. Holds 1, and 1 is the honest
+                                 # count -- the second member `05` section 12 names, the
+                                 # acceptance-owner role record, has no record in
+                                 # record-registry.json to carry a row.
+CAPABILITY_PUBLISHER_KEYS = {"record", "field", "minimum", "why"}
+checked(bool(str(PINNED.get("capability_publishing_structures_why", "")).strip()),
+        ("the capability-publishing table states no reason",))
+checked(len(CAPABILITY_PUBLISHERS) >= CAPABILITY_PUBLISHER_FLOOR,
+        ("the capability-publishing table has shrunk below its floor",
+         dict(rows=len(CAPABILITY_PUBLISHERS), floor=CAPABILITY_PUBLISHER_FLOOR)))
+for _row in CAPABILITY_PUBLISHERS:
+    checked(set(_row) == CAPABILITY_PUBLISHER_KEYS,
+            ("capability-publishing row shape", _row.get("record"),
+             sorted(set(_row) ^ CAPABILITY_PUBLISHER_KEYS)))
+    checked(bool(_row["why"].strip()),
+            ("a capability-publishing row states no reason", _row["record"]))
+    _pay = RECORDS[_row["record"]]["fields"]["payload"]
+    _schema_pay = FILES["records.schema.json"]["$defs"][_row["record"]]["properties"]["payload"]
+    checked(_pay["type_fields"].get(_row["field"]) == "string[]"
+            and (_pay["fields"].get(_row["field"]) or {}).get("required") is True
+            and _row["field"] in _pay["required_fields"],
+            ("A STANDING STRUCTURE THAT OWNS A CAPABILITY ACCEPTANCE PUBLISHES NO "
+             "capability_refs: `05` section 12 requires the field on this record, and the "
+             "registry does not carry it as a required array (F6W-01, R-X07)",
+             _row["record"], dict(type=_pay["type_fields"].get(_row["field"]),
+                                  declared=_pay["fields"].get(_row["field"]),
+                                  in_required_fields=_row["field"] in _pay["required_fields"])))
+    _prop = _schema_pay["properties"].get(_row["field"]) or {}
+    checked(_prop.get("type") == "array"
+            and (_prop.get("items") or {}).get("$ref") == "values.schema.json#/$defs/string"
+            and _row["field"] in _schema_pay["required"],
+            ("A STANDING STRUCTURE THAT OWNS A CAPABILITY ACCEPTANCE PUBLISHES NO "
+             "capability_refs: the schema is the declaration an implementer validates against, "
+             "and a field required in the registry and absent from the schema is not required "
+             "(F6W-01, R-X07)",
+             _row["record"], dict(schema=_prop,
+                                  in_required=_row["field"] in _schema_pay["required"])))
+    checked(_prop.get("minItems") == _row["minimum"],
+            ("A CAPABILITY BINDING MAY BE PUBLISHED EMPTY: `05` section 12 says required AND "
+             "NON-EMPTY, and an empty array satisfies `required` in every JSON Schema "
+             "implementation there is. Coverage is counted over the 46 capability ids "
+             "individually and a capability no structure names is uncovered, so a structure "
+             "publishing an empty binding is a standing office accountable for nothing the "
+             "coverage rule can count (F6W-01, R-X07)",
+             _row["record"], dict(minItems=_prop.get("minItems"), required=_row["minimum"])))
 
 NEGATIVE_FIXTURES_DECLARED = len(json.loads(
     (ROOT / "fixtures" / "negative" / "MANIFEST.json").read_text(encoding="utf-8"))["fixtures"])
@@ -3845,6 +3900,7 @@ checked(CENSUS_KEYS_PINNED == CENSUS_KEYS,
 HAND_WRITTEN_CONTROL_KEYS = {"pins", "require_rows", "pinned_transitions",
                              "pinned_attachments", "computed_projections",
                              "producer_unauthorable_fields", "natural_key_create_paths",
+                             "capability_publishing_structures",
                              "finding_sources",
                              "unanswered_findings",
                              "out_of_reach_findings", "disjoined_rows", "admissible_ancestors",
@@ -3869,6 +3925,9 @@ HAND_WRITTEN_CONTROLS = {
     "natural_key_create_paths": dict(count=len(NATURAL_KEY_PATHS),
                                      floor=NATURAL_KEY_PATH_FLOOR,
                                      file="pinned-conjuncts.json#/natural_key_create_paths"),
+    "capability_publishing_structures": dict(count=len(CAPABILITY_PUBLISHERS),
+                                             floor=CAPABILITY_PUBLISHER_FLOOR,
+                                             file="pinned-conjuncts.json#/capability_publishing_structures"),
     "finding_sources": {"count": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR,
                         "file": "pinned-conjuncts.json#/finding_sources"},
     "unanswered_findings": {"count": len(unanswered), "ceiling": UNANSWERED_CEILING,

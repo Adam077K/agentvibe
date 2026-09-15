@@ -197935,10 +197935,18 @@
                 "revision"
               ],
               "additionalProperties": false
+            },
+            "capability_refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "values.schema.json#/$defs/string"
+              }
             }
           },
           "required": [
             "alternate_assignment_ref",
+            "capability_refs",
             "carries_model_memory",
             "clock_runs_with_no_case",
             "duty_class_id",

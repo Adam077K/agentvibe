@@ -3832,5 +3832,14 @@
       "on_conflict": "resolve_to_existing_head",
       "why": "08 section 1 names a writer-key assignment as (field_path, epoch). Two records for one field path in one epoch are two answers to who may write this field -- and the whole of the F6D-05 repair reads that answer."
     }
+  ],
+  "capability_publishing_structures_why": "F6W-01 / R-X07. 05 section 12 specifies that every standing structure owning the acceptance of a capability publishes its capability_refs, required and NON-EMPTY, and closes that set by name: StandingHolder and the acceptance-owner role record. The chapter says so of itself -- specified and unregistered -- and until this table existed the rule two consolidation findings are recorded as repaired by was carried by no record shape under contracts/**. Each row names the record, the field, and the minimum cardinality, and the checks read all three out of BOTH declarations, so publishing the binding back into optionality is a four-place edit. OWED and stated rather than faked: the acceptance-owner role record the chapter names as the second member of the closed set has NO record in record-registry.json, so it gets no row here -- inventing one would be specification by side effect, and its absence is named in the lane names contract instead. Adverse fixture R43.",
+  "capability_publishing_structures": [
+    {
+      "record": "StandingHolder",
+      "field": "capability_refs",
+      "minimum": 1,
+      "why": "05 section 12: the binding is per capability and never grouped, coverage is counted over the 46 capability ids individually, and a capability no structure names is uncovered rather than covered by default. A StandingHolder that publishes no capability_refs is a standing office accountable for nothing the coverage rule can count, which is the state R-X07 exists to end. 05 section 12 also amends the enumeration of the record in section 12 so that its own `and nothing else` admits this field."
+    }
   ]
 }
