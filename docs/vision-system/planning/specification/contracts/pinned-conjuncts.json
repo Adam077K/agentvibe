@@ -184,6 +184,10 @@
     "F6Z-08": "planning/reviews/F2-06-recheck-04b.md",
     "F6Z-09": "planning/reviews/F2-06-recheck-04b.md"
   },
+  "step6_mention_only_why": "The Step 6 sweep in validate_contracts.py demands a `finding_sources` row for every id a review RAISES -- a heading or a table row. An id a review only MENTIONS, quoted from a fixture or cited from another document, is not a finding and holds no row. The difference between the two sets is declared here, by name and with a reason, and the validator checks that this map is EXACTLY that difference: so a review that quotes a new id is a data edit here, and a predicate that stops recognising raisings fails there rather than quietly narrowing the required set.",
+  "step6_mention_only": {
+    "F6X-03": "A SYNTHETIC id. It exists only inside fixtures/positive/r36-a-declared-family-gains-a-finding-benign.json, whose whole purpose is to add a finding to a declared family and pass; F2-06-recheck-05.md describes that fixture and so quotes the id. No review raises it and no row is owed for it. Giving it a row instead would be answered by the next review that quotes any id."
+  },
   "unpinnable": [
     {
       "finding": "G1-06b",

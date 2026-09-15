@@ -2512,12 +2512,85 @@ checked(len(register_findings) >= 30,
 # derived from the corpus, because a literal derived from the file it measures is
 # satisfied by the empty file.
 STEP6_FAMILIES = ("F6A", "F6B", "F6C", "F6D", "F6R", "F6V", "F6W", "F6X", "F6Y", "F6Z")
+#
+# --- A MENTION IS NOT A RAISING, AND THE DEMAND IS OVER RAISINGS (F6R-03, F6Y-01). ----
+#
+# The sweep demanded a source row for every OCCURRENCE of a Step 6 id in the corpus.
+# `F2-06-recheck-05.md` then described the r36 BENIGN fixture -- whose entire purpose is
+# to add a SYNTHETIC id, `F6X-03`, to both tables and pass -- and the quotation put that
+# id into the required set. Measured at `ffeb072`: exit 1, `'F6X-03'`, 141 source rows,
+# against a review document that is a VERBATIM ARCHIVE and may not be edited to green a
+# check.
+#
+# BRANCH TAKEN, of the three on the table: (a). The per-id demand below is over the ids a
+# review RAISES -- a heading, a table row it opens, or a bolded finding line, which are
+# the three forms this corpus actually uses. Every MENTION is still swept, still counted,
+# still floored and still reported in the payloads, so nothing leaves the instrument's
+# view; only the DEMAND narrows, and it narrows onto exactly what the per-id check's own
+# message says it is about: "A STEP 6 FINDING IS RAISED IN A REVIEW".
+#
+# (b) -- give `F6X-03` a row and re-point the benign twin at an id no corpus can state --
+# was refused for the reason (b) would have had to write down beside itself: the next
+# review that quotes ANY id recreates this RED, so the repair would be owed again on
+# every quotation ever written. A rule whose counterexample is reachable by quoting it is
+# not a rule.
+#
+# The exemption is DATA -- declared by name, with a reason, in `#/step6_mention_only` --
+# and it must equal the difference EXACTLY. So a review that quotes a new id is a cheap
+# data edit, while a raising pattern that stops matching fails HERE, naming every id it
+# dropped, instead of silently shrinking the required set the way `F6[A-DRVX]` shrank it
+# for the whole of its life. The three raising forms are themselves a declaration:
+# widening them can only move ids OUT of the exemption and INTO the demand, and the
+# equality makes that movement an edit a reviewer sees.
 STEP6_ID = re.compile(r"\b(F6[A-Z]-[0-9][0-9])\b")
+STEP6_RAISED = (
+    re.compile(r"^#{2,6}\s+.{0,200}?\b(F6[A-Z]-[0-9][0-9])\b"),   # ### F6W-04 - title
+    re.compile(r"^\|\s{0,4}\*{0,2}`?(F6[A-Z]-[0-9][0-9])\b"),     # | F6W-04 | verdict |
+    re.compile(r"^(?:[-]\s{1,3})?\*{2}(F6[A-Z]-[0-9][0-9])\b"),   # F6C-02 - (a) - title
+)
 STEP6_CORPUS = sorted((ROOT.parents[2] / "planning" / "reviews").glob("F2-06-*.md"))
 _step6 = set()
+_step6_raised = {}
 for _document in STEP6_CORPUS:
-    _step6 |= set(STEP6_ID.findall(_document.read_text(encoding="utf-8")))
-_step6_families = sorted(set(_id.split("-")[0] for _id in _step6))
+    _text = _document.read_text(encoding="utf-8")
+    _step6 |= set(STEP6_ID.findall(_text))
+    for _line in _text.splitlines():
+        for _pattern in STEP6_RAISED:
+            _hit = _pattern.match(_line)
+            if _hit:
+                _step6_raised.setdefault(_hit.group(1), _document.name)
+STEP6_MENTION_ONLY = PINNED["step6_mention_only"]
+# The concrete thing before the count, which is the ordering rule this file states about
+# itself three blocks above. An exemption naming a RAISED finding is the one way this
+# design could be used to do on purpose what `F6[A-DRVX]` did by accident, so it is
+# checked per row and before the set equality that would otherwise report it as arithmetic.
+for _finding, _why in sorted(STEP6_MENTION_ONLY.items()):
+    checked(str(_why).strip(),
+            ("a Step 6 id is excused from the source-row demand with no reason; the "
+             "exemption is data so that a reader can weigh it, and a blank reason is "
+             "nothing to weigh (F6R-03)", _finding))
+    checked(_finding not in _step6_raised,
+            ("AN EXEMPTION NAMES A FINDING THE CORPUS RAISES: `#/step6_mention_only` "
+             "excuses ids a review only MENTIONS -- quoted from a fixture, cited from "
+             "another document -- from the source-row demand below. An id a review RAISES "
+             "is a finding, and excusing it here is the disappearance this sweep exists "
+             "to refuse, done deliberately rather than by accident. Delete the exemption "
+             "and add the `finding_sources` row (F6R-03)",
+             _finding, {"raised in": _step6_raised.get(_finding)}))
+checked(_step6 - set(_step6_raised) == set(STEP6_MENTION_ONLY),
+        ("THE MENTION-ONLY EXEMPTION NO LONGER MATCHES THE CORPUS: every Step 6 id these "
+         "reviews mention is either RAISED in one of them -- and then it must hold a "
+         "`finding_sources` row -- or declared in `#/step6_mention_only` with the reason "
+         "it is only a mention. The two sets must be EQUAL: a review that quotes a new id "
+         "is then a data edit, and a raising pattern that stops matching fails here by "
+         "name rather than quietly narrowing the required set below (F6R-03)",
+         {"mentioned, neither raised nor declared":
+              sorted(_step6 - set(_step6_raised) - set(STEP6_MENTION_ONLY)),
+          "declared, but raised or absent from the corpus":
+              sorted(set(STEP6_MENTION_ONLY) - (_step6 - set(_step6_raised))),
+          "mentioned": len(_step6), "raised": len(_step6_raised),
+          "documents": [_p.name for _p in STEP6_CORPUS]}))
+_step6_families = sorted(set(_id.split("-")[0] for _id in _step6_raised))
 checked(set(_step6_families) <= set(STEP6_FAMILIES),
         ("A STEP 6 REVIEW RAISES A FINDING IN AN UNDECLARED FAMILY: the sweep below "
          "demands a source row for every id it finds, so a family the declaration does "
@@ -2528,19 +2601,33 @@ checked(set(_step6_families) <= set(STEP6_FAMILIES),
          {"undeclared": sorted(set(_step6_families) - set(STEP6_FAMILIES)),
           "declared": list(STEP6_FAMILIES), "found": _step6_families,
           "documents": [_p.name for _p in STEP6_CORPUS]}))
-checked(len(_step6_families) >= 8,
-        ("the Step 6 sweep found fewer families than the corpus has ever held; the "
-         "containment check above passes vacuously over an empty family set (F6Y-01)",
-         {"families": _step6_families, "floor": 8}))
-checked(len(_step6) >= 81,
-        ("THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING: the coverage "
-         "assertion below is over whatever this sweep found, so a sweep that found nothing "
-         "passes it vacuously -- which is the defect RC5-02 named about the other sweep in "
-         "this file. 81 ids in nine families were stated across those documents when "
-         "F6Y-01 widened this pattern; the narrow pattern saw 64 in seven (F6R-03, "
-         "F6Y-01)", {"found": len(_step6), "floor": 81, "families": _step6_families,
-                      "documents": [_p.name for _p in STEP6_CORPUS]}))
-for _finding in sorted(_step6):
+# THE THREE FLOORS ARE TIGHT AT THE COMMITTED CORPUS, and F6AA-08 is why they are stated
+# again rather than left: they read 81 ids and 8 families while the corpus at the subject
+# held 89 and 10, so eight ids and two families could have left it -- a review deleted or
+# renamed -- with no control firing. Measured at this commit over the ten F2-06 documents:
+# 90 ids mentioned, 89 of them raised, in 10 families. RAISE ALL THREE WHENEVER A REVIEW
+# LANDS; lowering one is a decision and the reason belongs here.
+checked(len(_step6_families) >= 10,
+        ("the Step 6 sweep found fewer families than the corpus holds; the containment "
+         "check above passes vacuously over an empty family set (F6Y-01, F6AA-08)",
+         {"families": _step6_families, "floor": 10}))
+checked(len(_step6) >= 90,
+        ("THE STEP 6 SWEEP OF THE F2-06 REVIEWS RETURNED ALMOST NOTHING: every check in "
+         "this block is computed over what this sweep found, so a sweep that found "
+         "nothing passes all of them vacuously -- the defect RC5-02 named about the other "
+         "sweep in this file. This floor is over MENTIONS, which is why widening the "
+         "demand to raisings alone did not weaken it (F6R-03, F6Y-01, F6AA-08)",
+         {"found": len(_step6), "floor": 90, "families": _step6_families,
+          "documents": [_p.name for _p in STEP6_CORPUS]}))
+checked(len(_step6_raised) >= 89,
+        ("THE SET OF RAISED STEP 6 FINDINGS HAS SHRUNK: this is the required set the "
+         "per-id demand below is computed over, so it is the one number that decides how "
+         "much coverage this block actually asks for. It falls when a review leaves the "
+         "corpus and when a raising form stops being recognised, and the second is "
+         "invisible from anywhere else (F6R-03, F6AA-08)",
+         {"raised": len(_step6_raised), "floor": 89,
+          "mentioned": len(_step6), "documents": [_p.name for _p in STEP6_CORPUS]}))
+for _finding in sorted(_step6_raised):
     checked(_finding in FINDING_SOURCES,
             ("A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW: "
              "`finding_sources` is what a pin's citation resolves against and what the "
@@ -2549,7 +2636,8 @@ for _finding in sorted(_step6):
              "for a review finding to disappear. Add the row with the document that raises "
              "it, then put the id in `answered_elsewhere` with a file and a check, or in "
              "`not_answered` with the reason (F6R-03)",
-             _finding, {"source rows": len(FINDING_SOURCES)}))
+             _finding, {"raised in": _step6_raised[_finding],
+                        "source rows": len(FINDING_SOURCES)}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
 checked(register_findings <= covered | set(unpinnable),
@@ -2987,8 +3075,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 112
-POSITIVE_FIXTURE_FLOOR = 73
+NEGATIVE_FIXTURE_FLOOR = 113
+POSITIVE_FIXTURE_FLOOR = 74
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
