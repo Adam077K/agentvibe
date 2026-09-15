@@ -276,7 +276,8 @@
         "verdict": "PARTIAL",
         "line": "Conjunct and eighteenth fixture landed. Nothing binds the calibration to the checker that produced the verdict."
       },
-      "residue_owner": "nothing binds the calibration to the checker that produced the verdict; AcceptanceInterval carries no checker identity (owed: contracts lane)"
+      "residue_owner": "nothing binds the calibration to the checker that produced the verdict; AcceptanceInterval carries no checker identity (owed: contracts lane)",
+      "r8_2026_09_15": "Landed by lane r8-contracts-i: AcceptanceInterval names its checker and the calibration guard equates it (first nested resolve in the registry — recheck this shape first); checker id is a free string (decision); executed fixture pair; author-recorded, recheck owed."
     }
   },
   "F6B-04": {
@@ -631,7 +632,8 @@
         "verdict": "PARTIAL",
         "line": "Ceiling required on `WorkOrder` and genuinely compared at `* → retry_admitted`; the park clause is owed, with a tripwire and a stated reason."
       },
-      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "r8_2026_09_15": "Park phase NOT landed: no edge-predicate writer exists in tools/; whether edge predicates become a derived artifact is a decision owed to the founder (lane r8-contracts-g packet)."
     }
   },
   "F6C-11": {
@@ -652,7 +654,8 @@
         "verdict": "PARTIAL",
         "line": "A real `lt` over two typed `Duration` operands, pinned; nothing ties `retention_span` to `retention_until` minus `landed_at`, and the note says so."
       },
-      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "r8_2026_09_15": "Landed by lane r8-contracts-h: instant-offset primitive registered, retention span bound to the two instants it measures, executed fixture pair; author-recorded, recheck owed."
     }
   },
   "F6C-12": {
@@ -886,7 +889,8 @@
         "line": "Field-level owners fixed and cross-pinned, but the annotation is read by no predicate and the record still grants the producer write."
       },
       "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
-      "chapter_half_2026_09_15": "Landed by lane r8-prose-e (merged at 61f374c): the owed sentence is in 05 §1, citing record-registry.json; orchestrator confirmed the cited owner values by reading the registry; vision verifiers 4/4 exit 0; author-recorded, independent recheck owed. The registry half stays as the recheck-04a verdict left it."
+      "chapter_half_2026_09_15": "Landed by lane r8-prose-e (merged at 61f374c): the owed sentence is in 05 §1, citing record-registry.json; orchestrator confirmed the cited owner values by reading the registry; vision verifiers 4/4 exit 0; author-recorded, independent recheck owed. The registry half stays as the recheck-04a verdict left it.",
+      "r8_2026_09_15": "Registry half still owed after four lanes (turn budget, not a blocker); shape in planning/F2/13-repair-names-contracts-i.md."
     }
   },
   "F6D-06": {

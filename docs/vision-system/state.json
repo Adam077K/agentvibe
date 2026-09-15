@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "F2 dispositioned (SCOPED); r8 lanes merged (recheck-05, prose-e, contracts-f/g/h/i); split suite on 3351226: 121/121 adverse, 80/82 benign (2 drifted benign fixtures, regeneration in flight); founder hold on building in force",
+  "phase": "F2 dispositioned (SCOPED); r8 complete — recheck-05 archived, seven lanes merged, split suite GREEN on 6c11200 (121/121 adverse, 82/82 benign); founder hold on building in force",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-1-1789446032",
@@ -272,17 +272,24 @@
       "worktree": "harness-managed; branch docs/vision-r8-contracts-i",
       "dispatched": "2026-09-15",
       "status": "RETURNED PARTIAL at b299163 and MERGED at b97890c: F6B-03 landed (R45; first nested resolve in the registry — flag for the next recheck; checker_id a free string, no CheckerId vocabulary; no verdict record names its checker — decision). F6D-05/F6Y-04 (R46) NOT started — owed, shape in planning/F2/13-repair-names-contracts-i.md. Light validator 305,513; 121/82. Contract lanes STOPPED for this session."
+    },
+    {
+      "lane": "r8-fixtures-j",
+      "engine": "builder",
+      "kind": "regenerate the two drifted benign fixtures",
+      "base": "3351226",
+      "dispatched": "2026-09-15",
+      "status": "RETURNED at 2ec0e53 and MERGED at 6c11200; both pairs re-executed green"
     }
   ],
   "next_actions": [
-    "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md when it exists, else HANDOFF-2026-09-14-after-r7.md, then active_work. HEAD is RED on the light validator (F6X-03) until r8-contracts-f merges; then split suite on a FROZEN tree with full stdout captured.",
-    "Split suite on the FROZEN head b97890c (running; result at scratchpad/split2/); then report §8 / README / site / founder page / session file / handoff",
-    "After r8-contracts-g merges: split suite on the FROZEN merged head, full stdout to a file (driver at scratchpad/split/driver.py pattern); then report §8 / README / site / founder page / session file / handoff HANDOFF-2026-09-15-after-r8.md",
+    "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md, then active_work",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
-    "FIRST in the next session: run the split suite on HEAD (light validator, then tools/run_negative_fixtures.py, then tools/run_positive_fixtures.py, sequential, background, python subprocess timeout — no `timeout` binary). It was killed for memory 4 times today; ask the founder to free memory on the Mac (close apps / quit idle Claude sessions) before starting. Record in validator_last_full_run.",
-    "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
-    "Owed after that (contracts): F6C-10 park phase, F6C-11 instant-offset, F6B-03 checker identity, F6D-05 guard-body rebinding, F6D-09 determinism conjunct (decision), F6V-02, F6W-01 capability_refs registration, F6R-01's 30 rows; (prose) 05 §1 and 05 §7 sentences the contracts lanes named as owed; the link from 05 §12 to planning/F2/09-q017-conjunction-rerun.md; six paired conformance cases for the flagged roles (Q-017)",
-    "Founder: perform the Q-022 entitlement read and report the observed limit, source and date"
+    "FOUNDER PACKET (in the handoff): lift the hold for B01 or not; re-run the fifteen-dimension review or not; Q-022 entitlement read; three structural decisions (edge predicates as derived artifact; runner copies fixture bodies; a CapabilityId/CheckerId vocabulary); F6AA-01/02 (the four layer-5 holders' staffing; absent-holder fallback); push the branch to origin as backup",
+    "Owed (contracts): F6D-05/F6Y-04 registry half (R46 free; shape in planning/F2/13-repair-names-contracts-i.md); F6C-10 park phase (blocked on the edge-predicate decision); F6Y-06 check half (blocked on the runner decision)",
+    "Owed (prose): F6AA-01..06 and F6AA-11 in chapter 05; chapter sentences named in planning/F2/10..13-repair-names-*.md (05 §12 ×2, 06 §7, the S1-C04 owner statement)",
+    "Owed (verification): an independent recheck of every r8 author-recorded repair (lanes prose-e, contracts-f/g/h/i, fixtures-j) — the nested resolve in R45 first",
+    "RULES for the next run of the suite: freeze the tree; use the per-fixture driver; capture stdout to files; run the light validator on HEAD before every record-keeping commit"
   ],
   "dependencies": [
     {
@@ -389,7 +396,7 @@
     "scope_fixed_unless_evidence": "the consequence/release boundary, evidence and acceptance, recovery, human responsibility and founder-competence mechanisms, the whole-company lifecycle scope — each reopenable only by a lane returning a specific falsifier",
     "status": "F2 round started 2026-09-13 on ceo-4-1789314685; Step 0 and the owed recheck dispatched in parallel"
   },
-  "handoff": "planning/HANDOFF-2026-09-14-after-r7.md",
+  "handoff": "planning/HANDOFF-2026-09-15-after-r8.md",
   "resumption_f2": {
     "date": "2026-09-13",
     "from_branch": "ceo-2-1789160976",
@@ -440,13 +447,13 @@
     "where": "inputs/FOUNDER-INPUT-2026-09-14-addendum.md and registers/open-questions.json"
   },
   "validator_last_full_run": {
-    "subject": "3351226 (frozen; no commit under docs/vision-system between launch 14:33 and completion 16:00)",
+    "subject": "6c11200 (contracts tree = 3351226 plus two regenerated benign fixtures)",
     "date": "2026-09-15",
-    "mode": "split, per fixture, resumable driver (scratchpad split3/driver3.py): light validator (34.3 s, rc 0) + 121 adverse fixtures one subprocess each (3,189 s) + 82 benign fixtures one subprocess each (1,769 s); every verdict recorded per fixture in negative.jsonl / positive.jsonl",
-    "result": "checks 305,513; adverse 121/121 refused for their own reason, 0 leaked, 0 wrong_reason; benign 80/82 passed, 2 FALSE EXCLUSIONS: r18-effect-identity-triple-unconstrained-benign (rejected by F6V-02's natural-key create-path table — the fixture predates R42/R45) and r19-allowlist-widened-in-json-benign (rejected by the argument_positions_digest re-pin — the fixture's digest predates R44's primitive). Both are the known drift class (benign fixture frozen against an older tree); regeneration dispatched to r8-fixtures-j.",
-    "earlier_today": "a first run on 3351226 launched 10:10 lost its driver to a harness low-memory kill at 10:32; its runner continued blind for 4+ hours and could not be observed or killed from the sandbox; superseded by the per-fixture run above",
+    "mode": "split, per fixture, resumable (scratchpad split3/driver3.py; each fixture its own subprocess, verdicts in negative.jsonl / positive.jsonl): light validator + 121 adverse + 82 benign",
+    "result": "GREEN. checks 305,513; adverse 121/121 refused for their own reason (0 leaked, 0 wrong_reason); benign 82/82 accepted. 119 adverse and 80 benign executed at 3351226 (fixture files byte-identical at 6c11200); r18 and r19 pairs (both halves) re-executed at 6c11200 after regeneration; light validator green at 6c11200.",
+    "earlier_today": "first pass at 3351226 found two false exclusions (r18/r19 benign frozen against pre-lane trees), regenerated by r8-fixtures-j; a run launched 10:10 lost its driver to a harness low-memory kill and its runner ran blind for 4+ hours, unobservable and unkillable from the sandbox — superseded",
     "previous_green": {
-      "subject": "1573593 (contracts tree identical at 3e51a9e)",
+      "subject": "1573593",
       "date": "2026-09-14",
       "result": "checks 305,223; negative 111/111; positive 72/72"
     }
