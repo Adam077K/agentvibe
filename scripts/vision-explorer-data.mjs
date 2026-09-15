@@ -470,3 +470,139 @@ const main = () => {
   return 2;
 };
 queueMicrotask(() => { process.exitCode = main(); });
+
+// ---- capabilities, stages, registers ---------------------------------------
+P.capabilities = "planning/specification/capabilities.json";
+P.capReq = "coverage/capability-requirements.json";
+P.graph = "planning/implementation-graph.json";
+P.decisions = "registers/decisions.json";
+P.questions = "registers/open-questions.json";
+P.risks = "registers/risks.json";
+P.attacks = "research/attack-coverage.json";
+P.ch08 = "planning/specification/08-improvement-implementation.md";
+
+emitter("capabilities", () => {
+  const cap = readJson(P.capabilities);
+  const req = readJson(P.capReq);
+  const reqById = new Map(req.capabilities.map((r) => [r.id, r]));
+  const sqc = cap.source_question_contracts || [];
+  const routes = cap.fulfillment_routes || {};
+  return cap.capabilities.map((c, i) => {
+    const contracts = sqc.filter((q) => (q.related_capabilities || []).includes(c.id));
+    return {
+      ...c,
+      name: c.concern || null,
+      outcome: c.required_outcome || null,
+      route: (c.fulfillment_route_refs || []).map((r) => ({ id: r, definition: routes[r] === undefined ? null : routes[r] })),
+      components: [c.owner_component].filter(Boolean),
+      consequence_class: { classes: c.consequence_classes || [], declared_floor: c.declared_floor || null, declared_floor_source: c.declared_floor_source || null },
+      acceptance: c.acceptance_contract || null,
+      requirements_row: reqById.get(c.id) || null,
+      source_question_contracts: contracts.map((q) => ({ question_id: q.question_id, source_field: q.source_field, question: q.question, answer: q.answer, answer_location: q.answer_location, status: q.status, uncertainty: q.uncertainty, implementation_status: q.implementation_status })),
+      source_question_contracts_full: "source-question-contracts.json",
+      questions: contracts.map((q) => q.question_id),
+      source: P.capabilities + "#/capabilities/" + i
+    };
+  });
+});
+
+emitter("stages", () => {
+  const g = readJson(P.graph);
+  const names = new Map();
+  const text = hasFile(P.ch08) ? readText(P.ch08) : "";
+  for (const m of text.matchAll(/\[(B[0-9]{2}) ([^\]]+)\]/g)) names.set(m[1], m[2]);
+  return g.stages.map((s, i) => ({
+    id: s.id,
+    name: names.get(s.id) || null,
+    name_source: names.has(s.id) ? P.ch08 + "#7-complete-dependency-ordered-construction-graph" : null,
+    depends_on: s.depends_on || [],
+    builds: s.components_and_contracts || null,
+    components: [...new Set((s.components_and_contracts || "").match(/C0[1-9]/g) || [])].map((c) => "S1-" + c),
+    completion_evidence: s.required_completion_evidence || null,
+    does_not_prove: s.risk_and_full_system_relationship || null,
+    phase_g_judgment: null,
+    status: s.status || null,
+    completed_evidence: s.completed_evidence || [],
+    source_doc: s.source || null,
+    source: P.graph + "#/stages/" + i
+  }));
+});
+
+emitter("decisions", () => {
+  const d = readJson(P.decisions);
+  return d.map((x, i) => ({ ...x, source: P.decisions + "#/" + i }));
+});
+
+emitter("questions", () => {
+  const q = readJson(P.questions);
+  return q.map((x, i) => ({ ...x, source: P.questions + "#/" + i }));
+});
+
+emitter("attacks", () => {
+  const a = readJson(P.attacks);
+  return {
+    source: P.attacks,
+    kind: a.kind || null,
+    source_doc: a.source || null,
+    architecture_selected: a.architecture_selected || null,
+    review_subject_commit: a.review_subject_commit || null,
+    review_subject_commit_note: a.review_subject_commit_note || null,
+    join_contract: a.join_contract || null,
+    limitations: a.limitations || [],
+    dimensions: a.dimensions || [],
+    additional_cases: a.additional_cases || null,
+    repair_provenance: a.repair_provenance || [],
+    items: (a.cases || []).map((c, i) => ({ ...c, source: P.attacks + "#/cases/" + i }))
+  };
+});
+
+emitter("risks", (ctx) => {
+  const r = readJson(P.risks);
+  const byCase = new Map(ctx.attacks.items.map((c) => [c.id, c]));
+  return r.risks.map((x, i) => ({
+    ...x,
+    attack_cases_joined: (x.attack_cases || []).map((id) => {
+      const c = byCase.get(id);
+      return { id, case: c ? c.case : null, status: c ? c.status : null };
+    }),
+    source: P.risks + "#/risks/" + i
+  }));
+});
+
+Object.assign(EXPECT, {
+  capabilities: 46,
+  stages: 12,
+  decisions: 22,
+  questions: 22,
+  risks: 17,
+  attacks: 33
+});
+
+structural("every risk attack_case id resolves to an attack case", (ctx) => {
+  const known = new Set(ctx.attacks.items.map((c) => c.id));
+  const bad = [];
+  for (const r of ctx.risks) for (const id of r.attack_cases || []) if (!known.has(id)) bad.push(r.id + " -> " + id);
+  return bad;
+});
+
+structural("every capability owner_component is a declared component id", (ctx) => {
+  const ids = new Set(Object.keys(readJson(P.capabilities).component_ids || {}));
+  return ctx.capabilities.filter((c) => c.owner_component !== null).filter((c) => !ids.has(c.owner_component)).map((c) => c.id + " -> " + c.owner_component);
+});
+
+structural("every stage depends_on resolves to a stage", (ctx) => {
+  const ids = new Set(ctx.stages.map((s) => s.id));
+  const bad = [];
+  for (const s of ctx.stages) for (const d of s.depends_on) if (!ids.has(d)) bad.push(s.id + " -> " + d);
+  return bad;
+});
+
+// The full source-question contracts live once, here; capabilities carry a
+// compact join plus the id list, because most contracts name many capabilities
+// and inlining them whole multiplied the package by roughly four.
+emitter("source-question-contracts", () => {
+  const cap = readJson(P.capabilities);
+  return (cap.source_question_contracts || []).map((q, i) => ({ ...q, source: P.capabilities + "#/source_question_contracts/" + i }));
+});
+
+Object.assign(MIN_EXPECT, { "source-question-contracts": 1 });
