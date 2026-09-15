@@ -253,11 +253,12 @@
       "base": "caceb7c",
       "worktree": "harness-managed; branch docs/vision-r8-contracts-g",
       "dispatched": "2026-09-15",
-      "status": "RUNNING"
+      "status": "RETURNED PARTIAL at ed4e8ed and MERGED at 80b60b8: item 1 F6Y-02 (R40, via tools_patch), item 6 F6Y-03 (R41), base fix (caceb7c register status prose naming F6A-09/F6C-06 was swept as registration — third arm answered_elsewhere added), item 9 decision packet in planning/F2/11-repair-names-contracts-g.md. Not started (budget): F6C-11, F6B-03, F6D-05/F6Y-04, F6V-02, F6W-01 → r8-contracts-h. Item 2 F6C-10 park phase BLOCKED on a decision: no edge-predicate writer exists in tools/; making edge predicates a derived artifact is architectural. Light validator 305,309; 117/78 declared."
     }
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md when it exists, else HANDOFF-2026-09-14-after-r7.md, then active_work. HEAD is RED on the light validator (F6X-03) until r8-contracts-f merges; then split suite on a FROZEN tree with full stdout captured.",
+    "DECISIONS OWED (orchestrator→founder packet or a framer lane): (i) edge predicates as a derived artifact (F6C-10 park phase blocked on it); (ii) F6Y-06 runner tree construction — copy fixture bodies (A) vs unfixtured check (B); (iii) register `status` prose is swept as data — stop naming other ids in status text, or change the sweep",
     "After r8-contracts-g merges: split suite on the FROZEN merged head, full stdout to a file (driver at scratchpad/split/driver.py pattern); then report §8 / README / site / founder page / session file / handoff HANDOFF-2026-09-15-after-r8.md",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "FIRST in the next session: run the split suite on HEAD (light validator, then tools/run_negative_fixtures.py, then tools/run_positive_fixtures.py, sequential, background, python subprocess timeout — no `timeout` binary). It was killed for memory 4 times today; ask the founder to free memory on the Mac (close apps / quit idle Claude sessions) before starting. Record in validator_last_full_run.",
