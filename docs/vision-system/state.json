@@ -426,10 +426,11 @@
   },
   "founder_page_republished": {
     "artifact": "29fd4c60-48ec-49e6-a6f6-a347e3384d37",
-    "version": 3,
-    "date": "2026-09-14",
+    "url": "https://claude.ai/artifact/6BjTiqfy1oimews6A3JndL",
+    "version": 4,
+    "date": "2026-09-15",
     "from": "planning/site/index.html",
-    "label": "Evening update 2026-09-14"
+    "label": "r8 update 2026-09-15"
   },
   "founder_reinvocation_2026_09_14": {
     "what": "Founder re-invoked the CEO in a fresh context with the full directive and the two resume pointers; no packet answered, hold not lifted in his words, no word on the inputs/ addendum",
