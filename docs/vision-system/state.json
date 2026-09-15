@@ -244,7 +244,7 @@
       "base": "ffeb072",
       "worktree": "harness-managed; branch docs/vision-r8-contracts-f",
       "dispatched": "2026-09-15",
-      "status": "RUNNING"
+      "status": "RETURNED PARTIAL at 984b130 and MERGED at 9ab0681: items 0,1,2,4a,4b(data),5 landed (7 commits); F6Y-02 not attempted (owed to r8-contracts-g, R40 free); F6Y-06 check half not shippable without changing the runner to copy fixture bodies (decision owed); light validator 305,306 checks, 115/76 declared; 16 fixtures executed singly, one false exclusion (r19 benign) found and regenerated; option (a) for the F6X-03 red: demand over RAISED ids, mentions floored, step6_mention_only pinned exactly. Full suites NOT run yet."
     }
   ],
   "next_actions": [
