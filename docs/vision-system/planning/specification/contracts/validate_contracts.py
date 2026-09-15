@@ -339,6 +339,87 @@ for _field in ("longest_plausible_outage", "retention_span"):
              "compared as spans in one unit, and a comparison between two free strings is "
              "not a comparison (F6C-11)", _field))
 
+# --- F6C-11, the remainder: THE SPAN IS TIED TO THE INSTANTS IT MEASURES. ------
+#
+# `ltF` above compares `retention_span` against the ceiling, and until this block NOTHING
+# tied that span to the instants it claims to measure. The lane that shipped `ltF` recorded
+# the hole as its own rather than leaving it to be found: a producer could state a
+# thirty-day outage, a thirty-one-day `retention_span` and a `retention_until` one hour
+# after `landed_at`, and the criterion passed. The cure it named is the one taken here --
+# an instant-offset primitive -- after which the comparison `lt` makes is over a span the
+# record cannot state independently of the two instants it is derived from.
+#
+# Read STRUCTURALLY off the AST, never as substrings over the serialised body. F6Y-02 is
+# the precedent and it is the reason this is thirty lines instead of three: twelve strings
+# all present, in branches whose meanings had been swapped, and six string-presence checks
+# passed. A pointer set says which fields a node mentions; it does not say which side of
+# the subtraction each one is on, and retention_until minus landed_at mentions exactly the
+# same two fields as landed_at minus retention_until.
+_landed_conjuncts = PREDICATES["criterion.UnmatchedPoolEntry.landed.v1"]["body"]["predicates"]
+
+def _landed_pointer(node):
+    # The subject pointer a `path` node reads, or None for any other shape.
+    if not isinstance(node, dict) or node.get("op") != "path":
+        return None
+    value = node.get("value")
+    if not isinstance(value, dict) or value.get("op") != "resolve":
+        return None
+    if (value.get("ref") or {}).get("arg") != "subject_ref":
+        return None
+    return node.get("pointer")
+
+_offset_nodes = [_node for _node in _landed_conjuncts
+                 if isinstance(_node, dict) and _node.get("op") == "eq"
+                 and _landed_pointer(_node.get("left")) == "/payload/retention_span"]
+checked(len(_offset_nodes) == 1,
+        ("THE RETENTION SPAN IS NOT TIED TO THE INSTANTS IT MEASURES: `retention_span` is "
+         "compared against the outage ceiling, and with no conjunct equating it to the "
+         "offset between `landed_at` and `retention_until` a producer states all three "
+         "independently -- a thirty-day outage, a thirty-one-day span, and a retention "
+         "that ends an hour after the entry landed. The ceiling is then applied to a "
+         "number the record made up (F6C-11, the remainder its own lane recorded as owed)",
+         {"eq_conjuncts_over_retention_span": len(_offset_nodes),
+          "note": "authored by tools/phase_content.py as the eqOffset conjunct over "
+                  "/payload/retention_span, /payload/retention_until and "
+                  "/payload/landed_at; weakening the derivation and regenerating does "
+                  "not satisfy this."}))
+_offset = _offset_nodes[0].get("right") or {}
+checked(isinstance(_offset, dict) and _offset.get("op") == "instant_offset"
+        and _landed_pointer(_offset.get("later")) == "/payload/retention_until"
+        and _landed_pointer(_offset.get("earlier")) == "/payload/landed_at",
+        ("THE RETENTION SPAN IS NOT TIED TO THE INSTANTS IT MEASURES: the span is equated "
+         "to something, and it is not the offset from `landed_at` to `retention_until`. "
+         "The two operands are read by POSITION here rather than by presence, because "
+         "swapping them names the same two fields and means the opposite span (F6C-11)",
+         {"op": _offset.get("op") if isinstance(_offset, dict) else type(_offset).__name__,
+          "later": _landed_pointer(_offset.get("later")) if isinstance(_offset, dict) else None,
+          "earlier": _landed_pointer(_offset.get("earlier")) if isinstance(_offset, dict) else None,
+          "wanted": {"op": "instant_offset", "later": "/payload/retention_until",
+                     "earlier": "/payload/landed_at"}}))
+# And the primitive is typed INSTANT minus INSTANT into a DURATION. Without this the
+# equality above is satisfied by an operator named `instant_offset` that takes anything and
+# returns anything -- the `every_linked_obligation` move RC4-02 measured, one file over.
+_offset_primitive = PRIMITIVES.get("instant_offset") or {}
+checked(_offset_primitive.get("argument_types") == {"later": "UTC", "earlier": "UTC"}
+        and _offset_primitive.get("result_type") == "Duration",
+        ("THE INSTANT OFFSET IS NOT TYPED INSTANT MINUS INSTANT INTO A DURATION: the whole "
+         "point of the primitive is that the equality compares two Durations and that the "
+         "two operands of the subtraction are instants. Retyped, it is a name (F6C-11)",
+         {"argument_types": _offset_primitive.get("argument_types"),
+          "result_type": _offset_primitive.get("result_type"),
+          "wanted": {"argument_types": {"later": "UTC", "earlier": "UTC"},
+                     "result_type": "Duration"}}))
+for _field, _wanted in (("retention_until", "UTC"), ("landed_at", "UTC"),
+                        ("retention_span", "Duration")):
+    checked(str(SCHEMAS["records.schema.json"]["$defs"]["UnmatchedPoolEntry"]["properties"]
+                ["payload"]["properties"][_field].get("$ref", "")).endswith("/" + _wanted),
+            ("AN OPERAND OF THE RETENTION OFFSET IS NOT THE TYPE THE OFFSET SUBTRACTS: "
+             "instant_offset is UTC minus UTC into Duration, and an operand typed "
+             "otherwise makes the equality a comparison of incomparable units, which "
+             "resolves unresolved rather than false -- and an unresolved conjunct in an "
+             "`all` is a rule nobody is told stopped applying (F6C-11)",
+             _field, _wanted))
+
 # --- F6D-09: A FIELD THAT NAMES A PREDICATE IS TYPED AS ONE. -------------------
 #
 # `values.schema.json` defines `PredicateId` as an enum of all registry keys. It is derived
@@ -3273,8 +3354,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 119  # 118 -> 119 (F6W-01): the R43 adverse half. Holds 119.
-POSITIVE_FIXTURE_FLOOR = 80   # 79 -> 80 (F6W-01): the R43 benign twin. Holds 80.
+NEGATIVE_FIXTURE_FLOOR = 120  # 119 -> 120 (F6C-11): the R44 adverse half. Holds 120.
+POSITIVE_FIXTURE_FLOOR = 81   # 80 -> 81 (F6C-11): the R44 benign twin. Holds 81.
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.

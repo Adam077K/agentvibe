@@ -7128,5 +7128,40 @@
     "result_type": "boolean_or_unresolved",
     "failure": "unresolved on absent, ambiguous, stale, unauthorized or invalid input; never silently coerced to true or a guessed world fact",
     "planned_module": "system/packages/contracts/src/predicates/component-removal.ts"
+  },
+  "instant_offset": {
+    "args": [
+      "later",
+      "earlier"
+    ],
+    "semantics": "Checked exact offset between two canonical UTC instants, returned as a Duration in milliseconds. later must not precede earlier: a negative offset is unresolved rather than a negative or wrapped value, because a span is a magnitude and the rules that read one compare it against a stated ceiling.",
+    "version": "1.0",
+    "argument_types": {
+      "later": "UTC",
+      "earlier": "UTC"
+    },
+    "argument_positions": {
+      "later": "value",
+      "earlier": "value"
+    },
+    "argument_schema": {
+      "type": "object",
+      "properties": {
+        "later": {
+          "$ref": "values.schema.json#/$defs/UTC"
+        },
+        "earlier": {
+          "$ref": "values.schema.json#/$defs/UTC"
+        }
+      },
+      "required": [
+        "later",
+        "earlier"
+      ],
+      "additionalProperties": false
+    },
+    "result_type": "Duration",
+    "failure": "unresolved on absent, ambiguous, stale, unauthorized or invalid input; never silently coerced to true or a guessed world fact",
+    "planned_module": "system/packages/contracts/predicates"
   }
 }
