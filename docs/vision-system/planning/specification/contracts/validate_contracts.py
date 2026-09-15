@@ -2787,10 +2787,30 @@ checked(len(FINDING_SOURCES) >= FINDING_SOURCE_FLOOR,
          {"finding_sources": len(FINDING_SOURCES), "floor": FINDING_SOURCE_FLOOR}))
 for finding, why in unpinnable.items():
     checked(why.strip(), ("a finding declared unpinnable with no reason", finding))
-checked(register_findings <= covered | set(unpinnable),
-        ("a registered finding is neither pinned nor declared unpinnable",
-         sorted(register_findings - covered - set(unpinnable)),
-         "add a pin to pinned-conjuncts.json, or an `unpinnable` entry saying why no "
+# THE THIRD ARM IS `answered_elsewhere`, AND LEAVING IT OUT WAS A CONTRADICTION INSIDE
+# ONE FILE. This comparison knew two ways for a finding to be accounted for -- a pin, or
+# an `unpinnable` row -- while `pinned-conjuncts.json` maintains a third and checks it
+# harder than either: an `answered_elsewhere` row must name the FILE and the CHECK that
+# answers the finding, and both are verified to exist. Measured 2026-09-15 at `caceb7c`:
+# that commit rewrote a register `status` STRING so that it narrates `F6A-09` and
+# `F6C-06`; `register_findings` is a raw-text sweep, so a sentence ABOUT two findings
+# registered them; both were already declared `answered_elsewhere` with file and check;
+# and this line failed anyway, saying nothing in this package says whether they are
+# answered while the file three keys over said exactly that. The light validator was red
+# on a commit whose whole content was a record of a merge.
+#
+# Adding the arm does not widen the excuse. `unpinnable` is the weak arm -- a sentence
+# saying no conjunct can carry it -- and it is unchanged; `answered_elsewhere` is the
+# strong one and is the only arm here whose members are checked against something. What
+# is removed is a file disagreeing with itself (F6R-01, provenance in
+# `planning/F2/11-repair-names-contracts-g.md`).
+_accounted = covered | set(unpinnable) | set(ANSWERED_ELSEWHERE)
+checked(register_findings <= _accounted,
+        ("a registered finding is neither pinned, nor answered elsewhere with a file and "
+         "a check, nor declared unpinnable",
+         sorted(register_findings - _accounted),
+         "add a pin to pinned-conjuncts.json, an `#/answered_elsewhere` row naming the "
+         "file and the check that answers it, or an `unpinnable` entry saying why no "
          "conjunct can carry it"))
 # And what `unpinnable` may say. A finding whose REQUIRED CONTRACT names a record or a
 # guard this package registers is a finding about DATA HELD HERE, so "this one is prose"
