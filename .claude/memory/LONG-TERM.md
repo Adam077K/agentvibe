@@ -97,3 +97,4 @@
   lanes passed it and the full run found one wrong-reason adverse fixture per lane plus three benign
   fixtures frozen against an older tree. Full run once on the merged head (~35 min unloaded; killed for
   memory once beside three lanes). No `timeout` binary here — `subprocess.run(timeout=5400)`.
+- **2026-09-15 — Freeze the tree while the split suite runs.** `run_negative_fixtures.py` replicates the live `registers/review-findings.json` and `planning/reviews/F2-06-*.md` into each fixture's scratch tree, so a commit mid-run (an archived recheck naming a new id) changes the subject under the later fixtures and reads as a wrong-reason leak. Also: capture the runner's full stdout to a file — a 2,500-char tail loses the summary block and the leak count.

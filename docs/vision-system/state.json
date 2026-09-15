@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Full-company responsible work system",
   "directive_date": "2026-09-12",
-  "phase": "F2 dispositioned (SCOPED); all r7 lanes merged at 7114f19; split suite on that head owed (killed for memory); founder hold on building in force",
+  "phase": "F2 dispositioned (SCOPED); r8: recheck-05 archived, r8-prose-e merged; split suite on 95ca14d FAILED on two wrong-reason fixtures (one caused by a mid-run archive); HEAD red on the light validator pending r8-contracts-f; founder hold on building in force",
   "status": "active",
   "base_commit": "b2cabad",
   "branch": "ceo-1-1789446032",
@@ -217,7 +217,7 @@
       "kind": "the owed split validator suite on HEAD (first action of the handoff)",
       "subject": "95ca14d",
       "dispatched": "2026-09-15",
-      "status": "RUNNING: stage 1 light validator rc 0 (305,275 checks, 17.5 s); stage 2 adverse runner in progress since 07:25; memory 38-44% free"
+      "status": "RETURNED: light rc 0; adverse rc 1 after 3,118 s (r35 wrong_reason via F6X-03 — orchestrator mid-run archive; r36 wrong_reason — floor before sweep); benign not reached. See validator_last_full_run. Fix dispatched to contracts lane r8-contracts-f."
     },
     {
       "lane": "f2-06-recheck-05",
@@ -239,7 +239,7 @@
     }
   ],
   "next_actions": [
-    "RESUME HERE: read planning/HANDOFF-2026-09-14-after-r7.md, then active_work (session ceo-1-1789446032 resumed 2026-09-15: split suite and recheck-05 in flight)",
+    "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md when it exists, else HANDOFF-2026-09-14-after-r7.md, then active_work. HEAD is RED on the light validator (F6X-03) until r8-contracts-f merges; then split suite on a FROZEN tree with full stdout captured.",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "FIRST in the next session: run the split suite on HEAD (light validator, then tools/run_negative_fixtures.py, then tools/run_positive_fixtures.py, sequential, background, python subprocess timeout — no `timeout` binary). It was killed for memory 4 times today; ask the founder to free memory on the Mac (close apps / quit idle Claude sessions) before starting. Record in validator_last_full_run.",
     "Then: PLANNING-REPORT.md §8 counts, README, site/index.html, founder page republish, session file, handoff refresh",
@@ -402,12 +402,17 @@
     "where": "inputs/FOUNDER-INPUT-2026-09-14-addendum.md and registers/open-questions.json"
   },
   "validator_last_full_run": {
-    "subject": "1573593 (contracts tree identical at 3e51a9e)",
-    "date": "2026-09-14",
-    "mode": "split: light validator (structural, 17 s) + tools/run_negative_fixtures.py (1,941 s) + tools/run_positive_fixtures.py (1,461 s), sequential — the single-process full run was killed for memory three times",
-    "result": "checks 305,223; negative 111/111 rejected for their own reason, leaked []; positive 72/72 passed, falsely_excluded []",
-    "note": "first execution of all 20 fixture pairs the three contracts lanes wrote today",
-    "superseded_note": "Head 7114f19 (after r7-contracts-e) has NOT had a full or split run complete: the split suite was killed by the OS for low memory before its first stage reported (log empty). The only contracts changes since the green run at 1573593/3e51a9e are r7-contracts-e's (F6Y-01: sweep widened, 25 source rows, fixture pair R36), which passed the light validator in-lane (305,267 checks; floors 112/73). Treat the R36 pair and the widened sweep as UNEXECUTED until a split run completes."
+    "subject": "95ca14d at launch; the live tree moved to 7e0545f during the adverse stage (orchestrator commits: register rows, findings index, F2-06-recheck-05.md)",
+    "date": "2026-09-15",
+    "mode": "split: light validator (17.5 s, rc 0, 305,275 checks, 112/73 fixtures declared) + tools/run_negative_fixtures.py (3,118 s, rc 1) — benign stage NOT reached",
+    "result": "adverse stage FAILED: two wrong_reason fixtures. r36 (F6Y-01's pair, first execution ever) — deleting a finding_sources row trips the RC5-02 floor (140 < 141) before the F6R-03 sweep, so the fixture is caught by the wrong control. r35 — caught by the F6R-03 sweep naming F6X-03, because the runner replicates planning/reviews/ into each scratch tree and the orchestrator archived F2-06-recheck-05.md (which states F6X-03, an id with no source row) while the stage was running; the same failure reproduces on the light validator at 7e0545f. Leaks and the summary block are unknown — the driver kept only the output tail.",
+    "consequence": "HEAD 7e0545f is RED on the light validator (F6X-03). Treat every fixture written since 1573593 as unexecuted until a split run completes on a frozen tree. The last complete green run is still 1573593/3e51a9e.",
+    "lesson": "FREEZE THE TREE while the split suite runs: the runner reads the live registers/review-findings.json and planning/reviews/F2-06-*.md at each fixture's scratch creation, so a commit mid-run changes the subject under the fixtures. Capture the runner's full stdout to a file, not a 2,500-char tail.",
+    "previous_green": {
+      "subject": "1573593 (contracts tree identical at 3e51a9e)",
+      "date": "2026-09-14",
+      "result": "checks 305,223; negative 111/111; positive 72/72"
+    }
   },
   "resumption_r8": {
     "date": "2026-09-15",
