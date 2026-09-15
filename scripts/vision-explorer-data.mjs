@@ -606,3 +606,255 @@ emitter("source-question-contracts", () => {
 });
 
 Object.assign(MIN_EXPECT, { "source-question-contracts": 1 });
+
+// ---- markdown toolkit ------------------------------------------------------
+// Enough of CommonMark to split a chapter into sections, read its tables and
+// render it as HTML. Written here rather than pulled in, because the package
+// must project with no dependencies.
+
+const stripInline = (s) => s
+  .replace(/`([^`]*)`/g, "$1")
+  .replace(/\*\*([^*]*)\*\*/g, "$1")
+  .replace(/\*([^*]*)\*/g, "$1")
+  .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1");
+
+const slugify = (heading) => stripInline(heading)
+  .toLowerCase()
+  .replace(/[^a-z0-9 \-]/g, "")
+  .trim()
+  .replace(/ +/g, "-");
+
+// Fenced code blocks are opaque: a heading or a pipe inside one is content.
+const splitSections = (text) => {
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let cur = { level: 0, heading: null, lines: [] };
+  let fence = null;
+  for (const line of lines) {
+    const f = line.match(/^(```|~~~)/);
+    if (f) { if (fence === null) fence = f[1]; else if (line.startsWith(fence)) fence = null; }
+    const h = fence === null ? line.match(/^(#{1,6}) +(.*)$/) : null;
+    if (h) { out.push(cur); cur = { level: h[1].length, heading: h[2].trim(), lines: [] }; continue; }
+    cur.lines.push(line);
+  }
+  out.push(cur);
+  return out.filter((s) => s.heading !== null || s.lines.join("").trim() !== "");
+};
+
+// Every GitHub-style pipe table in a block of lines.
+const splitCells = (line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+const findTables = (lines) => {
+  const tables = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const head = lines[i];
+    const sep = lines[i + 1];
+    if (head === undefined || sep === undefined) continue;
+    if (head.trim().startsWith("|") !== true) continue;
+    if (/^\|[\s:|-]+\|$/.test(sep.trim()) !== true) continue;
+    const headers = splitCells(head);
+    const rows = [];
+    let j = i + 2;
+    while (j < lines.length && lines[j].trim().startsWith("|")) { rows.push(splitCells(lines[j])); j += 1; }
+    tables.push({ headers, rows });
+    i = j - 1;
+  }
+  return tables;
+};
+
+const sectionOf = (sections, predicate) => sections.find(predicate) || null;
+const sectionText = (s) => (s === null ? null : s.lines.join(String.fromCharCode(10)).trim());
+
+// ---- components and layers -------------------------------------------------
+P.arch = "planning/02-architecture-selection.md";
+P.compAuth = "planning/specification/components-authority.json";
+P.ch05 = "planning/specification/05-work-agents-skills.md";
+P.selection = "planning/F2/05-selection-record.md";
+P.ch07 = "planning/specification/07-integrations-capacity.md";
+
+const archSection3 = () => {
+  const secs = splitSections(readText(P.arch));
+  return sectionOf(secs, (s) => s.heading !== null && s.heading.startsWith("3."));
+};
+
+emitter("components", (ctx) => {
+  const ids = readJson(P.capabilities).component_ids || {};
+  const order = Object.keys(ids);
+  const auth = readJson(P.compAuth);
+  const authById = new Map((auth.components || []).map((c) => [c.id, c]));
+  const sec = archSection3();
+  const tables = sec === null ? [] : findTables(sec.lines);
+  const compTable = tables.find((t) => t.headers[0] === "Component") || { rows: [] };
+  // "Receives -> returns; prohibition" is one cell in 02 section 3; split it.
+  const rows = compTable.rows.map((r) => {
+    const owns = r[1] || null;
+    const rest = r[2] || "";
+    const arrow = rest.split(/→/);
+    const receives = arrow.length > 1 ? arrow[0].trim() : null;
+    const tail = arrow.length > 1 ? arrow.slice(1).join("→").trim() : rest.trim();
+    const cut = tail.search(/;\s*(cannot|no |commands return)/i);
+    return {
+      label: stripInline(r[0] || ""),
+      owns,
+      receives,
+      returns: cut >= 0 ? tail.slice(0, cut).trim() : tail,
+      cannot: cut >= 0 ? tail.slice(cut + 1).trim() : null
+    };
+  });
+  const recs = ctx.records;
+  const cmds = ctx.commands;
+  const preds = ctx.predicates;
+  const caps = ctx.capabilities;
+  const items = order.map((id, i) => {
+    const a = authById.get(id) || {};
+    const row = rows[i] || {};
+    return {
+      id,
+      name: a.name || ids[id],
+      short_name: ids[id],
+      table_label: row.label === undefined ? null : row.label,
+      owns: row.owns === undefined ? null : row.owns,
+      receives: row.receives === undefined ? null : row.receives,
+      returns: row.returns === undefined ? null : row.returns,
+      cannot: row.cannot === undefined ? null : row.cannot,
+      implementation_location: a.implementation_location || null,
+      attributes: a.attributes || {},
+      contract_refs: a.contract_refs || [],
+      questions: (auth.questions || []).filter((q) => (q.owner_components || []).includes(id)).map((q) => q.id),
+      records_owned: recs.filter((r) => r.owner_component === id).map((r) => r.id),
+      commands: cmds.filter((c) => c.owner_component === id).map((c) => c.id),
+      predicates_count: preds.filter((p) => p.owner_component === id).length,
+      capabilities: caps.filter((c) => c.owner_component === id).map((c) => c.id),
+      source: P.arch + "#3-selected-logical-and-responsibility-model",
+      source_authority: P.compAuth + "#/components/" + i
+    };
+  });
+  return {
+    source: P.arch + "#3-selected-logical-and-responsibility-model",
+    items,
+    flows: componentFlows(),
+    deployment_flows: deploymentFlows()
+  };
+});
+
+// The labelled edges between components, read from the mermaid flowcharts in
+// 08-improvement-implementation.md. Node ids that name a component are
+// rewritten to its registry id; the rest stay as the chapter wrote them.
+const mermaidBlock = (heading) => {
+  const secs = splitSections(readText(P.ch08));
+  const s = sectionOf(secs, (x) => x.heading === heading);
+  if (s === null) return [];
+  const out = [];
+  let inside = false;
+  for (const line of s.lines) {
+    if (line.trim().startsWith("```")) { inside = inside !== true; continue; }
+    if (inside) out.push(line);
+  }
+  return out;
+};
+
+const parseMermaid = (lines, sourceAnchor) => {
+  const labels = new Map();
+  for (const line of lines) {
+    for (const m of line.matchAll(/([A-Za-z0-9_]+)[\[(]([^\])]+)[\])]/g)) labels.set(m[1], m[2].trim());
+  }
+  const nodeId = (n) => (/^C0[1-9]$/.test(n) ? "S1-" + n : n);
+  const edges = [];
+  const re = /^\s*([A-Za-z0-9_]+)(?:[\[(][^\])]*[\])])?\s*(<-->|-->)(?:\|([^|]*)\|)?\s*([A-Za-z0-9_]+)(?:[\[(][^\])]*[\])])?\s*$/;
+  for (const line of lines) {
+    const m = line.match(re);
+    if (m === null) continue;
+    edges.push({
+      from: nodeId(m[1]),
+      to: nodeId(m[4]),
+      arrow: m[2],
+      bidirectional: m[2] === "<-->",
+      label: m[3] === undefined ? null : m[3].trim(),
+      from_label: labels.get(m[1]) || null,
+      to_label: labels.get(m[4]) || null,
+      source: P.ch08 + sourceAnchor
+    });
+  }
+  return edges;
+};
+
+const componentFlows = () => parseMermaid(mermaidBlock("Logical flow"), "#logical-flow");
+const deploymentFlows = () => parseMermaid(mermaidBlock("Trust and fault placement"), "#trust-and-fault-placement");
+
+// ---- layers ----------------------------------------------------------------
+// L1-L5 as tabled in 02 section 3, each joined to the section of
+// 05-work-agents-skills.md its governing rule cites, and to the five criteria
+// judged in the F2 selection record.
+emitter("layers", () => {
+  const sec = archSection3();
+  const lines = sec === null ? [] : sec.lines;
+  const table = findTables(lines).find((t) => t.headers[0] === "Layer") || { rows: [] };
+  const ch05 = splitSections(readText(P.ch05));
+  const precedence = lines.find((l) => l.includes("Precedence is fixed and operative")) || null;
+  const intro = lines.find((l) => l.includes("the five layers of")) || null;
+  const selectionSecs = splitSections(readText(P.selection));
+  const criteria = sectionOf(selectionSecs, (s) => s.heading !== null && s.heading.startsWith("2."));
+  const items = table.rows.map((r, i) => {
+    const name = stripInline(r[0] || "");
+    const where = r[3] || "";
+    const nums = [...where.matchAll(/`05` *§ ?([0-9]+)/g)].map((m) => m[1]);
+    const cited = nums.map((n) => {
+      const s = sectionOf(ch05, (x) => x.heading !== null && x.heading.startsWith(n + "."));
+      return { section: n, heading: s === null ? null : s.heading, text: sectionText(s), source: P.ch05 };
+    });
+    return {
+      id: "L" + (i + 1),
+      name,
+      decides: r[1] || null,
+      governing_rule: r[2] || null,
+      where_specified: where || null,
+      rule_sections: cited,
+      source: P.arch + "#3-selected-logical-and-responsibility-model"
+    };
+  });
+  return {
+    source: P.arch + "#3-selected-logical-and-responsibility-model",
+    introduction: intro,
+    precedence: precedence,
+    selection_record_criteria: { heading: criteria === null ? null : criteria.heading, text: sectionText(criteria), source: P.selection },
+    items
+  };
+});
+
+// ---- adapters and execution profiles ---------------------------------------
+const ch07Section = (prefix) => {
+  const secs = splitSections(readText(P.ch07));
+  return sectionOf(secs, (s) => s.heading !== null && s.heading.startsWith(prefix));
+};
+
+emitter("adapters", () => {
+  const sec = ch07Section("3.");
+  const table = sec === null ? { rows: [], headers: [] } : (findTables(sec.lines)[0] || { rows: [], headers: [] });
+  return table.rows.map((r) => {
+    const head = (r[0] || "").split("/");
+    return {
+      id: head[0].trim(),
+      selected: (r[0] || "").trim(),
+      implemented_target: head.slice(1).join("/").trim() || null,
+      contract: r[1] || null,
+      limit: r[2] || null,
+      simpler_alternative: r[3] || null,
+      columns: table.headers,
+      source: P.ch07 + "#3-selected-fulfillment-adapters"
+    };
+  });
+});
+
+emitter("execution-profiles", () => {
+  const sec = ch07Section("5.");
+  const table = sec === null ? { rows: [], headers: [] } : (findTables(sec.lines)[0] || { rows: [], headers: [] });
+  return table.rows.map((r) => ({
+    id: (r[0] || "").trim(),
+    launch_interface: r[1] || null,
+    admission_and_boundary: r[2] || null,
+    columns: table.headers,
+    source: P.ch07 + "#5-native-subscription-execution"
+  }));
+});
+
+Object.assign(EXPECT, { components: 9, layers: 5, adapters: 7 });
+Object.assign(MIN_EXPECT, { "execution-profiles": 1 });
