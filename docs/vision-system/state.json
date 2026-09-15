@@ -286,6 +286,15 @@
       "engine": "builder",
       "kind": "data projection for the interactive system explorer (founder request 2026-09-15)",
       "status": "RETURNED COMPLETE at f3da6fa and MERGED: scripts/vision-explorer-data.mjs build|check|stats; 28 files under planning/site/explorer/data/ (17.7 MB); check exit 0 (189/2398/105/186/58/27/11/65/46/12/22/22/33/17/566, graph 3,488 nodes / 28,759 edges). Known nulls: stages.phase_g_judgment, component flow labels (package states none)."
+    },
+    {
+      "lane": "explorer-page",
+      "engine": "designer",
+      "kind": "interactive explorer page over planning/site/explorer/data/ (founder request 2026-09-15)",
+      "branch": "docs/vision-explorer-page",
+      "base": "d689baf",
+      "status": "DISPATCHED 2026-09-15 (worktree; 30-turn blocks; resume by message with 'commit first'). Brief: reuse plan-page tokens; rail+canvas+detail; system map C01-C09 with flows; layers; records with lifecycle state diagrams and guard meanings; predicates/commands/values/primitives/control contracts/endpoints/subject bindings/pins; capabilities with source-question contracts; build DAG B00-B11; decisions/questions/risks/attacks/adapters/profiles; chapter reader with mention links; reviews/findings/coverage; global search; hash routes; lazy-load data. Return JSON {status,branch,head,files,routes,views_looked_at,console_errors,not_done,session_file}.",
+      "next": "merge -> reviewer lane (every id in data/ reachable; no page text absent from the package) -> publish NEW multi-file artifact 'The Company Engine Explorer' (index.html + data/*.json via files) -> record in state/history/handoff"
     }
   ],
   "next_actions": [

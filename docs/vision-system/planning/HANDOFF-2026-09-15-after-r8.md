@@ -28,5 +28,8 @@
 ## Rules learned this round (also in LONG-TERM.md)
 Freeze the tree during a suite run (the runner replicates `registers/` and `planning/reviews/F2-06-*.md` per scratch tree). Register `status` prose is swept as data — never name another finding's id in it; run the light validator on HEAD before any record-keeping commit. Capture runner stdout to files. A lane's first 30-turn block is mostly reading: brief 1–2 items per block and commit at every item.
 
+## Explorer track (founder request, 2026-09-15)
+Data projection merged at 3e07c7c (`node scripts/vision-explorer-data.mjs check` exit 0; 28 files, 17.7 MB under `planning/site/explorer/data/`). Designer lane `explorer-page` dispatched on branch `docs/vision-explorer-page` from d689baf; brief and return shape in state.json `active_work`. Remaining: merge the page; reviewer lane (subject = branch head; criteria: every id in every data file reachable by list + detail and by search; no explanatory text on the page absent from the package; both themes; 400px width; zero console errors); then publish as a NEW multi-file artifact named "The Company Engine Explorer" (`index.html` + `data/*.json` through `files`), beside the existing plan page (Version 4). Record in state/history and this handoff. A lane that ends a 30-turn block uncommitted is resumed with "commit first; 1-2 items per block".
+
 ## Standing constraints
 Orchestrator writes no source or artifacts; reviewers get subject + criteria only; one model family everywhere; no runtime exists — every "closed", "repaired", "green" is specified behaviour checked offline.
