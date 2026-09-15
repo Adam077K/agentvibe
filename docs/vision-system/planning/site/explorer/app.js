@@ -137,7 +137,7 @@ X.view("component",{label:"Components",group:"The system",n:9,
  list:function(sel){return D("components").then(function(c){
   return pane("Nine components","<div class=\"cards\">"+c.items.map(function(i){
    return "<a class=\"card"+(i.id===sel?" on":"")+"\" href=\""+href("component",i.id)+"\"><span class=\"t\">"+e(i.id)+" \u00b7 "+e(i.short_name||i.name)+"</span><span class=\"s\">"+e(cut(i.owns,110))+"</span></a>"}).join("")+"</div>"+
-   "<p class=\"cap\">Record, command, predicate and capability counts on each detail are derived by the projection, not declared in the chapter.</p>"+srcline(c))})},
+   srcline(c))})},
  detail:function(id){return Promise.all([D("components"),D("records"),D("commands"),D("capabilities"),D("chapters")]).then(function(a){
   var c=a[0],i=byId("components",c.items)[id];if(!i)return pane("Not found","<p>"+e(id)+" is not a component id.</p>");
   var recs=a[1].filter(function(r){return r.owner_component===id}),cmds=a[2].filter(function(x){return x.owner_component===id}),caps=a[3].filter(function(x){return x.owner_component===id});
@@ -150,7 +150,7 @@ X.view("component",{label:"Components",group:"The system",n:9,
      ["capabilities",caps.length+(caps.length?"<br>"+caps.map(function(x){return lk("capability",x.id,x.id+" \u00b7 "+x.name)}).join(""):"")],
      ["predicates",i.predicates_count+"<br>"+lk("predicate","@"+id,"browse the "+i.predicates_count+" it owns")],
      ["source questions",chips(i.questions,"coverage")]])+
-   sub("the nineteen authority attributes")+kv(i.attributes)+
+   "<p class=\"cap\">Record, command, predicate and capability counts above are derived by the projection, not declared in the chapter.</p>"+sub("the nineteen authority attributes")+kv(i.attributes)+
    (X.has(i.contract_refs)?sub("contract references")+val(i.contract_refs):"")+
    sub("chapter sections that mention it ("+secs.length+")")+
    "<div class=\"rows\">"+secs.map(function(p){return "<a class=\"row\" href=\""+href("chapter",p[0].id,p[1].id)+"\"><span class=\"t\">"+e(p[1].heading)+"</span><span class=\"s\">"+e(p[0].title)+"</span></a>"}).join("")+"</div>"+
@@ -696,16 +696,25 @@ window.dispatchEvent(new Event("hashchange"));
 })();
 
 /* ---- search reaches the class-mapping rows and the chapter documents.
-   search.json is generated, so it is left alone on disk and extended in memory. ---- */
+   search.json is generated, so it is left alone on disk and extended in memory.
+   Both groups are prepended, so they survive the 400-hit scan cap. ---- */
 (function(){
 var X=window.__EX;
-Promise.all([X.D("search"),X.D("class-mapping"),X.D("chapters")]).then(function(a){
- var S=a[0];
+function add(S,items){if(!items.length)return;Array.prototype.unshift.apply(S,items)}
+function retype(){var q=document.getElementById("q");
+ if(q&&q.value.trim())q.dispatchEvent(new Event("input"))}
+X.D("search").then(function(S){
  if(S.__augmented)return;
  S.__augmented=true;
- a[1].forEach(function(r){S.push({type:"classmap",id:r.id,title:r.id,
-  snippet:typeof r.value==="string"?r.value:"class mapping table"})});
- a[2].forEach(function(c){S.push({type:"chapter",id:c.id,title:c.title,
-  snippet:c.path+" - "+c.sections.length+" sections"})});
+ return X.D("class-mapping").then(function(cm){
+  add(S,cm.map(function(r){return {type:"classmap",id:r.id,title:r.id,
+   snippet:typeof r.value==="string"?r.value:"class mapping table"}}));
+  retype();
+  return X.D("chapters").then(function(ch){
+   add(S,ch.map(function(c){return {type:"chapter",id:c.id,title:c.title,
+    snippet:c.path+" - "+c.sections.length+" sections"}}));
+   retype();
+  });
+ });
 }).catch(function(){});
 })();
