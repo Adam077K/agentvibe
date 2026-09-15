@@ -628,3 +628,69 @@ D("meta").then(function(M){var p=M.package,vr=p.validator_last_full_run||{},fh=p
 render(false);
 setTimeout(function(){D("components");D("layers");D("stages");D("search")},400);
 })();
+
+/* ---- the system map, hand placed: fixed coordinates, routed edges ---- */
+(function(){
+var X=window.__EX,D=X.D,e=X.e,md=X.md,sub=X.sub,pane=X.pane,srcline=X.srcline,lk=X.lk,href=X.href,cut=X.cut,V=X.V;
+var W=120,HH=48,Q="\u0022",AR=" \u2192 ",BI=" \u2194 ";
+var POS={"H":[8,118],"G":[576,198],"S1-C07":[150,38],"S1-C01":[150,118],"S1-C02":[150,198],"S1-C09":[8,358],"S1-C05":[292,118],"S1-C03":[292,198],"S1-C04":[434,198],"S1-C08":[434,278],"S1-C06":[576,38]};
+var RT={
+ "H>S1-C07":["M128,142 H139 V62 H150",139,104],
+ "S1-C07>S1-C01":["M210,86 V118",215,106],
+ "S1-C01>S1-C02":["M210,166 V198",215,186],
+ "S1-C02>S1-C03":["M270,222 H292",281,192],
+ "S1-C05>S1-C03":["M352,166 V198",357,186],
+ "S1-C03>S1-C04":["M412,222 H434",423,192],
+ "S1-C05>S1-C04":["M412,142 H423 V210 H434",423,176],
+ "S1-C04>S1-C08":["M494,246 V278",499,266],
+ "S1-C08>G":["M554,302 H565 V222 H576",565,266],
+ "G>S1-C06":["M636,198 V86",641,146],
+ "S1-C06>S1-C01":["M576,54 H281 V142 H270",430,46],
+ "S1-C06>S1-C07":["M636,38 V16 H210 V38",430,11],
+ "S1-C09>S1-C07":["M128,370 H131 V50 H150",131,330],
+ "S1-C09>S1-C02":["M68,358 V270 H210 V246",140,262]};
+function ab(id){return id.indexOf("S1-")===0?id.slice(3):id}
+function lines(s){var t=String(s).replace(/\//g,"/ ");var w=X.wrapText(t,17).slice(0,2);
+ return w.map(function(x){return x.length>19?x.slice(0,18)+"\u2026":x})}
+function sysmap(c,sel){
+ var nodes=[],seen={};
+ c.items.forEach(function(i){seen[i.id]=1;nodes.push({id:i.id,label:i.short_name||i.name,title:i.id+" "+i.name,ext:false})});
+ c.flows.forEach(function(f){["from","to"].forEach(function(k){var id=f[k];
+  if(!seen[id]){seen[id]=1;nodes.push({id:id,label:f[k+"_label"]||id,title:f[k+"_label"]||id,ext:true})}})});
+ var svg=["<svg class=\u0022sysmap\u0022 viewBox=\u00220 0 706 420\u0022 width=\u0022100%\u0022 preserveAspectRatio=\u0022xMidYMid meet\u0022 style=\u0022max-width:706px;height:auto\u0022 role=\u0022img\u0022>",
+  "<defs><marker id=\u0022ah2\u0022 viewBox=\u00220 0 8 8\u0022 refX=\u00227\u0022 refY=\u00224\u0022 markerWidth=\u00227\u0022 markerHeight=\u00227\u0022 orient=\u0022auto-start-reverse\u0022><path d=\u0022M0,1 L7,4 L0,7 z\u0022 fill=\u0022currentColor\u0022/></marker></defs>"];
+ var labels=[];
+ c.flows.forEach(function(f){var r=RT[f.from+">"+f.to];if(!r)return;
+  var on=sel&&(f.from===sel||f.to===sel)?" on":"";
+  var tip=(f.from_label||f.from)+AR+(f.to_label||f.to)+(f.bidirectional?" (stated both ways)":"");
+  svg.push("<g class=\u0022ed"+on+"\u0022><title>"+e(tip)+"</title><path class=\u0022hit\u0022 d=\u0022"+r[0]+"\u0022/>"+
+   "<path d=\u0022"+r[0]+"\u0022 marker-end=\u0022url(#ah2)\u0022"+(f.bidirectional?" marker-start=\u0022url(#ah2)\u0022":"")+"/></g>");
+  var txt=ab(f.from)+(f.bidirectional?BI:AR)+ab(f.to);
+  labels.push("<g class=\u0022edl"+on+"\u0022><rect x=\u0022"+(r[1]-txt.length*2.7-3)+"\u0022 y=\u0022"+(r[2]-8)+"\u0022 width=\u0022"+(txt.length*5.4+6)+"\u0022 height=\u002211\u0022 rx=\u00222\u0022/><text x=\u0022"+r[1]+"\u0022 y=\u0022"+r[2]+"\u0022 text-anchor=\u0022middle\u0022>"+e(txt)+"</text></g>")});
+ nodes.forEach(function(n){var p=POS[n.id];if(!p)return;
+  var ls=lines(n.label),y0=p[1]+(ls.length>1?28:31);
+  svg.push("<g class=\u0022nd"+(n.ext?" ext":"")+(n.id===sel?" on":"")+"\u0022"+(n.ext?"":" data-h=\u0022"+href("component",n.id)+"\u0022")+"><title>"+e(n.title)+"</title>"+
+   "<rect x=\u0022"+p[0]+"\u0022 y=\u0022"+p[1]+"\u0022 width=\u0022"+W+"\u0022 height=\u0022"+HH+"\u0022 rx=\u00226\u0022/>"+
+   "<text class=\u0022id\u0022 x=\u0022"+(p[0]+9)+"\u0022 y=\u0022"+(p[1]+15)+"\u0022>"+e(ab(n.id))+"</text>"+
+   ls.map(function(t,i){return "<text x=\u0022"+(p[0]+9)+"\u0022 y=\u0022"+(y0+i*13)+"\u0022>"+e(t)+"</text>"}).join("")+"</g>")});
+ svg.push(labels.join(""));
+ svg.push("</svg>");
+ return "<div class=\u0022diagram\u0022>"+svg.join("")+"</div>"+
+  "<div class=\u0022legend\u0022><span>solid box \u00b7 component, click it</span><span>dashed box \u00b7 node the chapter names that is not a component</span><span>arrow \u00b7 one declared flow</span><span>double arrow \u00b7 stated both ways</span></div>"+
+  "<p class=\u0022cap\u0022>"+md("The fourteen edges of the logical flowchart in chapter 08 section 3, over the nine components of `components.json`. **The package states these edges without labels**, so each arrow is labelled here with its two endpoint ids and carries both full endpoint names as its tooltip; the list below names every edge in full. Positions are chosen for legibility and are not stated by the package: intake left, admission and production through the middle, release, transport and acceptance right, operator surfaces below.")+"</p>"}
+function one(id,label){return /^S1-C/.test(id)?lk("component",id,label||id):"<span class=\u0022chip\u0022>"+e(label||id)+"</span>"}
+function flowList(fl,sel){return "<div class=\u0022rows\u0022>"+fl.map(function(f){
+ var on=sel&&(f.from===sel||f.to===sel)?" on":"";
+ return "<div class=\u0022row"+on+"\u0022><div class=\u0022t\u0022>"+one(f.from,f.from_label)+"<span class=\u0022m\u0022>"+e(f.arrow)+(f.bidirectional?" (both ways)":"")+"</span>"+one(f.to,f.to_label)+"</div></div>"}).join("")+"</div>"}
+V.home.list=function(){return D("components").then(function(c){
+ return pane("The nine logical components",sysmap(c,null)+
+  "<p class=\u0022cap\u0022>Click a box for what that component owns, receives, returns and cannot do \u2014 with its records, commands, capabilities and predicates.</p>"+
+  sub("the fourteen logical flows")+flowList(c.flows,null)+
+  sub("the eight trust and fault placement flows")+flowList(c.deployment_flows,null)+srcline(c))})};
+V.component.list=function(sel){return D("components").then(function(c){
+ return pane(sel?"The map, with "+sel+" and its flows picked out":"Nine components",sysmap(c,sel)+
+  sub("the fourteen logical flows")+flowList(c.flows,sel)+
+  "<div class=\u0022groupname\u0022>every component</div><div class=\u0022cards\u0022>"+c.items.map(function(i){
+   return "<a class=\u0022card"+(i.id===sel?" on":"")+"\u0022 href=\u0022"+href("component",i.id)+"\u0022><span class=\u0022t\u0022>"+e(i.id)+" \u00b7 "+e(i.short_name||i.name)+"</span><span class=\u0022s\u0022>"+e(cut(i.owns,110))+"</span></a>"}).join("")+"</div>"+srcline(c))})};
+window.dispatchEvent(new Event("hashchange"));
+})();
