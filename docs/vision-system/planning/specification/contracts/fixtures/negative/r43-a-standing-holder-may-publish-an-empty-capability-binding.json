@@ -1,0 +1,16 @@
+{
+  "id": "r43-a-standing-holder-may-publish-an-empty-capability-binding",
+  "repair": "R43",
+  "finding": "F6W-01; registers/review-findings.json (F6W-01), from reviews/F2-06-recheck-03.md",
+  "case": "minItems is struck from StandingHolder.payload.capability_refs, so the field is required and may be the empty array.",
+  "paired_benign_fixture": "fixtures/positive/r43-the-capability-publishing-row-reason-edited-benign.json",
+  "why": "05 section 12 says capability_refs is required AND NON-EMPTY, and an empty array satisfies required in every JSON Schema implementation there is. Coverage under R-X07 is counted over the 46 capability ids individually and a capability no structure names is uncovered rather than covered by default, so a standing office publishing an empty binding is accountable for nothing the coverage rule can count -- the exact state R-X07 exists to end, reachable while the field is present. The adverse edit is the CARDINALITY rather than the field, deliberately: striking the field itself is refused by the generic registry-versus-schema pair walk long before this rule is reached, which would test that walk instead of this one.",
+  "expect_failure_contains": "A CAPABILITY BINDING MAY BE PUBLISHED EMPTY",
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/StandingHolder/properties/payload/properties/capability_refs/minItems",
+      "op": "remove"
+    }
+  ]
+}

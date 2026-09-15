@@ -75352,7 +75352,8 @@
           "exercising_fixture_id": "string",
           "live_duty_refs": "Ref<Obligation>[]",
           "admission_stopped_for_duty_class": "boolean",
-          "successor_holder_ref": "Ref<StandingHolder>"
+          "successor_holder_ref": "Ref<StandingHolder>",
+          "capability_refs": "string[]"
         },
         "required_fields": [
           "holder_id",
@@ -75370,7 +75371,8 @@
           "stated_minimum_status",
           "carries_model_memory",
           "exercising_fixture_id",
-          "live_duty_refs"
+          "live_duty_refs",
+          "capability_refs"
         ],
         "storage": "full protected canonical bytes by default; field exceptions require FieldStorageRule and actual purge accounting",
         "owner": "S1-C01",
@@ -75453,6 +75455,10 @@
             "required": true,
             "added_by": "WORK-1.1-F6D-07",
             "note": "F6D-07. The standing-holder SET is the holders currently in `staffed`, so a transition into or out of that phase is a change to the set. There is no separate set object and inventing one would be the second implementation this package refuses everywhere else."
+          },
+          "capability_refs": {
+            "type": "string[]",
+            "required": true
           }
         }
       }

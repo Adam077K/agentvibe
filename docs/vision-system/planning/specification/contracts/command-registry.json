@@ -3539,7 +3539,13 @@
         "target state belongs to exact registered subject type",
         "proposed links match subject type and transition-owned roles",
         "predicate IDs/version/argument schemas admitted; unregistered arbitrary predicates fail"
-      ]
+      ],
+      "natural_key_resolution": {
+        "applies_to": "a registration whose record_type declares identity.natural_key",
+        "on_conflict": "resolve_to_existing_head",
+        "creates_second_record": false,
+        "why": "record-registry.json states RESOLVE-OR-CREATE on the EffectIdentity triple (effect_class_id, counterparty_id, payload_digest) and a one-per-key rule on AdmissionRecord, ExhaustionDecision and FieldAuthority, while this command -- the only create path any of the four names -- specified the create path identically to every other record. A registration whose natural key is already allocated RESOLVES to the existing head and returns it: it does not create a second record, and it is not a typed conflict. Without this the registry identity is the surrogate triple, the natural key is three ordinary payload fields, and an implementer picks between a unique-index conflict, a read-then-join and two rows -- three different systems (F6V-02, reviews/F2-06-recheck-02.md)."
+      }
     },
     "planned_module": "system/apps/witness"
   },
