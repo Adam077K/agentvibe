@@ -1,0 +1,25 @@
+{
+  "id": "r39-a-finding-crosses-to-answered-with-a-file-that-resolves-benign",
+  "repair": "R39",
+  "finding": "F6Y-08; planning/reviews/F2-06-recheck-04a.md section 4 (F6Y-08), benign column",
+  "case": "F6AA-07 moved from `not_answered` to `answered_elsewhere` with a file that exists and a check named in it.",
+  "paired_adverse_fixture": "fixtures/negative/r39-a-finding-declared-answered-by-a-file-that-is-not-there.json",
+  "why": "The other half of F6Y-08, and the half that is the finding: recording a verified repair must PASS as a data edit. Before this the two ceilings sat exactly at their table sizes, so a lane that had verified a check could only record it by raising a literal in validate_contracts.py -- the act that file reserves for weakening a control. F6AA-07 is the honest subject for it: its repair is real and the row's own reason says the repair is a sentence rather than a check, so this fixture shows the crossing is possible without asserting that the crossing has happened in the committed tree.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/not_answered/F6AA-07",
+      "op": "remove"
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/answered_elsewhere/F6AA-07",
+      "op": "add",
+      "value": {
+        "file": "planning/specification/contracts/validate_contracts.py",
+        "check": "The comments above UNANSWERED_CEILING, NOT_ANSWERED_CEILING, ANSWERED_ELSEWHERE_CEILING and FINDING_SOURCE_FLOOR, each stating the value its constant holds, the committed count, and the fixture that holds the odd slot open."
+      }
+    }
+  ]
+}

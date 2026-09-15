@@ -388,8 +388,9 @@ checked(set(SCHEMAS["records.schema.json"]["$defs"]["StandingInterest"]["propert
          ["properties"]["precondition_evaluator_kind"].get("enum")))
 # OWED, and recorded rather than faked. The review also asked for "a conjunct asserting
 # each named predicate's registered `implementation_status` is deterministic". Measured
-# here before writing it: `implementation_status` takes exactly ONE value across all 2,397
-# registered predicates -- "specified; conformance interpreter only, no production binding
+# here before writing it: `implementation_status` takes exactly ONE value across EVERY
+# registered predicate -- 2,397 of them when this was written and `len(PREDICATES)` today,
+# which is the figure to recount from because the registry grows (F6Y-07) -- "specified; conformance interpreter only, no production binding
 # implemented". There is no deterministic/model classification in the registry to read, so
 # that conjunct would be TRUE OF EVERY PREDICATE by construction: a guard that collects the
 # evidence for the ceiling and never applies it, which is the anti-shape fixture r16-08
@@ -670,11 +671,14 @@ checked(_cr.get("type") == "array" and "record_type" in ((_cr.get("items") or {}
 # already compares the enum, so the chapters instructed an author to write a record the
 # guard rejects. A full run said nothing, because nothing read an enum's members.
 #
-# FIFTY-SEVEN payload fields carry a closed enum and the pairs agreed on every one of them
-# before this check existed -- which is the argument for the check rather than against it:
-# the invariant was true and unguarded, so the first drift would have been silent, and one
-# of the 57 had already drifted from the CHAPTERS in the direction no field comparison can
-# see.
+# EVERY payload field carrying a closed enum agreed with its pair before this check existed
+# -- which is the argument for the check rather than against it: the invariant was true and
+# unguarded, so the first drift would have been silent, and one of them had already drifted
+# from the CHAPTERS in the direction no field comparison can see. The count was FIFTY-SEVEN
+# when that was written and the walk meets more now; the floor below is the bound and the
+# live figure is computed into the failure payload, so neither is frozen in this sentence.
+# A reader who recounts and finds a different number in a file whose whole subject is the
+# difference between a claim and what checks it has been told something false (F6Y-07).
 #
 # Compared as SETS, not as sequences. An enum's members are a set; `in` does not read
 # order, and no predicate in the registry does. A byte-comparison would refuse a
@@ -1720,7 +1724,12 @@ checked(len(unanswered) <= UNANSWERED_CEILING,
 #   `answered_elsewhere` -- the finding is answered, and the row NAMES the file and the
 #       check, so the claim is falsifiable by opening the file rather than by trusting a
 #       sentence. `file` must exist.
-#   `not_answered`       -- nothing here answers it, and the row says why not.
+#   `not_answered`       -- NO FILE AND CHECK HAS BEEN NAMED AND VERIFIED for it here, and
+#       the row says why not. That is narrower than "nothing here answers it", and the
+#       narrower sentence is the true one: F6A-09 and F6C-06 sat here for a lane while a
+#       check and a fixture pair existed for each, so this count OVERSTATES what is
+#       unrepaired -- which is the safe direction and is not the same as being accurate
+#       (F6Y-08). Both crossed over on the commit that wrote this line.
 # Each half carries its OWN bound. One ceiling over both would let an entry move from
 # "answered" to "not answered" at zero cost, which is exactly the ambiguity F6R-01 is
 # about; two ceilings make the crossing an edit to this file.
@@ -1763,20 +1772,27 @@ for _finding, _why in sorted(NOT_ANSWERED.items()):
 # finding out of it. `answered_elsewhere` has a ceiling rather than a floor for the reason
 # every other ceiling here does -- a table where everything is declared answered passes as
 # loudly as one where nothing is, and the rows are the evidence, not the count.
-# 3 -> 4 -> 7 COMMITTED, AND THE CONSTANT IS 8 (F6R-01, F6AA-07). F6AA-08, F6AA-09
+# 3 -> 4 -> 9 COMMITTED, AND THE CONSTANT IS 10 (F6R-01, F6AA-07, F6Y-08). F6AA-08, F6AA-09
 # and F6Y-01 are answered by named checks and belong in this half; F6Y-01 comes ACROSS
-# from `not_answered`, whose row for it stated a condition the row itself met. The odd slot is deliberate and is F6Y-08's direction: recording a repair that
+# from `not_answered`, whose row for it stated a condition the row itself met, and so do
+# F6A-09 and F6C-06, which F6Y-08 named. The constant is TWO above the committed count, not
+# one: one slot for the r39 benign twin, which moves a row across and must pass, and one so
+# that the next verified repair is a DATA edit. F6Y-08's whole argument is that the control
+# which lets a lane record a repair should not charge the price this file reserves for
+# weakening things. The odd slot is deliberate and is F6Y-08's direction: recording a repair that
 # a file and a check really do carry must be a DATA edit, and only the TOTAL above
 # stays a literal in this file.
-ANSWERED_ELSEWHERE_CEILING = 8
+ANSWERED_ELSEWHERE_CEILING = 10
 # 37 -> 62 -> 71 COMMITTED, AND THE CONSTANT IS 72 (F6Y-01, F6AA-07). It grew by the
 # twenty-five F6W/F6Y/F6Z rows, then by the nine F6AA rows this package declares
 # and does not answer with a named check -- the one direction this ceiling's own
 # message permits. The odd slot is the same one UNANSWERED_CEILING holds and for the
 # same fixture: `r36-a-declared-family-gains-a-finding-benign` adds a `not_answered`
-# row as well as a source row. 70 is the committed count; 71 is what this constant
-# holds; tightening it breaks that fixture.
-NOT_ANSWERED_CEILING = 71
+# row as well as a source row. 68 is the committed count and 69 is what this constant
+# holds: F6A-09 and F6C-06 left this half for `answered_elsewhere` (F6Y-08), and a
+# ceiling that may only fall was lowered to match rather than left carrying slack
+# nobody had written a reason for. Tightening it to 68 breaks the benign fixture.
+NOT_ANSWERED_CEILING = 69
 checked(len(ANSWERED_ELSEWHERE) <= ANSWERED_ELSEWHERE_CEILING,
         ("more findings are declared answered outside the pin machinery than when this "
          "ceiling was set; each one is a claim that a named file and a named check carry "
@@ -3129,8 +3145,8 @@ checked(version_rows >= 14,
 #   negative: 109 -> 110 and positive 70 -> 71 (F6D-08): the m4 pair.
 #   negative: 110 -> 111 and positive 71 -> 72 (F6D-05): the control-ownership pair.
 #   negative: 111 -> 112 and positive 72 -> 73 (F6Y-01): the source-row deletion pair.
-NEGATIVE_FIXTURE_FLOOR = 114
-POSITIVE_FIXTURE_FLOOR = 75
+NEGATIVE_FIXTURE_FLOOR = 115
+POSITIVE_FIXTURE_FLOOR = 76
 # Read OUTSIDE the fixture-run guard below, so a negative fixture can express this. The
 # recheck said one could not -- "it is a property of the tree the runner is invoked in" --
 # and that is true of the RATCHET, which compares the tree to the manifest and needs both.
