@@ -299,9 +299,10 @@
   ],
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md, then active_work",
+    "PUSHED 2026-09-19: origin/ceo-1-1789446032 at 1800227 (tracking set). Push again after each record-keeping commit.",
+    "OUTSIDE REVIEW (founder-directed): a Codex/Astra session runs the second-family review from branch review/outside-<date> cut at 1800227; deliverables planning/reviews/F2-07-outside-review.md + F2-07-outside-findings.jsonl. Do not change the plan while it runs. Then: founder packet answers -> final-spec session -> lift hold for B01 only.",
     "EXPLORER PUBLISHED: https://claude.ai/artifact/Ufucbixckde8yhiLf3JDTZ (v1, from 6df39ae). Republish from this path after any data or page change: `node scripts/vision-explorer-data.mjs build && check`, then publish index.html with root=planning/site/explorer and the same files map.",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
-    "FOUNDER PACKET (in the handoff): lift the hold for B01 or not; re-run the fifteen-dimension review or not; Q-022 entitlement read; three structural decisions (edge predicates as derived artifact; runner copies fixture bodies; a CapabilityId/CheckerId vocabulary); F6AA-01/02 (the four layer-5 holders' staffing; absent-holder fallback); push the branch to origin as backup",
     "Owed (contracts): F6D-05/F6Y-04 registry half (R46 free; shape in planning/F2/13-repair-names-contracts-i.md); F6C-10 park phase (blocked on the edge-predicate decision); F6Y-06 check half (blocked on the runner decision)",
     "Owed (prose): F6AA-01..06 and F6AA-11 in chapter 05; chapter sentences named in planning/F2/10..13-repair-names-*.md (05 §12 ×2, 06 §7, the S1-C04 owner statement)",
     "Owed (verification): an independent recheck of every r8 author-recorded repair (lanes prose-e, contracts-f/g/h/i, fixtures-j) — the nested resolve in R45 first",
