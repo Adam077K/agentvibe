@@ -300,7 +300,7 @@
   "next_actions": [
     "RESUME HERE: read planning/HANDOFF-2026-09-15-after-r8.md, then active_work",
     "PUSHED 2026-09-19: origin/ceo-1-1789446032 at 1800227 (tracking set). Push again after each record-keeping commit.",
-    "OUTSIDE REVIEW (founder-directed): a Codex/Astra session runs the second-family review from branch review/outside-<date> cut at 1800227; deliverables planning/reviews/F2-07-outside-review.md + F2-07-outside-findings.jsonl. Do not change the plan while it runs. Then: founder packet answers -> final-spec session -> lift hold for B01 only.",
+    "OUTSIDE REVIEW (founder-directed): a Codex/Astra session runs the second-family review per planning/HANDOFF-2026-09-19-outside-review.md (branch review/outside-2026-09-19 cut at 1182e9b); deliverables planning/reviews/F2-07-outside-review.md + F2-07-outside-findings.jsonl. Do not change the plan while it runs. Then: founder packet answers -> final-spec session -> lift hold for B01 only.",
     "EXPLORER PUBLISHED: https://claude.ai/artifact/Ufucbixckde8yhiLf3JDTZ (v1, from 6df39ae). Republish from this path after any data or page change: `node scripts/vision-explorer-data.mjs build && check`, then publish index.html with root=planning/site/explorer and the same files map.",
     "HELD BY FOUNDER: no build stage may be dispatched until the founder lifts the hold in his own words",
     "Owed (contracts): F6D-05/F6Y-04 registry half (R46 free; shape in planning/F2/13-repair-names-contracts-i.md); F6C-10 park phase (blocked on the edge-predicate decision); F6Y-06 check half (blocked on the runner decision)",
