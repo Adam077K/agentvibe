@@ -214,3 +214,56 @@ verify-by-execution non-optional rather than a virtue.
 **Owner:** ceo · **Founder decisions:** 7 working lanes · pre-authorise A/B/C · assign a lane to PR #77
 **Affects:** `CLAUDE.md`, `README.md`, `AGENTS.md`, `.claude/commands/*`, `scripts/check-registration.mjs`,
 `scripts/run-gate.mjs`, `scripts/pre-tool-use.test.mjs`, and the still-open `design-screen.md` dispatch gap
+
+## 2026-08-26 — Done is "the loop runs itself"; nine PRs wired the circulation and did not start the heart
+
+**Context:** the wave needed a definition of done a reader could check rather than argue about. Rule 4
+requires a choice affecting others to be appended here, and the choice that defined this entire wave never
+was — `grep 'loop runs itself'` returns **0** against a control of 51 for `decision`. The 2026-08-25 entry
+above records the reaffirmation half only.
+
+**Options considered:** done = every specified surface is built / done = the loop runs itself / done = one
+venture task shipped end to end.
+
+**Decision (founder, 2026-08-26): done = *the loop runs itself*.** Waves A+B+C in scope. **Mission-control
+surfaces and P1 portability are deferred** — real work, deliberately not on the path to that definition.
+The companion decision, *proof = harness work only*, **reaffirms** the 2026-08-25 entry above rather than
+replacing it; read it there rather than here.
+
+**What it produced:** nine PRs, `47dbbd6` → `d1294a4`, **127 commits**, main CI **57/57 · 0 failed · 0
+skipped**, **50 verdict records**. The closures, compactly: six chain-guard bypasses (#114) · `sourcer`
+granted a narrow `mcpServers: [claim-append]` and **not a `Write` tool** (#112) · an honest dispatch signal
+(#110) · `verdict.mjs` refusing unknown flags (#116) · a refusal made a terminal value distinct from a block
+(#115) · fixture-position sweeps (#117) · `gate:` made executable, 6 of 6 triggers, `framer` 0 → 5 (#113) ·
+the orchestrator reaching the gate, **and only the orchestrator, by design** (#111) · the QA bypass bound to
+its diff, its failure path observed on the runner (#109).
+
+**What it did NOT establish, stated as plainly as the wins:**
+- **The circulation is wired; the heart has not started.** The orchestrator *is* the session, and
+  `bin/warroom` sends a bare `claude`. The loop still begins where a person types.
+- **`gate: qa-verdict` runs `verdict.mjs check`: it VERIFIES that a verdict exists and binds, and does not
+  PRODUCE one.** So the loop can check the gate autonomously and still cannot pass it without a session
+  invoking the panel.
+- **All nine verdicts are author-recorded — one agent, one model family.** `irreversible` asks 2-of-3 and
+  >=2 model families; neither is met. *The checks ran and are green* is not *the tier was satisfied*.
+  Accepted risk, exit **2026-11-17**.
+- **"Built" must not be read as "the gate met."** This repo has made that error twice — Phase 8b's exit gate
+  and P0 item 6.
+
+**One reversal, recorded because a decision was taken on bad evidence and then unwound:** the orchestrator
+retired the `parseYamlSubset` backlog item on **plain-scalar** evidence and told three lanes to stand down.
+The defect's real shape is a **block scalar**, where our parser and real YAML do disagree. **The item
+stands** (durable record A55.1). A parallel session has since measured the root cause as `scanLines()`, a
+whole-document pre-pass — **six losses, not one** — with the live corruption in `.claude/skills/CURATION.yml`
+rather than in the `#` case the orchestrator named.
+
+**Provenance, because the two halves have different standing:** the commit count, the 50 verdict records,
+`framer`'s 5 dispatch sites, 6-of-6 triggers and `sourcer`'s grant were **re-derived in a worktree at
+`d1294a4`**. Main's **57/57 CI result is reported by the team lead and is not verified here** — this sandbox
+has no network.
+
+**Reversibility:** hard-to-reverse — the definition reorders every remaining wave and the nine PRs are
+merged; the deferrals themselves are reversible.
+**Owner:** builder (`builder-one-living-status`) · **founder decision 2026-08-26**
+**Affects:** `docs/STATUS.md`, `.claude/gates.yml`, `.claude/playbooks/`, `bin/warroom`, and every agent
+that reads "built" as "gated"

@@ -342,57 +342,9 @@ size and not age. A 1,035-byte entry cited in 24 places nets 31 bytes and was le
 `.claude/memory/DECISIONS.md`, `CLAUDE.md`
 
 ## 2026-08-26 — Done is "the loop runs itself"; nine PRs wired the circulation and did not start the heart
-
-**Context:** the wave needed a definition of done a reader could check rather than argue about. Rule 4
-requires a choice affecting others to be appended here, and the choice that defined this entire wave never
-was — `grep 'loop runs itself'` returns **0** against a control of 51 for `decision`. The 2026-08-25 entry
-above records the reaffirmation half only.
-
-**Options considered:** done = every specified surface is built / done = the loop runs itself / done = one
-venture task shipped end to end.
-
-**Decision (founder, 2026-08-26): done = *the loop runs itself*.** Waves A+B+C in scope. **Mission-control
-surfaces and P1 portability are deferred** — real work, deliberately not on the path to that definition.
-The companion decision, *proof = harness work only*, **reaffirms** the 2026-08-25 entry above rather than
-replacing it; read it there rather than here.
-
-**What it produced:** nine PRs, `47dbbd6` → `d1294a4`, **127 commits**, main CI **57/57 · 0 failed · 0
-skipped**, **50 verdict records**. The closures, compactly: six chain-guard bypasses (#114) · `sourcer`
-granted a narrow `mcpServers: [claim-append]` and **not a `Write` tool** (#112) · an honest dispatch signal
-(#110) · `verdict.mjs` refusing unknown flags (#116) · a refusal made a terminal value distinct from a block
-(#115) · fixture-position sweeps (#117) · `gate:` made executable, 6 of 6 triggers, `framer` 0 → 5 (#113) ·
-the orchestrator reaching the gate, **and only the orchestrator, by design** (#111) · the QA bypass bound to
-its diff, its failure path observed on the runner (#109).
-
-**What it did NOT establish, stated as plainly as the wins:**
-- **The circulation is wired; the heart has not started.** The orchestrator *is* the session, and
-  `bin/warroom` sends a bare `claude`. The loop still begins where a person types.
-- **`gate: qa-verdict` runs `verdict.mjs check`: it VERIFIES that a verdict exists and binds, and does not
-  PRODUCE one.** So the loop can check the gate autonomously and still cannot pass it without a session
-  invoking the panel.
-- **All nine verdicts are author-recorded — one agent, one model family.** `irreversible` asks 2-of-3 and
-  >=2 model families; neither is met. *The checks ran and are green* is not *the tier was satisfied*.
-  Accepted risk, exit **2026-11-17**.
-- **"Built" must not be read as "the gate met."** This repo has made that error twice — Phase 8b's exit gate
-  and P0 item 6.
-
-**One reversal, recorded because a decision was taken on bad evidence and then unwound:** the orchestrator
-retired the `parseYamlSubset` backlog item on **plain-scalar** evidence and told three lanes to stand down.
-The defect's real shape is a **block scalar**, where our parser and real YAML do disagree. **The item
-stands** (durable record A55.1). A parallel session has since measured the root cause as `scanLines()`, a
-whole-document pre-pass — **six losses, not one** — with the live corruption in `.claude/skills/CURATION.yml`
-rather than in the `#` case the orchestrator named.
-
-**Provenance, because the two halves have different standing:** the commit count, the 50 verdict records,
-`framer`'s 5 dispatch sites, 6-of-6 triggers and `sourcer`'s grant were **re-derived in a worktree at
-`d1294a4`**. Main's **57/57 CI result is reported by the team lead and is not verified here** — this sandbox
-has no network.
-
-**Reversibility:** hard-to-reverse — the definition reorders every remaining wave and the nine PRs are
-merged; the deferrals themselves are reversible.
-**Owner:** builder (`builder-one-living-status`) · **founder decision 2026-08-26**
-**Affects:** `docs/STATUS.md`, `.claude/gates.yml`, `.claude/playbooks/`, `bin/warroom`, and every agent
-that reads "built" as "gated"
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-01). Wave one is recorded in full in CLAUDE.md Project State, per-PR for #109-#117; this entry is the superseded working copy. Archived to make room for the Phase 9 port breadcrumb.*
+***Cited in prose by 3 location(s)**, which the heading above keeps resolvable: `.qa/verdicts/f71367a3a9a93b68eefeb38da2130ae1ca095dee11a65ceea53e08bf64ebe665.json:9` (date), `docs/08-agents_work/sessions/2026-08-26-builder-wave-decision-recorded.md:12` (title-phrase), `docs/08-agents_work/sessions/2026-08-26-ceo-wave-one.md:21` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-29 — Design: conformance binds, quality informs; taste enters once, as references
 
@@ -422,3 +374,43 @@ conformance binds by being a test and by nothing else**; the lens and playbook a
 **Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29**
 **Affects:** `.claude/lenses.yml`, `.claude/review-lenses.yml`, `.claude/playbooks/design-pass.yml`,
 `scripts/build-tokens.mjs`, `scripts/design-probe.mjs`, `design/`, every future design dispatch
+
+## 2026-08-31 — Phase 9 executed against beeond: what ports, what is authored per repo, and the gate that stayed open
+
+**Founder direction, 2026-08-29/31:** full harness rather than instruments-only (I recommended
+instruments-only and was overruled knowingly), a real check runner and CI in the target, an installer
+rather than a hand-copy, and the roster swap done in the same change as the handoff rewrite.
+
+**The split posture, and it is the durable part.** Two classes of harness file, and confusing them is what
+made eight defects invisible from inside this repo. **Portable:** the enforcement spine — `ledger.mjs`,
+`classifier.js`, `verdict.mjs`, `run-checks.mjs`, `lib/check-suite.js` — which has *zero* code-level
+coupling to any agent name, lens or playbook. **Per-repo, must be authored:** the `STEPS` list,
+`qa-tier-floor.yml`, `ci.yml`, `CURATION.yml`, and every posture header. A `POSTURE: BLOCKS` line is a
+claim about the repository the file sits in; copying it carries a false claim into a repo where it is not
+true. **Four of the eight were one shape — a list describing ONE repository, embedded in portable code:**
+tests reading the host's own `seeds.json`, the ledger exemptions compiled into `ledger.mjs`, meta-tests
+coupled to the live step list, and skill routers indexing one library. Five were fixed at source and
+re-ported; patching the target's copies would have forked the suite into two that drift apart.
+
+**The rule the port earned:** an installer, not a copy. A hand-copy cannot answer "does the target still
+have the harness, or has it drifted?" `--verify` answers it as an exit code — in sync 0, drifted 1, could
+not check 2 — and dry-run is the default because `verdict.mjs` once shipped the opposite polarity.
+
+**A figure beside its own command had rotted in three days.** `.qa/` is 68 verdicts, not the 50 this
+repo's `CLAUDE.md` records. Found by running the command written next to the number. Keep commands in
+prose, not results — the practice works only if someone runs them.
+
+**Gate 3 is open and is not a failure.** Of four acceptance gates — installer `--verify` 0, a suite tally
+with the denominator read before the verdict, CI green on a real PR, one real claim from the target's own
+work — three are met. **CI green needs a push and a push was never requested**, so the one gate requiring
+the outside world is the one still open. **Phase 8b's exit gate is discharged**: beeond's ledger now holds
+a real claim arising from beeond's own design work, not a fixture. Its id lives in beeond's ledger and is
+deliberately not cited here — this repo's checker cannot resolve another project's claim, and declaring
+it exempt would mean writing a false reason into `.claude/unresolvable-citations.yml`.
+
+**Reversibility:** reversible in agentvibe — additive installer, manifest and tests, plus five source
+fixes to existing scripts; no agent file, workflow or STEP list touched. The target's roster swap is
+`irreversible` tier, founder-approved, and tagged `pre-harness-port-2026-08-30` in beeond.
+**Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29 / 2026-08-31**
+**Affects:** `bin/fleet-install.mjs`, `fleet/MANIFEST.yml`, `scripts/fleet-install.test.mjs`,
+`.claude/unresolvable-citations.yml`, `scripts/build-tokens.mjs`, every future port target
