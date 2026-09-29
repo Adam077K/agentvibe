@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "kind": "Orchestrator cross-contract inspection; not independent Phase G acceptance",
+  "subject": "Uncommitted Phase F kernel/authority and company/human drafts in their isolated author worktrees",
+  "findings": [
+    {
+      "id": "FI-01",
+      "issue": "Command acceptance and common types diverge between drafts: independently witnessed acceptance, UTC timestamps, Money exponent, Position/watermarks and identity/intent aliases need one canonical definition.",
+      "owner": "repair_company_foundations with attack_technical",
+      "status": "Addressed in committed specification and inspected by orchestrator; full schema consolidation, independent review and runtime verification remain",
+      "completion_evidence": {
+        "commit": "cb1eac4",
+        "specification": "planning/specification/03-company-capabilities.md#record-and-procedure-contract",
+        "catalog": "planning/specification/capabilities.json",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-02",
+      "issue": "Capability dependency lists contain startup cycles; a fresh venture needs a valid first investigation/design path without invented prior customers, support or fulfillment evidence.",
+      "owner": "repair_company_foundations",
+      "status": "Independent F-integration-02 closes FIR01/FIR02 semantic startup gaps at86bb9ef; runtime checks remain unexecuted",
+      "completion_evidence": {
+        "commit": "cb1eac4",
+        "specification": "planning/specification/03-company-capabilities.md#record-and-procedure-contract",
+        "catalog": "planning/specification/capabilities.json",
+        "runtime": null,
+        "limitation": "Earlier root inspection missed the capacity-route and pricing-acceptance joins; not independent closure."
+      }
+    },
+    {
+      "id": "FI-03",
+      "issue": "LaunchReadiness delivery/support fields still use model ExecutionCapacity where actual DeliveryCapacity is required.",
+      "owner": "repair_company_foundations",
+      "status": "Addressed in committed specification and inspected by orchestrator; full schema consolidation, independent review and runtime verification remain",
+      "completion_evidence": {
+        "commit": "cb1eac4",
+        "specification": "planning/specification/03-company-capabilities.md#record-and-procedure-contract",
+        "catalog": "planning/specification/capabilities.json",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-04",
+      "issue": "Required integer financial observations need a typed unknown/absent representation; prose alone cannot prevent unobserved costs becoming zero or prevent preparatory work from deadlocking.",
+      "owner": "repair_company_foundations",
+      "status": "Addressed in committed specification and inspected by orchestrator; full schema consolidation, independent review and runtime verification remain",
+      "completion_evidence": {
+        "commit": "cb1eac4",
+        "specification": "planning/specification/03-company-capabilities.md#record-and-procedure-contract",
+        "catalog": "planning/specification/capabilities.json",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-05",
+      "issue": "Native CLI internal request counts can be opaque. Enforce finite observable job/wall/process/output/network bounds without inventing provider quota or making all native paths ineligible.",
+      "owner": "attack_technical",
+      "status": "Observable native-job bounds and protected tunnel specified and inspected; runtime admission unexecuted",
+      "completion_evidence": {
+        "commit": "16a222f",
+        "specification": "planning/specification/02-authority-recovery.md#72-gate-and-connector-profile",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-06",
+      "issue": "Concrete protected deployment needs a priced bill of materials, maintenance labor and a simpler comparator under the same fault contract. Dedicated gateway host was not required by the stated trusted-host boundary.",
+      "owner": "attack_technical; remaining S03/S07 author",
+      "status": "Priced BOM, actual-labor unknowns and serious VPS/S0 comparators specified and root-inspected; independent assessment and operating feasibility remain",
+      "completion_evidence": {
+        "commit": "c3519f5",
+        "specification": "planning/specification/07-integrations-capacity.md#7-deployment-economics-and-comparators",
+        "inspection": "research/reviews/2026-09-12-integration-economics-inspection.md",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-07",
+      "issue": "Nine component interface rows do not alone supply every required responsibility, nonresponsibility, owner, state, lifecycle, trust, observability, evaluation, scaling, version and removal contract.",
+      "owner": "Remaining component/schema/build integration",
+      "status": "Nine component by19attribute contracts specified and root-read; independent integration/full-plan judgment and implementation remain",
+      "completion_evidence": {
+        "commit": "7cf71f5",
+        "specification": "planning/specification/10-components-authority-traceability.md",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-08",
+      "issue": "Committed group, SendClaim and stored business result must not contain their own future signed receipt/hash; post-witness proof must be attached by exact external identity.",
+      "owner": "attack_technical",
+      "status": "Addressed in committed amendment and inspected by orchestrator; independent integration review and runtime tests pending",
+      "completion_evidence": {
+        "commit": "e9201fa",
+        "specification": "planning/specification/01-contract-kernel.md and 02-authority-recovery.md",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-09",
+      "issue": "Independent audit found nftables timestamp unit/timezone documentation conflict and kernel-buffer versus wire-frame distinction; qualify exact userspace encoding and hook claim.",
+      "owner": "attack_technical",
+      "status": "Addressed in committed amendment and inspected by orchestrator; independent integration review and runtime tests pending",
+      "completion_evidence": {
+        "commit": "e9201fa",
+        "specification": "planning/specification/01-contract-kernel.md and 02-authority-recovery.md",
+        "runtime": null
+      }
+    },
+    {
+      "id": "FI-10",
+      "issue": "Final catalog must expand composite Budget/Handoff subjects and presentation aliases to concrete record/value reference types. Per-question pointers must become substantive answers, not chapter-link counts.",
+      "owner": "Full schema and coverage consolidation",
+      "status": "CLOSED at specification level by independent review at cb4bf52 (F-canonical-01): Budget→[ResourceAccount,Reservation], Handoff→[Continuation,ResponsibilityAssignment,HandoffAcceptance], Evaluation→[EvaluationPlan,EvaluationRun,EvaluationTrial,EvidenceJudgment], role-specific single-member enums; 0 composite Ref<> left in record-registry. Caveat CCR-05 (destination resolution).",
+      "completion_evidence": {
+        "commit": "cb4bf52",
+        "specification": "planning/specification/contracts/subject-bindings.json",
+        "independent_review": "planning/reviews/F-canonical-01.md",
+        "runtime": null
+      },
+      "inspection_note": "Previously cited Ref<Budget> example was already repaired in cb1eac4: Experiment uses ResourceAccount and Reservation references. Remaining obligation is full consolidation and semantic coverage, not that stale example. Work/knowledge draft makes Evaluation a composite; company Ref<Evaluation> fields need role-specific exact Plan/Run/Judgment bindings. Handoff must preserve accepted assignment transfer alongside Continuation."
+    },
+    {
+      "id": "FI-11",
+      "issue": "Full schema consolidation must supply registered TypedPredicate IDs and argument shapes plus materially distinct per-transition guards; draft40-record work catalog has373 edges sharing one common guard and delegating to short record-specific prose. A copied guard count does not establish buildability.",
+      "owner": "Full schema consolidation after05–08 integration",
+      "status": "MECHANISM CLOSED; CONTENT AUTHORED IN PART, NOT CLOSED - content lane on docs/vision-phase-content 2026-09-13; independent reviewer must confirm. The repair lane closed the mechanism (op:\"call\" in edge guards 0->1295, every edge calls its own criterion_id, declared-but-unread arguments 2588->0, sibling collisions with state literals erased 206->0) and left the CONTENT open: under the reviewer's harsher all-strings-erased method sibling collisions were 210, distinct edge skeletons 92 and the largest share 567. The content lane states, per phase, what evidence the prose says a transition into that phase requires: 760 criteria carry a body composed from the registered primitives plus `derived_from` citations that resolve to a file AND quote text that file actually contains; 67 carry `content_unspecified` with a registered entry in contracts/phase-content-gaps.json; 10 are preserved because their bodies join the FI-12 bootstrap chain. Measured after: sibling collisions 210->5, distinct skeletons 92->327, largest share 567->122. The five residuals are declared in phase-content-gaps.json#/residual_sibling_collisions with a reason each and the declaration is checked in BOTH directions. NOT CLOSED: (a) all 67 gaps are records whose payload declares no field the stated requirement can bind to -- 39 of them `superseded`, where the corpus says a successor must exist and the record carries no field naming one; (b) `due_preserved` states 11-schemas-state-contracts.md's 'restrictive action preserves duties' directly and is used nowhere, because its continuation_ref parameter takes an argument no criterion declares and argument shapes were out of scope; (c) two prose contradictions are recorded and neither side encoded; (d) NO RUNTIME EXISTS and none of this is executed -- the enrichment is author-recorded and pending independent review. Re-measure with contracts/tools/guard_distinctness.py.",
+      "completion_evidence": null
+    },
+    {
+      "id": "FI-12",
+      "issue": "An acceptance judgment on a proposed subject revision may mismatch immediately if the subject becomes validated/accepted by incrementing that same revision. Exact FIR subject/version binding requires a coherent candidate-state and judgment write contract, not equivalence by summary.",
+      "owner": "Canonical schema author; independent reviewer after concrete alternatives",
+      "status": "CONSTRAINTS 2 AND 6 REPAIRED, NOT CLOSED - repair on docs/vision-canonical-repair 2026-09-13; independent reviewer must confirm. (2) subject_ref.record_type enum on all eight subject-taking primitives 173->167, derived from `intrinsic: true`; two generic Ref<Record> predicate enums narrowed; the six criterion.<intrinsic>.<phase>.v1 predicates removed; validate_contracts.py now compares a declared argument type against the enum, which nothing did before. The review's counterexample validates at a7b2c5c (exit 0) and is rejected here. (6) bootstrap_roots invoked by 0 of 2252 predicates -> 8 evidence.bootstrap.<Record>.v1 predicates; nine chain criteria carry a genesis disjunct; docs/vision-system/planning/specification/contracts/tools/acceptance_chain.py walks the chain and reports terminates_at_a_bootstrap_root false->true. OPEN and a deployment prerequisite, not a design gap: the identities of the actual founder and root custodian. The validator's FI-12 evidence block no longer tests an in-file FocalStore stub; it reads the registries.",
+      "completion_evidence": null,
+      "constraints": [
+        "Exact immutable business subject and acceptance predicate, with current authoritative judgment/status validity at use",
+        "No own future hash/receipt or recursively self-accepted LifecycleStatus",
+        "No invented native performance, professional standing or beneficiary acceptance",
+        "Later business mutation invalidates affected current acceptance and transitive evidence",
+        "No arbitrary forward references, stale status replay or projection-created authority",
+        "Actual competent human evaluator/owner bootstrap without recursive self-certification"
+      ],
+      "proposal": {
+        "kind": "Design proposal from canonical author,2026-09-12; not yet committed/integrated or independently accepted",
+        "selected": "Immutable business payload revisions plus intrinsic LifecycleStatus revisions and one current status head per exact business subject. State does not mutate judged business bytes. LifecycleStatus has no lifecycle/acceptance of its own.",
+        "concurrency": "Jointly CAS current business head, prior lifecycle head and relevant live validity heads in the same ordered transaction. New business revision initializes status and invalidates old current acceptance; C04 reads current subject/status/dependency closure at use.",
+        "rejected_alternative": "Atomic frozen complete candidate-postimage and judgment group with final independent digest endorsements; adds routine preparation/confirmation labor and brittle self/child joins. Broader mechanical migration of existing lifecycle contracts preferred, pending defensibility review.",
+        "remaining": "Complete affected schema/API/storage/command/source mappings, finite actual human bootstrap, exact tests, migration version and independent conformance judgment."
+      }
+    },
+    {
+      "id": "CCR-01",
+      "issue": "Edge criterion_id is named on all 1295 edges and evaluated by no edge guard; 11-schemas-state-contracts.md:111 claims otherwise. Missing decision: does a transition require its criterion, and how is it evaluated?",
+      "class": "d",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Repaired on docs/vision-canonical-repair 2026-09-13 and given content on docs/vision-phase-content 2026-09-13, both pending independent review. The edge evaluates its criterion (mechanism) and the criterion now states a sourced per-phase requirement or an explicit gap (content). Negative fixtures: fixtures/negative/r1-edge-does-not-call-its-criterion.json and the four fixtures/negative/r9-*.json, which cover an unsourced body, a shape-identical sibling pair, a gap marker with no registered gap, a citation to a file that does not exist and a quote its source does not contain.",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-02",
+      "issue": "bootstrap_roots is defined in primitive-registry.json and invoked by zero predicates; the mandate→attested_result→mandate regress has no terminator. Missing decision: the finite actual human root of trust.",
+      "class": "d",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Repaired on docs/vision-canonical-repair 2026-09-13, pending independent review. Mechanism decided (signed BootstrapCandidate group, not a 174th record type; bootstrap_roots gains subject_ref; genesis is a disjunct). Founder decision still open: the identities of the founder and root custodian. Negative fixture: fixtures/negative/r2-acceptance-chain-loses-its-root.json.",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-03",
+      "issue": "Intrinsic/LifecycleStatus subject exclusion is prose-only in invariants.json; all eight subject-taking primitives' record_type enums admit all 173 records including LifecycleStatus and six intrinsics.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Repaired on docs/vision-canonical-repair 2026-09-13, pending independent review. Negative fixture: fixtures/negative/r3-lifecycle-status-as-judgment-subject.json, which validates at a7b2c5c and is rejected after the repair.",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-04",
+      "issue": "26 edges list kernel.projection.recompute in allowed_command_ids; it is absent from the 104-entry command-registry.json. validate_contracts.py:113 checks only non-emptiness, never membership.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Repaired on docs/vision-canonical-repair 2026-09-13, pending independent review. kernel.projection.recompute registered with its own guard and schema; membership and target_types now checked on all 1295 edges. Negative fixture: fixtures/negative/r4-edge-routes-to-an-unregistered-command.json.",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-05",
+      "issue": "source-field-mappings.json destination is checked only for truthiness (validate_contracts.py:179); ~56 do not resolve against records.schema.json; one is a sentence.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Repaired on docs/vision-canonical-repair 2026-09-13, pending independent review. 56 unresolvable destinations -> 0; 22 of the 56 were false findings of a resolver that did not follow $ref. Grammar has one implementation, tools/destination_paths.py. Negative fixtures: r5-destination-names-a-field-that-does-not-exist.json, r5-destination-carries-prose.json.",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-06",
+      "issue": "invariants.json, control-contracts.json and endpoints.json are loaded but referenced by no check and no schema; values.schema.json#/$defs/string is unconstrained.",
+      "class": "b",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Repaired on docs/vision-canonical-repair 2026-09-13, pending independent review. All three files bind; 4 of 25 invariant clauses have a registered check and 21 declare themselves prose-only; SendClaim's unreachable control contract moved to contracts/prose/. values.schema.json#/$defs/string bounded - the 8192 ceiling is flagged as a founder decision. Negative fixtures: r6-*.json.",
+      "completion_evidence": null
+    },
+    {
+      "id": "CCR-07",
+      "issue": "Coverage checks compare registry to inventory, both authored in the same run; the inventory is never re-derived from capabilities.json / work-knowledge-contracts.json.",
+      "class": "a",
+      "owner": "canonical contract repair author; independent reviewer after repair",
+      "status": "Repaired on docs/vision-canonical-repair 2026-09-13, pending independent review. coverage-inventory.json is derived from capabilities.json, work-knowledge-contracts.json, subject-bindings.json and the registries; the validator recomputes and fails on drift. source_fields was a byte copy of the mappings and is now the independent 864-id oracle, which also settles the 'Not checked' item on source_fields. Negative fixtures: r7-*.json.",
+      "completion_evidence": null
+    }
+  ],
+  "planning_accepted": false,
+  "runtime_tests_executed": false
+}

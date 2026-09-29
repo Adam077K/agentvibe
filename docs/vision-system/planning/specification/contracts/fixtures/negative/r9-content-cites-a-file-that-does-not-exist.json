@@ -1,0 +1,15 @@
+{
+  "id": "r9-content-cites-a-file-that-does-not-exist",
+  "repair": "R9",
+  "finding": "FI-11 content / Rule 3",
+  "why": "Rule 3 is enforced for repo paths elsewhere in this repository and was not enforced here: a criterion could cite any string as its source. This points criterion.Goal.achieved.v1 at a file that does not exist, which is exactly how a citation rots after a rename.",
+  "expect_failure_contains": "derived_from names a file that does not exist",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.Goal.achieved.v1/derived_from/0/file",
+      "op": "replace",
+      "value": "99-a-contract-that-was-never-written.md"
+    }
+  ]
+}

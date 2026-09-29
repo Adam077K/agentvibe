@@ -1,0 +1,17 @@
+{
+  "id": "r18-capability-floor-has-no-source-benign",
+  "repair": "R18",
+  "finding": "F6A-06, benign column",
+  "case": "A term is re-mapped in a way that moves no capability's floor, and the package is not refused for it.",
+  "paired_adverse_fixture": "fixtures/negative/r18-capability-floor-has-no-source.json",
+  "why": "`financial-record` is declared by CAP-20 alone, beside `reporting`, which maps at C2 -- so raising it from C1 to C2 leaves CAP-20's floor at C2 and every other capability untouched. The check compares each declared floor to what the table computes; it does not freeze the table. That distinction is the whole point of deriving the floor rather than typing it: a mapping may be argued about and corrected, and the floors move with it or the build fails.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "class-mapping-table.json",
+      "pointer": "/mappings/financial-record/class",
+      "op": "replace",
+      "value": "C2"
+    }
+  ]
+}

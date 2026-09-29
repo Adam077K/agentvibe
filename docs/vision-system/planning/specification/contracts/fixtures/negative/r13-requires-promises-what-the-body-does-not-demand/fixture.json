@@ -1,0 +1,17 @@
+{
+  "id": "r13-requires-promises-what-the-body-does-not-demand",
+  "repair": "RC-03",
+  "finding": "RC-03 (planning/reviews/G-02-recheck-01.md)",
+  "why": "`requires` and `conjuncts` are independent fields of one spec and nothing compared them, so a criterion could state one requirement and demand another. The recheck saw the live version: after the weakened derivation, `requires` still read \"that Fulfillment is currently `delivered`\" over a body demanding none of it. This fixture adds one sentence to the DERIVATION promising a field no conjunct reads, then regenerates -- so the drift oracle is satisfied and the requires/conjuncts comparison is the only thing left that can object. It tests the direction that matters: prose that over-promises makes a reader believe a guarantee the machine does not carry.",
+  "expect_failure_contains": "RC-03: `requires` names a field path no conjunct demands",
+  "patch": [],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"SalesAgreement\", \"performed\"): spec(",
+      "block_end": "    # -- R-F / G4-02:",
+      "replacement": "over-promising-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true
+}

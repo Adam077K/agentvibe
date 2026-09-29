@@ -1,0 +1,17 @@
+{
+  "id": "r37-a-raised-finding-is-excused-as-a-mention",
+  "repair": "R37",
+  "finding": "F6R-03; planning/reviews/F2-06-recheck-05.md (the F6X-03 RED that forced the raised/mentioned split)",
+  "case": "F6W-04 -- raised by name in F2-06-recheck-03.md -- declared in `#/step6_mention_only`, which would excuse it from the per-id source-row demand.",
+  "paired_benign_fixture": "fixtures/positive/r37-the-mention-only-exemption-is-restated-benign.json",
+  "why": "The per-id demand is over the ids a review RAISES, not every id it mentions, because F2-06-recheck-05.md quoted the r36 benign fixture's synthetic `F6X-03` and turned a verbatim archive into a RED. `#/step6_mention_only` is the exemption that narrowing needs, and an exemption is a hole: written into the wrong row it does on purpose what `F6[A-DRVX]` did to F6W-01..08 by accident. This fixture is the wall on that hole. It adds NOTHING else -- the `finding_sources` row for F6W-04 stays -- so the only reason the validator can reject it is the per-row exemption check, which runs before the set equality so that the id is named rather than reported as arithmetic.",
+  "expect_failure_contains": "AN EXEMPTION NAMES A FINDING THE CORPUS RAISES",
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/step6_mention_only/F6W-04",
+      "op": "add",
+      "value": "Only a mention, as far as this row is concerned."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "r16-02-checker-delivered-the-producers-rationale",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 2; 05-work-agents-skills.md section 9",
+  "case": "A checker whose delivered inputs include the producer's rationale field, detected by the loader's record and not the checker's claim.",
+  "paired_benign_fixture": "fixtures/positive/r16-02-checker-delivered-the-producers-rationale-benign.json",
+  "why": "Section 12.5 row 2. The containment conjunct only asks that everything DECLARED was delivered; the size comparison is what refuses an extra field arriving in the checker's inputs. Deleting it leaves a guard that passes a delivery of the declared set PLUS the producer's rationale. AD-017 is the decision this enforces, and the detection is off the loader's own record rather than off the checker's claimed read list.",
+  "expect_failure_contains": "'guard.readset.delivered_equals_declared', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.readset.delivered_equals_declared/body/predicates/2",
+      "op": "remove"
+    }
+  ]
+}

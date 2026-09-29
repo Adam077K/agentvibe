@@ -1,0 +1,30 @@
+{
+  "id": "r15-pinned-conjunct-buried-in-a-value-slot",
+  "repair": "RC3-02",
+  "finding": "RC3-02 (planning/reviews/G-02-recheck-03.md, probe 4b)",
+  "why": "The same root cause as RC3-01 with a different required contract, so a fix aimed only at `forall` leaves it open. The walker reached every value of every node except `op`, so a conjunct placed in a slot that is not a predicate position at all -- `present`'s `value`, which primitive-registry.json types JsonValue -- was still reported negated=False disjoined=False, which is to say DEMANDED. This fixture buries each of the three pinned conjuncts of criterion.SalesAgreement.performed.v1 inside `present(value: ...)`. Nothing is removed, nothing is disjoined, pin file and prose untouched. Measured before the repair with CONTRACTS_FIXTURE_RUN=1 at exit 0, 269,694 checks, every registry-level check passing. The validator must reject it saying the op sits in a NON-PREDICATE POSITION: as a requirement it is not present, and telling a reader it is missing would send them looking for an op that is right there in the body.",
+  "expect_failure_contains": "PINNED CONJUNCT IN A NON-PREDICATE POSITION",
+  "patch": [],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "RECORD_SPECIFIC_KINDS = (\"nfp\", \"rpp\", \"neF\", \"prF\", \"eqF\")",
+      "block_end": "def literal_kinds(item):",
+      "replacement": "bury-dsl-kinds.py"
+    },
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    if kind == \"not\":",
+      "block_end": "    if kind == \"neF\":",
+      "replacement": "bury-builder.py"
+    },
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"SalesAgreement\", \"performed\"): spec(",
+      "block_end": "    # -- R-F / G4-02:",
+      "replacement": "bury-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "note": "`present(value: <a boolean op>)` is accepted by ast_check because the node's key set is exactly {op, value} and values.schema.json's JsonValue admits the object -- which is the point: the AST is not where this is caught, and typing alone does not catch it. What catches it is `argument_positions` in primitive-registry.json declaring `present.value` a `value` role, and the walk marking everything below a value slot as not-a-conjunct."
+}

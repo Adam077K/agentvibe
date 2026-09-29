@@ -1,0 +1,29 @@
+{
+  "id": "r16-08-fifty-cheap-consultations-inside-one-budget-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 8, benign column; 05-work-agents-skills.md section 9",
+  "case": "Two consultations over one read set, which must not trip the width ceiling.",
+  "paired_adverse_fixture": "fixtures/negative/r16-08-fifty-cheap-consultations-inside-one-budget.json",
+  "why": "Two consultations over ONE read set produce one digest, which is under any ceiling, and the step still declares its read set. Demanding that declaration must not trip anything -- if it did, the ceiling would be over consultations rather than over read sets, which is the design that was rejected.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.delegation.width_ceiling_over_distinct_read_sets/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/declared_read_set"
+        }
+      }
+    }
+  ]
+}

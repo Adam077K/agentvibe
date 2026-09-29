@@ -1,0 +1,25 @@
+{
+  "id": "r18-terminal-flag-not-recorded-on-a-blocked-failure-benign",
+  "repair": "R18",
+  "finding": "F6C-09, F6C-16; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md, benign column",
+  "case": "A failure record blocked with its class named and its terminal flag recorded as false, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-terminal-flag-not-recorded-on-a-blocked-failure.json",
+  "why": "`present` rather than `nonempty` on the flag is deliberate: it is a boolean and `false` is an answer, so a record that stopped for a reason that is not terminal must pass. The patch additionally demands the work order the failure belongs to, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.failure.no_progress_names_recipient/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/work_order_ref"
+        ]
+      }
+    }
+  ]
+}

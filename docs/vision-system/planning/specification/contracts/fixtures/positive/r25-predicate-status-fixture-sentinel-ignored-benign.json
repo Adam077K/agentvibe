@@ -1,0 +1,17 @@
+{
+  "id": "r25-predicate-status-fixture-sentinel-ignored-benign",
+  "repair": "R25",
+  "finding": "F6D-09 owed clause; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-09), benign column",
+  "case": "One registered predicate is given the NEGATIVE-FIXTURE SENTINEL as its `implementation_status`, which is what every fixture-introduced predicate carries, and which must not trip the F6D-09 tripwire.",
+  "paired_adverse_fixture": "fixtures/negative/r25-predicate-status-gains-a-second-classification.json",
+  "why": "This is the exclusion itself, held to a case. `r3-lifecycle-status-as-judgment-subject` patches a predicate INTO the registry to exercise the primitive-argument record-type comparison, and that predicate must declare a status; the status it declares says `negative fixture; never part of the contract`. Before r7-contracts-b the F6D-09 tripwire counted distinct statuses across the whole registry and so fired on r3's own scratch tree, refusing r3 for a reason that had nothing to do with what r3 proves -- a wrong_reason leak, and the suite's whole point is that a rejection for the wrong reason is not a rejection. A benign fixture is what keeps the exclusion from silently widening: if someone ever drops the sentinel from the exclusion, this one fails, and the failure names the reason.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.interest.precondition_invokes_no_model/implementation_status",
+      "op": "replace",
+      "value": "negative fixture; never part of the contract"
+    }
+  ]
+}

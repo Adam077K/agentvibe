@@ -1,0 +1,20 @@
+{
+  "id": "r22-refusal-names-a-predicate-that-is-only-a-string",
+  "repair": "R22",
+  "finding": "F6D-09; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-09)",
+  "case": "`AdmissionRecord.failed_predicate_id` goes back to a free string, so the text `unfamiliar wording` is an admissible failed predicate again.",
+  "paired_benign_fixture": "fixtures/positive/r22-precondition-ids-reordered-benign.json",
+  "why": "F6D-09: this restores the committed state the finding measured. `guard.admission.refusal_names_failed_predicate` asserts the field is nonempty and not the empty string, which `unfamiliar wording` satisfies -- and that phrase is what the guard's own meaning says is NOT a predicate. Adverse case 13 and benign case 17 both turn on the distinction, and only the TYPE carries it. A nonempty check cannot be strengthened into this; the field has to be the derived, ratcheted enum of registry keys.",
+  "expect_failure_contains": "A FIELD THAT NAMES A PREDICATE IS A FREE STRING",
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/AdmissionRecord/properties/payload/properties/failed_predicate_id",
+      "op": "replace",
+      "value": {
+        "$ref": "values.schema.json#/$defs/string"
+      }
+    }
+  ]
+}

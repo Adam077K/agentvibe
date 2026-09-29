@@ -1,0 +1,17 @@
+{
+  "id": "r42-a-natural-key-record-is-created-twice",
+  "repair": "R42",
+  "finding": "F6V-02; registers/review-findings.json (F6V-02), from reviews/F2-06-recheck-02.md",
+  "case": "kernel.record.register states that a registration against an already-allocated natural key CREATES A NEW RECORD, which is the committed behaviour F6V-02 found: the create path specified identically to every other record.",
+  "paired_benign_fixture": "fixtures/positive/r42-the-natural-key-create-path-rows-reordered-benign.json",
+  "why": "F6V-02 measured that record-registry.json asserts RESOLVE-OR-CREATE on the EffectIdentity triple while the only command that creates an EffectIdentity said nothing about natural keys at all. This fixture is that state, written explicitly rather than by omission, so the refusal names the rule instead of a missing key: on_conflict is compared to a constant, so a create path that announces it makes a second record is refused by name for all four natural-key records.",
+  "expect_failure_contains": "THE CREATE PATH FOR A NATURAL-KEY RECORD DOES NOT RESOLVE TO THE EXISTING HEAD",
+  "patch": [
+    {
+      "file": "command-registry.json",
+      "pointer": "/kernel.record.register/transaction_contract/natural_key_resolution/on_conflict",
+      "op": "replace",
+      "value": "create_new_record"
+    }
+  ]
+}

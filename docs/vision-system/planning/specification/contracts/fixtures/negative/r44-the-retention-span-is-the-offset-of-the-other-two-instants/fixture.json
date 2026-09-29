@@ -1,0 +1,19 @@
+{
+  "id": "r44-the-retention-span-is-the-offset-of-the-other-two-instants",
+  "repair": "R44",
+  "finding": "F6C-11; planning/F2/07-repair-names-contract.md (F6C-11, OWED -- the span is not tied to the instants)",
+  "case": "The two operands of the instant offset are SWAPPED IN THE DERIVATION and the criterion regenerated, so retention_span is equated to landed_at minus retention_until -- the opposite span, mentioning exactly the same two fields.",
+  "paired_benign_fixture": "fixtures/positive/r44-the-landed-operand-list-reordered-benign/fixture.json",
+  "why": "The lane that shipped ltF recorded this hole as its own: a producer could state a thirty-day outage, a thirty-one-day retention_span and a retention_until one hour after landed_at, and the criterion passed. The offset conjunct closes it. This fixture is the counterexample to the CLOSURE rather than to the hole -- it leaves every pointer, every op name and every type in place and inverts only the sense, so the pin row (which names three pointers and cannot say which side of the subtraction each is on) still matches and only the structural read refuses it. That is F6Y-02 measured a second time, deliberately, against the check written in its shadow. The swap is made in the DERIVATION and regenerated because a hand edit of a criterion is refused as drift long before this rule is reached, which would test the drift oracle instead.",
+  "expect_failure_contains": "THE RETENTION SPAN IS NOT TIED TO THE INSTANTS IT MEASURES",
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "('eqOffset', '/payload/retention_span', '/payload/retention_until', '/payload/landed_at')",
+      "block_end": ", AR],",
+      "replacement": "swapped-instants.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "patch": []
+}

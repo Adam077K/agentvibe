@@ -1,0 +1,1420 @@
+{
+  "schema_version": 1,
+  "kind": "Requirements decomposition; not a completed capability specification",
+  "source": "Founder directive sections 1.1, 8.4, 8.18–8.23 and THE-VISION-AND-THE-FIELDS.md",
+  "reason": "F25-Q01 combines many meaningful company jobs in one question; a count of answered questions alone cannot prove lifecycle substance. Cross-cutting machinery must not displace actual business fulfillment.",
+  "status": "Contract authored for every capability in planning/specification/capabilities.json; implementation not started (no module exists); independent review: see planning/reviews/G-01-completeness-vision-coverage.md. Contract authored is not accepted and is not implemented.",
+  "generation": {
+    "generated_by": "scripts/vision-capability-requirements.mjs",
+    "generated_from": "planning/specification/capabilities.json",
+    "hand_edit": "refused — run `node scripts/vision-capability-requirements.mjs project --write`; `verify` fails on drift",
+    "contract_location_rule": "JSON pointer to the capability contract in planning/specification/capabilities.json",
+    "evaluation_evidence_rule": "JSON pointer to that contract's evaluation.method",
+    "implementation_location_rule": "No module exists for any of the 46. The value names the construction stage that builds them, derived as the unique stage of planning/implementation-graph.json whose components_and_contracts matches /all company CAP procedures/i — currently B04: \"All company CAP procedures and responsibility/competence, work/workflow/delegation/skills, context/knowledge/forgetting, protected capture/dependencies and qualified judgments. C01/C02/C03/C05/C06/C07.\"",
+    "required_field_locations_rule": "One pointer per directive §8.4 required field, into the same contract. A reviewer navigating §8.4 through this register reaches the contract text, which was the G1-01 counterexample.",
+    "repair_state": "G1-01 repaired, pending independent recheck"
+  },
+  "capabilities": [
+    {
+      "id": "CAP-01",
+      "concern": "Intent and commitments",
+      "source_fields": [
+        1,
+        30
+      ],
+      "required_outcome": "Preserve endorsed purposes, constraints, promises, taste, corrections and rejected choices through delivery and changes of mind.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/0",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C01",
+      "planned_procedure_id": "company.cap01.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/0/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/0/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/0/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/0/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/0/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/0/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/0/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/0/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/0/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/0/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/0/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/0/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-02",
+      "concern": "Portfolio direction",
+      "source_fields": [
+        20,
+        24
+      ],
+      "required_outcome": "Admit, compare, fund and stop ventures while keeping actual principals, restricted resources, shared dependencies and differing stages visible.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/1",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C01",
+      "planned_procedure_id": "company.cap02.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/1/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/1/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/1/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/1/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/1/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/1/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/1/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/1/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/1/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/1/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/1/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/1/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-03",
+      "concern": "Opportunity discovery",
+      "source_fields": [
+        1,
+        7,
+        25
+      ],
+      "required_outcome": "Find and compare candidate problems with contrary evidence, uncertainty, feasible tests and explicit rejection reasons.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/2",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap03.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/2/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/2/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/2/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/2/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/2/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/2/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/2/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/2/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/2/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/2/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/2/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/2/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-04",
+      "concern": "Customer research",
+      "source_fields": [
+        10,
+        25,
+        26
+      ],
+      "required_outcome": "Plan authorized research, work with original customer material, distinguish observed needs from generated hypotheses and preserve sampling omissions.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/3",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap04.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/3/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/3/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/3/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/3/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/3/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/3/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/3/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/3/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/3/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/3/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/3/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/3/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-05",
+      "concern": "Market research",
+      "source_fields": [
+        7,
+        25,
+        29
+      ],
+      "required_outcome": "Establish dated market and competitor evidence, conflicting interpretations and changes requiring a strategy review.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/4",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap05.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/4/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/4/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/4/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/4/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/4/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/4/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/4/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/4/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/4/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/4/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/4/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/4/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-06",
+      "concern": "Company and product strategy",
+      "source_fields": [
+        1,
+        20,
+        24,
+        25
+      ],
+      "required_outcome": "Translate evidence and endorsed purpose into choices, opportunity costs and measurable propositions without inventing founder values.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/5",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C01",
+      "planned_procedure_id": "company.cap06.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/5/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/5/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/5/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/5/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/5/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/5/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/5/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/5/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/5/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/5/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/5/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/5/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-07",
+      "concern": "Product management",
+      "source_fields": [
+        2,
+        25
+      ],
+      "required_outcome": "Maintain customer outcomes, requirements, acceptance criteria, priorities and surviving promises across product changes.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/6",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap07.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/6/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/6/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/6/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/6/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/6/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/6/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/6/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/6/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/6/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/6/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/6/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/6/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-08",
+      "concern": "Experience and product design",
+      "source_fields": [
+        8,
+        25
+      ],
+      "required_outcome": "Produce and evaluate usable experiences with accessibility, taste, user evidence and explicit design trade-offs.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/7",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap08.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/7/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/7/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/7/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/7/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/7/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/7/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/7/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/7/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/7/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/7/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/7/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/7/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-09",
+      "concern": "Brand and identity",
+      "source_fields": [
+        1,
+        25,
+        29
+      ],
+      "required_outcome": "Develop coherent identity, audience understanding and substantiated public positioning within actual use rights and owner taste.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/8",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap09.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/8/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/8/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/8/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/8/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/8/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/8/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/8/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/8/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/8/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/8/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/8/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/8/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-10",
+      "concern": "Software and technical construction",
+      "source_fields": [
+        8,
+        17,
+        25,
+        41
+      ],
+      "required_outcome": "Produce, review, test, integrate, release and maintain working software and infrastructure through authorized environments and recoverable changes.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/9",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap10.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/9/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/9/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/9/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/9/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/9/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/9/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/9/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/9/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/9/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/9/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/9/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/9/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-11",
+      "concern": "Quality assurance",
+      "source_fields": [
+        14,
+        25,
+        40,
+        41
+      ],
+      "required_outcome": "Judge substantive outcomes, process and evidence with independent negative controls and actual defect disposition.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/10",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C06",
+      "planned_procedure_id": "company.cap11.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/10/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/10/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/10/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/10/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/10/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/10/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/10/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/10/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/10/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/10/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/10/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/10/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-12",
+      "concern": "Launch and release",
+      "source_fields": [
+        11,
+        25,
+        28,
+        29
+      ],
+      "required_outcome": "Coordinate readiness, authorized outward commitments, fulfillment, support, monitoring and correction or rollback of a launch.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/11",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C02",
+      "planned_procedure_id": "company.cap12.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/11/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/11/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/11/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/11/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/11/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/11/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/11/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/11/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/11/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/11/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/11/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/11/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-13",
+      "concern": "Content production",
+      "source_fields": [
+        11,
+        25,
+        29
+      ],
+      "required_outcome": "Create useful audience-specific material with accepted claims, rights, taste, revisions, distribution eligibility and outcome evaluation.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/12",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap13.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/12/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/12/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/12/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/12/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/12/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/12/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/12/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/12/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/12/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/12/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/12/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/12/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-14",
+      "concern": "Marketing and distribution",
+      "source_fields": [
+        11,
+        20,
+        25,
+        29
+      ],
+      "required_outcome": "Select and execute authorized channels and experiments while preserving recipient constraints and distinguishing interest from vanity metrics.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/13",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap14.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/13/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/13/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/13/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/13/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/13/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/13/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/13/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/13/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/13/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/13/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/13/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/13/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-15",
+      "concern": "Sales",
+      "source_fields": [
+        11,
+        20,
+        25,
+        53
+      ],
+      "required_outcome": "Move an opportunity through substantiated offers, actual agreement, payment and accepted delivery without unauthorized promises or fictional authority.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/14",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap15.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/14/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/14/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/14/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/14/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/14/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/14/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/14/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/14/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/14/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/14/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/14/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/14/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-16",
+      "concern": "Customer communication",
+      "source_fields": [
+        11,
+        12,
+        25,
+        29
+      ],
+      "required_outcome": "Respond through permitted relationships and purposes, preserve exact promises and corrections, and handle consequential ambiguity before sending.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/15",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap16.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/15/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/15/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/15/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/15/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/15/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/15/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/15/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/15/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/15/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/15/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/15/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/15/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-17",
+      "concern": "Support and customer success",
+      "source_fields": [
+        25,
+        30,
+        31
+      ],
+      "required_outcome": "Resolve actual customer needs, perform authorized remedies, verify fulfillment and discover recurring or underserved experiences.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/16",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap17.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/16/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/16/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/16/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/16/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/16/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/16/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/16/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/16/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/16/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/16/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/16/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/16/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-18",
+      "concern": "Pricing and commercial economics",
+      "source_fields": [
+        20,
+        25
+      ],
+      "required_outcome": "Compare willingness-to-pay evidence, obligations, contribution and alternatives; establish price proposals and authorized commercial terms.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/17",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap18.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/17/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/17/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/17/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/17/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/17/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/17/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/17/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/17/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/17/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/17/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/17/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/17/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-19",
+      "concern": "Finance and treasury",
+      "source_fields": [
+        20,
+        24,
+        25,
+        53
+      ],
+      "required_outcome": "Maintain money, cash commitments, reserves and cash-flow evidence; authorize scoped payments and reconcile unknown effects.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/18",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C04",
+      "planned_procedure_id": "company.cap19.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/18/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/18/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/18/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/18/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/18/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/18/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/18/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/18/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/18/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/18/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/18/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/18/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-20",
+      "concern": "Bookkeeping and financial close",
+      "source_fields": [
+        20,
+        25,
+        27,
+        53
+      ],
+      "required_outcome": "Reconcile native financial records and discrepancies with original evidence and competent determinations for applicable reporting.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/19",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap20.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/19/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/19/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/19/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/19/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/19/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/19/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/19/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/19/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/19/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/19/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/19/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/19/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-21",
+      "concern": "Legal and regulatory coordination",
+      "source_fields": [
+        16,
+        25,
+        27,
+        53
+      ],
+      "required_outcome": "Locate activity/entity/jurisdiction obligations, route actual professional determinations, preserve deadlines and authorized contractual standing.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/20",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap21.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/20/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/20/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/20/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/20/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/20/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/20/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/20/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/20/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/20/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/20/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/20/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/20/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-22",
+      "concern": "Privacy and data rights",
+      "source_fields": [
+        16,
+        26,
+        27
+      ],
+      "required_outcome": "Enforce purpose and access, support rights requests, correct or erase appropriate data, and reconcile late copies, vendors and restored stores.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/21",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap22.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/21/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/21/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/21/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/21/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/21/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/21/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/21/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/21/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/21/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/21/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/21/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/21/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-23",
+      "concern": "Security operations",
+      "source_fields": [
+        15,
+        16,
+        17,
+        28,
+        31
+      ],
+      "required_outcome": "Maintain actual access boundaries, detect incidents and delegated persistence, contain compromise and verify scoped recovery.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/22",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C08",
+      "planned_procedure_id": "company.cap23.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/22/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/22/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/22/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/22/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/22/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/22/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/22/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/22/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/22/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/22/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/22/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/22/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-24",
+      "concern": "Procurement and suppliers",
+      "source_fields": [
+        20,
+        25,
+        27,
+        53
+      ],
+      "required_outcome": "Compare buy/build options, verify supplier capability and dependencies, obtain authorized terms and replace suppliers without abandoning duties.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/23",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap24.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/23/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/23/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/23/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/23/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/23/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/23/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/23/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/23/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/23/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/23/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/23/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/23/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-25",
+      "concern": "Partnerships",
+      "source_fields": [
+        16,
+        20,
+        25,
+        30
+      ],
+      "required_outcome": "Assess shared value, negotiate within mandate, preserve commitments and dependencies, and evaluate or end the relationship responsibly.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/24",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap25.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/24/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/24/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/24/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/24/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/24/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/24/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/24/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/24/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/24/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/24/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/24/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/24/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-26",
+      "concern": "Hiring and external capacity",
+      "source_fields": [
+        16,
+        25,
+        26,
+        51
+      ],
+      "required_outcome": "Define actual capacity needs, fairly evaluate candidates/services, engage with authorized terms, onboard and account for applicant and contractor burden.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/25",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap26.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/25/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/25/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/25/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/25/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/25/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/25/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/25/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/25/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/25/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/25/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/25/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/25/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-27",
+      "concern": "Human collaboration",
+      "source_fields": [
+        12,
+        30,
+        46,
+        51
+      ],
+      "required_outcome": "Identify each person, share sufficient permitted context, assign accepted responsibility, resolve disagreements and handle departure.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/26",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap27.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/26/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/26/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/26/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/26/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/26/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/26/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/26/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/26/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/26/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/26/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/26/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/26/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-28",
+      "concern": "Analytics",
+      "source_fields": [
+        7,
+        20,
+        32,
+        40
+      ],
+      "required_outcome": "Produce measurements with original denominators, cohorts, exclusions, uncertainty, lineage and interpretable business consequences.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/27",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C06",
+      "planned_procedure_id": "company.cap28.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/27/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/27/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/27/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/27/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/27/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/27/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/27/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/27/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/27/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/27/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/27/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/27/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-29",
+      "concern": "Experimentation",
+      "source_fields": [
+        7,
+        20,
+        40,
+        48,
+        49
+      ],
+      "required_outcome": "Predeclare hypotheses, controls, resources and stopping rules; execute bounded tests and retain failures and inconclusive results.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/28",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap29.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/28/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/28/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/28/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/28/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/28/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/28/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/28/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/28/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/28/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/28/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/28/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/28/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-30",
+      "concern": "Operations and fulfillment",
+      "source_fields": [
+        2,
+        8,
+        25,
+        28,
+        30
+      ],
+      "required_outcome": "Perform the actual promised service or coordinate accepted human/physical delivery, verify outcomes and maintain continuity capacity.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/29",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap30.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/29/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/29/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/29/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/29/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/29/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/29/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/29/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/29/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/29/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/29/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/29/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/29/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-31",
+      "concern": "Incident response",
+      "source_fields": [
+        15,
+        28,
+        31
+      ],
+      "required_outcome": "Assess and contain actual incidents, protect continuing service, communicate within authority, repair effects and preserve lessons and residual consequences.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/30",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C08",
+      "planned_procedure_id": "company.cap31.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/30/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/30/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/30/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/30/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/30/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/30/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/30/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/30/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/30/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/30/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/30/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/30/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-32",
+      "concern": "Knowledge management",
+      "source_fields": [
+        6,
+        7,
+        13,
+        44
+      ],
+      "required_outcome": "Acquire, retrieve, challenge, correct and retire organizational knowledge with provenance, freshness, contradiction and scoped access.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/31",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C05",
+      "planned_procedure_id": "company.cap32.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/31/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/31/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/31/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/31/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/31/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/31/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/31/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/31/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/31/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/31/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/31/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/31/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-33",
+      "concern": "Governance",
+      "source_fields": [
+        1,
+        15,
+        16,
+        27,
+        30,
+        51
+      ],
+      "required_outcome": "Maintain accountable decision rights, consequence limits, disputes, independent review and control over protected rules.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/32",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C01",
+      "planned_procedure_id": "company.cap33.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/32/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/32/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/32/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/32/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/32/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/32/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/32/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/32/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/32/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/32/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/32/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/32/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-34",
+      "concern": "Organizational learning",
+      "source_fields": [
+        7,
+        23,
+        30,
+        40,
+        50
+      ],
+      "required_outcome": "Turn observed outcomes and omitted work into tested improvements while preserving failures, disagreement and the costs of change.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/33",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C03",
+      "planned_procedure_id": "company.cap34.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/33/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/33/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/33/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/33/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/33/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/33/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/33/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/33/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/33/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/33/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/33/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/33/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-35",
+      "concern": "Scaling",
+      "source_fields": [
+        20,
+        24,
+        25,
+        28,
+        51
+      ],
+      "required_outcome": "Expand actual useful delivery within demonstrated operational, human, financial and institutional capacity; detect proportional hidden labor.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/34",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C02",
+      "planned_procedure_id": "company.cap35.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/34/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/34/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/34/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/34/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/34/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/34/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/34/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/34/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/34/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/34/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/34/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/34/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-36",
+      "concern": "Pause",
+      "source_fields": [
+        24,
+        28,
+        30,
+        53
+      ],
+      "required_outcome": "Stop appropriate new work, preserve surviving duties and evidence, control renewals and define conditions and costs of resumption.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/35",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C02",
+      "planned_procedure_id": "company.cap36.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/35/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/35/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/35/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/35/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/35/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/35/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/35/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/35/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/35/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/35/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/35/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/35/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-37",
+      "concern": "Recovery and resumption",
+      "source_fields": [
+        6,
+        17,
+        28,
+        31,
+        48
+      ],
+      "required_outcome": "Resume across interruption, provider and process changes or restored state only after current restrictions, uncertain effects and context loss are reconciled.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/36",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C08",
+      "planned_procedure_id": "company.cap37.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/36/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/36/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/36/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/36/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/36/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/36/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/36/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/36/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/36/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/36/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/36/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/36/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-38",
+      "concern": "Pivot and changed direction",
+      "source_fields": [
+        1,
+        24,
+        30
+      ],
+      "required_outcome": "Apply a legitimate change of purpose while preserving existing promises, rejected choices, evidence and authorized transition or compensation.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/37",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C01",
+      "planned_procedure_id": "company.cap38.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/37/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/37/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/37/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/37/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/37/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/37/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/37/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/37/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/37/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/37/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/37/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/37/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-39",
+      "concern": "Closure and wind-down",
+      "source_fields": [
+        20,
+        24,
+        26,
+        27,
+        30,
+        53
+      ],
+      "required_outcome": "Dispose of or legitimately transfer surviving obligations, resources, access, data, suppliers and redress; software shutdown alone is not closure.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/38",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap39.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/38/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/38/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/38/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/38/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/38/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/38/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/38/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/38/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/38/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/38/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/38/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/38/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-40",
+      "concern": "Institutional formation and readiness",
+      "source_fields": [
+        16,
+        20,
+        27,
+        53
+      ],
+      "required_outcome": "Coordinate the actual entity, principal, accounts, rights, signatories and service prerequisites needed for the proposed activities.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/39",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap40.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/39/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/39/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/39/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/39/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/39/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/39/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/39/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/39/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/39/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/39/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/39/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/39/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-41",
+      "concern": "Succession and transfer",
+      "source_fields": [
+        16,
+        28,
+        30,
+        51,
+        53
+      ],
+      "required_outcome": "Obtain competent successor acceptance of actual authority, access, duties, unresolved effects and restrictions before transfer.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/40",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap41.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/40/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/40/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/40/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/40/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/40/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/40/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/40/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/40/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/40/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/40/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/40/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/40/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-42",
+      "concern": "External grievance and remedy",
+      "source_fields": [
+        11,
+        25,
+        26,
+        27,
+        29,
+        31
+      ],
+      "required_outcome": "Provide reachable noncustomer-inclusive challenge, reasons, deadlines, competent escalation and funded remedy through closure.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/41",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap42.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/41/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/41/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/41/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/41/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/41/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/41/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/41/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/41/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/41/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/41/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/41/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/41/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-43",
+      "concern": "Owner attention and competence",
+      "source_fields": [
+        21,
+        22,
+        46,
+        50,
+        51
+      ],
+      "required_outcome": "Use contestable authentic participation and adverse evidence to preserve domain understanding and intervention ability without global profiling or excessive review.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/42",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C07",
+      "planned_procedure_id": "company.cap43.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/42/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/42/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/42/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/42/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/42/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/42/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/42/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/42/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/42/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/42/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/42/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/42/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-44",
+      "concern": "Truthful account and reproducibility",
+      "source_fields": [
+        12,
+        13,
+        32,
+        42,
+        48,
+        49
+      ],
+      "required_outcome": "Account for attempts, failures, omissions, stale or unavailable evidence, rationale versus cause, disagreements and remaining consequences.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/43",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C09",
+      "planned_procedure_id": "company.cap44.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/43/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/43/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/43/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/43/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/43/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/43/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/43/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/43/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/43/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/43/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/43/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/43/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-45",
+      "concern": "Compute, subscription and infrastructure capacity",
+      "source_fields": [
+        17,
+        18,
+        19,
+        20,
+        28
+      ],
+      "required_outcome": "Observe separate money, provider allowance, compute and attention; queue, interrupt and resume without silently purchasing metered capacity.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/44",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C02",
+      "planned_procedure_id": "company.cap45.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/44/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/44/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/44/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/44/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/44/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/44/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/44/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/44/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/44/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/44/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/44/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/44/replacement_removal"
+      },
+      "completion_claim": false
+    },
+    {
+      "id": "CAP-46",
+      "concern": "Controlled system improvement",
+      "source_fields": [
+        23,
+        33,
+        34,
+        35,
+        37,
+        40,
+        41,
+        47
+      ],
+      "required_outcome": "Propose, evaluate, authorize, roll out, monitor and reverse system changes while independently protecting governance, identity, evidence and the improvement gate.",
+      "contract_location": "planning/specification/capabilities.json#/capabilities/45",
+      "implementation_location": "planned-not-existing: B04",
+      "planned_owner_component": "S1-C06",
+      "planned_procedure_id": "company.cap46.v1",
+      "evaluation_evidence": "planning/specification/capabilities.json#/capabilities/45/evaluation/method",
+      "required_field_locations": {
+        "purpose": "planning/specification/capabilities.json#/capabilities/45/purpose",
+        "inputs": "planning/specification/capabilities.json#/capabilities/45/inputs",
+        "outputs": "planning/specification/capabilities.json#/capabilities/45/outputs",
+        "dependencies": "planning/specification/capabilities.json#/capabilities/45/dependencies",
+        "authority": "planning/specification/capabilities.json#/capabilities/45/authority",
+        "consequence class": "planning/specification/capabilities.json#/capabilities/45/consequence_classes",
+        "evidence produced": "planning/specification/capabilities.json#/capabilities/45/evidence_produced",
+        "evaluation method": "planning/specification/capabilities.json#/capabilities/45/evaluation/method",
+        "implementation mode": "planning/specification/capabilities.json#/capabilities/45/implementation_mode",
+        "failure behavior": "planning/specification/capabilities.json#/capabilities/45/failure_behavior",
+        "removal or replacement criteria": "planning/specification/capabilities.json#/capabilities/45/replacement_removal"
+      },
+      "completion_claim": false
+    }
+  ],
+  "invariants": [
+    "No capability is satisfied by a name, agent role, generated plan, blocked packet or dashboard alone",
+    "A legitimate coordination capability must support actual intake, execution or accepted delegation, outcome acceptance, failure, replacement and surviving duties",
+    "Actual professional standing, institutional authority, external funding and qualified continuity remain real operational dependencies",
+    "Success, denied authority, uncertainty, failure and closure paths all require conformance evidence"
+  ],
+  "required_capability_fields": [
+    "purpose",
+    "inputs",
+    "outputs",
+    "dependencies",
+    "authority",
+    "consequence class",
+    "evidence produced",
+    "evaluation method",
+    "implementation mode",
+    "failure behavior",
+    "removal or replacement criteria"
+  ]
+}

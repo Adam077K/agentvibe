@@ -1,0 +1,21 @@
+{
+  "id": "r18-effect-identity-triple-unconstrained",
+  "repair": "R18",
+  "finding": "F6C-08, F6D-11; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md",
+  "case": "The business identity triple carries no uniqueness constraint, so two concurrent allocations both validate and both release.",
+  "paired_benign_fixture": "fixtures/positive/r18-effect-identity-triple-unconstrained-benign.json",
+  "why": "This is the measured state: `identity.key` was the surrogate `(company_id, record_id, revision)`, the triple 05 section 6 declares as the identity was three ordinary payload fields, and `natural_key`, `unique` and `uniqueness` occurred nowhere in record-registry.json. The registry HAS the construct and uses it on the immediate neighbours -- nine of 188 records declare an exclusive factory, and `SendClaim`'s invariant reads \"one-use claim ... it cannot authorize a second dispatch\" -- and none of the fifteen new records declared anything. For fourteen that is harmless; for the one record whose entire purpose is convergence under concurrency it is the mechanism.",
+  "expect_failure_contains": "DOES NOT CONSTRAIN ITS BUSINESS TRIPLE",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/EffectIdentity/identity/natural_key",
+      "op": "remove"
+    },
+    {
+      "file": "record-registry.json",
+      "pointer": "/EffectIdentity/identity/natural_key_rule",
+      "op": "remove"
+    }
+  ]
+}

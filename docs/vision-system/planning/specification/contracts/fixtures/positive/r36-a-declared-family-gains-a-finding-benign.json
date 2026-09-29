@@ -1,0 +1,23 @@
+{
+  "id": "r36-a-declared-family-gains-a-finding-benign",
+  "repair": "R36",
+  "finding": "F6Y-01; planning/reviews/F2-06-recheck-04a.md (F6Y-01), benign column",
+  "case": "A newly raised finding in a family STEP6_FAMILIES already declares, given a source row and a `not_answered` row in the same edit.",
+  "paired_adverse_fixture": "fixtures/negative/r36-step-6-finding-loses-its-source-row.json",
+  "why": "Declaring a finding must stay cheap, or the widened sweep buys coverage by making the honest move expensive -- which is how a required set comes to be routed around rather than fixed. This is the direction F6Y-08 argues for at the partition: recording a finding is a data edit, and only the TOTAL stays a literal in validate_contracts.py. The ceilings therefore carry exactly one slot of headroom, and this fixture is what holds that slot open.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/finding_sources/F6X-03",
+      "op": "add",
+      "value": "planning/reviews/F2-06-recheck-01.md"
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/not_answered/F6X-03",
+      "op": "add",
+      "value": "No file-and-check pair is recorded here for it. Benign-column fixture: a finding declared in a family the Step 6 sweep already reaches, placed in the conservative half because no file and check answer it."
+    }
+  ]
+}

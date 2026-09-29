@@ -1,0 +1,517 @@
+[
+  {
+    "id": "D01",
+    "kind": "cross-field failure case",
+    "concern": "A run resumes after the external service has forgotten its idempotency key.",
+    "sources": [
+      "research/L08-reliability.md"
+    ],
+    "related_source_fields": [
+      2,
+      17,
+      37,
+      48
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/62",
+    "component": [
+      "S1-C04",
+      "S1-C08"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/integrations/reconciliation.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L08-reliability.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D02",
+    "kind": "cross-field failure case",
+    "concern": "A restored backup predates revocation, deletion or completion and resurrects authority or effects.",
+    "sources": [
+      "research/L08-reliability.md"
+    ],
+    "related_source_fields": [
+      6,
+      16,
+      26,
+      28,
+      31
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/63",
+    "component": [
+      "S1-C04",
+      "S1-C05",
+      "S1-C08"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/authority/recovery.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L08-reliability.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D03",
+    "kind": "cross-field failure case",
+    "concern": "A correct final outcome hides a process violation such as omitted authorization.",
+    "sources": [
+      "research/L06-evaluation.md"
+    ],
+    "related_source_fields": [
+      14,
+      16,
+      40,
+      42,
+      43
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/64",
+    "component": [
+      "S1-C04",
+      "S1-C06"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/evidence/judgments.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L06-evaluation.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D04",
+    "kind": "cross-field failure case",
+    "concern": "A set of individually permitted actions exceeds aggregate financial, privacy or reputation exposure.",
+    "sources": [
+      "research/L07-security.md"
+    ],
+    "related_source_fields": [
+      15,
+      16,
+      20,
+      24
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/65",
+    "component": [
+      "S1-C04"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/authority/reservations.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L07-security.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D05",
+    "kind": "cross-field failure case",
+    "concern": "A model-written rationale hides a causal influence and is mistaken for a faithful reason.",
+    "sources": [
+      "research/L06-evaluation.md"
+    ],
+    "related_source_fields": [
+      4,
+      13,
+      42,
+      45,
+      48
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/66",
+    "component": [
+      "S1-C06"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/evidence/accounts.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L06-evaluation.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D06",
+    "kind": "cross-field failure case",
+    "concern": "An owner has authority to approve but lacks the domain competence to assess the consequence.",
+    "sources": [
+      "research/L09-human.md"
+    ],
+    "related_source_fields": [
+      21,
+      22,
+      27,
+      46,
+      51
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/67",
+    "component": [
+      "S1-C07",
+      "S1-C04"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/company/decision-packets.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L09-human.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D07",
+    "kind": "cross-field failure case",
+    "concern": "Cancellation of a business goal leaves promises, subscriptions, customer data and remedies outstanding.",
+    "sources": [
+      "research/L02-operations.md"
+    ],
+    "related_source_fields": [
+      1,
+      24,
+      28,
+      53
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/68",
+    "component": [
+      "S1-C07",
+      "S1-C08"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/company/closure.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L02-operations.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D08",
+    "kind": "cross-field failure case",
+    "concern": "A benchmark or work-management plan change erases distinctions without changing a displayed success state.",
+    "sources": [
+      "research/L02-operations.md"
+    ],
+    "related_source_fields": [
+      14,
+      31,
+      32,
+      40,
+      41
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/69",
+    "component": [
+      "S1-C04",
+      "S1-C06"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/improvement/migrations.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L02-operations.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D09",
+    "kind": "cross-field failure case",
+    "concern": "Summarization promotes untrusted material into authoritative policy or founder preference.",
+    "sources": [
+      "research/L05-memory.md"
+    ],
+    "related_source_fields": [
+      6,
+      7,
+      13,
+      33,
+      44,
+      45
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/70",
+    "component": [
+      "S1-C01",
+      "S1-C05"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/context/manifests.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L05-memory.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D10",
+    "kind": "cross-field failure case",
+    "concern": "A provider/model change invalidates a harness intervention that was previously helpful.",
+    "sources": [
+      "research/L04-engineering.md"
+    ],
+    "related_source_fields": [
+      18,
+      33,
+      41,
+      47,
+      50
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/71",
+    "component": [
+      "S1-C03",
+      "S1-C06"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/runtime/qualification.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L04-engineering.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D11",
+    "kind": "cross-field failure case",
+    "concern": "An improvement candidate changes evidence capture while its hidden evaluator remains intact.",
+    "sources": [
+      "research/L12-improvement.md"
+    ],
+    "related_source_fields": [
+      23,
+      32,
+      40,
+      41,
+      42,
+      47,
+      49
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/72",
+    "component": [
+      "S1-C06",
+      "S1-C04"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/evidence/dependencies.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L12-improvement.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D12",
+    "kind": "cross-field failure case",
+    "concern": "A supported authentication path silently changes billing mode because an API key or credit setting overrides subscription access.",
+    "sources": [
+      "research/L10-economics.md"
+    ],
+    "related_source_fields": [
+      16,
+      18,
+      20,
+      35,
+      36
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/73",
+    "component": [
+      "S1-C03",
+      "S1-C04"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/runtime/auth-attestation.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L10-economics.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D13",
+    "kind": "cross-field failure case",
+    "concern": "A search result repeats a withdrawn provider policy, or a legal transition is applied to the wrong provision.",
+    "sources": [
+      "research/L10-economics.md",
+      "research/L11-governance.md"
+    ],
+    "related_source_fields": [
+      7,
+      13,
+      18,
+      27,
+      35,
+      44
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/74",
+    "component": [
+      "S1-C05",
+      "S1-C07"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/context/source-validity.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L10-economics.md",
+      "research/L11-governance.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D14",
+    "kind": "cross-field failure case",
+    "concern": "An owner loses capacity while refunds, legal holds, complaints and recurring service obligations continue.",
+    "sources": [
+      "research/L11-governance.md"
+    ],
+    "related_source_fields": [
+      22,
+      24,
+      26,
+      28,
+      30,
+      31,
+      51,
+      53
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/75",
+    "component": [
+      "S1-C07",
+      "S1-C08"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/company/continuity.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L11-governance.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  },
+  {
+    "id": "D15",
+    "kind": "cross-field failure case",
+    "concern": "A benchmark caption claims superiority that its own table values contradict.",
+    "sources": [
+      "research/L12-improvement.md"
+    ],
+    "related_source_fields": [
+      13,
+      14,
+      40,
+      44,
+      49
+    ],
+    "status": "Answered",
+    "answer_location": "planning/specification/scope-lifecycle-contracts.json#/records/76",
+    "component": [
+      "S1-C05",
+      "S1-C06"
+    ],
+    "decision": "planning/specification/12-scope-lifecycle-traceability.md#scope-decision",
+    "remaining_uncertainty": "Contract unimplemented and pending independent complete-plan review; actual admission, useful outcomes and burden need their declared evidence.",
+    "owner": "orchestrator",
+    "implementation_location": "system/packages/evidence/source-checks.ts",
+    "note": "Adds an explicit cross-field test case; does not assert that the original field map omitted the entire domain.",
+    "implementation_status": "planned-not-existing",
+    "evidence": [
+      "planning/02-architecture-selection.md",
+      "planning/reviews/G-acceptance-protocol.md",
+      "research/L12-improvement.md"
+    ],
+    "answer_field": "answer",
+    "status_rule": "R9-specified-with-planned-verification"
+  }
+]

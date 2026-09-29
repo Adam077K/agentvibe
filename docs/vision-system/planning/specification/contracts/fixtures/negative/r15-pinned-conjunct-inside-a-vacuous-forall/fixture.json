@@ -1,0 +1,30 @@
+{
+  "id": "r15-pinned-conjunct-inside-a-vacuous-forall",
+  "repair": "RC3-01",
+  "finding": "RC3-01 (planning/reviews/G-02-recheck-03.md, probe 4)",
+  "why": "The walker decided whether a position DEMANDED its conjunct by matching three hard-coded operator names -- `all`, `any`, `not` -- and `forall` is the registry's FOURTH primitive with a boolean-typed argument. This fixture moves all three pinned conjuncts of criterion.SalesAgreement.performed.v1 verbatim inside `forall(items=path(/payload/obligation_refs), bind, predicate=all(...))`. Nothing is removed, nothing is disjoined, pinned-conjuncts.json and the `requires` prose are untouched. records.schema.json gives `obligation_refs` no `minItems`, so `[]` is schema-valid and the quantifier is vacuous: the sale reaches `performed` naming no Fulfillment, with nothing `delivered` and no Obligation discharged -- G2-01's counterexample, restored by regeneration alone. Measured before the repair at exit 0, 269,708 checks, 33 of 33 fixtures still rejecting, ELEVEN checks more than the baseline. The validator must reject it naming the QUANTIFIER and the collection that admits `[]`, not reporting the conjunct as missing -- it is not missing, and a message that said so would send a reader looking for something that is right there.",
+  "expect_failure_contains": "PINNED CONJUNCT ONLY UNDER A QUANTIFIER",
+  "patch": [],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "RECORD_SPECIFIC_KINDS = (\"nfp\", \"rpp\", \"neF\", \"prF\", \"eqF\")",
+      "block_end": "def literal_kinds(item):",
+      "replacement": "forall-dsl-kinds.py"
+    },
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    if kind == \"not\":",
+      "block_end": "    if kind == \"neF\":",
+      "replacement": "forall-builder.py"
+    },
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"SalesAgreement\", \"performed\"): spec(",
+      "block_end": "    # -- R-F / G4-02:",
+      "replacement": "forall-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "note": "Three tools_patch steps rather than one, and that is the honest size of it: no `forall` builder exists in the DSL, because no predicate in the corpus uses the primitive. The recheck was explicit that this is a LARGER edit than the `any` attack it generalises and that it is not adversarial -- `forall` is registered, invoked by nothing, and the first author who needs \"every linked Obligation satisfies X\" writes exactly this. The positive control matters as much as in r14: the mutation must REGENERATE cleanly, because a hunk that crashes author_phase_content.py proves only that the DSL rejected it, and the runner reports FAIL rather than a rejection when regeneration fails. A rejection for any OTHER reason -- the runner checks the message -- means something weaker is refusing it and the demand table has stopped carrying its own weight."
+}

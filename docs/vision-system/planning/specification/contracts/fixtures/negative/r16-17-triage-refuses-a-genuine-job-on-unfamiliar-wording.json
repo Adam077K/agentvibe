@@ -1,0 +1,16 @@
+{
+  "id": "r16-17-triage-refuses-a-genuine-job-on-unfamiliar-wording",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 17; 05-work-agents-skills.md section 9",
+  "case": "A genuine job in unfamiliar wording refused by triage.",
+  "paired_benign_fixture": "fixtures/positive/r16-17-triage-refuses-a-genuine-job-on-unfamiliar-wording-benign.json",
+  "why": "Section 12.5 row 17. The mutation deletes the conjunct requiring a refusal's BASIS to be a failed predicate, leaving a refusal path that may be entered on wording alone. Unfamiliar wording is not a predicate: without this conjunct the refusal path swallows work it merely did not recognise, and every adverse row above still passes -- which is the definition of a control that refuses everything.",
+  "expect_failure_contains": "'guard.admission.refusal_names_failed_predicate', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.admission.refusal_names_failed_predicate/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

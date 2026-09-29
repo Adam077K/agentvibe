@@ -1,0 +1,37 @@
+{
+  "id": "r18-control-object-changed-without-authorization",
+  "repair": "R18",
+  "finding": "F6D-07; reviews/F2-06-D-authority-buildability-adversarial.md; 08-improvement-implementation.md section 1; W10",
+  "case": "A declared class floor changes with no authorized `ProtectedChange` naming it.",
+  "paired_benign_fixture": "fixtures/positive/r18-control-object-changed-without-authorization-benign.json",
+  "why": "This is the W10 self-modification probe, and before the repair it resolved the wrong way on all six control objects: `ProtectedChange` is well built, its `baseline_subject_refs` is enum-typed over every record type, and NO edge on any of the six required one. Three of the six were not records at all. The mutation makes `protected_change_ref` optional again on `ConsequenceClassDefinition`, whose every transition IS a change to a declared class floor -- so the floor that decides who may act on an action moves through an ordinary transition owned by an ordinary component. The guard's binding is `optional: true` because ConfigurationVersion's benign case needs it, which is exactly why the presence half has to be checked here.",
+  "expect_failure_contains": "A CONTROL OBJECT MAY CHANGE WITH NO PROTECTED CHANGE NAMED",
+  "regenerate_from_derivation": true,
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/ConsequenceClassDefinition/properties/payload/required",
+      "op": "replace",
+      "value": [
+        "class_id",
+        "predicate",
+        "qualitative_constraints",
+        "required_gate_predicates",
+        "version_reason_ref"
+      ]
+    },
+    {
+      "file": "record-registry.json",
+      "pointer": "/ConsequenceClassDefinition/fields/payload/required_fields",
+      "op": "replace",
+      "value": [
+        "class_id",
+        "predicate",
+        "qualitative_constraints",
+        "required_gate_predicates",
+        "version_reason_ref"
+      ]
+    }
+  ]
+}

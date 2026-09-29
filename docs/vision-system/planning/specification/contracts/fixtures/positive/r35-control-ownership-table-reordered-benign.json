@@ -1,0 +1,53 @@
+{
+  "id": "r35-control-ownership-table-reordered-benign",
+  "repair": "R35",
+  "finding": "F6D-05; the F2-06 D review, benign column",
+  "case": "The same five control fields, in reverse order.",
+  "paired_adverse_fixture": "fixtures/negative/r35-grant-stripping-probe-owned-by-the-skill-it-probes.json",
+  "why": "Every check over this table is a per-row membership check; the order rows are written in changes no field's owner. A control that refuses a harmless reordering is one contributors learn to route around.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/producer_unauthorable_fields",
+      "op": "replace",
+      "value": [
+        {
+          "record": "StandingInterest",
+          "field": "precondition_evaluator_kind",
+          "owner": "S1-C04",
+          "guard": "guard.interest.precondition_invokes_no_model",
+          "why": "The guard checks a string on the interest saying its evaluator invokes no model. Owned by C02, that is the party with the interest classifying its own evaluator."
+        },
+        {
+          "record": "SkillVersion",
+          "field": "content_hash_rechecked_at_use",
+          "owner": "S1-C04",
+          "guard": "guard.skill.declared_grant_inert",
+          "why": "A recheck AT USE is a statement by the enforcement point at use time, not by the content that is rechecked."
+        },
+        {
+          "record": "SkillVersion",
+          "field": "grant_stripping_probe_ref",
+          "owner": "S1-C04",
+          "guard": "guard.launcher.stripping_positive_control",
+          "why": "The probe the result comes from, owned by the party that runs it."
+        },
+        {
+          "record": "SkillVersion",
+          "field": "grant_stripping_probe_result",
+          "owner": "S1-C04",
+          "guard": "guard.launcher.stripping_positive_control",
+          "why": "The positive control on grant removal. Owned by the producer, it was the record whose grants are removed reporting that they were."
+        },
+        {
+          "record": "SkillVersion",
+          "field": "declared_tool_grant_effect",
+          "owner": "S1-C04",
+          "guard": "guard.skill.declared_grant_inert",
+          "why": "R-X15 argues the rule must be structural rather than asserted; while this field belonged to the producer it was the producer asserting its own grant inert."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "r34-computed-projection-table-reordered-benign",
+  "repair": "R34",
+  "finding": "F6D-08; the F2-06 D review, benign column",
+  "case": "The same five computed projections, in reverse order.",
+  "paired_adverse_fixture": "fixtures/negative/r34-armed-set-gains-the-three-kernel-record-commands.json",
+  "why": "The table is a SET of records nothing may write, and every check over it is a membership check. A control that refused a reordering would be refusing an edit that changes no record's command list, and a control contributors learn to route around protects nothing -- the argument this package makes at r20, r30 and r32. Rebuilt from the current table: the first copy predated `transition_count`, so one reordered row was missing a key the row-shape check REFUSES the absence of -- correctly, since a row shape that is optional is a row that can pin nothing. DRIFT REPAIR by lane r7-contracts-c: this benign fixture was FALSELY EXCLUDED on the merged head. It is the same class the package names elsewhere -- a fixture that encodes a snapshot of a table another lane then grew. The patch is regenerated from the current tree and the old shape is recorded here, because a benign fixture that fails looks exactly like a repair that broke something.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/computed_projections",
+      "op": "replace",
+      "value": [
+        {
+          "record": "OperatorProjection",
+          "evaluator_modules": [],
+          "why": "The operator's view is computed from the records it projects; writing it directly would make the view and the thing disagree with nothing noticing.",
+          "transition_count": 12
+        },
+        {
+          "record": "OperationStatus",
+          "evaluator_modules": [],
+          "why": "Status is read off the operation's own lifecycle. A writable status is a report of success for work that stopped, which is W7's failure condition verbatim.",
+          "transition_count": 6
+        },
+        {
+          "record": "DomainEvent",
+          "evaluator_modules": [],
+          "why": "Events are emitted by the kernel commit path, never registered through a record command; a permitted command here would let a party author its own history.",
+          "transition_count": 0
+        },
+        {
+          "record": "AccessGraph",
+          "evaluator_modules": [],
+          "why": "The reachability closure over access grants is derived from the grants; a command that wrote it would let a component grant itself reach.",
+          "transition_count": 8
+        },
+        {
+          "record": "ArmedSet",
+          "evaluator_modules": [
+            "system/packages/work/armed-set"
+          ],
+          "why": "`05` section 7: a computed projection with no lifecycle that nobody writes, and in particular the admission authority holds no write access to any precondition-bearing kind. m4 is the mutation this row refuses.",
+          "transition_count": 0
+        }
+      ]
+    }
+  ]
+}

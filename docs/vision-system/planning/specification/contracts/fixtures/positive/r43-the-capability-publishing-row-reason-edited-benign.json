@@ -1,0 +1,24 @@
+{
+  "id": "r43-the-capability-publishing-row-reason-edited-benign",
+  "repair": "R43",
+  "finding": "F6W-01; registers/review-findings.json (F6W-01), benign twin",
+  "case": "The same row, the same record, field and minimum, with its why rewritten.",
+  "paired_adverse_fixture": "fixtures/negative/r43-a-standing-holder-may-publish-an-empty-capability-binding.json",
+  "why": "BENIGN SUBSTITUTION, STATED RATHER THAN MADE SILENTLY. The usual benign twin for a pinned table is the rows reordered; this table has ONE row -- the honest count, because the second member 05 section 12 names has no record in record-registry.json -- so a reorder is the identity and proves nothing. Shipped instead is the r31/r23 shape: the reason text rewritten over an unchanged structure. Every check over this table reads record, field and minimum out of the two declarations; none reads the prose, and a control that refused an edit to a reason field would be one contributors learn to route around.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/capability_publishing_structures",
+      "op": "replace",
+      "value": [
+        {
+          "record": "StandingHolder",
+          "field": "capability_refs",
+          "minimum": 1,
+          "why": "R-X07, stated the other way round: the binding is per capability and never grouped, so a structure naming several capabilities in one row is refused at admission and coverage is counted over the 46 ids one at a time. A StandingHolder publishing nothing is a standing office no capability id can be counted against."
+        }
+      ]
+    }
+  ]
+}

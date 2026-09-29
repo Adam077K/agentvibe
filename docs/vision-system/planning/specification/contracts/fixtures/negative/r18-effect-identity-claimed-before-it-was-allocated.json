@@ -1,0 +1,16 @@
+{
+  "id": "r18-effect-identity-claimed-before-it-was-allocated",
+  "repair": "R18",
+  "finding": "F6C-16; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A claim may precede its own allocation, so the identity that makes a duplicate external effect detectable is written after the effect.",
+  "paired_benign_fixture": "fixtures/positive/r18-effect-identity-claimed-before-it-was-allocated-benign.json",
+  "why": "The identity is allocated by C04 BEFORE release; that is what makes it usable for detecting an already-released effect on a retry. With the ordering gone, both timestamps are present and a claim recorded before its allocation is indistinguishable from one recorded after. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.effect.identity_allocated_before_release` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.effect.identity_allocated_before_release', 'lt'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.effect.identity_allocated_before_release/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

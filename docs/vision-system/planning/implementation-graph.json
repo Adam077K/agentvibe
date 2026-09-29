@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "status": "planned; B00 full-plan gate not yet passed",
+  "stages": [
+    {
+      "id": "B00",
+      "depends_on": [],
+      "components_and_contracts": "Consolidate all 566 question answers, 46 subjects and full component matrix; reconcile 01–08, actual adapter routes, operational prerequisites and independent G review before runtime work.",
+      "required_completion_evidence": "Schema/reference/state/meaning consistency, independent adversarial and successful lifecycle review, preserved dissent and unresolved operating inputs. Complete only with a reviewable accepted plan scope.",
+      "risk_and_full_system_relationship": "A rich document can still hide missing fulfillment. This stage prevents premature code from choosing authority accidentally.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B01",
+      "depends_on": [
+        "B00"
+      ],
+      "components_and_contracts": "system workspace, schemas/clients, canonical identities, pure command reducers, SERIALIZABLE storage, D0/D1/D2 distinctions, immutable group hashing, query/proof values and SQL outbox. C01/C02/C04/C05/C06 foundations.",
+      "required_completion_evidence": "Property/model tests for revisions, duplicate commands, crossed updates, alias bindings, hash/proof acyclicity, imported stale staging and failed commit; useful draft→witnessed command fixture.",
+      "risk_and_full_system_relationship": "Earliest small discriminator includes successful ordinary work plus lost-ack/status behavior, not only refusal. No production state accepted yet.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B02",
+      "depends_on": [
+        "B01"
+      ],
+      "components_and_contracts": "Real Pg primary/hot standby plus R writable receipt ledger, complete blobs/keys, release/send claim, revocation/conflict migration, backup/WAL/restore/frontier membership. C04/C08.",
+      "required_completion_evidence": "Crash at every local/witness/sign/ack boundary, sync-wait cancellation, empty standby/config bypass, incomplete blobs, primary loss, restored old frontiers, unknown effects, missing custodians. Successful release proceeds after exact witness.",
+      "risk_and_full_system_relationship": "Local tests show protocol behavior only; operational independent roots remain B10 evidence.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B03",
+      "depends_on": [
+        "B02"
+      ],
+      "components_and_contracts": "Keycloak/step-ca, service epochs, trusted parameter/disclosure gates, G nftables/time/readback and N/X isolation. C04/C05/C08 runtime.",
+      "required_completion_evidence": "Actual Linux controlled sk_buff-hook tests with partial requests, established sockets, GSO, clock boot/TZ/epoch-seconds compiler, tunnel escape, credentials/env/IPC and revocation races; successful bounded transport under valid time.",
+      "risk_and_full_system_relationship": "No unsupported promise of physical delivery or provider acceptance deadline; clock/admin roots and native channel inventory must be tested.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B04",
+      "depends_on": [
+        "B01"
+      ],
+      "components_and_contracts": "All company CAP procedures and responsibility/competence, work/workflow/delegation/skills, context/knowledge/forgetting, protected capture/dependencies and qualified judgments. C01/C02/C03/C05/C06/C07.",
+      "required_completion_evidence": "Complete company fixtures from intent and research to offer, pre-sale capacity, delivery/support/finance/governance/people/incident/closure; stale lineage and transitive evaluator corruption; successful expert/human routes.",
+      "risk_and_full_system_relationship": "No generic Case closure substitutes for native domain performance. All 46 capabilities remain connected.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B05",
+      "depends_on": [
+        "B03",
+        "B04"
+      ],
+      "components_and_contracts": "IC native/search/mail/public/payment/books/human adapters, account/billing/capacity and provider migration/removal. C03/C04/C05/C06/C08.",
+      "required_completion_evidence": "IC-T01…12, contract mocks then separately authorized real-account benign tests, quota/credit refusal and useful completion; actual native startup/config inventory.",
+      "risk_and_full_system_relationship": "Provider mocks cannot establish current terms, account eligibility, delivery or all-channel isolation. No model calls before authorization.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B06",
+      "depends_on": [
+        "B04",
+        "B05"
+      ],
+      "components_and_contracts": "Full 04 human flows, permission-filtered UI, independent grievance/continuity, public form/product and service ownership. C07/C09 with company procedures.",
+      "required_completion_evidence": "Keyboard/screen-reader/task tests, concrete owner decisions with evidence/uncertainty, limited competence, absent founder, outsider complaint and actual alternate acknowledgement; no optimistic acceptance.",
+      "risk_and_full_system_relationship": "User understanding/representation/effective response are separately judged, including recurring attention cost.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B07",
+      "depends_on": [
+        "B02",
+        "B05"
+      ],
+      "components_and_contracts": "IaC/systemd topology, secrets/keys, inventory/cost, observability, release/migration, backup/deletion/restore and actual provider descendants. C04/C08 and all providers.",
+      "required_completion_evidence": "Disposable deployment, exact config readback, complete restore/rotation, leaked-key containment, stuck paid resources, lost account/MFA/billing recovery and R/G load. Record measured RPO/RTO and labor.",
+      "risk_and_full_system_relationship": "Purchasing infrastructure alone cannot establish independent actual custodians or affordable useful operation.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B08",
+      "depends_on": [
+        "B04"
+      ],
+      "components_and_contracts": "ProtectedChange/trial/evaluator/rollout/watch/migration, stochastic baseline and cumulative drift. C06/C04/C01.",
+      "required_completion_evidence": "Candidate alters gate/denominator/evaluator tests; successful useful improvement with independent assessment; rollback with irreversible effects and changed meanings.",
+      "risk_and_full_system_relationship": "Never self-accept the builder's system change or overfit the same benchmark population.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B09",
+      "depends_on": [
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "components_and_contracts": "Full integrated company simulator/rehearsals with matched S0 comparison, admitted account fixtures and representative workloads. All C01…C09.",
+      "required_completion_evidence": "G dimensions, all source cases/attacks, honest missing/unknown results, actual capacity/attention, lawful competent native routes and cross-mechanism failures; independent assessor outcomes.",
+      "risk_and_full_system_relationship": "Complete isolated scenario success is necessary but not operational/company success. No aggregate score.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B10",
+      "depends_on": [
+        "B09"
+      ],
+      "components_and_contracts": "Actual operational principals/accounts/caps/mandates/professionals, independent A/R custody, native billing attestation, domain/terms and scoped transition.",
+      "required_completion_evidence": "Independent admission checks exact deployment, clock/root/time boundaries, provider effect/recovery/continuity and measured costs; owner approves concrete deployment if not already authorized.",
+      "risk_and_full_system_relationship": "Actual unavailable prerequisites block operating promises, not silently narrow the plan. Planned procurement is not permission to spend now.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    },
+    {
+      "id": "B11",
+      "depends_on": [
+        "B10"
+      ],
+      "components_and_contracts": "Continuing delivery, settlement, grievances, obligation accounting, improvement watch and old-system retirement. All company lifecycle and removal.",
+      "required_completion_evidence": "At least one complete due-date/outcome cycle for each live offer and its support/refund/finance route; independent customer/evidence/rights review, actual budgets, surviving descendants resolved.",
+      "risk_and_full_system_relationship": "'Start using' begins only inside admitted scope; complete system capability construction is not proven commercial success. Failure may select S0 or a replacement.",
+      "status": "not-started",
+      "source": "planning/specification/08-improvement-implementation.md#7-complete-dependency-ordered-construction-graph",
+      "completed_evidence": []
+    }
+  ]
+}

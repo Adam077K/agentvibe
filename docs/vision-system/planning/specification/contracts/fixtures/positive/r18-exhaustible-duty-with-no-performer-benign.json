@@ -1,0 +1,20 @@
+{
+  "id": "r18-exhaustible-duty-with-no-performer-benign",
+  "repair": "R18",
+  "finding": "F6C-01, benign column; 07-integrations-capacity.md section 6",
+  "case": "An obligation whose duty class cannot exhaust, admitted with `production_mode: none`.",
+  "paired_adverse_fixture": "fixtures/negative/r18-exhaustible-duty-with-no-performer.json",
+  "why": "`none` is a NAMED mode, not a missing one, and it is the right answer for a duty class with no bucket to empty. The conditional turns on `duty_class_can_exhaust` for exactly that reason, and the guard demands the flag is PRESENT rather than true -- `false` is an answer. The patch widens the conditional's `then` with a second requirement that every exhaustible duty already meets, so the ordinary non-exhaustible admission is untouched and must pass. A control that refused it would have made every obligation in the company owe a standing performer.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/Obligation/properties/payload/allOf/0/then/required",
+      "op": "replace",
+      "value": [
+        "production_performer_ref",
+        "custodian_ref"
+      ]
+    }
+  ]
+}

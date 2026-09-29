@@ -1,0 +1,150 @@
+{
+  "Grant": [
+    "issuer assignment and accepted mandate current for action/principal/scope; holder identity epoch matches",
+    "active requires not_before<=now<expires_at, finite bounds and actual required participants",
+    "parent scope, bounds, expiry, actions and delegation depth contain child; parent active",
+    "restriction increments live epoch and ordered descendants; expiry/renewal never replenish spent resources"
+  ],
+  "ResourceAccount": [
+    "same principal, exact unit/scale and nonnegative resource equation",
+    "native availability evidence current; unknown usage holds maximum",
+    "replenishment requires named accepted authority and actual reset evidence; old causal episode usage retained",
+    "close only when reserved=uncertain=0 and every obligation disposition is reconciled"
+  ],
+  "Reservation": [
+    "held creation atomically compares resource head and deducts available capacity for exact work/operation",
+    "same causal episode and immutable maximum quantity; no duplicate hold identity",
+    "consumed/uncertain amount updates require exact native reconciliation or observed bounded internal usage",
+    "expired unclaimed reservation releases only after positive no-send/no-work-use evidence; unresolved external effect retains maximum"
+  ],
+  "OperationIntent": [
+    "prepared exact immutable payload, parameters, purpose/recipient, grants, interactions and aliases resolve",
+    "envelope_confirmed requires independent exact recoverable envelope receipt",
+    "released requires ordered current participants/epochs/claims/reservations and current accepted prerequisites",
+    "observed never means discharged; unknown_effect retains claims/holds and duties",
+    "reconciled requires current exact effect judgment and accepted obligation dispositions; cancel does not negate already released/unknown transport"
+  ],
+  "ConflictClaim": [
+    "all canonical business keys normalized by admitted alias version; scopes overlap under current interaction classes",
+    "atomically exclude incompatible prior held/uncertain claims in complete scope",
+    "uncertain predecessor remains held through migration and generation seal",
+    "resolved requires native entitlement/effect reconciliation; retirement preserves history"
+  ],
+  "RecoveryEnvelope": [
+    "exact operation/payload/content/key/retention manifests and all required participant/meaning/authority refs present",
+    "confirmed only after R independently acknowledges the exact encrypted bytes and usable key material",
+    "new content or any changed prerequisite creates a new envelope; invalidate obsolete unreleased preparations"
+  ],
+  "PrerequisiteSnapshot": [
+    "complete witnessed/source frontier and every required epoch/participant/meaning definition enumerated",
+    "expiry and current restrictions rechecked in release transaction; old complete snapshot not current by existence"
+  ],
+  "Release": [
+    "creation only authority.operation.release under serializable current-check transaction",
+    "exact recovery envelope independently durable before decision response; ordered scope claims remain held",
+    "immutable release payload contains TransactionKey only, never its own Position/hash/receipt",
+    "restriction/expiry prevent new transport after contracted window; cannot erase issued claim or effect"
+  ],
+  "ExternalAttempt": [
+    "prepared attempt binds actual operation/release/request and unique index",
+    "claim requires witnessed current SendClaim; transport_armed only admitted gateway boot/time profile",
+    "actual first transport is kernel egress observation before deadline, not userspace invocation",
+    "proven_unsent needs positive gateway evidence; interrupted/lost response without proof is unknown_effect",
+    "reconciled_applied/not_applied require exact current native effect predicate, never HTTP/exit success alone"
+  ],
+  "ScopeRegistry": [
+    "freezing fences all affected old/new scope admission before mapping changes",
+    "old unknown holds carried; required issuer/alias/interaction set is complete",
+    "obsolete unreleased preparations invalidated; combined conflict scopes ordered",
+    "active resumption requires successful fenced migration and exact current competent interaction/meaning judgments"
+  ],
+  "RegistryMembership": [
+    "one active generation per company; named A/R/standby/gateway identities and actual keys verified",
+    "sealing records maximum issued transport windows and unresolved effects",
+    "new active membership requires fresh nonce-bound R frontier, sealed predecessor, actual old gateway/identity fencing and elapsed windows",
+    "restoration checks every required blob/key/hold/restriction and actual admission; old local commits outside R frontier do not authorize dispatch"
+  ],
+  "IdentityBinding": [
+    "actual authenticated issuer/subject and company/principal are verified",
+    "active workload identity bound to admitted runtime and least authority; owner model login is not credential delegation",
+    "suspension/revocation increments current identity epoch; old sessions and descendants enumerated/fenced"
+  ],
+  "ValidityEpoch": [
+    "new epoch strictly exceeds current value and increments in same ordered exclusion transaction",
+    "publish/release compares complete epoch dependency closure at cutoff",
+    "late derivatives inherit scope; propagation queue completion never weakens barrier"
+  ],
+  "KeyManifest": [
+    "actual key generation and wrapping graph acyclic; every recovery blob decryptable to authorized independent custodian",
+    "nonce unique per key generation; key retirement checks all required retained blobs/backups",
+    "scope deletion preserves only documented residual retention and records genuine key/copy destruction limits"
+  ],
+  "BackupPolicy": [
+    "actual separate storage/key/custodian paths and reserved resources exist",
+    "admission requires current restore and destructive joint-failure exercise evidence",
+    "retention/expiry cannot purge material needed for unresolved issued claims or protected duties"
+  ],
+  "AccessDescendant": [
+    "native identity and actual scope/source are captured, including unknown offline copies",
+    "containment verified only by competent observation of effective removal, not requested revocation",
+    "retirement does not erase residual copies or unknown authority; deletion receipt retains limits"
+  ],
+  "RuntimeProfile": [
+    "exact executable/configuration/auth surfaces captured and test evidence current",
+    "admitted profile proves enforced ingress/egress/tool/secret/context limits for actual mode",
+    "quota/auth failure stops or takes explicitly authorized existing fallback; no silent paid API",
+    "drain/retire preserves outstanding native sessions and continuation/descendant cleanup"
+  ],
+  "AccessPolicy": [
+    "current issuer and actual permission purpose/recipient cover every field",
+    "deny/restriction wins; empty arrays mean none, never all",
+    "protected byte decryption and derived disclosure recheck live epochs, including queries and stdout"
+  ],
+  "RetentionPolicy": [
+    "actual activity-specific determination and purpose bound scope; missing law remains unknown",
+    "every field/copy class has sensitivity and purge/expiry responsibility, including numeric identity links",
+    "plaintext exception tracks GroupBody/JSONB/WAL/index/backup copies and keeps deletion incomplete until actual purge"
+  ],
+  "OperationalAdmission": [
+    "actual membership, keys, witness, restore, gateway and native-isolation judgments current",
+    "actual continuity provider and real reserved closure/recovery capacity exist under joint failure",
+    "scope is exact activity/runtime; preparatory research needs its own contact/privacy/interviewer capacity, not an unrelated product Offer",
+    "missing any required positive fact denies dependent exposure while due-duty intake/authorized preservation continue"
+  ],
+  "ProtectedChange": [
+    "exact immutable proposal/manifest, baseline and independent plan/trials precede review",
+    "authorized requires actual current protected-target decision and C04 grant bounds",
+    "activation through reconciled deployment operation with finite cohort exposure and monitoring",
+    "negative/unknown evidence or lost monitor triggers stop/rollback review without reversing live business events"
+  ],
+  "ConfigurationVersion": [
+    "closed kind matches nested variant and admitted schema/meaning version",
+    "authority-sensitive changes require exact ProtectedChange and independent predicates; arbitrary file edits not admission",
+    "new version invalidates affected preparations/indexes/evaluations through dependency closure"
+  ],
+  "SemanticMappingVersion": [
+    "every named source/target field/state and authority binding maps exactly; unmapped authority blocks",
+    "loss tested with historical fixtures and conflict scopes fenced",
+    "source identity map explicit; historical alias bytes are not rewritten in place"
+  ],
+  "ConsequenceClassDefinition": [
+    "actual competent classifier and scoped owner decision define gates",
+    "new interacting nonmonetary classes retained without scalar risk conversion",
+    "changes invalidate affected dependent admission; unknown material classification narrows effects"
+  ],
+  "ParameterAuthority": [
+    "exact source record/field current, principal/destination/purpose within mandate",
+    "deterministic named transform preserves admitted bounds and meaning; model cannot supply a protected parameter",
+    "revoked source/meaning epoch invalidates prepared output"
+  ],
+  "DisclosureContract": [
+    "actual recipient and every disclosed field/inference are within exact source purpose and processing determination",
+    "construction mode and profile enforce admitted query/response/tool stdout boundary",
+    "expiry/revocation applies to known/late descendants and current native ancestry; shrinking tools cannot erase prior disclosure"
+  ],
+  "RetryContract": [
+    "finite attempts/delays/latest-first-start/expiry and exact native idempotency semantics admitted",
+    "only outcome-specific positively evidenced retry permitted",
+    "unknown effect enters reconciliation and retains hold; provider eventual acceptance window remains explicit"
+  ]
+}

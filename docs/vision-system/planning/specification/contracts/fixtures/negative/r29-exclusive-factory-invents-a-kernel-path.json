@@ -1,0 +1,17 @@
+{
+  "id": "r29-exclusive-factory-invents-a-kernel-path",
+  "repair": "R29",
+  "finding": "F6X-01; registers/review-findings.json (F6X-01), the exemption's edge",
+  "case": "DomainEvent's exclusive factory repointed to a NEW kernel-shaped path that is not one of the three declared.",
+  "paired_benign_fixture": "fixtures/positive/r29-exclusive-factory-uses-a-declared-kernel-path-benign.json",
+  "why": "This is the fixture that keeps F6X-01's repair from being an escape hatch. Three exclusive factories name kernel and witness paths that are not commands, and the repair declares those three BY NAME rather than registering invented command contracts or deleting a real containment. The danger in any exemption is that it becomes a prefix rule -- name your path `kernel.something` and skip the command registry. Membership is EXACT. A fourth kernel path is an edit to the literal in validate_contracts.py, which is a diff a reviewer sees, and this fixture is what fails if someone loosens it to a startswith.",
+  "expect_failure_contains": "AN EXCLUSIVE FACTORY RESOLVES TO NOTHING",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/DomainEvent/registration/exclusive_factory",
+      "op": "replace",
+      "value": "kernel.commit_events"
+    }
+  ]
+}

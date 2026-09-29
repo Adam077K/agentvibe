@@ -1,0 +1,16 @@
+{
+  "id": "r18-load-bearing-edge-deleted-benign",
+  "repair": "R18",
+  "finding": "F6D-04, benign column",
+  "case": "A transition nothing pinned is removed, and the lifecycle is still coherent, so it must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-load-bearing-edge-deleted.json",
+  "why": "The transition table pins routes whose ABSENCE changes a safety property. It is not a closed enumeration of every lifecycle, and reading it as one would turn a floor under the registry into a freeze on it. Here `ContextManifest: admitted -> invalidated` is removed and `invalidated` remains reachable from `captured`, so no phase is lost and no guard is orphaned. A control that refused this would refuse ordinary registry work, and the adverse count beside it could not be read as a detection rate.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/ContextManifest/lifecycle/transitions/3",
+      "op": "remove"
+    }
+  ]
+}

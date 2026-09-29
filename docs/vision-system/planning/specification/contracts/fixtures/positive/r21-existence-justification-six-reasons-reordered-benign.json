@@ -1,0 +1,25 @@
+{
+  "id": "r21-existence-justification-six-reasons-reordered-benign",
+  "repair": "R21",
+  "finding": "F6D-12; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-12), benign column",
+  "case": "The same six admitted reasons in a different order -- each of the six still admitted, each still paired with its own unit -- which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r21-existence-justification-admits-a-seventh-reason.json",
+  "why": "The review asked for a benign case per admitted reason. All six are asserted on EVERY run by EXISTENCE_REASON_PAIRS and by the six pairing checks that read the criterion body, which is stronger than six fixtures and cheaper than them; what a fixture adds beyond that is the proof that the control keys on MEMBERSHIP and on the pairing rather than on the order the six happen to be written in. A reordering admits exactly the same six reasons and exactly the same six units, and must pass.",
+  "expect_pass": true,
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/ExistenceJustification/properties/payload/properties/reason_kind/enum",
+      "op": "replace",
+      "value": [
+        "verification_relation",
+        "named_partition",
+        "confidentiality_boundary",
+        "consequence_class",
+        "input_provenance",
+        "permission_scope"
+      ]
+    }
+  ]
+}

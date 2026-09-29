@@ -1,0 +1,17 @@
+{
+  "id": "r28-exclusive-factory-repointed-to-a-registered-command-benign",
+  "repair": "R28",
+  "finding": "F6X-01; registers/review-findings.json (F6X-01), benign column",
+  "case": "ArmedSet, which declares no exclusive factory, is given one that IS a registered command.",
+  "paired_adverse_fixture": "fixtures/negative/r28-exclusive-factory-names-an-unregistered-command.json",
+  "why": "The check must resolve names, not refuse change. A record acquiring an exclusive factory is an ordinary tightening -- it is the direction the contract wants to move -- and a control that refused it would make declaring a creation path more expensive than leaving it open, which is backwards. This also proves the ordinary branch of the resolution is live: the command registry is consulted, not just the three-path kernel literal.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/ArmedSet/registration/exclusive_factory",
+      "op": "replace",
+      "value": "authority.grant.issue"
+    }
+  ]
+}

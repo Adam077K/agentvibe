@@ -1,0 +1,16 @@
+{
+  "id": "r16-01-derivation-gates-only-the-higher-class",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 1; 05-work-agents-skills.md section 9",
+  "case": "A derivation that reaches two classes and applies only the higher one's gates.",
+  "paired_benign_fixture": "fixtures/positive/r16-01-derivation-gates-only-the-higher-class-benign.json",
+  "why": "Section 12.5 row 1, and AT-M4-02's measured collapse: an action that is both C2 and C3, gated only by the higher row, loses C2's human requirement. The mutation deletes the conjunct requiring every reached class to be inside the gated set, leaving the size comparison and the field-presence conjunct standing -- so the guard still LOOKS like it compares the two sets. The validator must reject it naming this guard and the `subset` row, because what is gone is the containment and not the comparison.",
+  "expect_failure_contains": "'guard.class.reached_set_gates_all', 'subset'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.class.reached_set_gates_all/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

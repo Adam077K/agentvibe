@@ -1,0 +1,17 @@
+{
+  "id": "r30-alias-key-is-a-registered-value-type",
+  "repair": "R30",
+  "finding": "F6A-09; reviews/F2-06-A-completeness-coherence-vision-binding.md (F6A-09)",
+  "case": "`ConsequenceVector` -- a registered VALUE type, live in a fixed-boundary chapter -- put back into the alias table as a candidate-era name.",
+  "paired_benign_fixture": "fixtures/positive/r30-alias-table-gains-a-candidate-only-name-benign.json",
+  "why": "This is the exact row F6A-09 found, restored. It matters that the fixture is the real defect and not an invented one: the row passed every check in this package for the whole of its life, because the declared refusal compared alias keys against RECORD names and `ConsequenceVector` is a value. `Grant.payload.consequence_bounds` declares it and `02` section 96 defines it; the table pointed a reader at `ConsequenceDerivation`, a per-operation derivation record, which is a different object. The fixture is what stops the row being restored by someone reading the alias table as a place to record any name correspondence they notice.",
+  "expect_failure_contains": "A CANDIDATE-ERA NAME IS A REGISTERED VALUE TYPE",
+  "patch": [
+    {
+      "file": "aliases.json",
+      "pointer": "/aliases/ConsequenceVector",
+      "op": "add",
+      "value": "ConsequenceDerivation"
+    }
+  ]
+}

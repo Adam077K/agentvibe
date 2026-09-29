@@ -57,49 +57,21 @@ having run none. Required checks govern the PR route only.
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-12 — The reader engine becomes a script, and the roster drops to six
-
-**Context:** Phase 6 opened with a stop-condition-7 clock running: `.claude/agents/reader.md` was created in
-Phase 4b and nothing invoked it. Reading it against the decision to wire it revealed the file specified an
-agent that never judges anything — its return contract (`status · window · expired · expiring_soon ·
-lapsed_waivers · silent_resolvers`) is six deterministic queries, and its own anti-patterns forbid the single
-judgement in scope: *"DO NOT record a disposition; that is a decision, and decisions have owners."*
-**Options considered:** Wire the agent into a scheduled CI job (needs an API key and per-run billing outside
-the subscription, and yields a non-deterministic report no test can pin) / Script the sweep and keep the agent
-to interpret it (real but speculative value, and the trigger would be prose rather than mechanical, so §0
-stays half-satisfied) / Script it and delete the agent / Record it as unconsumed and defer.
-**Decision:** `node scripts/ledger.mjs sweep`, and `.claude/agents/reader.md` is deleted. Roster is six
-engines. The sweep runs on a schedule ([ledger-sweep.yml](../../.github/workflows/ledger-sweep.yml)) and at
-session start, where the same hook also injects the lens and playbook files.
-**Rationale:** Deletion is the strongest answer to the new §0 gate criterion — the unconsumed mechanism is
-removed rather than pretended-consumed. Deterministic, keyless, testable, and it makes the roster smaller,
-which is the whole thesis of Phase 4. Verified safe first: no `reader.md` exists in `~/.claude/agents/`, so
-unlike the eleven shimmed names, deleting this one actually removes it.
-**Reversibility:** hard-to-reverse (git history holds the file; the roster count is referenced in four docs)
-**Owner:** ceo
-**Affects:** every engine consumer, schema-lint's ENGINES registry, AGENTS.md, README counts, the claim ledger
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). F2 round breadcrumb needs ~1.8KB; both entries are superseded by later ones and their bodies are in the archive*
+***Cited in prose by 8 location(s)**, which the heading above keeps resolvable: `.claude/memory/LONG-TERM.md:19` (date), `docs/03-system-design/AGENT-SYSTEM-REBUILD.md:317` (date), `docs/08-agents_work/2026-08-13-rethink-board.md:19` (date), `docs/08-agents_work/2026-08-13-rethink-board.md:53` (date), `docs/08-agents_work/2026-08-13-rethink-board.md:82` (date), `docs/08-agents_work/sessions/2026-08-13-ceo-corpus-correction.md:10` (date), and 2 more.*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-12 — Three Phase 6 gate criteria amended, each by a measurement
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Phase 6 is complete; the amended criteria are now the operative status quo.*
 ## 2026-08-11 — Claim ledger replaces the diff gate as the enforcement spine
-
-**Context:** The system must serve any venture work, not only code. A measured diagnostic found ~1,736 stated imperative rules against 1 mechanism that can block, and 16 verified fabrications. The obvious fix — a merge gate bound to a commit SHA with CI executing compilers — gates diffs, and most venture work (pricing, market sizing, positioning, GTM) has no diff.
-**Options considered:** Diff gate only (gates the recoverable class, leaves the unrecoverable class ungated) / Two gates in two homes (two classifiers will disagree during an incident) / Decision as the durable unit (loses per-claim blast radius) / Artifact + per-task criteria (criteria die with the task, so nothing can go stale) / Nothing durable (cannot answer "what do we believe and why").
-**Decision:** The **claim** is the durable unit. Claims live inside the artifact they support; a generated index compiles them. Three resolvers — `source`, `command`, `judge`. Expiry via `valid_until` with a forced Refresh / Deprecate / Waive disposition.
-**Rationale:** Every domain ultimately asserts things, so claim verification is domain-general where diff gating is not. It catches the exact failure class that produced all 16 fabrications, makes staleness computable, and gives blast radius free via `supports:`.
-**Reversibility:** hard-to-reverse
-**Owner:** ceo
-**Affects:** every engine, the QA classifier, all four memory files (which become generated views), CI, Mission Control
-**See:** [ADR-001](../../docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md)
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). F2 round breadcrumb needs ~1.8KB; both entries are superseded by later ones and their bodies are in the archive*
+***Cited in prose by 4 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/IMPLEMENTATION-PLAN.md:243` (date), `docs/06-codebase/2026-08-11-FLEET-BASELINE.md:128` (date), `docs/08-agents_work/sessions/2026-08-16-builder-false-spawn-constraint.md:9` (date), `docs/08-agents_work/sessions/2026-08-25-builder-memory-eviction.md:55` (title-phrase).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — "Subagents cannot spawn subagents" is false; delete the dispatch-packet layer
-
-**Context:** The operating instructions state nested Task spawning is blocked. The entire dispatch-packet ceremony and much of the CEO→C-suite→worker layering exists to route around it.
-**Options considered:** Trust the stated constraint / Probe it.
-**Decision:** Probed live — **false**. A subagent had `Agent` in its primary tool list, called it, and the nested agent returned `NESTED_OK` in 1.8s. Depth-2 confirmed. The dispatch-packet machinery is deleted once write-capable nesting is confirmed outside plan mode (Phase 1 task).
-**Rationale:** A capability constraint not re-tested this quarter is a rumour. This one shaped the architecture. It is also the canonical example for the ledger: a global-scope claim, true once, carrying no expiry, silently rotted while the whole system obeyed it.
-**Reversibility:** reversible
-**Owner:** ceo
-**Affects:** topology, roster, every C-suite agent definition, CLAUDE.md layer contract
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
+***Cited in prose by 23 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/AGENT-ARCHITECTURE-REDIVE.md:67` (title-phrase), `docs/03-system-design/AGENT-ARCHITECTURE.md:396` (title-phrase), `docs/03-system-design/AGENT-SYSTEM-REBUILD.md:44` (title-phrase), `docs/03-system-design/CLAIM-LEDGER.md:19` (title-phrase), `docs/03-system-design/CLAIM-LEDGER.md:904` (title-phrase), `docs/03-system-design/IMPLEMENTATION-PLAN.md:243` (date), and 17 more.*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — Roster collapses from 60 agent files to 7 engines, derived from a 38-job inventory
 *Archived to `DECISIONS_ARCHIVE_002.md` (2026-08-26). Executed. The roster is seven engines of eighteen files; the operative record is CLAUDE.md, `AGENTS.md`, and the `ENGINES` list in `.claude/hooks/schema-lint.js`, none of which reads this entry.*
@@ -107,14 +79,9 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — Every gate ships in shadow mode before it blocks
-
-**Context:** The source spec admits its single largest unpriced variable is what friction costs when an agent hits a denial mid-task. Nobody in 24 studied systems measured it.
-**Options considered:** Block on unrecoverable and advise elsewhere (skips the measurement) / Block by default with a named escape hatch (highest friction, unpriced) / Shadow mode first.
-**Decision:** Every gate ships computing `would_block` and logging it, blocking nothing, for a fixed window. Promote to real blocking only rules that fired correctly and rarely. **Exception:** outbound send, deploy, migration and harness self-edit block from day one, no shadow period.
-**Rationale:** It is the only design that prices the unknown instead of guessing at it, and it has live prior art. The exception covers the class where being wrong is unrecoverable.
-**Reversibility:** reversible
-**Owner:** ceo
-**Affects:** all resolvers, the pre-tool hook, CI, the outbound queue
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
+***Cited in prose by 9 location(s)**, which the heading above keeps resolvable: `.claude/mcp-policy.json:4` (title-phrase), `.claude/qa-tier-floor.yml:45` (title-phrase), `.github/workflows/qa-lead-pass.yml:5` (title-phrase), `docs/03-system-design/CLAIM-LEDGER.md:84` (title-phrase), `docs/03-system-design/IMPLEMENTATION-PLAN.md:243` (date), `docs/06-codebase/2026-08-11-FLEET-BASELINE.md:128` (date), and 3 more.*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-11 — Playbooks declare work graphs and exit gates, never method
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Decision is implemented in `.claude/playbooks/` and CLAUDE.md. **Checked by title-phrase grep only, and none found** — the rule itself is restated in `schema-lint.js:1428` and `ci.yml:148`, but neither references this record.*
@@ -144,7 +111,7 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 *Not checked: paraphrase, global-scope-claims, title-too-generic — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
-*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-03). room for the 2026-09-03 WATCH-is-the-frame entry; the refreshed claim lives in the ledger*
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
 ***Cited in prose by 2 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/IMPLEMENTATION-PLAN.md:198` (date), `docs/08-agents_work/sessions/2026-08-13-ceo-phase-8a-status.md:9` (date).*
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
@@ -166,20 +133,12 @@ unlike the eleven shimmed names, deleting this one actually removes it.
 ## 2026-08-16 — Ship five engines, defer the two that hold credentials
 *Archived to `DECISIONS_ARCHIVE.md` (2026-08-22). Roster decision captured in AGENTS.md and docs. **Cited, and the original stub was wrong to say otherwise:** `docs/08-agents_work/handoffs/2026-08-15-implementation.md:112-114` — *“whether `operator`/`instrument` wait for the OS sandbox (recorded in `DECISIONS.md` as: ship five, defer two)”* — which is an item still open on the founder, not a closed one.*
 ## 2026-08-16 — The eleven shims stay until nothing references their names
-
-**Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different
-content**, and 33 more are absent from a clean clone. Deleting a repo shim **un-shadows** its global twin, so
-the name keeps working and quietly means the older definition. Nothing errors — the worst failure shape.
-**Decision:** Keep the 11 shims through the roster migration. They are occupying the name, which is their
-job. Delete only once nothing references those names.
-**The constraint that decided it:** those globals are **live in two other projects**
-(`obsidian-claude-code-mcp`, `overstory`), measured 2026-08-11. Archiving them fixes Agentvibe and reaches
-into work that is not Agentvibe, so it is not this repo's call to make unilaterally.
-**Reversibility:** fully reversible — nothing is deleted.
-**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-14). Archived 2026-09-14 to stay under the 40,000-byte cap after the F2 founder-decisions entry; each subject is recorded in CLAUDE.md or the claim ledger*
+***Cited in prose by 1 location(s)**, which the heading above keeps resolvable: `docs/08-agents_work/sessions/2026-08-16-builder-token-efficiency.md:9` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
-*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-02). archived 2026-09-02 to make room for the StartupOS v1 entry; superseded by STARTUP-OS.md Part II §11 and §13*
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-15). room for the 2026-09-15 r8 breadcrumb*
 ***Cited in prose by 4 location(s)**, which the heading above keeps resolvable: `docs/08-agents_work/sessions/2026-08-16-builder-token-efficiency.md:9` (date), `scripts/lib/memory-entries.js:507` (title-phrase), `scripts/lib/memory-entries.js:508` (title-phrase), `scripts/lib/memory-entries.js:509` (title-phrase).*
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
@@ -189,111 +148,24 @@ into work that is not Agentvibe, so it is not this repo's call to make unilatera
 *Not checked: paraphrase, global-scope-claims, title-too-generic — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-24 — Act on the over-build audit, but check its premises first; split PRs by tier
-*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-02). archived 2026-09-02 to make room for the StartupOS v1 entry; superseded by STARTUP-OS.md Part II §11 and §13*
+*Archived to `DECISIONS_ARCHIVE_002.md` (2026-09-15). room for the 2026-09-15 r8 breadcrumb*
 ***Cited in prose by 2 location(s)**, which the heading above keeps resolvable: `CLAUDE.md:856` (date), `docs/03-system-design/AGENT-ARCHITECTURE.md:244` (date).*
 *Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-25 — Four founder decisions: scope, review weight, venture work, one living status
-
-**Context:** Twelve days produced 15 handoff documents, 117 session files and four plan documents on disk
-at once, while the QA gate has still never written a verdict and CI has been red since 2026-08-24 on one
-environment-dependent test. Four open questions were settled in a single pass.
-
-**Options considered:** finish the harness vs. start venture work now / keep the full 49-agent gate on
-every PR vs. tier it by reversibility / continue the handoff chain vs. one living document.
-
-**Decision — 1 · Scope:** complete Waves 1–4 of the target architecture. **Phase 9 fleet rollout is
-excluded** — the plan's own P6, and no other project is touched.
-**Decision — 2 · Review weight:** lean by default — 3 blinded reviewers plus the deterministic floor. The
-full `qa.js` gate runs only where `git revert` does not undo the damage: `.github/workflows/`,
-`.claude/agents/`, `.claude/hooks/`, the gate itself, credentials.
-**Decision — 3 · Venture work: not yet.** The harness is finished first. Founder position, restated
-2026-08-25 after being raised with the session count.
-**Decision — 4 · Documentation:** one living `docs/STATUS.md`. The handoff chain retires — bannered
-HISTORICAL, not deleted.
-
-**Rationale:** (2) rests on this repo's own measurement, not on preference: a 49-agent gate run cost ~3.3M
-tokens and found 3 P1s while missing the largest defect of the session; 3 blinded reviewers found 7 P1s at
-a fraction of that. Panel size was never the signal — two reviewers converging independently was.
-(4) a handoff is a snapshot addressed to one reader at one moment, and snapshots are superseded rather than
-corrected, so a stale one is indistinguishable from a current one until both have been read. A living
-document is corrected in place, which makes being wrong a bug someone fixes instead of a file someone adds.
-
-**Cost, recorded once and not to be re-litigated:** (3) means every mechanism built in Waves 1–4 stays
-untested against work that is not the harness itself, and stop conditions 6 and 7 stand at maximum
-exposure — 117 session files, zero customer-facing work. (2) accepts that a lean panel will miss findings a
-49-agent panel would catch, on the measured ground that the larger panel missed more.
-
-**Reversibility:** reversible — four process decisions; (4) deletes no file and no history.
-**Owner:** ceo · **founder decision** · **Affects:** `docs/STATUS.md`,
-`docs/08-agents_work/handoffs/`, `qa.js` gate routing, and every future session's pre-flight read
+*Archived to `DECISIONS_ARCHIVE_003.md` (2026-09-29). Archived 2026-09-29 by the vision/f7 main merge: the union of three divergent DECISIONS.md versions exceeded the 40,000-byte cap; oldest eligible entries first*
+***Cited in prose by 3 location(s)**, which the heading above keeps resolvable: `docs/STATUS.md:524` (date), `scripts/check-memory-budget.test.mjs:318` (date), `scripts/evict-memory.test.mjs:307` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-25 — Branch protection: fix `cmd_merge` first, then flip `enforce_admins`; CODEOWNERS dropped
-
-**Context:** Branch protection exists on `main` and does not bind on the path actually used. Required
-status checks govern the **pull-request route only** — a direct push prints *"Bypassed rule violations for
-refs/heads/main: 2 of 2 required status checks are expected"* and succeeds having run none. Observed
-2026-08-23 and twice on 2026-08-25. So every claim of the form "nothing merges without the gate" is true
-only of the route people choose to take, which makes the gate's authority a convention rather than a
-control.
-
-**Options considered:** flip `enforce_admins` now (the obvious fix, and it bricks the merge path that
-exists today) / add CODEOWNERS as a second control / fix the merge path first, then flip.
-
-**Decision — order matters, and this is the whole decision.** Fix `cmd_merge` in `bin/warroom` to push a
-branch and open a PR, **then** flip `enforce_admins`. Flipping first breaks the repo two ways, both
-following from one fact verified in-worktree: `.github/workflows/qa-lead-pass.yml` triggers on
-`pull_request` only — its `on:` block names `pull_request` and the file contains **zero** `push:` triggers
-— while being a *required* check. So (1) with admins enforced, a direct push to `main` could never satisfy
-a check that only ever runs on pull requests; and (2) `cmd_merge` merges into **local** `main` and never
-pushes, so it would produce commits that can never reach `origin`.
-
-**CODEOWNERS was dropped from the plan, not deferred.** Branch protection carries no
-`required_pull_request_reviews` at all, so `require_code_owner_reviews` is unset and a CODEOWNERS file
-would gate **nothing** — and on a solo repository, enabling code-owner review would deadlock the only
-reviewer. A control that reports green while controlling nothing is the class this repo exists to refuse,
-so adding one to look safer would have been the defect, not the fix.
-
-**Provenance, kept separate because the two halves have different standing.** The API readings —
-`enforce_admins: {enabled: false}`, `rulesets: []`, required checks `["Deterministic checks", "Verify QA
-Lead PASS"]` with `strict: true`, no CODEOWNERS — are **reported by the team lead and not verified in a
-worktree**: `gh` is denied by the sandbox's `denyRead` on `~/.config/gh`, which is working as intended. The
-workflow trigger, the absence of a tracked CODEOWNERS, and `cmd_merge`'s never-pushes behaviour **are**
-verified here. Do not promote the first group to "verified" without re-running it against the API.
-
-**Reversibility:** reversible — `enforce_admins` is one repository setting and `cmd_merge` is one function.
-Note that only the Founder can change the setting; it is not a file in this repo.
-**Owner:** ceo · **founder decision 2026-08-25**
-**Affects:** `bin/warroom` (`cmd_merge`), `.github/workflows/qa-lead-pass.yml`, `docs/STATUS.md`, and every
-agent that believes the QA gate is binding on all routes
+*Archived to `DECISIONS_ARCHIVE_003.md` (2026-09-29). Archived 2026-09-29 by the vision/f7 main merge: the union of three divergent DECISIONS.md versions exceeded the 40,000-byte cap; oldest eligible entries first*
+***Cited in prose by 3 location(s)**, which the heading above keeps resolvable: `docs/STATUS.md:524` (date), `scripts/check-memory-budget.test.mjs:318` (date), `scripts/evict-memory.test.mjs:307` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-26 — Memory eviction is typed and mechanised; the archive rotates rather than being pruned
-
-**Context:** `DECISIONS.md` stood at 39,675 of a blocking 40,000 while rule 4 tells every agent to append
-here, so rule 4 was unfollowable. The same condition occurred at 91 bytes of headroom, was relieved by a
-manual eviction, and the mechanism was never built.
-
-**Options considered:** raise the cap (moves the wall, keeps the file unreadable) / evict by recency (the
-oldest entries are the ones two test files and the ledger still reason from) / evict by type, keyed on
-`Reversibility:` and `Affects:`, which every entry already carries.
-
-**Decision:** typed eviction — `scripts/lib/memory-entries.js` classifies, `scripts/evict-memory.mjs`
-applies, with no override flag. Irreversible-with-a-live-subject is never archived; all-`Affects:`-deleted
-is archivable on sight; anything cited by a live claim is pinned; every archival leaves a stub under the
-original heading. **The archive rotates into sequence-numbered volumes**, each capped independently.
-
-**Rationale:** one capped archive relocates the pressure instead of relieving it — it stood at 34,472 of
-its own 40,000 — and the only way to meet that cap is to delete history, which the overflow message
-literally advised. A per-volume cap bounds what one reader must load and leaves the lifetime total free to
-grow. Sequence keys, not period keys: a period key needs a second rule the moment one period overflows.
-
-**Also recorded, because it changed a selection:** the number to act on is **net** — entry minus stub — not
-size and not age. A 1,035-byte entry cited in 24 places nets 31 bytes and was left alone.
-
-**Reversibility:** reversible — the volumes are files, the stubs name what moved, no byte was deleted.
-**Owner:** builder (`builder-memory-eviction`)
-**Affects:** `scripts/check-memory-budget.mjs`, `scripts/lib/memory-entries.js`, `scripts/evict-memory.mjs`,
-`.claude/memory/DECISIONS.md`, `CLAUDE.md`
+*Archived to `DECISIONS_ARCHIVE_003.md` (2026-09-29). Archived 2026-09-29 by the vision/f7 main merge: the union of three divergent DECISIONS.md versions exceeded the 40,000-byte cap; oldest eligible entries first*
+***Cited in prose by 6 location(s)**, which the heading above keeps resolvable: `.qa/verdicts/f71367a3a9a93b68eefeb38da2130ae1ca095dee11a65ceea53e08bf64ebe665.json:9` (date), `docs/03-system-design/STARTUP-OS.md:52` (date), `docs/03-system-design/review/2026-09-02-FABLE-REPORT.md:435` (date), `docs/08-agents_work/board-meetings/2026-09-01-startup-os/r1-adversary.json:25` (date), `docs/08-agents_work/sessions/2026-08-25-builder-memory-eviction.md:33` (title-phrase), `docs/08-agents_work/sessions/2026-08-26-ceo-wave-one.md:21` (date).*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
 ## 2026-08-26 — Done is "the loop runs itself"; nine PRs wired the circulation and did not start the heart
 
@@ -349,33 +221,49 @@ merged; the deferrals themselves are reversible.
 that reads "built" as "gated"
 
 ## 2026-08-29 — Design: conformance binds, quality informs; taste enters once, as references
+*Archived to `DECISIONS_ARCHIVE_003.md` (2026-09-29). Archived 2026-09-29 by the vision/f7 main merge: the union of three divergent DECISIONS.md versions exceeded the 40,000-byte cap; oldest eligible entries first*
+***Cited in prose by 8 location(s)**, which the heading above keeps resolvable: `docs/03-system-design/STARTUP-OS.md:51` (date), `docs/03-system-design/review/2026-09-02-fable-2.md:178` (date), `docs/vision-system/research/F2/R7-verification.md:9` (date), `docs/vision-system/research/F2/R7-verification.md:11` (date), `docs/vision-system/research/F2/R7-verification.md:51` (date), `docs/vision-system/research/F2/R7-verification.md:157` (date), and 2 more.*
+*Not checked: paraphrase, global-scope-claims — a citation that names neither the date nor the title cannot be found by a scan, so read this as "two scans found nothing", not as "nothing cites it".*
 
-**CONFORMANCE CAN BIND. QUALITY CAN ONLY INFORM.** A design-quality PASS/BLOCK judge is ~0.543 accurate
-against a designer panel only 0.741 self-consistent — a biased coin on the merge path, *reproducible
-while invalid*, which looks exactly like a working mechanism. Corollary: evaluators agree with each other
-5-17% of the time while each finds 18-60% of the real problems. **Weak judges are excellent FINDERS and
-useless SCORERS — union, never average.** A panel returns findings, never a score. This explains a result
-already measured here: three blinded reviewers found 7 P1s where a 49-agent gate found 3.
+## 2026-08-31 — Phase 9 executed against beeond: what ports, what is authored per repo, and the gate that stayed open
 
-**Division of labour, founder direction 2026-08-29** (*"agents can do those small decisions or learn from
-context, references"*): founder supplies **references, brand adjectives, no-gos**; the agent **derives
-every value**. Taste enters once and nowhere else — no downstream judge can recover it. Also founder-set:
-**1-3 outputs at high quality, not 40+**, which the evidence supports *against* the three-directions
-ritual nobody in the corpus defends.
+**Founder direction, 2026-08-29/31:** full harness rather than instruments-only (I recommended
+instruments-only and was overruled knowingly), a real check runner and CI in the target, an installer
+rather than a hand-copy, and the roster swap done in the same change as the handoff rewrite.
 
-**Root cause was not taste.** The `design` lens — in a file whose job is "how to PRODUCE work" — has five
-steps and every one is a judging action; `sources:` show it was rehoused from `design-critic.md`. **A
-critic's checklist sat in the production procedure's slot.** Found three independent ways.
+**The split posture, and it is the durable part.** Two classes of harness file, and confusing them is what
+made eight defects invisible from inside this repo. **Portable:** the enforcement spine — `ledger.mjs`,
+`classifier.js`, `verdict.mjs`, `run-checks.mjs`, `lib/check-suite.js` — which has *zero* code-level
+coupling to any agent name, lens or playbook. **Per-repo, must be authored:** the `STEPS` list,
+`qa-tier-floor.yml`, `ci.yml`, `CURATION.yml`, and every posture header. A `POSTURE: BLOCKS` line is a
+claim about the repository the file sits in; copying it carries a false claim into a repo where it is not
+true. **Four of the eight were one shape — a list describing ONE repository, embedded in portable code:**
+tests reading the host's own `seeds.json`, the ledger exemptions compiled into `ledger.mjs`, meta-tests
+coupled to the live step list, and skill routers indexing one library. Five were fixed at source and
+re-ported; patching the target's copies would have forked the suite into two that drift apart.
 
-**What binds is a short list.** Only `npm run check` steps and `qa-lead-pass.yml`. Grep of `origin/main`
-confirms **no code path loads a lens `procedure:` or a playbook's stages**, `qa.js` has five hardcoded
-dimensions excluding `craft`, and `blocking_severities` is read by nothing outside the linter. **Design
-conformance binds by being a test and by nothing else**; the lens and playbook are ADVISORY, labelled so.
+**The rule the port earned:** an installer, not a copy. A hand-copy cannot answer "does the target still
+have the harness, or has it drifted?" `--verify` answers it as an exit code — in sync 0, drifted 1, could
+not check 2 — and dry-run is the default because `verdict.mjs` once shipped the opposite polarity.
 
-**Reversibility:** reversible — additive scripts only; no agent file, workflow or STEP touched, floor `full`.
-**Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29**
-**Affects:** `.claude/lenses.yml`, `.claude/review-lenses.yml`, `.claude/playbooks/design-pass.yml`,
-`scripts/build-tokens.mjs`, `scripts/design-probe.mjs`, `design/`, every future design dispatch
+**A figure beside its own command had rotted in three days.** `.qa/` is 68 verdicts, not the 50 this
+repo's `CLAUDE.md` records. Found by running the command written next to the number. Keep commands in
+prose, not results — the practice works only if someone runs them.
+
+**Gate 3 is open and is not a failure.** Of four acceptance gates — installer `--verify` 0, a suite tally
+with the denominator read before the verdict, CI green on a real PR, one real claim from the target's own
+work — three are met. **CI green needs a push and a push was never requested**, so the one gate requiring
+the outside world is the one still open. **Phase 8b's exit gate is discharged**: beeond's ledger now holds
+a real claim arising from beeond's own design work, not a fixture. Its id lives in beeond's ledger and is
+deliberately not cited here — this repo's checker cannot resolve another project's claim, and declaring
+it exempt would mean writing a false reason into `.claude/unresolvable-citations.yml`.
+
+**Reversibility:** reversible in agentvibe — additive installer, manifest and tests, plus five source
+fixes to existing scripts; no agent file, workflow or STEP list touched. The target's roster swap is
+`irreversible` tier, founder-approved, and tagged `pre-harness-port-2026-08-30` in beeond.
+**Owner:** orchestrator (`ceo-4-1787566829`) · **founder direction 2026-08-29 / 2026-08-31**
+**Affects:** `bin/fleet-install.mjs`, `fleet/MANIFEST.yml`, `scripts/fleet-install.test.mjs`,
+`.claude/unresolvable-citations.yml`, `scripts/build-tokens.mjs`, every future port target
 
 ## 2026-09-02 — StartupOS v1: the frame is a slice of the picture; fifteen stand, six amendments
 
@@ -405,3 +293,75 @@ into Part IV. **Reversibility:** reversible — documents only; nothing is built
 **Decision (founder, 2026-09-03):** asked whether WAKE was the frame, the founder said *"envision again the whole system; it can learn, for context, from the other systems."* Three sealed Opus minds each wrote a spine before reading anything, then read WAKE and the prior systems as context, then dreamed the whole; one Fable merge decided → **WATCH**, `docs/03-system-design/envision/2026-09-02-THE-SYSTEM.md`. After the page the founder chose: **WATCH is the frame**; commit, no push; the spec is re-derived next session.
 **Affects:** every existing part named in WATCH §29 (the check suite, ledger, verdict binding, sandbox and hook SURVIVE; the risk classifier, QA gate, engines, lenses, playbooks, skills library, session files, slash commands, mission control's views RETIRED or absorbed). WAKE (`dream/`) is round one's record, untouched. `STARTUP-OS.md` v2 is a parts bin until v3 is derived from §29 and §25.
 **Why:** 22 claims all three spines made blind; the largest change against WAKE (the founder model buys silence, never action) was refused by all three independently. Reversibility: reversible; nothing built.
+
+## 2026-09-14 — F2 round: the agents/work layer re-specified as five layers (S1.1); the pin lesson
+
+**Decision (founder-reopened layer, run per `docs/vision-system/planning/HANDOFF-F2-agents-work-layer.md`).**
+Eight blind research lanes, five materially different candidates, five independent attacks (111 findings,
+28 (d)), then a synthesis: **consequence class decides who may act; a declared procedure decides how work
+runs and what each step sees; a typed standing interest decides when work is due; an existence record
+decides whether a worker may exist; exactly one standing party holds each duty that outlives its case —
+lower layer governs.** Zero falsifiers against the six fixed boundaries, so **S1.1**, not S2.0. No
+persistent roster; specialized knowledge is a skill version, never a reason for an agent; attributable
+identity is mandatory and never a reason. Six founder packets (Q-016…Q-021). Record:
+`docs/vision-system/planning/F2/05-selection-record.md`.
+
+**Two mechanisms learned the hard way, recorded for every future session.** (1) Long subagent returns
+truncate at ~4k chars and a drain over 16k is dropped; the full text is in the subagent transcript on disk
+(LONG-TERM.md has the path). (2) **A registry may classify; only the pin may say what satisfies it.** Four
+rechecks of one defect (RC-02 → RC2-02 → RC3-01/02 → RC4-01/02): a hand-written pin was defeated in turn by
+`any`, by `forall`, by a value slot, then by editing the primitive table the walker trusted. Each repair
+closed the named attack and the next sibling leaked. The structural fix is a pin-side allowlist of
+admissible ancestors plus a pinned digest of the table.
+
+**Reversibility:** reversible — planning only; founder hold on building in force. **Owner:** orchestrator
+`ceo-4-1789314685` · **Affects:** `docs/vision-system/**`, every future dispatch that expects a long return
+
+## 2026-09-14 — Founder decisions on the agent layer; the F2 findings closed at specification level
+
+**Decisions (founder, 2026-09-14, via decision prompts; recorded in `registers/open-questions.json` and
+`inputs/FOUNDER-INPUT-2026-09-14-addendum.md`).** The five-reason list for creating an agent is **not
+closed** — consequence class is admitted, so S1.1/WORK-1.1 stands on the founder's own gate (TC-35). Q-016
+(d) founder as terminal owner, explicit exception. Q-017 (d) then, on the strict re-run that cut 46
+acceptance roles to **3 standing** (personal data/deletion, grievance/rights, continuity day-five arm): staff
+the three with the founder as declared exception; six flagged roles need a paired conformance case each
+before admission; 32 dissolve into per-case acceptance. Q-018 (b) parks. Q-019 (d) then (b). Q-020 (a).
+Q-021 placeholders. Q-022 stays with the founder (account read). The multi-field-agent thought is a dated
+founder input now.
+
+**State of the 54 Step 6 findings after five repair lanes and two independent rechecks** (recheck-02 on 18
+older repairs: 13 closed / 5 partial; recheck-03 on 15 prose repairs: 12 closed / 1 partial): 33 closed by
+recheck, 5 confirmed by reading, 6 author-recorded, 10 partial with named residues, **0 with no repair**.
+Contracts-side repairs of the day await recheck-04 on the validated merged head. Nothing here lifts the
+founder's hold; B01 not dispatched; one model family; no runtime exists.
+
+**Reversibility:** reversible — planning only. **Owner:** orchestrator `ceo-4-1789314685` ·
+**Affects:** `docs/vision-system/**`, `registers/open-questions.json`, every future lane's dispatch brief
+(see LONG-TERM.md 2026-09-14 for the mechanics)
+
+## 2026-09-15 — r8: repairs stop at the residue, and three structural decisions are owed
+
+**Decisions (orchestrator `ceo-1-1789446032`).** (1) **Contract lanes stop for this round** after four
+(F/G/H/I) landed twenty-four items; F6D-05/F6Y-04 (R46) and F6C-10 stay owed rather than buy a fifth lane.
+(2) **The suite runs on a frozen tree, per fixture, with full stdout to files** — the runner replicates
+`registers/` and `planning/reviews/F2-06-*.md` per scratch tree, so a mid-run commit changed the subject
+under the fixtures (measured twice: F6X-03, and register status prose naming F6A-09/F6C-06). (3) **Register
+`status` prose is data**: never name another finding's id in it; run the light validator on HEAD before any
+record-keeping commit.
+
+**Owed to the founder or a framer lane, not decided here:** edge predicates as a derived artifact (no
+edge-predicate writer exists; F6C-10's park phase is blocked on it) · the fixture runner copying fixture
+bodies instead of symlinking manifests (F6Y-06's check half; lane G's packet in
+`planning/F2/11-repair-names-contracts-g.md`) · a `CapabilityId`/`CheckerId` vocabulary (two free strings
+now carry structural joins) · whether to re-run the fifteen-dimension review, which no repair moves.
+
+**Reversibility:** reversible — planning only. **Owner:** orchestrator · **Affects:** every future
+contracts lane brief, `docs/vision-system/**`, `.claude/memory/LONG-TERM.md` (2026-09-15 entries)
+
+## 2026-09-29 — Company Engine plan: design frozen at S1.1, build hold kept, executable exit criteria
+
+**Decision:** The design stays frozen at S1.1 and the build hold is kept. Founder answers of 2026-09-29:
+**D3** reviewer defaults accepted as proposed · **D4** an S0-vs-S1 checkpoint after B01+B04, before any
+further build item · **D6** the operating rules adopted. Exit from the hold is by executable criteria, not
+by judgement. Backlog: `docs/vision-system/planning/reviews/F2-07-repair-backlog.md`.
+**Reversibility:** reversible — planning only. **Owner:** orchestrator · **Affects:** `docs/vision-system/**`

@@ -1,0 +1,16 @@
+{
+  "id": "r18-cap-exhaustion-refuses-the-next-complainant",
+  "repair": "R18",
+  "finding": "F6C-16, R-X17; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "Cap exhaustion refuses the next arrival instead of overflowing to a named destination.",
+  "paired_benign_fixture": "fixtures/positive/r18-cap-exhaustion-refuses-the-next-complainant-benign.json",
+  "why": "R-X17's point is that the failure mode of an intake cap is silence toward the person with the grievance. With the refusal flag unconstrained, an admission record may be written with intake refused while the overflow destination and its alarm reader sit recorded and unused. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.intake.per_origin_subcap_preserves_intake` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.intake.per_origin_subcap_preserves_intake', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.intake.per_origin_subcap_preserves_intake/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

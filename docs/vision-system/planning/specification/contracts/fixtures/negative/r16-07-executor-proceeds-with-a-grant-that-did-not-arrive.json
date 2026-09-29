@@ -1,0 +1,16 @@
+{
+  "id": "r16-07-executor-proceeds-with-a-grant-that-did-not-arrive",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 7; 05-work-agents-skills.md section 9",
+  "case": "A grant that did not arrive, where the effect proceeds with less.",
+  "paired_benign_fixture": "fixtures/positive/r16-07-executor-proceeds-with-a-grant-that-did-not-arrive-benign.json",
+  "why": "Section 12.5 row 7. The guarantee is GrantDeliveryReceipt's -- an executor whose grant did not arrive fails loudly and never completes with less -- and it is pinned on the edge that starts the executor, because section 12.4's thirty guard names are a closed list and this is not one of them. The mutation deletes the attestation conjunct and leaves the receipt reference demanded, so the instance still POINTS AT a receipt while nothing asserts the grant arrived.",
+  "expect_failure_contains": "'edge.AgentInstance.leased.running.v1', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.AgentInstance.leased.running.v1/body/predicates/6",
+      "op": "remove"
+    }
+  ]
+}

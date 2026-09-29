@@ -1,0 +1,17 @@
+{
+  "id": "r29-exclusive-factory-uses-a-declared-kernel-path-benign",
+  "repair": "R29",
+  "finding": "F6X-01; registers/review-findings.json (F6X-01), benign column",
+  "case": "ArmedSet given one of the three DECLARED kernel paths as its exclusive factory.",
+  "paired_adverse_fixture": "fixtures/negative/r29-exclusive-factory-invents-a-kernel-path.json",
+  "why": "The exemption has to actually work, or the repair is just a stricter refusal wearing a literal. Its adverse twin proves an undeclared kernel path is refused; this proves a declared one is accepted. Run the two together and the shape of the rule is visible from the fixtures alone, which is the property a reader gets that a comment cannot give them.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/ArmedSet/registration/exclusive_factory",
+      "op": "replace",
+      "value": "kernel.commit_group"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "r38-a-two-letter-family-finding-loses-its-source-row",
+  "repair": "R38",
+  "finding": "F6Y-01, F6AA-08; planning/reviews/F2-06-recheck-05.md",
+  "case": "The `finding_sources` and `not_answered` rows for F6AA-04 deleted -- a finding in the two-letter family the previous pattern could not match at all.",
+  "paired_benign_fixture": "fixtures/positive/r38-a-two-letter-family-finding-is-declared-benign.json",
+  "why": "F6Y-01 widened the sweep from `F6[A-DRVX]` to every ONE-letter family and the next review raised eleven findings in a TWO-letter one, F6AA-01..11 -- outside the required set entirely, which is F6Y-01's own class recurring inside F6Y-01's repair. r36 pins the one-letter half; this fixture pins the other. Re-narrowing the quantifier to a single letter does NOT make this fixture pass: the F6AA ids leave both the mentioned and the raised sets, the three Step 6 floors fall below 101 / 100 / 11 and reject it, and run_negative_fixtures.py classifies that `wrong_reason` and fails the build. Both rows are removed rather than one, for r36's reason: removing the source row alone leaves F6AA-04 in `not_answered` but out of `unanswered`, and the partition equality fails first with a different message.",
+  "expect_failure_contains": "A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW",
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/finding_sources/F6AA-04",
+      "op": "remove"
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/not_answered/F6AA-04",
+      "op": "remove"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "r16-02-checker-delivered-the-producers-rationale-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 2, benign column; 05-work-agents-skills.md section 9",
+  "case": "A checker whose delivered inputs are the artifact and the criteria, which must NOT be flagged.",
+  "paired_adverse_fixture": "fixtures/negative/r16-02-checker-delivered-the-producers-rationale.json",
+  "why": "The legitimate delivery still records the class the manifest was assembled for (R-X13). Demanding that must not turn the clean case into a finding -- this is the false-positive half of the pair, and without it the adverse row above is satisfied by a guard that rejects every manifest.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.readset.delivered_equals_declared/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/assembled_for_class"
+        }
+      }
+    }
+  ]
+}

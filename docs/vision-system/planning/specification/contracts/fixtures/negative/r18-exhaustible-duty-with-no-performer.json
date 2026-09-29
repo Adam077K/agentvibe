@@ -1,0 +1,16 @@
+{
+  "id": "r18-exhaustible-duty-with-no-performer",
+  "repair": "R18",
+  "finding": "F6C-01; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 07-integrations-capacity.md section 6 (R-G01)",
+  "case": "An obligation in a duty class that can exhaust is admitted with `production_mode: none`.",
+  "paired_benign_fixture": "fixtures/positive/r18-exhaustible-duty-with-no-performer-benign.json",
+  "why": "Uniform gap G-01 was answered in prose only: `production_mode`, `non_model_production_mode` and every equivalent occurred ZERO times across the registry, the schema, the predicates and the invariants, so \"named explicitly on the obligation\" named nothing and no predicate could refuse the admission of a due obligation in an exhaustible class with no performer. The mutation deletes the payload conditional, and `none` becomes admissible on a class that can empty -- a promise with nobody behind it, discovered at the moment the bucket empties.",
+  "expect_failure_contains": "THE EXHAUSTION RULE HAS NO CONDITIONAL BEHIND IT",
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/Obligation/properties/payload/allOf",
+      "op": "remove"
+    }
+  ]
+}

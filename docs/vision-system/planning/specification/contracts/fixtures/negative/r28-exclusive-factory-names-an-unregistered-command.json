@@ -1,0 +1,17 @@
+{
+  "id": "r28-exclusive-factory-names-an-unregistered-command",
+  "repair": "R28",
+  "finding": "F6X-01; registers/review-findings.json (F6X-01)",
+  "case": "DomainEvent's exclusive factory repointed to a command-shaped name that command-registry.json does not carry.",
+  "paired_benign_fixture": "fixtures/positive/r28-exclusive-factory-repointed-to-a-registered-command-benign.json",
+  "why": "Before this repair `exclusive_factory` was read ZERO times by validate_contracts.py. Nine records declare one and not one of the nine strings was ever resolved against anything, so the sentence `only this path may create this record` was a comment that reads like a rule. This fixture is the shape that hole admits: a plausible command name, in the house style, naming nothing. It must be refused for the resolution check and not for a spelling rule, which is why the name is well-formed.",
+  "expect_failure_contains": "AN EXCLUSIVE FACTORY RESOLVES TO NOTHING",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/DomainEvent/registration/exclusive_factory",
+      "op": "replace",
+      "value": "event.group.commit"
+    }
+  ]
+}

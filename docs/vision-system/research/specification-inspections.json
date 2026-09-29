@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "kind": "Orchestrator integration inspection; not independent acceptance",
+  "inspections": [
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/05-work-agents-skills.md",
+      "source_worktree": ".worktrees/phase-f-work-knowledge",
+      "source_state": "Uncommitted draft while author completed S04 question answers",
+      "sha256": "51c4a361f70c5bedbc16aa4d0b734d2781f074ae943b5640d1aac8a757aa2a78",
+      "read_scope": "Complete document",
+      "result": "Concrete work/schedule/temporary-agent/skill contracts read; no independent verdict or runtime proof. Read only subsequent differences at integration if this hash changes.",
+      "remaining": "Inspect machine-record/state contracts and all268 substantive answers after handoff; independent review; full schema/component/coverage consolidation."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/06-knowledge-evidence-evaluation.md",
+      "source_worktree": ".worktrees/phase-f-work-knowledge",
+      "source_state": "Uncommitted draft before announced sensitive-short-field storage amendment",
+      "sha256": "b3d17f271d96ee19a357939515a827218ecd8d897e23672ed87026d7474ba236",
+      "read_scope": "Complete document",
+      "result": "Knowledge/context/retrieval/evidence/evaluation contracts read. Author separately addressing sensitive short fields, persistent lexical index scope and typed metadata sensitivity. No independent verdict/runtime proof.",
+      "remaining": "Inspect storage amendment and other changes at final commit; machine contracts/268 source answers and full schema consolidation remain."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/work-knowledge-contracts.json",
+      "source_worktree": ".worktrees/phase-f-work-knowledge",
+      "source_state": "Uncommitted changing draft; no fixed hash or whole-file read claimed",
+      "read_scope": "All48 subject bindings, complete Goal/Mission records; selected transition summaries and payload names for WorkflowRun,AgentInstance,RetrievalAttempt,EvaluationRun,IndexSnapshot; common type contract, one question-answer and one command sample; structural counts only for remainder",
+      "result": "268 answers present by count, not substantively read. Common predicate/guard and Evaluation/Handoff consolidation obligations routed as FI10/FI11. No complete catalog or coverage pass."
+    },
+    {
+      "date": "2026-09-12",
+      "subject_commit": "857a98c with12e4f8c metadata inheritance",
+      "paths": [
+        "planning/specification/05-work-agents-skills.md",
+        "planning/specification/06-knowledge-evidence-evaluation.md",
+        "planning/specification/work-knowledge-contracts.json"
+      ],
+      "read_scope": "05 complete original prefix verified unchanged by SHA256 plus full appended consolidation paragraph;06 changed lexical/storage/retention/conformance passages and new source-metadata inheritance read; all268 exact source question texts and substantive answer paragraphs read in four ordered batches. Earlier machine-record read scope remains partial.",
+      "checks": "268 IDs/text match source and author answer JSON Schema; no silent claim of full predicate/record/command/coverage conformance.",
+      "result": "Consolidation gaps FI10/FI11 remain. No further contradiction asserted in the inspected answer/prose scope; independent05–08 review active.",
+      "remaining": "Read all40 record-specific payload/transition/authority contracts,38 commands, value types/invariants/decisions/tests and metadata refs; inspect07/08/113answers/pricing; full schema/component/coverage/G."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/07-integrations-capacity.md",
+      "source_commit": "3ff24a1",
+      "sha256": "fcd93efe87b4480461583648beab362c23917296355f375016f6e93a0639c82b",
+      "read_scope": "Complete prose, native/provider/admission and economics contracts",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/08-improvement-implementation.md",
+      "source_commit": "3ff24a1",
+      "sha256": "9ed86c6c3b6a7738af1cf7a50b75c7965f6bb5cf17423462960578dd00aab537",
+      "read_scope": "Complete prose, module/process map, improvement, local envelope, B00–B11 graph and migration",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/09-company-human-traceability.md",
+      "source_commit": "3ff24a1",
+      "sha256": "ca251d6f14e408d2013a0daea4242e1614c4e6cb33c46e2e1f703d3defd73d59",
+      "read_scope": "Complete prose and all116 original question/answer paragraphs; F25 all15 named job intake/procedure/acceptance/availability routes; one complete entry and selected individual tests/uncertainty, not every linked field individually",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/integrations-capacity-build.json",
+      "source_commit": "3ff24a1",
+      "sha256": "93f70b7b72198446aa0959ef05d6b9b61e821d2918cae8b5848eaa448b34ed5f",
+      "read_scope": "All113 exact question/answer/uncertainty/falsifying-test paragraphs and complete pricing object; one full row; root arithmetic and selected current primary checks",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/work-knowledge-contracts.json",
+      "source_commit": "3ff24a1",
+      "sha256": "b375ec434b9b19c9f82287aef008151f29227162820d54ed276d87c58ca9fc19",
+      "read_scope": "All40 record payload/state/transition-contract/authority fields and ordered edge pairs (shared guard inspected once), all38 command payload/guard/result/failure records, value types/decisions/evidence sources/planned tests/storage/consolidation; all268 answer paragraphs read previously. Shared retention contract read once, not repeated as separate evidence",
+      "result": "Orchestrator integration inspection, no full-plan or runtime acceptance. Known schema/predicate/component/coverage obligations remain.",
+      "remaining": "Independent integration and complete-plan judgment; unified schema/coverage; implementation and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/10-components-authority-traceability.md",
+      "source_commit": "7cf71f5",
+      "sha256": "a04148260cf5a8aa7ef9e16fd1bfcb8bc099a1562f28a9b01aba677fb399f8a1",
+      "read_scope": "Complete introductory/shared interface prose and all171 component attribute paragraphs; all69 original question/answer/uncertainty paragraphs from companion, sample complete entries and selected tests; companion interface_checks and limits. Duplicate69question pointer table not reread separately.",
+      "result": "Concrete component contracts and69answer substance inspected by root; author parity/links checked independently below. No independent acceptance or runtime test.",
+      "remaining": "Full canonical schema predicates; complete-plan review; runtime and actual operating evidence."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "research/integration-claims.json",
+      "subject": "2407bc1781884ede74e190b1ba0f4c788b8e0614",
+      "sha256": "6c87d282a3b268a52a1bd86aaa70829a21c1c3895198d12b0e2f21dcda23cff0",
+      "read_scope": "Shared method/policy/limits and full IC-S01 sample; all29 groups title, claim scope, design distinction, invalidators, corroboration and source-date/URL/retrieval-failure exceptions. Repeated generic per-source fields not individually reread. Large initial output attempts truncated and were replaced with small projected batches.",
+      "result": "Metadata preserves historical attributed scope, unknown source dates/account applicability, missing source bodies, failed retrievals and source-specific invalidators. Source locator index merged; this is root integration inspection, not independent source verification.",
+      "remaining": "Independent epistemic completeness review; concrete Postmark admission follow-up; actual locking/account/runtime checks."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/11-schemas-state-contracts.md",
+      "subject": "9f8922a7284942a8dfc6c2af66e85341160ed258",
+      "sha256": "79b83bc7db1975b5fda332688a3e78748bc6edc8d87360b7ff92ab53aca0e6e0",
+      "read_scope": "Complete 170-line early prose: FI-12 alternatives, immutable business revisions and LifecycleStatus, CAS/invalidation, proof, predicate boundary, finite bootstrap, storage, affected migration and 15 paired cases. The machine registry is explicitly forthcoming.",
+      "result": "Explicit representation proposal read. Independent FI-12 review is active. Earlier 01–10 contracts are not yet mechanically amended; full types, guards and command registry are not claimed.",
+      "remaining": "Independent scoped and complete Phase G review, complete canonical amendment, construction and runtime/operating qualification."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/work-knowledge-contracts.json",
+      "subject": "5349c3f089ac6652d194db52e4d956e336468001",
+      "sha256": "b9ccfa8e7402020580df6010303c122e231b0444e7dbaf139a47e5e3fb360496",
+      "read_scope": "All 54 shared subcase names/stimuli and 159 distinct expected observations; common procedure, positive-control and execution-boundary fields read once and identical values verified. Six question bindings inspected semantically, including the two XSR-02 examples; all 394 bindings resolved structurally. Original 268 IDs, questions and answers unchanged by Git comparison.",
+      "result": "Refreshed 268 root coverage verification projections with package-relative pointers. Specific verification cases are authored; independent XSR-02 closure is pending and every runtime test remains unexecuted.",
+      "remaining": "Independent scoped and complete Phase G review, complete canonical amendment, construction and runtime/operating qualification."
+    },
+    {
+      "date": "2026-09-12",
+      "path": "planning/specification/capabilities.json",
+      "subject": "d9652586a35940615cfa278f6cfaeca8df1e1124",
+      "sha256": "89c2ec9a6210c25ace58b1c7b847fa220d49e1d93599b5dae4500cb0a2dd47a2",
+      "read_scope": "All 11 complete fulfillment-route objects, binding contract and changed 03 route prose. Initial 03 diff output was truncated; entire changed source section was then read.",
+      "result": "Selected contract versions/routes and actual implementation, account, funding, jurisdiction, custody and performer unknowns are separated. All local contract paths resolve; all 116 source-answer objects are unchanged.",
+      "remaining": "Independent XSR-03 recheck; canonical version-2 migration must preserve route bindings. No implementation or actual account admission."
+    }
+  ]
+}

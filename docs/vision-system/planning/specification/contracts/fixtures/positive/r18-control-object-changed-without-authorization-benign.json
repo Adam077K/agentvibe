@@ -1,0 +1,27 @@
+{
+  "id": "r18-control-object-changed-without-authorization-benign",
+  "repair": "R18",
+  "finding": "F6D-07, benign column; 08-improvement-implementation.md section 1",
+  "case": "An ordinary configuration -- one that declares no control object kind -- admitted normally, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-control-object-changed-without-authorization.json",
+  "why": "The chapter states this case in as many words. `control_object_kind` stays OPTIONAL on `ConfigurationVersion`: the ordinary admission path requires no protected change, and declaring the kind is what makes one mandatory through `dependentRequired`. The patch adds a fourth ordinary configuration kind to the record's own `kind` vocabulary and leaves the control-object conditional untouched, so an admission with no control object declared must still pass. A control that refused it would have made every configuration change a C5 change, which is the opposite error and just as expensive.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.protected.control_object_change_authorized/body/predicates/1",
+      "op": "add",
+      "value": {
+        "op": "related_phases",
+        "subject_ref": { "arg": "subject_ref" },
+        "bindings": [
+          {
+            "field_path": "/payload/protected_change_ref",
+            "states": ["authorized", "staged", "activated"],
+            "optional": true
+          }
+        ]
+      }
+    }
+  ]
+}

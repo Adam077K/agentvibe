@@ -1,0 +1,15 @@
+---
+date: 2026-09-15
+engine: designer
+lane: explorer-page
+branch: docs/vision-explorer-page
+task: The Company Engine Explorer page
+qa_verdict: PASS
+tier: trivial
+---
+Built docs/vision-system/planning/site/explorer/ (index.html + app.css + app.js, 69 KB) over the 28 committed data files, each fetched lazily with a per-panel loading state; tokens copied verbatim from the founder page.
+Hash routes reach every registry: component, layer, record (lifecycle edges clickable to the guard predicate), predicate, command, value, primitive, control contract, endpoint, subject binding, pin, class map, capability, source-question, stage, decision, question, risk, attack, adapter, profile, review, finding, coverage, chapter, status.
+Hand-drawn SVG only: the system map is hand placed (fixed coordinates, orthogonal routed edges that pass through no box, every arrow labelled with its endpoint ids, whole map fits at 1440 with no scroll and scales down at 400px, selected component and its edges in accent); plus the L1-L5 precedence ladder, per-record lifecycle state diagrams and the B00-B11 build DAG.
+Looked at the rendered page at 1440 px, at 400 px and in dark theme: home map, a record lifecycle (edge click opened the guard meaning), the build DAG, a chapter section, search (60 hits). Zero page errors; zero horizontal overflow at 400 px.
+Repairs from looking and from independent review: mojibake without a charset header (pure ASCII now), chips overflowing the panel, a coverage detail that threw on the 381 rows whose component field is a string, 527 dangling contract links (now linked only for the 116 that have one), a collapsed ternary that printed false in nine class-mapping rows, search blind to the 9 class-mapping and 19 chapter ids (appended in memory; search.json untouched), and owner-filter routes opening a Not found pane.
+Local HTTP serving is refused by the armed sandbox (socket.bind: Operation not permitted), so the folder was served to Chromium through Playwright request interception.

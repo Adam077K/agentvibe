@@ -1,0 +1,15 @@
+{
+  "id": "r8-guard-states-a-different-transition",
+  "repair": "R8",
+  "finding": "FI-11",
+  "why": "Every guard restates its own from/to, which F-canonical-01 correctly called tautological. An UNCHECKED tautology is worse than a checked one: it can be wrong and nothing notices. This fixture points one guard at a transition its edge does not make.",
+  "expect_failure_contains": "guard states a different transition than its edge",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.Goal.proposed.endorsed.v1/body/predicates/1/to_state",
+      "op": "replace",
+      "value": "abandoned"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "r17-registry-flips-forall-to-demanded",
+  "repair": "RC4-01",
+  "finding": "RC4-01 (planning/reviews/G-02-recheck-04.md, probes 3a and 8a)",
+  "why": "ONE STRING. `/forall/argument_positions/predicate` from \"quantified\" to \"demanded\", and nothing else in the tree is touched -- no body moves, no pin changes, no prose. Before RC4-01 this passed at exit 0 and left the whole demand vocabulary re-written: with the r15 vacuous-`forall` body on top of it the registry validated at 288,646 checks with every pin satisfied, RC-03 silent, and the census still reporting `under_quantifier: 0` because the census reads the same table it just lied about. The only thing that refused that pair was one negative fixture naming `forall` by hand, and the sentence it printed -- \"a negative fixture was not rejected; the check it names is gone\" -- named the FIXTURE, not the table, and the check was not gone. primitive-registry.json is written by tools/author_phase_content.py and the two repair tools; the criterion-content oracle never compares it, the guard ratchet only budgets sibling collisions, and there was no hash of any registry anywhere in the package. This fixture deliberately does NOT move a conjunct: with nothing sitting under a `forall` the ancestor rule has nothing to refuse, so the only control that can catch it is the hand-written digest, and the message must name the TABLE and both digests. If this fixture ever passes validation again, the demand table has gone back to being authority nothing asserts.",
+  "expect_failure_contains": "THE DEMAND TABLE MOVED",
+  "patch": [
+    {
+      "file": "primitive-registry.json",
+      "pointer": "/forall/argument_positions/predicate",
+      "op": "replace",
+      "value": "demanded"
+    }
+  ]
+}

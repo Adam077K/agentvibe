@@ -1,0 +1,20 @@
+{
+  "id": "r2-acceptance-chain-loses-its-root",
+  "repair": "R2",
+  "finding": "CCR-02 / FI-12 constraint 6",
+  "why": "Mandate acceptance requires attested_result, whose semantics require an accepted assessor mandate. bootstrap_roots was defined and invoked by zero of 2252 predicates, so nothing grounded the regress. This fixture replaces the genesis disjunct with its derived branch alone, putting the cycle back.",
+  "expect_failure_contains": "mandate acceptance chain does not terminate at a bootstrap root",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.Mandate.accepted.v1/body/predicates/1/op",
+      "op": "replace",
+      "value": "all"
+    },
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.Mandate.accepted.v1/body/predicates/1/predicates/0",
+      "op": "remove"
+    }
+  ]
+}

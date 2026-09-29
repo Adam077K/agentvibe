@@ -1,0 +1,15 @@
+{
+  "id": "r6-payload-declares-a-state-field",
+  "repair": "R6",
+  "finding": "CCR-06 / FI-12",
+  "why": "FI-12's accepted design is that state lives in LifecycleStatus and never in judged business bytes. invariants.json#/RecordEnvelope said so in prose and nothing checked it. This fixture puts a state field back into a business payload.",
+  "expect_failure_contains": "payload declares a state field",
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/Goal/properties/payload/properties/state",
+      "op": "add",
+      "value": {"type": "string"}
+    }
+  ]
+}

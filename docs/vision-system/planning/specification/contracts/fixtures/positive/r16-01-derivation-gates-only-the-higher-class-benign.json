@@ -1,0 +1,29 @@
+{
+  "id": "r16-01-derivation-gates-only-the-higher-class-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 1, benign column; 05-work-agents-skills.md section 9",
+  "case": "An action reaching one class, gated by that row.",
+  "paired_adverse_fixture": "fixtures/negative/r16-01-derivation-gates-only-the-higher-class.json",
+  "why": "The single-class case is what an unweakened guard must still admit. Requiring the gated list to be duplicate-free is satisfied by an action gated by exactly one row, and the suite must accept it: a pin that refused every edit to this guard would pass the adverse row above for the wrong reason.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.class.reached_set_gates_all/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "unique",
+        "items": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/gated_class_ids"
+        }
+      }
+    }
+  ]
+}

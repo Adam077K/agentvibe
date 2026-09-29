@@ -1,0 +1,16 @@
+{
+  "id": "r16-04-trial-interest-declares-a-writer-key",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 4; 05-work-agents-skills.md section 9",
+  "case": "A trial interest declaring a writer key over an existing sole-writer kind.",
+  "paired_benign_fixture": "fixtures/positive/r16-04-trial-interest-declares-a-writer-key-benign.json",
+  "why": "Section 12.5 row 4 and AS-M5-02: an interest that can declare its own writer key takes custody of a kind by asserting it. The mutation deletes the emptiness requirement and leaves the external-authority conjunct, so the guard still mentions writer-key authority while permitting the interest to name its own.",
+  "expect_failure_contains": "'guard.interest.writer_keys_not_self_declared', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.interest.writer_keys_not_self_declared/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

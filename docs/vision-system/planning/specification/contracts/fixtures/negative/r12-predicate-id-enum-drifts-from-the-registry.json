@@ -1,0 +1,15 @@
+{
+  "id": "r12-predicate-id-enum-drifts-from-the-registry",
+  "repair": "R12",
+  "finding": "GR-04",
+  "why": "values.schema.json's PredicateId enum and predicate-registry.json were two hand-kept lists of the same 2273 ids and nothing compared them. They had drifted in both directions: 9 registered predicates were absent from the enum, so a live predicate could not be cited from a TypedPredicate at all, and 6 enum entries named predicates R3 deleted, so the schema admitted a reference to nothing and validated it. The enum is derived from the registry now. This fixture adds ONE entry naming a predicate that does not exist -- the direction that fails open, because an enum that admits too much rejects nothing -- and the validator must refuse it. It is inserted at its correctly SORTED position (index 108, between command.worker.report.v1 and criterion.AccessDescendant.active.v1) so that membership is the only thing wrong with it: an entry appended anywhere convenient would also break the order, and the fixture would then pass for a reason it was not written to test.",
+  "expect_failure_contains": "PredicateId enum differs from its derivation",
+  "patch": [
+    {
+      "file": "values.schema.json",
+      "pointer": "/$defs/PredicateId/enum/108",
+      "op": "add",
+      "value": "criterion.APredicateTheRegistryDoesNotDefine.v1"
+    }
+  ]
+}

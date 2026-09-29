@@ -1,0 +1,665 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "scope": "Material risk groups covering all 33 directive attacks plus company, institutional and human failure. This is not a completed threat-model implementation or an aggregate risk score.",
+  "risks": [
+    {
+      "id": "RISK-01",
+      "kind": "Design risk",
+      "status": "Open. Controls specified at 02 section 8.1, 01 section 8 and K15; no runtime test executed. AC07 within this group is enforcement rule-only, so the group is not fully covered by an enforcement point even on paper.",
+      "architecture": "S1.0",
+      "title": "Untrusted content becomes authority",
+      "cause": "Retrieved pages, tool metadata or model messages masquerade as instructions, grants or corroboration.",
+      "likelihood_or_uncertainty": "Unknown as a frequency. The mechanism is demonstrated in the cited source lanes, this company has no operating data, and the first measurement is B03's injection fixtures; a rate over real traffic is not available before B09.",
+      "consequence": "Unauthorized work, changed recipients, disclosure or commitments.",
+      "attack_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC07",
+        "AC16"
+      ],
+      "prevention": "Separate attributed data from authenticated commands; protected tool schemas and grants determine effect semantics.",
+      "detection": "Inject instructions and forged tool annotations while comparing proposed work and actual release against independent policy.",
+      "containment": "Suspend affected producer/tool scope, preserve raw evidence and revalidate every dependent proposal.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Misleading content may still influence judgment within an allowed proposal scope; perfect model compliance is not assumed.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Consequence authority and release",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the consequence-authority owner when an injection reaches a released effect, and to the founder only where the residual is an acceptance of material exposure. Suspected injection alone is an incident for the C04 owner, not a founder decision.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#81-trusted-parameter-selection — the model proposes candidates and deterministic code resolves trusted selectors and compares final bytes to authorized values, so retrieved text cannot reach an authority-bearing field",
+        "planning/specification/01-contract-kernel.md#8-domain-production-api-and-durable-work — untrusted text can propose data or actions but cannot change authority fields, policies, tool schemas or supervisor instructions",
+        "planning/specification/01-contract-kernel.md#10-deterministic-invariant-register — K15 places the refusal at a named boundary: no native tool, imported text, response rationale or provider credential grants production account authority",
+        "planning/specification/06-knowledge-evidence-evaluation.md#3-retrieval-ranking-freshness-and-contradiction — retrieval text stays attributed source content, separate from authenticated instruction"
+      ],
+      "implementation_evidence": "None. What would discharge it is B03's actual trusted-parameter and disclosure-gate tests against a noncompliant model, plus B05's IC-T01 hostile source-control fixtures. Not obtainable before B03.",
+      "revalidation": "At each AdapterProfile admission and revision, on any change to the ParameterAuthority field list or to the C05 loader, on a new tool or retrieval surface, and on any observed injection reaching a proposal."
+    },
+    {
+      "id": "RISK-02",
+      "kind": "Design risk",
+      "status": "Open with an admitted residual. The containment method is required before release, but 02 section 12 concedes that revocation completeness cannot be proven for every provider; the residual is carried, not closed.",
+      "architecture": "S1.0",
+      "title": "Credential and descendant authority compromise",
+      "cause": "A credential-bearing adapter creates tokens, sessions, forwarding, deployments or schedules that survive parent revocation.",
+      "likelihood_or_uncertainty": "Unknown. The specification states plainly that enumeration may be incomplete and that the residual is recorded as unknown rather than resolved, so this risk has an admitted permanent residual. First measurable at B07 against actual provider inventories.",
+      "consequence": "Spending, exfiltration, persistent access and consequential external actions.",
+      "attack_cases": [
+        "AC13",
+        "AC14",
+        "AC15",
+        "AC16",
+        "AC28"
+      ],
+      "prevention": "Inspect actual native permissions, remove minting paths where possible, separate worker credentials and independent recovery administration.",
+      "detection": "Compare effective access graph with independent provider inventory and test every admitted delegation edge.",
+      "containment": "Stop broker release, revoke provider-native descendants and fence execution; restore only after verified denial.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "A stolen credential can exercise real native permissions until containment; unenumerable routes keep the scope contained.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Recovery and continuity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the account custodian and, where a provider account or billing root is implicated, to the founder — the account relationship is the founder's and the provider's administrator is outside this system's fault claim.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#12-keys-native-descendants-deletion-and-backup-handling — AccessDescendant enumerates tokens, sessions, roles, resource policies, webhooks, deploy keys, scheduled jobs, shared links, service accounts, native memory and exported copies; a revoked parent token is not proof a descendant lost authority",
+        "planning/specification/02-authority-recovery.md#4-authentication-principals-and-grant-attenuation — five-minute workload certificates bound to environment, component, actor and instance, checked against the current IdentityBinding epoch",
+        "planning/specification/07-integrations-capacity.md#1-integration-identity-and-admission — a credential broader than a job stays in a protected connector process and the model receives an invocation capability with exact job, action, account, destination and amount bounds"
+      ],
+      "implementation_evidence": "None. What would discharge it is B03's credential, environment and IPC tests plus B07's leaked-key containment and lost-account/MFA/billing recovery exercise against real provider inventories. B05 mocks cannot establish it.",
+      "revalidation": "On every new admitted adapter or connection, on any credential rotation or revocation, whenever a provider adds a delegation or minting surface, and after any incomplete descendant enumeration leaves residual_authority unknown."
+    },
+    {
+      "id": "RISK-03",
+      "kind": "Design risk",
+      "status": "Open. The company-side construction is specified and testable; the provider-side residual is an explicit UNKNOWN admission check in 07 section 9.5 that blocks profile admission and is not closed here.",
+      "architecture": "S1.0",
+      "title": "Disclosure through permitted destinations",
+      "cause": "Mixed sensitive context, model-selected fields, tool output or masked credentials carry forbidden data or authority through an allowed host.",
+      "likelihood_or_uncertainty": "Unknown. Two constructions are specified and neither has been exercised; the hidden-context half depends on native runtime surfaces that N01 documented from help text and never tested. First measurable at B03, and the provider-append residual is not measurable before B10.",
+      "consequence": "Privacy/confidentiality harm, unauthorized inference or public exposure.",
+      "attack_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC04",
+        "AC13",
+        "AC16"
+      ],
+      "prevention": "Destination/purpose-specific clean context or trusted deterministic rendering; exact parameter authority and mediated all-surface egress.",
+      "detection": "Synthetic canaries in content, encoding, attachments, queries, URLs, metadata and child-process output to the model provider.",
+      "containment": "Revoke dependent release, isolate context compartment, inventory recipients and initiate authorized downstream correction/deletion.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "No scanner proves all semantic disclosure safe; unrestricted mixed-context generation needs a legitimate specific disclosure decision.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Context and validity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate an actual disclosure to the affected principal's responsibility owner and to C07 for the rights route. Founder escalation is required only for accepting a residual disclosure surface — for example what a provider appends to an outbound message — which 07 section 9.5 leaves as an admission check.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#82-disclosure-even-with-a-noncompliant-model — exactly two admissible constructions — destination-clean generation or deterministic outbound rendering — and a classifier or model redactor is supplementary detection, not the authority boundary",
+        "planning/specification/07-integrations-capacity.md#95-outward-fields-metadata-and-hidden-disclosure — the outbound object is closed: a field absent from the table is absent from the request, metadata is opaque high-entropy identifiers only, and tracking is off by construction",
+        "planning/specification/02-authority-recovery.md#72-gate-and-connector-profile — all native traffic reaches the gateway through a per-job tunnel and the same default-deny destination checks apply after decryption, so there is no second egress",
+        "planning/specification/06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss — model-provider traffic is itself disclosure, including tool stdout, error messages, fixtures and resumed history"
+      ],
+      "implementation_evidence": "None. What would discharge it is B03's synthetic canaries across every channel and destination and B05's IC-T04 all-channel native file, environment, IPC, context and network canaries, plus the actual sent-message inspection 07 section 9.5 requires before the first real recipient.",
+      "revalidation": "On any change to a DisclosureContract, destination profile, renderer template, native startup or memory surface, provider library version, or admitted header allowlist; and on every observed open or click event while tracking is off, which quarantines the connection."
+    },
+    {
+      "id": "RISK-04",
+      "kind": "Design risk",
+      "status": "Open. The closure check is specified as a release-time guard rather than a background job, which is the substantive repair; it is untested and the completeness of the reverse-dependency graph is itself unverified.",
+      "architecture": "S1.0",
+      "title": "Stale or poisoned knowledge becomes usable again",
+      "cause": "Old session state, incomplete citations, offline stores or late derivatives evade a correction, revocation or deletion.",
+      "likelihood_or_uncertainty": "Unknown. The failure mode requires a race between publication and invalidation, whose frequency depends on worker concurrency that is initially one; the design admits the race exists and blocks on an unverified closure. First measurable at B04, and realistically at B07 where restores happen.",
+      "consequence": "Incorrect decisions, contaminated evidence, renewed prohibited use and misleading accounts.",
+      "attack_cases": [
+        "AC04",
+        "AC05",
+        "AC06",
+        "AC22",
+        "AC29"
+      ],
+      "prevention": "Loader-captured conservative lineage, atomic publication/derivative registration and current validity gates before read/release.",
+      "detection": "Race staged output and handoffs against restriction changes; restore/rejoin old stores and discover late descendants.",
+      "containment": "Restrict affected references first, then reconcile descendants and restart clean context where required.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Conservative lineage can block useful work; inaccessible vendor copies and forgotten inputs limit reconstruction.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Context and validity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the deletion-scope custodian and to C07 where a person's deletion right is affected. Founder escalation only where a lawful retention duty and a current deletion demand actually conflict, which 06 section 4 routes to a competent determination rather than to software.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#83-atomic-validity-and-continuing-deletion-scope — invalidation increments the restrictive epoch and creates a durable propagation task in the same transaction; background traversal cannot be the sole prevention mechanism for late writes",
+        "planning/specification/01-contract-kernel.md#7-core-relationships-and-exact-state-transitions — reads and releases compare the dependency closure against current epochs and fail if that closure is incomplete or stale",
+        "planning/specification/06-knowledge-evidence-evaluation.md#4-maintenance-corrections-and-deliberate-forgetting — late summaries, exports, offline copies and restored indexes remain within the continuing deletion scope; time passing alone cannot renew a claim",
+        "planning/specification/06-knowledge-evidence-evaluation.md#2-context-assembly-and-information-loss — resume can reuse a session only when every retained input is allowed for current recipients and purpose; narrowing today's tools cannot remove yesterday's data"
+      ],
+      "implementation_evidence": "None. What would discharge it is B04's stale-lineage and transitive-evaluator-corruption fixtures and B07's restore-and-rejoin exercise that reconnects old stores and discovers late descendants after a restriction change.",
+      "revalidation": "On every invalidation or deletion that leaves a residual, on any restore or index rebuild, on native session resume policy changes, and whenever a closure index frontier is reported incomplete."
+    },
+    {
+      "id": "RISK-05",
+      "kind": "Design risk",
+      "status": "Open, and the group carrying the package's own reflexive problem. AC07 inside it is enforcement rule-only because no refusal predicate exists when independence roots are unknown.",
+      "architecture": "S1.0",
+      "title": "False success through shared evidence interpretation",
+      "cause": "Producer and judge share corrupt parsers, source selection, denominators, administrative roots or unsupported causal accounts.",
+      "likelihood_or_uncertainty": "Unknown, and structurally hard to bound: the failure is invisible to the instrument that would detect it. The controls are specified but the joint-false-acceptance measurement that would give a rate has not been designed against a real panel. First measurable at B08.",
+      "consequence": "Owner accepts failed/unauthorized work or an economically harmful decision with false confidence.",
+      "attack_cases": [
+        "AC06",
+        "AC08",
+        "AC11",
+        "AC12",
+        "AC21",
+        "AC22",
+        "AC30",
+        "AC31"
+      ],
+      "prevention": "Protect the transitive evidence base; declare independence targets; retain attempted/eligible/excluded/missing denominators and rationale-versus-cause.",
+      "detection": "Change shared decoding/metrics without changing judge files; use authorized-bad-outcome and unauthorized-good-outcome controls.",
+      "containment": "Invalidate affected acceptance, preserve original observations and re-evaluate through the required independent interpretation.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Independent judges can still agree incorrectly; unavailable original evidence must remain unknown.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Evidence and acceptance",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the independent acceptance owner named for the affected evaluator; escalate to the founder only to accept a residual where no independent competence is available, which 08 section 1 otherwise resolves by making the protected change wait.",
+      "design_evidence": [
+        "planning/specification/06-knowledge-evidence-evaluation.md#5-protected-evidence-and-account-reconstruction — the protected evidence closure covers capture, transport, parser, normalization, mappings, sample selection, fixtures, metric definition, denominator, evaluator code and acceptance rule; a producer cannot choose all adverse samples or delete failed attempts",
+        "planning/specification/01-contract-kernel.md#10-deterministic-invariant-register — K09 puts selection and denominator inside the acceptance closure, so a compromised dependency invalidates affected judgments at the acceptance boundary",
+        "planning/specification/06-knowledge-evidence-evaluation.md#7-cases-trials-independence-and-negative-controls — positive detection controls inject a known defect, fake citation, skipped authorization, omitted failed attempt and changed denominator; measure joint false acceptance before treating panel agreement as assurance",
+        "planning/specification/02-authority-recovery.md#13-native-execution-evidence-independence-and-protected-changes — a second model sharing the same corrupt parser, prompt, log owner or reward does not supply independence"
+      ],
+      "implementation_evidence": "None. What would discharge it is B04's transitive evaluator-corruption fixtures, B08's candidate-alters-gate-denominator-evaluator tests and B09's independent assessor outcomes. No judge panel has run.",
+      "revalidation": "On any change to a parser, schema, source mapping, test selection, acceptance definition, cohort denominator, evaluator runtime or shared dependency; and whenever an independence root that was previously recorded becomes unknown."
+    },
+    {
+      "id": "RISK-06",
+      "kind": "Design risk",
+      "status": "Open. The release protocol and the witness receipt are fully specified and are the package's most detailed contract; nothing has been built, and 02 section 1's zero-loss objective is an objective, not a measured result.",
+      "architecture": "S1.0",
+      "title": "Lost or duplicated effects and promises",
+      "cause": "Restore loses post-backup operations or zero-immediate-cost promises; retries use new identities after ambiguous outcomes.",
+      "likelihood_or_uncertainty": "Unknown as a rate. The conditions are ordinary rather than adversarial — lost acknowledgments and ambiguous responses happen without an attacker — so this group's realized frequency is expected to be the highest of the seventeen, but no number is asserted. First measurable at B02.",
+      "consequence": "Double refunds/spending, omitted delivery duties and missing continuing liabilities.",
+      "attack_cases": [
+        "AC09",
+        "AC10",
+        "AC11",
+        "AC12",
+        "AC13",
+        "AC14",
+        "AC28",
+        "AC29"
+      ],
+      "prevention": "Independently durable executable envelopes/release records, complete membership/frontiers, business conflict holds and no blind retries.",
+      "detection": "Lose primary after payment, promise and inbound acceptance; hide destination history and expire provider deduplication.",
+      "containment": "Fence old egress, restore holds pessimistically, reconcile complete independent prefixes and preserve unknown effects.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Loss of every declared recovery root or uninstrumented channels prevents a complete account; containment is not fulfillment.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Recovery and continuity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate an unresolved duplicate or lost promise to the obligation custodian with its beneficiary and deadline. Founder escalation where a compensating external operation requires a new commitment or spend she has not already authorized.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#62-ordered-preparation-release-and-send-claim — P1 to P7 with a frozen RecoveryEnvelope containing enough surviving content to reconcile without the worker, the original prompt, the source checkout or A's backup; the SendClaim is consumed once at the registry and once at the gateway",
+        "planning/specification/02-authority-recovery.md#63-lost-acknowledgmentstatus-outcomes — each lost-acknowledgment condition has a required behavior, and crash after SendClaim before reliable observation is unknown_effect until positive proof narrows it",
+        "planning/specification/01-contract-kernel.md#5-command-query-and-event-protocol — the deduplication key is company plus authenticated actor plus command_id, and a different command_id never bypasses business ConflictClaim identity",
+        "planning/specification/02-authority-recovery.md#9-operationattempt-state-cancellation-retry-and-outcomes — unknown, partial or ambiguous effect forbids blind retry; native state is reconciled first"
+      ],
+      "implementation_evidence": "None. What would discharge it is B02's crash-at-every-boundary suite — local, witness, sign and acknowledgment — with primary loss, restored old frontiers and unknown effects, plus B05's IC-T02 lost-acknowledgement and duplicate-webhook fixtures.",
+      "revalidation": "After every recovery or restore, on any provider idempotency semantics or retention change, on each conflict-identity or alias change, and whenever an operation closes with an unresolved unknown_effect."
+    },
+    {
+      "id": "RISK-07",
+      "kind": "Design risk",
+      "status": "Open with a named trusted-root limitation. The contract does not conceal the limit behind the word trusted; it states that no userspace monitor prevents every instantaneous root fault.",
+      "architecture": "S1.0",
+      "title": "Revocation, time or scope migration race",
+      "cause": "Permissions change after checks; old aliases hide holds; added participants or delayed first sends escape their original validity window.",
+      "likelihood_or_uncertainty": "Unknown. The window is narrow by construction — 30 seconds by default — but 02 section 7.3 concedes a clock root that moves realtime backward beyond the admitted bound defeats the rule, and that root is trusted rather than verified. First measurable at B03.",
+      "consequence": "Release without complete current authority or duplicated business consequence.",
+      "attack_cases": [
+        "AC10",
+        "AC13",
+        "AC14",
+        "AC16",
+        "AC28"
+      ],
+      "prevention": "One order for overlapping constraints; fenced alias/scope/participant migration; independent durability proof on status; bounded first transport and generation fencing.",
+      "detection": "Interleave reclassification, expiry, revocation, paused gateways, lost acknowledgments, partitions and restore.",
+      "containment": "Contain union of old/new conflict domains, invalidate unreleased preparations and retain already released exposure for reconciliation.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "External acceptance is not atomic with internal authorization; provider suppression limits remain explicit.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Consequence authority and release",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the migration owner, who 02 section 10 forbids from authoring their own completeness evidence. Founder escalation where a migration cannot map a material interaction and the affected business scope must stay blocked past a customer deadline.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#10-conflict-scope-and-participant-migrations--t-r1 — the seven-step union freeze: freeze the union, fence inflight eligibility, map conservatively, recompute participants, verify completeness against R's frontier, activate one order, and roll back only as another forward migration",
+        "planning/specification/02-authority-recovery.md#73-clock-admission-and-margin — the cutoff is computed from the deadline minus uncertainty, a window-proportional margin and attestation age, and expiries are verified against the upper UTC bound so a possibly expired grant is expired",
+        "planning/specification/02-authority-recovery.md#74-partial-sends-revocation-and-observed-limits — rule removal proves no future admission through that gate, not recall of prior bytes; recovery waits out the largest previously issued window plus its clock margin",
+        "planning/specification/02-authority-recovery.md#62-ordered-preparation-release-and-send-claim — release is the authorization cutoff in the common order, and P4 adds a fresh opportunity to deny without claiming an atomic order with a remote provider"
+      ],
+      "implementation_evidence": "None. What would discharge it is B03's Linux sk_buff-hook tests with partial requests, established sockets, GSO and clock boot/timezone/epoch-second compiler readback, plus B02's revocation and conflict-migration races.",
+      "revalidation": "On any scope, alias or participant migration; on any clock profile, NTS source, boot or nftables/kernel version change; on any grant revocation ordered near a release; and after any gateway partition."
+    },
+    {
+      "id": "RISK-08",
+      "kind": "Design risk",
+      "status": "Open. The causal ceiling is specified and enforceable at admission; AC20 and AC23 within this group are enforcement rule-only, so the drift and owner-load members of the group are weaker than the cost and retry members.",
+      "architecture": "S1.0",
+      "title": "Runaway delegated work, retries and capacity use",
+      "cause": "Fresh tasks, corrections and allowance resets replenish apparent budgets while descendants share one unresolved disturbance.",
+      "likelihood_or_uncertainty": "Unknown. The design forecloses the refill paths that make runaway possible, so the residual is a single episode's authorized ceiling being wrong rather than unbounded growth. First measurable at B04; the ceiling's adequacy is a B09 question.",
+      "consequence": "Runaway cost/capacity, owner interruptions and starvation of owed service.",
+      "attack_cases": [
+        "AC17",
+        "AC18",
+        "AC19",
+        "AC20",
+        "AC23",
+        "AC27"
+      ],
+      "prevention": "Durable causal episode totals plus company caps, attenuation, classified retry, progress tests and reserved due-service/grievance capacity.",
+      "detection": "Sustain fresh false signals across resets with a true severe complaint and ordinary valid service.",
+      "containment": "Stop discretionary descendants, preserve intake/standing, invoke capacity incident and accepted alternate.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Finite systems cannot guarantee unlimited arrival throughput; legitimate delays and service loss must remain visible.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Case admission and scheduler",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the capacity owner with the exact exhausted dimension, due duties and available manual or other-provider paths, as 07 section 6 requires. Founder escalation only to raise a cap or authorize spend.",
+      "design_evidence": [
+        "planning/specification/01-contract-kernel.md#9-scheduling-bounds-and-useful-progress — the causal allowance is a vector including human attention minutes; a provider reset, new case, new observation or delegated child cannot refill an episode, and independent grievance intake has its own protected finite allocation",
+        "planning/specification/05-work-agents-skills.md#5-delegation-messages-and-accountable-handoffs — default maximum delegation depth is one child layer and depth is never a substitute for the root causal ceiling",
+        "planning/specification/02-authority-recovery.md#9-operationattempt-state-cancellation-retry-and-outcomes — default external attempt maximum is one; an admitted RetryContract allows at most three within the same ceilings and never runs on unknown effect because a delay elapsed",
+        "planning/specification/07-integrations-capacity.md#6-capacity-money-and-scheduling — pressure is the maximum of independently observed saturation dimensions, not a blended score that hides exhausted money or attention; discretionary admission stops at 85 percent"
+      ],
+      "implementation_evidence": "None. What would discharge it is B04's repeat-no-progress-across-provider-reset fixture with a genuine due service running alongside, and B09's representative-workload rehearsals with actual capacity and attention.",
+      "revalidation": "On any allowance or cap change, any provider quota or reset semantics change, any delegation depth exception, and after any episode that reached exhaustion and created a closure continuation."
+    },
+    {
+      "id": "RISK-09",
+      "kind": "Design risk",
+      "status": "Open, and the group most likely to be realized by the passage of time alone. Quarantine on drift is specified; the detection depends on the profile's schema digests being complete, which is untested.",
+      "architecture": "S1.0",
+      "title": "Provider outage, policy or semantic drift",
+      "cause": "Account limits, auth route, model behavior or provider response semantics change while old success/configuration assumptions remain.",
+      "likelihood_or_uncertainty": "Unknown as a rate, but this is the one group whose realization does not require an adversary or an internal defect: providers change on their own schedule. Every provider fact in the package is dated 2026-09-12 and already carries a recheck deadline. First measurable at B05.",
+      "consequence": "Interrupted service, unsupported automation, metered spending or false acceptance.",
+      "attack_cases": [
+        "AC25",
+        "AC26",
+        "AC27",
+        "AC30",
+        "AC31"
+      ],
+      "prevention": "Versioned admission and effective launch attestation; separate money/allowance/compute; explicit resume and no paid fallback.",
+      "detection": "Inject quota/auth loss, schema-preserving semantic change and unavailable native resume; replay adapter conformance.",
+      "containment": "Park affected execution, keep portable work state, use only independently admitted alternatives and continuity resources.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Subscriptions provide no assumed SLA or fixed per-call capacity; substitutes may differ materially.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Domain production interfaces",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the connection custodian on quarantine, and to the founder where continuing the service requires a new commercial relationship, a plan change or an accepted degraded promise to a customer.",
+      "design_evidence": [
+        "planning/specification/07-integrations-capacity.md#1-integration-identity-and-admission — AdapterProfile pins request and response schema digests, endpoint and redirect policy, parser versions and the retry/idempotency contract; admitted moves to quarantined or draining and returns only on new evidence",
+        "planning/specification/07-integrations-capacity.md#5-native-subscription-execution — missing or stale billing evidence stops new launches, an observed quota reset never renews the company causal budget, and no API-key or credit fallback occurs during a job",
+        "planning/specification/07-integrations-capacity.md#8-admission-evidence-and-removal — a provider's silent version, terms or billing change invalidates relevant profile evidence and requires a protected migration with explicit quality and cost comparison",
+        "planning/specification/01-contract-kernel.md#11-contract-evolution-scaling-and-removal — RuntimeProfile pins versions and configuration hashes and admission reports carry expiry and an owner"
+      ],
+      "implementation_evidence": "None. What would discharge it is B05's quota, credit and auth-change refusal tests and separately authorized real-account benign tests, plus B07's stuck-paid-resource and provider-descendant checks. Mocks cannot establish current terms or account eligibility.",
+      "revalidation": "At each provider's scheduled recheck — for the mail profile, 2026-10-12 under IC-S30/IC-S31 — on any observed schema, status-code or charge-mode change, before any dependency locking, and before operational admission."
+    },
+    {
+      "id": "RISK-10",
+      "kind": "Design risk",
+      "status": "Open and enforcement rule-only for both its members. AC23 and AC24 are the two cases in this group and neither has an enforcement point: the ceilings are owner-declared and the detector is declinable.",
+      "architecture": "S1.0",
+      "title": "Owner overload or loss of competence",
+      "cause": "Curated summaries and familiar exercises conceal misunderstood customers, money, trade-offs or intervention behavior.",
+      "likelihood_or_uncertainty": "Unknown, and the least measurable of the seventeen. There is one owner, no baseline, no operating data, and the instrument is a consented study the subject may decline. First weak signal at B06; a defensible statement not before B11.",
+      "consequence": "Deskilling, rubber-stamped decisions, loss of control or a full-time review burden.",
+      "attack_cases": [
+        "AC21",
+        "AC22",
+        "AC23",
+        "AC24"
+      ],
+      "prevention": "Contestable fixed participation, independent adverse selection, delayed unfamiliar transfer checks and consequence-specific competent assistance.",
+      "detection": "Measure raw owner minutes, missed material misunderstanding, actual intervention and sample omissions; distinguish taste disagreement.",
+      "containment": "Narrow affected new exposure, provide competent assistance and invoke continuity for existing duties.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Longitudinal benefit and tolerable cadence are unproved; no global competence score or model transfer of values authority.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Human and external responsibility interface",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "This risk escalates to the founder by construction: the ParticipationPlan, its minutes and its sampling policy are owner-endorsed setup data that no agent may adopt by silence, and declining the assessment is the owner's to decide.",
+      "design_evidence": [
+        "planning/specification/04-human-operation.md#attention-and-practiced-competence — a contestable fixed participation policy with adverse-sample alternation, a reproducible random seed outside the account producer's write authority, delayed unfamiliar transfer tests, and separate reporting of unaided recognition, intervention quality, false positives, owner time and emotional burden",
+        "planning/specification/06-knowledge-evidence-evaluation.md#6-evaluation-contracts-at-every-level — the Attention/competence row states that attendance, confidence and agreement cannot establish competence",
+        "planning/specification/04-human-operation.md#decision-timing-and-no-answer-behavior — a packet is generated only when a current mandate cannot resolve a real decision without that person, and unreadiness is escalated rather than turned into a hurried signature",
+        "planning/specification/03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending — CAP-35 tests growth against owner load, and new admissions shrink before mandated review or existing-duty progress is starved"
+      ],
+      "implementation_evidence": "None, and the shape of the missing evidence is unusual: what would discharge it is a consented longitudinal comparison across absence and closure, which 04 calls a proposed schedule to test rather than a proven human-learning dose. Earliest real signal is B06's limited-competence and absent-founder tests; a longitudinal claim is not obtainable before B11.",
+      "revalidation": "At each participation-policy revision, after each declined or interrupted cycle — recorded as a coverage limit — after any material domain misunderstanding, and at each absence or succession exercise."
+    },
+    {
+      "id": "RISK-11",
+      "kind": "Design risk",
+      "status": "Open and partly enforcement rule-only. AC20 in this group has no enforcement point: the review cadence is the whole control, so any interval between reviews is unguarded by construction.",
+      "architecture": "S1.0",
+      "title": "Intent and governing meaning drift",
+      "cause": "Summaries, changed priorities or incremental optimization erase reasons, rejected alternatives, promises or legitimate changes of mind.",
+      "likelihood_or_uncertainty": "Unknown. Drift is cumulative and slow, so a short operating window cannot observe it; the specification's own falsifier for it is a periodic comparison rather than a live predicate. First measurable at B08, meaningfully at B11.",
+      "consequence": "Wrong business direction, identity/taste loss and broken external commitments.",
+      "attack_cases": [
+        "AC20",
+        "AC21",
+        "AC22",
+        "AC29",
+        "AC32"
+      ],
+      "prevention": "Version endorsed purpose and mandate separately from inference/proposal; propagate explicit changes while preserving surviving duties.",
+      "detection": "Trace representative delivered artifacts and decisions to original intent, adverse evidence and versioned alternatives.",
+      "containment": "Pause affected new commitments, restore authentic decision context and obtain the actual owner decision when values are unresolved.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "No model can infer a founder-only promise or uniquely choose equally defensible personal ends.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Direction and responsibility register",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the founder on any proposed change to endorsed intent, exclusions or settled values; 04 section on operator jobs reserves personal intent, values, taste and new material exposure to their actual owner and forbids a synthetic arbitration persona.",
+      "design_evidence": [
+        "planning/specification/01-contract-kernel.md#4-intent-knowledge-rationale-and-events — IntentVersion, Observation, Claim, ReasonRecord, DecisionRecord and DomainEvent are separate record types with explicit forbidden promotions; inferred goals cannot become endorsed intent",
+        "planning/specification/06-knowledge-evidence-evaluation.md#8-drift-reopening-economics-and-comparators — reaffirming a settled choice requires current reasoning about its premises, not its age or popularity; values deliberately settled by their owner retain the actual amendment route",
+        "planning/specification/08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift — cumulative drift review compares the current release with the last independently endorsed strategic baseline after every five accepted changes or 30 days, and changes cannot evade review by splitting",
+        "planning/specification/03-company-capabilities.md#operating-setup-and-bounded-autonomy — goals carry a review date, a next bounded discriminator, a horizon and abandonment authority"
+      ],
+      "implementation_evidence": "None. What would discharge it is B08's cumulative-drift comparison against an independently endorsed baseline and B09's trace of representative delivered artifacts back to original intent and versioned alternatives.",
+      "revalidation": "At each cumulative drift review — five accepted changes or 30 days — on any IntentVersion revision, on any mandate change, and whenever a delivered artifact cannot be traced to an endorsed purpose."
+    },
+    {
+      "id": "RISK-12",
+      "kind": "Design risk",
+      "status": "Open and BLOCKING for the operating profile rather than for the specification. The controls are contracts on humans who do not yet exist; this is why the founder queue in open-questions.json was promoted from prose on 2026-09-13.",
+      "architecture": "S1.0",
+      "title": "Institutional, professional or continuity incapacity",
+      "cause": "A named role, completed packet or nominal backup substitutes for actual competence, authority, funding, availability or physical delivery.",
+      "likelihood_or_uncertainty": "Unknown, and the specification is explicit that the software cannot manufacture the missing capacity: 02 section 1 says recovery completion and useful service time depend on actual admitted operators. No custodian, assessor or professional has been appointed. First measurable at B10, and blocked before it.",
+      "consequence": "Missed filings, failed service, legal/financial exposure and stranded customer obligations.",
+      "attack_cases": [
+        "AC11",
+        "AC12",
+        "AC13",
+        "AC23",
+        "AC25",
+        "AC27",
+        "AC28",
+        "AC29"
+      ],
+      "prevention": "Accepted responsibility and continuity packets; verify actual principal, specialist determination, access, capacity and joint-failure performance before promises.",
+      "detection": "Remove founder and material supplier during refund uncertainty, specialist deadline and continuing service.",
+      "containment": "Stop dependent new liabilities; use accepted substitutes, lawful alternatives and authorized remedies; retain owned unmet duties.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Shared institutional failures, scarce specialists or unaffordable continuity can defeat venture viability.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Human and external responsibility interface",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the founder: every discharge path for this group requires a human act only the founder can perform — appointing and paying a custodian, engaging a professional, accepting an assessor. The open-questions register now carries these as decision packets.",
+      "design_evidence": [
+        "planning/specification/03-company-capabilities.md#finance-suppliers-people-and-institutional-work — ProfessionalRequest names the provider, fee authority and due result, and preparing or delivering the packet does not complete the requested professional work; missing capacity invokes the accepted alternate before the latest responsible start and remains a material readiness failure when unavailable",
+        "planning/specification/03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending — CAP-41 succession requires actual authority, competence, access and rehearsal of unfamiliar duties, and joint owner/provider loss must not depend on the absent owner to appoint or pay the substitute",
+        "planning/specification/07-integrations-capacity.md#4-communication-and-independent-continuity — continuity admission requires a primary custodian and an accepted alternate with independent login, recovery and MFA, an actual acknowledgement and a rehearsal; no assumed free lawyer, accountant, proxy founder or perpetual on-call volunteer",
+        "planning/specification/02-authority-recovery.md#2-concrete-deployment-and-operational-admission — admission requires actual owner and substitute attention, service and legal competence, closure and retention costs and continuing infrastructure funding to fit the accepted operating plan"
+      ],
+      "implementation_evidence": "None, and it is the group least discharged by code. What would discharge it is B10's actual operational principals, mandates, professionals and independent A/R custody, plus B07's lost-account and MFA recovery exercise. No amount of B01–B09 work reaches it.",
+      "revalidation": "Before every promise that depends on a named performer, at each custodian or professional engagement change, at each absence or destructive exercise — quarterly per 02 section 11 — and whenever a substitute's acknowledgement lapses."
+    },
+    {
+      "id": "RISK-13",
+      "kind": "Design risk",
+      "status": "Open with one named unfilled role. The clustering probe that G-03 called exactly the right test is status unexecuted; the independent intake route is specified and unbuilt.",
+      "architecture": "S1.0",
+      "title": "Ineffective redress and irresponsible closure",
+      "cause": "Noncustomers, disputed custodians or late data copies lose a reachable remedy when internal tickets or software close.",
+      "likelihood_or_uncertainty": "Unknown. The G-03 scenario walked this path and found the contracts hold at every step except one — who the alternate is and who appoints it — so the residual is an unfilled role rather than a missing mechanism. First measurable at B06; the funded-remedy half is a B10 admission input.",
+      "consequence": "Unremedied harm, denied standing, data resurrection and surviving legal/reputational liabilities.",
+      "attack_cases": [
+        "AC05",
+        "AC11",
+        "AC12",
+        "AC23",
+        "AC28",
+        "AC29"
+      ],
+      "prevention": "Independent grievance lifecycle, meaningful deadlines/reasons/escalation, reserved remedy capacity and continuing deletion/closure scope.",
+      "detection": "Challenge a custodian after product closure; reconnect offline data and discover a late export while a remedy is disputed.",
+      "containment": "Activate accepted alternate, restrict affected use, preserve live intake and reconcile actual remedy or legitimate transfer.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Required external forums, retention bases and remedy funding are deployment-specific; internal labels cannot bind another person.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Human and external responsibility interface",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the competent grievance recipient, who must be outside the disputed dependency. Founder escalation is required to appoint that recipient and the alternate for a complaint against the custodian, and to fund the remedy capacity — all three are now open questions rather than prose.",
+      "design_evidence": [
+        "planning/specification/03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending — CAP-42 provides noncustomer-inclusive intake without unnecessary product access, proportionate identity checks, reasons, deadlines, actual competent escalation and funded remedy; a complaint about the current custodian routes outside the disputed decision and incentive dependency, and clustering cannot erase a person's standing, deadline, evidence or alternate",
+        "planning/specification/07-integrations-capacity.md#3-selected-fulfillment-adapters — the independent mailbox address is printed on every receipt and static grievance page and distributed in agreements and offline packets; the recipient need not authenticate, know the schema, or survive an outage to reach the custodian",
+        "planning/specification/01-contract-kernel.md#9-scheduling-bounds-and-useful-progress — independent grievance intake has its own protected finite service allocation and is not charged into an adversarial producer's exhausted episode; a blanket stop cannot be treated as successful complaint handling",
+        "planning/specification/02-authority-recovery.md#83-atomic-validity-and-continuing-deletion-scope — DeletionScope remains active until the source, derived, copied, exported, backup and native-retention scopes have actual receipts or explicit justified retention"
+      ],
+      "implementation_evidence": "None. What would discharge it is B06's outsider-complaint and actual-alternate-acknowledgement tests, B05's IC-T08 offline receipt and independent grievance response, and B11's independent customer and rights review across a complete cycle.",
+      "revalidation": "At every closure or pause of a product, on any custodian change or dispute, after each grievance that missed its deadline, and whenever a deletion scope leaves an unresolved provider-held copy."
+    },
+    {
+      "id": "RISK-14",
+      "kind": "Design risk",
+      "status": "Open and undischargeable before operation. Every control here is a measurement obligation rather than a refusal; the register does not claim otherwise.",
+      "architecture": "S1.0",
+      "title": "Business failure and shifted human burden",
+      "cause": "Internal task output and aggregate metrics obscure weak demand, poor delivery, concentrated harm or costs shifted to customers/applicants/contractors.",
+      "likelihood_or_uncertainty": "Unknown, and this is the risk the whole architecture is bet against: 08 section 2's falsifier says the approach is falsified if qualified comparison cannot show useful full-company progress within actual founder money and attention limits. No venture work has run. First measurable at B11.",
+      "consequence": "Unviable ventures, reputational loss and exploitation of external attention or unpaid repair labor.",
+      "attack_cases": [
+        "AC12",
+        "AC20",
+        "AC21",
+        "AC23"
+      ],
+      "prevention": "Predeclared customer/economic propositions, cohort measures, full continuing/closure costs and original adverse observations.",
+      "detection": "Compare delivered usefulness, contribution, repeated use where relevant and external effort against matched alternatives, including intentional subsidy.",
+      "containment": "Correct offer/operations, narrow acquisition or propose legitimate closure while continuing owed duties.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "No architecture establishes product-market fit or founder appetite for subsidy; actual market effects require evidence.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Domain production interfaces",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the founder: whether to continue, subsidize or end a venture is a values and risk-tolerance decision, and 03 permits an explicitly endorsed subsidy with the negative contribution left visible rather than resolved by a score.",
+      "design_evidence": [
+        "planning/specification/06-knowledge-evidence-evaluation.md#6-evaluation-contracts-at-every-level — the Business/service row requires complete discovery-to-closure paths, customer acceptance, contribution, duty progress and shifted human burden, and holds profitable harm and competent losses as separate failures",
+        "planning/specification/03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending — CAP-35 states that a green organization-wide metric cannot hide a harmed person or a losing venture, and stage-specific success differs by stage",
+        "planning/specification/01-contract-kernel.md#9-scheduling-bounds-and-useful-progress — the operating account measures useful accepted outcomes, delivery and complaint deadlines, severe individual failures, owner and customer labor, repair work and closure costs separately; no combined score can erase a failed duty",
+        "planning/specification/03-company-capabilities.md#discovery-to-an-accepted-offer — price acceptance distinguishes provisional_hypothesis from demand_supported, and empty or synthetic cohorts never count as real demand"
+      ],
+      "implementation_evidence": "None, and it cannot be simulated. What would discharge it is B11's at-least-one-complete-due-date cycle per live offer with actual budgets and an independent customer review, against the S0 comparator of 08 section 8. B09 rehearsals are necessary and explicitly not sufficient.",
+      "revalidation": "At each monthly outcome review, at each offer version, whenever a cohort measure moves without a matching delivered outcome, and on any evidence of burden shifted to customers, applicants or contractors."
+    },
+    {
+      "id": "RISK-15",
+      "kind": "Design risk",
+      "status": "Open. The separation of authority is specified and structural rather than procedural, which is the strongest form available here; nothing has been built and no independent assessor has been appointed.",
+      "architecture": "S1.0",
+      "title": "Compromised improvement and cumulative change",
+      "cause": "An improver changes protected policy or evaluator dependencies, exploits a holdout or accumulates individually small changes into governing drift.",
+      "likelihood_or_uncertainty": "Unknown. The attack requires an improver that is both capable and adversarial, which this system does not yet have; the more likely near-term realization is accidental accumulation rather than deliberate subversion. First measurable at B08.",
+      "consequence": "Weakened identity/authority, fabricated improvement, unrecoverable history and loss of control.",
+      "attack_cases": [
+        "AC06",
+        "AC08",
+        "AC21",
+        "AC30",
+        "AC31",
+        "AC32",
+        "AC33"
+      ],
+      "prevention": "Separate protected change authority, dependency-complete proposals, independent controls, rollout monitoring and state-aware rollback.",
+      "detection": "Attack shared judge dependencies and apply sequences of individually accepted changes; verify protected intent and authority invariants.",
+      "containment": "Suspend improvement release, retain incidents/evidence and roll back compatible internal state; reconcile external consequences separately.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Adaptive evaluations can themselves drift or be gamed; no single success metric may authorize change.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Evidence and acceptance",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the independent authorizer named for the affected protected subject. Founder escalation where no independent competence exists — 08 section 1 says the change waits and the system does not invent a qualified proxy for the founder, which makes the wait the founder's to resolve.",
+      "design_evidence": [
+        "planning/specification/08-improvement-implementation.md#1-protected-improvement-contract — a dedicated protected registry defines which authority may change each subject; a candidate evaluator cannot select its own hidden tests, alter the gate, sign its acceptance or provision the signing key, and if independent competence is unavailable the protected change waits",
+        "planning/specification/01-contract-kernel.md#10-deterministic-invariant-register — K13 places authority, evidence capture, evaluator acceptance, release gate, recovery roots and rollback acceptance outside the self-improver's reach",
+        "planning/specification/08-improvement-implementation.md#2-improvement-evidence-stochastic-comparison-and-drift — critical invariant tests require zero observed violations plus adversarial mechanism evidence, never a statistical permission to violate an invariant; drift review resists change-splitting",
+        "planning/specification/02-authority-recovery.md#13-native-execution-evidence-independence-and-protected-changes — a protected change requires exact diff and artifact hashes, independent review with relevant scope, an actual authorized signer, staged tests, current recovery proof and an activation/rollback plan"
+      ],
+      "implementation_evidence": "None. What would discharge it is B08's candidate-alters-gate-denominator-evaluator suite and its successful-useful-improvement-with-independent-assessment counterpart, plus rollback with irreversible effects and changed meanings.",
+      "revalidation": "On every ProtectedChange activation and rollback, at each cumulative drift review, on any evaluator or holdout population change, and whenever the independent assessor for a subject changes."
+    },
+    {
+      "id": "RISK-16",
+      "kind": "Design risk",
+      "status": "Open with the package's largest gap between documented and tested. Unknown surfaces are specified to narrow the eligible work set, so the failure mode is a wrongly-believed-complete inventory rather than an unhandled one.",
+      "architecture": "S1.0",
+      "title": "Isolation and software supply-chain failure",
+      "cause": "Native configuration precedence, managed hooks, unmediated tools, executable dependencies or local services bypass intended worker restrictions.",
+      "likelihood_or_uncertainty": "Unknown, and the uncertainty is concentrated in a specific place: the package knows what the vendors' help text says and nothing about what the binaries do. 02 section 13 records that tools flags do not necessarily restrict MCP and that shell sandbox policies do not cover every native read, app, MCP, browser, search or parent-client channel. First measurable at B03.",
+      "consequence": "Host compromise, secret access, unauthorized native effects and poisoned acceptance.",
+      "attack_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC15",
+        "AC16",
+        "AC26",
+        "AC31",
+        "AC33"
+      ],
+      "prevention": "Pin effective profiles and executable/schema provenance; isolate workers; deny unneeded tools, sockets, startup sources and network surfaces.",
+      "detection": "Use synthetic secrets and hostile dependencies against files, process environment, symlinks, linked Git metadata, IPC and all native egress surfaces.",
+      "containment": "Withdraw adapter admission, isolate executable scope, preserve independent evidence and recover effective access through separate administration.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Host/kernel escape beyond tested boundary and compromised ultimate administrators remain declared exclusions, not hidden guarantees.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Recovery and continuity",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the runtime admission owner on any unknown surface, which narrows the eligible work set rather than blocking the system. Founder escalation where accepting an uninventoried native surface would be the only way to keep a committed capability.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#13-native-execution-evidence-independence-and-protected-changes — runtime admission inventories the exact executable, version and hash, effective managed/user/project/explicit settings, startup rules, memory, hooks, plugins, all tool and broker schemas, files, environment, IPC and every traffic channel; a tool-name allowlist alone is insufficient",
+        "planning/specification/07-integrations-capacity.md#5-native-subscription-execution — exact pinned launch argv rather than a shell, with --bare forbidden because it excludes subscription OAuth, and safe mode not assumed composable with the explicit broker; unknown flags or effective configuration differences stop launch",
+        "planning/specification/02-authority-recovery.md#2-concrete-deployment-and-operational-admission — FD-N and FD-X are separate machines with separate credentials: the CLI login stays in N, arbitrary build code lives in X and never receives it, and neither has production credentials, instance-role metadata, a shared Docker socket or a host mount",
+        "planning/specification/08-improvement-implementation.md#3-repository-and-process-implementation-target — dependencies and artifacts are version-locked at construction and dependency updates are ProtectedChanges, not floating production installs"
+      ],
+      "implementation_evidence": "None, and the current evidence is weaker than it looks: N01 is installed-help and documentation inspection, explicitly not executed model or isolation tests. What would discharge it is B03's N/X escape tests and B05's IC-T04 all-channel canaries against the pinned binaries.",
+      "revalidation": "On every CLI, plugin, MCP server or dependency version change, on any managed-policy change, at each RuntimeProfile admission expiry, and whenever a provider ships a new tool, browser, search or app surface."
+    },
+    {
+      "id": "RISK-17",
+      "kind": "Design risk",
+      "status": "Open and dormant. The mechanism is specified and the sharding prohibition in 01 section 11 is its structural backstop: sharding is prohibited across overlapping constraints until a reviewed partition proves disjointness.",
+      "architecture": "S1.0",
+      "title": "Cross-venture interaction and migration error",
+      "cause": "Separate accounts mask shared populations/dependencies; migration drops meanings, outstanding holds, restrictions or legitimate principal boundaries.",
+      "likelihood_or_uncertainty": "Unknown, and currently zero-exposure: there is one company and no second venture, so this group cannot be realized until a second venture exists. That also means it will arrive untested. First measurable at B02 for the mechanism and at B09 for the cross-venture case.",
+      "consequence": "Cross-entity subsidy, cumulative contact/privacy harm, duplicate effects or duties lost during transition.",
+      "attack_cases": [
+        "AC09",
+        "AC10",
+        "AC13",
+        "AC14",
+        "AC20",
+        "AC28",
+        "AC29",
+        "AC31"
+      ],
+      "prevention": "Versioned interaction determinations, semantic ownership, restricted resource accounts and fenced single-scope migration with uncertain history preserved.",
+      "detection": "Reveal shared recipient/supplier/purpose during migration; transfer while an effect and deletion scope remain unresolved.",
+      "containment": "Contain interacting scopes, restore old meaning or reconcile the union, and require accepted successor responsibility before retiring controls.",
+      "rollback_or_compensation": "Restore compatible internal state only after current authority, effects and restrictions are reconciled. External effects require an independently authorized correction, remedy or legitimate disposition; reversal is not assumed.",
+      "residual_risk": "Interaction discovery and hidden off-platform facts are incomplete; excessive conservatism can defeat useful work.",
+      "accountable_owner": {
+        "planning": "orchestrator",
+        "operational_responsibility": "Direction and responsibility register",
+        "actual_assignment": "Required at capability/deployment admission; no person or institution appointed by this register"
+      },
+      "escalation_requirement": "Escalate to the migration owner and, where two principals' liabilities or a person's data cross a venture boundary, to C07 and the founder — the principal structure and what may be shared between ventures are the founder's to decide.",
+      "design_evidence": [
+        "planning/specification/02-authority-recovery.md#10-conflict-scope-and-participant-migrations--t-r1 — the union freeze preserves every unknown hold and potential obligation across the union, and unmapped or ambiguous keys retain a union-wide hold rather than being dropped as obsolete",
+        "planning/specification/02-authority-recovery.md#5-reservations-exact-operation-identity-and-prerequisites — ConflictClaim joins actual recipient population, time window and purpose restrictions for contact across ventures, and a shared supplier joins aggregate capacity and dependent obligations",
+        "planning/specification/01-contract-kernel.md#3-normative-types-and-record-envelope — company_id is a coordination namespace and not a legal entity; money, permissions, liabilities and restricted reserves stay separate across principals and cross-company interactions cannot be released by assuming disjointness",
+        "planning/specification/03-company-capabilities.md#incidents-knowledge-growth-and-responsible-ending — CAP-32/34 transfer between ventures requires current purpose and recipient authority and compatible meaning; a common owner is not permission to share personal data or infer the same market"
+      ],
+      "implementation_evidence": "None. What would discharge it is B02's revocation and conflict-migration races, B05's IC-T10 source, account and provider migration while effects remain unknown, and B09's cross-mechanism failure rehearsals.",
+      "revalidation": "On every scope or alias migration, whenever a shared recipient, supplier or purpose is discovered across ventures, on any principal restructuring or provider account transfer, and whenever a claimed disjointness is asserted without affirmative evidence."
+    }
+  ],
+  "repair_provenance": [
+    {
+      "finding": "G3-03",
+      "date": "2026-09-13",
+      "review": "planning/reviews/G-03-evidence-unknowns-adversarial.md",
+      "state": "repaired, pending independent recheck",
+      "what_changed": "Six fields had 1 distinct value across all 17 groups: design_evidence, escalation_requirement, implementation_evidence, revalidation, likelihood_or_uncertainty and status. Each is now specific to its risk. design_evidence cites specification passages by file and heading anchor with the sentence that addresses THIS risk, replacing the shared five-file list. likelihood_or_uncertainty states the unknown honestly and names the construction stage at which it first becomes measurable, rather than repeating one no-numeric-probability sentence.",
+      "shape_note": "implementation_evidence was null on all 17 rows and is now a per-risk string that begins 'None.' and names the evidence that would discharge the risk and the stage that produces it. A consumer testing `is None` must be updated; there is no such consumer in this repository as of this commit.",
+      "distinct_values_per_field": {
+        "before": {
+          "design_evidence": 1,
+          "escalation_requirement": 1,
+          "implementation_evidence": 1,
+          "revalidation": 1,
+          "likelihood_or_uncertainty": 1,
+          "status": 1
+        },
+        "after": {
+          "design_evidence": 17,
+          "escalation_requirement": 17,
+          "implementation_evidence": 17,
+          "revalidation": 17,
+          "likelihood_or_uncertainty": 17,
+          "status": 17
+        }
+      },
+      "not_changed": "cause, consequence, prevention, detection, containment, rollback_or_compensation and residual_risk were already per-risk and substantive; G-03 said so and they are untouched."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "r16-05-investigating-activation-promotes-its-own-entry",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 5; 05-work-agents-skills.md section 9",
+  "case": "An untrusted entry promoted to attested by the investigating activation.",
+  "paired_benign_fixture": "fixtures/positive/r16-05-investigating-activation-promotes-its-own-entry-benign.json",
+  "why": "Section 12.5 row 5 and AS-M5-01: the activation reads its own output back as corroboration. The mutation deletes the conjunct that refuses a model discriminator, leaving the out-of-band rule named and the discriminator unconstrained -- so a model-authored discriminator passes a guard whose name still says it cannot.",
+  "expect_failure_contains": "'guard.trust.promotion_is_an_effect_with_a_non_model_discriminator', 'neq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.trust.promotion_is_an_effect_with_a_non_model_discriminator/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

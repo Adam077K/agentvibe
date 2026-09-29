@@ -1,0 +1,16 @@
+{
+  "id": "r16-12-admitted-into-a-duty-class-with-no-staffed-holder",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 12; 05-work-agents-skills.md section 9",
+  "case": "Work admitted in a duty class whose acceptance role is unfilled.",
+  "paired_benign_fixture": "fixtures/positive/r16-12-admitted-into-a-duty-class-with-no-staffed-holder-benign.json",
+  "why": "Section 12.5 row 12, R-X09 and R-D09, against AC-M3-02 / AC-M4-02 / AE-M4-05. The mutation deletes the phase binding and leaves the holder reference demanded, so the admission still NAMES a holder while nothing requires that holder to be staffed. Admission-narrowing is the behaviour when a standing acceptance role is unfilled, and this binding is the whole of it.",
+  "expect_failure_contains": "'guard.admission.acceptance_role_staffed', 'related_phases'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.admission.acceptance_role_staffed/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

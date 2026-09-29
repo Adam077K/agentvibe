@@ -1,0 +1,16 @@
+{
+  "id": "r18-standing-interest-precondition-invokes-a-model",
+  "repair": "R18",
+  "finding": "F6C-16, R-L3; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A standing interest's precondition invokes a model, which is the violation layer 3 names as its own withdrawal condition.",
+  "paired_benign_fixture": "fixtures/positive/r18-standing-interest-precondition-invokes-a-model-benign.json",
+  "why": "This is the hard rule of layer 3: NO precondition of a standing interest may invoke a model. The guard states it twice on purpose -- the evaluator kind IS deterministic and is NOT a model -- because an enum that grows a seventh member would otherwise satisfy the positive half. Removing the negative half leaves exactly that hole. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.interest.precondition_invokes_no_model` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.interest.precondition_invokes_no_model', 'neq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.interest.precondition_invokes_no_model/body/predicates/2",
+      "op": "remove"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "L01",
+    "topic": "Vision and founder-intent preservation",
+    "status": "independent findings archived",
+    "agent": "lane01_intent",
+    "artifact": "research/L01-intent.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L02",
+    "topic": "Company and organizational operations",
+    "status": "independent findings archived",
+    "agent": "lane02_operations",
+    "artifact": "research/L02-operations.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L03",
+    "topic": "Agent and workflow architectures",
+    "status": "independent findings archived",
+    "agent": "lane03_architectures",
+    "artifact": "research/L03-architectures.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L04",
+    "topic": "Coding, terminal and software engineering",
+    "status": "independent findings archived",
+    "agent": "lane04_engineering",
+    "artifact": "research/L04-engineering.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L05",
+    "topic": "Memory, knowledge, context and grounding",
+    "status": "independent findings archived",
+    "agent": "lane05_memory",
+    "artifact": "research/L05-memory.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L06",
+    "topic": "Evaluation, evidence, truth and reproducibility",
+    "status": "independent findings archived",
+    "agent": "lane06_evaluation",
+    "artifact": "research/L06-evaluation.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L07",
+    "topic": "Security, permissions, identity and adversarial threats",
+    "status": "independent findings archived",
+    "agent": "lane07_security",
+    "artifact": "research/L07-security.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L08",
+    "topic": "Reliability, durable execution and incident recovery",
+    "status": "independent findings archived",
+    "agent": "lane08_reliability",
+    "artifact": "research/L08-reliability.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L09",
+    "topic": "Human factors, founder attention, competence and interfaces",
+    "status": "independent findings archived",
+    "agent": "lane09_human",
+    "artifact": "research/L09-human.md",
+    "review": "not yet independently evidence-audited"
+  },
+  {
+    "id": "L10",
+    "topic": "Economics, subscriptions, capacity and infrastructure",
+    "status": "independent findings archived",
+    "agent": "lane10_economics",
+    "artifact": "research/L10-economics.md",
+    "review": "selected assertions audited in research/reviews/2026-09-12-current-claims.md; L12 corrected; not an audit of every assertion"
+  },
+  {
+    "id": "L11",
+    "topic": "Legal, privacy, governance and ethical consequences",
+    "status": "independent findings archived",
+    "agent": "lane11_governance",
+    "artifact": "research/L11-governance.md",
+    "review": "selected assertions audited in research/reviews/2026-09-12-current-claims.md; L12 corrected; not an audit of every assertion"
+  },
+  {
+    "id": "L12",
+    "topic": "Self-improvement and controlled system change",
+    "status": "independent findings archived",
+    "agent": "lane12_improvement",
+    "artifact": "research/L12-improvement.md",
+    "review": "selected assertions audited in research/reviews/2026-09-12-current-claims.md; L12 corrected; not an audit of every assertion"
+  },
+  {
+    "id": "L13",
+    "topic": "Contrarian and architecture-breaking alternatives",
+    "status": "independent findings archived",
+    "agent": "lane13_contrarian",
+    "artifact": "research/L13-contrarian.md",
+    "review": "not independently source-audited"
+  },
+  {
+    "id": "L14",
+    "topic": "Novel concepts beyond current frameworks",
+    "status": "independent findings archived",
+    "agent": "lane14_novel",
+    "artifact": "research/L14-novel.md",
+    "review": "not independently source-audited"
+  }
+]

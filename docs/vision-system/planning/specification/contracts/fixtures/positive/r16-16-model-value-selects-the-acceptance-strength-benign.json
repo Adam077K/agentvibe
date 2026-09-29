@@ -1,0 +1,29 @@
+{
+  "id": "r16-16-model-value-selects-the-acceptance-strength-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 16, benign column; 05-work-agents-skills.md section 9",
+  "case": "A model step supplying a typed value into a declared field of declared type and domain.",
+  "paired_adverse_fixture": "fixtures/negative/r16-16-model-value-selects-the-acceptance-strength.json",
+  "why": "That step declares its validator, which is what makes the value typed. Demanding the validator must not block a model step -- what is refused is a model-authored value SELECTING BETWEEN acceptance strengths, not a model step.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.branch.no_model_selected_acceptance_strength/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/validator_ref"
+        }
+      }
+    }
+  ]
+}

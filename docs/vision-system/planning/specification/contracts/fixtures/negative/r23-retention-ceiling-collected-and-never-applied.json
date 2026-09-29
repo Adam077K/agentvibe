@@ -1,0 +1,16 @@
+{
+  "id": "r23-retention-ceiling-collected-and-never-applied",
+  "repair": "R23",
+  "finding": "F6C-11; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-11)",
+  "case": "The comparison is removed from `criterion.UnmatchedPoolEntry.landed.v1`, leaving both operands required and neither compared.",
+  "paired_benign_fixture": "fixtures/positive/r23-retention-field-note-edited-benign.json",
+  "why": "F6C-11: this is the committed state the finding measured -- an entry with a one-day retention and a thirty-day stated outage satisfying a criterion whose own rule says retention exceeds the outage. It is also F6R-04's ordering, deliberately: a hand edit of a criterion body trips the derivation oracle too, and the check that names the CONCRETE thing is placed above it, so the reader is told which rule stopped being checked rather than that a table moved.",
+  "expect_failure_contains": "THE RETENTION CEILING IS COLLECTED AND NEVER APPLIED",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.UnmatchedPoolEntry.landed.v1/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

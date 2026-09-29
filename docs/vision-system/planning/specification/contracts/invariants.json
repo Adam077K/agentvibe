@@ -1,0 +1,128 @@
+{
+  "Money": [
+    {
+      "clause": "currency is active in the admitted dated currency catalog",
+      "enforced_by": null
+    },
+    {
+      "clause": "minor_units is canonical signed integer, exponent matches currency catalog; no implicit FX or rescaling",
+      "enforced_by": null
+    }
+  ],
+  "Quantity": [
+    {
+      "clause": "amount is an actual nonnegative decimal quantity, not a count of minor units",
+      "enforced_by": null
+    },
+    {
+      "clause": "fractional digits <= scale; unit and scale agree for arithmetic; no floating point",
+      "enforced_by": null
+    }
+  ],
+  "TimeWindow": [
+    {
+      "clause": "start < end; both UTC Z instants",
+      "enforced_by": "time-window-declares-two-utc-bounds"
+    }
+  ],
+  "MoneyKnowledge": [
+    {
+      "clause": "observed requires nonempty actual evidence and explicit coverage; zero has minor_units=0",
+      "enforced_by": null
+    },
+    {
+      "clause": "estimated requires a bound and assumptions; lower<=upper in same currency/exponent",
+      "enforced_by": null
+    },
+    {
+      "clause": "unknown contains no amount and never contributes zero or available spend",
+      "enforced_by": null
+    }
+  ],
+  "MinutesKnowledge": [
+    {
+      "clause": "observed actual timing evidence and coverage; estimated/unknown never count as verified free attention",
+      "enforced_by": null
+    }
+  ],
+  "GroupBody": [
+    {
+      "clause": "changed refs and events match one exact transaction key; no self hash/Position/receipt/signature",
+      "enforced_by": null
+    },
+    {
+      "clause": "protected records encrypted before body is persisted; complete before/after and BusinessResult committed together",
+      "enforced_by": null
+    }
+  ],
+  "CommandResult": [
+    {
+      "clause": "accepted requires committed_position and independent durability_receipt_ref",
+      "enforced_by": "command-result-accepted-requires-receipt"
+    },
+    {
+      "clause": "durability_pending cannot dispatch; duplicate retains exact original outcome/result with current restrictions separately checked",
+      "enforced_by": null
+    }
+  ],
+  "RecoveryFrontier": [
+    {
+      "clause": "fresh nonce/authenticated current witness query; historical capture remains evidence only",
+      "enforced_by": null
+    }
+  ],
+  "LifecycleStatus": [
+    {
+      "clause": "subject is neither LifecycleStatus nor an intrinsic record; ENFORCED by the subject_ref.record_type enum of every subject-taking primitive in primitive-registry.json, derived from `intrinsic: true` in record-registry.json by tools/repair_r3_intrinsic_subjects.py and re-checked by validate_contracts.py",
+      "enforced_by": "lifecycle-status-subject-enum"
+    },
+    {
+      "clause": "phase and links schema match exact subject type",
+      "enforced_by": null
+    },
+    {
+      "clause": "prior status same exact subject; current subject and prior lifecycle head CAS",
+      "enforced_by": null
+    },
+    {
+      "clause": "supporting judgment/decision/response links must satisfy the named edge, not mere schema shape",
+      "enforced_by": null
+    }
+  ],
+  "LaunchReadiness": [
+    {
+      "clause": "unique complete requirement-child bijection; current exact predicates/arguments/criteria/owners; no self/circular support",
+      "enforced_by": null
+    }
+  ],
+  "RecordEnvelope": [
+    {
+      "clause": "schema_version2.0; no state field",
+      "enforced_by": "record-envelope-version-and-no-state-field"
+    },
+    {
+      "clause": "recorded_at/created_event/last_event identify immutable bytes; lifecycle event refs separate",
+      "enforced_by": null
+    },
+    {
+      "clause": "all declared refs typed and current only where explicitly required; historical existence never authority",
+      "enforced_by": null
+    }
+  ],
+  "NativeAncestry": [
+    {
+      "clause": "resumed context/hidden startup influence recorded or declared unknown; current tool reduction does not shrink prior disclosure",
+      "enforced_by": null
+    }
+  ],
+  "StoredRecordImage": [
+    {
+      "clause": "routing refs may be sensitive; plaintext allowlist requires actual scoped retention/deletion copy policy",
+      "enforced_by": null
+    },
+    {
+      "clause": "protected business AND lifecycle bytes encrypted before GroupBody/JSONB/WAL/log/index/backup copies",
+      "enforced_by": null
+    }
+  ]
+}

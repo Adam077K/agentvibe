@@ -1,0 +1,29 @@
+{
+  "id": "r16-07-executor-proceeds-with-a-grant-that-did-not-arrive-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 7, benign column; 05-work-agents-skills.md section 9",
+  "case": "A grant that arrived, attested at first use, proceeding normally.",
+  "paired_adverse_fixture": "fixtures/negative/r16-07-executor-proceeds-with-a-grant-that-did-not-arrive.json",
+  "why": "The normal instance also carries the existence justification this amendment requires of every worker. Demanding it must not stop the instance running.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.AgentInstance.leased.running.v1/body/predicates/8",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/existence_justification_ref"
+        }
+      }
+    }
+  ]
+}

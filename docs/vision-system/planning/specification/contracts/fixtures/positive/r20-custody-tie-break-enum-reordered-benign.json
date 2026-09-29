@@ -1,0 +1,24 @@
+{
+  "id": "r20-custody-tie-break-enum-reordered-benign",
+  "repair": "R20",
+  "finding": "F6A-10; reviews/F2-06-A-completeness-coherence-vision-binding.md (F6A-10), benign column",
+  "case": "The same closed enum with its five members in a different order, which admits exactly the same values and must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r20-custody-tie-break-enum-omits-the-admitter-exclusion.json",
+  "why": "The control is over MEMBERSHIP. An enum's members are a set -- `in` does not read order and no predicate in the registry does -- so a comparison that refused a reordering would be refusing an edit that changes no admissible value. This fixture is what pins that: it fails the moment someone 'strengthens' the check into a byte or sequence comparison, which is the version contributors route around.",
+  "expect_pass": true,
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/ResponsibilityAssignment/properties/payload/properties/custody_tie_break_reason/enum",
+      "op": "replace",
+      "value": [
+        "admitter_excluded",
+        "no_overlap",
+        "earliest_acceptance",
+        "alternate_available",
+        "narrowest_sufficient_scope"
+      ]
+    }
+  ]
+}

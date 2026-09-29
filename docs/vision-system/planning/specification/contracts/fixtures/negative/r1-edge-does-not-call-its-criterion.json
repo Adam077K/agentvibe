@@ -1,0 +1,14 @@
+{
+  "id": "r1-edge-does-not-call-its-criterion",
+  "repair": "R1",
+  "finding": "CCR-01 / FI-11",
+  "why": "The original defect at 1295 edges: criterion_id named on the edge and evaluated by nothing. op:\"call\" appeared zero times in any edge guard, and the whole 843-member criterion.* family was unreachable. This fixture removes one edge's call and leaves the criterion_id in place -- which is exactly how the registry looked at cb4bf52.",
+  "expect_failure_contains": "FI-11: edge does not call its criterion",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.Goal.proposed.endorsed.v1/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

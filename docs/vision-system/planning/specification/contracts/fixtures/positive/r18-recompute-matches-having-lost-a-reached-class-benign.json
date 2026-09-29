@@ -1,0 +1,29 @@
+{
+  "id": "r18-recompute-matches-having-lost-a-reached-class-benign",
+  "repair": "R18",
+  "finding": "F6D-03, benign column",
+  "case": "A recomputation that legitimately agrees with the admitted set, with the containment also stated in the other direction.",
+  "paired_adverse_fixture": "fixtures/negative/r18-recompute-matches-having-lost-a-reached-class.json",
+  "why": "A release whose recomputation reaches exactly the admitted set must take this edge. Stating the containment both ways is the explicit form of the set equality the count comparison was carrying implicitly, and it must not be refused -- otherwise the control refuses the correct recompute as well as the lossy one, and the adverse count above is not a detection rate.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.derivation.recompute_matches/body/predicates/5",
+      "op": "add",
+      "value": {
+        "op": "subset",
+        "left": {
+          "op": "path",
+          "value": { "op": "resolve", "ref": { "arg": "subject_ref" } },
+          "pointer": "/payload/reached_class_ids"
+        },
+        "right": {
+          "op": "path",
+          "value": { "op": "resolve", "ref": { "arg": "subject_ref" } },
+          "pointer": "/payload/recomputed_class_ids"
+        }
+      }
+    }
+  ]
+}

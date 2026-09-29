@@ -1,0 +1,16 @@
+{
+  "id": "r18-readset-equality-fooled-by-a-duplicate",
+  "repair": "R18",
+  "finding": "F6D-02; reviews/F2-06-D-authority-buildability-adversarial.md; 05-work-agents-skills.md section 9 adverse row 2",
+  "case": "The loader's read-set equality is subset-plus-count again, so a duplicated declared pointer makes room for an undeclared delivered one.",
+  "paired_benign_fixture": "fixtures/positive/r18-readset-equality-fooled-by-a-duplicate-benign.json",
+  "why": "The defeating input is data and a fixture is a registry mutation, so the fixture removes the conjunct that makes that input detectable -- which is the registry-level form of planting it. With `unique` gone from the declared side, declared_read_set = [\"/artifact\", \"/artifact\"] and delivered_read_set = [\"/artifact\", \"/producer_rationale\"] satisfy subset (the only distinct declared member is delivered) and satisfy count equality (2 and 2), and the producer's rationale reaches the checker while the loader's own record certifies that it did not. That is negative control 6 defeated at the one place the design says it is detected.",
+  "expect_failure_contains": "'guard.readset.delivered_equals_declared', 'unique'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.readset.delivered_equals_declared/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

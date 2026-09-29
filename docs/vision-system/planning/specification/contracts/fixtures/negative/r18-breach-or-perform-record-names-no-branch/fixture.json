@@ -1,0 +1,20 @@
+{
+  "id": "r18-breach-or-perform-record-names-no-branch",
+  "repair": "R18",
+  "finding": "F6C-02; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 07-integrations-capacity.md section 6 (R-G01); 05-work-agents-skills.md section 7",
+  "case": "The breach-or-perform record reaches `written` without naming which branch was taken or why, and without a route anyone holds.",
+  "paired_benign_fixture": "fixtures/positive/r18-breach-or-perform-record-names-no-branch-benign.json",
+  "why": "Two chapters require that the breach-or-perform decision leaves a record naming which was chosen and why, and NO RECORD TYPE WAS IT. `ShedDecision` is written when C02 proposes and C01 authorises a SHED; its `minimum_breached` is a fact about a shed lane under pressure, not about an empty bucket meeting a due obligation, and one record carrying both would collapse the distinction the exhaustion rule exists to draw -- fifty percent of an empty bucket is zero. The mutation is not a mutation of the registry at all: it weakens the DERIVATION the criterion-content oracle compares the registry to, then regenerates, so the oracle agrees with itself and the record reaches `written` saying nothing about what was decided. What refuses it is pinned-conjuncts.json, which is hand-written and which the authoring tool neither reads nor writes.",
+  "expect_failure_contains": "'criterion.ExhaustionDecision.written.v1', 'nonempty_fields'",
+  "patch": [],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"ExhaustionDecision\", \"written\"): spec(",
+      "block_end": "    # -- ShedDecision (S1-C02) ---------------------------",
+      "replacement": "weakened-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "note": "The positive control is the runner's: if the regeneration step fails, the fixture is reported as never_ran rather than counted as rejected, because a mutation that never reached the validator proves nothing. And if it is ever rejected by something other than the pin, the pin has been replaced by something weaker that happens to also refuse."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "r18-manifest-omits-what-it-dropped-and-what-it-was-for-benign",
+  "repair": "R18",
+  "finding": "F6B-01, benign column",
+  "case": "A manifest that dropped nothing, recorded that it dropped nothing, and is admitted.",
+  "paired_adverse_fixture": "fixtures/negative/r18-manifest-omits-what-it-dropped-and-what-it-was-for.json",
+  "why": "`present` rather than `nonempty` on `dropped_constraints` is deliberate: nothing dropped is a RESULT and must pass, while an absent list is a silence and must not. The patch hardens the same guard by also requiring the destination contracts to be named, which every real manifest carries, and it must not be refused -- otherwise the control refuses the clean assembly as well as the lossy one.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.manifest.omission_and_class_declared/body/predicates/4",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/destination_contract_refs"
+        ]
+      }
+    }
+  ]
+}

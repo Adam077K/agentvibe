@@ -1,0 +1,17 @@
+{
+  "id": "r31-capacity-measure-documentation-edited-benign",
+  "repair": "R31",
+  "finding": "F6C-06; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-06), benign column",
+  "case": "The vocabulary's own explanatory text rewritten, its members untouched.",
+  "paired_adverse_fixture": "fixtures/negative/r31-capacity-measure-invented-in-the-registry.json",
+  "why": "Stated narrowly, because a benign fixture that claims more than it shows is its own defect: this proves the control reads the MEMBER LIST and not the entry's bytes, so the reasoning beside a vocabulary can be improved without tripping a check about what the vocabulary admits. It does NOT prove that a chapter-named member is accepted -- the vocabulary has exactly one member today, so there is no second real measure to add, and adding a fake one to demonstrate acceptance would be the very fabrication its adverse twin refuses. When a chapter names a second measure, that is the benign case to write here.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "value-registry.json",
+      "pointer": "/CapacityMeasure/members_why",
+      "op": "replace",
+      "value": "F6C-06. The capacity measures the specification names. Edited by a benign fixture to show that this text is not what the check reads."
+    }
+  ]
+}
