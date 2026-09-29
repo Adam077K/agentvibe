@@ -3415,6 +3415,40 @@ RECORD_OVERRIDES = {
 }
 
 # The `capabilities.json#/domain_validators` provenance for the eight overrides above.
+# -- DeletionScope (F7-database-01). --------------------------------------------
+# `determined` was a registered gap: the generic spec binds an `authority` role and
+# DeletionScope declares no required field that role matches, so the only exit from
+# `requested` resolved `content_unspecified` forever. 02 section 8.3 now states which of
+# DeletionScope's OWN fields carry the determination; this override binds exactly those.
+# Every conjunct still resolves unresolved on a missing path, so absence stays restrictive.
+CITE["del-determined"] = (
+    "02-authority-recovery.md",
+    "`DeletionScope.determined` is bound to fields the scope already carries, not to a "
+    "conclusion held elsewhere. ... A missing, stale or unaccepted binding leaves the "
+    "request in `requested`, where it stays recorded and restrictive.")
+RECORD_OVERRIDES[("DeletionScope", "determined")] = spec(
+    "The exact subjects, material selector, purposes and restrictions; an inventory at a "
+    "named cutoff with nonempty inventory refs; the restriction epoch still current; "
+    "every retention exception active and any governing professional determination "
+    "validated; a currently accepted owner; response and reconcile deadlines with the "
+    "cutoff strictly before the response deadline; and stated proof limits. A missing, "
+    "stale or unaccepted binding leaves the request in `requested`.",
+    ["del-determined"],
+    [("nfp", ["/payload/subject_refs", "/payload/material_selector",
+              "/payload/purpose_ids", "/payload/restrictions",
+              "/payload/inventory_cutoff", "/payload/inventory_refs",
+              "/payload/restriction_epoch_ref", "/payload/response_due_at",
+              "/payload/reconcile_at", "/payload/proof_limits",
+              "/owner_assignment_ref"]),
+     ("rpp", [("/owner_assignment_ref", ["accepted"], False),
+              ("/payload/restriction_epoch_ref", ["current"], False),
+              ("/payload/exception_refs", ["active"], True),
+              ("/payload/determination_ref", ["validated"], True)]),
+     ("ltF", "/payload/inventory_cutoff", "/payload/response_due_at"),
+     AF, AR],
+    hard=["nfp", "rpp", "ltF"])
+
+
 OVERRIDE_SOURCE = {
     "DeliveryCapacity", "Experiment", "PriceProposal", "LaunchReadiness",
     "Economics", "CashPosition",

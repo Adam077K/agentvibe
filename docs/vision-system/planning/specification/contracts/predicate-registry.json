@@ -40847,21 +40847,81 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-DeletionScope-determined"
+          "field_paths": [
+            "/payload/subject_refs",
+            "/payload/material_selector",
+            "/payload/purpose_ids",
+            "/payload/restrictions",
+            "/payload/inventory_cutoff",
+            "/payload/inventory_refs",
+            "/payload/restriction_epoch_ref",
+            "/payload/response_due_at",
+            "/payload/reconcile_at",
+            "/payload/proof_limits",
+            "/owner_assignment_ref"
+          ]
         },
         {
-          "op": "attested_result",
+          "op": "related_phases",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "predicate_id": "criterion.DeletionScope.determined.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
+          "bindings": [
+            {
+              "field_path": "/owner_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/restriction_epoch_ref",
+              "states": [
+                "current"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/exception_refs",
+              "states": [
+                "active"
+              ],
+              "optional": true
+            },
+            {
+              "field_path": "/payload/determination_ref",
+              "states": [
+                "validated"
+              ],
+              "optional": true
+            }
+          ]
+        },
+        {
+          "op": "lt",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/inventory_cutoff"
+          },
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/response_due_at"
           }
         },
         {
@@ -40873,10 +40933,21 @@
           "judgment_refs": {
             "arg": "judgment_refs"
           }
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.DeletionScope.determined.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-DeletionScope-determined. Phase assessed: determined.",
+    "meaning": "The exact subjects, material selector, purposes and restrictions; an inventory at a named cutoff with nonempty inventory refs; the restriction epoch still current; every retention exception active and any governing professional determination validated; a currently accepted owner; response and reconcile deadlines with the cutoff strictly before the response deadline; and stated proof limits. A missing, stale or unaccepted binding leaves the request in `requested`. Phase assessed: determined.",
     "owner_component": "S1-C07",
     "source": "../candidates/company-foundation-repairs-v1.md",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -40968,8 +41039,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-DeletionScope-determined",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `determined` on DeletionScope. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "The exact subjects, material selector, purposes and restrictions; an inventory at a named cutoff with nonempty inventory refs; the restriction epoch still current; every retention exception active and any governing professional determination validated; a currently accepted owner; response and reconcile deadlines with the cutoff strictly before the response deadline; and stated proof limits. A missing, stale or unaccepted binding leaves the request in `requested`.",
+    "derived_from": [
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "`DeletionScope.determined` is bound to fields the scope already carries, not to a conclusion held elsewhere. ... A missing, stale or unaccepted binding leaves the request in `requested`, where it stays recorded and restrictive."
+      }
+    ]
   },
   "criterion.DeletionScope.propagating.v1": {
     "version": "1.0",
