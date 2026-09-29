@@ -24918,6 +24918,39 @@
           ]
         },
         {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/duty_inventory",
+            "/payload/funding_ref",
+            "/payload/grievance_custodian"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/funding_ref",
+              "states": [
+                "validated"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/grievance_custodian",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
           "op": "storage_admitted",
           "subject_ref": {
             "arg": "subject_ref"
@@ -32716,6 +32749,63 @@
           ]
         },
         {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/alternate_assignment_ref",
+            "/payload/trigger_predicates",
+            "/payload/resource_reservation_refs",
+            "/payload/channel_connection_refs",
+            "/payload/joint_failure_roots"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/primary_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/alternate_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/resource_reservation_refs",
+              "states": [
+                "held",
+                "partly_consumed"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/channel_connection_refs",
+              "states": [
+                "active"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/exercise_judgment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
+          ]
+        },
+        {
           "op": "any",
           "predicates": [
             {
@@ -32910,6 +33000,63 @@
             "/payload/access_evidence_refs",
             "/payload/competence_evidence_refs",
             "/payload/exercise_judgment_ref"
+          ]
+        },
+        {
+          "op": "nonempty_fields",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "field_paths": [
+            "/payload/alternate_assignment_ref",
+            "/payload/trigger_predicates",
+            "/payload/resource_reservation_refs",
+            "/payload/channel_connection_refs",
+            "/payload/joint_failure_roots"
+          ]
+        },
+        {
+          "op": "related_phases",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "bindings": [
+            {
+              "field_path": "/payload/primary_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/alternate_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/resource_reservation_refs",
+              "states": [
+                "held",
+                "partly_consumed"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/channel_connection_refs",
+              "states": [
+                "active"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/exercise_judgment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            }
           ]
         },
         {
