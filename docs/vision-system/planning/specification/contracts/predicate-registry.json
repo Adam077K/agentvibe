@@ -24918,39 +24918,6 @@
           ]
         },
         {
-          "op": "nonempty_fields",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "field_paths": [
-            "/payload/duty_inventory",
-            "/payload/funding_ref",
-            "/payload/grievance_custodian"
-          ]
-        },
-        {
-          "op": "related_phases",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "bindings": [
-            {
-              "field_path": "/payload/funding_ref",
-              "states": [
-                "validated"
-              ],
-              "optional": false
-            },
-            {
-              "field_path": "/payload/grievance_custodian",
-              "states": [
-                "accepted"
-              ],
-              "optional": false
-            }
-          ]
-        },
-        {
           "op": "storage_admitted",
           "subject_ref": {
             "arg": "subject_ref"
