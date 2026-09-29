@@ -26554,7 +26554,7 @@
           "mutates": "LifecycleStatus only; exact immutable business subject retained",
           "on_denial": "Keep prior status, exact reason/event and all existing duties/holds. Restrictive request itself remains recorded and routed.",
           "allowed_command_ids": [
-            "kernel.record.transition"
+            "authority.attempt.claim"
           ]
         },
         {

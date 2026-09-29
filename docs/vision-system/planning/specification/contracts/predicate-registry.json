@@ -61631,11 +61631,35 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-Fulfillment-refunded"
+          "field_paths": [
+            "/payload/agreement_ref",
+            "/payload/receipts",
+            "/payload/remaining_duties"
+          ]
+        },
+        {
+          "op": "native_correlated",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "observation_refs": {
+            "arg": "observation_refs"
+          },
+          "result": "observed_applied"
+        },
+        {
+          "op": "accepted_for",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.Fulfillment.refunded.v1",
+          "judgment_refs": {
+            "arg": "judgment_refs"
+          }
         },
         {
           "op": "attested_result",
@@ -61647,20 +61671,10 @@
           "observation_refs": {
             "arg": "observation_refs"
           }
-        },
-        {
-          "op": "accepted_for",
-          "subject_ref": {
-            "arg": "subject_ref"
-          },
-          "predicate_id": "criterion.Fulfillment.refunded.v1",
-          "judgment_refs": {
-            "arg": "judgment_refs"
-          }
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-Fulfillment-refunded. Phase assessed: refunded.",
+    "meaning": "The refund is established against an ENTITLEMENT, not a request: the sold agreement it arises from, the receipts actually obtained and the obligations that survive are recorded, and the refunded amount and currency are exactly those the entitlement allows for this fulfillment -- full or partial, never more than was received and never paid twice across sales and support. The refund is its own operation linked to the ORIGINAL payment, and `refunded` is entered only on a qualified native observation, exactly correlated to that provider refund object, account and request, that the refund SETTLED for the entitled amount and currency, with a current accepted judgment on THIS criterion. A refund acknowledgement, a pending or unknown provider status, an unrelated payment, a case closure or a company status is not a settled refund; a pending or unknown refund effect stays held as an uncertain effect, and duties still owed keep their own custody on the record. A reservation or hold for this refund or this fulfillment is released only against the settled entitlement and only for the amount settled -- never on an acknowledgement or a generic case closure. Phase assessed: refunded.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/Fulfillment",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -61752,8 +61766,25 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-Fulfillment-refunded",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `refunded` on Fulfillment. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "The refund is established against an ENTITLEMENT, not a request: the sold agreement it arises from, the receipts actually obtained and the obligations that survive are recorded, and the refunded amount and currency are exactly those the entitlement allows for this fulfillment -- full or partial, never more than was received and never paid twice across sales and support. The refund is its own operation linked to the ORIGINAL payment, and `refunded` is entered only on a qualified native observation, exactly correlated to that provider refund object, account and request, that the refund SETTLED for the entitled amount and currency, with a current accepted judgment on THIS criterion. A refund acknowledgement, a pending or unknown provider status, an unrelated payment, a case closure or a company status is not a settled refund; a pending or unknown refund effect stays held as an uncertain effect, and duties still owed keep their own custody on the record. A reservation or hold for this refund or this fulfillment is released only against the settled entitlement and only for the amount settled -- never on an acknowledgement or a generic case closure.",
+    "derived_from": [
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "CAP-17 retrieves the sold version and actual fault, performs authorized repair/completion/refund and checks the resulting customer condition. Refund conflict identity uses entitlement and prior unknown effects, so sales retention and support cannot pay it twice."
+      },
+      {
+        "file": "07-integrations-capacity.md",
+        "anchor_or_quote": "Refund is its own OperationIntent linked to original payment."
+      },
+      {
+        "file": "07-integrations-capacity.md",
+        "anchor_or_quote": "Refund acknowledgement is not settled refund."
+      },
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+      }
+    ]
   },
   "criterion.Fulfillment.restricted.v1": {
     "version": "1.0",
@@ -74954,15 +74985,18 @@
       "op": "all",
       "predicates": [
         {
-          "op": "attested_result",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "predicate_id": "criterion.JournalBatch.balanced.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
+          "field_paths": [
+            "/payload/ledger_authority",
+            "/payload/accounting_period",
+            "/payload/entries",
+            "/payload/source_documents",
+            "/payload/treatment_refs",
+            "/payload/reconciliations"
+          ]
         },
         {
           "op": "accepted_for",
@@ -74973,10 +75007,21 @@
           "judgment_refs": {
             "arg": "judgment_refs"
           }
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.JournalBatch.balanced.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
         }
       ]
     },
-    "meaning": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations. Phase assessed: balanced.",
+    "meaning": "Every entry carries its account, its source references and exactly one nonzero debit or credit in decimal-string minor units, and SEPARATELY FOR EACH currency, exponent and ledger the batch's debits sum exactly to its credits -- no cross-currency netting, no invented exchange rate and no invented balancing entry. Every entry is covered by the batch's original source documents and by an authoritative accounting treatment, under the one ledger authority for the stated accounting period. Every unreconciled item -- unmatched movement, fee, timing difference, credit or disputed classification -- is identified on the batch's reconciliations with its disposition, never hidden or netted away. The arithmetic is attested and accepted on THIS criterion: a ResourceAccount reservation equation, or an attestation or judgment on any other predicate, establishes nothing here. Balanced is not posted and says nothing about compliance. Phase assessed: balanced.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/JournalBatch",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -75068,11 +75113,15 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations.",
+    "requires": "Every entry carries its account, its source references and exactly one nonzero debit or credit in decimal-string minor units, and SEPARATELY FOR EACH currency, exponent and ledger the batch's debits sum exactly to its credits -- no cross-currency netting, no invented exchange rate and no invented balancing entry. Every entry is covered by the batch's original source documents and by an authoritative accounting treatment, under the one ledger authority for the stated accounting period. Every unreconciled item -- unmatched movement, fee, timing difference, credit or disputed classification -- is identified on the batch's reconciliations with its disposition, never hidden or netted away. The arithmetic is attested and accepted on THIS criterion: a ResourceAccount reservation equation, or an attestation or judgment on any other predicate, establishes nothing here. Balanced is not posted and says nothing about compliance.",
     "derived_from": [
       {
-        "file": "02-authority-recovery.md",
-        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Native financial computation uses decimal-string minor units by currency. Each `JournalEntry` has source references, an account, and exactly one nonzero debit or credit. A posted batch balances separately per currency and ledger; it is immutable and corrected through linked reversing/correcting entries. No unsupported accounting treatment, jurisdictional rule, exchange rate or balancing entry is invented."
+      },
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Bank reconciliation preserves unmatched movements, fees, timing differences, credits and disputed classifications until supported treatment exists."
       }
     ]
   },
@@ -246342,7 +246391,7 @@
         }
       ]
     },
-    "meaning": "Fulfillment: failed → refunded; RC-01. `refunded` had exactly one inbound edge, from `delivered`, which made a refund of an UNDELIVERED sale unrepresentable -- the commonest refund there is. Content for `refunded` remains the registered gap gap-Fulfillment-refunded: the corpus says what a refund IS and says it about the SupportCase that performs it, never what a Fulfillment record in `refunded` shows.",
+    "meaning": "Fulfillment: failed → refunded; RC-01. `refunded` had exactly one inbound edge, from `delivered`, which made a refund of an UNDELIVERED sale unrepresentable -- the commonest refund there is. Content for `refunded` is criterion.Fulfillment.refunded.v1 (F7-cfo-01, closing the former gap-Fulfillment-refunded): a settled refund of the entitlement, exactly correlated to the provider refund linked to the original payment -- never an acknowledgement or a case closure.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/Fulfillment",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",

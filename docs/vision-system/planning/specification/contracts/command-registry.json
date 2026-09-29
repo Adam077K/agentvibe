@@ -1918,7 +1918,8 @@
     "source": "02-authority-recovery.md#62-ordered-preparation-release-and-send-claim",
     "target_types": [
       "SendClaim",
-      "ExternalAttempt"
+      "ExternalAttempt",
+      "EffectIdentity"
     ],
     "read_only": false,
     "schema_ref": "commands.schema.json#/$defs/authority.attempt.claim",
@@ -1927,7 +1928,7 @@
     "transaction_contract": {
       "isolation": "serializable, <=3 serialization retries, no external I/O while holding locks",
       "idempotency": "command_id with exact canonical request digest; changed payload under same id conflicts",
-      "cas": "all expected business and lifecycle heads plus actual read dependencies; scope/epoch current reads included",
+      "cas": "all expected business and lifecycle heads plus actual read dependencies; scope/epoch current reads included; EFFECT WINNER (F7-distributed-01): P4 owns the effect-winner decision -- it reads the EffectIdentity resolved by its natural key (effect_class, counterparty, payload_digest) at its exact head, and IN THE SAME GroupBody as the SendClaim/ExternalAttempt creation either (a) CASes it allocated->claimed naming this operation/attempt as first claimant, or (b) finds it already claimed/observed by another claimant, commits NO SendClaim, debits no attempt allowance and returns the prior claimant outcome to join without new authorization; the winner transition and the claim commit or abort together, so no winner without a claim and no claim without a winner",
       "commit": "one complete GroupBody without own future hash/proof; post-commit R independent durability before accepted",
       "external_effect": "none implied; separate OperationIntent/Release/SendClaim and actual native reconciliation",
       "on_failure": "typed reason, original result on retry, duties/holds retained",
