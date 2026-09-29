@@ -1,0 +1,23 @@
+{
+  "id": "r38-a-two-letter-family-finding-is-declared-benign",
+  "repair": "R38",
+  "finding": "F6Y-01, F6AA-08; planning/reviews/F2-06-recheck-05.md, benign column",
+  "case": "A twelfth F6AA finding declared -- a source row and a `not_answered` row in one edit, in a two-letter family STEP6_FAMILIES already names.",
+  "paired_adverse_fixture": "fixtures/negative/r38-a-two-letter-family-finding-loses-its-source-row.json",
+  "why": "The adverse twin above is consistent with a sweep that has simply been frozen around the eleven ids committed today. This is the other half: declaring a NEW finding in the widened family must stay a data edit, exactly as r36 holds it for the one-letter half. It occupies the single slot of headroom UNANSWERED_CEILING and NOT_ANSWERED_CEILING carry -- the reason is written at both constants as well as here, because F6AA-07 was the same slot with its reason recorded only in a fixture.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/finding_sources/F6AA-12",
+      "op": "add",
+      "value": "planning/reviews/F2-06-recheck-05.md"
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/not_answered/F6AA-12",
+      "op": "add",
+      "value": "Benign-column fixture: a finding declared in the two-letter family the widened sweep now reaches, placed in the conservative half because no file and check answer it."
+    }
+  ]
+}

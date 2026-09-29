@@ -1,0 +1,29 @@
+{
+  "id": "r18-readset-equality-fooled-by-a-duplicate-benign",
+  "repair": "R18",
+  "finding": "F6D-02, benign column",
+  "case": "The same equality stated in the other direction as well, which is a strengthening and must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-readset-equality-fooled-by-a-duplicate.json",
+  "why": "The security property the design needs is `delivered` subset-of `declared` -- nothing extra was delivered -- and the guard states the converse and relies on the count equality for the other half. Adding the missing direction explicitly is a legitimate hardening of the same guard, and a pin table that refused it would be refusing the repair rather than the defect.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.readset.delivered_equals_declared/body/predicates/5",
+      "op": "add",
+      "value": {
+        "op": "subset",
+        "left": {
+          "op": "path",
+          "value": { "op": "resolve", "ref": { "arg": "subject_ref" } },
+          "pointer": "/payload/delivered_read_set"
+        },
+        "right": {
+          "op": "path",
+          "value": { "op": "resolve", "ref": { "arg": "subject_ref" } },
+          "pointer": "/payload/declared_read_set"
+        }
+      }
+    }
+  ]
+}

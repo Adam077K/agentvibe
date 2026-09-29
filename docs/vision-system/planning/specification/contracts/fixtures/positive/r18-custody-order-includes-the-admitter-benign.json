@@ -1,0 +1,25 @@
+{
+  "id": "r18-custody-order-includes-the-admitter-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-X06; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A custody order that genuinely excludes the admitter, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-custody-order-includes-the-admitter.json",
+  "why": "Every legitimate admission records both an admitting identity and a custody order; the rule is about their intersection, not about their existence. The patch additionally demands the duty class be named, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.custody.admitter_excluded/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/duty_class_id"
+        ]
+      }
+    }
+  ]
+}

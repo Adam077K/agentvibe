@@ -1,0 +1,25 @@
+{
+  "id": "r39-a-finding-declared-answered-by-a-file-that-is-not-there",
+  "repair": "R39",
+  "finding": "F6Y-08; planning/reviews/F2-06-recheck-04a.md section 4 (F6Y-08)",
+  "case": "F6AA-01 moved from `not_answered` to `answered_elsewhere`, naming a file that does not exist in the tree.",
+  "paired_benign_fixture": "fixtures/positive/r39-a-finding-crosses-to-answered-with-a-file-that-resolves-benign.json",
+  "why": "F6Y-08 asks for the crossing from `not_answered` to `answered_elsewhere` to be a DATA edit rather than an edit to validate_contracts.py, so that a lane can record a repair it really verified. Making a move cheap is only safe if the destination is guarded, and the guard is that `file` must resolve: a row asserting a named file and a named check answer a finding is falsifiable by opening the file, which is the whole reason F6R-01 put the claim in data. This is the adverse half. ANSWERED_ELSEWHERE_CEILING is two above the committed count so that this fixture reaches the existence check instead of being stopped by the ceiling -- the leak class this suite already found in r27 and r35.",
+  "expect_failure_contains": "a finding is declared answered by a file that does not exist",
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/not_answered/F6AA-01",
+      "op": "remove"
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/answered_elsewhere/F6AA-01",
+      "op": "add",
+      "value": {
+        "file": "planning/specification/contracts/md-02-staffing-check.py",
+        "check": "THE NARROWED MD-02 QUESTION IS REFUSED"
+      }
+    }
+  ]
+}

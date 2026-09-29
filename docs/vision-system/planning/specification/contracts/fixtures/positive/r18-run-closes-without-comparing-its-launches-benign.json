@@ -1,0 +1,25 @@
+{
+  "id": "r18-run-closes-without-comparing-its-launches-benign",
+  "repair": "R18",
+  "finding": "F6C-04, benign column",
+  "case": "A run that closes with both counts recorded and a divergence, which must be accepted rather than refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-run-closes-without-comparing-its-launches.json",
+  "why": "The comparison RECORDS the divergence; it does not require the two numbers to be equal. A procedure that checkpoints at every step boundary makes more launches than one that does not, and a run that reports honestly that it made more is the case the instrument exists to see -- refusing it would make the instrument something people route around. The patch hardens the guard by also demanding the causal episode that carries the allowance, which every closing run names.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.launch.actual_compared_to_expected/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/causal_episode_ref"
+        ]
+      }
+    }
+  ]
+}

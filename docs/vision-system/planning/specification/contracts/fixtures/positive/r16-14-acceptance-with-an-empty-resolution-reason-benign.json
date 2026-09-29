@@ -1,0 +1,29 @@
+{
+  "id": "r16-14-acceptance-with-an-empty-resolution-reason-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 14, benign column; 05-work-agents-skills.md section 9",
+  "case": "An acceptance with a reason, which must commit.",
+  "paired_adverse_fixture": "fixtures/negative/r16-14-acceptance-with-an-empty-resolution-reason.json",
+  "why": "A decided interval carries its latest responsible moment as well as its reason. Demanding it must not stop the acceptance committing.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.acceptance.resolution_reason_present/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/latest_responsible_at"
+        }
+      }
+    }
+  ]
+}

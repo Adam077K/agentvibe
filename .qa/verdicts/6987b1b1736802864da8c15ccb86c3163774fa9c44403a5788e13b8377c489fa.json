@@ -1,0 +1,11 @@
+{
+  "subject": "6987b1b1736802864da8c15ccb86c3163774fa9c44403a5788e13b8377c489fa",
+  "base": "c9f220a8474f66224ee2197dbbad7c9dc8548609",
+  "tier": "full",
+  "tier_driver": "scripts/vision-capability-requirements.mjs",
+  "verdict": "PASS",
+  "by": "ceo-1 (orchestrator) · founder-waived reduced gate: 2 reviewers",
+  "run_id": null,
+  "evidence": "Founder waived the full qa.js panel on 2026-09-29 (token budget). Two sonnet reviewers PASS, no P1: scripts security+correctness (P2 null-check in vision-wk-bindings.mjs projectedFor; P3 unwired) and memory/plan correctness+scope+evidence. CI Deterministic checks green; contract light validator 305,749 checks exit 0. Single model family; full-tier panel NOT run.",
+  "recorded_at": "2026-09-29T14:44:44.663Z"
+}

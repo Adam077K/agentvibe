@@ -1,0 +1,25 @@
+{
+  "id": "r18-effect-identity-claimed-before-it-was-allocated-benign",
+  "repair": "R18",
+  "finding": "F6C-16; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A claim strictly after its allocation, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-effect-identity-claimed-before-it-was-allocated.json",
+  "why": "Every ordinary release allocates and then claims. The patch also demands the reserved name range be named, which C04 allocates centrally, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.effect.identity_allocated_before_release/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/reserved_name_range"
+        ]
+      }
+    }
+  ]
+}

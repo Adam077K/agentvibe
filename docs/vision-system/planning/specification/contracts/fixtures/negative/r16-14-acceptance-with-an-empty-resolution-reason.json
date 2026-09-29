@@ -1,0 +1,16 @@
+{
+  "id": "r16-14-acceptance-with-an-empty-resolution-reason",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 14; 05-work-agents-skills.md section 9",
+  "case": "An acceptance transition with an empty resolution reason.",
+  "paired_benign_fixture": "fixtures/positive/r16-14-acceptance-with-an-empty-resolution-reason-benign.json",
+  "why": "Section 12.5 row 14. Producer-declared completion is not acceptance, and an acceptance with no reason is an interval that timed out wearing a decision's name. The mutation deletes the value test and leaves the field-presence and the `!= \"\"` conjuncts -- which is the interesting case, because two of the three tests survive and the message must still name the one that went.",
+  "expect_failure_contains": "'guard.acceptance.resolution_reason_present', 'nonempty'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.acceptance.resolution_reason_present/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

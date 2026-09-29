@@ -1,0 +1,15 @@
+{
+  "id": "r5-destination-names-a-field-that-does-not-exist",
+  "repair": "R5",
+  "finding": "CCR-05",
+  "why": "A destination naming a field that is not in records.schema.json passed the old bool(destination) check exactly as a real one did. ~56 such destinations were committed.",
+  "expect_failure_contains": "unresolvable destination",
+  "patch": [
+    {
+      "file": "source-field-mappings.json",
+      "pointer": "/mappings/0/destination",
+      "op": "replace",
+      "value": "payload.no_such_field_exists"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "r9-content-quotes-text-its-source-does-not-contain",
+  "repair": "R9",
+  "finding": "FI-11 content / Rule 3",
+  "why": "A citation that resolves to a real file is still not a source: this leaves criterion.Goal.achieved.v1 pointing at 02-architecture-selection.md and changes the quoted sentence to one that is not in it. That is what a quote looks like after the passage it came from has been edited, and it is indistinguishable by eye from one that has not.",
+  "expect_failure_contains": "derived_from quotes text that is not in the file it cites",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.Goal.achieved.v1/derived_from/0/anchor_or_quote",
+      "op": "replace",
+      "value": "Achievement is established by the producer reporting that the work is done."
+    }
+  ]
+}

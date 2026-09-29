@@ -1,0 +1,15 @@
+{
+  "id": "r6-control-contract-for-a-record-no-guard-invokes",
+  "repair": "R6",
+  "finding": "CCR-06",
+  "why": "control-contracts.json is executed by the control_contract primitive, but nothing checked that its entries correspond to the records whose guards invoke it. An entry for a record no guard reaches looks exactly like enforcement and is not.",
+  "expect_failure_contains": "control-contracts.json must name exactly the records",
+  "patch": [
+    {
+      "file": "control-contracts.json",
+      "pointer": "/Goal",
+      "op": "add",
+      "value": ["a control rule for a record whose guards never invoke control_contract"]
+    }
+  ]
+}

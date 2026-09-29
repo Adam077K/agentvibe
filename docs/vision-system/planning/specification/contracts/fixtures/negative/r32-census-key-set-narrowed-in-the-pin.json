@@ -1,0 +1,25 @@
+{
+  "id": "r32-census-key-set-narrowed-in-the-pin",
+  "repair": "R32",
+  "finding": "RC4-07; the fourth recheck of the F2 contracts layer",
+  "case": "`under_negation` struck from the pinned census key set, leaving the literal in validate_contracts.py untouched.",
+  "paired_benign_fixture": "fixtures/positive/r32-census-key-set-reordered-benign.json",
+  "why": "RC4-07 is that `CENSUS_KEYS` was declared exactly once, in the file that also decides whether the census carries those keys. Dropping a field from the literal and from the check is one hunk, after which the verdict prints a census that LOOKS complete. Every `demanded` in this package means whatever the demand walk decided and the census is the only thing in the verdict saying how far that walk reached, so a quietly narrowed census is a quietly narrowed coverage claim. This fixture narrows ONE side; the whole value of a second declaration is that doing so is now visible.",
+  "expect_failure_contains": "THE CENSUS KEY SET IS DECLARED TWICE AND THE TWO DISAGREE",
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/census_keys",
+      "op": "replace",
+      "value": [
+        "operators",
+        "predicate_positions",
+        "refused",
+        "slots_classified",
+        "under_disjunction",
+        "under_quantifier",
+        "value_positions"
+      ]
+    }
+  ]
+}

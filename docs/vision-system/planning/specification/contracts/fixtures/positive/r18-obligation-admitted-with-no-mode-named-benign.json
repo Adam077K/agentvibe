@@ -1,0 +1,25 @@
+{
+  "id": "r18-obligation-admitted-with-no-mode-named-benign",
+  "repair": "R18",
+  "finding": "F6C-16, F6C-01, R-G01; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "An obligation admitted with a named mode and its exhaustibility recorded, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-obligation-admitted-with-no-mode-named.json",
+  "why": "Naming `manual_founder` and recording that the class can exhaust is the ordinary admission this rule exists to allow. The patch additionally demands the custodian, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.obligation.production_mode_named/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/custodian_ref"
+        ]
+      }
+    }
+  ]
+}

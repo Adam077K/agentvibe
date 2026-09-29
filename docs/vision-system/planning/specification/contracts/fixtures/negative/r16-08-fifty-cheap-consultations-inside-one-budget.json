@@ -1,0 +1,16 @@
+{
+  "id": "r16-08-fifty-cheap-consultations-inside-one-budget",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 8; 05-work-agents-skills.md section 9",
+  "case": "Fifty sequential consultations inside one budget, each individually cheap.",
+  "paired_benign_fixture": "fixtures/positive/r16-08-fifty-cheap-consultations-inside-one-budget-benign.json",
+  "why": "Section 12.5 row 8 and AS-X-04: fifty sequential consultations each individually cheap sit inside one budget and are a fan-out incident. The mutation deletes the count comparison, leaving the ceiling declared and the digests recorded and distinct -- a guard that collects the evidence for the ceiling and never applies it. R-X16 is explicit that the ceiling is over DISTINCT READ SETS rather than over cost, and this is the conjunct that says so.",
+  "expect_failure_contains": "'guard.delegation.width_ceiling_over_distinct_read_sets', 'lte'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.delegation.width_ceiling_over_distinct_read_sets/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

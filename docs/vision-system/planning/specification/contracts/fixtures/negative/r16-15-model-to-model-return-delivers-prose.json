@@ -1,0 +1,16 @@
+{
+  "id": "r16-15-model-to-model-return-delivers-prose",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 15; 05-work-agents-skills.md section 9",
+  "case": "A model-to-model return delivering prose.",
+  "paired_benign_fixture": "fixtures/positive/r16-15-model-to-model-return-delivers-prose-benign.json",
+  "why": "Section 12.5 row 15, R-D13 and AS-M1-01. A model-to-model return exists only on a declared procedure edge, crosses the loader, delivers TYPED OUTPUTS ONLY, and stores prose at a Ref undelivered. The mutation deletes the typed-outputs conjunct and leaves the prose-at-a-Ref conjunct standing, so prose may be the payload while the guard still says where prose belongs.",
+  "expect_failure_contains": "'edge.Delegation.offered.accepted.v1', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.Delegation.offered.accepted.v1/body/predicates/4",
+      "op": "remove"
+    }
+  ]
+}

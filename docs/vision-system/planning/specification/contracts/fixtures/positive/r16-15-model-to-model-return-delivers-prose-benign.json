@@ -1,0 +1,29 @@
+{
+  "id": "r16-15-model-to-model-return-delivers-prose-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 15, benign column; 05-work-agents-skills.md section 9",
+  "case": "The same return delivering typed outputs with the prose at a Ref.",
+  "paired_adverse_fixture": "fixtures/negative/r16-15-model-to-model-return-delivers-prose.json",
+  "why": "The legitimate return has prose -- at a reference, undelivered. Demanding the reference must not block the crossing: prose accompanying a constraint set is evidence and never a substitute.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.Delegation.offered.accepted.v1/body/predicates/7",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/prose_ref"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "id": "r27-contested-refs-made-optional",
+  "repair": "R27",
+  "finding": "F6X-02; reviews/F2-06-X-cross-cutting.md (F6X-02), the contested-refs limb",
+  "case": "`contested_refs` struck from the operator projection payload's required list in BOTH declarations -- registry and schema -- the field still declared, still typed, simply no longer demanded.",
+  "paired_benign_fixture": "fixtures/positive/r27-operator-projection-required-reordered-benign.json",
+  "why": "This is the edit that looks like a relaxation and is a loss of meaning. `04` DELTA 1 asks a projection to carry what was omitted AND what was contested. With the field REQUIRED, an empty array is an assertion -- nothing was contested. With it optional, an absent field means either that or that nobody looked, and the operator the record exists for cannot tell which. The fixture is here because `required` is a list in a schema and striking one string from it is the smallest possible diff for the largest possible change in what a passing record promises. WRONG_REASON LEAK, FIXED BY LANE r7-contracts-c. Until this edit the patch touched the SCHEMA ONLY, so the two declarations disagreed and F6A-07's check fired first -- 'REGISTRY AND SCHEMA DISAGREE ABOUT WHICH PAYLOAD FIELDS ARE REQUIRED', OperatorProjection, required by registry only: ['contested_refs']. The suite was RED at 107 of 108 for that reason: the fixture was rejected, but not by the check it exists to exercise, so F6X-02's contested-refs limb was covered by nothing while the row read as covered. The F6X-02 check reads BOTH declarations (`\"contested_refs\" in schema required AND in registry required`, the latter being `required_fields` unioned with any per-field `required: true`), so dropping it from both is what puts the fixture in front of its own check.",
+  "expect_failure_contains": "IS OPTIONAL ON AN OPERATOR PROJECTION",
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/OperatorProjection/properties/payload/required",
+      "op": "replace",
+      "value": [
+        "actor_scope_ref",
+        "constraint_set_ref",
+        "freshness",
+        "included_refs",
+        "omission_manifest_ref",
+        "projection",
+        "selection_version_ref",
+        "view_id"
+      ]
+    },
+    {
+      "file": "record-registry.json",
+      "pointer": "/OperatorProjection/fields/payload/required_fields",
+      "op": "replace",
+      "value": [
+        "view_id",
+        "actor_scope_ref",
+        "projection",
+        "freshness",
+        "included_refs",
+        "omission_manifest_ref",
+        "selection_version_ref"
+      ]
+    },
+    {
+      "file": "record-registry.json",
+      "pointer": "/OperatorProjection/fields/payload/fields/contested_refs/required",
+      "op": "replace",
+      "value": false
+    }
+  ]
+}

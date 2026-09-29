@@ -1,0 +1,21 @@
+{
+  "id": "r36-step-6-finding-loses-its-source-row",
+  "repair": "R36",
+  "finding": "F6Y-01; planning/reviews/F2-06-recheck-04a.md (F6Y-01)",
+  "case": "The `finding_sources` row for F6W-04 deleted -- a finding raised in F2-06-recheck-03.md, in the family the old `F6[A-DRVX]` sweep could not see at all.",
+  "paired_benign_fixture": "fixtures/positive/r36-a-declared-family-gains-a-finding-benign.json",
+  "why": "This is the real defect F6Y-01 measured, restored to one row. Before the widening the eight F6W ids had NO source row and the sweep did not fail, because the pattern that built its required set excluded the family; the floor of 60 was computed over the same narrow output, so it did not notice either. With the family declared, deleting a row is a failure that names the finding. WHAT THIS FIXTURE GUARDS, STATED AS IT IS (F6AA-10): re-narrowing the pattern to any range that omits F6W does NOT make this fixture pass. It makes it fail for the WRONG REASON, which run_negative_fixtures.py classifies `wrong_reason` and fails the build for just the same. The `why` said PASS until 2026-09-15 and that was wrong. The check that would fire instead is the FINDING_SOURCE_FLOOR assertion, 141 against a table of 140 -- and on this fixture's first execution it fired FIRST, before the sweep, so the expected string never appeared and the pair was red for a reason that had nothing to do with the finding. That assertion now runs AFTER the per-id sweep, so the specific message precedes the count and this fixture is refused by the check it exists to exercise. A contributor lowering FINDING_SOURCE_FLOOR still weakens a separate control and should read that block, not this one.",
+  "expect_failure_contains": "A STEP 6 FINDING IS RAISED IN A REVIEW AND HELD BY NO SOURCE ROW",
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/finding_sources/F6W-04",
+      "op": "remove"
+    },
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/not_answered/F6W-04",
+      "op": "remove"
+    }
+  ]
+}

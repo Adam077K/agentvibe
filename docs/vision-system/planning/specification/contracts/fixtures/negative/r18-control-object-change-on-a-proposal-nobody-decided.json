@@ -1,0 +1,24 @@
+{
+  "id": "r18-control-object-change-on-a-proposal-nobody-decided",
+  "repair": "R18",
+  "finding": "F6D-07, F6C-16; reviews/F2-06-D-authority-buildability-adversarial.md; 08-improvement-implementation.md section 1",
+  "case": "A control object changes on the strength of a ProtectedChange that is merely `proposed` or `reviewed`.",
+  "paired_benign_fixture": "fixtures/positive/r18-control-object-changed-without-authorization-benign.json",
+  "why": "The phase list is the substance of this guard and `proposed` is deliberately outside it: 11 section 7 states that `reviewed` requires a completed independent assessment and `authorized` requires the exact current competent decision, and it is the DECISION the rule is about. Widening the list to `proposed` lets a floor, a writer key or the standing-holder set move on a proposal nobody has decided -- which is the W10 self-modification probe resolving the wrong way with the paperwork present.",
+  "expect_failure_contains": "'guard.protected.control_object_change_authorized', 'related_phases'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.protected.control_object_change_authorized/body/predicates/0/bindings/0/states",
+      "op": "replace",
+      "value": [
+        "proposed",
+        "reviewed",
+        "authorized",
+        "staged",
+        "activated",
+        "verified"
+      ]
+    }
+  ]
+}

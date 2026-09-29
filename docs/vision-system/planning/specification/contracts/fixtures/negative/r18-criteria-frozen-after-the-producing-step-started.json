@@ -1,0 +1,16 @@
+{
+  "id": "r18-criteria-frozen-after-the-producing-step-started",
+  "repair": "R18",
+  "finding": "F6C-16, AD-018, AS-X-01; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "The acceptance criteria carry a freeze time that need not precede the producing step, so they can be written around the work.",
+  "paired_benign_fixture": "fixtures/positive/r18-criteria-frozen-after-the-producing-step-started-benign.json",
+  "why": "AS-X-01 is the round's only (d) landing on W5, and this is its second half: criteria authored by someone outside the producing path are still defeated if they are frozen after the producing step began, because by then the work is what the criteria are written to match. Presence of the two timestamps proves nothing without the order between them. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.criteria.frozen_before_producing_step` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.criteria.frozen_before_producing_step', 'lt'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.criteria.frozen_before_producing_step/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

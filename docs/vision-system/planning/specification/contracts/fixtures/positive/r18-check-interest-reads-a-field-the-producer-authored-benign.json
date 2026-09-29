@@ -1,0 +1,25 @@
+{
+  "id": "r18-check-interest-reads-a-field-the-producer-authored-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-X20, AS-M5-04; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A check interest whose read set is entirely non-authorable, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-check-interest-reads-a-field-the-producer-authored.json",
+  "why": "The rule constrains WHICH fields a precondition may read, not how many. An interest reading three non-authorable fields is the case the mechanism exists to allow. The patch also demands the interest identify itself, a hardening in the same shape.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.check.reads_only_non_authorable_fields/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/interest_id"
+        ]
+      }
+    }
+  ]
+}

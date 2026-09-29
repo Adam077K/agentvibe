@@ -1,0 +1,35 @@
+{
+  "id": "r24-work-order-carries-no-attempt-ceiling",
+  "repair": "R24",
+  "finding": "F6C-10; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-10)",
+  "case": "`attempt_ceiling` stops being required on `WorkOrder`, so a work order carries no ceiling until it has already failed.",
+  "paired_benign_fixture": "fixtures/positive/r24-attempt-ceiling-required-benign.json",
+  "why": "F6C-10: the committed state the finding measured. R-X10 puts the maximum attempt count ON THE WORK ORDER with a named owner; it lived on FailureRecord alone and optional, so the bound existed only after the thing it bounds had happened. Removing it from `required` is the one-line move that restores that, and the registry half is what notices.",
+  "expect_failure_contains": "REGISTRY AND SCHEMA DISAGREE ABOUT WHICH PAYLOAD FIELDS ARE REQUIRED",
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/WorkOrder/properties/payload/required",
+      "op": "replace",
+      "value": [
+        "case_ref",
+        "duty_refs",
+        "capability_contract_ref",
+        "outcome_ref",
+        "input_refs",
+        "allowed_tool_profile_ref",
+        "acceptance_contract_ref",
+        "acceptance_owner_assignment_ref",
+        "executor_constraint_ref",
+        "causal_episode_id",
+        "reservation_refs",
+        "wall_deadline",
+        "checkpoint_contract_ref",
+        "stop_predicates",
+        "unfinished_obligation_refs",
+        "report_refs"
+      ]
+    }
+  ]
+}

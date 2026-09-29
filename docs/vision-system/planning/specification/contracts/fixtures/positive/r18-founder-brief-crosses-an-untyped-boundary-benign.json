@@ -1,0 +1,29 @@
+{
+  "id": "r18-founder-brief-crosses-an-untyped-boundary-benign",
+  "repair": "R18",
+  "finding": "F6B-02, benign column",
+  "case": "A transfer whose constraint set resolves and stands at `issued`, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-founder-brief-crosses-an-untyped-boundary.json",
+  "why": "A typed constraint set on the founder brief is a requirement about what accompanies the transfer, not a reason to refuse it. The patch additionally requires the set to be named on a record that also carries its own identity fields, a hardening in the same shape, and a control that refused it would be refusing every legitimate handoff -- the false exclusion that would make the adverse count unreadable as a detection rate.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.constraint.set_bound_at_transfer/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/constraint_set_ref"
+        }
+      }
+    }
+  ]
+}

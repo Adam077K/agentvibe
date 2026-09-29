@@ -1,0 +1,16 @@
+{
+  "id": "r16-09-protected-lane-holder-refuses-a-shed",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 9; 05-work-agents-skills.md section 9",
+  "case": "A protected-lane holder refusing a shed.",
+  "paired_benign_fixture": "fixtures/positive/r16-09-protected-lane-holder-refuses-a-shed-benign.json",
+  "why": "Section 12.5 row 9 and AE-M4-01: four protected holders that could each refuse a shed can hold an empty bucket hostage with no override anywhere. The mutation deletes the no-veto conjunct and leaves the stated-minimum-is-evidence conjunct, so the guard still says the minimum is evidence while permitting the holder to block on it.",
+  "expect_failure_contains": "'guard.holder.no_veto', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.holder.no_veto/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

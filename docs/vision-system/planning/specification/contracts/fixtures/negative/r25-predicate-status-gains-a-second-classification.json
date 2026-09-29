@@ -1,0 +1,17 @@
+{
+  "id": "r25-predicate-status-gains-a-second-classification",
+  "repair": "R25",
+  "finding": "F6D-09 owed clause; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-09)",
+  "case": "One registered predicate is given a genuine second `implementation_status` -- a classification that is NOT the negative-fixture sentinel -- which must still trip the F6D-09 tripwire.",
+  "paired_benign_fixture": "fixtures/positive/r25-predicate-status-fixture-sentinel-ignored-benign.json",
+  "why": "The F6D-09 tripwire exists to fire the moment the predicate registry gains an implementation-status classification, because that is the moment the review's third clause -- a conjunct asserting each named precondition predicate is deterministic -- stops being vacuous and becomes writable. r7-contracts-b had to exclude the negative-fixture sentinel from it, since a fixture that ADDS a predicate must give that predicate a status and was tripping the tripwire inside its own scratch tree. An exclusion is a hole until something proves it is the right size. This fixture is that proof from the adverse side: a second value that is not the sentinel, on a predicate that really is in the contract, and the tripwire must still see it. Its benign twin proves the other side.",
+  "expect_failure_contains": "THE PREDICATE REGISTRY NOW CLASSIFIES IMPLEMENTATION STATUS",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.interest.precondition_invokes_no_model/implementation_status",
+      "op": "replace",
+      "value": "implemented; deterministic evaluator bound in production"
+    }
+  ]
+}

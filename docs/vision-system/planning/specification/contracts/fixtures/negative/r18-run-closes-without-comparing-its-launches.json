@@ -1,0 +1,16 @@
+{
+  "id": "r18-run-closes-without-comparing-its-launches",
+  "repair": "R18",
+  "finding": "F6C-04, F6C-14; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 07-integrations-capacity.md section 6 (R-X12)",
+  "case": "A run reaches `accepted` without its actual native-launch count compared to the count its procedure version expected.",
+  "paired_benign_fixture": "fixtures/positive/r18-run-closes-without-comparing-its-launches-benign.json",
+  "why": "`expected_launch`, `launch_count` and `expected native-launch` occurred ZERO times anywhere under contracts/, so this design's self-declared dominant unpriced cost was measured by nothing and reopen condition 4 of 02 section 9 named an instrument that did not exist. The mutation removes the demand at close, and a run accepts with no actual count at all -- under W9's own probe, swap the model provider, the package's stated detector is absent and a changed provider property is noticed only by whatever else happens to break.",
+  "expect_failure_contains": "'guard.launch.actual_compared_to_expected', 'nonempty_fields'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.launch.actual_compared_to_expected/body/predicates/0",
+      "op": "remove"
+    }
+  ]
+}

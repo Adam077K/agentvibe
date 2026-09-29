@@ -1,0 +1,119 @@
+{
+  "id": "r11-grievance-escalation-may-be-the-custodian",
+  "repair": "R-E",
+  "finding": "G4-01",
+  "why": "`neq` becomes `eq` in the triage guard, which does not delete the check -- it INVERTS it, so the guard now requires the escalation route to BE the custodian being complained about. Chosen over deleting the conjunct because a deletion leaves a guard that demands nothing and an inversion leaves one that demands the wrong thing, and the second is the failure that survives review.",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.GrievanceCase.received.triaged.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "subject_unchanged",
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          },
+          {
+            "op": "status_edge",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "from_state": "received",
+            "to_state": "triaged"
+          },
+          {
+            "op": "transition_basis",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "event_kind": "record.triaged",
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "decision_refs": {
+              "arg": "decision_refs"
+            }
+          },
+          {
+            "op": "current_owner",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "actor_ref": {
+              "context": "actor_identity_ref"
+            },
+            "command": {
+              "context": "command_name"
+            }
+          },
+          {
+            "op": "any",
+            "predicates": [
+              {
+                "op": "not",
+                "predicate": {
+                  "op": "eq",
+                  "left": {
+                    "op": "path",
+                    "value": {
+                      "op": "resolve",
+                      "ref": {
+                        "arg": "subject_ref"
+                      }
+                    },
+                    "pointer": "/payload/disputed_custodian"
+                  },
+                  "right": true
+                }
+              },
+              {
+                "op": "eq",
+                "left": {
+                  "op": "path",
+                  "value": {
+                    "op": "resolve",
+                    "ref": {
+                      "arg": "subject_ref"
+                    }
+                  },
+                  "pointer": "/payload/independent_escalation_assignment_ref"
+                },
+                "right": {
+                  "op": "path",
+                  "value": {
+                    "op": "resolve",
+                    "ref": {
+                      "arg": "subject_ref"
+                    }
+                  },
+                  "pointer": "/payload/custodian_assignment_ref"
+                }
+              }
+            ]
+          },
+          {
+            "op": "call",
+            "predicate_id": "criterion.GrievanceCase.triaged.v1",
+            "arguments": {
+              "subject_ref": {
+                "arg": "subject_ref"
+              },
+              "observation_refs": {
+                "arg": "observation_refs"
+              },
+              "judgment_refs": {
+                "arg": "judgment_refs"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "note_rc02": "Message updated with the control: `REQUIRED_GUARD_OPS` was a literal table in validate_contracts.py and is now a row of contracts/pinned-conjuncts.json, so ONE pinned table covers guards and criterion content instead of two that drift. The mutation and what refuses it are unchanged; only the name of the refusing check moved."
+}

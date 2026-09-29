@@ -1,0 +1,80 @@
+{
+  "id": "r10-criterion-field-paths-erased",
+  "repair": "R-D",
+  "finding": "G2-06",
+  "why": "The Phase G reviewer's first mutation, run verbatim: erase criterion.SalesAgreement.performed.v1's `field_paths`. It passed all 252,513 checks at 7ddc066 and all 268,000-odd on the tree this repair started from, because nothing in the package compared a criterion body to anything. An empty `field_paths` is a `nonempty_fields` that names nothing -- the vacuous check the whole FI-11 content effort exists to remove, wearing the shape of a real one.",
+  "expect_failure_contains": "criterion content drifts from its derivation",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.SalesAgreement.performed.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "nonempty_fields",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "field_paths": []
+          },
+          {
+            "op": "related_phases",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "bindings": [
+              {
+                "field_path": "/payload/fulfillment_ref",
+                "states": [
+                  "delivered"
+                ],
+                "optional": false
+              },
+              {
+                "field_path": "/payload/obligation_refs",
+                "states": [
+                  "discharged",
+                  "transferred"
+                ],
+                "optional": false
+              }
+            ]
+          },
+          {
+            "op": "native_correlated",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "result": "delivered"
+          },
+          {
+            "op": "accepted_for",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.SalesAgreement.performed.v1",
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          },
+          {
+            "op": "attested_result",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.SalesAgreement.performed.v1",
+            "predicate_version": "1.0",
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

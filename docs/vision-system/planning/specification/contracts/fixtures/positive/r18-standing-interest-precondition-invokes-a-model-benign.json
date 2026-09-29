@@ -1,0 +1,25 @@
+{
+  "id": "r18-standing-interest-precondition-invokes-a-model-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-L3; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "A standing interest whose precondition is deterministic, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-standing-interest-precondition-invokes-a-model.json",
+  "why": "A deterministic precondition is what layer 3 is made of, and refusing it would leave the layer unable to act at all. The patch additionally demands the predicate ids be named, so `deterministic` points at something, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.interest.precondition_invokes_no_model/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/precondition_predicate_ids"
+        ]
+      }
+    }
+  ]
+}

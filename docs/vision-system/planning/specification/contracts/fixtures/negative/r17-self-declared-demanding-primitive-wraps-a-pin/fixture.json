@@ -1,0 +1,81 @@
+{
+  "id": "r17-self-declared-demanding-primitive-wraps-a-pin",
+  "repair": "RC4-02",
+  "finding": "RC4-02 (planning/reviews/G-02-recheck-04.md, probes 3b and 8e)",
+  "why": "RC3-01's repair moved the definition of \"demanded\" out of a hard-coded triple in validate_contracts.py and into primitive-registry.json's `argument_positions`, and the walker's comment claimed the class was closed: \"a hard-coded triple is how the FOURTH boolean-child primitive got through. The fifth cannot.\" The fourth recheck measured the fifth getting through. This fixture registers `every_linked_obligation` -- `argument_types.predicate: \"boolean\"`, `argument_positions.predicate: \"demanded\"` -- and moves the three pinned conjuncts of criterion.SalesAgreement.performed.v1 inside it, verbatim, by regeneration. Nothing is removed, nothing is disjoined, pinned-conjuncts.json's pins and the `requires` prose are untouched. records.schema.json gives `/payload/obligation_refs` no `minItems`, so `[]` is schema-valid and the quantifier is vacuous: the sale reaches `performed` naming no Fulfillment, with nothing `delivered` and no Obligation discharged. Measured before the repair at exit 0, 288,665 checks -- FORTY-FIVE more than the baseline -- with 36 of 36 negative fixtures still rejecting, every pin satisfied and RC-03 silent. The table was closed against the UNDECLARED and open to the MISDECLARED. The validator must reject it naming the ANCESTOR OPERATOR, because a reader told only that a digest moved would go looking at the table rather than at the conjunct the table now excuses.",
+  "expect_failure_contains": "PINNED CONJUNCT UNDER AN OPERATOR THE PIN TABLE DOES NOT ADMIT",
+  "patch": [
+    {
+      "file": "primitive-registry.json",
+      "pointer": "/every_linked_obligation",
+      "op": "add",
+      "value": {
+        "args": [
+          "items",
+          "bind",
+          "predicate"
+        ],
+        "semantics": "Evaluate the finite child for every Obligation the subject links, with lexical binding; no mutation or new authority.",
+        "version": "1.0",
+        "argument_types": {
+          "items": "JsonValue[]",
+          "bind": "string",
+          "predicate": "boolean"
+        },
+        "argument_positions": {
+          "items": "value",
+          "bind": "value",
+          "predicate": "demanded"
+        },
+        "argument_schema": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "values.schema.json#/$defs/JsonValue"
+              }
+            },
+            "bind": {
+              "$ref": "values.schema.json#/$defs/string"
+            },
+            "predicate": {
+              "$ref": "values.schema.json#/$defs/boolean"
+            }
+          },
+          "required": [
+            "items",
+            "bind",
+            "predicate"
+          ],
+          "additionalProperties": false
+        },
+        "result_type": "boolean_or_unresolved",
+        "failure": "unresolved on absent, ambiguous, stale, unauthorized or invalid input; never silently coerced to true or a guessed world fact",
+        "planned_module": "system/packages/contracts/predicates"
+      }
+    }
+  ],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "RECORD_SPECIFIC_KINDS = (\"nfp\", \"rpp\", \"neF\", \"prF\", \"eqF\")",
+      "block_end": "def literal_kinds(item):",
+      "replacement": "elo-dsl-kinds.py"
+    },
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    if kind == \"not\":",
+      "block_end": "    if kind == \"neF\":",
+      "replacement": "elo-builder.py"
+    },
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"SalesAgreement\", \"performed\"): spec(",
+      "block_end": "    # -- R-F / G4-02:",
+      "replacement": "elo-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "rederive_from_registries": true
+}

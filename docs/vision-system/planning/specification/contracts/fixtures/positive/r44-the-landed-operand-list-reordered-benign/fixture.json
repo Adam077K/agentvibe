@@ -1,0 +1,19 @@
+{
+  "id": "r44-the-landed-operand-list-reordered-benign",
+  "repair": "R44",
+  "finding": "F6C-11; planning/F2/07-repair-names-contract.md (F6C-11), benign twin",
+  "case": "The same eight operand paths of the landed nonempty_fields conjunct, in reverse order, patched in the derivation and regenerated.",
+  "paired_adverse_fixture": "fixtures/negative/r44-the-retention-span-is-the-offset-of-the-other-two-instants/fixture.json",
+  "why": "BENIGN SUBSTITUTION, STATED RATHER THAN MADE SILENTLY. The obvious twin -- the offset operands reordered -- is exactly the adverse case, because the two operands of a subtraction are not interchangeable: reordering them IS the defect. So the benign half reorders the OTHER conjunct of the same criterion through the same tools_patch and regenerate path. The pin reads field_paths_include as a SET and the structural read names each operand by position, so the order the eight required paths are written in changes nothing either check depends on. It exercises the same machinery the adverse half uses, which is what a twin is for.",
+  "expect_pass": true,
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "('nfp', ['/payload/work_record_ref', '/payload/retention_until', '/payload/longest_plausible_outage', '/payload/alarm_reader_ref', '/payload/alarm_raised_at', '/payload/residue_note', '/payload/landed_at', '/payload/retention_span'])",
+      "block_end": ", ('ltF'",
+      "replacement": "reordered-operands.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "patch": []
+}

@@ -1,0 +1,18 @@
+{
+  "id": "r14-pinned-conjunct-disjoined-with-a-tautology",
+  "repair": "RC2-02",
+  "finding": "RC2-02 (planning/reviews/G-02-recheck-02.md, probe 9)",
+  "why": "A pin asserted CONTAINMENT while every `why` in pinned-conjuncts.json is written as a DEMAND, and the two come apart under one operator. The recheck kept all three pinned conjuncts of criterion.SalesAgreement.performed.v1 verbatim and disjoined each with `present(/payload/agreed_terms)`, a field records.schema.json requires of every SalesAgreement -- so every `any` is satisfied unconditionally and the criterion stopped requiring the agreement to name its Fulfillment, that Fulfillment to be `delivered`, or any Obligation to be `discharged` or `transferred`. Measured at exit 0, 269,592 checks, 31 of 31 fixtures still rejecting, with the pin file, the fixtures and the `requires` prose all untouched. This fixture performs exactly that hunk and requires the validator to reject it, naming the disjunction rather than reporting the conjunct as missing -- it is not missing, and a message that said so would send a reader to look for something that is right there.",
+  "expect_failure_contains": "PINNED CONJUNCT ONLY UNDER A DISJUNCTION",
+  "patch": [],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"SalesAgreement\", \"performed\"): spec(",
+      "block_end": "    # -- R-F / G4-02:",
+      "replacement": "disjoined-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "note": "The positive control matters more here than in r13: the mutation must REGENERATE cleanly, because a hunk that crashes author_phase_content.py proves only that the DSL rejected it. The runner reports FAIL rather than a rejection if regeneration fails. And if this fixture is ever rejected for a reason OTHER than the disjunction -- the runner checks the message -- then something weaker is refusing it and the demand rule has stopped carrying its own weight."
+}

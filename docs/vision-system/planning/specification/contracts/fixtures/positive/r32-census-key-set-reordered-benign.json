@@ -1,0 +1,26 @@
+{
+  "id": "r32-census-key-set-reordered-benign",
+  "repair": "R32",
+  "finding": "RC4-07; the fourth recheck of the F2 contracts layer, benign column",
+  "case": "The same eight census keys in a different order.",
+  "paired_adverse_fixture": "fixtures/negative/r32-census-key-set-narrowed-in-the-pin.json",
+  "why": "The pin is a SET and the comparison reads it as one. A byte comparison would refuse a reordering that changes nothing about which fields the census must carry, and a control that refuses harmless edits is one contributors learn to route around -- the argument this package makes at every other closed set it declares, made again here because the assertion is a different comparison in a different place.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/census_keys",
+      "op": "replace",
+      "value": [
+        "value_positions",
+        "under_quantifier",
+        "under_negation",
+        "under_disjunction",
+        "slots_classified",
+        "refused",
+        "predicate_positions",
+        "operators"
+      ]
+    }
+  ]
+}

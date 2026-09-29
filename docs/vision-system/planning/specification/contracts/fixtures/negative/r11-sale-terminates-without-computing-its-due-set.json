@@ -1,0 +1,85 @@
+{
+  "id": "r11-sale-terminates-without-computing-its-due-set",
+  "repair": "R-B",
+  "finding": "G2-02",
+  "why": "`due_preserved` is removed from accepted->terminated and `continuation_ref` with it, so the edge is back to transition_basis only -- the state AD-014 was written about. The argument is dropped in the same patch deliberately: leaving it declared would trip FI-11's unread-argument check first, and a fixture that fails for the wrong reason proves nothing.",
+  "expect_failure_contains": "PINNED CONJUNCT MISSING",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.SalesAgreement.accepted.terminated.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "subject_unchanged",
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          },
+          {
+            "op": "status_edge",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "from_state": "accepted",
+            "to_state": "terminated"
+          },
+          {
+            "op": "transition_basis",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "event_kind": "record.terminated",
+            "observation_refs": {
+              "arg": "observation_refs"
+            },
+            "decision_refs": {
+              "arg": "decision_refs"
+            }
+          },
+          {
+            "op": "current_owner",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "actor_ref": {
+              "context": "actor_identity_ref"
+            },
+            "command": {
+              "context": "command_name"
+            }
+          },
+          {
+            "op": "call",
+            "predicate_id": "criterion.SalesAgreement.terminated.v1",
+            "arguments": {
+              "subject_ref": {
+                "arg": "subject_ref"
+              },
+              "observation_refs": {
+                "arg": "observation_refs"
+              },
+              "judgment_refs": {
+                "arg": "judgment_refs"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/edge.SalesAgreement.accepted.terminated.v1/argument_types",
+      "op": "replace",
+      "value": {
+        "subject_ref": "Ref<SalesAgreement>",
+        "observation_refs": "Ref<Observation>[]",
+        "judgment_refs": "Ref<EvidenceJudgment>[]",
+        "decision_refs": "Ref<DecisionRecord>[]"
+      }
+    }
+  ],
+  "note_rc02": "Message updated with the control: `REQUIRED_GUARD_OPS` was a literal table in validate_contracts.py and is now a row of contracts/pinned-conjuncts.json, so ONE pinned table covers guards and criterion content instead of two that drift. The mutation and what refuses it are unchanged; only the name of the refusing check moved."
+}

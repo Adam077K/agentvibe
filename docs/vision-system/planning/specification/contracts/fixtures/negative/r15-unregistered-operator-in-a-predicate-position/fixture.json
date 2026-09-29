@@ -1,0 +1,31 @@
+{
+  "id": "r15-unregistered-operator-in-a-predicate-position",
+  "repair": "RC3-01",
+  "finding": "RC3-01 (planning/reviews/G-02-recheck-03.md, required contract 1)",
+  "why": "The durable half of RC3-01, and the half a fixture for `forall` alone does not test. The recheck's contract: the set of demanding positions must be DERIVED from primitive-registry.json and CLOSED -- \"an unrecognised boolean-child operator must be refused, not walked through as if it were `all`. A hard-coded triple of `any`/`all`/`not` is how this one got through, and the next primitive with a boolean child will get through the same way.\" This fixture is that next primitive: `every_obligation`, registered with a `boolean[]` argument and NO `argument_positions`, exactly as a contributor adding a quantifier would leave it. The validator must refuse the registry outright, naming the operator, rather than accepting it and walking conjuncts under it with a demand nobody declared.",
+  "expect_failure_contains": "a primitive declares no `argument_positions`",
+  "patch": [
+    {
+      "file": "primitive-registry.json",
+      "pointer": "/every_obligation",
+      "op": "add",
+      "value": {
+        "args": [
+          "subject_ref",
+          "predicates"
+        ],
+        "semantics": "Every Obligation the subject links satisfies every finite child.",
+        "version": "1.0",
+        "argument_types": {
+          "subject_ref": "Ref<Record>",
+          "predicates": "boolean[]"
+        },
+        "result_type": "boolean_or_unresolved",
+        "failure": "unresolved on absent, ambiguous, stale, unauthorized or invalid input; never silently coerced to true or a guessed world fact",
+        "planned_module": "system/packages/contracts/predicates"
+      }
+    }
+  ],
+  "rederive_from_registries": true,
+  "note": "The refusal lands at the TABLE, before any predicate body is read, and that is deliberate: a boolean-child primitive that cannot enter the registry undeclared can never reach a body, so the per-node refusals in the walker are backstops rather than the live control and the file says so. `rederive_from_registries` keeps coverage-inventory.json's `canonical_primitives` in step inside the scratch tree -- without it the fixture would be rejected by the inventory derivation instead, which is the right answer to the wrong question and the runner counts that as a leak."
+}

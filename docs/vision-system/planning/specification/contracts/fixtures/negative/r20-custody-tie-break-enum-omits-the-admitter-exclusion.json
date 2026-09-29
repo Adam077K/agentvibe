@@ -1,0 +1,23 @@
+{
+  "id": "r20-custody-tie-break-enum-omits-the-admitter-exclusion",
+  "repair": "R20",
+  "finding": "F6A-10; reviews/F2-06-A-completeness-coherence-vision-binding.md (F6A-10)",
+  "case": "The closed `custody_tie_break_reason` enum loses `admitter_excluded`, so the reason `05` section 7 instructs the resolver to record is unwritable again.",
+  "paired_benign_fixture": "fixtures/positive/r20-custody-tie-break-enum-reordered-benign.json",
+  "why": "F6A-10: this is the committed state the finding measured, restored. The chapters instruct `custody_tie_break_reason = admitter_excluded` and the enum admitted four values, none of them that one -- so the instruction produced a record `edge.ResponsibilityAssignment.proposed.accepted.v1` rejects, and a full run was silent because the payload rule compares FIELD NAMES and nothing compared an enum's members. Two checks must fire on this mutation and the first names the concrete thing: the registry and the schema now disagree about the members.",
+  "expect_failure_contains": "DISAGREE ABOUT A CLOSED ENUM'S MEMBERS",
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/ResponsibilityAssignment/properties/payload/properties/custody_tie_break_reason/enum",
+      "op": "replace",
+      "value": [
+        "narrowest_sufficient_scope",
+        "alternate_available",
+        "earliest_acceptance",
+        "no_overlap"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "r16-11-supersession-leaves-an-accepted-outcome-unreopened",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 11; 05-work-agents-skills.md section 9",
+  "case": "A supersession whose derived closure includes an accepted outcome, left unreopened.",
+  "paired_benign_fixture": "fixtures/positive/r16-11-supersession-leaves-an-accepted-outcome-unreopened-benign.json",
+  "why": "Section 12.5 row 11, R-G06 and AX-M1-02. The mutation deletes the conjunct binding the reopened set to the closure, leaving both sets present and the walk marked complete -- so a supersession may record a closure containing an accepted outcome and a reopen set authored beside it rather than from it.",
+  "expect_failure_contains": "'guard.supersession.walks_derived_closure', 'subset'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.supersession.walks_derived_closure/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

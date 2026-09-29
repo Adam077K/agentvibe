@@ -1,0 +1,14 @@
+{
+  "id": "r19-pin-citing-a-review-finding-deleted",
+  "repair": "RC5-02",
+  "finding": "RC5-02 (planning/reviews/G-02-recheck-05.md, probe 6a)",
+  "why": "ONE PIN, deleted. `guard.custody.admitter_excluded` cites AT-M5-04 and nothing else does. p6a of the fifth recheck deleted 32 of 57 pins this way -- every one of them citing only the F2 selection-record families, AT-M2-03, AC-M4-05, AS-M5-01, AX-M1-02 -- and exited 0 at 297,520 checks, 0.6% below the baseline, because the two controls that could have caught it both missed: the coverage check builds its required set with a regex that matched `G#-##` and `RC-##` alone, so it had no opinion about any of the 32, and the pin floor was 25 against a table of 57. Both controls worked; the gap was between them. The refusal must NAME THE FINDING rather than report a count, because a count cannot say which requirement this package stopped making -- which is the same argument RC4-01's block makes about its own ordering, and is why the unanswered-finding ceiling is checked ABOVE the floors. If this fixture ever passes, more than half the pin table is back below no control that can name what it lost.",
+  "expect_failure_contains": "'AT-M5-04'",
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/pins/39",
+      "op": "remove"
+    }
+  ]
+}

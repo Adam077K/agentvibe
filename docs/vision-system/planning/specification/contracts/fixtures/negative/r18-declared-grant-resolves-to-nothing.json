@@ -1,0 +1,17 @@
+{
+  "id": "r18-declared-grant-resolves-to-nothing",
+  "repair": "R18",
+  "finding": "F6D-06; reviews/F2-06-D-authority-buildability-adversarial.md; R3 F57, F60; W6 probe",
+  "case": "A step declares grants that resolve to nothing, and admission does not refuse it.",
+  "paired_benign_fixture": "fixtures/positive/r18-declared-grant-resolves-to-nothing-benign.json",
+  "why": "`optional: true` on the binding is the whole defect in one word: a declaration whose refs resolve to nothing satisfies the guard, so `declared_grants` is decorative again. That is the state the review measured -- optional in `required`, `array<string>` rather than `Ref<Grant>[]`, and the string occurring in 0 predicate bodies -- and it is the decorative-declaration loophole the rule was written to close, observed in this repository as 44 capability declarations that nothing backed. The executor then reaches the enforcement point with whatever the enforcement point gives it, and `grant_arrival_attested` does not help: arrival is a different fact from scope.",
+  "expect_failure_contains": "'guard.grant.declared_resolves_to_live_grant', 'related_phases'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.grant.declared_resolves_to_live_grant/body/predicates/1/bindings/0/optional",
+      "op": "replace",
+      "value": true
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "r5-destination-carries-prose",
+  "repair": "R5",
+  "finding": "CCR-05",
+  "why": "The committed registry held one destination that was a sentence: \"payload.chosen_option_id via explicit option identity map\". It is now split into a resolvable destination plus a separate `note`. This fixture puts a sentence back.",
+  "expect_failure_contains": "destination carries prose",
+  "patch": [
+    {
+      "file": "source-field-mappings.json",
+      "pointer": "/mappings/0/destination",
+      "op": "replace",
+      "value": "payload.original_words via explicit identity map"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "id": "r9-sibling-criteria-share-a-shape-undeclared",
+  "repair": "R9",
+  "finding": "FI-11 content",
+  "why": "The same shape collapse with the citations LEFT IN PLACE, so the derived_from checks cannot catch it: criterion.Mission.retired-with-residuals.v1 is given criterion.Mission.retired.v1's body with the ids rewritten. The two edges out of Mission:active and Mission:parked then have effective guards nothing executable can tell apart, and phase-content-gaps.json does not declare either pair. This is the predicate FI-11 actually asserts. Mission was chosen over Goal deliberately: Goal's two edge guards already differ structurally -- endorsed->parked carries a transition_basis conjunct that endorsed->achieved does not -- so cloning the criterion there does NOT collide the edges, and the first version of this fixture leaked for exactly that reason. A fixture that does not reach the check it names proves nothing.",
+  "expect_failure_contains": "sibling guards share a shape that phase-content-gaps.json does not declare",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/criterion.Mission.retired-with-residuals.v1/body",
+      "op": "replace",
+      "value": {
+        "op": "all",
+        "predicates": [
+          {
+            "op": "nonempty_fields",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "field_paths": [
+              "/payload/residual_obligation_refs",
+              "/owner_assignment_ref"
+            ]
+          },
+          {
+            "op": "related_phases",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "bindings": [
+              {
+                "field_path": "/owner_assignment_ref",
+                "states": [
+                  "accepted"
+                ],
+                "optional": false
+              }
+            ]
+          },
+          {
+            "op": "complete_capture",
+            "subject_ref": {
+              "arg": "subject_ref"
+            }
+          },
+          {
+            "op": "accepted_for",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.Mission.retired-with-residuals.v1",
+            "judgment_refs": {
+              "arg": "judgment_refs"
+            }
+          },
+          {
+            "op": "attested_result",
+            "subject_ref": {
+              "arg": "subject_ref"
+            },
+            "predicate_id": "criterion.Mission.retired-with-residuals.v1",
+            "predicate_version": "1.0",
+            "observation_refs": {
+              "arg": "observation_refs"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

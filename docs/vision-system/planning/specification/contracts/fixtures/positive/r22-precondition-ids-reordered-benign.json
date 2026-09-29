@@ -1,0 +1,24 @@
+{
+  "id": "r22-precondition-ids-reordered-benign",
+  "repair": "R22",
+  "finding": "F6D-09; reviews/F2-06-D-authority-buildability-adversarial.md (F6D-09), benign column",
+  "case": "`precondition_evaluator_kind`'s two members written in the other order -- the same two values the guard compares against -- which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r22-refusal-names-a-predicate-that-is-only-a-string.json",
+  "why": "The adverse case is about a field being UNTYPED. The benign case has to prove the repair did not overshoot into byte-equality on the type declaration: `deterministic` and `model` are the guard's two comparands and their order carries nothing, so an interest declaring either is admissible and a check that refused the reordering would be refusing an edit that changes no admissible value.",
+  "expect_pass": true,
+  "rederive_from_registries": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/StandingInterest/properties/payload/properties/precondition_evaluator_kind",
+      "op": "replace",
+      "value": {
+        "type": "string",
+        "enum": [
+          "model",
+          "deterministic"
+        ]
+      }
+    }
+  ]
+}

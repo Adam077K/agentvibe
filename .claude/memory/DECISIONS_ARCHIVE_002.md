@@ -215,26 +215,89 @@ verify-by-execution non-optional rather than a virtue.
 **Affects:** `CLAUDE.md`, `README.md`, `AGENTS.md`, `.claude/commands/*`, `scripts/check-registration.mjs`,
 `scripts/run-gate.mjs`, `scripts/pre-tool-use.test.mjs`, and the still-open `design-screen.md` dispatch gap
 
-## 2026-08-24 — Act on the over-build audit, but check its premises first; split PRs by tier
+## 2026-08-11 — Claim ledger replaces the diff gate as the enforcement spine
 
-**Decision:** the 2026-08-24 audit (`docs/08-agents_work/handoffs/2026-08-24-continue-the-build.md` §4.4)
-ranked six items. All six were re-verified against `695800e` before any was actioned, and **two rest on false
-premises**: item 1's claim that the 4× retry ceiling was sized against `maxTurns=20` is refuted by
-`qa.js:270-272`, which records a turn cap tested **and discarded**; item 5 names `.claude/qa-tier-floor.yml`,
-which contains no mention of model families at all. Both are corrected in the handoff rather than implemented,
-and the retry values stay untouched — cutting them on a refuted premise would re-break a gate that cost three
-failed runs to fix.
-**Why this is a decision, not a detail:** the audit is the document authorising changes to the gate, and it
-carried the same citation rot it was commissioned to cure. An audit is not exempt from its own finding.
-**Work splits into three PRs by TIER, not by topic.** The tier floor is per-PR, so a single irreversible file
-drags a whole PR to a 17–70-agent gate. Grouping by tier makes the irreversible files pay that gate once
-instead of four times; it is the largest cost lever measured this session.
-**Recorded and deferred by founder decision:** `.claude/workflows/qa.js` never reads
-`.claude/review-lenses.yml` (`grep -c` → 0). The gate carries five hardcoded prose dimensions; the lens file
-declares ten structured lenses; they share two names. That is *why* `independence: provenance` goes
-unenforced — the gate cannot honour a property it never loads. Patch-and-record chosen over unification.
-**Reversibility:** reversible — documentation, lint severities, and one loop bound.
-**Owner:** ceo · **founder decision** · **Affects:** the 2026-08-24 handoff, `MODEL-DIVERSITY.md`, `qa.js`, `schema-lint.js`
+**Context:** The system must serve any venture work, not only code. A measured diagnostic found ~1,736 stated imperative rules against 1 mechanism that can block, and 16 verified fabrications. The obvious fix — a merge gate bound to a commit SHA with CI executing compilers — gates diffs, and most venture work (pricing, market sizing, positioning, GTM) has no diff.
+**Options considered:** Diff gate only (gates the recoverable class, leaves the unrecoverable class ungated) / Two gates in two homes (two classifiers will disagree during an incident) / Decision as the durable unit (loses per-claim blast radius) / Artifact + per-task criteria (criteria die with the task, so nothing can go stale) / Nothing durable (cannot answer "what do we believe and why").
+**Decision:** The **claim** is the durable unit. Claims live inside the artifact they support; a generated index compiles them. Three resolvers — `source`, `command`, `judge`. Expiry via `valid_until` with a forced Refresh / Deprecate / Waive disposition.
+**Rationale:** Every domain ultimately asserts things, so claim verification is domain-general where diff gating is not. It catches the exact failure class that produced all 16 fabrications, makes staleness computable, and gives blast radius free via `supports:`.
+**Reversibility:** hard-to-reverse
+**Owner:** ceo
+**Affects:** every engine, the QA classifier, all four memory files (which become generated views), CI, Mission Control
+**See:** [ADR-001](../../docs/03-system-design/adr/001-claim-ledger-as-enforcement-spine.md)
+
+## 2026-08-12 — The reader engine becomes a script, and the roster drops to six
+
+**Context:** Phase 6 opened with a stop-condition-7 clock running: `.claude/agents/reader.md` was created in
+Phase 4b and nothing invoked it. Reading it against the decision to wire it revealed the file specified an
+agent that never judges anything — its return contract (`status · window · expired · expiring_soon ·
+lapsed_waivers · silent_resolvers`) is six deterministic queries, and its own anti-patterns forbid the single
+judgement in scope: *"DO NOT record a disposition; that is a decision, and decisions have owners."*
+**Options considered:** Wire the agent into a scheduled CI job (needs an API key and per-run billing outside
+the subscription, and yields a non-deterministic report no test can pin) / Script the sweep and keep the agent
+to interpret it (real but speculative value, and the trigger would be prose rather than mechanical, so §0
+stays half-satisfied) / Script it and delete the agent / Record it as unconsumed and defer.
+**Decision:** `node scripts/ledger.mjs sweep`, and `.claude/agents/reader.md` is deleted. Roster is six
+engines. The sweep runs on a schedule ([ledger-sweep.yml](../../.github/workflows/ledger-sweep.yml)) and at
+session start, where the same hook also injects the lens and playbook files.
+**Rationale:** Deletion is the strongest answer to the new §0 gate criterion — the unconsumed mechanism is
+removed rather than pretended-consumed. Deterministic, keyless, testable, and it makes the roster smaller,
+which is the whole thesis of Phase 4. Verified safe first: no `reader.md` exists in `~/.claude/agents/`, so
+unlike the eleven shimmed names, deleting this one actually removes it.
+**Reversibility:** hard-to-reverse (git history holds the file; the roster count is referenced in four docs)
+**Owner:** ceo
+**Affects:** every engine consumer, schema-lint's ENGINES registry, AGENTS.md, README counts, the claim ledger
+
+## 2026-08-11 — "Subagents cannot spawn subagents" is false; delete the dispatch-packet layer
+
+**Context:** The operating instructions state nested Task spawning is blocked. The entire dispatch-packet ceremony and much of the CEO→C-suite→worker layering exists to route around it.
+**Options considered:** Trust the stated constraint / Probe it.
+**Decision:** Probed live — **false**. A subagent had `Agent` in its primary tool list, called it, and the nested agent returned `NESTED_OK` in 1.8s. Depth-2 confirmed. The dispatch-packet machinery is deleted once write-capable nesting is confirmed outside plan mode (Phase 1 task).
+**Rationale:** A capability constraint not re-tested this quarter is a rumour. This one shaped the architecture. It is also the canonical example for the ledger: a global-scope claim, true once, carrying no expiry, silently rotted while the whole system obeyed it.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** topology, roster, every C-suite agent definition, CLAUDE.md layer contract
+
+## 2026-08-11 — Every gate ships in shadow mode before it blocks
+
+**Context:** The source spec admits its single largest unpriced variable is what friction costs when an agent hits a denial mid-task. Nobody in 24 studied systems measured it.
+**Options considered:** Block on unrecoverable and advise elsewhere (skips the measurement) / Block by default with a named escape hatch (highest friction, unpriced) / Shadow mode first.
+**Decision:** Every gate ships computing `would_block` and logging it, blocking nothing, for a fixed window. Promote to real blocking only rules that fired correctly and rarely. **Exception:** outbound send, deploy, migration and harness self-edit block from day one, no shadow period.
+**Rationale:** It is the only design that prices the unknown instead of guessing at it, and it has live prior art. The exception covers the class where being wrong is unrecoverable.
+**Reversibility:** reversible
+**Owner:** ceo
+**Affects:** all resolvers, the pre-tool hook, CI, the outbound queue
+
+## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
+
+**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
+mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
+stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
+**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
+no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
+launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
+missing and had to be recovered from a session file it wrote before being blocked.
+**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
+polarity backwards — the claim says nesting *works*, and the probe agrees.
+**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
+subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
+the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
+orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
+**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
+**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`
+
+## 2026-08-16 — The eleven shims stay until nothing references their names
+
+**Context:** 17 agent files here, 44 in `~/.claude/agents/`; 11 names exist in both with **different
+content**, and 33 more are absent from a clean clone. Deleting a repo shim **un-shadows** its global twin, so
+the name keeps working and quietly means the older definition. Nothing errors — the worst failure shape.
+**Decision:** Keep the 11 shims through the roster migration. They are occupying the name, which is their
+job. Delete only once nothing references those names.
+**The constraint that decided it:** those globals are **live in two other projects**
+(`obsidian-claude-code-mcp`, `overstory`), measured 2026-08-11. Archiving them fixes Agentvibe and reaches
+into work that is not Agentvibe, so it is not this repo's call to make unilaterally.
+**Reversibility:** fully reversible — nothing is deleted.
+**Owner:** ceo · **founder decision** · **Affects:** the roster migration, `~/.claude/agents/`
 
 ## 2026-08-16 — `maxTurns` does bind, and the belief that it did not cost three gate runs
 
@@ -258,20 +321,23 @@ It binds hard the moment a dispatch names an `agentType`. The CEO introduced the
 **Owner:** ceo · **Affects:** `.claude/agents/reviewer*.md`, `.claude/workflows/qa.js`, and any future dispatch
 that names an agent type
 
-## 2026-08-13 — c-runtime-nested-spawn REFRESHED: depth-2 nesting works, the CEO instructions are wrong
+## 2026-08-24 — Act on the over-build audit, but check its premises first; split PRs by tier
 
-**Context:** The claim asserts *"Subagents can spawn subagents — write-capable depth-2 nesting outside plan
-mode"*. It carried a 2026-08-11 waiver whose reason — *"spawning is disabled by founder instruction"* —
-stopped being true on 2026-08-13. Two independent probes were run; each made exactly one spawn attempt.
-**Measurement:** `Agent` appears un-deferred in a depth-1 subagent's own tool list; the spawn succeeded with
-no block, denial or error; the depth-2 child ran and returned `ACK`. Spawning is **async** — the tool returns
-launch metadata immediately and the child's reply arrives later — which is why the first probe's report went
-missing and had to be recovered from a session file it wrote before being blocked.
-**Decision:** **Refresh**, not Deprecate. The CEO initially recorded this as a Deprecate, having the claim's
-polarity backwards — the claim says nesting *works*, and the probe agrees.
-**What is actually false is the CEO's own operating instructions**, which state *"RUNTIME CONSTRAINT:
-subagents cannot spawn subagents (nested Task is blocked)"*. That line is wrong on this runtime, and it is
-the stated reason chiefs return dispatch packets instead of spawning workers themselves — so the T2
-orchestration tier rests on a false premise. Not changed here; flagged for the Founder.
-**Reversibility:** reversible — the disposition is one line in `~/.warroom/ledger/global.yml`
-**Owner:** ceo · **Affects:** `~/.warroom/ledger/global.yml`, and the T2 tier design in `AGENTS.md`/`ceo.md`
+**Decision:** the 2026-08-24 audit (`docs/08-agents_work/handoffs/2026-08-24-continue-the-build.md` §4.4)
+ranked six items. All six were re-verified against `695800e` before any was actioned, and **two rest on false
+premises**: item 1's claim that the 4× retry ceiling was sized against `maxTurns=20` is refuted by
+`qa.js:270-272`, which records a turn cap tested **and discarded**; item 5 names `.claude/qa-tier-floor.yml`,
+which contains no mention of model families at all. Both are corrected in the handoff rather than implemented,
+and the retry values stay untouched — cutting them on a refuted premise would re-break a gate that cost three
+failed runs to fix.
+**Why this is a decision, not a detail:** the audit is the document authorising changes to the gate, and it
+carried the same citation rot it was commissioned to cure. An audit is not exempt from its own finding.
+**Work splits into three PRs by TIER, not by topic.** The tier floor is per-PR, so a single irreversible file
+drags a whole PR to a 17–70-agent gate. Grouping by tier makes the irreversible files pay that gate once
+instead of four times; it is the largest cost lever measured this session.
+**Recorded and deferred by founder decision:** `.claude/workflows/qa.js` never reads
+`.claude/review-lenses.yml` (`grep -c` → 0). The gate carries five hardcoded prose dimensions; the lens file
+declares ten structured lenses; they share two names. That is *why* `independence: provenance` goes
+unenforced — the gate cannot honour a property it never loads. Patch-and-record chosen over unification.
+**Reversibility:** reversible — documentation, lint severities, and one loop bound.
+**Owner:** ceo · **founder decision** · **Affects:** the 2026-08-24 handoff, `MODEL-DIVERSITY.md`, `qa.js`, `schema-lint.js`

@@ -1,0 +1,1018 @@
+{
+  "F6A-01": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "d",
+    "heading": "### F6A-01 · class (d) · no admission rule for a standing holder of a duty class no frozen fixture exercises",
+    "disposition": {
+      "repaired_by": [
+        "22743bf",
+        "b3fe2f1"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§1 CLOSED at specification level (prose-carried; no executable control)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+    }
+  },
+  "F6A-02": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "c",
+    "heading": "### F6A-02 · class (c) · work triggered by an external state change with no inbound record has no entry path",
+    "disposition": {
+      "repaired_by": [
+        "f005276"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "The world-change sweep is named in `05` §7 with owner C02 and a latest responsible start, and the (c)-class probe carries protocol, baseline, unit, repetition, stopping rule and an owner who is not C02."
+      }
+    }
+  },
+  "F6A-03": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "a",
+    "heading": "### F6A-03 · class (a) · `refusal-sample` is an undeclared third delta to the FIXED competence mechanism",
+    "disposition": {
+      "repaired_by": [
+        "c6f38c9"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "Resolved by a third disposition: `refusal-sample` is scoped into an existing encounter stratum, stated in both `04` and `05` with a falsifiable three-part test, so it is not a delta."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6A-04": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "b",
+    "heading": "### F6A-04 · class (b) · the model-call release construction asserts conformance rather than showing it",
+    "disposition": {
+      "repaired_by": [
+        "cbc9d72"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "`02-architecture-selection.md` §4 now states the answer as a labelled DECISION: the standing pre-authorisation performs the ordered release transaction once, at grant, and C04 remains the only releaser."
+      }
+    }
+  },
+  "F6A-05": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "b",
+    "heading": "### F6A-05 · class (b) · MD-24 is neither closed nor listed open",
+    "disposition": {
+      "repaired_by": [
+        "d734124"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "`05`'s header records AT-M5-03 / MD-24 as dissolved by non-adoption and names §6's unmechanised overlap detector as the residue."
+      }
+    }
+  },
+  "F6A-06": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "d",
+    "heading": "### F6A-06 · class (d) · the \"declared floor\" has no representation in the capability contract",
+    "disposition": {
+      "repaired_by": [
+        "f8f43e8",
+        "b3fe2f1"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§1 CLOSED (both mutations refused by name)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+    }
+  },
+  "F6A-07": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "a",
+    "heading": "### F6A-07 · class (a) · all fifteen new records declare `ContextManifest`'s payload in the registry",
+    "disposition": {
+      "repaired_by": [
+        "6b7a799"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "All fifteen records declare their own payload; a union-rule check now compares registry to schema for 188 records, with a fixture pair."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6A-08": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "a",
+    "heading": "### F6A-08 · class (a) · `budget` is declared a mandatory schema field and no schema declares it",
+    "disposition": {
+      "repaired_by": [
+        "4b3b9a6"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§5 repaired (read)",
+      "disposition_2026_09_14": "repaired; confirmed by reading in the recheck sample",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)"
+    }
+  },
+  "F6A-09": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "a",
+    "heading": "### F6A-09 · class (a) · two alias-table keys collide with live specification names",
+    "disposition": {
+      "repaired_by": [
+        "6ae17ca"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "Wrong row deleted to `not_aliases`, refusal widened to value-registry names, false gloss repaired; second option declined with a checkable reason."
+      }
+    }
+  },
+  "F6A-10": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "a",
+    "heading": "### F6A-10 · class (a) · `custody_tie_break_reason = admitter_excluded` is outside a closed enum a guard already compares",
+    "disposition": {
+      "repaired_by": [
+        "0daf679"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
+      "f2_06_recheck_01": "§5 OPEN — neither branch of the required contract taken",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "`admitter_excluded` in both declarations, a general 61-pair enum comparison with a floor, plus a hand literal for the member itself."
+      }
+    }
+  },
+  "F6A-11": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "b",
+    "heading": "### F6A-11 · class (b) · three of eight new decisions cite no specification section",
+    "disposition": {
+      "repaired_by": [
+        "a42c5d7",
+        "8c8729d"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "AD-019, AD-020 and AD-021 gained specification references; the three unlanded rule ids are each traced or declared outstanding. New finding F6W-01 on the consequence."
+      }
+    }
+  },
+  "F6A-12": {
+    "file": "F2-06-A-completeness-coherence-vision-binding.md",
+    "class": "c",
+    "heading": "### F6A-12 · class (c) · the founder-attention figure the design requires of itself is not produced",
+    "disposition": {
+      "repaired_by": [
+        "6d8ffa3"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-03): denominator clause wrong in content (F6W-02, F6W-03); other eight clauses met",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-03, owner assigned",
+      "owner": "chapter 05 and its joins (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "PARTIAL",
+        "line": "Eight of nine clauses met, including the §13 entry with its full protocol. The denominator clause is met in form and wrong in content: F6W-02, F6W-03."
+      },
+      "residue_owner": "prose lane C (05 §12 denominator: 100 records incl. holder alternates; branch B formula with a holder term)"
+    }
+  },
+  "F6B-01": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "a",
+    "heading": "### F6B-01 · (a) · Two of the three manifest fields `06` §2 requires are required by nothing",
+    "disposition": {
+      "repaired_by": [
+        "1e95d2b"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§5 repaired (read)",
+      "disposition_2026_09_14": "repaired; confirmed by reading in the recheck sample",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)"
+    }
+  },
+  "F6B-02": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "a",
+    "heading": "### F6B-02 · (a) · `ConstraintSet` binds on one boundary out of the six the rule names, and optionally there",
+    "disposition": {
+      "repaired_by": [
+        "1e95d2b"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-02): boundary_kind still an unconstrained string; no contested-refs field on any operator-facing record (= F6X-02, owed to the contracts lane after chapter 05 §5 states the set)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-02, owner assigned",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "PARTIAL",
+        "line": "Three of five clauses met. `boundary_kind` is still an unconstrained string and no contested-refs field exists."
+      },
+      "residue_owner": "boundary_kind still an unconstrained string; no contested-refs field on any operator-facing record (= F6X-02, owed to the contracts lane after chapter 05 §5 states the set)"
+    }
+  },
+  "F6B-03": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "a",
+    "heading": "### F6B-03 · (a) · Nothing binds a verdict to a calibration, so \"unresolved, never pass\" is unenforced",
+    "disposition": {
+      "repaired_by": [
+        "1e95d2b"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-02): nothing binds the calibration to the checker that produced the verdict; AcceptanceInterval carries no checker identity (owed: contracts lane)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-02, owner assigned",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "PARTIAL",
+        "line": "Conjunct and eighteenth fixture landed. Nothing binds the calibration to the checker that produced the verdict."
+      },
+      "residue_owner": "nothing binds the calibration to the checker that produced the verdict; AcceptanceInterval carries no checker identity (owed: contracts lane)",
+      "r8_2026_09_15": "Landed by lane r8-contracts-i: AcceptanceInterval names its checker and the calibration guard equates it (first nested resolve in the registry — recheck this shape first); checker id is a free string (decision); executed fixture pair; author-recorded, recheck owed."
+    }
+  },
+  "F6B-04": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "c",
+    "heading": "### F6B-04 · (c) · R7's third amendment — the control that excludes \"more compute\" — is not adopted",
+    "disposition": {
+      "repaired_by": [
+        "a42c5d7"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "`06` §7 adds the fifth F-4 arm with a 10-point floor, a rate per controlled defect case, five trials, a 60-case stopping rule and owner C06."
+      }
+    }
+  },
+  "F6B-05": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "d",
+    "heading": "### F6B-05 · (d) · The acceptance load is still counted nowhere, and the second limb of AC-M4-01's required contract is neither answered nor routed",
+    "disposition": {
+      "repaired_by": [
+        "036a26f",
+        "8163f37"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§1 CLOSED at specification level (prose only; per-week count registered as an owed measurement)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)"
+    }
+  },
+  "F6B-06": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "a",
+    "heading": "### F6B-06 · (a) · \"Five (d)s remain open\" is an undefined count, and on this dimension it maps three findings onto one cited id",
+    "disposition": {
+      "repaired_by": [
+        "cc1168b"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "Header states six packets, not five findings, and lists the ten consolidation ids each subsumes; §349 and §370 agree."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6B-07": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "b",
+    "heading": "### F6B-07 · (b) · The fixture table marks F-6 \"exercised\" while the chapter's own open (d) says F-6's staffing question is unanswered",
+    "disposition": {
+      "repaired_by": [
+        "cc1168b"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "The continuity row names the day-five arm, marks itself partially exercised, and names MD-03. Both branches taken."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6B-08": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "c",
+    "heading": "### F6B-08 · (c) · X19 — the founder's own error rate — is named, routed into a packet's uncertainty field, and left off the owed-measurement list",
+    "disposition": {
+      "repaired_by": [
+        "a457be1"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "The human-anchor error rate is the sixth owed measurement in `05` §13(2), with a stopping rule and a SPECIFICATION-labelled interim reporting rule."
+      }
+    }
+  },
+  "F6B-09": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "a",
+    "heading": "### F6B-09 · (a) · The round's own documented citation drift propagated into the specification, unrepaired",
+    "disposition": {
+      "repaired_by": [
+        "c99e3fa"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "Interval corrected to the two dates themselves; AX-ROUND-01's drift check recorded as owed with a named owner and a due trigger."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6B-10": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "b",
+    "heading": "### F6B-10 · (b) · A preserved disagreement is cited on its favourable half only",
+    "disposition": {
+      "repaired_by": [
+        "c99e3fa"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "ChatDev half cited with its numbers *and* F-10's \"INFERENCE, not a measured decomposition\" label carried on the sentence."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6B-11": {
+    "file": "F2-06-B-context-verification-founder-evidence.md",
+    "class": "b",
+    "heading": "### F6B-11 · (b) · A measurement is invoked by adjective, twice, with no source and no number",
+    "disposition": {
+      "repaired_by": [
+        "6337505",
+        "c99e3fa"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05 §2/§13 and 04 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "Both chapters now carry a SOURCE CLAIM with the numbers, the study, the year and the primary-read label."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6C-01": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-01 · (a) · No record field carries the named non-model production mode; uniform gap G-01 is answered",
+    "disposition": {
+      "repaired_by": [
+        "601a60b",
+        "431ba99"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "`production_mode` required, performer ref conditionally required, `none` refused for an exhaustible class, guard on both admission edges."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6C-02": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-02 · (a) · The breach-or-perform record is required and no record type is it.**",
+    "disposition": {
+      "repaired_by": [
+        "9d60596",
+        "431ba99"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§5 repaired (read)",
+      "disposition_2026_09_14": "repaired; confirmed by reading in the recheck sample",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+    }
+  },
+  "F6C-03": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-03 · (a) · The lapse guard sits on one of three release edges, and no transition fires on the lapse",
+    "disposition": {
+      "repaired_by": [
+        "bc44869"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "Guard on all three `* → released` edges; lapse bound to a `ScheduleOccurrence` that must have left `planned`."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6C-04": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-04 · (a) · The expected-launch count — named as this design's dominant unpriced cost and as the",
+    "disposition": {
+      "repaired_by": [
+        "601a60b",
+        "431ba99"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-02): no conjunct compares expected to actual and no field records the divergence; 07 §6 claims otherwise (= F6V-01, owed: prose lane amends 07 §6 and 02 line ~188, or contracts lane adds the comparison)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-02, owner assigned",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "PARTIAL",
+        "line": "Both fields required at close. No conjunct compares them; divergence deliberately not stored; `07` §6 says otherwise."
+      },
+      "residue_owner": "no conjunct compares expected to actual and no field records the divergence; 07 §6 claims otherwise (= F6V-01, owed: prose lane amends 07 §6 and 02 line ~188, or contracts lane adds the comparison)"
+    }
+  },
+  "F6C-05": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-05 · (a) · The evaluation-capacity row is required against a table that does not exist, and the only",
+    "disposition": {
+      "repaired_by": [
+        "c5e60d0"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03) — with attached finding: regression F6W-04",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED · regression F6W-04",
+        "line": "The 10% row is split into 6% maintenance and 4% evaluation as placeholders under MD-08; the same edit falsified the chapter header."
+      }
+    }
+  },
+  "F6C-06": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "b",
+    "heading": "**F6C-06 · (b) · The cache-lifetime collapse is priced as a capacity event in prose and binds to no capacity",
+    "disposition": {
+      "repaired_by": [
+        "cc26cf9"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): A `CapacityMeasure` vocabulary now names `cache_lifetime` and is held to the chapters, but no field or predicate uses it.",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "A `CapacityMeasure` vocabulary now names `cache_lifetime` and is held to the chapters, but no field or predicate uses it."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
+    }
+  },
+  "F6C-07": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-07 · (a) · X14 has no owner, and both founder packets that depend on it defer to it by name.**",
+    "disposition": {
+      "repaired_by": [
+        "d8cf96e"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-02): Q-020 and Q-021 still deferred to the act rather than to Q-022 — repaired by the orchestrator in registers/open-questions.json 2026-09-14 (packet cross-reference); recheck owed",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-02, owner assigned",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "PARTIAL",
+        "line": "Inspection owned by the founder as Q-022 with a latest responsible time. Q-020 and Q-021 still defer to the act, not to Q-022."
+      },
+      "residue_owner": "Q-020 and Q-021 still deferred to the act rather than to Q-022 — repaired by the orchestrator in registers/open-questions.json 2026-09-14 (packet cross-reference); recheck owed"
+    }
+  },
+  "F6C-08": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-08 · (a) · `EffectIdentity` declares no exclusive factory and no uniqueness on its triple, so two",
+    "disposition": {
+      "repaired_by": [
+        "656b9b2"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "By substitution: a checked `identity.natural_key` over the triple with a resolve-or-create rule, rather than an exclusive factory."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6C-09": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-09 · (a) · `no_progress` is an enum value with an optional recipient that nothing demands, and no",
+    "disposition": {
+      "repaired_by": [
+        "bc44869"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "Schema conditional requires the recipient when the class is `no_progress`; guard on all three edges into the terminal phase."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6C-10": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-10 · (a) · The attempt ceiling is on the wrong record, optional, and demanded by nothing.**",
+    "disposition": {
+      "repaired_by": [
+        "32c18de"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): Ceiling required on `WorkOrder` and genuinely compared at `* → retry_admitted`; the park clause is owed, with a tripwire and a stated reason.",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "Ceiling required on `WorkOrder` and genuinely compared at `* → retry_admitted`; the park clause is owed, with a tripwire and a stated reason."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "r8_2026_09_15": "Park phase NOT landed: no edge-predicate writer exists in tools/; whether edge predicates become a derived artifact is a decision owed to the founder (lane r8-contracts-g packet)."
+    }
+  },
+  "F6C-11": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-11 · (a) · Silent-drop counter (3) states a comparison that its criterion does not make, although both",
+    "disposition": {
+      "repaired_by": [
+        "fdef870"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): A real `lt` over two typed `Duration` operands, pinned; nothing ties `retention_span` to `retention_until` minus `landed_at`, and the note says so.",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "A real `lt` over two typed `Duration` operands, pinned; nothing ties `retention_span` to `retention_until` minus `landed_at`, and the note says so."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "r8_2026_09_15": "Landed by lane r8-contracts-h: instant-offset primitive registered, retention span bound to the two instants it measures, executed fixture pair; author-recorded, recheck owed."
+    }
+  },
+  "F6C-12": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-12 · (a), low severity · Counter (4) names a state the registry does not have.**",
+    "disposition": {
+      "repaired_by": [
+        "d734124"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "`05` §6 counter (4) now names the registered `AdmissionRecord.escalated` phase, whose criterion I verified demands exactly the three fields claimed."
+      }
+    }
+  },
+  "F6C-13": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "b",
+    "heading": "**F6C-13 · (b) · `critical_fields` carries its authorship rule in prose and in no predicate.**",
+    "disposition": {
+      "repaired_by": [
+        "558f6c4"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "Both fields required on `WorkOrder`, a guard refusing equality with the order's own owner, attached to the admission edge, pinned twice."
+      }
+    }
+  },
+  "F6C-14": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-14 · (a) · Reopen condition 4's named instrument does not exist.**",
+    "disposition": {
+      "repaired_by": [
+        "601a60b",
+        "431ba99"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-02): shares F6C-04's unmet sub-clause; its own consequence discharged (instrument exists)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-02, owner assigned",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "PARTIAL",
+        "line": "Shares F6C-04's unmet sub-clause. Its own consequence is discharged: the instrument now exists."
+      },
+      "residue_owner": "shares F6C-04's unmet sub-clause; its own consequence discharged (instrument exists)"
+    }
+  },
+  "F6C-15": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-15 · (a) · `guard.supersession.walks_derived_closure` cannot fail the adverse case its own §9 row",
+    "disposition": {
+      "repaired_by": [
+        "bc44869"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "`accepted_closure_member_refs` required, and the containment now runs the other way; the adverse case as worded fails."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6C-16": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-16 · (a) · `11-schemas-state-contracts.md` states a rule about the 30 guards that is false of all 30",
+    "disposition": {
+      "repaired_by": [
+        "4fd9ba8",
+        "5241c65"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§5 repaired (read)",
+      "disposition_2026_09_14": "repaired; confirmed by reading in the recheck sample",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)"
+    }
+  },
+  "F6C-17": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "a",
+    "heading": "**F6C-17 · (a) · Two reopen conditions turn on \"a small number\", and nothing says what that is.**",
+    "disposition": {
+      "repaired_by": [
+        "d7afd1d"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-02)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "f2_06_recheck_02": {
+        "subject": "38a3421",
+        "verdict": "CLOSED",
+        "line": "Both reopen conditions quantified with windows, and additionally labelled DESIGN PROPOSAL placeholders owned by the founder."
+      },
+      "disposition_2026_09_14_note": "moved from \"repaired, author-recorded, not independently rechecked\" to closed by F2-06-recheck-02 (subject 38a3421); recheck ran no validator — verdict rests on guard body, pin and fixture pair"
+    }
+  },
+  "F6C-18": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "b",
+    "heading": "**F6C-18 · (b) · FAL-01 does not reach the chapter that carries the comparator.**",
+    "disposition": {
+      "repaired_by": [
+        "c5e60d0"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-b",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "FAL-01 is carried into `07` §7 as a SOURCE CLAIM, with what it does and does not change to the money rows stated, and the capacity figure marked UNKNOWN."
+      }
+    }
+  },
+  "F6C-19": {
+    "file": "F2-06-C-capacity-reliability-changeability-alternatives.md",
+    "class": "b",
+    "heading": "**F6C-19 · (b) · W13 was judged once, by the lane that also judged W4, and returned sufficient for all",
+    "disposition": {
+      "repaired_by": [
+        "5a308de"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-03)",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "chapter 05, 07, 11 (prose) / contracts/ (data)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in lane r7-prose-a",
+      "f2_06_recheck_03": {
+        "subject": "ee86480",
+        "verdict": "CLOSED at specification level",
+        "line": "The consolidation carries an amendment recording the two inconsistent matrix cells, editing no cell, and naming the method fix as owed with an owner."
+      }
+    }
+  },
+  "F6D-01": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-01 - (a), with a (d)-class consequence - Every one of the thirty new guards can be DETACHED from the edge it guards and the validator stays green. 30 of 30.",
+    "disposition": {
+      "repaired_by": [
+        "b4accb7"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§2 CLOSED (8 of 8 detachments refused by name; 2 pinned-edge deletions refused)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-02": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-02 - (a) - \"subset + equal counts\" does not mean set equality, and no array in either schema is a set. The loader's read-set guard is bypassable by a duplicate.",
+    "disposition": {
+      "repaired_by": [
+        "d4b6c79"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§3 CLOSED at specification level (unique on both arrays, pinned)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-03": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-03 - (a) - The same idiom in `guard.derivation.recompute_matches` lets a release proceed as `matched` having lost a reached class. This is AT-M4-02's harm through the recompute path.",
+    "disposition": {
+      "repaired_by": [
+        "d4b6c79"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§3 CLOSED at specification level (unique on both arrays, pinned)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-04": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-04 - (a) - Whole lifecycle edges can be deleted from the new records with no detection, including the only park-on-mismatch route.",
+    "disposition": {
+      "repaired_by": [
+        "b4accb7"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§2 CLOSED",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-05": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "b",
+    "heading": "## F6D-05 - (b) - Twenty-nine of the thirty guards read only fields on their own subject record, and in twenty-six the guard's owning component is the component that writes that record.",
+    "disposition": {
+      "repaired_by": [
+        "398f8d7"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): Field-level owners fixed and cross-pinned, but the annotation is read by no predicate and the record still grants the producer write.",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "Field-level owners fixed and cross-pinned, but the annotation is read by no predicate and the record still grants the producer write."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "chapter_half_2026_09_15": "Landed by lane r8-prose-e (merged at 61f374c): the owed sentence is in 05 §1, citing record-registry.json; orchestrator confirmed the cited owner values by reading the registry; vision verifiers 4/4 exit 0; author-recorded, independent recheck owed. The registry half stays as the recheck-04a verdict left it.",
+      "r8_2026_09_15": "Registry half still owed after four lanes (turn budget, not a blocker); shape in planning/F2/13-repair-names-contracts-i.md."
+    }
+  },
+  "F6D-06": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "d",
+    "heading": "## F6D-06 - (d) - `declared_grants` is optional, untyped and read by nothing. The decorative-declaration loophole the rule was written to close is reproduced by the rule.",
+    "disposition": {
+      "repaired_by": [
+        "5fc56fb",
+        "5719c88"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§1 CLOSED at specification level",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-07": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "d",
+    "heading": "## F6D-07 - (d) - Six named control objects are C5-protected in prose and bound by nothing. Three of them do not exist as records at all.",
+    "disposition": {
+      "repaired_by": [
+        "c5fff26",
+        "5719c88"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§1 CLOSED at specification level (three of six control objects reached through ConfigurationVersion.control_object_kind, not records)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-08": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-08 - (a) - The `ArmedSet` is unstoppable by prose only. Its stated invariant names the admission authority as the party that must not write it, and the registry names that same party as its own",
+    "disposition": {
+      "repaired_by": [
+        "b3ea337"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): Containment and the custodial reading are both closed and checked; the evaluator binding resolves to the record's own module.",
+      "f2_06_recheck_01": "not individually rechecked (outside the narrow scope)",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "Containment and the custodial reading are both closed and checked; the evaluator binding resolves to the record's own module."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)",
+      "chapter_half_2026_09_15": "Landed by lane r8-prose-e (merged at 61f374c): the owed sentence is in 05 §7, citing record-registry.json; orchestrator confirmed the cited owner values by reading the registry; vision verifiers 4/4 exit 0; author-recorded, independent recheck owed. The registry half stays as the recheck-04a verdict left it."
+    }
+  },
+  "F6D-09": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-09 - (a) - `PredicateId` is a 2,387-entry enum that zero record fields use. The two predicate-bearing fields this amendment adds are free strings, where thirty-two pre-existing fields are typed",
+    "disposition": {
+      "repaired_by": [
+        "69c4004"
+      ],
+      "repair_status": "closed at specification level by independent recheck (F2-06-recheck-04a)",
+      "f2_06_recheck_01": "§5 OPEN — PredicateId used by 0 record fields",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "CLOSED",
+        "line": "Both fields typed `PredicateId`, evaluator kind closed to two members, third clause returned as a decision with an equality tripwire."
+      }
+    }
+  },
+  "F6D-10": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-10 - (a), reduced on re-check - `budget` is on zero records. The `CapacityState` half of this finding is WITHDRAWN.",
+    "disposition": {
+      "repaired_by": [
+        "4b3b9a6"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§5 repaired (read)",
+      "disposition_2026_09_14": "repaired; confirmed by reading in the recheck sample",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-11": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "d",
+    "heading": "## F6D-11 - (d) - `EffectIdentity`'s \"a second claimant joins the first\" is carried by an optional field nobody reads, and the business identity triple has no uniqueness constraint.",
+    "disposition": {
+      "repaired_by": [
+        "656b9b2",
+        "5719c88"
+      ],
+      "repair_status": "author-recorded",
+      "f2_06_recheck_01": "§1 CLOSED at specification level (declaration checked for well-formedness; no evaluator)",
+      "disposition_2026_09_14": "closed at specification level by independent recheck",
+      "owner": "contracts/ (schema, registry, pins)"
+    }
+  },
+  "F6D-12": {
+    "file": "F2-06-D-authority-buildability-adversarial.md",
+    "class": "a",
+    "heading": "## F6D-12 - (a) - `ExistenceJustification.reason_kind` is a free string. The six admitted reasons are a prose table, so the refused seventh is admissible.",
+    "disposition": {
+      "repaired_by": [
+        "ed50c84"
+      ],
+      "repair_status": "PARTIAL by independent recheck (F2-06-recheck-04a): The six pairs are exactly right in the data; the check that guards them cannot tell them from a shuffle.",
+      "f2_06_recheck_01": "§5 OPEN — both fields still free strings",
+      "disposition_2026_09_14": "PARTIAL — repaired in part; residue named by F2-06-recheck-04a, owner assigned",
+      "owner": "contracts/ (schema, registry, pins)",
+      "disposition_note_r7": "was \"OPEN — no repair landed\" at the 2026-09-14 disposition; repair landed later the same day in the r7 contracts lanes",
+      "f2_06_recheck_04a": {
+        "subject": "3e51a9e",
+        "verdict": "PARTIAL",
+        "line": "The six pairs are exactly right in the data; the check that guards them cannot tell them from a shuffle."
+      },
+      "residue_owner": "contracts lane E / later contracts lane (see review-findings.json F6Y-*)"
+    }
+  }
+}

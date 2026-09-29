@@ -1,0 +1,16 @@
+{
+  "id": "r18-capability-floor-has-no-source",
+  "repair": "R18",
+  "finding": "F6A-06; reviews/F2-06-A-completeness-coherence-vision-binding.md; 05-work-agents-skills.md section 11",
+  "case": "A capability declares a consequence term the mapping table does not map, so its floor cannot be computed and the required `declared_floor_ref` has no rule behind it.",
+  "paired_benign_fixture": "fixtures/positive/r18-capability-floor-has-no-source-benign.json",
+  "why": "`public-claims` is the term that floors CAP-13 at the economic/contractual class, which is what 05 section 11 states in prose. Unmapped, CAP-13's floor is uncomputable -- and that was the state of ALL 53 terms: capabilities.json had no floor field of any name and zero occurrences of any C0-C5 token, while `ConsequenceDerivation.declared_floor_ref` was required. Two implementers mapping 53 domain terms onto six classes differently decide who may act differently, and the mapping table was named three times across two chapters without existing.",
+  "expect_failure_contains": "A CAPABILITY DECLARES A CONSEQUENCE TERM THE MAPPING TABLE DOES NOT MAP",
+  "patch": [
+    {
+      "file": "class-mapping-table.json",
+      "pointer": "/mappings/public-claims",
+      "op": "remove"
+    }
+  ]
+}

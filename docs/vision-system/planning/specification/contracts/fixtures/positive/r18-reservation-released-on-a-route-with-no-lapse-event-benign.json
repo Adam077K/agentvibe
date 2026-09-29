@@ -1,0 +1,25 @@
+{
+  "id": "r18-reservation-released-on-a-route-with-no-lapse-event-benign",
+  "repair": "R18",
+  "finding": "F6C-03; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 07-integrations-capacity.md section 6 (R-X24); 05 section 9 adverse row 10, benign column",
+  "case": "A reservation consumed inside its window, whose lapse occurrence was planned and never became due.",
+  "paired_adverse_fixture": "fixtures/negative/r18-reservation-released-on-a-route-with-no-lapse-event.json",
+  "why": "The lapse rule binds AT the lapse point and nowhere before it, which is why the occurrence binding accepts `due`, `admitted`, `running`, `completed`, `missed` and `disposed` and refuses only `planned`: a scheduled lapse nobody woke for is not a lapse. The patch hardens the guard by also demanding the account the allowance is drawn against, which every real reservation names, and it must not be refused.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.reservation.lapse_independent_of_consent/body/predicates/5",
+      "op": "add",
+      "value": {
+        "op": "nonempty_fields",
+        "subject_ref": {
+          "arg": "subject_ref"
+        },
+        "field_paths": [
+          "/payload/account_ref"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "r18-no-progress-with-no-named-recipient-benign",
+  "repair": "R18",
+  "finding": "F6C-09; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md; 05-work-agents-skills.md section 6 (R-X10), benign column",
+  "case": "A failure record blocked for a reason that is not `no_progress`, which owes no recipient and must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-no-progress-with-no-named-recipient.json",
+  "why": "The conditional turns on the VALUE of `error_class` precisely so that the other members of the enum are unaffected: a blocked record whose cause is a named external dependency is routed by that dependency, not by a no-progress recipient. The patch widens the conditional's `then` with a field every no-progress record already carries, leaving every other error class untouched, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/FailureRecord/properties/payload/allOf/0/then/required",
+      "op": "replace",
+      "value": [
+        "no_progress_recipient_ref",
+        "no_progress_terminal",
+        "next_discriminator"
+      ]
+    }
+  ]
+}

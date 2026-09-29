@@ -1,0 +1,16 @@
+{
+  "id": "r18-check-interest-reads-a-field-the-producer-authored",
+  "repair": "R18",
+  "finding": "F6C-16, R-X20, AS-M5-04; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "A check interest's precondition reads a field the producer could author, so the producer decides whether it is checked.",
+  "paired_benign_fixture": "fixtures/positive/r18-check-interest-reads-a-field-the-producer-authored-benign.json",
+  "why": "R-X20's point is that a standing check whose trigger the producer controls is a check the producer can switch off by writing a field. With the containment gone, the declared read set is unconstrained and the two lists sit beside each other proving nothing. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.check.reads_only_non_authorable_fields` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.check.reads_only_non_authorable_fields', 'subset'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.check.reads_only_non_authorable_fields/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

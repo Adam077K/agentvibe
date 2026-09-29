@@ -1,0 +1,16 @@
+{
+  "id": "r19-not-admitted-operator-is-also-admitted-benign",
+  "repair": "RC5-03",
+  "case": "declaring a real, non-admitted primitive in the not-admitted block",
+  "why": "The benign twin of r19-not-admitted-operator-is-also-admitted. `present` is a registered primitive, its only argument is a VALUE position, and it is not in ADMISSIBLE_LITERAL -- so naming it in `#/admissible_ancestors_not_admitted` states something true, adds a row a future author can read, and contradicts nothing. This must PASS. The block is meant to grow: every operator that takes the `quantified` escape is REQUIRED to be named here, so a checker that refused a new row would refuse the declaration the escape now costs. It also exercises the block's second rule in the passing direction -- the name is a primitive that exists, which is what separates this from a row forbidding an operator no body could carry.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "pinned-conjuncts.json",
+      "pointer": "/admissible_ancestors_not_admitted/present",
+      "op": "add",
+      "value": "`present(value: X)` type-checks X and asserts nothing about it, so its one argument is a value position and no conjunct inside it is demanded (RC3-02). Never admissible as an ancestor of a pinned conjunct."
+    }
+  ],
+  "finding": ""
+}

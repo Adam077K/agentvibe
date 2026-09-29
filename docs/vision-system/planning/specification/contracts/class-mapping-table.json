@@ -1,0 +1,236 @@
+{
+  "schema_version": "1.0",
+  "kind": "class mapping table: the consequence-class vocabulary of capabilities.json, mapped to C0-C5",
+  "status": "SPECIFICATION. This file IS the class mapping table that 05 section 11 and 08 section 1 name as one of the six protected control objects. Changing it is a C5 protected control change, carried by ConfigurationVersion with control_object_kind = class_mapping_table.",
+  "why": "F6A-06. `ConsequenceDerivation.declared_floor_ref` is REQUIRED and the class set is computed \"from the owning capability contract's declared floor, and from nothing else\" -- and capabilities.json had no floor field of any name, zero occurrences of any C0-C5 token, and a 53-term free-text vocabulary with nothing anywhere mapping it onto the six classes. An implementer populating that required field for CAP-17, CAP-22 or CAP-24 had no rule for which class definition to point at, and two implementers would map 53 terms onto six classes differently -- a mapping that decides WHO MAY ACT. The table was named three times across two chapters and did not exist.",
+  "how_the_floor_is_computed": "A capability's `declared_floor` is the HIGHEST class its declared terms map to. Read that narrowly: it is a floor, a single class that always applies to any action under the capability, and it is NOT the total rank the design refuses. 02 section 4 forbids collapsing a REACHED SET into one class and applying one row -- that is AT-M4-02 and it drops C2's human requirement on an action that is both C2 and C3. This computation runs over a capability's declared vocabulary at design time and produces ONE OF THE FOUR INPUTS to the derivation, whose output is still a set and whose every member's gates still apply. The two are different objects and only the second is the one the prohibition is about.",
+  "classes": {
+    "C0": "local computation",
+    "C1": "controlled internal mutation",
+    "C2": "external disclosure/contact",
+    "C3": "economic/contractual",
+    "C4": "production/physical/security",
+    "C5": "protected control change"
+  },
+  "checked_by": [
+    "validate_contracts.py: every term any capability declares is mapped here, and every mapped term is declared by some capability",
+    "validate_contracts.py: every capability's declared_floor equals the maximum of its mapped terms",
+    "validate_contracts.py: CAP-13, CAP-14, CAP-15 and CAP-16 floor at C3, which is what 05 section 11 states in prose",
+    "validate_contracts.py: ConsequenceDerivation.declared_floor_ref targets ConsequenceClassDefinition, whose class_id is drawn from the same six"
+  ],
+  "writer": "S1-C01, through a ProtectedChange whose protected_subject_kind is class_mapping_table",
+  "mappings": {
+    "acceptance": {
+      "class": "C1",
+      "reason": "Recording that work was accepted is an internal state change on records the company already holds; it creates no destination, promise or production write."
+    },
+    "allocation": {
+      "class": "C1",
+      "reason": "Assigning internal capacity, budget headroom or a lane is a controlled internal mutation; the money it may later authorise is `financial`, mapped separately."
+    },
+    "attention": {
+      "class": "C1",
+      "reason": "Founder attention is allocated internally. The scarcity is real and the act is an internal assignment."
+    },
+    "authority": {
+      "class": "C5",
+      "reason": "Who may act is the protected-control-change class by name: identity roots and the grant and interpretation machinery."
+    },
+    "availability": {
+      "class": "C4",
+      "reason": "Keeping or restoring a service available is a production effect with reversibility and containment conditions."
+    },
+    "closure": {
+      "class": "C3",
+      "reason": "Closing a venture settles duties, entitlements and money with outside parties; every closure step is economic or contractual before it is anything else."
+    },
+    "code": {
+      "class": "C4",
+      "reason": "Code is a production and environment effect the moment it is anything but a draft, and C4's row names deployment first."
+    },
+    "collaboration": {
+      "class": "C2",
+      "reason": "Collaboration reaches a party outside the acting component, so a destination and a purpose exist."
+    },
+    "competence": {
+      "class": "C1",
+      "reason": "A competence determination is recorded internally; the professional prerequisites it gates are `professional`, mapped separately."
+    },
+    "compute": {
+      "class": "C3",
+      "reason": "Metered compute is spend against a real account. An allowance that runs out is money, not a counter."
+    },
+    "contact": {
+      "class": "C2",
+      "reason": "External contact IS the C2 row: exact destination, data, purpose and relationship constraints."
+    },
+    "containment": {
+      "class": "C4",
+      "reason": "Containing an incident is a production and security action with descendants and reversibility conditions."
+    },
+    "continuity": {
+      "class": "C4",
+      "reason": "Continuity arrangements are production and access arrangements that must survive the person who made them."
+    },
+    "contract": {
+      "class": "C3",
+      "reason": "A contract is the economic/contractual class stated in one word."
+    },
+    "credential": {
+      "class": "C4",
+      "reason": "A credential is delegated access, which C4's row names explicitly; the machinery that issues one is `authority`, mapped at C5."
+    },
+    "customer-promise": {
+      "class": "C3",
+      "reason": "A promise to a customer is a binding commitment, which is the C3 row."
+    },
+    "customer-service": {
+      "class": "C2",
+      "reason": "Answering a customer is an outward message to a named recipient."
+    },
+    "customer-terms": {
+      "class": "C3",
+      "reason": "Terms are the contract, expressed as the thing the customer agreed to."
+    },
+    "decision-support": {
+      "class": "C0",
+      "reason": "Assembling material for a decision is deterministic work over already authorized data; the decision itself is classified by what it decides."
+    },
+    "deletion": {
+      "class": "C4",
+      "reason": "Deletion is a destructive state change, which C4's row names, and it is not undone by a revert."
+    },
+    "deployment": {
+      "class": "C4",
+      "reason": "Deployment is the first example in C4's own row."
+    },
+    "direction": {
+      "class": "C1",
+      "reason": "Endorsed direction is an internal record whose effect on outside parties runs through the work it admits, never through itself."
+    },
+    "disclosure": {
+      "class": "C2",
+      "reason": "Disclosure is the external-disclosure class by name."
+    },
+    "employment": {
+      "class": "C3",
+      "reason": "Employing someone creates continuing economic and contractual duties to a person."
+    },
+    "evidence": {
+      "class": "C1",
+      "reason": "Capturing evidence writes internal records; what the evidence is ABOUT is classified separately."
+    },
+    "experiment": {
+      "class": "C2",
+      "reason": "An experiment that reaches real people is outreach; one that does not is `internal-analysis`, which the same capability also declares."
+    },
+    "external-query": {
+      "class": "C2",
+      "reason": "A query to an outside source is an outward request with a destination."
+    },
+    "financial": {
+      "class": "C3",
+      "reason": "Money is the economic class."
+    },
+    "financial-record": {
+      "class": "C1",
+      "reason": "Bookkeeping writes internal records; the payments they record are `financial` and the statutory filings are `reporting`."
+    },
+    "governance": {
+      "class": "C5",
+      "reason": "Governance decides who decides, which is a protected control change."
+    },
+    "grievance": {
+      "class": "C2",
+      "reason": "A grievance involves a person outside the company who must be reachable and must be answered."
+    },
+    "identity": {
+      "class": "C5",
+      "reason": "Identity roots are named in C5's row."
+    },
+    "improvement": {
+      "class": "C1",
+      "reason": "Proposing an improvement writes an internal record; ACTIVATING one is `self-change`, mapped at C5, and the two are deliberately different terms."
+    },
+    "internal-analysis": {
+      "class": "C0",
+      "reason": "Deterministic work over already authorized data in an isolated workspace, which is C0's row verbatim."
+    },
+    "internal-artifact": {
+      "class": "C0",
+      "reason": "A draft that has not left the workspace is local computation; putting it outside is `publication` or `disclosure`."
+    },
+    "internal-record": {
+      "class": "C1",
+      "reason": "Writing an internal record is a controlled internal mutation."
+    },
+    "knowledge": {
+      "class": "C1",
+      "reason": "Knowledge entries are internal records with an epoch and a writer."
+    },
+    "legal": {
+      "class": "C3",
+      "reason": "A legal step creates or discharges a duty owed to someone, which is contractual before it is anything else."
+    },
+    "opportunity-cost": {
+      "class": "C1",
+      "reason": "An opportunity cost is a judgement recorded against an internal allocation."
+    },
+    "personal-data": {
+      "class": "C2",
+      "reason": "Personal data carries a category, a purpose, a destination and a retention rule, which is the C2 row's second half."
+    },
+    "physical": {
+      "class": "C4",
+      "reason": "Physical performance is named in C4's row."
+    },
+    "procurement": {
+      "class": "C3",
+      "reason": "Buying something commits money and creates a supplier relationship."
+    },
+    "professional": {
+      "class": "C4",
+      "reason": "A professional determination is a competent determination with real-world prerequisites, which C4's row names; the fee for it is `financial`."
+    },
+    "public-claims": {
+      "class": "C3",
+      "reason": "A public claim is a representation that binds the company to it. 05 section 11 floors CAP-13 at the economic/contractual class and `public-claims` is the only term of its three that can carry that floor."
+    },
+    "publication": {
+      "class": "C2",
+      "reason": "Publishing puts data at an external destination."
+    },
+    "readiness": {
+      "class": "C1",
+      "reason": "A readiness assessment is an internal record about whether something may proceed."
+    },
+    "recovery": {
+      "class": "C5",
+      "reason": "Recovery machinery is named in C5's row alongside grant, release, capture and interpretation."
+    },
+    "relationship": {
+      "class": "C2",
+      "reason": "A relationship is maintained through contact with a party outside the company."
+    },
+    "remedy": {
+      "class": "C3",
+      "reason": "A remedy is a refund, a credit or a replacement, which is money or a new promise."
+    },
+    "reporting": {
+      "class": "C2",
+      "reason": "A report goes to a recipient outside the acting component, including a statutory one."
+    },
+    "security": {
+      "class": "C4",
+      "reason": "Security actions delegate or revoke access and change production state."
+    },
+    "self-change": {
+      "class": "C5",
+      "reason": "The system changing itself is the protected-change class, and the reason 08 section 1 enumerates its six control objects."
+    },
+    "succession": {
+      "class": "C5",
+      "reason": "Succession moves identity and authority roots to another party."
+    }
+  }
+}

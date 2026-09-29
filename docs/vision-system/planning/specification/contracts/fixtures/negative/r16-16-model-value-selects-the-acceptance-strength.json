@@ -1,0 +1,16 @@
+{
+  "id": "r16-16-model-value-selects-the-acceptance-strength",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 16; 05-work-agents-skills.md section 9",
+  "case": "A model step selecting between acceptance strengths through a declared branch.",
+  "paired_benign_fixture": "fixtures/positive/r16-16-model-value-selects-the-acceptance-strength-benign.json",
+  "why": "Section 12.5 row 16, R-X19 and AS-M3-01. Acceptance-strength selection is a guard over journal state and consequence class; a model's output is an INPUT to a guard and never a jump. The mutation deletes the allow-list and leaves the explicit `!= model` conjunct -- which is the subtle case: the guard still refuses the literal string `model` while admitting any other selector kind a procedure cares to invent.",
+  "expect_failure_contains": "'guard.branch.no_model_selected_acceptance_strength', 'in'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.branch.no_model_selected_acceptance_strength/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

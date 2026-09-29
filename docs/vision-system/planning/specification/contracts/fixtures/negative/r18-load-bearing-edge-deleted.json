@@ -1,0 +1,16 @@
+{
+  "id": "r18-load-bearing-edge-deleted",
+  "repair": "R18",
+  "finding": "F6D-04; reviews/F2-06-D-authority-buildability-adversarial.md; 05-work-agents-skills.md section 10",
+  "case": "The park-on-mismatch route is deleted from record-registry.json. The edge predicate survives and every check that reads predicates still passes.",
+  "paired_benign_fixture": "fixtures/positive/r18-load-bearing-edge-deleted-benign.json",
+  "why": "Measured at bcfd658: three edge deletions on the new records, three runs, three exit 0. This is the consequential one. With `recomputed_at_release -> parked_on_mismatch` gone, that phase has exactly one outbound edge, to `matched`, so a recompute that disagrees with the admitted class set has nowhere to go but release. `parked_on_mismatch` is the phase whose row reads \"it never resolves downward\"; unreachable, it never resolves at all. Deleting the transition is a different attack from deleting the call: the predicate survives, the attachment pin still resolves, and only the ROUTE is gone.",
+  "expect_failure_contains": "PINNED TRANSITION MISSING",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/ConsequenceDerivation/lifecycle/transitions/2",
+      "op": "remove"
+    }
+  ]
+}

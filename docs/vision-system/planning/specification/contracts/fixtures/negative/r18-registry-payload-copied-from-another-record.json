@@ -1,0 +1,33 @@
+{
+  "id": "r18-registry-payload-copied-from-another-record",
+  "repair": "R18",
+  "finding": "F6A-07; reviews/F2-06-A-completeness-coherence-vision-binding.md",
+  "case": "A record's registry payload declaration is another record's, so the declared authority and the enforced schema disagree about which fields are required.",
+  "paired_benign_fixture": "fixtures/positive/r18-registry-payload-copied-from-another-record-benign.json",
+  "why": "This is the measured defect, restored on one record: all fifteen WORK-1.1 records declared ContextManifest's fifteen payload fields as their own required_fields, so record-registry.json said ConsequenceDerivation need not carry declared_floor_ref, reached_class_ids or frozen_payload_digest. records.schema.json was right and nothing compared the two. The mutation puts ContextManifest's list back on ConsequenceDerivation alone.",
+  "expect_failure_contains": "REGISTRY AND SCHEMA DISAGREE ABOUT WHICH PAYLOAD FIELDS ARE REQUIRED",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/ConsequenceDerivation/fields/payload/required_fields",
+      "op": "replace",
+      "value": [
+        "work_order_ref",
+        "loader_identity_ref",
+        "loader_profile_ref",
+        "source_refs",
+        "blob_refs",
+        "captured_inputs",
+        "epochs",
+        "transformation_refs",
+        "destination_contract_refs",
+        "purpose_ids",
+        "native_ancestry",
+        "omissions",
+        "allocations",
+        "closure_snapshot_ref",
+        "expires_at"
+      ]
+    }
+  ]
+}

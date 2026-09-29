@@ -1,0 +1,29 @@
+{
+  "id": "r16-05-investigating-activation-promotes-its-own-entry-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 5, benign column; 05-work-agents-skills.md section 9",
+  "case": "A NEW attested fact written from an out-of-band corroborant, with the untrusted entry linked as prompting it.",
+  "paired_adverse_fixture": "fixtures/negative/r16-05-investigating-activation-promotes-its-own-entry.json",
+  "why": "The legitimate promotion carries the out-of-band corroborant on the manifest. Demanding it must not flag the clean case; what is refused is the promotion whose discriminator is the investigating path itself.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.trust.promotion_is_an_effect_with_a_non_model_discriminator/body/predicates/3",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/trust_promotion_corroborant_ref"
+        }
+      }
+    }
+  ]
+}

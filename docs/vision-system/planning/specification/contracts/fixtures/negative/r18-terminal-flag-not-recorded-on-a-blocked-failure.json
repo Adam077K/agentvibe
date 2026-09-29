@@ -1,0 +1,16 @@
+{
+  "id": "r18-terminal-flag-not-recorded-on-a-blocked-failure",
+  "repair": "R18",
+  "finding": "F6C-09, F6C-16; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md",
+  "case": "A failure record stops moving without recording whether its error class is terminal.",
+  "paired_benign_fixture": "fixtures/positive/r18-terminal-flag-not-recorded-on-a-blocked-failure-benign.json",
+  "why": "`no_progress` is not a lifecycle PHASE -- the phases are observed, investigating, retry_admitted, blocked, resolved -- so \"terminal\" has no registered meaning unless the record says so. With the flag no longer demanded, a record reaches `blocked` and nothing on it distinguishes a failure that stopped from one that is still being worked, which is the condition under which the payload conditional never has to bind. Coverage note: F6C-16 measured 14 of 30 guards with a paired fixture, and every guard this amendment adds is owed one.",
+  "expect_failure_contains": "'guard.failure.no_progress_names_recipient', 'present'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.failure.no_progress_names_recipient/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "r4-edge-routes-to-an-unregistered-command",
+  "repair": "R4",
+  "finding": "CCR-04",
+  "why": "The original defect exactly: an edge routing to a command id that is in no registry. validate_contracts.py checked bool(allowed_command_ids) -- non-emptiness -- so 26 edges routed to kernel.projection.recompute, which did not exist, and read identically to edges routed to a command that did.",
+  "expect_failure_contains": "unregistered routed command",
+  "patch": [
+    {
+      "file": "record-registry.json",
+      "pointer": "/Goal/lifecycle/transitions/0/allowed_command_ids/0",
+      "op": "replace",
+      "value": "kernel.projection.recompute.but.not.registered"
+    }
+  ]
+}

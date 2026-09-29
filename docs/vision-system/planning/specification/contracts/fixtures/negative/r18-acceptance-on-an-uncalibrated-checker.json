@@ -1,0 +1,17 @@
+{
+  "id": "r18-acceptance-on-an-uncalibrated-checker",
+  "repair": "R18",
+  "finding": "F6B-03; reviews/F2-06-B-context-verification-founder-evidence.md; 06-knowledge-evidence-evaluation.md section 7; AM-01",
+  "case": "An acceptance commits on a verdict from an instrument with no current calibration.",
+  "paired_benign_fixture": "fixtures/positive/r18-acceptance-on-an-uncalibrated-checker-benign.json",
+  "why": "06 section 7 says a verdict from an instrument whose refusal rate on correct artifacts is unrecorded is `unresolved` and MAY NOT SATISFY AN ACCEPTANCE GATE, and nothing bound the two: no record in the registry related to `InstrumentCalibration`, and `criterion.AcceptanceInterval.accepted.v1` required only a resolution reason, an acceptance owner and a criteria ref. With this binding optional the acceptance commits on a checker with no calibration in `run` at all, which is the state every checker is in before its first calibration session.",
+  "expect_failure_contains": "'guard.calibration.current_for_checker', 'related_phases'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.calibration.current_for_checker/body/predicates/1/bindings/0/optional",
+      "op": "replace",
+      "value": true
+    }
+  ]
+}

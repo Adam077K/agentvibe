@@ -1,0 +1,34 @@
+{
+  "id": "r16-17-triage-refuses-a-genuine-job-on-unfamiliar-wording-benign",
+  "repair": "R16",
+  "finding": "F2 selection record section 12.5 row 17, benign column; 05-work-agents-skills.md section 9",
+  "case": "THE FALSE-EXCLUSION CONTROL FOR THE WHOLE REFUSAL PATH, and it must pass.",
+  "paired_adverse_fixture": "fixtures/negative/r16-17-triage-refuses-a-genuine-job-on-unfamiliar-wording.json",
+  "why": "This is the benign case the brief names as the false-exclusion control, and it is the one row whose PASSING is the result. A genuine job in wording the catalogue does not recognise types as `no_match` -- a searched answer, one of the three admissible typing outcomes -- and not as a refusal. Requiring the typing outcome to be one of those three must PASS. If it did not, the refusal path would be excluding genuine work and every adverse number in this suite would be unreadable, because a checker that refuses everything detects everything.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.admission.refusal_names_failed_predicate/body/predicates/4",
+      "op": "add",
+      "value": {
+        "op": "in",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/typing_outcome"
+        },
+        "set": [
+          "matched",
+          "no_match",
+          "budget_exhausted"
+        ]
+      }
+    }
+  ]
+}

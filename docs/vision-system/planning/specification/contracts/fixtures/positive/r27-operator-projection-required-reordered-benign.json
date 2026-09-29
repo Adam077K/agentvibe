@@ -1,0 +1,27 @@
+{
+  "id": "r27-operator-projection-required-reordered-benign",
+  "repair": "R27",
+  "finding": "F6X-02; reviews/F2-06-X-cross-cutting.md (F6X-02), benign column",
+  "case": "The same required fields in a different order, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r27-contested-refs-made-optional.json",
+  "why": "The required list is a set of field names and its order means nothing to any validator that reads it. Pairing the adverse case with this one is what distinguishes a check that asks WHETHER `contested_refs` is demanded from a check that pins the exact bytes of a list -- the second kind fails on every unrelated field anyone ever adds to this record, and gets deleted for it.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "records.schema.json",
+      "pointer": "/$defs/OperatorProjection/properties/payload/required",
+      "op": "replace",
+      "value": [
+        "view_id",
+        "selection_version_ref",
+        "projection",
+        "omission_manifest_ref",
+        "included_refs",
+        "freshness",
+        "contested_refs",
+        "constraint_set_ref",
+        "actor_scope_ref"
+      ]
+    }
+  ]
+}

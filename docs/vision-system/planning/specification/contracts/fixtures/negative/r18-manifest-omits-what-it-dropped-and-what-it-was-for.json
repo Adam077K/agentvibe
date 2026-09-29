@@ -1,0 +1,16 @@
+{
+  "id": "r18-manifest-omits-what-it-dropped-and-what-it-was-for",
+  "repair": "R18",
+  "finding": "F6B-01; reviews/F2-06-B-context-verification-founder-evidence.md; 06-knowledge-evidence-evaluation.md section 2",
+  "case": "The manifest's per-item trust list is no longer joined to the items it describes, so one trust level can stand for twelve delivered inputs.",
+  "paired_benign_fixture": "fixtures/positive/r18-manifest-omits-what-it-dropped-and-what-it-was-for-benign.json",
+  "why": "06 section 2 says the PER-ITEM part is the load-bearing part, and `item_trust_levels` was `array<string>` with no length join to `captured_inputs` and no uniqueness. The guard that did fire on trust checked only that the derived level equals the minimum input level, which says nothing about whether every item has one. Remove the count equality and a manifest carrying a single optimistic trust level for a dozen inputs satisfies every check -- and R2 F-04 measures boundary metadata surviving at ~0.57 against ~0.97 for facts, which is why the per-item form is the one that binds.",
+  "expect_failure_contains": "'guard.manifest.omission_and_class_declared', 'eq'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.manifest.omission_and_class_declared/body/predicates/3",
+      "op": "remove"
+    }
+  ]
+}

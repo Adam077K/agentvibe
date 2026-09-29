@@ -1,0 +1,18 @@
+{
+  "id": "r14-requires-names-a-related-phase-no-conjunct-binds",
+  "repair": "RC2-03",
+  "finding": "RC2-03 (planning/reviews/G-02-recheck-02.md, probes 7 and 10)",
+  "why": "RC-03 is two rules and only one of them had a negative control. The field-path rule had r13-requires-promises-what-the-body-does-not-demand and an applicable population of ZERO -- 0 of 774 criteria name a field path in `requires`. The phase-name rule carries the whole of RC-03's live force (22 tokens across 19 criteria, 17 waived) and had no fixture at all, which is how the recheck was able to switch it off with three pairs of backticks and see the build fail 640 seconds later for a different reason. This fixture adds one clause to the DERIVATION promising that the Fulfillment has not been `refunded` -- a phase of a related record that no `related_phases` binding holds -- leaves every conjunct untouched so the pins still pass, and regenerates, so the drift oracle is satisfied and the requires/conjuncts comparison is the only thing left that can object.",
+  "expect_failure_contains": "RC-03: `requires` names a related record's phase that no conjunct binds",
+  "patch": [],
+  "tools_patch": [
+    {
+      "file": "tools/phase_content.py",
+      "block_start": "    (\"SalesAgreement\", \"performed\"): spec(",
+      "block_end": "    # -- R-F / G4-02:",
+      "replacement": "phase-promising-spec.py"
+    }
+  ],
+  "regenerate_from_derivation": true,
+  "note": "The token is deliberately a phase this criterion has no opinion about, rather than a synonym for its own phase: all 17 waivers in pinned-conjuncts.json#/requires_waivers are the synonym shape, and a fixture built from that shape would be excusable by the waiver mechanism it is meant to bound. If this fixture is ever rejected for another reason -- the runner checks the message -- the phase rule has stopped being the thing that refuses an over-promise."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "r18-custody-order-includes-the-admitter",
+  "repair": "R18",
+  "finding": "F6C-16, R-X06; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16)",
+  "case": "The ordered custody resolver may return the admitting identity, so the party that admitted the work also holds custody of it.",
+  "paired_benign_fixture": "fixtures/positive/r18-custody-order-includes-the-admitter-benign.json",
+  "why": "R-X06: the resolver SKIPS the admitting identity and continues to the next tier. With the negated membership test gone, the two lists are recorded beside each other and the resolver may return the admitter -- which collapses the separation the admission record exists to draw, on the record that draws it. Coverage note: F6C-16 measured 14 of 30 guards exercised by a paired adverse and benign fixture, and `guard.custody.admitter_excluded` was one of the sixteen without one -- a guard registered with no adverse fixture is a guard nobody has seen fail.",
+  "expect_failure_contains": "'guard.custody.admitter_excluded', 'in'",
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.custody.admitter_excluded/body/predicates/1",
+      "op": "remove"
+    }
+  ]
+}

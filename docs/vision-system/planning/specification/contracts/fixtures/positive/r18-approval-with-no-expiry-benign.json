@@ -1,0 +1,29 @@
+{
+  "id": "r18-approval-with-no-expiry-benign",
+  "repair": "R18",
+  "finding": "F6C-16, R-X18, AS-M2-02; reviews/F2-06-C-capacity-reliability-changeability-alternatives.md (F6C-16), benign column",
+  "case": "An approval whose expiry is genuinely later, which must not be refused.",
+  "paired_adverse_fixture": "fixtures/negative/r18-approval-with-no-expiry.json",
+  "why": "An expiry strictly after the approval is the ordinary case on both records the guard covers, `ExistenceJustification` and `ProjectionGrant`. The patch additionally demands the expiry be present as a value, a restatement in the same shape, and it must pass.",
+  "expect_pass": true,
+  "patch": [
+    {
+      "file": "predicate-registry.json",
+      "pointer": "/guard.approval.expiry_present/body/predicates/2",
+      "op": "add",
+      "value": {
+        "op": "present",
+        "value": {
+          "op": "path",
+          "value": {
+            "op": "resolve",
+            "ref": {
+              "arg": "subject_ref"
+            }
+          },
+          "pointer": "/payload/approval_expires_at"
+        }
+      }
+    }
+  ]
+}
