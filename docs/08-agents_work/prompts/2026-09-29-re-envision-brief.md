@@ -41,6 +41,13 @@ consider, from its lens:
    134 skills, sandbox) as the foundation. Replace a part only with a stated reason.
 
 ## Read first (by reference — do not read the 72 MB package whole)
+- **Start with the structured map of the old plan** (the data behind the founder's Company Engine
+  Explorer, https://claude.ai/artifact/Ufucbixckde8yhiLf3JDTZ, generated 2026-09-15 at b568559 —
+  it predates the F2-07 review and the 2026-09-29 repairs):
+  `docs/vision-system/planning/site/explorer/data/` — `components.json` (9 components),
+  `layers.json` (5 authority layers), `decisions.json` (22 decisions), `stages.json` (12 build stages),
+  `capabilities.json` (46 capabilities — large, use jq), `risks.json`, `questions.json`, `attacks.json`.
+  Use the 12 specification chapters only for depth on a specific point.
 - The founder directive: `docs/vision-system/inputs/DIRECTIVE.md`
 - What the system is: `docs/vision-system/planning/00-executive-guide.md`, `01-understand.md`,
   `02-architecture-selection.md` (heading map, then the sections you need)
