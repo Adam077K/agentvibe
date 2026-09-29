@@ -40847,21 +40847,81 @@
       "op": "all",
       "predicates": [
         {
-          "op": "content_unspecified",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "gap_id": "gap-DeletionScope-determined"
+          "field_paths": [
+            "/payload/subject_refs",
+            "/payload/material_selector",
+            "/payload/purpose_ids",
+            "/payload/restrictions",
+            "/payload/inventory_cutoff",
+            "/payload/inventory_refs",
+            "/payload/restriction_epoch_ref",
+            "/payload/response_due_at",
+            "/payload/reconcile_at",
+            "/payload/proof_limits",
+            "/owner_assignment_ref"
+          ]
         },
         {
-          "op": "attested_result",
+          "op": "related_phases",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "predicate_id": "criterion.DeletionScope.determined.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
+          "bindings": [
+            {
+              "field_path": "/owner_assignment_ref",
+              "states": [
+                "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/restriction_epoch_ref",
+              "states": [
+                "current"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/exception_refs",
+              "states": [
+                "active"
+              ],
+              "optional": true
+            },
+            {
+              "field_path": "/payload/determination_ref",
+              "states": [
+                "validated"
+              ],
+              "optional": true
+            }
+          ]
+        },
+        {
+          "op": "lt",
+          "left": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/inventory_cutoff"
+          },
+          "right": {
+            "op": "path",
+            "value": {
+              "op": "resolve",
+              "ref": {
+                "arg": "subject_ref"
+              }
+            },
+            "pointer": "/payload/response_due_at"
           }
         },
         {
@@ -40873,10 +40933,21 @@
           "judgment_refs": {
             "arg": "judgment_refs"
           }
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.DeletionScope.determined.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
         }
       ]
     },
-    "meaning": "Per-phase content unspecified; see gap-DeletionScope-determined. Phase assessed: determined.",
+    "meaning": "The exact subjects, material selector, purposes and restrictions; an inventory at a named cutoff with nonempty inventory refs; the restriction epoch still current; every retention exception active and any governing professional determination validated; a currently accepted owner; response and reconcile deadlines with the cutoff strictly before the response deadline; and stated proof limits. A missing, stale or unaccepted binding leaves the request in `requested`. Phase assessed: determined.",
     "owner_component": "S1-C07",
     "source": "../candidates/company-foundation-repairs-v1.md",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -40968,8 +41039,13 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "content_gap_id": "gap-DeletionScope-determined",
-    "requires": "NOT STATED. The source corpus carries no evidence requirement for a transition into `determined` on DeletionScope. See phase-content-gaps.json#/gaps for what it would have to say."
+    "requires": "The exact subjects, material selector, purposes and restrictions; an inventory at a named cutoff with nonempty inventory refs; the restriction epoch still current; every retention exception active and any governing professional determination validated; a currently accepted owner; response and reconcile deadlines with the cutoff strictly before the response deadline; and stated proof limits. A missing, stale or unaccepted binding leaves the request in `requested`.",
+    "derived_from": [
+      {
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "`DeletionScope.determined` is bound to fields the scope already carries, not to a conclusion held elsewhere. ... A missing, stale or unaccepted binding leaves the request in `requested`, where it stays recorded and restrictive."
+      }
+    ]
   },
   "criterion.DeletionScope.propagating.v1": {
     "version": "1.0",
@@ -41441,8 +41517,43 @@
           },
           "field_paths": [
             "/payload/receipt_refs",
+            "/payload/inventory_refs",
+            "/payload/restriction_epoch_ref",
+            "/payload/proof_limits",
             "/owner_assignment_ref"
           ]
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "nonempty",
+            "value": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/unknown_copies"
+            }
+          }
+        },
+        {
+          "op": "not",
+          "predicate": {
+            "op": "nonempty",
+            "value": {
+              "op": "path",
+              "value": {
+                "op": "resolve",
+                "ref": {
+                  "arg": "subject_ref"
+                }
+              },
+              "pointer": "/payload/residual_retention_refs"
+            }
+          }
         },
         {
           "op": "related_phases",
@@ -41454,6 +41565,29 @@
               "field_path": "/owner_assignment_ref",
               "states": [
                 "accepted"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/restriction_epoch_ref",
+              "states": [
+                "current"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/receipt_refs",
+              "states": [
+                "recorded"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/inventory_refs",
+              "states": [
+                "contained",
+                "expired",
+                "retired"
               ],
               "optional": false
             }
@@ -41492,7 +41626,7 @@
         }
       ]
     },
-    "meaning": "Independently observed conformance against the declared predicates -- actual acknowledged availability, competence and exercised access, not a compute check and not the producer's own report. Phase assessed: verified.",
+    "meaning": "Every inventory item is covered by a receipt that applies to this revision (same record, revision no later than this one, currently recorded, scope not widened, item discovered by its checked_at) and is contained, expired or retired; every listed receipt is recorded; unknown_copies is EMPTY and residual_retention_refs is EMPTY; the restriction epoch is current and the owner accepted. Any residual makes this `verified_with_residuals` instead; absent evidence leaves `propagating`. Phase assessed: verified.",
     "owner_component": "S1-C07",
     "source": "../candidates/company-foundation-repairs-v1.md",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -41584,19 +41718,19 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "Independently observed conformance against the declared predicates -- actual acknowledged availability, competence and exercised access, not a compute check and not the producer's own report.",
+    "requires": "Every inventory item is covered by a receipt that applies to this revision (same record, revision no later than this one, currently recorded, scope not widened, item discovered by its checked_at) and is contained, expired or retired; every listed receipt is recorded; unknown_copies is EMPTY and residual_retention_refs is EMPTY; the restriction epoch is current and the owner accepted. Any residual makes this `verified_with_residuals` instead; absent evidence leaves `propagating`.",
     "derived_from": [
       {
-        "file": "03-company-capabilities.md",
-        "anchor_or_quote": "Before any sale, `company.delivery_capacity.verify.v1` accepts proposed DeliveryCapacity, actual performer assignments, service workflow, materials/access evidence, availability window, reservations and continuity arrangement. It verifies actual acknowledged availability and competence ... then obtains independent scoped acceptance."
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "`verified` means both residual partitions are empty: every inventory item is covered, `unknown_copies` is empty and `residual_retention_refs` is empty. `verified_with_residuals` means at least one residual partition is nonempty; retention-only, unknown-only and mixed results all qualify, and each residual keeps its own restriction, owner and review."
       },
       {
-        "file": "08-improvement-implementation.md",
-        "anchor_or_quote": "Exact kernel states are proposed → reviewed → authorized → staged → activated → verified; any preactivation state may become rejected; activated/verified → rollback_required → rolled_back. reviewed requires completed independent assessment; authorized requires the exact current competent decision; staged means the exact manifest is prepared with no activation claim; activated requires native effect evidence; verified requires the declared monitoring/outcome predicates."
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "A receipt applies to revision N only when it names a revision of the same record no later than N, is currently `recorded` rather than `contested` or `superseded`, and N does not widen the subjects, material selector, purposes or copy class that receipt covered."
       },
       {
-        "file": "06-knowledge-evidence-evaluation.md",
-        "anchor_or_quote": "Independent perspective means different relevant evidence, method, measurement or competent human grounding under separate protected authority. ... A different model family can add a tested viewpoint but is not a proof of independent error."
+        "file": "11-schemas-state-contracts.md",
+        "anchor_or_quote": "Which evidence about a prior revision counts toward the successor is decided by that record's own contract"
       }
     ]
   },
@@ -41617,9 +41751,41 @@
           },
           "field_paths": [
             "/payload/receipt_refs",
-            "/payload/unknown_copies",
-            "/payload/residual_retention_refs",
+            "/payload/inventory_refs",
+            "/payload/restriction_epoch_ref",
+            "/payload/proof_limits",
             "/owner_assignment_ref"
+          ]
+        },
+        {
+          "op": "any",
+          "predicates": [
+            {
+              "op": "nonempty",
+              "value": {
+                "op": "path",
+                "value": {
+                  "op": "resolve",
+                  "ref": {
+                    "arg": "subject_ref"
+                  }
+                },
+                "pointer": "/payload/unknown_copies"
+              }
+            },
+            {
+              "op": "nonempty",
+              "value": {
+                "op": "path",
+                "value": {
+                  "op": "resolve",
+                  "ref": {
+                    "arg": "subject_ref"
+                  }
+                },
+                "pointer": "/payload/residual_retention_refs"
+              }
+            }
           ]
         },
         {
@@ -41634,6 +41800,37 @@
                 "accepted"
               ],
               "optional": false
+            },
+            {
+              "field_path": "/payload/restriction_epoch_ref",
+              "states": [
+                "current"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/receipt_refs",
+              "states": [
+                "recorded"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/inventory_refs",
+              "states": [
+                "contained",
+                "expired",
+                "retired",
+                "residual_unknown"
+              ],
+              "optional": false
+            },
+            {
+              "field_path": "/payload/residual_retention_refs",
+              "states": [
+                "active"
+              ],
+              "optional": true
             }
           ]
         },
@@ -41670,7 +41867,7 @@
         }
       ]
     },
-    "meaning": "Verification succeeded for part of the scope and the unverified remainder is named and still owned. Phase assessed: verified_with_residuals.",
+    "meaning": "As `verified` for coverage and receipt applicability, except that at least one residual partition is nonempty: unknown copies, residual retention, or both. Each retained copy's policy is active and owned; each unknown inventory item is residual_unknown. Retention-only, unknown-only and mixed results all qualify; a result with neither residual is `verified`, not this. Phase assessed: verified_with_residuals.",
     "owner_component": "S1-C07",
     "source": "../candidates/company-foundation-repairs-v1.md",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -41762,15 +41959,19 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "Verification succeeded for part of the scope and the unverified remainder is named and still owned.",
+    "requires": "As `verified` for coverage and receipt applicability, except that at least one residual partition is nonempty: unknown copies, residual retention, or both. Each retained copy's policy is active and owned; each unknown inventory item is residual_unknown. Retention-only, unknown-only and mixed results all qualify; a result with neither residual is `verified`, not this.",
     "derived_from": [
       {
-        "file": "03-company-capabilities.md",
-        "anchor_or_quote": "Before any sale, `company.delivery_capacity.verify.v1` accepts proposed DeliveryCapacity, actual performer assignments, service workflow, materials/access evidence, availability window, reservations and continuity arrangement. It verifies actual acknowledged availability and competence ... then obtains independent scoped acceptance."
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "`verified` means both residual partitions are empty: every inventory item is covered, `unknown_copies` is empty and `residual_retention_refs` is empty. `verified_with_residuals` means at least one residual partition is nonempty; retention-only, unknown-only and mixed results all qualify, and each residual keeps its own restriction, owner and review."
       },
       {
-        "file": "03-company-capabilities.md",
-        "anchor_or_quote": "CAP-39 closure inventories accepted and potential promises, refunds, service, workers/suppliers, renewals, filings, records/data and grievance resources; performs each real disposition; and records surviving unresolved scope. `closed-with-residuals` has actual custodian, funding and review dates. It cannot be advertised as no remaining responsibility."
+        "file": "02-authority-recovery.md",
+        "anchor_or_quote": "A receipt applies to revision N only when it names a revision of the same record no later than N, is currently `recorded` rather than `contested` or `superseded`, and N does not widen the subjects, material selector, purposes or copy class that receipt covered."
+      },
+      {
+        "file": "11-schemas-state-contracts.md",
+        "anchor_or_quote": "Which evidence about a prior revision counts toward the successor is decided by that record's own contract"
       }
     ]
   },

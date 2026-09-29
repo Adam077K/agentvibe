@@ -103,15 +103,6 @@
       ],
       "count": 3,
       "finding": "3 records declare a `paused` phase and no field the stated requirement can bind to. This is one question asked 3 times, not 3 separate omissions: either those records gain the field, or the corpus states what `paused` requires for a record that does not carry one."
-    },
-    {
-      "phase": "determined",
-      "records": [
-        "DeletionScope",
-        "InteractionDetermination"
-      ],
-      "count": 2,
-      "finding": "2 records declare a `determined` phase and no field the stated requirement can bind to. This is one question asked 2 times, not 2 separate omissions: either those records gain the field, or the corpus states what `determined` requires for a record that does not carry one."
     }
   ],
   "gaps": [
@@ -708,40 +699,6 @@
         "checked_at",
         "limits",
         "residual_refs"
-      ]
-    },
-    {
-      "gap_id": "gap-DeletionScope-determined",
-      "record": "DeletionScope",
-      "phase": "determined",
-      "criterion_id": "criterion.DeletionScope.determined.v1",
-      "kind": "record_has_no_field_for_the_stated_requirement",
-      "reason": "the requirement states evidence this record carries no field for: conjunct 'rp' does not resolve",
-      "what_the_prose_would_need_to_say": "Which of DeletionScope's own fields carries the evidence `determined` requires. The requirement IS stated -- A competent issuer's scoped conclusion with its conditions, uncertainties and expiry; naming an endpoint does not create the competence. -- and DeletionScope declares no field it can bind to, so the criterion cannot express it. Either DeletionScope gains that field, or the corpus states what DeletionScope's `determined` requires INSTEAD of the general rule.",
-      "nearest_related_passage": {
-        "phase_kind_entry": "determined",
-        "requires": "A competent issuer's scoped conclusion with its conditions, uncertainties and expiry; naming an endpoint does not create the competence.",
-        "cites": [
-          "c-seed",
-          "s-world-propositions"
-        ]
-      },
-      "record_required_payload_fields": [
-        "subject_refs",
-        "material_selector",
-        "purpose_ids",
-        "restrictions",
-        "inventory_cutoff",
-        "inventory_refs",
-        "future_copy_rule",
-        "exception_refs",
-        "response_due_at",
-        "reconcile_at",
-        "receipt_refs",
-        "unknown_copies",
-        "residual_retention_refs",
-        "restriction_epoch_ref",
-        "proof_limits"
       ]
     },
     {

@@ -3494,6 +3494,107 @@ RECORD_OVERRIDES = {
 }
 
 # The `capabilities.json#/domain_validators` provenance for the eight overrides above.
+# -- DeletionScope (F7-database-01). --------------------------------------------
+# `determined` was a registered gap: the generic spec binds an `authority` role and
+# DeletionScope declares no required field that role matches, so the only exit from
+# `requested` resolved `content_unspecified` forever. 02 section 8.3 now states which of
+# DeletionScope's OWN fields carry the determination; this override binds exactly those.
+# Every conjunct still resolves unresolved on a missing path, so absence stays restrictive.
+CITE["del-determined"] = (
+    "02-authority-recovery.md",
+    "`DeletionScope.determined` is bound to fields the scope already carries, not to a "
+    "conclusion held elsewhere. ... A missing, stale or unaccepted binding leaves the "
+    "request in `requested`, where it stays recorded and restrictive.")
+RECORD_OVERRIDES[("DeletionScope", "determined")] = spec(
+    "The exact subjects, material selector, purposes and restrictions; an inventory at a "
+    "named cutoff with nonempty inventory refs; the restriction epoch still current; "
+    "every retention exception active and any governing professional determination "
+    "validated; a currently accepted owner; response and reconcile deadlines with the "
+    "cutoff strictly before the response deadline; and stated proof limits. A missing, "
+    "stale or unaccepted binding leaves the request in `requested`.",
+    ["del-determined"],
+    [("nfp", ["/payload/subject_refs", "/payload/material_selector",
+              "/payload/purpose_ids", "/payload/restrictions",
+              "/payload/inventory_cutoff", "/payload/inventory_refs",
+              "/payload/restriction_epoch_ref", "/payload/response_due_at",
+              "/payload/reconcile_at", "/payload/proof_limits",
+              "/owner_assignment_ref"]),
+     ("rpp", [("/owner_assignment_ref", ["accepted"], False),
+              ("/payload/restriction_epoch_ref", ["current"], False),
+              ("/payload/exception_refs", ["active"], True),
+              ("/payload/determination_ref", ["validated"], True)]),
+     ("ltF", "/payload/inventory_cutoff", "/payload/response_due_at"),
+     AF, AR],
+    hard=["nfp", "rpp", "ltF"])
+
+# -- DeletionScope verified / verified_with_residuals (F7-database-02, F7-privacy-01).
+# The generic specs checked a nonempty receipt list and nothing about coverage, and the
+# two phases differed only in naming the `uncertainty` role, which on DeletionScope
+# matches BOTH residual arrays -- so `verified_with_residuals` demanded unknown copies AND
+# residual retention, and `verified` excluded neither. 02 section 8.3 now states the
+# partition. Coverage is carried by the inventory items' own lifecycle phases; the
+# residual split by the two arrays. Per-receipt applicability across revisions (same
+# record, revision <= N, no widening, checked_at) needs a join over receipt fields that
+# this DSL cannot express: it is stated in `requires` and carried by the accepted
+# judgment on THIS criterion (accepted_for), recorded as a proof limit in
+# reviews/F2-07-repairs-lifecycle.md rather than implied by the machine.
+CITE["del-receipt-applicability"] = (
+    "02-authority-recovery.md",
+    "A receipt applies to revision N only when it names a revision of the same record no "
+    "later than N, is currently `recorded` rather than `contested` or `superseded`, and N "
+    "does not widen the subjects, material selector, purposes or copy class that receipt "
+    "covered.")
+CITE["del-partition"] = (
+    "02-authority-recovery.md",
+    "`verified` means both residual partitions are empty: every inventory item is "
+    "covered, `unknown_copies` is empty and `residual_retention_refs` is empty. "
+    "`verified_with_residuals` means at least one residual partition is nonempty; "
+    "retention-only, unknown-only and mixed results all qualify, and each residual keeps "
+    "its own restriction, owner and review.")
+CITE["del-revision"] = (
+    "11-schemas-state-contracts.md",
+    "Which evidence about a prior revision counts toward the successor is decided by "
+    "that record's own contract")
+_DEL_VERIFY_FIELDS = ("nfp", ["/payload/receipt_refs", "/payload/inventory_refs",
+                              "/payload/restriction_epoch_ref", "/payload/proof_limits",
+                              "/owner_assignment_ref"])
+RECORD_OVERRIDES[("DeletionScope", "verified")] = spec(
+    "Every inventory item is covered by a receipt that applies to this revision (same "
+    "record, revision no later than this one, currently recorded, scope not widened, "
+    "item discovered by its checked_at) and is contained, expired or retired; every "
+    "listed receipt is recorded; unknown_copies is EMPTY and residual_retention_refs is "
+    "EMPTY; the restriction epoch is current and the owner accepted. Any residual makes "
+    "this `verified_with_residuals` instead; absent evidence leaves `propagating`.",
+    ["del-partition", "del-receipt-applicability", "del-revision"],
+    [_DEL_VERIFY_FIELDS,
+     ("not", ("neF", "/payload/unknown_copies")),
+     ("not", ("neF", "/payload/residual_retention_refs")),
+     ("rpp", [("/owner_assignment_ref", ["accepted"], False),
+              ("/payload/restriction_epoch_ref", ["current"], False),
+              ("/payload/receipt_refs", ["recorded"], False),
+              ("/payload/inventory_refs", ["contained", "expired", "retired"], False)]),
+     ("nc", "observed_applied"), AF, AR],
+    hard=["nfp", "not", "rpp", "nc"])
+RECORD_OVERRIDES[("DeletionScope", "verified_with_residuals")] = spec(
+    "As `verified` for coverage and receipt applicability, except that at least one "
+    "residual partition is nonempty: unknown copies, residual retention, or both. Each "
+    "retained copy's policy is active and owned; each unknown inventory item is "
+    "residual_unknown. Retention-only, unknown-only and mixed results all qualify; a "
+    "result with neither residual is `verified`, not this.",
+    ["del-partition", "del-receipt-applicability", "del-revision"],
+    [_DEL_VERIFY_FIELDS,
+     ("either", [("neF", "/payload/unknown_copies"),
+                 ("neF", "/payload/residual_retention_refs")]),
+     ("rpp", [("/owner_assignment_ref", ["accepted"], False),
+              ("/payload/restriction_epoch_ref", ["current"], False),
+              ("/payload/receipt_refs", ["recorded"], False),
+              ("/payload/inventory_refs",
+               ["contained", "expired", "retired", "residual_unknown"], False),
+              ("/payload/residual_retention_refs", ["active"], True)]),
+     ("nc", "observed_applied"), AF, AR],
+    hard=["nfp", "either", "rpp", "nc"])
+
+
 OVERRIDE_SOURCE = {
     "DeliveryCapacity", "Experiment", "PriceProposal", "LaunchReadiness",
     "Economics", "CashPosition",
