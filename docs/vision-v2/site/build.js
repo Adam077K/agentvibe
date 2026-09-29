@@ -1,0 +1,11 @@
+const fs=require('fs'),path=require('path');
+const [,,V,S,commit]=process.argv, D=path.join(V,'docs/vision-v2');
+const pkg=[['readme','README.md','','Overview'],['vision','01-VISION.md','01','Vision'],['architecture','02-ARCHITECTURE.md','02','Architecture'],['components','03-COMPONENTS.md','03','Components'],['keepcut','04-KEEP-CUT.md','04','Keep and cut from S1.1'],['buildplan','05-BUILD-PLAN.md','05','Build plan'],['metrics','06-METRICS.md','06','Metrics'],['decisions','07-FOUNDER-DECISIONS.md','07','Founder decisions'],['risks','08-RISKS.md','08','Risks']];
+const made=[['brief','BRIEF.md','B','The brief'],['p01','panel/01-serial-founder.md','P1','Serial founder'],['p02','panel/02-multi-agent-engineer.md','P2','Multi-agent engineer'],['p03','panel/03-open-source-scout.md','P3','Open-source scout'],['p04','panel/04-memory-self-improvement.md','P4','Memory and self-improvement'],['p05','panel/05-solo-founder-experience.md','P5','Solo-founder experience'],['p06','panel/06-growth-gtm.md','P6','Growth and GTM'],['p07','panel/07-ops-security-cost.md','P7','Ops, security and cost'],['p07b','panel/07b-customer-support-ops.md','P7b','Customer and support ops'],['p07c','panel/07c-finance-legal-admin.md','P7c','Finance, legal and admin'],['redteam','panel/08-red-team.md','R','Red team']];
+const docs=[];let bytes=0;
+for(const [g,list] of [['The v2 package',pkg],['How it was made',made]]) for(const [id,file,num,title] of list){const md=fs.readFileSync(path.join(D,file),'utf8');bytes+=Buffer.byteLength(md);docs.push({id,file,path:'docs/vision-v2/'+file,num,title,group:g,md,bytes:Buffer.byteLength(md)});}
+const glance=[['30','build jobs, J00 to J29, each sized for one agent session'],['12','founder decisions; D12, D1, D2 and D9 block the start'],['11','failure classes seeded into the one integrated test'],['14','risks tracked, each with a mitigation and an owner'],['10','panel seats: nine lenses plus a red team'],['59 KB','for the whole package, against 815 KB for S1.1']];
+const data={branch:'vision/v2-reenvision',commit,date:'2026-09-29',bytes,glance,docs};
+const json=JSON.stringify(data).replace(/</g,'\\u003c');
+const out=fs.readFileSync(path.join(S,'template.html'),'utf8').replace('__DATA__',()=>json);
+fs.writeFileSync(path.join(S,'index.html'),out);console.log('docs',docs.length,'bytes',bytes,'html',out.length);
