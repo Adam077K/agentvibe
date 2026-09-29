@@ -70,7 +70,7 @@ named contracts only; the S1.1 design freeze holds. No implementation code was w
   against the settled entitlement and only for the amount settled**.
 
   Body: `nonempty_fields` over agreement_ref, receipts and remaining_duties, plus
-  `native_correlated(observed_applied)`, `accepted_for` and `attested_result`. Citations: CAP-17
+  `native_correlated(observed_applied)`, `accepted_for` and `attested_result`. Citations: 
   (`c-refund-conflict`), the two IC-PAY refund sentences, and `a-reservation`.
 - Prose updated to agree: the `Fulfillment.refunded` row in `03-company-capabilities.md` and the
   meaning of `edge.Fulfillment.failed.refunded.v1`. Gaps registered went from 68 to 67.
