@@ -559,3 +559,112 @@ claims:
     valid_until: "2027-06-01"
     confidence: 0.85
 ```
+
+## c-langgraph-license-mit
+> LangGraph (langchain-ai/langgraph) is licensed under the MIT License.
+Source: <https://github.com/langchain-ai/langgraph/blob/main/LICENSE> · accessed 2026-09-29 · appended 2026-09-29 by `mcp:claim-append`.
+Verified at append time by `claim-source` and `claim-freshness`; body digest `sha256:e024bf68b076bf6fd860eeb5fd7661cc6d105dbc3edf54d8b1367d8d29e9c46b`.
+```claims
+claims:
+  - id: c-langgraph-license-mit
+    assert: "LangGraph (langchain-ai/langgraph) is licensed under the MIT License."
+    kind: external-fact
+    scope: project
+    verified_by: source
+    evidence:
+      url: "https://github.com/langchain-ai/langgraph/blob/main/LICENSE"
+      quote: "MIT License"
+      accessed: "2026-09-29"
+    valid_until: "2027-03-29"
+    confidence: 0.9
+```
+## c-mem0-license-apache2
+> Mem0 (mem0ai/mem0) is licensed under Apache-2.0.
+Source: <https://github.com/mem0ai/mem0> · accessed 2026-09-29 · appended 2026-09-29 by `mcp:claim-append`.
+Verified at append time by `claim-source` and `claim-freshness`; body digest `sha256:24bc0c9fe24faf7715e77127d295ed55dacf336940fcfa86656db83702db77ce`.
+```claims
+claims:
+  - id: c-mem0-license-apache2
+    assert: "Mem0 (mem0ai/mem0) is licensed under Apache-2.0."
+    kind: external-fact
+    scope: project
+    verified_by: source
+    evidence:
+      url: "https://github.com/mem0ai/mem0"
+      quote: "Apache-2.0"
+      accessed: "2026-09-29"
+    valid_until: "2027-03-29"
+    confidence: 0.85
+```
+## c-graphiti-license-apache2
+> Graphiti (getzep/graphiti), the open-source temporal knowledge-graph library behind Zep, is licensed under Apache-2.0.
+Source: <https://github.com/getzep/graphiti> · accessed 2026-09-29 · appended 2026-09-29 by `mcp:claim-append`.
+Verified at append time by `claim-source` and `claim-freshness`; body digest `sha256:221128a9b036ce282186035d4e1c8ce73ccc688e16d839554fa5093b39d3eae2`.
+```claims
+claims:
+  - id: c-graphiti-license-apache2
+    assert: "Graphiti (getzep/graphiti), the open-source temporal knowledge-graph library behind Zep, is licensed under Apache-2.0."
+    kind: external-fact
+    scope: project
+    verified_by: source
+    evidence:
+      url: "https://github.com/getzep/graphiti"
+      quote: "Apache-2.0"
+      accessed: "2026-09-29"
+    valid_until: "2027-03-29"
+    confidence: 0.85
+```
+## c-openhands-license-mit
+> OpenHands (OpenHands/OpenHands, formerly OpenDevin) is licensed under the MIT License.
+Source: <https://github.com/OpenHands/OpenHands/blob/main/LICENSE> · accessed 2026-09-29 · appended 2026-09-29 by `mcp:claim-append`.
+Verified at append time by `claim-source` and `claim-freshness`; body digest `sha256:f5d665f02a37be2437a1145bcd18a048f4f7291c1163226fc8216e59fdae44e9`.
+```claims
+claims:
+  - id: c-openhands-license-mit
+    assert: "OpenHands (OpenHands/OpenHands, formerly OpenDevin) is licensed under the MIT License."
+    kind: external-fact
+    scope: project
+    verified_by: source
+    evidence:
+      url: "https://github.com/OpenHands/OpenHands/blob/main/LICENSE"
+      quote: "The MIT License (MIT)"
+      accessed: "2026-09-29"
+    valid_until: "2027-03-29"
+    confidence: 0.9
+```
+## c-letta-license-apache2
+> Letta (letta-ai/letta, formerly MemGPT), the stateful-agent memory framework, is licensed under Apache-2.0.
+Source: <https://github.com/letta-ai/letta> · accessed 2026-09-29 · appended 2026-09-29 by `mcp:claim-append`.
+Verified at append time by `claim-source` and `claim-freshness`; body digest `sha256:a6744c22f7b0eb389a808d8e5e6cbeee50560abb65cfb999324767ef2474961c`.
+```claims
+claims:
+  - id: c-letta-license-apache2
+    assert: "Letta (letta-ai/letta, formerly MemGPT), the stateful-agent memory framework, is licensed under Apache-2.0."
+    kind: external-fact
+    scope: project
+    verified_by: source
+    evidence:
+      url: "https://github.com/letta-ai/letta"
+      quote: "Apache-2.0"
+      accessed: "2026-09-29"
+    valid_until: "2027-03-29"
+    confidence: 0.85
+```
+## c-inngest-server-license-sspl
+> Inngest's self-hostable server ships under the SSPL (source-available, not OSI-approved open source), distinct from Temporal's MIT license and Restate's Apache-2.0 self-hosted option.
+Source: <https://bex.co/blog/2026/09/12/inngest-self-hostable-durable-execution-temporal> · accessed 2026-09-29 · appended 2026-09-29 by `mcp:claim-append`.
+Verified at append time by `claim-source` and `claim-freshness`; body digest `sha256:bd2f2837eeb0113ae767f9aa09c34faa490b1d3f13f2b958c77c9888cb9d5023`.
+```claims
+claims:
+  - id: c-inngest-server-license-sspl
+    assert: "Inngest's self-hostable server ships under the SSPL (source-available, not OSI-approved open source), distinct from Temporal's MIT license and Restate's Apache-2.0 self-hosted option."
+    kind: external-fact
+    scope: project
+    verified_by: source
+    evidence:
+      url: "https://bex.co/blog/2026/09/12/inngest-self-hostable-durable-execution-temporal"
+      quote: "the server ships under SSPL"
+      accessed: "2026-09-29"
+    valid_until: "2027-03-29"
+    confidence: 0.55
+```
