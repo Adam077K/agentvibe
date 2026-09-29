@@ -74954,15 +74954,18 @@
       "op": "all",
       "predicates": [
         {
-          "op": "attested_result",
+          "op": "nonempty_fields",
           "subject_ref": {
             "arg": "subject_ref"
           },
-          "predicate_id": "criterion.JournalBatch.balanced.v1",
-          "predicate_version": "1.0",
-          "observation_refs": {
-            "arg": "observation_refs"
-          }
+          "field_paths": [
+            "/payload/ledger_authority",
+            "/payload/accounting_period",
+            "/payload/entries",
+            "/payload/source_documents",
+            "/payload/treatment_refs",
+            "/payload/reconciliations"
+          ]
         },
         {
           "op": "accepted_for",
@@ -74973,10 +74976,21 @@
           "judgment_refs": {
             "arg": "judgment_refs"
           }
+        },
+        {
+          "op": "attested_result",
+          "subject_ref": {
+            "arg": "subject_ref"
+          },
+          "predicate_id": "criterion.JournalBatch.balanced.v1",
+          "predicate_version": "1.0",
+          "observation_refs": {
+            "arg": "observation_refs"
+          }
         }
       ]
     },
-    "meaning": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations. Phase assessed: balanced.",
+    "meaning": "Every entry carries its account, its source references and exactly one nonzero debit or credit in decimal-string minor units, and SEPARATELY FOR EACH currency, exponent and ledger the batch's debits sum exactly to its credits -- no cross-currency netting, no invented exchange rate and no invented balancing entry. Every entry is covered by the batch's original source documents and by an authoritative accounting treatment, under the one ledger authority for the stated accounting period. Every unreconciled item -- unmatched movement, fee, timing difference, credit or disputed classification -- is identified on the batch's reconciliations with its disposition, never hidden or netted away. The arithmetic is attested and accepted on THIS criterion: a ResourceAccount reservation equation, or an attestation or judgment on any other predicate, establishes nothing here. Balanced is not posted and says nothing about compliance. Phase assessed: balanced.",
     "owner_component": "S1-C03",
     "source": "capabilities.json#/record_types/JournalBatch",
     "failure": "false or unresolved denies this dependent transition; preserve typed reason and surviving duties",
@@ -75068,11 +75082,15 @@
       "additionalProperties": false
     },
     "content_source": "tools/phase_content.py",
-    "requires": "Reserved plus consumed plus uncertain does not exceed the authorized total, in each account's own canonical unit, reconciled against actual observations.",
+    "requires": "Every entry carries its account, its source references and exactly one nonzero debit or credit in decimal-string minor units, and SEPARATELY FOR EACH currency, exponent and ledger the batch's debits sum exactly to its credits -- no cross-currency netting, no invented exchange rate and no invented balancing entry. Every entry is covered by the batch's original source documents and by an authoritative accounting treatment, under the one ledger authority for the stated accounting period. Every unreconciled item -- unmatched movement, fee, timing difference, credit or disputed classification -- is identified on the batch's reconciliations with its disposition, never hidden or netted away. The arithmetic is attested and accepted on THIS criterion: a ResourceAccount reservation equation, or an attestation or judgment on any other predicate, establishes nothing here. Balanced is not posted and says nothing about compliance.",
     "derived_from": [
       {
-        "file": "02-authority-recovery.md",
-        "anchor_or_quote": "State held → partly_consumed/consumed/released; held/partly_consumed → uncertain; uncertain → consumed/released only on sufficient reconciliation evidence. Expiry can release a purely internal unclaimed reservation after fencing; it cannot clear uncertainty about a possible external effect."
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Native financial computation uses decimal-string minor units by currency. Each `JournalEntry` has source references, an account, and exactly one nonzero debit or credit. A posted batch balances separately per currency and ledger; it is immutable and corrected through linked reversing/correcting entries. No unsupported accounting treatment, jurisdictional rule, exchange rate or balancing entry is invented."
+      },
+      {
+        "file": "03-company-capabilities.md",
+        "anchor_or_quote": "Bank reconciliation preserves unmatched movements, fees, timing differences, credits and disputed classifications until supported treatment exists."
       }
     ]
   },

@@ -2261,10 +2261,6 @@
       ]
     },
     "JournalBatch": {
-      "balanced": [
-        "nf",
-        "s1:resource_equation(not defined for JournalBatch)"
-      ],
       "corrected": [
         "rp"
       ],

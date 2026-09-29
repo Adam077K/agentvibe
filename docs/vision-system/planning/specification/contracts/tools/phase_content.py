@@ -427,6 +427,18 @@ CITE = {
         "run an operationally successful losing case and a profitable case with excessive "
         "customer/applicant/contractor coordination. Report distinct economic, usefulness "
         "and individual-burden failures; no combined score rescues them."),
+    "c-journal-balance": (
+        "03-company-capabilities.md",
+        "Native financial computation uses decimal-string minor units by currency. Each "
+        "`JournalEntry` has source references, an account, and exactly one nonzero debit "
+        "or credit. A posted batch balances separately per currency and ledger; it is "
+        "immutable and corrected through linked reversing/correcting entries. No "
+        "unsupported accounting treatment, jurisdictional rule, exchange rate or balancing "
+        "entry is invented."),
+    "c-bank-reconciliation": (
+        "03-company-capabilities.md",
+        "Bank reconciliation preserves unmatched movements, fees, timing differences, "
+        "credits and disputed classifications until supported treatment exists."),
     "c-closure": (
         "03-company-capabilities.md",
         "CAP-39 closure inventories accepted and potential promises, refunds, service, "
@@ -1603,12 +1615,6 @@ PHASE_SPECS = {
         [("nf", ["quantity", "evidence", "dependency"]),
          ("s1", "resource_equation"), AR],
         hard=["s1"]),
-    "balanced": spec(
-        "Reserved plus consumed plus uncertain does not exceed the authorized total, in "
-        "each account's own canonical unit, reconciled against actual observations.",
-        ["a-reservation"],
-        [("nf", ["quantity"]), ("s1", "resource_equation"), AR],
-        hard=["s1"]),
     "transport_observed": spec(
         "Protected capture records at least one admitted packet or request-stage "
         "observation. This is transport, NOT business effect.",
@@ -2672,6 +2678,39 @@ RECORD_OVERRIDES = {
     #                 '/payload/attempt_ceiling', '/payload/next_discriminator']),
     #        ('not', ('ltCount', '/payload/attempt_refs', '/payload/attempt_ceiling')), AR],
     #       hard=['nfp', 'not']),
+
+    # -- F7-accountant-01: JournalBatch.balanced. ---------------------------------
+    #
+    # The generic kind-level `balanced` spec USED TO carry ResourceAccount's reservation
+    # equation ("reserved plus consumed plus uncertain does not exceed the authorized
+    # total") and cite `a-reservation`. JournalBatch is the only record with a
+    # `balanced` phase, `resource_equation` is ResourceAccount's primitive and was
+    # dropped as not applicable, so the criterion's body read only AR/AF while its
+    # `meaning`/`requires` told the attester to check reservation arithmetic. An
+    # attestation of the wrong rule is not an attestation of this one. The generic spec
+    # is deleted and this override states the journal rule. The per-currency sum is
+    # attested and accepted on THIS criterion id; the kernel has no grouped-sum
+    # primitive to compute it, and inventing one is a kernel change, not a repair.
+    ("JournalBatch", "balanced"): spec(
+        "Every entry carries its account, its source references and exactly one nonzero "
+        "debit or credit in decimal-string minor units, and SEPARATELY FOR EACH currency, "
+        "exponent and ledger the batch's debits sum exactly to its credits -- no "
+        "cross-currency netting, no invented exchange rate and no invented balancing "
+        "entry. Every entry is covered by the batch's original source documents and by "
+        "an authoritative accounting treatment, under the one ledger authority for the "
+        "stated accounting period. Every unreconciled item -- unmatched movement, fee, "
+        "timing difference, credit or disputed classification -- is identified on the "
+        "batch's reconciliations with its disposition, never hidden or netted away. The "
+        "arithmetic is attested and accepted on THIS criterion: a ResourceAccount "
+        "reservation equation, or an attestation or judgment on any other predicate, "
+        "establishes nothing here. Balanced is not posted and says nothing about "
+        "compliance.",
+        ["c-journal-balance", "c-bank-reconciliation"],
+        [("nfp", ["/payload/ledger_authority", "/payload/accounting_period",
+                  "/payload/entries", "/payload/source_documents",
+                  "/payload/treatment_refs", "/payload/reconciliations"]),
+         AF, AR],
+        hard=["nfp"]),
 
     # -- R-C / AD-013: Fulfillment's domain lifecycle. ----------------------------
     #
