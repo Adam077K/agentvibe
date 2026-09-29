@@ -495,5 +495,33 @@
       "long lists show first 250-300 per filter; every id reachable by route and search",
       "Google Fonts rendering unverified in the capture harness"
     ]
+  },
+  "founder_decisions_2026_09_29": {
+    "date": "2026-09-29",
+    "channel": "founder answers recorded by the orchestrator, handoff 3f77ede",
+    "hold": "KEPT — founder_hold.lifted stays false",
+    "reviewer_defaults": {
+      "status": "ACCEPTED",
+      "items": [
+        "derived edge predicates from one reviewed source + deterministic generator + independent semantic cases",
+        "self-contained fixture snapshots with digests",
+        "CapabilityId/CheckerId drawn from the existing catalogs",
+        "TC-35 six reasons closed-but-amendable"
+      ]
+    },
+    "checkpoint": {
+      "status": "ADOPTED",
+      "rule": "S0-vs-S1 checkpoint after B01+B04"
+    },
+    "operating_rules": {
+      "status": "ADOPTED",
+      "rules": [
+        "design frozen at S1.1",
+        "batch exit = executable tests + one review pass",
+        "no recheck chains",
+        "spec gaps fixed in the batch that builds them",
+        "split-suite validator only"
+      ]
+    }
   }
 }
