@@ -3,8 +3,8 @@
   "kind": "explicit per-phase content gaps",
   "why": "A criterion whose body uses `content_unspecified` states no requirement because no source states one. Each entry below names what the prose would have to say for that criterion to carry content. validate_contracts.py fails a `content_unspecified` body with no entry here, and fails an entry here with no such body -- so the count cannot drift in either direction.",
   "counts": {
-    "criteria_with_content": 811,
-    "criteria_content_unspecified": 68,
+    "criteria_with_content": 812,
+    "criteria_content_unspecified": 67,
     "criteria_preserved_from_repair": 10
   },
   "grouped_findings": [
@@ -966,31 +966,6 @@
         "verification_refs",
         "unknown_copies",
         "residual_duty_refs"
-      ]
-    },
-    {
-      "gap_id": "gap-Fulfillment-refunded",
-      "record": "Fulfillment",
-      "phase": "refunded",
-      "criterion_id": "criterion.Fulfillment.refunded.v1",
-      "kind": "prose_silent",
-      "reason": "the prose states no evidence requirement for this phase name",
-      "what_the_prose_would_need_to_say": "What evidence a transition into `refunded` requires -- for Fulfillment or for any record carrying that phase. The corpus names `refunded` in a state list and never says what entering it demands.",
-      "nearest_related_passage": {
-        "phase_kind_entry": null,
-        "nearest_named_phases": [
-          "refused"
-        ],
-        "note": "no phase-kind entry exists for this name; the corpus names the phase in a state list without saying what entering it requires"
-      },
-      "record_required_payload_fields": [
-        "agreement_ref",
-        "delivery_steps",
-        "performer_assignment",
-        "service_window",
-        "onboarding_state",
-        "receipts",
-        "remaining_duties"
       ]
     },
     {

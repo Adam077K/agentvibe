@@ -439,6 +439,18 @@ CITE = {
         "03-company-capabilities.md",
         "Bank reconciliation preserves unmatched movements, fees, timing differences, "
         "credits and disputed classifications until supported treatment exists."),
+    "c-refund-conflict": (
+        "03-company-capabilities.md",
+        "CAP-17 retrieves the sold version and actual fault, performs authorized "
+        "repair/completion/refund and checks the resulting customer condition. Refund "
+        "conflict identity uses entitlement and prior unknown effects, so sales retention "
+        "and support cannot pay it twice."),
+    "i-pay-refund-intent": (
+        "07-integrations-capacity.md",
+        "Refund is its own OperationIntent linked to original payment."),
+    "i-pay-refund-settled": (
+        "07-integrations-capacity.md",
+        "Refund acknowledgement is not settled refund."),
     "c-closure": (
         "03-company-capabilities.md",
         "CAP-39 closure inventories accepted and potential promises, refunds, service, "
@@ -2714,11 +2726,39 @@ RECORD_OVERRIDES = {
 
     # -- R-C / AD-013: Fulfillment's domain lifecycle. ----------------------------
     #
-    # `refunded` is deliberately ABSENT and becomes a registered gap. The corpus says
-    # what a refund IS (CAP-17: "authorized repair/completion/refund", conflict identity
-    # so support and sales "cannot pay it twice") and says it about the SupportCase that
-    # performs it. It nowhere says what a Fulfillment record in `refunded` must show.
-    # Inventing that sentence here is the false closure this module exists to refuse.
+    # F7-cfo-01: `refunded` WAS deliberately absent and a registered gap, on the reading
+    # that the corpus says what a refund is only about the SupportCase that performs it.
+    # The outside review (F2-07) confirmed the gap as HIGH and named the content the
+    # corpus DOES supply for the money half: CAP-17's entitlement-based conflict identity,
+    # IC-PAY's "Refund is its own OperationIntent linked to original payment" and
+    # "Refund acknowledgement is not settled refund". The spec below says only that:
+    # entitlement, exact correlation, SETTLEMENT (not acknowledgement), surviving duties,
+    # and that reservation release follows the settled entitlement. Amount/currency are
+    # compared inside the attested/accepted judgment on THIS criterion, because the
+    # Fulfillment payload carries no refund-amount field; adding one is a schema change.
+    ("Fulfillment", "refunded"): spec(
+        "The refund is established against an ENTITLEMENT, not a request: the sold "
+        "agreement it arises from, the receipts actually obtained and the obligations "
+        "that survive are recorded, and the refunded amount and currency are exactly "
+        "those the entitlement allows for this fulfillment -- full or partial, never "
+        "more than was received and never paid twice across sales and support. The "
+        "refund is its own operation linked to the ORIGINAL payment, and `refunded` is "
+        "entered only on a qualified native observation, exactly correlated to that "
+        "provider refund object, account and request, that the refund SETTLED for the "
+        "entitled amount and currency, with a current accepted judgment on THIS "
+        "criterion. A refund acknowledgement, a pending or unknown provider status, an "
+        "unrelated payment, a case closure or a company status is not a settled refund; "
+        "a pending or unknown refund effect stays held as an uncertain effect, and "
+        "duties still owed keep their own custody on the record. A reservation or hold "
+        "for this refund or this fulfillment is released only against the settled "
+        "entitlement and only for the amount settled -- never on an acknowledgement or "
+        "a generic case closure.",
+        ["c-refund-conflict", "i-pay-refund-intent", "i-pay-refund-settled",
+         "a-reservation"],
+        [("nfp", ["/payload/agreement_ref", "/payload/receipts",
+                  "/payload/remaining_duties"]),
+         ("nc", "observed_applied"), AF, AR],
+        hard=["nfp", "nc"]),
     ("Fulfillment", "delivering"): spec(
         "The agreed service is being performed by a currently accepted performer, with "
         "the milestone steps, the service window and the obligations still outstanding "
