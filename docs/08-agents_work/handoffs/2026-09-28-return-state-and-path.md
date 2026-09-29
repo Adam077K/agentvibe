@@ -66,3 +66,12 @@ B00 freeze → B01 kernel (schemas, identities, reducers, SERIALIZABLE Pg, outbo
 B05 adapters, B06 human/public ops, B07 ops migration, B09 rehearsals and B10 admission follow once the §4 Q-items
 are answered. Mechanism: one committed workflow in `.claude/workflows/` — a builder lane per batch in its own
 worktree, exit on tests, one reviewer pass, the binding gate per PR. The orchestrator keeps state in one run-ledger file.
+
+## 7. Founder answers — 2026-09-29
+| # | Answer |
+|---|---|
+| D1/D2 | **Hold KEPT.** No construction dispatch; stack not yet ratified. Repair pass and consolidation proceed (documents only). |
+| D3 | **Accepted** all four reviewer defaults. |
+| D4 | **Accepted** — S0-vs-S1 checkpoint after B01+B04, when building starts. |
+| D5 | Not answered — one-job pin stays as is. |
+| D6 | **Adopted** — design frozen at S1.1; exit = executable; one review pass, no recheck chains; spec gaps fixed in the batch that builds them. |
