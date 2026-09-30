@@ -106,7 +106,7 @@ func (r *receipts) Append(x Receipt) error { r.got = append(r.got, x); return ni
 
 func grant() Grant {
 	return Grant{
-		Holder:         "kernel.launcher",
+		Holder:   "kernel.launcher",
 		Binaries: []Binary{{Path: claudeBin, Digest: claudeDigest}, {Path: codexBin, Digest: codexDigest}},
 		Templates: []ArgvTemplate{
 			{Binary: claudeBin, Tokens: claudeTokens, Digest: argvDigest(claudeTokens)},

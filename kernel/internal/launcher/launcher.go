@@ -107,7 +107,7 @@ type Prerequisites struct {
 // Request is one launch request.
 type Request struct {
 	JobID      string
-	Binary     string // path; must be on the grant
+	Binary     string   // path; must be on the grant
 	Argv       []string // argv[1:]; must match one of the grant's templates for Binary
 	Unattended bool     // no human is present; the grant alone authorises the launch
 	Requires   Prerequisites
@@ -115,8 +115,8 @@ type Request struct {
 
 // Receipt records one launch.
 type Receipt struct {
-	JobID  string
-	Binary string
+	JobID    string
+	Binary   string
 	Digest   string // the binary's digest
 	Template string // Digest of the ArgvTemplate the argv matched
 	Argv     []string
