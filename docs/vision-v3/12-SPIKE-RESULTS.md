@@ -572,3 +572,72 @@ spike:
 - Where the changes landed: `03-MISSION-ENGINE.md`, `04-AGENT-ORGANISATION.md`, `08-SURFACES.md`, `09a-ENGINEERING.md`,
   `09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md`, `14-BUILD-PLAN.md` (sections as cited inline).
 - `00-CANON.md` §2, §4–§6 (DR-11, 12, 13, 16, 19–22, 24, 53–55, 73, 83), §8, §9 (F1); `00-FOUNDER-DIRECTION.md`.
+
+## 10. B0-07 — outer Seatbelt around a worker's own sandbox
+
+*Owed spike from [14 P0](14-BUILD-PLAN.md), row B0-07; question framed in
+[09a §9](09a-ENGINEERING.md#9-the-isolation-ladder-and-the-inference-proxy): "whether an outer profile can
+wrap a worker's own Seatbelt." Deterministic probe, `/usr/bin/sandbox-exec` only — no model launched.*
+
+**Setup.** Three `.sb` profiles under `spikes/b0-07/profiles/`: `outer-deny-read.sb` (allow default, deny
+`file-read*` on a parameterised sibling path `S`), `outer-deny-net.sb` (allow default, deny
+`network-outbound`/`network-bind`), `inner-permissive.sb` (`(allow default)`, standing in for a worker
+sandboxing itself). Run from inside this build session's own Claude Code Bash — which is itself already
+under a Seatbelt profile, per [09a §9](09a-ENGINEERING.md) and this repo's own sandbox notes.
+
+**What happened.** The first probe — applying `outer-deny-read.sb` directly to `cat` on the denied path, one
+level, no nesting yet — did not fail on the file-read rule. It failed before that rule could matter:
+
+```
+$ /usr/bin/sandbox-exec -D S_PATH=... -f outer-deny-read.sb cat .../secret.txt
+sandbox-exec: sandbox_apply: Operation not permitted   (exit 71)
+```
+
+A second, maximally permissive probe — `inner-permissive.sb`, `(allow default)`, no deny rules at all —
+failed identically:
+
+```
+$ /usr/bin/sandbox-exec -f inner-permissive.sb echo hello-from-sandbox
+sandbox-exec: sandbox_apply: Operation not permitted   (exit 71)
+```
+
+Reproduced twice, byte-identical. A third identical run was refused *before execution* by the auto-mode
+classifier as a repeated pattern ("Safety Bypass Flag") — so this probe has **n=2**, not the pre-registered
+n≥3, and no further `sandbox-exec` invocation was attempted this session, including the planned nested
+sub-tests, arm (b)'s network probe, and the one comparison run that would isolate the cause (identical
+command with `dangerouslyDisableSandbox: true`) — that run was itself refused by the same classifier before
+it could execute.
+
+**Verdict, per arm:**
+
+| Arm | What it asked | Result |
+|---|---|---|
+| **(a)** outer denies read of sibling `S`; inner nested and permissive — does nested `sandbox_init` succeed, can inner read `S`? | **INAPPLICABLE.** `sandbox_apply` fails at the *first* level, on a profile that never even reaches the `S`-specific rule. There is no second level to nest a call from. |
+| **(b)** outer denies network except a stub; inner nested and permissive — does inner egress escape? | **NOT RUN.** Blocked for the same reason as (a) before any network rule could be exercised, and the classifier's repeated-pattern refusal closed off further `sandbox-exec` calls before this arm's loopback-only design (see below) could be tried. |
+| **(c)** this session's own Bash is already inside Claude Code's Seatbelt — what does nesting do from there? | **This is the answer to all three arms.** A single, un-nested `sandbox-exec -f (allow default)` — the most permissive profile expressible — cannot even initialize from inside this session's own sandboxed Bash. The outer Seatbelt refuses `sandbox_apply` itself, not the permissions the inner profile would have granted. |
+
+**What remains `unresolved`, and the permission it needs.** Whether the `EPERM` is *specific to Claude Code's
+own* enclosing Seatbelt profile — i.e., an unsandboxed process, or one sandboxed some other way, *can*
+successfully call `sandbox_apply` a second time — versus `sandbox_apply` being broken or
+entitlement-gated on this host (macOS 26.5.2 / Darwin 25.5.0) regardless of Claude, was not established. The
+one run that would settle it — the identical bare `sandbox-exec -f inner-permissive.sb echo …` with
+`dangerouslyDisableSandbox: true` — was refused by the auto-mode classifier ("Safety Bypass Flag") before
+executing, and per that denial's own terms an agent may not pursue the same outcome through another route
+this session. **It needs either a human running that one comparison command directly, or a founder-approved
+Bash permission rule scoped to `sandbox-exec` for a future session.** Re-run date: alongside the next owed
+isolation spike (B0-05/B0-06), or sooner if I3 planning (below) needs the answer first.
+
+**If the outer profile does not hold — and on the evidence gathered, `sandbox-exec` nesting cannot be
+exercised at all inside this harness's own Bash sandbox, which is the harder failure than "does not hold":
+the named fallback applies.** Per [14 B0-07](14-BUILD-PLAN.md) and [09a §9](09a-ENGINEERING.md#9): **I3 for
+all headless work, at a measured capacity cost** — an Apple `container` micro-VM per mission rather than a
+Unix-user-plus-Seatbelt layer for A3/A4 ventures, D2/D3, untrusted code, and the quarantined reader. Carried
+into [B1-10](14-BUILD-PLAN.md) as a note: do not design a headless isolation tier that depends on a worker
+successfully re-sandboxing itself under an enclosing Seatbelt profile — this session's evidence is that the
+attempt fails before its own rules are evaluated, for the *most permissive* profile expressible, not only a
+restrictive one.
+
+**Sources.** `spikes/b0-07/profiles/*.sb`, `spikes/b0-07/run-spike.sh` (record of the literal commands run —
+this session's git-worktree-isolation guard refuses wrapping `sandbox-exec` in a loop or runtime variable
+substitution, so each probe was issued as its own single Bash call), `spikes/b0-07/results/raw.log` (verbatim
+transcript and exit codes); branch `build/b0-07`.

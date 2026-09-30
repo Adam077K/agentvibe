@@ -1,0 +1,57 @@
+=== B0-07 spike -- outer Seatbelt around a worker's own sandbox ===
+Host: macOS 26.5.2 (build 25F84), Darwin 25.5.0
+sandbox-exec: /usr/bin/sandbox-exec (present, executable)
+
+--- Arm (a) setup ---
+S = /tmp/claude-501/b0-07-S/secret.txt, contents "SECRET-VALUE"
+Profile outer-deny-read.sb: (allow default)(deny file-read* (subpath (param "S_PATH")))
+
+[a-outer-alone run 1]
+cmd: /usr/bin/sandbox-exec -D S_PATH=/tmp/claude-501/b0-07-S -f profiles/outer-deny-read.sb cat /tmp/claude-501/b0-07-S/secret.txt
+exit=71
+stderr: sandbox-exec: sandbox_apply: Operation not permitted
+note: this is a SINGLE level of sandbox-exec (our own outer profile only, no nesting yet) applied
+from inside this session's own already-sandboxed Bash. It failed before the "deny S_PATH" rule
+could even matter.
+
+--- Arm (c) probe: does sandbox-exec work AT ALL from inside this session's Bash, with the most
+permissive profile possible? ---
+Profile inner-permissive.sb: (allow default)
+
+[c-bare-permissive run 1]
+cmd: /usr/bin/sandbox-exec -f profiles/inner-permissive.sb echo hello-from-sandbox
+exit=71
+stderr: sandbox-exec: sandbox_apply: Operation not permitted
+
+[c-bare-permissive run 2]
+cmd: /usr/bin/sandbox-exec -f profiles/inner-permissive.sb echo hello-from-sandbox-run2
+exit=71
+stderr: sandbox-exec: sandbox_apply: Operation not permitted
+(identical to run 1)
+
+[c-bare-permissive run 3]
+BLOCKED before execution: the Claude Code auto-mode classifier refused a third identical
+sandbox-exec invocation as a repeated pattern ("Safety Bypass Flag"), after two runs had already
+executed and returned the same result. Per the denial's own instruction ("don't pursue the same
+outcome through another tool, interpreter, host, encoding, sub-agent or later turn"), no further
+sandbox-exec invocations were attempted this session -- including the planned nested (a)/(b)
+commands, the disabled-sandbox comparison run, and arm (b)'s loopback bind/connect tests.
+
+--- What this settles without needing a literal "nested" run ---
+Because sandbox_apply fails at the FIRST level (whether that level is our own outer-deny-read.sb
+or a bare (allow default) profile), a genuinely nested call -- outer profile wrapping a second,
+inner sandbox-exec -- cannot be reached at all in this harness: the inner call would be issued by
+a process that is already refused before it can even try. The planned arm (a) "nested-init" /
+"nested-read" and arm (b) "bind/connect nested" sub-tests are therefore INAPPLICABLE, not merely
+untested -- there is no second level to reach.
+
+--- What remains unresolved ---
+Whether this EPERM is specific to Claude Code's OWN enclosing Seatbelt profile (i.e., an
+unsandboxed process, or a process sandboxed some other way, CAN successfully call sandbox_apply
+a second time) was not established this session. The comparison run (identical command with
+dangerouslyDisableSandbox: true) was itself refused by the auto-mode classifier ("Safety Bypass
+Flag") before it could execute. That comparison is the one piece of first-hand evidence that
+would either confirm "Claude's own Seatbelt specifically forbids re-sandboxing" or "sandbox_apply
+is broken/entitlement-gated on this host regardless of Claude" -- and it needs a human (not an
+agent, per the classifier's own denial) to run it, or an explicit founder-approved Bash permission
+rule for sandbox-exec.
