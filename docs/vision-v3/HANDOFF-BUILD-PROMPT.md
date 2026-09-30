@@ -45,7 +45,7 @@ repo in a state the next session can continue from without asking anyone anythin
 
 | Work | Model | How |
 |---|---|---|
-| You, the orchestrator; architecture; hard design calls; reviews at full/irreversible tier | **Opus 5.5** (`opus`) | `Agent` tool, `model: "opus"` |
+| You, the orchestrator; architecture; hard design calls; reviews at full/irreversible tier | **Opus 5.5** (`opus`) | `Agent` tool, `model: "opus"` (the Agent tool's own alias; agent *files* use the ids pinned in `scripts/prompt-standard.test.mjs`) |
 | Most building, writing, tests, research, refactors | **Sonnet** (latest — the founder calls it Sonnet 5.5; use the `sonnet` alias) | `Agent` tool, `model: "sonnet"` |
 | Trivial jobs: lint, test runs, log parsing, classification | `haiku` | `Agent` tool |
 | **Equal worker and the other family for every review** | **Codex** (`gpt-6-astra`, ChatGPT Pro) | `codex exec --skip-git-repo-check -s workspace-write -C <worktree> -o <out.md> "<prompt>" </dev/null` |
@@ -71,8 +71,11 @@ change is reviewed by the other family** (DR-88: when the two disagree, reconcil
   verdict → PR → merge when CI is green. **irreversible** (agent definitions, `.claude/settings.json`, hooks, workflows,
   migrations, billing): build it, open the PR with a session file declaring `tier: irreversible`, and **leave it open for
   the founder** — do not merge it and do not post bypass comments. List every such PR in the handoff.
-- **Merge authority (granted by the founder for this session):** you may merge your own PRs below the irreversible tier
-  once the verdict is recorded and CI is green. Never force-push `main`; never merge red.
+- **Merge authority (founder grant, 2026-10-01 — recorded in `_process/FOUNDER-ANSWERS-2026-09-30.md` as G1):** you may
+  merge PRs below the irreversible tier **only** when (a) the verdict was recorded by a reviewer that did not build the
+  change, and of the **other model family** at full tier; (b) CI is green; (c) the merge goes through the PR route, never
+  a direct push to `main`. Never force-push; never merge red; never author a verdict for your own work. Anything the
+  classifier tiers irreversible waits for the founder.
 - **Checkpoint continuously** — the session can end abruptly when the usage window runs out. After every merged job,
   append one line to `docs/08-agents_work/BUILD-LOG.md` (job id · PR · what landed · what's next) and commit it.
 - **Decisions:** a choice that affects other jobs → one entry in `.claude/memory/DECISIONS.md` (respect its byte cap —
