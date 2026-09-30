@@ -24,7 +24,7 @@ billion-dollar company. The founder calls the practice **vibe startuping**.
 ## What the founder wants — in his words, condensed
 Don't shrink the vision. More autonomy, founder in the loop only where it matters. Autonomy switchable per project. The system
 can act as a founder or part of the company. It must handle *anything* — no playbooks as the core; agents must research, imagine,
-reason, challenge themselves, plan, execute, document, remember and improve. Claude Code and Codex are equal workers. Named agents
+reason, challenge themselves, plan, execute, document, remember and improve. Claude Code and Codex are equal workers. Agents are identified by **title and expertise, never personal names**,
 and **hybrid specialties** beyond human job titles (test them). Swarms and agents talking to each other. Memory without a
 graveyard. Skills harvested from scratch from open-source libraries, not the 134 we have. One owned app: Mission Control with live
 agents, monitoring, spend/usage, tasks, idea board, calendar, a missions board where dragging launches a team; plus terminal; plus
@@ -40,7 +40,7 @@ visual and decisive**, and it is judged by worked scenarios, not by reviews of p
 3. **The mission engine** — open-ended work without playbooks: goal → research → hypotheses → options → plan → execute →
    evaluate → learn; self-challenge (debate, red team, pre-mortem, devil's advocate agents); stop conditions; how "unknown work" is
    decomposed; how playbook-like knowledge is *learned* as reusable patterns without becoming a cage.
-4. **The agent organisation** — agent identity records, the named roster *and* hybrid specialties (propose at least 12 hybrids and
+4. **The agent organisation** — agent identity records, the roster of titles *and* hybrid specialties (propose at least 12 hybrids and
    how to test them against classic roles), dynamic team composition per mission, swarms, agent-to-agent protocols,
    coordination and non-interference, Claude/Codex routing as equals, launch-on-demand.
 5. **Autonomy and the founder** — autonomy levels per project, the initiative engine, the AI co-founder seat (ownership, cadence,
@@ -52,7 +52,7 @@ visual and decisive**, and it is judged by worked scenarios, not by reviews of p
 9. **Engineering** — languages, stack, repo layout, runner, sandboxes, security, data policy, provider terms, economics
    (subscription capacity for Claude + Codex), observability, simulation/digital twin, self-improvement with evals.
 10. **Open-source inspiration map** — for each system studied: what it does well, what we take (use / fork / learn), licence.
-11. **Worked scenarios (at least 10)** — end to end, minute by minute where it matters: which agents launch (by name), models,
+11. **Worked scenarios (at least 10)** — end to end, minute by minute where it matters: which agents launch (by title), models,
     time, budget, skills, memory writes, approvals, what the founder sees on which surface. Include: new agency from zero;
     validate an idea in 48 h; overnight feature ship; 3 a.m. incident; competitor launch; learn a new field; pivot decision;
     autonomous business running a week without the founder; two agents' work colliding; budget exhausted mid-mission.

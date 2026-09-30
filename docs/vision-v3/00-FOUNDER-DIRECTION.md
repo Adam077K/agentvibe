@@ -14,7 +14,7 @@ agentic organisation competing with billion-dollar companies. It supersedes the 
    playbook. **No playbooks as the core** — they limit thinking. The system must reason, research, imagine, challenge itself,
    plan, execute, document, remember and improve on open-ended work.
 6. **Claude Code and Codex are equal.** Both build, both review, both do any job. Not "Codex = reviewer only".
-7. **Named agents are fine** — personal names, titles or expertise labels help the founder understand who is doing what.
+7. **Agents are identified by title and expertise, never personal names** (founder, 2026-09-30: "An engineer is a good enough title"). What matters is the role and the knowledge it carries.
    Agents are launched only when needed (an engineer is a Claude Code or Codex session with the right memory, context,
    sandbox and skills), not standing processes.
 8. **Hybrid specialties.** Don't copy human job titles by default. AI makes it possible to fuse fields that no human could
@@ -36,7 +36,7 @@ The founder asked the AI to see further. These are required sections, not option
   execution → evaluation → learning, with self-challenge (debate, red team, pre-mortem) and explicit stop conditions.
 - **Dynamic team composition** — who gets launched for a mission and why; team size; model choice (Claude/Codex/other);
   budget; sandbox; how the team is dissolved and what it leaves behind.
-- **Agent identity system** — named agents as records (skills + memory + tools + model + track record), hybrid-specialty
+- **Agent identity system** — agents as records identified by title/expertise (skills + memory + tools + model + track record), hybrid-specialty
   design, and an experiment harness that compares them.
 - **The initiative engine** — how autonomous projects generate their own work (standing goals, heartbeats, signals,
   opportunity scanning), and how that stays aligned with the founder's intent.
