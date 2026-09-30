@@ -18,6 +18,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import type { FamilyStamp } from './model-family.ts';
 
 export function missionsDir(): string {
   return process.env.MC_MISSIONS_DIR ?? path.join(os.homedir(), '.agentvibe', 'missions');
@@ -135,7 +136,8 @@ export interface TeamEvent {
   title: string;
   model: string;
   family: string;
-  kind: 'status' | 'tool' | 'message' | 'result' | 'receipt' | 'verdict';
+  /** `slot_model_mismatch` (B0-20, DR-83): a launch whose model id's family differs from its slot's. */
+  kind: 'status' | 'tool' | 'message' | 'result' | 'receipt' | 'verdict' | 'slot_model_mismatch';
   status?: AgentStatus;
   text?: string;
   costUsd?: number;
@@ -217,7 +219,7 @@ export function launchesPath(id: string, dir: string = missionsDir()): string {
   return path.join(dir, id, 'launches.jsonl');
 }
 
-export interface LaunchReceipt {
+export interface LaunchReceipt extends FamilyStamp {
   launchId: string;
   missionId: string;
   role: string;
@@ -233,6 +235,10 @@ export interface LaunchReceipt {
   unparsedLines?: number;
   parentLaunchId?: string;
 }
+
+// `family` is derived from `model` by familyOf() (server/model-family.ts), never from the slot;
+// `slotFamily` is what the slot declared, and `slotModelMismatch` is set when the two differ.
+// Receipts written before B0-20 carry none of the three.
 
 export function readLaunchReceipts(id: string, dir: string = missionsDir()): LaunchReceipt[] {
   let text: string;

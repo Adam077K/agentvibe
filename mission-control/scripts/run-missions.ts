@@ -40,6 +40,7 @@ import {
   type TeamEvent,
   type Verdict,
 } from '../server/missions.ts';
+import { familyOf, stampFamily, type ModelFamily } from '../server/model-family.ts';
 
 const argv = process.argv.slice(2);
 const flag = (name: string) => argv.includes(name);
@@ -57,10 +58,12 @@ const CLAUDE_BUDGET = process.env.MC_CLAUDE_BUDGET_USD ?? '2';
 const CLAUDE_BIN = process.env.MC_CLAUDE_BIN ?? 'claude';
 const CODEX_BIN = process.env.MC_CODEX_BIN ?? 'codex';
 
-const BUILDER = { agent: 'builder', title: 'Builder', model: CLAUDE_MODEL, family: 'anthropic' };
-const REFEREE = { agent: 'referee', title: 'Referee', model: CODEX_MODEL, family: 'openai' };
-const RUNNER = { agent: 'runner', title: 'Runner', model: '-', family: '-' };
-export const SUBAGENT = { agent: 'builder-subagent', title: 'Builder › subagent', model: CLAUDE_MODEL, family: 'anthropic' };
+// `slot` is the family a seat DECLARES. It is compared against, never logged as, the family of the
+// model that actually ran (DR-83) — see server/model-family.ts.
+const BUILDER = { agent: 'builder', title: 'Builder', model: CLAUDE_MODEL, family: 'anthropic', slot: 'claude' as ModelFamily };
+const REFEREE = { agent: 'referee', title: 'Referee', model: CODEX_MODEL, family: 'openai', slot: 'codex' as ModelFamily };
+const RUNNER = { agent: 'runner', title: 'Runner', model: '-', family: '-', slot: 'unknown' as ModelFamily };
+export const SUBAGENT = { agent: 'builder-subagent', title: 'Builder › subagent', model: CLAUDE_MODEL, family: 'anthropic', slot: 'claude' as ModelFamily };
 type Who = typeof BUILDER;
 
 /** The error a refused run carries on the board. One spelling, shared with the tests. */
@@ -77,7 +80,49 @@ export type RunFn = (bin: string, args: string[], cwd: string, onLine: (l: strin
  */
 export interface RunnerDeps {
   run: RunFn;
-  logLaunch: (row: { worker: string; model: string; mission: string; seconds: number; cost: string; exit: number | null }) => void;
+  logLaunch: (row: LaunchRow) => void;
+  /** Model ids per slot. Absent → MC_CLAUDE_MODEL / MC_CODEX_MODEL. A slot may be given any id. */
+  models?: { claude?: string; codex?: string };
+}
+
+export type LaunchRow = { worker: string; model: string; mission: string; seconds: number; cost: string; exit: number | null };
+
+export const LAUNCH_CSV_HEADER = 'ts,worker,model,mission,seconds,cost_usd,exit,family';
+
+/**
+ * Append one row to launches.csv. `family` is familyOf(row.model) — computed here from the model id
+ * and nowhere else, so no caller can pass a slot's family in its place. A file still carrying the
+ * pre-B0-20 header gains the `family` column in place; its older rows read that column as empty.
+ */
+export function appendLaunchCsv(file: string, row: LaunchRow): void {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  if (!fs.existsSync(file)) fs.writeFileSync(file, LAUNCH_CSV_HEADER + '\n');
+  else {
+    const text = fs.readFileSync(file, 'utf8');
+    const nl = text.indexOf('\n');
+    const head = nl < 0 ? text : text.slice(0, nl);
+    if (head === 'ts,worker,model,mission,seconds,cost_usd,exit') fs.writeFileSync(file, LAUNCH_CSV_HEADER + text.slice(head.length));
+  }
+  fs.appendFileSync(
+    file,
+    [new Date().toISOString(), row.worker, row.model, row.mission, row.seconds.toFixed(1), row.cost, String(row.exit), familyOf(row.model)].join(',') + '\n',
+  );
+}
+
+/**
+ * Stamp a launch with its derived family and, when the slot declared another, record exactly one
+ * `slot_model_mismatch` event for that launch. Returns the receipt fields.
+ */
+function stampLaunch(emit: ReturnType<typeof emitter>, who: Who, role: string, model: string, launchId: string) {
+  const stamp = stampFamily(who.slot, model);
+  if (stamp.slotModelMismatch) {
+    emit(RUNNER, {
+      kind: 'slot_model_mismatch',
+      text: `${role} slot declares ${stamp.slotFamily} but model ${model} is ${stamp.family}`,
+      data: { launchId, role, model, slotFamily: stamp.slotFamily, family: stamp.family },
+    });
+  }
+  return stamp;
 }
 
 /**
@@ -85,10 +130,10 @@ export interface RunnerDeps {
  * tools). `Bash` stays disallowed as well: the SLICE was registered as "Claude `acceptEdits`
  * without Bash" (12-SPIKE-RESULTS), and this Builder writes files, it does not run them.
  */
-export function builderArgs(prompt: string): string[] {
+export function builderArgs(prompt: string, model: string = CLAUDE_MODEL): string[] {
   return [
     '-p', prompt,
-    '--model', CLAUDE_MODEL,
+    '--model', model,
     '--output-format', 'stream-json', '--verbose',
     '--permission-mode', 'acceptEdits',
     '--allowedTools', 'Read,Write,Edit,Glob,Grep',
@@ -111,13 +156,8 @@ function emitter(id: string) {
   };
 }
 
-function logLaunch(row: { worker: string; model: string; mission: string; seconds: number; cost: string; exit: number | null }) {
-  fs.mkdirSync(path.dirname(LAUNCH_LOG), { recursive: true });
-  if (!fs.existsSync(LAUNCH_LOG)) fs.writeFileSync(LAUNCH_LOG, 'ts,worker,model,mission,seconds,cost_usd,exit\n');
-  fs.appendFileSync(
-    LAUNCH_LOG,
-    [new Date().toISOString(), row.worker, row.model, row.mission, row.seconds.toFixed(1), row.cost, String(row.exit)].join(',') + '\n',
-  );
+function logLaunch(row: LaunchRow) {
+  appendLaunchCsv(LAUNCH_LOG, row);
 }
 
 /** Spawn with an args array (no shell), feed each stdout line to `onLine`, resolve with the exit code. */
@@ -171,9 +211,11 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
     `When done, reply with one short paragraph naming each file you wrote.`,
   ].join('\n');
   const launchId = randomUUID();
-  const args = builderArgs(prompt);
+  const model = deps.models?.claude ?? CLAUDE_MODEL;
+  const args = builderArgs(prompt, model);
   const argvHash = createHash('sha256').update(args.join('\u0000')).digest('hex');
-  emit(BUILDER, { kind: 'status', status: 'starting', text: `claude -p (${CLAUDE_MODEL}) in ${WORKDIR}` });
+  emit(BUILDER, { kind: 'status', status: 'starting', model, text: `claude -p (${model}) in ${WORKDIR}` });
+  const stamp = stampLaunch(emit, BUILDER, 'builder', model, launchId);
   const written = new Set<string>();
   let cost: number | undefined;
   let summary = '';
@@ -207,7 +249,8 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
           missionId: m.id,
           role: 'builder-subagent',
           argvHash,
-          model: CLAUDE_MODEL,
+          model,
+          ...stampFamily(SUBAGENT.slot, model),
           startedAt: Date.now(),
           endedAt: Date.now(),
           exit: null,
@@ -257,9 +300,9 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
     }
   });
   const secs = (Date.now() - t0) / 1000;
-  deps.logLaunch({ worker: 'claude', model: CLAUDE_MODEL, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
+  deps.logLaunch({ worker: 'claude', model, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
   const receipt: LaunchReceipt = {
-    launchId, missionId: m.id, role: 'builder', argvHash, model: CLAUDE_MODEL,
+    launchId, missionId: m.id, role: 'builder', argvHash, model, ...stamp,
     startedAt: t0, endedAt: Date.now(), exit: code, turns, resultSubtype, unparsedLines: unparsed,
   };
   appendMissionLine(receipt, launchesPath(m.id));
@@ -315,11 +358,13 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     `Be brief. End your reply with exactly one final line of the form:`,
     `VERDICT: {"verdict":"PASS"|"FAIL","reasons":["short reason", "..."]}`,
   ].join('\n');
-  const args = ['exec', '--json', '--skip-git-repo-check', '-s', 'read-only', '-m', CODEX_MODEL, '-C', WORKDIR, '-o', outFile, prompt];
+  const model = deps.models?.codex ?? CODEX_MODEL;
+  const args = ['exec', '--json', '--skip-git-repo-check', '-s', 'read-only', '-m', model, '-C', WORKDIR, '-o', outFile, prompt];
   const launchId = randomUUID();
   const argvHash = createHash('sha256').update(args.join('\u0000')).digest('hex');
   let unparsed = 0;
-  emit(REFEREE, { kind: 'status', status: 'starting', text: `codex exec (${CODEX_MODEL}) read-only` });
+  emit(REFEREE, { kind: 'status', status: 'starting', model, text: `codex exec (${model}) read-only` });
+  const stamp = stampLaunch(emit, REFEREE, 'referee', model, launchId);
   const t0 = Date.now();
   let lastMessage = '';
   const { code, stderr } = await deps.run(CODEX_BIN, args, WORKDIR, (line) => {
@@ -341,10 +386,10 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     else if (j.type === 'turn.failed' || j.type === 'error') emit(REFEREE, { kind: 'status', status: 'failed', text: clip(JSON.stringify(j)) });
   });
   const secs = (Date.now() - t0) / 1000;
-  deps.logLaunch({ worker: 'codex', model: CODEX_MODEL, mission: m.id, seconds: secs, cost: '', exit: code });
+  deps.logLaunch({ worker: 'codex', model, mission: m.id, seconds: secs, cost: '', exit: code });
   // One receipt per launched process (server/missions.ts): the Referee is a launch like the Builder.
   appendMissionLine({
-    launchId, missionId: m.id, role: 'referee', argvHash, model: CODEX_MODEL,
+    launchId, missionId: m.id, role: 'referee', argvHash, model, ...stamp,
     startedAt: t0, endedAt: Date.now(), exit: code, turns: null, resultSubtype: null, unparsedLines: unparsed,
   } satisfies LaunchReceipt, launchesPath(m.id));
   if (!lastMessage) {
