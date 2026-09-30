@@ -21,6 +21,9 @@ const CSV = join(OUT, "launches.csv");
 if (!existsSync(CSV)) writeFileSync(CSV, "n,ts,role,family,model,seconds,cost_usd,tokens,exit\n");
 
 let launches = Number(process.env.SP1_LAUNCH_OFFSET ?? 0);
+export const SEARCH_ONLY_NOTE = process.env.SP1_CLAUDE_ONLY
+  ? "\nTOOLING NOTE: you have WebSearch only (no page fetch). A source counts only if it appeared in your search results; the quote must be text shown in those results for that URL."
+  : "";
 export const launchCount = () => launches;
 export const LAUNCH_CAP = 40;
 
@@ -43,10 +46,15 @@ export async function dispatch(family: Family, role: string, prompt: string, opt
   const timeout = opts.timeoutMs ?? 15 * 60_000;
   writeFileSync(join(OUT, `${n}-${opts.tag}.prompt.md`), prompt);
   let text = "", cost: number | null = null, tokens: number | null = null, code = 0, model = "";
-  if (family === "claude") {
-    model = "claude-sonnet-5";
+  // SP1_CLAUDE_ONLY: Codex is unreachable from the sandbox (its auth lives under ~/.codex, which is denyRead,
+  // and the unsandboxed launch was refused). Family "codex" is then played by Claude Opus 5; web = WebSearch only
+  // (WebFetch is client-side and the sandbox cannot allow arbitrary hosts).
+  const claudeOnly = !!process.env.SP1_CLAUDE_ONLY;
+  if (family === "claude" || claudeOnly) {
+    model = family === "claude" ? "claude-sonnet-5" : "claude-opus-5";
     const args = ["-p", prompt, "--model", model, "--output-format", "json", "--no-session-persistence", "--setting-sources", "user", "--strict-mcp-config"];
-    if (opts.web) args.push("--allowedTools", "WebSearch", "WebFetch");
+    if (opts.web && claudeOnly) args.push("--allowedTools", "WebSearch", "--disallowedTools", "WebFetch", "Bash", "Edit", "Write");
+    else if (opts.web) args.push("--allowedTools", "WebSearch", "WebFetch");
     else args.push("--disallowedTools", "Bash", "Edit", "Write", "WebSearch", "WebFetch");
     const r = await run("claude", args, timeout);
     code = r.code;

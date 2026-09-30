@@ -27,5 +27,20 @@ paying client within 30 days; produce the evidence and a first offer."
 **Overall verdict rule:** PASS needs C1–C4 and C6 at PASS. FAIL follows from any FAIL among C1–C4, or C6
 at FAIL. Anything else is PARTIAL.
 
+### 1b. Amendment, committed before any mission run: the environment forced a degraded variant
+
+- **Codex could not run.** Its credentials are under `~/.codex`, which the Bash sandbox blocks from reading.
+  The unsandboxed launch the common brief prescribes was **refused by the permission classifier**, and I did
+  not route around that refusal. Every worker therefore runs **inside the sandbox**, with only
+  `api.anthropic.com` allowed.
+- **The "codex" family slot is played by Claude Opus 5.** The "claude" slot is Sonnet 5. So the Referee is
+  a *different model*, **not a different family**. The cross-family property is **untested** by this spike.
+- **Web access is WebSearch only.** WebSearch runs server-side and works. WebFetch runs client-side, and the
+  sandbox cannot allow arbitrary hosts (the tool rejects TLD wildcards). Workers cite sources seen in search
+  results. The Referee verifies by searching, not by opening pages.
+- **Criteria adjusted, and not loosened.** C3's manual spot check is done by me with the same WebSearch.
+  C6's judge is Opus 5 rather than Codex. It stays blind to which process produced which deliverable, but
+  it shares a family with both.
+
 **Known limitation, declared in advance.** Codex does not report cost; for Codex only tokens are logged.
 The Claude cost counts only the Claude side.
