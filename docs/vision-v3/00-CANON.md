@@ -5,8 +5,8 @@ earlier round disagrees with it, this file wins until the founder changes it. Bi
 
 ## 0. How to use this file
 
-- **Reading budget.** Read §0–§4, §8 and §10 whole (~25 KB). The glossary (§5, ~150 terms) and the decisions register
-  (§6, 55 entries) are reference: search them for your topic's terms rather than reading them end to end.
+- **Reading budget.** Read §0–§4, §8 and §10 whole (~25 KB). The glossary (§5, ~180 terms) and the decisions register
+  (§6, 83 entries incl. the R5 fix-pass rulings DR-56–DR-83) are reference: search them for your topic's terms rather than reading them end to end.
 - **Terms.** Use the words in §4–§5 exactly. If you need a new term, define it in your file's glossary box and say which
   §5 entry it refines; never re-define a §5 term.
 - **Conflicts.** §6 settles every conflict the rounds raised. Do not reopen one. If your topic exposes a *new* conflict,
@@ -105,8 +105,16 @@ decision_contract:
 | P | Class | Held by | Example |
 |---|---|---|---|
 | P1 | **Never-list and constitutional prohibitions** | Constitution | Sign as the founder; move money across a venture boundary |
-| P2 | **Safety narrowing in force** — SCRAM, freeze, kill switch, breaker | Regulation / anyone who trips SCRAM | Payments frozen after a fraud alarm |
+| P2 | **Safety narrowing in force** — SCRAM, freeze, kill switch, breaker, narrowing overlays | Regulation / anyone who trips SCRAM | Payments frozen after a fraud alarm |
 | P3 | **Existing obligations**, within real resources and their funded fallbacks | Allocation (reserve) + Custody (execute) | A refund due to a customer continues under a freeze via its pre-authorised continuity route |
+
+**P2 × P3, made executable (R5, walker C2/B10).** P2 still outranks P3: obligations never override a freeze. Instead,
+every SCRAM safe state and freeze scope carries an explicit **`continuity:` list** — pre-authorised, bounded routes per
+obligation class (e.g. `refund ≤ original charge`, `sms_manual_confirm`, `notify customer of delay`), signed with the
+Charter. The compiler evaluates a P2 deny as "deny within scope **except** actions matching a listed continuity route";
+a matching action then proceeds to P3–P8 as normal. An obligation with no listed route stays pending, and its latest safe
+start opens a continuity decision. Obligations never gain precedence over safety. Safety states must name how duties
+continue.
 | P4 | **Mandates, grants and limits** | Custody (mandate), Regulation (limit) | Refund cap $200; ≤30 cold emails/day/cell |
 | P5 | **Acceptance requirements** | Acceptance | Coverage contract unmet → no merge, no settlement |
 | P6 | **Funding decisions** | Allocation | Tranche exhausted → checkpoint and reroute |
@@ -129,6 +137,25 @@ decision_contract:
   Every control has a line in the **control ROI ledger**; one that catches nothing for 90 days on a door class drops to 5%
   sampling there (constitutional hard controls excepted).
 - **Same action, same answer on every channel** (R3 §3.2): chat, checkout, API and phone compile to the same contract.
+- **Consequence and disposition come from one rule source (R5, walker C1).** **16 owns classification**: effect class
+  R0 read/think · R1 internal reversible · R2 internal significant · R3 external reversible · R4 external one-way, money
+  out, legal or identity. Door type is derived from action × target × money × audience × identity; blast radius moves the
+  **door**, never the R-class. **05 owns disposition**: one table of level × grant × door → auto · notify · ask · co-sign
+  · never. **09a composes them once**, and every other file links rather than restating either table. **A signed Effect
+  Mandate covering the exact class lowers disposition one step** (ask → notify, notify → auto), **never below notify for a
+  one-way door**, and never changes the door. Paid probes, ads and task procurement are one-way money: they run inside a
+  founder-signed mandate as *notify*, or they ask.
+- **Narrowing overlays (R5, walker C5).** Automatic narrowing — by Regulation, SCRAM, a tripwire, a continuity tier or
+  a demotion — is written as a **narrowing overlay**: a Journal event the compiler applies on top of the signed
+  Constitution, with scope, reason and expiry. Nothing but the founder's passkey ever rewrites signed Constitution files.
+  An overlay can be folded into a signed amendment later. Lifting an overlay early is widening and follows the widening
+  rules.
+- **Activation timing (R5, walker B01/B24; accepts 05's NEW DECISION).** Narrowing takes effect instantly. Widening
+  takes effect after a withdrawable **12 h cooling-off** (parameter; 0 h for a Standing Order codifying a default he
+  accepted ≥8/10 times). There are two exceptions, both signed in advance. (1) A **Genesis Charter** at A0–A2 inside the
+  default genesis caps activates on the signature that ends Genesis. (2) A pre-signed **emergency-capacity envelope**
+  (per venture, bounded in money, duration and purpose) may be *drawn* immediately by an Incident Lead or the founder,
+  because drawing it widens nothing.
 - **Model-checked.** The compiler's transition rules are checked for both safety (nothing forbidden is reachable) and
   progress (every blocked obligation has a reachable remedy) before each Constitution release.
 
@@ -139,7 +166,7 @@ decision_contract:
 | Authorities | Constitution + Intent, Allocation, Execution, Acceptance, Record, Custody, Regulation (verbs: Want, Fund, Do, Check, Know, Hold, Brake) | "Limits" (S10) → the **Limits Book** inside Regulation; "Learning layer" → Record; "Exposure authority" (S13), "Capability Custody" (S05) → Custody | One word per power; the founder can hold seven verbs |
 | Founder contact | **Class × Reach.** Class (what he must do): **Halt · Decide · Circle · Know · Log**. Reach (how hard a surface reaches): **Ring · Buzz · Tap · Reel · Shelf** | S03's Demand/Altitude and Interrupt/Nudge/Brief/Record; S07's class "Record" → **Log** (collides with the Record authority); ENGINE-SPEC interrupt/ask/tell/log; SURFACES-SPEC nudges | S07's structure and names are the more complete (Circle and Halt are distinct); one rename avoids a collision. Autonomy (05) owns classes, Surfaces (08) owns reach, a deterministic **Reach Router** joins them |
 | Attention | **Founder Attention Exchange**, priced in **minutes**; Halt never budgeted; Circle has its own small supply | "≤10 asks/day", "3 nudges/day" | One currency |
-| Autonomy | **A0–A4 presets** over a signed **Charter envelope** (level × six grants × mode × mandate); **principal modes** Instrument · Staff · Partner · Proxy; **modes** Episodic · Series; **states** Active · Paused · Caretaker · Wind-down · Obligation Keeper | C5's A0–A3 + Series as a separate scale | S03's synthesis keeps every earlier scale inside one envelope |
+| Autonomy | **A0–A4 presets** over a signed **Charter envelope** (level × six grants × mode × **Charter terms**). *Renamed R5: the envelope's fourth field was "mandate", which collided with Effect Mandates (16). Charter terms = capital, pre-listed one-way doors, packet quota, kill trigger;* **principal modes** Instrument · Staff · Partner · Proxy; **modes** Episodic · Series; **states** Active · Paused · Caretaker · Wind-down · Obligation Keeper | C5's A0–A3 + Series as a separate scale | S03's synthesis keeps every earlier scale inside one envelope |
 | Consequence | **Door type** (two-way · costly-reversible · one-way) is what humans read; **effect class R0–R4** is what the Kernel computes; **disposition** auto · notify · ask · co-sign · never | "declared risk" | Derived, never declared (S13) |
 | Evidence | **Rungs E0–E5** (opinion, desk, simulated, behaviour, commitment, retention) × door type; **evidence debt** | — | S01 |
 | Review | **Acceptance Coverage Contract** and the **review coverage graph** | "the other model family from the builder" (R1) | Mixed-family artifacts broke the binary rule (S02, S09, R3 §3.9) |
@@ -166,7 +193,7 @@ One definition per term. **Owner** = the file that specifies it; everyone else l
 | Micro-venture | An autonomous small venture governed under a fleet Charter; ~5 founder minutes a week | 17 |
 | Flagship | A venture with its own full Charter and board meeting | 17 |
 | Constitution | Founder-signed law: charters, levels, grants, never-list, decision rights, Continuity Will, precedence, ceilings, release authority. Writable only by founder passkey | 02 / 05 |
-| Charter | A venture's signed envelope: intent, autonomy level, grant vector, mode, mandate, budget, never-list reference, data boundary, SCRAM safe state, founder-minute quota | 05 |
+| Charter | A venture's signed envelope: intent, autonomy level, grant vector, mode, **Charter terms** (capital, pre-listed one-way doors, packet quota, kill trigger — never called "mandate"), budget, baseline CCIR, continuity routes, never-list reference, data boundary, SCRAM safe state, founder-minute quota | 05 |
 | Never-list | Seven non-delegable action classes (change authority; be the founder's person; create/end a legal person or liability; move money across a boundary; destroy the unrestorable; edit the judges; employ/dismiss or act on health/safety/legal standing) | 05 |
 | Decision-rights matrix | 22 decisions × holders, one D per row, enforced by gateway, merge queue, Referee or admission code — never by prompt | 05 |
 | Decision Contract | The compiled answer for one action against one policy snapshot: disposition, satisfied rules, blockers with owner/remedy/expiry | 00 §3 / 09a |
@@ -349,6 +376,38 @@ One definition per term. **Owner** = the file that specifies it; everyone else l
 | The Map | One legible view of stocks and loops, lit only off-band; unknown drawn as fog | 08 |
 | Honest Scoreboard | Every number resolves to a system of record; no points, streaks or badges | 08 |
 
+**Added in the R5 fix pass** (each refines or replaces nothing above unless it says so)
+
+| Term | Definition | Owner |
+|---|---|---|
+| Charter terms | The Charter envelope's fourth field: capital, pre-listed one-way doors, packet quota, kill trigger. Replaces "mandate" inside a Charter; "mandate" now means only an Effect Mandate | 05 |
+| Narrowing overlay | A Journal-recorded, scoped, expiring narrowing applied by the compiler on top of the signed Constitution; never rewrites it | 05 / 09a |
+| Cooling-off | The withdrawable delay (12 h, parameter) before a widening activates | 05 |
+| Emergency-capacity envelope | A pre-signed, bounded (money, duration, purpose) allowance per venture that an Incident Lead or the founder may draw immediately | 05 |
+| Continuity route | A pre-authorised bounded action listed in a safe state's `continuity:` list; the only thing a P2 deny lets through | 05 / 09a |
+| Presence proof | A device-bound, signed founder gesture (passkey, or registered-watch signed tap) that resets the continuity clock. It proves presence only and never authorises an effect | 05 |
+| Baseline CCIR | The CCIR lines every Charter carries from Genesis, from a Kind template, signed with the Charter | 05 |
+| Reach floor / ceiling | Floor: the lowest reach a contact may get (class, door, CCIR line, deadline). Ceiling: the highest Founder State allows. One ordered table in 08 resolves conflicts | 08 |
+| UNPARSED | Verdict state when a judge's output cannot be parsed. Never PASS; it counts against verifier capacity | 08 / 09b |
+| Claims Register | 16's register of outward claims and their evidence; distinct from the harness's claim ledger. Replaces "Claims Ledger" | 16 |
+| Capability epoch | Monotonic version on an admitted capability. Revocation bumps it, and every job, cache and pending effect bound to the old epoch is rechecked | 07 |
+| Capability Custodian | Title of the model session that *drafts* admission cases and grant decisions for the Capability Registry effector; the effector's deterministic policy admits | 07 |
+| Qualification key | Capabilities, judges and identities are qualified per **model version × capability × route**, never per family name | 07 / 09b |
+| `support_bucket` | Coarse count of independent supporting observations on a prior or lesson (e.g. "2-3"), beside rungs E0–E5, not a seventh rung | 06 |
+| Typed null | A null result labelled powered, underpowered or confounded; only a powered null settles a hypothesis | 06 / 03 |
+| `awaiting_gate` | Mission stop state: the next step is a named human gate or an unavailable capability. The mission stops rather than keep researching | 03 |
+| Capability-checked success test | Every clause of a success or kill test maps to an available worker capability or a named human gate at framing time | 03 |
+| Veto question | A question class (legal, regulatory, safety) exempt from VoI ranking that must be resolved before `stop_success` | 03 |
+| Diminishing-returns stop | If the top question's value moves <0.1 over two consecutive cycles, force a decision (pivot, gate or accept). Replaces method-named "no three Research moves" guards | 03 |
+| Re-scope Review | Triggered at tranche burn ≥80% with settlement forecast ≥30% below admission (parameters); led by a fresh other-lineage Mission Lead from the mission's reserve | 03 |
+| Staging integration vs publication | Workers integrate on a staging branch; **publication** (CAS land to main or deploy) happens only after the coverage contract's required verdicts | 04 / 09b |
+| Settlement edges | Separate facts: artifact accepted · deployment confirmed by independent production observation · promise fulfilled | 09b |
+| Time-out Confirmer | A named coverage edge — a second-lineage check of the target card before each R3/R4 effect, reserved with the coverage contract | 04 / 09b |
+| Build Charter | Founder-signed envelope that funds construction of the organisation until Handover; afterwards residual tuning moves to the Improvement sleeve | 14 |
+| Charging rule | Every spend is charged by purpose to exactly one pool (DR-60) | 09b |
+| Participant | A human-subject research principal with protocol, consent scope, pay, withdrawal and approved sample | 16 |
+| Release (of sealed data) | Governed effect that reclassifies a derivative out of `sealed`: consent-scope check, disclosure test, founder signature; never implied by de-identification | 06 |
+
 
 ## 6. Decisions register
 
@@ -423,7 +482,7 @@ id); SP2, SP3, SLICE spikes; R1 synthesis.
 | DR-42 | Lesson Airlock budgets cumulative disclosure per recipient; default boundary class `guarded` | Safe lessons compose into disclosure | S04; R3-RT X07 |
 | DR-43 | Capability counts: ~340 trusted-first skills in 10 vendor libraries; aggregators are discovery only; Snyk's 13.4% critical / 36.8% any-flaw figures cover **3,984 ClawHub skills only** (corrects R0-C) | Verified by the skills seat against GitHub API | S05 |
 | DR-44 | Capabilities admitted **per family** on measured uplift; blast-radius rings; ≤8 skills per Loadout; admission pins executable digests and egress, and never substitutes for containment | Tool behaviour changes under a pinned description | S05; R3-RT X03 |
-| DR-45 | Credential routing by provider terms: API keys for autonomous ventures, customer/client data and all unattended Codex; subscriptions only for founder-initiated interactive work | Terms fetched 2026-09-30 | S12 |
+| DR-45 | Credential routing by provider terms: API keys for autonomous ventures, customer/client data and all unattended Codex; subscriptions only for founder-initiated interactive work. **Amended R5 → DR-61** (the one billing rule) | Terms fetched 2026-09-30 | S12 |
 | DR-46 | Concentration limits live in one exposure model with explicit denominators (S01 30% of funded work, S06 40% of task-class casting, S07/S10 60% signals become named rows) | Three caps measured different things | R3-RT C04, §3.10 |
 | DR-47 | Self-improvement is charged to root purposes; discretionary Improvement sleeve ≤15%; beneficiary + 30-day outcome check or the tranche returns | Self-improvement must not become the main customer | R3-RT D04 |
 | DR-48 | Speech with foreseeable reliance is an effect; offers compile from an authorised Offer object; checkout reserves fulfilment capacity | Formatted words still create reliance | S13; R3-RT H01, §3.2 |
@@ -433,7 +492,42 @@ id); SP2, SP3, SLICE spikes; R1 synthesis.
 | DR-52 | The seventeen expander additions are **responsibilities of existing authorities**, not new authorities (table in `02-ORGANISATION.md` §6) | Keeps the stack at seven | R3-X §1 |
 | DR-53 | The dispatcher needs a **standing launch permission** scoped to the Kernel launcher; per-session human approval of each launch cannot run a merge queue | SP2's live arms were blocked by the permission layer | SP2 (founder decision F1) |
 | DR-54 | Hybrid specialties are fused *procedures* with pre-registered claims, routed by task class (mixed copy+measurement, not pure copy); title-vs-procedure is the next spike | SP3 narrow pass: +1.01 vs +1.0 bar; zero on pure copy | SP3 |
-| DR-55 | SP1 (open-ended mission choosing its own moves) is still running; `03-MISSION-ENGINE.md` and `12-SPIKE-RESULTS.md` fold its result in when it lands | Do not pre-empt a measurement | R4 |
+| DR-55 | ~~SP1 still running~~ **SP1 landed PARTIAL**: steering held, but the loop never stopped by itself (ran to the cost cap at 23× the control's cost). Its fixes are DR-73 | Measurement in | SP1 |
+
+**Round 5 fix pass** — rulings on R5-ISSUES (#), the Codex scenario walk (B, C), scenario gaps (G, G-B) and 15's open
+gaps (OG). The execution list is `_process/R5-FIX-PLAN.md`.
+
+| # | Decision | Rationale | Source |
+|---|---|---|---|
+| DR-56 | P2 × P3: safe states carry an explicit `continuity:` list; a P2 deny passes only listed continuity routes; obligations never outrank safety (§3) | The compiler terminated at P2 before the promised continuity path | C2, B10 |
+| DR-57 | One consequence source: 16 classifies (R-class, door), 05 disposes (one table), 09a composes. A covering mandate lowers disposition one step, never below notify for one-way | Same effect got different dispositions in 05 and 16 | C1, B04 |
+| DR-58 | Automatic narrowing is a Journal **overlay**, never a rewrite of signed Constitution files | Automatic narrowing vs founder-only writes | C5 |
+| DR-59 | Widening activates after a 12 h cooling-off (**accepts 05's NEW DECISION**, #14). Exceptions: a Genesis Charter at A0–A2 within default caps; draws on a pre-signed emergency-capacity envelope | Stolen-passkey defence without killing speed | #14, B01, B24 |
+| DR-60 | **The charging rule — one pool per purpose.** (1) Delivering obligations → obligations reserve. (2) Judging funded work → acceptance reserve. (3) Recovery → recovery reserve. (4) *Manufacturing* acceptance capacity (Verifier Foundry) → the acceptance reserve's **uncommitted** headroom only, ≤25% of it per month (parameter), never windows already reserved for admitted missions. (5) Improving how the organisation works — auditions, Forge, config trials, Skill Foundry, reflex re-runs, residual harness tuning → Improvement sleeve (floor 6%, 12% for the 30 days after a model release, cap 15% of investment-lane capacity; all parameters). (6) Constructing the organisation until Handover → the **Build Charter**. (7) Everything else → its investment sleeve. Every draw names a beneficiary and faces the 30-day outcome check (DR-47) | Accepts #10 (ND-04-1) as written, #11 modified (headroom-only, capped), #18 modified (ends at Handover) | #10, #11, #18 |
+| DR-61 | **The billing rule** (replaces DR-45's wording, pending founder decision D2). Default **until D2 is signed: every headless run uses an API key.** Recommended for D2: attended headless on the **subscription for Claude only**, when the job was launched by the founder's command *and* a presence proof is <30 min old (parameter), at A0–A1, on D0–D1 data. **All Codex headless → API key.** Autonomous ventures, customer/client data (D2+), and initiative-generated jobs → API key. Subscription work carries an API shadow price. A terms change flips to strict. 09a's `providerMode` must match | 09a and 15 disagreed; strict-until-signed is the safe default | #7, #21, OG G2 |
+| DR-62 | Fencing authority and anchors live in a **third failure domain** (accepts 09a's NEW DECISION, refines DR-09) | No host can grant itself the epoch | #6, D3 |
+| DR-63 | `support_bucket` beside rungs E0–E5 (accepts 06's NEW DECISION) | One ladder, one meaning | #3 |
+| DR-64 | UNPARSED verdict state (accepts 08); driving → `travel`, asleep → quiet hours (accepts 08). "Know at Tap only by founder override" is **superseded** by DR-65 | Strictly safer | #13 |
+| DR-65 | **Reach resolution is one ordered table owned by 08.** Floors: Halt ≥ Buzz (Ring after 5 min unacked); Decide on a one-way door ≥ Tap; a CCIR line carries its own signed floor (default Tap; `wake` lines may exceed quiet hours); Know about an executed one-way effect ≥ Reel unless a CCIR line raises it. Ceilings come from Founder State, focus, quiet hours and budget. If floor > ceiling: Halt, `wake` CCIR lines, and one-way Decides whose deadline precedes the next permitted window take the floor. Otherwise delivery is **deferred** to the first permitted moment, and if that is after the deadline the silence rule applies. Property test: reach ≥ floor, or deferred-and-deadline-safe. 05, 09b and 16 supply inputs and never choose reach | Reach rules produced several answers | C4, G2, G-B4, B21 |
+| DR-66 | A venture **pivot** (new intent) is a new Charter: founder passkey, never silence, never automatic. A strategy change inside existing intent is a goal-tree change (A3 proposes, A4 decides) | 17 allowed autonomous pivots | C3 |
+| DR-67 | No rule may name a method. Method-named guards in 03 are rewritten as invariants that accept equivalent evidence-producing methods | P8 vs 03's G2/G4 | C6 |
+| DR-68 | One versioned wire schema for labels, owned by 09a, with a published mapping. 06 owns semantics and uses the wire names. Classification, boundary, retention class, retention deadline, permission, taint and origin stay distinct. Human provenance is a provenance field, not a new origin | 06 and 09a schemas differed | C7, B16 |
+| DR-69 | Single-family mode yields **provisional** verdicts that never satisfy a missing coverage edge. A human may substitute for a missing edge only if the coverage contract named a qualified human alternative before launch | Degraded mode must not manufacture acceptance | C8, B25 |
+| DR-70 | Nothing is *published* (main, deploy, outbound) before the coverage contract's required verdicts. Staging integration may precede them. R3/R4 effects need a Time-out Confirmer edge. Settlement has three separate edges (artifact accepted, deployment observed, promise fulfilled) | Landing preceded acceptance in S3/S9 | B07, B09, B38 |
+| DR-71 | When the producer accepts a FAIL's defect and reworks, the old candidate stays FAIL and no adjudication is needed. Adjudication is required only to accept a candidate over an unrefuted FAIL. Independence is judged per component *and lineage*, not family name | Material-disagreement path was skipped | B08, B17 |
+| DR-72 | Immediate scoped SCRAM (containment, extendable to siblings with recorded applicability evidence) is separate from an antibody's observe → warn → block lifecycle | Containment ≠ promoting a detector | B11 |
+| DR-73 | **SP1 fixes into 03**: capability-checked success tests; `awaiting_gate` stop state; diminishing-returns stop; `veto` question class exempt from VoI; Referee fetches pages (claim-source fetch + quote match before any model); loop only when the decision is worth ~20× a single run, else single run + one Referee pass; cheaper steward with compact state | PARTIAL: steering held, stopping failed | SP1, OG G6 |
+| DR-74 | Completion guarantor: the Re-scope Review trigger in 03 | No role re-scoped failing missions | OG G9 |
+| DR-75 | Qualification is per model version × capability × route. Retirement or replacement is scoped to exact configurations. Reports show partial completion. Capability tests are within-model pairs | Model-release reflex over-generalised | B35, B36, B37 |
+| DR-76 | Classification consent (e.g. a Fleet Import sort) never grants authority. Member and imported Charters activate only by signature (DR-59). Secret scanning is deterministic and precedes any model reading a repo | Import silently promoted repos | B33, B34, G-B6 |
+| DR-77 | Evidence debt has durable identity, a successor owner and a frozen question. A pivot neither erases it nor lets an underpowered result count as repayment. Rung-bearing evidence must match the exact proposition | Debt and proposition drift | G6, B02, B18 |
+| DR-78 | Wagers recuse interested **records and lineages**, not only families. The wager query is frozen at registration and evaluated at its resolution date | Family switch did not remove the interest | G-B2, B14 |
+| DR-79 | Sealed derivatives stay local unless a governed **Release** effect clears them (consent scope, disclosure test, founder signature). De-identification alone changes nothing | S12 exported sealed study data | B30, G-B3 |
+| DR-80 | Concession exposure is the full commitment value (e.g. 2 months × 20% × MRR), checked against grants. The wrist never approves offers or outbound | $960 was booked as $80 | B19 |
+| DR-81 | Provider spend caps are reservation buckets held before every debit. Acceptance headroom cannot be consumed by execution | S10 judge cap exhausted | B23 |
+| DR-83 | Launch logs derive the worker **family from the model id**, never from the slot it was launched into (accepts 12's ND-12-2). DR-73 is 12's ND-12-1, accepted | Slot-derived family mislabels cross-family evidence | 12 ND-12-1, ND-12-2 |
+| DR-82 | Package reading paths live in canon §11; every file's links are relative siblings (`05-…md`, not `../05-…md`) | #5, #9, B40 | #5, #9, B40 |
+
 
 
 ## 7. Numeric targets (TARGETS, not facts)
@@ -502,22 +596,25 @@ Writers own their topic fully and **link** for everything else. "Not here" lists
 | **16-EXTERNAL-WORLD-HUMANS** | Effect Gateway and Front Desk behaviour, mandates, Offer objects, claims standard, identity and disclosure, brand cells, kill levels, Obligation Keeper, legal body (entities, Books, contracts, tax), Rooms, Human Task Market, Guild, counterparty agents, Atoms Gateway, Acquisition Desk and Capital Desk mechanics, relationship repair | Venture strategy (17) |
 | **17-VIBE-STARTUPING-IN-PRACTICE** | Genesis, Fleet Import, Stage Clock and Vital Signs, the seven operating loops, venture tiers and fleets, Probe Swarm, Replication Engine, Wish-to-Ship, Fork Fleet, Keystones, Frontier Program, inter-venture economy, exits and OpCo Packs, Pivot Court, a founder's day and week | Mechanism internals |
 
-## 9. Draft founder decisions (≤10)
+## 9. Founder decisions (D1–D10, aligned with 15)
 
-Final wording lives in `15-RISKS-AND-DECISIONS.md`; these are the architect's draft, each with a recommendation.
+Final wording, options and deadlines live in [15 §8](15-RISKS-AND-DECISIONS.md). The canon's draft F1–F10 map one-to-one
+onto D1–D10. Milestones M0–M5 are 15's build-milestone deadlines (targets).
 
-| # | Decision | Recommendation |
-|---|---|---|
-| F1 | A **standing launch permission** for the Kernel's dispatcher (DR-53) | **Yes**, scoped: the launcher only, per-mission tool leases with forbidden tools, API-key credentials, hard budget caps; every launch receipted |
-| F2 | **API keys for autonomous ventures** from day one with hard monthly caps | **Yes**: start at $150 Anthropic / $50 OpenAI per autonomous venture, raised by the treasury rule |
-| F3 | **Hosts**: dedicated always-on Mac for the Kernel plus a small cloud host for Front Desk and effectors | **Yes**, before the first 24/7 venture; alternate host drilled quarterly |
-| F4 | **Founder minute supply** | 45 min weekdays / 10 weekends + 30-min weekly board; two 10-minute decision windows (08:00, 17:00); re-derived monthly from looked-at minutes |
-| F5 | **Which ventures run autonomously first**, and at what level | Two: one Fleet-Import venture with live revenue at A2 → A3, one new agency at A2; A4 only via a Promotion Case after ≥8 weeks at A3 |
-| F6 | **Deputy and Continuity Will** | Name one Deputy who accepts and drills; **required** for any A3+ venture with live customers, optional otherwise; sign a per-venture Continuity Will (hold / wind down / hand over) |
-| F7 | **Legal holding structure** | One holding entity with DBAs pre-revenue; own entity at the stated triggers — confirm with a lawyer and accountant in the founder's jurisdiction |
-| F8 | **Outbound and selling**: who sells, and cold outreach | Founder takes the first 10 sales calls per Flagship; agents 1:1 disclosed cold outreach ≤30/day/cell in US/consenting B2B; EU/IL per-batch approval; bulk cold email never |
-| F9 | **Scale programmes needing legal groundwork**: Acquisition Desk, Capital Desk, Guild | Approve all three as destination capabilities; fund legal review in Year 1; first acquisition and first Guild contracts founder-signed |
-| F10 | **A third acceptance route**: fund the Model Foundry spike and a human adjudicator pool | **Yes**: one fine-tune on one accepted-trace class (exit: parity within 2 points at ≤25% cost, or a null); a paid human adjudicator pool for material cross-family disagreement meanwhile |
+| # | Decision | Recommendation | Deadline |
+|---|---|---|---|
+| D1 | Standing launch permission for the Kernel's dispatcher | Yes: launcher-only, binaries pinned by digest, argv templates, forbidden flags, per-launch tool lease with forbidden list, isolation ≥ I2 if headless, budget cap, fenced lease; 12 concurrent / 120 per hour (parameters); a Receipt per launch | M0 |
+| D2 | Paying for model work: API caps; headless runs on the subscription | Caps $150 Anthropic / $50 OpenAI per autonomous venture per month, raised only by the Treasury rule. Attended headless on the subscription for **Claude only** (founder-launched, presence proof <30 min, A0–A1, D0–D1). **Codex headless always API.** Until signed: all headless on API (DR-61) | M1 / M2 |
+| D3 | Hosts, third failure domain, residual host risk | Dedicated always-on Mac (Kernel) + small cloud host (Front Desk, effectors) + third-domain fencing and anchors (DR-62); alternate host drilled quarterly; Kernel-host admin compromise acknowledged, mitigated per 09a | M2 |
+| D4 | Founder minute supply and reach | 45 min weekdays / 10 weekends + 30-min board; windows 08:00 and 17:00; Ring for Halt and for Decide above $200/h cost of delay, ≤2 calls/day; wrist only for two-way doors <$50 with 1-h held undo, never offers, outbound or publishing | M2 |
+| D5 | First autonomous ventures | Two: an imported live-revenue venture A2 → A3 and a new agency at A2; A4 only by Promotion Case after ≥8 weeks at A3; he names them | M0 / M2 |
+| D6 | Deputy and Continuity Will | A named human Deputy who accepts a scoped grant and passes a drill (a professional Deputy acceptable), plus an alternate; per-venture Will; required before any A3+ venture with live customers | M3 / M4 |
+| D7 | Legal holding structure and insurance | Holding entity + DBAs pre-revenue; own entity on 16's triggers; lawyer and accountant confirm; broker opinion per entity before its first A3 money mandate; until then commitment mandates capped at the Repair Budget | M3 |
+| D8 | Who sells; outbound rules | First 10 sales calls per Flagship are his; 1:1 disclosed cold outreach ≤30/day/cell, US and consenting B2B, under an A2+ mandate; EU/IL per-batch approval; bulk cold email never | M2 |
+| D9 | Acquisition Desk, Capital Desk, Guild | Approve as destination capabilities; fund legal review (incl. contractor classification) in Year 1; he signs the first acquisition and first Guild contracts | M5 |
+| D10 | A third acceptance route | Paid human adjudicator pool (3, ≤5% of acceptance spend) now; Model Foundry spike (parity within 2 points at ≤25% cost, or a null) | M3 / M5 |
+
+Not founder decisions (mechanism changes inside Allocation's or an owner's envelope): DR-56 to DR-82.
 
 ## 10. Rules for section writers
 
@@ -532,3 +629,8 @@ Final wording lives in `15-RISKS-AND-DECISIONS.md`; these are the architect's dr
    treats them as claims.
 8. Mermaid diagrams, tables, YAML/TypeScript shapes and ASCII wireframes beat paragraphs.
 
+## 11. Reading paths (R5-ISSUES #5)
+
+- **Founder, 45 minutes:** 01 → 02 §1 and §7 → 00 §2–§3 → 05 §1 → 13 (S1, S8, S11) → 15 §8.
+- **Build team:** 00 whole → 02 → 09a → 03 → 04 → 09b → 07 → 06 → 16 → 08 → 14 → 12 → 15.
+- **Reviewer or red team:** 00 §3 and §6 → 15 → 13 → the owner file of any row.

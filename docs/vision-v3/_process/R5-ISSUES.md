@@ -18,4 +18,8 @@
 | 15 | 05 ↔ 16 ↔ canon | Canon calls a Charter field "mandate" — collides with Effect Mandates (16). 05 marked it venture-level. | Rename the Charter field in canon (e.g. "Charter envelope") everywhere. |
 | 16 | 09b | S14 prices are for Sonnet 4.6 / Opus 4.7, not the pinned models; 09b says fetch, never assume. | Fine; build plan includes a pricing fetch job. |
 | 17 | 16 | "Claims Ledger" renamed **Claims Register** (avoid the harness claim ledger); Exposure folded into Custody; AI Co-founder never signs. | Check other files use Claims Register. |
+| 18 | 14 | NEW DECISION: the build runs under a founder-signed **Build Charter**, not the ≤15% Improvement sleeve (vs DR-47). 112 jobs, 6 phases, Handover at W10. | Add to canon register; reconcile with #10 and #11 (who pays for what). |
+| 19 | 13 | Scenario writers' gaps G1–G7 (A) and G-B1–G-B7 (B) — listed at the end of each half of file 13. | Fix pass: each gap gets an owning file and a mechanism; then mark resolved in 13. |
+| 20 | 15 | 11 OPEN GAPS listed in 15 (no build jobs for Q8/Q9 suites; SP1 stop fixes not in 03; compromised kernel-host admin; agent-action insurance; Codex headless reliability unmeasured; no completion guarantor in 03/04; …). | Fix pass resolves each or records it as an open question in its owning file. |
+| 21 | 15 ↔ 09a | 15's D2 recommends: attended-headless on subscription for **Claude only**, headless Codex **always API key** — stricter than 09a's `providerMode`. | Align 09a to 15's D2 recommendation (the founder decides; files must agree on the recommendation). |
 | 5 | package | Package will be ~800 KB vs brief's 200–400 KB estimate; 03–09b each 60–75 KB. | Keep depth; README gives a reading path (founder 45-min route vs build-team route). |

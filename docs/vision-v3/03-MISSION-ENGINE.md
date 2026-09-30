@@ -270,31 +270,51 @@ sequenceDiagram
 *Illustration:* a Research move with a 5-worker read-only swarm ~20–40 min, ~$3–8 API; a k = 5 vote ~$2–4 — replaced by the
 Budget Ledger's medians after the first 200 missions.
 
-## 5. SP1 — mission choosing its own next steps (PLACEHOLDER)
+<a id="5-sp1--mission-choosing-its-own-next-steps-placeholder"></a>
+## 5. SP1 — mission choosing its own next steps (results: PARTIAL)
 
-> **PLACEHOLDER — SP1 is still running.** Nothing here is a result. The measurement and the design change it forces land in
-> [12-SPIKE-RESULTS.md](12-SPIKE-RESULTS.md), and this section is rewritten to cite them (DR-55). Until then §4 is a design,
-> not a measured property.
+> **Result landed — PARTIAL** (DR-55). The full record, with its numbers, is in
+> [12 §2](12-SPIKE-RESULTS.md#2-sp1--a-mission-choosing-its-own-next-steps). §4 is still a design. SP1 measured a simpler
+> loop: a Steward chose the move and a Referee checked every claim. It had no guards and no narrative-free evaluator.
 
-**Hypothesis.** On an open-ended goal with no playbook, the §4 engine (fresh planner, K = 3, mVoI pick under guards,
-narrative-free cross-family evaluator) reaches an **Acceptance-passed, decision-changing answer** at lower cost and with
-fewer `same` cycles than two baselines: a **fixed recipe** (the same moves in fixed order — tests the no-playbooks premise)
-and a **single long agent** (one Claude Code or Codex session, same tools, no engine — tests whether the machinery earns its
-overhead).
+**What ran [SP1].** One open goal was given: "a B2B niche where a one-person AI agency could sign a client in 30 days". A
+Steward re-ranked a VoI-ordered uncertainty map each iteration and chose the question, the worker and the Referee.
 
-**Pre-registered readings** (not results): share of `same` cycles; cost per accepted decision-changing answer; how often the
-pick differed from the planner's own top candidate; guard firings and whether they prevented a real error; planner
-`p_changes_decision` against outcome; whether Learn or Challenge was ever chosen unforced.
+| Criterion | Measured | Result |
+|---|---|---|
+| On intent | 8/8 steps on a map question; 0 unknown ids | PASS |
+| Each step reduced an uncertainty | 8/8 steps, on Referee-supported evidence | PASS |
+| Referee catches | 17 of 65 claims unsupported (26%), mostly real quotes on the wrong URL; 2/2 hand checks correct | PASS |
+| Stops for a stated reason | stopped by the $20 cap, not by itself: its success test needed a real prospect, which no worker could reach | PARTIAL |
+| Cost | $20.88 and 70.7 min for the loop, against $0.89 and 4.2 min for the single run | PARTIAL |
+| Against a single long run | won 8 vs 7 overall and 9 vs 7 on verifiability (blind judge) | PASS\* |
 
-**Decided now, so the result cannot be rationalised later:**
+\*n = 1, 23× the cost. **The Referee and the judge shared the builder's family**: the permission classifier refused the
+Codex launch, and the "codex" slot was played by `claude-opus-5` [SP1 §1b]. So the loop *steers*: it stayed on intent,
+added its own questions, and corrected itself when all its confirming prospects turned out to already use an incumbent.
+It does not yet *stop* on its own.
 
-| If SP1 shows… | v3 changes… |
-|---|---|
-| Engine beats both | nothing structural; K and ghost rate become Allocator arms |
-| Engine ≈ single agent, both beat recipe | moves stay as the logging/scoring vocabulary; one agent chooses inside a phase with guards and evaluator around it |
-| Recipe ≈ engine | choice is not where value is; spend on framing and evaluation; K = 1 |
-| Guards fire without catching anything | their control ROI line drops to 5% sampling (DR-10) |
-| Evaluator's `same` often disagrees with Acceptance | evaluator reads observations, becomes a Verifier Foundry target |
+**The pre-decided table, applied.**
+
+| If SP1 shows… | v3 changes… | Applies? |
+|---|---|---|
+| Engine beats both | nothing structural; K and ghost rate become Allocator arms | **Provisionally, half.** The loop beat the single agent, but the fixed-recipe arm was not run. §4 stays as designed; K and ghost rate are registered as Allocator arms |
+| Engine ≈ single agent, both beat recipe | moves stay as vocabulary; one agent chooses inside a phase | Not shown; the loop beat the single agent, and the recipe arm is untested |
+| Recipe ≈ engine | spend on framing and evaluation; K = 1 | Untested; no recipe arm |
+| Guards fire without catching anything | control ROI line drops to 5% sampling (DR-10) | Untested; SP1 had no §4.3 guards |
+| Evaluator's `same` often disagrees with Acceptance | evaluator becomes a Verifier Foundry target | Untested; SP1 had no narrative-free evaluator |
+
+**What the table did not pre-decide, and is therefore not applied here.** SP1 proposed five changes [SP1 §5]:
+
+- capability-checked success tests, with an `awaiting_gate` stop;
+- a diminishing-returns stop on question confidence (§4.3 G2 and §10 `no_progress` are the nearest rules);
+- an attribution-checking Referee that fetches pages;
+- `veto`-class questions that VoI ranking cannot starve;
+- a loop-worth threshold of about 20–25× a single run.
+
+[12 §2.5](12-SPIKE-RESULTS.md#25-what-it-changed-in-v3-and-what-did-not-land) records where each stands, and proposes
+them as **ND-12-1** for the architect to fold into §3, §10 and §11. The **fixed-recipe arm and a real cross-family
+Referee** run in SP1-bis (B0-09).
 
 Every branch keeps the destination — open-ended work without playbooks. SP1 decides *how much machinery*, not *whether*.
 
@@ -715,12 +735,12 @@ Foundry from [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md); the Journal and cont
 the Probe Mandate from [16](16-EXTERNAL-WORLD-HUMANS.md). It gives back `mission.*` events and MoveChoice records;
 settlements, coverage, nulls and Wrap Deposits (06); door × rung × challenge and kill/pivot packets (05); skill candidates
 (07); card fields — state, facets, rung, coverage, days to kill, forecast, sleeve — to [08](08-SURFACES.md); graduated probes,
-replication families and cell results to [17](17-VIBE-STARTUPING-IN-PRACTICE.md); and §5 is rewritten from [12](12-SPIKE-RESULTS.md).
+replication families and cell results to [17](17-VIBE-STARTUPING-IN-PRACTICE.md); and §5 cites [12](12-SPIKE-RESULTS.md).
 
 ## Open questions
 
 1. **How much per-cycle machinery does open-ended work need?** *Recommendation:* ship §4 as designed, register K ∈ {1, 3, 5}
-   and per-cycle vs per-phase re-instantiation as Allocator arms from the first mission, and apply the §5 table the day SP1 lands.
+   and per-cycle vs per-phase re-instantiation as Allocator arms from the first mission, as §5's provisional reading of SP1 already requires; SP1-bis (B0-09) settles the recipe arm.
 2. **Pooling Allocator posteriors across ventures** — faster learning vs leakage. *Recommendation:* pool only abstracted,
    Airlock-checked task-family priors with learned per-venture shrinkage; never across a `sealed` boundary.
 3. **Who accepts a Framing Contract when only the founder's taste can judge?** *Recommendation:* the pairwise oracle
@@ -735,4 +755,4 @@ replication families and cell results to [17](17-VIBE-STARTUPING-IN-PRACTICE.md)
 - `r3-stretch/R3-redteam-codex.md` — D01, D02, D03, D04, D05, D07, T01, T08, C04, C05, C06, X01; §3.7, §3.10, §3.13; Q6.
 - `r2-seats/S11-wildcard-systems.md` — M2 pairing rule, M3 homeostats, attractors A1, A7, A9.
 - `engineering/ENGINE-SPEC.md` §3 — move library, planner, guard rules (rule 4 replaced), evaluator.
-- `02-ORGANISATION.md` §4.1–§4.3, §5.3–§5.4, §6. SP1 pending (§5).
+- `02-ORGANISATION.md` §4.1–§4.3, §5.3–§5.4, §6. SP1 result folded into §5 from `12-SPIKE-RESULTS.md` §2 and `r4-spikes/SP1-mission-loop.md`.
