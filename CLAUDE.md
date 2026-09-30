@@ -581,21 +581,15 @@ With frontmatter including `qa_verdict: PASS` and (when applicable) `tier: full|
   `.claude/agents/**`, `.claude/commands/**` and `.mcp.json`. Adding those paths to `allowWrite` does not
   lift it: `**/.worktrees/**` already matches the refused path and it was refused anyway. That closes
   SANDBOX.md's two open acceptance questions. Escalation is required for that one command.
-- **Known contradiction, deliberate and visible — and this is the state on `main` as of 2026-08-24.**
-  `.claude/agents/builder.md` and `designer.md` still teach the superseded worktree command as Step 1, and
-  `schema-lint.js` still REQUIRES it: the rule warns when an agent that writes app code declares
-  `isolation: worktree` and its body lacks the worktree-creation block, so `lint:agents` is green only
-  because those bodies still carry it. Find it by what it tests —
+- **The worktree contradiction is RESOLVED on `main` — reconciled 2026-10-01 (build job B0-15).**
+  `.claude/agents/builder.md` and `designer.md` carry the `PROJECT_ROOT=$(git rev-parse --show-toplevel)` form
+  with no `MAIN_REPO`, the `schema-lint.js` predicate tests for that form, and
+  `worktree-isolation-pattern/SKILL.md` matches; `schema-lint` → 18 pass · 0 fail · 0 warnings. Verify, never
+  recall: `grep -n MAIN_REPO .claude/agents/builder.md .claude/agents/designer.md` → nothing, and
   `grep -n "fm.isolation === 'worktree'" .claude/hooks/schema-lint.js`.
-  *Superseded 2026-08-24: this bullet pinned `schema-lint.js:1068`. That line is now
-  `if (fm.skills !== undefined) {` — the pin had rotted, in the same file that warns prose line numbers rot.
-  It is deliberately **not** replaced with the current number, because a corrected pin rots on the next edit
-  above it.*
-  Both irreversible tier. **A change that would resolve this contradiction is in flight in this session and
-  has NOT landed on `main`** — it moves the agent bodies and the lint predicate together to the
-  `PROJECT_ROOT` form. Do not read this bullet as resolved until someone reconciles it against `main` and
-  says so here. Required follow-up with an exit criterion in
-  [the handoff](docs/08-agents_work/handoffs/2026-08-25-after-the-gate-ran.md).
+  *Superseded 2026-10-01: this bullet read "Known contradiction, deliberate and visible … A change that would
+  resolve this contradiction is in flight in this session and has NOT landed on `main`", and asked the next
+  reader to reconcile it against `main` and say so here. That change had landed; this is the reconciliation.*
 - **THE MERGE TRAIN LANDED 2026-08-26 — eight merges.** #106, #99, #101, #102, #103, #104, #105, #107.
   *Superseded 2026-08-28: the headline read "eight merges, **zero open PRs**", parenthesised
   "(`REPORTED`; branch state is not readable from here — the sandbox denies `~/.config/gh`)". Both halves
