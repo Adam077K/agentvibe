@@ -39,6 +39,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   B0-17a's strict parser (refuses any unrecognised line — the lesson B0-13's review taught) and B0-17b's exit 2 for
   "could not check" (CLAUDE.md rule 10: `unresolved` ≠ fail). A reconcile job merges both halves into `build/b0-17`
   after both pass review.
+- **DECISION — SQLite's transitive modules.** `kernel/ALLOWED_MODULES` names `modernc.org/sqlite` (09a: pure-Go SQLite)
+  but not its dependency closure, which the boundary checker refuses. B1-01a pins one SQLite version and adds exactly
+  its measured `go list -m all` closure, each entry annotated "transitive of modernc.org/sqlite@<ver>". Any later
+  addition outside that closure is a new policy decision, not a follow-on.
 - **Tool-use note:** a sandboxed `git worktree add` inside the session root still hits 35 denials on
   `.claude/**` (re-measured 2026-10-01), so the documented wall stands.
 - **Blocked on the founder:** B0-05 (second macOS user), B0-06 (Apple `container` not installed), B0-08/09/10/11
