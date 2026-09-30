@@ -1,0 +1,11 @@
+{
+  "subject": "1170821642d29f34bffe5dcb7b59b632e1de6fce03bd9138d133d94f19901225",
+  "base": "560fc0c69269e7770e227d4bc315503e48bf7dbd",
+  "tier": "trivial",
+  "tier_driver": null,
+  "verdict": "PASS",
+  "by": "reviewer",
+  "run_id": null,
+  "evidence": "Trivial tier, docs only. Independent reviewer (reviewer engine, claude-sonnet) verified every file/section/job/DR/script reference in HANDOFF-BUILD-PROMPT.md; round 1 FAIL on an unrecorded merge grant, fixed by recording founder decision G1 (2026-10-01) and narrowing it; re-check PASS. Single model family.",
+  "recorded_at": "2026-09-30T21:06:36.156Z"
+}
