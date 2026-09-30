@@ -31,9 +31,9 @@ train, hosts and external fencing, the data policy, observability, the substrate
 7. **Surfaces never spawn;** only the Kernel launcher does, under one standing grant (DR-53, [SLICE], [SP2]).
 8. **Isolation is a ladder chosen by label:** provider sandbox → Unix user per venture → micro-VM per mission with no
    credentials inside → remote VM on trigger.
-9. **Provider mode per job from the providers' own terms:** API keys for autonomous ventures, customer and client data,
-   initiative jobs and all Codex headless; until D2 is signed every headless run is API, after it only founder-launched,
-   present, A0–A1, D0–D1 Claude headless may use the subscription (DR-61, ~~DR-45~~).
+9. **Model work runs on subscriptions, routed by measured capacity** (DR-61, ~~DR-45~~): both families, interactive and
+   headless, across the founder's accounts; data eligibility still decides which work a route may take. An API key is a
+   documented fallback the founder alone can enable (§10).
 10. **Labels propagate transitively** over data and control dependencies; a tainted authorising context cannot authorise
     an R2+ effect (DR-40, [R3-red X01]).
 11. **The organisation builds itself on a release train it cannot use to promote its own judges** — the protected
@@ -46,12 +46,12 @@ train, hosts and external fencing, the data policy, observability, the substrate
 ## 2. Kernel and Userland
 
 Whoever holds credentials can act without Intent, Allocation or Acceptance. The one process holding Stripe, bank, email
-and API keys must have the smallest dependency surface the organisation can build; everything else should move fast and
+and model credentials must have the smallest dependency surface the organisation can build; everything else should move fast and
 crash freely. So the substrate is a microkernel [S12 §2.1–2.2].
 
 | Component | Process · OS user | Language | Holds |
 |---|---|---|---|
-| **Kernel `avk`** — journal, leases, fencing, compiler, launcher, inference proxy, anchors | `avk` | **Go 1.25+**, pure-Go SQLite, stdlib Ed25519 | Journal, fencing counters, launcher grant, API keys (proxy only) |
+| **Kernel `avk`** — journal, leases, fencing, compiler, launcher, inference proxy, anchors | `avk` | **Go 1.25+**, pure-Go SQLite, stdlib Ed25519 | Journal, fencing counters, launcher grant, subscription tokens and any fallback API key (proxy only) |
 | **Watchdog** | `avk`, launchd KeepAlive | Go, ~300 lines (target) | A kill file and the Journal's `system` stream — works when the Kernel API is wedged |
 | **Custody effectors** — Effect Gateway, Treasury, Key Vault, Front Desk | one OS user each (`_avgate`, `_avtreas`, …) | Go | Their own credentials and receipt keys (DR-01, DR-03) |
 | **Observation broker** (Acceptance) | `_avobs` | Go | Read-only credentials disjoint from every effector's [R3-red X02] |
@@ -92,7 +92,7 @@ type Event = { id: ULID; stream: string; seq: number; type: string; ts: string; 
                schema: number; data: unknown; prev_hash: Hex; hash: Hex };
 type Job   = { id: JobId; venture: VentureId; record_ref: IdentityRef; model_id: string;
                family: 'claude'|'codex'|string;     // derived from model_id, never from the slot (DR-83)
-               headless: boolean;                   // billing turns on it (§10, DR-61)
+               headless: boolean;                   // capacity metering and isolation turn on it (§9–§10, DR-61)
                parent_job?: JobId;                  // nested agents are team members (§8.4)
                provider_mode: 'sub'|'api'; isolation: 'I1'|'I2'|'I3'|'I4'; context_profile: ProfileId;
                tool_lease: { allowed: string[]; forbidden: string[] };
@@ -447,7 +447,7 @@ another family, or single-family mode with provisional verdicts (§10, DR-69).
 | Level | Mechanism | Credentials inside | Used for |
 |---|---|---|---|
 | **I1** | Provider sandbox (Claude Seatbelt / Codex `workspace-write`), founder's Unix user | Founder's subscription OAuth | Interactive, founder-present sessions |
-| **I2** | I1 + **a Unix user per venture** (`av_<venture>`), roots `chmod 700`, egress via a local allowlist proxy | An API key via the proxy; a Claude subscription token only when `providerMode` returns `sub` (after D2, §10) | Headless D0–D1 work the founder launched on A0–A1 ventures |
+| **I2** | I1 + **a Unix user per venture** (`av_<venture>`), roots `chmod 700`, egress via a local allowlist proxy | A subscription token for the account `providerMode` picks (§10); the fallback API key only if the founder enabled it | Headless D0–D1 work on A0–A2 ventures |
 | **I3** | **Apple `container` micro-VM per mission**, only the worktree mounted, model via the proxy | **None** | A3/A4 ventures, D2/D3, untrusted code, done-tests, counterparty content, intake trials, the quarantined reader |
 | **I4** | Remote microVM (Firecracker class) | None | On trigger (§17) |
 
@@ -456,7 +456,7 @@ A Unix user per venture because deny-lists drift (v2 found `cat` of a sibling ve
 fail a cross-venture read in the OS kernel for every tool.
 **Owed spikes before the first autonomous venture:** `claude -p` under a second macOS user via `claude setup-token`;
 whether a `container` VM can reach the proxy with no other egress; whether an outer profile can wrap a worker's own
-Seatbelt [S12 §2.4; ENGINE-SPEC §9.1]. Named fallbacks: I3 + API for all headless work; `pf` rules per VM interface; I4.
+Seatbelt [S12 §2.4; ENGINE-SPEC §9.1]. Named fallbacks: I3 for all headless work; `pf` rules per VM interface; I4.
 
 **The sandbox refuses loopback, so verification environments are designed.** SLICE measured that the armed sandbox
 refuses loopback `bind()` **and** `connect()`: the server, the Vite client and `curl` ran outside it and the page was
@@ -470,62 +470,56 @@ URL from its own OS user outside every worker sandbox, stores the response diges
 deterministically **before any model reads the claim**. A fetch that fails or times out is `unresolved`, never `pass`.
 The Referee and verifiers read the broker's stored copy, so no sandboxed worker needs web egress to be checked.
 
-**The inference proxy (`avk proxy`)** on a per-VM vsock or loopback address: injects the API key so none enters a VM;
-meters tokens per job exactly; refuses requests over the job budget; records request/response digests for replay;
+**The inference proxy (`avk proxy`)** on a per-VM vsock or loopback address: injects the credential (subscription token,
+or the fallback API key if enabled) so none enters a VM; meters tokens per job exactly; refuses requests over the job's
+capacity budget; records request/response digests for replay;
 **enforces provider and data eligibility** — a D2 pack cannot reach a route without commercial terms, and a route change
 is a requalification event [R3-red X04]; records route and model-version evidence where returned; and is a **kill point**
-that stops all model traffic within one request. It never sees subscription OAuth (I1 and `sub`-mode I2 traffic goes direct) — which is
-exactly where its guarantees stop [S12 §2.5].
+that stops all model traffic within one request. It never sees the founder's interactive I1 sessions, which go direct —
+exactly where its guarantees stop [S12 §2.5]; their usage is read from the tools' own readouts instead (§10).
 
 ## 10. Credential routing and provider terms
 
-**What the terms said when fetched, 2026-09-30** [S12 §2.9; URLs in Sources]:
+**What the terms said when fetched, 2026-09-30** [S12 §2.9; URLs in Sources] — kept as the **evidence for risk V25**
+([15](15-RISKS-AND-DECISIONS.md)), not as the routing rule:
 
 | Source | Says | Consequence |
 |---|---|---|
-| Anthropic Consumer Terms | No access "through automated or non-human means" except "via an Anthropic API Key or where we otherwise explicitly permit it"; opt-out does not cover Feedback; accounts not "available to anyone else" | **No feedback from worker sessions**; nobody else uses the founder's plan |
-| Claude Help Center 15036540 | `claude -p` and the Agent SDK "still draw from your subscription's usage limits"; a June change was paused with "advance notice before any future change" | Permitted, unstable: subscription work carries an API **shadow price** |
-| Claude Code legal and compliance | Limits "assume ordinary, individual usage"; developers building products "should use API key authentication" | Customer-serving products and 24/7 autonomy → API |
-| OpenAI Codex auth | "Use API key authentication for programmatic Codex CLI workflows" | **Codex headless always uses an API key** [DR-61] |
-| Anthropic / OpenAI API data docs | No training on API content by default; ~30-day retention; ZDR on request | D2/D3 only via API under commercial terms |
+| Anthropic Consumer Terms | No access "through automated or non-human means" except "via an Anthropic API Key or where we otherwise explicitly permit it"; opt-out does not cover Feedback; accounts not "available to anyone else" | **No feedback from worker sessions**; nobody else uses the founder's plan; unattended use is the flagged risk |
+| Claude Help Center 15036540 | `claude -p` and the Agent SDK "still draw from your subscription's usage limits"; a June change was paused with "advance notice before any future change" | Headless on the subscription is documented, and unstable: the terms watcher tracks it |
+| Claude Code legal and compliance | Limits "assume ordinary, individual usage"; developers building products "should use API key authentication" | Customer-serving 24/7 autonomy is where the risk concentrates |
+| OpenAI Codex auth | "Use API key authentication for programmatic Codex CLI workflows" | Same risk for Codex headless |
+| Anthropic / OpenAI API data docs | No training on API content by default; ~30-day retention; ZDR on request | A contract or DPA requiring processor terms needs the API fallback (§11) |
 
-**The billing rule is DR-61, codified here and nowhere else in engineering.** Until the founder signs D2
-([15](15-RISKS-AND-DECISIONS.md)), `d2Signed` is false and **every headless run uses an API key**. Once signed, a
-headless job may run on the subscription only if its family is **Claude**, it was launched by the founder's command, a
-presence proof is <30 min old (parameter), the venture is at A0–A1 and the data is D0–D1. **Codex headless is always
-API.** Autonomous ventures, customer/client data (D2+) and initiative-generated jobs are always API. D4 is refused.
+**The capacity rule is DR-61, codified here and nowhere else in engineering.** Every model job runs on a subscription.
+`providerMode` picks the **account**: the one with the most measured headroom in the job's family, else a lighter model,
+else the other family (if the coverage contract allows), else the queue. D4 is refused. The API route exists only when
+the founder has enabled it (a Constitution flag, default off) and is used for the cases §11 names or as a fallback.
 
 ```ts
-function providerMode(job: Job, ctx: Ctx): 'sub' | 'api' | 'refuse' {   // at admission AND in the proxy   [DR-61]
-  if (job.label.dclass === 'D4') return 'refuse';                      // no model, ever
-  if (ctx.level >= 'A3' || ctx.customerFacing || job.label.dclass >= 'D2') return 'api';  // autonomous, D2+
-  if (ctx.initiatedBy !== 'founder') return 'api';                     // initiative-generated work: always API
-  if (!job.headless) return ctx.founderPresent ? 'sub' : 'api';        // interactive, founder at the keyboard
-  // headless from here on
-  if (!ctx.d2Signed) return 'api';                                     // default false: all headless on API
-  if (job.family !== 'claude') return 'api';                           // Codex (and any other family) headless: always API
-  if (ctx.level > 'A1') return 'api';                                  // headless sub only at A0–A1
-  if (!ctx.launchedByFounderCommand) return 'api';
-  if (ctx.presenceProofAgeMin === undefined || ctx.presenceProofAgeMin >= 30) return 'api';  // parameter
-  return 'sub';                                                        // Claude, founder-launched, present, A0–A1, D0–D1
+function providerMode(job: Job, ctx: Ctx): { account: string; model: string } | 'queue' | 'api' | 'refuse' {  // [DR-61]
+  if (job.label.dclass === 'D4') return 'refuse';                       // no model, ever
+  if (needsProcessorTerms(job)) return ctx.apiFallbackEnabled ? 'api' : 'refuse';   // §11: DPA/contract says so
+  const acct = ctx.meter.bestAccount(job.family, job.estTokens);        // measured headroom, never a hard-coded limit
+  if (acct) return { account: acct, model: job.model };
+  const lighter = ctx.meter.bestAccount(job.family, job.estTokens, { lighterModel: true });
+  if (lighter) return lighter;                                          // degraded, recorded on the Receipt
+  if (job.familyFlexible) { const other = ctx.meter.bestAccount(otherFamily(job.family), job.estTokens); if (other) return other; }
+  return ctx.apiFallbackEnabled && job.urgent ? 'api' : 'queue';        // never a silent stop: queue is visible
 }
-// Every 'sub' job is metered and receipted at the API shadow price (09b), so switching to API never changes a budget.
 ```
 
-`family` here is derived from the model id (DR-83, §8.7). A presence proof ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md))
-proves presence only; it never authorises the job — admission still needs its contract. A terms change reported by the
-watcher below flips `d2Signed` to false (strict) until the founder re-signs [DR-61].
-
-API keys carry hard monthly caps in each provider console — $150 Anthropic / $50 OpenAI per autonomous venture to start,
-raised by the Treasury Standing Order (F2; parameters). Accounts are sets of **buckets** (Claude 5-hour and weekly
-windows; Codex plan windows, reported changed twice this quarter by secondary sources and not relied on; API monthly
-USD). The first 429 is ground truth; a one-token **limit canary** runs before a batch admits. Degraded modes and shadow
-prices are [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)'s; the mechanism here guarantees that single-family mode routes
+`family` here is derived from the model id (DR-83, §8.7). **The capacity meter** reads each tool's own usage readout
+(Claude's and Codex's usage/status views) and the token counts headless runs report, per account, into buckets — the
+rolling 5-hour window and the weekly cap. Limits are **learned, not configured**: providers change them (Codex's 5-hour
+limit was removed in July 2026 and restored for Plus on 25 Aug 2026), so the meter treats the first limit message as
+ground truth and a one-token **limit canary** runs before a batch admits. Degraded modes and the capacity budget are [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)'s; the mechanism here guarantees that single-family mode routes
 every role to one family and flags every verdict it produces **`provisional`** [DR-69]. A provisional verdict is
 journalled and shown, but **never satisfies a missing coverage edge**: Acceptance treats that edge as still open, so no
 merge or settlement that needs it proceeds. A human substitutes for the missing edge only if the coverage contract named
 a qualified human alternative before launch. A weekly **terms watcher** diffs the pages and opens an obligations-lane
-item on change; a quarterly **provider-exit drill** runs a day API-only and a day single-family, and measures **degraded
+item on change; a quarterly **provider-exit drill** runs a day with one account suspended and a day single-family (and,
+if the founder has enabled it, confirms the API fallback still starts), and measures **degraded
 production only** — throughput, cost and latency of work that proceeds — never acceptance, since single-family verdicts
 from the drill are provisional like any other [DR-69].
 
@@ -540,17 +534,17 @@ change.*
 | Class | Examples | May reach | Isolation | Other rules |
 |---|---|---|---|---|
 | **D0 public** | Web pages, public docs | Any provider, any mode | any | Tainted if it came from the web |
-| **D1 internal** | Venture code, plans, Brain, Minds | Subscription (training off) only where `providerMode` returns `sub` (§10, DR-61); otherwise API | ≥ I2 headless | Never in feedback or sharing features |
-| **D2 personal** | Customer email, interviews, CRM, recordings | **API under commercial terms only**; a DPA once a customer exists | I3 | Pseudonymised before any Launch Pack where possible; transcription local (whisper.cpp); per-subject key |
-| **D3 client / NDA** | Agency client code and data | API only, only where the contract permits processors; ZDR requested where offered | I3 always | Own venture; never in the Lesson Airlock or any export |
+| **D1 internal** | Venture code, plans, Brain, Minds | Subscription (training off) (§10, DR-61) | ≥ I2 headless | Never in feedback or sharing features |
+| **D2 personal** | Customer email, interviews, CRM, recordings | Subscription (training off), pseudonymised; where a DPA or law requires processor terms, only the founder-enabled API fallback, else refused | I3 | Pseudonymised before any Launch Pack where possible; transcription local (whisper.cpp); per-subject key |
+| **D3 client / NDA** | Agency client code and data | Only where the contract permits it; a contract requiring processor terms or ZDR → API fallback only, else refused | I3 always | Own venture; never in the Lesson Airlock or any export |
 | **D4 secrets** | Credentials, tokens, signing keys | **No model, ever** | — | Only Custody effectors touch them; redactor scans every blob |
 
 **11.2 Training and feedback.** Training off on every consumer account, verified weekly by an obligations-lane task
 that captures the settings page; a mismatch drops that account to D0-only until fixed. No worker ever sends thumbs,
 ratings or feedback — the Consumer Terms exempt feedback from the opt-out.
 
-**11.3 Accounts.** The founder's plans serve only his own founder-initiated work. Collaborators, contractors and
-customers never use them; a Room ([16](16-EXTERNAL-WORLD-HUMANS.md)) gets its own API-metered route.
+**11.3 Accounts.** The founder's plans serve only his own organisation's work. Collaborators, contractors and
+customers never use them; a Room ([16](16-EXTERNAL-WORLD-HUMANS.md)) needs its own seat or the API fallback.
 
 **11.4 Minimisation.** The Launch Pack builder strips fields the task class does not need; D2 is pseudonymised; D3 never
 leaves its venture. What went to which route (digest, route, model version) is recorded, so a provider incident is
@@ -670,7 +664,7 @@ the offsite anchor, provider-side key revocation and the external gateway epoch 
   journal head and compares it with its own anchor chain; a mismatch — a rewritten or forked history — **trips the
   external epoch**, fencing the Kernel host out of every effector until recovery.
 - **Provider keys are revocable from the recovery kit**: the offline kit lists every provider console and key id and
-  the revocation step for each, so a compromised host's API keys die without that host's cooperation.
+  the revocation step for each, so a compromised host's model credentials die without that host's cooperation.
 
 ## 14. The protected computing base and the release train
 
@@ -828,7 +822,7 @@ reconciliation task, never a retry button.
 1. **Where does the fencing authority run in Year 1?** *Recommendation:* a conditional-write object store in a cloud
    account separate from the effector host, credentials only in the founder's recovery kit; revisit at federation.
 2. **Unix user per venture, or I3 for all headless work from day one?** *Recommendation:* run the two owed spikes (§9) in
-   the first build phase; if either fails, I3 + API for everything headless at the measured cost.
+   the first build phase; if either fails, I3 for everything headless at the measured capacity cost.
 3. **How to model-check the compiler?** *Recommendation:* property-based simulation in Go first (cheaper for both families
    to maintain), TLA+ for the precedence core once the rule set stabilises.
 

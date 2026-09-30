@@ -592,7 +592,7 @@ cheaper, and every line is a link to its reason.
 |          families · disagreement → adjudicator (09b) · verifier window reserved 10:30 ✓       |
 | TOOLS    lease allows Read Edit Bash(test) · FORBIDS Agent Task WebFetch · context: minimal   |
 | BACKLOT  referral-starter v3 · brand kit Nimbus v5 → ~46% reuse · strike on wrap ✓            |
-| BUDGET   ≤150k tok · ≤2 h · $0 API (subscription, founder-initiated) · stop at 2 continuations|
+| BUDGET   ≤150k tok (~9% of the week's capacity, measured) · ≤2 h · stop at 2 continuations  |
 | DONE WHEN (frozen before work) invite link · attribution row · e2e green on clean checkout    |
 | BET      success ≥8 referred signups / 14 d · kill <2 by Oct 21 · evidence needed E2          |
 | FORECAST P(Referee PASS first time) .64 · cost 110k tok ±30k (scored at settlement)           |
@@ -974,28 +974,29 @@ twin with another cast or policy and shows outcome diffs, with the twin's inheri
 
 ### P17 · Spend and usage (`/spend`)
 
-The four resources are never interchangeable (09b): cash, subscription allowance, API throughput, founder minutes —
-plus reserved verifier windows. The headline is **cost per settled outcome**, beside **founder-minutes per outcome**.
+The four resources are never interchangeable (09b): cash, subscription capacity, provider throughput, founder minutes —
+plus reserved verifier windows. The headline is **capacity per settled outcome**, beside **founder-minutes per outcome**.
 
 ```
 + Spend · 7 days · All · reserve order: obligations → acceptance → recovery → investment --------+
-| SUBSCRIPTION ◆ ▓▓▓▓▓▓░░░ 58% 5-h window (estimated, source ▸) · ◇ ▓▓▓░░ 31% · floor 25%        |
-| API          $41.20 of $200 caps (◆ $150 · ◇ $50 per autonomous venture) · voice $2.88         |
+| CAPACITY     ◆ ▓▓▓▓▓▓░░░ 58% 5-h window · week 44% (measured, readout ▸) · ◇ ▓▓▓░░ 31% · reserve 20% |
+| SEATS        ◆ 1 Max · ◇ 1 ChatGPT · capacity bound 0 of 7 days → no seat case (DR-61)          |
+| CASH         $2.88 voice · domains $0 · all tools on free tiers (DR-84)                          |
 | FOUNDER MIN  212 of 255 supply · Halt 0 · Circle 14 · Decide 168 · board 30                    |
 | VERIFIER     windows reserved 38 · used 31 · utilisation 64% (ceiling 70%) · Deterministic 41% |
-| BY OUTCOME        settled  subscr.  API $  founder-min  per settled outcome                    |
-|  Feature shipped      4     31%      $12       9         $3.00 · 2.3 min                       |
-|  Interviews synth.    9      6%       $0       4         $0 · 0.4 min                          |
-|  Bet settled (any)    3     11%       $6      12         $2.00 · 4.0 min                       |
-|  No outcome ⚠         3      7%       $4       1         waste → AAR ▸                         |
+| BY OUTCOME        settled  capacity  cash  founder-min  per settled outcome                    |
+|  Feature shipped      4     31%       $0       9         31% of a week · 2.3 min               |
+|  Interviews synth.    9      6%       $0       4         <1% · 0.4 min                         |
+|  Bet settled (any)    3     11%       $0      12         4% · 4.0 min                          |
+|  No outcome ⚠         3      7%       $0       1         waste → AAR ▸                         |
 | EXPOSURE  zod-forms v3 in 61% of runs · claude-opus-5 in 70% → exposure book rows ▸ (DR-46)    |
 | DEGRADED MODE off · at 85%: obligations lane only, reviews continue, heartbeats pause (09b)    |
 +------------------------------------------------------------------------------------------------+
 ```
 
 Every figure says *measured* (with its source) or *estimated*; estimated numbers render with a dotted underline and a
-focusable explanation. Subscription capacity is used only for founder-initiated interactive work; autonomous ventures
-run on API keys (DR-45) — Spend shows the split so a breach is visible, not inferred.
+focusable explanation. All model work runs on subscriptions (DR-61); capacity is read from each tool's own usage readout,
+and the page names what another seat would add whenever capacity bound the week. Figures are illustrations.
 
 ### P18 · Chronicle and Seasons (`/chronicle`)
 

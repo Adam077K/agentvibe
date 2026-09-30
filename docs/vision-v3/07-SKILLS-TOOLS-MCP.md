@@ -765,10 +765,10 @@ four-resource maths.
 |---|---|---|---|
 | Static scan (pass a) | cents per candidate | Cash (Haiku 4.5 triage + deterministic tools) | Capability line, Improvement sleeve |
 | Behaviour trace (pass b) | ~$0.20 per executable candidate | Cash (sandbox compute) | Same |
-| Cross-family read (pass c) | ~$0.30 per candidate | API throughput | Same |
-| SANDBOX eval | 3 tasks × 2 arms × k=3 × 2 families = 36 runs; ~$5–10 per skill | API throughput (never subscription allowance for unattended runs, DR-45) | The gap's root purpose |
-| Model-release re-score, top 30 | ~540 runs, ~$60–120 [S05 §5.3] | API throughput | Improvement sleeve |
-| Foundry draft + evaluate | ~$1–3 per skill [S05 §5.2] | API throughput | The gap's root purpose |
+| Cross-family read (pass c) | ~$0.30 per candidate (API-equivalent) | Subscription capacity (DR-61) | Same |
+| SANDBOX eval | 3 tasks × 2 arms × k=3 × 2 families = 36 runs; ~$5–10 per skill (API-equivalent) | Subscription capacity, scheduled into off-peak windows (DR-61) | The gap's root purpose |
+| Model-release re-score, top 30 | ~540 runs, ~$60–120 (API-equivalent) [S05 §5.3] | Subscription capacity | Improvement sleeve |
+| Foundry draft + evaluate | ~$1–3 per skill (API-equivalent) [S05 §5.2] | Subscription capacity | The gap's root purpose |
 | Model Foundry fine-tune | Priced per Bet on GPU quotes at the time | Cash | Its own Bet with kill criteria |
 
 **Cost controls.** Re-score by load order; run cheap trigger evals before expensive task evals; triage statically with

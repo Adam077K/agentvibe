@@ -71,14 +71,14 @@ Ledger → [05](05-AUTONOMY-INITIATIVE-FOUNDER.md); Priors, Nulls, labels → [0
 
 ## 1. The four resources and verifier windows
 
-The organisation spends four things, **never interchangeable** [S14 §1]: API credit does not buy a founder-minute, and
+The organisation spends four things, **never interchangeable** [S14 §1]: subscription capacity does not buy a founder-minute, and
 money set aside for a Referee does not make an eligible judge exist [R3-red T01].
 
 | Resource | Unit | System of record | Grows by | Runs out as |
 |---|---|---|---|---|
 | **Cash** | original currency, fixed precision | bank, processor, invoices (Books) | Treasury rule (§8); Capital Desk with founder signature | runway breach, processor hold, refunds |
-| **Subscription allowance** | bucket units + reset time | provider telemetry or a timestamped observation; *unknown* allowed | plan change at renewal | 5-hour / weekly limits |
-| **API throughput** | RPM, input/output TPM, spend caps | rate-limit headers, account limits | tier promotion; Model Foundry share | 429s; a spend-cap 429 retrying cannot fix [S14 §2.5] |
+| **Subscription capacity** (DR-61) | bucket units + reset time, per account | the tools' own usage readouts and headless token counts; *unknown* allowed | another seat or a higher tier (founder); Model Foundry share | 5-hour window / weekly cap |
+| **Provider throughput** | requests and tokens per minute, per account | limit messages; the first one is ground truth | spreading across accounts | 429s mid-run |
 | **Founder minutes** | minutes + interruptions | Attention Exchange looked-at minutes | Standing Orders, Decision Supply Bench, Deterministic Share | Founder State; Halt never budgeted |
 | *plus* **verifier windows** | qualified service windows (§13) | Referee queue | Verifier Foundry (§12) | correlated fan-in |
 
@@ -107,9 +107,7 @@ Facts fetched from the providers' own pages for this design [S14 §2.2] (a measu
 | Claude Max | $100/mo (5×), $200/mo (20×); 5-hour sessions, account-assigned weekly reset | a multiplier is allowance, not a token inventory |
 | ChatGPT with Codex | Plus $20; Pro $100/$200/$500; Pro has no 5-hour limit, weekly limits may apply | ENGINE-SPEC's universal 5-hour Codex bucket is retired |
 | Agent SDK / `claude -p` | consumes subscription allowance; the separate SDK credit is paused | assume no SDK credit |
-| Claude API (Sonnet 4.6 · Opus 4.7) | $3/$15 · $5/$25 per M in/out; cache read 10% of input | rates per request, with cache-write duration |
-| OpenAI API (GPT-6 Astra · Sol · Luna) | $10/$50 · $2/$10 · $0.10/$0.50; Astra >272K input: in ×2, out ×1.5; Batch/Flex ½, Fast ×2 | modifiers attach to the request |
-| Claude API limits | RPM, ITPM, OTPM; Start/Build/Scale caps $500/$1,000/$200,000 | actual account limits govern admission |
+| Claude / OpenAI API | per-token rates (fetched) | **fallback only**, off until the founder enables it (09a §10) |
 
 Rates for the models the engines now pin (`claude-opus-5`, `claude-sonnet-5`) are **fetched into the Registry, not
 assumed** from older rows; a model with no current entry is refused admission. A route with unknown price is not free.
@@ -119,22 +117,18 @@ type ProviderContract = {
   id: string; provider: 'anthropic' | 'openai' | 'foundry';   // foundry = the Model Foundry family (07)
   account_ref: string;                 // opaque, never a credential
   route: 'subscription' | 'credits' | 'api'; plan: string; rate_card_ref: string;
-  permitted_use_ref: string;           // DR-61 billing rule by provider terms (09a providerMode)
+  permitted_use_ref: string;           // terms evidence for risk V25 (09a §10)
   allowance_buckets: string[]; throughput_buckets: string[];   // observed, never assumed universal
   overflow_grant_ref: string | null;   // an enabled credit reload is not a grant
   evidence: { url: string; fetched_at: string; sha256: string }[]; valid_until: string;
 };
 ```
 
-The billing rule binds (DR-61, ~~DR-45's wording~~): until the founder signs D2, **every headless run uses an API key**.
-The D2 recommendation allows attended headless on the subscription for **Claude only** (launched by his command, presence
-proof <30 min old, venture at A0–A1, data D0–D1); all Codex headless, autonomous ventures, D2+ data and initiative jobs use
-API keys, and subscription work carries an API shadow price — the Allocator cannot price an impermissible route, however
-cheap. F2 starts API caps at
-**$150 Anthropic / $50 OpenAI per autonomous venture per month** (parameter), raised only by the Treasury rule. **Renewal is
-an experiment:** compare plans over the same observed workload — fee, overflow, missed deadlines, idle allowance, accepted
-outcomes; an upgrade wins only if expected savings in metered cost and delay beat its fee under uncertainty. The candidate
-$400/month interactive baseline (Max 20× + Codex Pro) is checked against invoices, never treated as production capacity.
+**The capacity rule binds (DR-61, ~~DR-45~~): all model work runs on subscriptions; there is no metered API budget.**
+Limits are measured, never hard-coded (they change: Codex's 5-hour limit was removed in July 2026 and restored for Plus on
+25 Aug 2026). **Adding a seat is an experiment:** when the meter shows capacity bound the plan (queued or degraded work,
+missed deadlines), Fund tells the founder what one more seat or tier would add, in accepted outcomes and delay, beside
+its fee; idle capacity counts against an upgrade.
 
 ## 3. The Budget Ledger
 
@@ -261,12 +255,12 @@ tranche:
   cash_cap_usd: 120                # = every hold below, contingency included
   holds_usd: {execution: 64, integration_rework: 8, acceptance: 20, recovery: 20}   # completion reserve = 40
   contingency: {pool: surprise_reserve, usd: 8, authority: "03 parameter: 10% of execution+rework, rounded up"}   # separate line
-  charged_vector: {cash_usd: 120, allowance: [claude-max: 0], throughput: [anthropic/api: fc-142, openai/api: fc-143],
+  charged_vector: {cash_usd: 120, capacity: [claude-max-1: fc-142, chatgpt-1: fc-143],
                    founder_minutes: 8, verifier_windows: 3}                                          # §3.2
   reservations: [probe-1: {arms: [a, b], cash_usd: 64}]   # one probe, two arms — one hold, two sub-holds
   parameter_overrides: []          # each {parameter, default, value, authority, reason, expires}
-  capacity_holds: [anthropic/api/agency: fc-142, openai/api/agency: fc-143]
-  acceptance_bucket_holds: [anthropic/api/agency:acceptance: fc-142a]   # held before any debit (DR-81)
+  capacity_holds: [claude-max-1/weekly: fc-142, chatgpt-1/weekly: fc-143]
+  acceptance_bucket_holds: [claude-max-1/weekly:acceptance: fc-142a]   # held before any debit (DR-81)
   verifier_windows: [component:codex-judge by 11:00, end-to-end:both-families by 12:00]
   acceptance_coverage_contract: acc-7731    # never a reviewer-family string (R3-red §3.9)
   founder_minutes_cap: 8
@@ -278,8 +272,8 @@ tranche:
 checked atomically (compare-and-swap) at portfolio, venture, mission and bucket level. Subagents and retries debit their
 parent; a nested agent is a visible team member (DR-24), never a way to mint budget.
 
-**Provider spend caps are reservation buckets held before every debit** [DR-81, R5-walk B23]. A provider cap (e.g. F2's
-$150 Anthropic per venture per month) is split into buckets — execution, acceptance, recovery — and the acceptance bucket
+**Capacity limits are reservation buckets held before every debit** [DR-81, R5-walk B23]. Each account's measured
+window and weekly cap is split into buckets — execution, acceptance, recovery — and the acceptance bucket
 is **held at admission** for the coverage contract's windows. Every debit first checks and decrements its own bucket;
 **execution can never consume acceptance headroom**, however much execution cap remains unspent elsewhere. If a debit
 nonetheless lands against a held acceptance bucket, that is not a bad forecast: it is an `invariant_violation
@@ -289,11 +283,12 @@ headroom only if it can checkpoint before an obligation's latest safe start; irr
 recallable capacity. The investment lane keeps a 15% exploration floor (parameter); obligations eroding it for three weeks
 raise a structural capacity proposal (attractor A9).
 
-**Starting monthly cash authorisation** (illustration, portfolio, Year-1 start [S14 §2.4]) — separate from §7's liquid
-reserve, which is cash *held*, not authority to spend: interactive subscriptions $400 · infrastructure, tools, hosts $300 ·
-obligations execution $450 · investment $400 · evals and shared capability $150 · incident contingency $300 · **total
-$2,000**. Acceptance costs sit inside each tranche, never again on the evals line. Canon §7's Year-1 target (~$52k/month
-of compute at 60 FTE-equivalents) is reached by the Treasury rule releasing reconciled revenue, never by editing this.
+**The starting budget has two lines** (illustration, Year-1 start). **Capacity:** the founder's seats (illustration: one
+Claude Max, one ChatGPT plan), metered per account and split into obligations, acceptance, recovery and investment
+buckets, with an **incident reserve** of each account's window (parameter: 20%) that only Halt-class work may draw; near a
+limit the degraded modes below apply. **Cash** for real-world spend only — domains, sending, phone numbers, ads — starting
+near zero on free tiers (DR-84), grown by the Treasury rule releasing reconciled revenue; a paying customer is never served
+from a non-commercial free plan.
 
 ## 5. Forecasting whole missions
 
@@ -339,9 +334,9 @@ same-family sign-off on exhaustion [S14 §2.5].
 
 | Mode | Entry | Permitted | Never |
 |---|---|---|---|
-| **Conserve** | P(deadline) < 0.8 or reserve pressure (parameter) | cut speculative fan-out, compact context, batch, Batch/Flex pricing | touch obligations |
+| **Conserve** | P(deadline) < 0.8 or reserve pressure (parameter) | cut speculative fan-out, compact context, batch, drop to a lighter model, queue for the next window | touch obligations |
 | **Essential** | reserve breach forecast | obligations, active acceptance, recovery; checkpoint investment | start investment |
-| **Route unavailable** | limit, outage, expired rights, auth mismatch | switch to an admitted route inside an existing grant and data policy | treat an API key's presence as a grant |
+| **Route unavailable** | limit, outage, expired rights, auth mismatch | switch to another account or the other family inside an existing grant and data policy; else queue, visibly | stop silently; treat a fallback API key's presence as a grant |
 | **Acceptance waiting** | no qualified judge for a required edge | preserve artifacts; deterministic dimensions settle; pre-authorised deterministic rollback; a **qualified human alternative** only if the coverage contract named it before launch | dispatch a dependent effect; substitute a same-family judge; let a provisional verdict satisfy the edge |
 | **Hold** | no route fits authority and resources | persist state; one bounded Decide packet | retry forever; borrow customer funds |
 
@@ -362,7 +357,7 @@ stateDiagram-v2
 ```
 
 **The runner enforces recovery:** stop new effects and preserve artifacts and request IDs → fence the old worker (new
-epoch, DR-20), keep uncertain exposure reserved → classify (rate, allowance, spend cap, availability, permission) → backoff,
+epoch, DR-20), keep uncertain exposure reserved → classify (rate, window, weekly cap, availability, permission) → backoff,
 switch inside a grant, or Hold → reconcile effects; `uncertain` never auto-retries (DR-26) → new lease, revalidated policy
 snapshot and Brain version.
 
@@ -380,7 +375,7 @@ the window~~ (DR-65). The Hold packet offers wait (deadline impact), buy bounded
 
 ## 7. Correlated-failure budget and joint stress
 
-Red team T03 (rank 6): cash held by a processor, refunds due, review costs spiking and API overflow ungranted — **at once**,
+Red team T03 (rank 6): cash held by a processor, refunds due, review costs spiking and capacity exhausted — **at once**,
 because they share a cause. Obligations have priority *within real resources*; they never manufacture resources (canon §3).
 
 The portfolio maps its **dependency groups** — model families, provider accounts, skill versions, processors, credentials,
@@ -420,15 +415,15 @@ treasury_standing_order:
   basis: reconciled_collected_cash      # never bookings, invoices, contracts or simulated revenue
   protected_first: [delivery_commitments, refunds_chargebacks, tax_restricted, runway_floor, stress_reserve]
   split: {compute_and_capability: 0.30, distribution_and_product: 0.40, retained: 0.30}
-  compute_release_usd: {weekly_max: 300, monthly_max: 1200}
-  raises_api_caps: true                 # F2 caps rise only here
-  portfolio_ceiling: "compute+tools ≤ 18% of trailing revenue after Year 2 (target, U8)"
+  capability_release_usd: {weekly_max: 300, monthly_max: 1200}   # parameters
+  buys_seats: true                      # another seat/tier is bought only here, on the meter's case (§2)
+  portfolio_ceiling: "subscriptions+tools ≤ 18% of trailing revenue after Year 2 (target, U8)"
   freeze_on: [refund_spike, reconciliation_failure, runway_breach]
   amendments_require: founder_passkey
 ```
 
 `eligible surplus = max(0, unrestricted settled cash − encumbrances − required reserve top-ups)`. *Illustration:* $10,000
-collected − $300 fees − $2,700 delivery − $1,000 newly restricted − $2,000 top-up = $4,000 → $1,200 compute, $1,600
+collected − $300 fees − $2,700 delivery − $1,000 newly restricted − $2,000 top-up = $4,000 → $1,200 seats and tools, $1,600
 distribution and product, $1,200 retained. Eligibility is not consumption: tranches still need evidence. A reversed receipt
 freezes releases and recalls unspent grants before their next dispatch; same-day loops cannot recycle a dollar twice;
 inter-venture revenue is eliminated first (R3-red D08, mechanics in [17](17-VIBE-STARTUPING-IN-PRACTICE.md)). The ≤18%
@@ -1082,12 +1077,12 @@ cross-family score was compared. **Memory writes:** verdict + coverage record; n
 
 ### 25.2 03:00 — both subscriptions exhausted mid-incident
 
-A pricing defect hits two ventures; a recovery Standing Order holds $40 execution + up to $80 remedies [S14 §5.B]. At
-minute six the Incident Reliability Engineer's (Codex) subscription route fails and Claude's allowance is exhausted. Mode →
+A pricing defect hits two ventures; a recovery Standing Order holds up to $80 of remedies [S14 §5.B]. At minute six the
+Incident Reliability Engineer's (Codex) execution buckets run dry and Claude's are exhausted too. Mode →
 **Route unavailable**: the runner fences the worker, keeps the patch, and treats a pending payment acknowledgement as
-*uncertain*, not failed. Both APIs are inside the incident grant: the engineer resumes on the Astra API (10 min, $1.80);
-a Release Referee (Claude, API) checks tests and rollback (7 min, ~$0.60); runtime ~$0.60 — **25 min, ~$3.00**, remedies
-still reserved, not spent. Had the Claude API also failed: **Acceptance waiting** — the pre-authorised deterministic
+*uncertain*, not failed. Both families' **incident reserves** (§4) are held for exactly this: the engineer resumes on
+Codex's held reserve (10 min); a Release Referee (Claude, incident reserve) checks tests and rollback (7 min)
+— **25 min**, remedies still reserved, not spent. Had no Claude reserve remained: **Acceptance waiting** — the pre-authorised deterministic
 rollback restores the last accepted state and the fix waits; no same-family substitute. Founder: **Know** in the morning
 pack (Shelf). Memory: receipts including the interrupted attempt, exhausted-bucket observations to the Registry, the skill
 version's exposure added to its stress case.
@@ -1154,9 +1149,9 @@ Ranks are the red team's P × S [R3-red §1]; tests are its Q-suites plus this f
 1. **Should Acceptance ever correct for judge offsets rather than only pair within generator?** They come from one spike.
    *Recommendation:* no — offsets stay diagnostic until a fixed calibration set shows each family's offset stable within
    ±0.3 across ≥3 task classes and 2 model releases.
-2. **What are the real Year-1 cash envelopes?** §4's $2,000/month and §7's scenario reserve are S14 illustrations.
-   *Recommendation:* adopt as starting parameters, confirm against invoices and F2's caps before the first autonomous
-   venture, and let only the Treasury rule raise them.
+2. **How many seats to start with?** §4's seat count and incident reserve are illustrations. *Recommendation:* start
+   with one seat per family, read the meter for four weeks, and buy a seat only on the meter's case (D2 in
+   [15](15-RISKS-AND-DECISIONS.md)).
 3. **How big is the third acceptance route before the Model Foundry qualifies?** *Recommendation:* three paid domain
    adjudicators on per-item terms via the Human Task Market ([16](16-EXTERNAL-WORLD-HUMANS.md)), capped at 5% of acceptance
    spend, resized from the measured material-disagreement rate after the first 200 coverage contracts.

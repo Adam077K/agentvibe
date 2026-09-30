@@ -334,7 +334,7 @@ type SeatRequest = {
   task_class: string; effect_class_ceiling: "R0"|"R1"|"R2"|"R3"|"R4"; budget_usd: number;
   bindings_needed: string[];
   coverage_ref: string;                    // the coverage contract the output must meet — never a family string
-  must_family?: "claude"|"codex";          // only when provider terms (DR-45) or coverage demand it
+  must_family?: "claude"|"codex";          // only when data eligibility (DR-45), capacity (DR-61) or coverage demand it
 };
 type CastDecision = {
   record: string; family: "claude"|"codex";

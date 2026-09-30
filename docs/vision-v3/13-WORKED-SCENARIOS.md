@@ -292,9 +292,9 @@ sequenceDiagram
 ### Budget
 
 Forecast (Allocator): p50 $85, p90 $130 across the vector; verifier windows 90 min reserved. **Actual $96**, 71 verifier
-minutes, 1 of 2 reworks used, recovery reserve untouched, $24 released to the obligations reserve. Subscription allowance
-not used: until D2 is signed every headless run uses an API key, and an unattended overnight mission would use one under
-D2 as well (DR-61, which amends DR-45).
+minutes, 1 of 2 reworks used, recovery reserve untouched, $24 released to the obligations reserve. All model work ran on
+the founder's subscriptions (DR-61); the dollar figures here are an illustration from the earlier draft and read as
+capacity used, measured per account.
 
 ### Memory writes
 
@@ -898,7 +898,7 @@ sequenceDiagram
 | 22:06 | Codex ready first. All-or-nothing acquisition of 9 resources (tokens 41). Queue merges staging, `bun test` green, CAS push **to staging** — staging integration may precede acceptance; publication to main may not (DR-70); **storage recomputes touched resources**: `declared_missed: []` because the hot resources were pre-added | Do → Check | — | — | $9.40 |
 | 22:19 | Claude ready. Leases granted (tokens 42). Merging staging: textual conflict in **4 files** (`config`, `index`, `pricing`, `types`) — the SP2 shape: leases ordered the landings, they did not integrate them | Do | — | — | $17.80 |
 | 22:20 | Conflict returns to **the same worker** as the budgeted rework, with the conflict list and Codex's landed diff | Do | Billing Engineer · Claude | — | $17.80 |
-| 22:31 | Claude's API throughput bucket returns 429s mid-rework (autonomous ventures run on API keys, DR-45); the worker backs off, lease renewals stop; TTL (5 min, parameter) expires at 22:36 | — | — | — | $21.10 |
+| 22:31 | Claude's account returns rate-limit errors mid-rework (DR-61: the meter holds the job until the window allows); the worker backs off, lease renewals stop; TTL (5 min, parameter) expires at 22:36 | — | — | — | $21.10 |
 | 22:38 | A one-line rounding hotfix (obligations lane, Codex) lands on `computeTotal` with tokens 43 (staging, then published on its own coverage verdicts) | Do | Payments Engineer · Codex · `gpt-6-sol` | — | $22.40 |
 | 22:44 | Claude's bucket refills; the worker, which never re-read the lease table, pushes with its **remembered** tokens 42 → pre-receive **REJECT** on 5 resources. The coordinator's table was never asked (SP2 drill, C3 PASS, measured) | Hold (storage) | — | — | $23.00 |
 | 22:45 | Re-acquire (44), rebase on the hotfix, second rework (a new overlapping pair → a predictable collision, so it is a **priced integration rework**: its own budget line, priced at the pair rework prior and charged to the later lander) | Do | Billing Engineer · Claude | — | $27.50 |
@@ -948,12 +948,13 @@ the SP2 live arms, which alone can say whether real workers adapt rather than co
 
 **Situation.** Signal Studio (a young agency, Flagship, A2, Episodic client work) owes a client a 10-page site plus copy by
 **Fri 17:00** — a contracted delivery, so an **obligation** with a latest safe decision time of Thu 18:00. In parallel an
-investment mission tests a new outbound offer. It is day 24 of the month, and the venture still runs on F2's starting caps
-(**$150 Anthropic / $50 OpenAI API per month**, parameters) because the Treasury rule has not yet released revenue to it.
+investment mission tests a new outbound offer. It is day 24 of the month, and the venture still runs on its starting
+**share of the founder's subscription capacity** (DR-61; the share is a parameter, measured by the meter) because the
+Treasury rule has not yet bought another seat. Figures below are **% of that monthly share** per family (illustration).
 
 **Charter in force.** `signal-studio.yml@v4`: A2 · spend $250/week · build R2 · publish R3 ask → notify (trust ≥A2) ·
-client data `sealed` · credential routing: API keys only (client data, DR-45) · founder_minutes_week 30 ·
-`emergency_capacity: {usd: 50, window: 7d, purpose: protect_obligation, drawn_by: [founder, incident_lead]}` (pre-signed
+client data `sealed` (contract permits processing on the founder's plans, training off; 09a §11) · founder_minutes_week 30 ·
+`emergency_capacity: {share_pct: 33, window: 7d, purpose: protect_obligation, drawn_by: [founder, incident_lead]}` (pre-signed
 at v4; parameters). The client contract names **no** human alternative for any coverage edge.
 
 ```mermaid
@@ -961,55 +962,55 @@ stateDiagram-v2
   [*] --> Normal
   Normal --> Conserve: Wed 14:10 · P(deadline) 0.71 < 0.8
   Conserve --> Essential: Wed 16:30 · reserve breach forecast
-  Essential --> RouteUnavailable: Wed 19:05 · Anthropic spend-cap 429
+  Essential --> RouteUnavailable: Wed 19:05 · Claude share exhausted
   RouteUnavailable --> AcceptanceWaiting: Wed 19:20 · no qualified Claude judge
   AcceptanceWaiting --> Hold: Thu 09:00 · latest safe decision time inside 12 h
-  Hold --> Normal: Thu 09:14 · founder draws $40 of the emergency envelope (passkey)
+  Hold --> Normal: Thu 09:14 · founder draws 27% from the emergency envelope (passkey)
 ```
 
-| Time | What happens | Authority | Agents (title · family · model) | Skills | Cost so far (month, API) |
+| Time | What happens | Authority | Agents (title · family · model) | Skills | Share used (month, Claude · Codex) |
 |---|---|---|---|---|---|
-| Wed 11:00 | Delivery mission Active: Web Engineer builds pages, Brand Copywriter writes; coverage contract reserves a Codex component judge for Claude copy and a Claude judge for Codex code, a fresh e2e pair, and a **Time-out Confirmer** edge for the R3 delivery (DR-70). Each reservation should be a **hold on its provider bucket** before any further debit (DR-81): $12 on Anthropic, $6 on OpenAI [R5-walk B23] | Do, Check | Web Engineer · Codex · `gpt-6-astra`; Brand Copywriter · Claude · `claude-sonnet-5` | `nextjs-app-router-patterns`, `tailwind-design-system`, `copywriting` | Anthropic $96 · OpenAI $31 |
-| Wed 12:10 | The outbound investment mission's research swarm loads a heavy **inherited context profile** (the SLICE failure: context load, not work, dominated cost [SLICE]) and burns $38 in 2 h | Do | Market Researcher ×4 · Claude · `claude-sonnet-5` | `deep-research`, `competitive-landscape` | $134 · $33 |
-| Wed 14:10 | Capacity forecast: P(deadline) 0.71 → **Conserve**. Swarm fan-out cut 4 → 1; contexts compacted; the research profile switched to `lean-web` (profile change resets its prior) | Fund → Do | Kernel runner | — | $136 · $34 |
-| Wed 16:30 | Reserve breach forecast (obligations + acceptance reserves would not fit the $14 left) → **Essential**: the investment mission is **checkpointed**, not killed — artifacts preserved, Wrap Deposit minimal, facet `delivery: in-progress`, no leases held | Fund | — | — | $138 · $35 |
-| Wed 19:05 | Anthropic **spend-cap 429** (a cap retrying cannot fix [S14 §2.5]) → **Route unavailable**. **Labelled invariant failure** `acceptance_headroom_consumed`: the Allocator's ledger shows the $12 Claude acceptance hold, but the hold was never written to the Anthropic bucket, so execution debits since 12:10 consumed it (DR-81 forbids exactly this). Regulation files an incident; the AAR below names the fix. Copy work switches to the OpenAI API route inside the grant: Brand Copywriter · Codex · `gpt-6-sol` finishes 3 remaining pages (the OpenAI hold was written, and holds) | Do, Brake | Brand Copywriter · Codex | `copywriting` | $150 · $41 |
-| Wed 19:20 | The coverage contract now needs a **Claude** judge for the Codex-written code and pages; that route is capped → **Acceptance waiting**. Deterministic dimensions settle (build, links, Lighthouse ≥ 90, Claims-Standard lint, accessibility): 5 of 7 checks PASS; 2 judged edges wait. **No same-family substitute** | Check | Deterministic verifiers | — | $150 · $43 |
-| Wed 19:21 | The founder's idle Claude Max subscription is visible in the Provider Contract Registry — and **not priceable**: client data plus unattended work routes to API only (DR-45) | Fund | — | — | — |
+| Wed 11:00 | Delivery mission Active: Web Engineer builds pages, Brand Copywriter writes; coverage contract reserves a Codex component judge for Claude copy and a Claude judge for Codex code, a fresh e2e pair, and a **Time-out Confirmer** edge for the R3 delivery (DR-70). Each reservation should be a **hold on its capacity bucket** before any further debit (DR-81): 8% of Claude, 12% of Codex [R5-walk B23] | Do, Check | Web Engineer · Codex · `gpt-6-astra`; Brand Copywriter · Claude · `claude-sonnet-5` | `nextjs-app-router-patterns`, `tailwind-design-system`, `copywriting` | Claude 64% · Codex 62% |
+| Wed 12:10 | The outbound investment mission's research swarm loads a heavy **inherited context profile** (the SLICE failure: context load, not work, dominated cost [SLICE]) and burns 25% of the Claude share in 2 h | Do | Market Researcher ×4 · Claude · `claude-sonnet-5` | `deep-research`, `competitive-landscape` | 89% · 66% |
+| Wed 14:10 | Capacity forecast: P(deadline) 0.71 → **Conserve**. Swarm fan-out cut 4 → 1; contexts compacted; the research profile switched to `lean-web` (profile change resets its prior) | Fund → Do | Kernel runner | — | 91% · 68% |
+| Wed 16:30 | Reserve breach forecast (obligations + acceptance reserves would not fit the 9% left) → **Essential**: the investment mission is **checkpointed**, not killed — artifacts preserved, Wrap Deposit minimal, facet `delivery: in-progress`, no leases held | Fund | — | — | 92% · 70% |
+| Wed 19:05 | The venture's **Claude share is exhausted** (the meter refuses further debits; retrying cannot fix it) → **Route unavailable**. **Labelled invariant failure** `acceptance_headroom_consumed`: the Allocator's ledger shows the 8% Claude acceptance hold, but the hold was never written to the Claude bucket, so execution debits since 12:10 consumed it (DR-81 forbids exactly this). Regulation files an incident; the AAR below names the fix. Copy work switches to Codex inside the grant: Brand Copywriter · Codex · `gpt-6-sol` finishes 3 remaining pages (the Codex hold was written, and holds) | Do, Brake | Brand Copywriter · Codex | `copywriting` | 100% · 82% |
+| Wed 19:20 | The coverage contract now needs a **Claude** judge for the Codex-written code and pages; that share is exhausted → **Acceptance waiting**. Deterministic dimensions settle (build, links, Lighthouse ≥ 90, Claims-Standard lint, accessibility): 5 of 7 checks PASS; 2 judged edges wait. **No same-family substitute** | Check | Deterministic verifiers | — | 100% · 86% |
+| Wed 19:21 | Other ventures' Claude shares have headroom — and are **not borrowable**: each share is an envelope, and only a signed draw moves capacity between them | Fund | — | — | — |
 | Thu 09:00 | Latest safe decision time within 12 h → **Hold**: one bounded DecisionPacket. Class Decide; reach raised Tap → **Buzz** because an obligation's deadline falls inside it (09b §6) | Fund → Want | Packet drafted by Co-founder seat · Codex | — | — |
-| Thu 09:14 | Founder picks B with his passkey over the canonical action "draw $40 of Signal Studio's pre-signed emergency-capacity envelope onto the Anthropic bucket, October only, obligation `delivery-site-v1` only". A draw widens nothing, so it is live at once (DR-59) [R5-walk B24]; a fresh cap raise would have waited out the 12 h cooling-off, past the latest safe decision time. The $40 is written as an **acceptance hold** on the bucket first | Constitution (founder) | — | — | cap $190 |
-| Thu 09:40 | Two judged edges run: Code Referee · Claude · `claude-sonnet-5`; e2e pair (one per family). One FAIL (a testimonial without signed permission → Claims Standard block); fixed, re-judged, PASS | Check | Referees | — | $171 · $46 |
-| Thu 11:00 | Before the R3 delivery effect, the **Time-out Confirmer** edge reserved at Wed 11:00 checks the target card (client Room, artifact hash, recipient) — second lineage to the Claude-judged artifact [R5-walk B38, DR-70] | Check | Time-out Confirmer · Codex · `gpt-6-luna` (OpenAI hold) | — | $171 · $46 |
-| Thu 11:05 | Delivery through the Effect Gateway (client Room); obligation discharged; mission Wrapped. The outbound mission stays checkpointed until Nov 1 | Hold, Know | — | — | $171 · $46 |
+| Thu 09:14 | Founder picks B with his passkey over the canonical action "draw 27% from Signal Studio's pre-signed emergency-capacity envelope onto its Claude bucket, October only, obligation `delivery-site-v1` only". A draw widens nothing, so it is live at once (DR-59) [R5-walk B24]; a fresh share raise would have waited out the 12 h cooling-off, past the latest safe decision time. The draw is written as an **acceptance hold** on the bucket first | Constitution (founder) | — | — | Claude share 127% |
+| Thu 09:40 | Two judged edges run: Code Referee · Claude · `claude-sonnet-5`; e2e pair (one per family). One FAIL (a testimonial without signed permission → Claims Standard block); fixed, re-judged, PASS | Check | Referees | — | 114% · 92% |
+| Thu 11:00 | Before the R3 delivery effect, the **Time-out Confirmer** edge reserved at Wed 11:00 checks the target card (client Room, artifact hash, recipient) — second lineage to the Claude-judged artifact [R5-walk B38, DR-70] | Check | Time-out Confirmer · Codex · `gpt-6-luna` (Codex hold) | — | 114% · 92% |
+| Thu 11:05 | Delivery through the Effect Gateway (client Room); obligation discharged; mission Wrapped. The outbound mission stays checkpointed until Nov 1 | Hold, Know | — | — | 114% · 92% |
 
 **The packet (Thu 09:00).**
 ```yaml
 packet: {id: pkt_2231, venture: signal-studio, class: decide, door: two_way}
-question: "Client delivery due Fri 17:00; 2 acceptance edges need a Claude judge; Anthropic cap reached."
+question: "Client delivery due Fri 17:00; 2 acceptance edges need a Claude judge; the venture's Claude share is used up."
 options:
   - {id: A, action: "offer client a 3-day extension (template); judged edges wait for Nov 1 reset",
      continuity: negotiate_extension, extension_state: pending,   # the Fri 17:00 obligation stands until the client accepts
      if_refused_or_unanswered_by: "Thu 18:00",
      fallback: "continuity route refund_and_notify for the undelivered pages; original due date unchanged"}
-  - {id: B, action: "draw $40 of the pre-signed emergency-capacity envelope (Anthropic, October, this obligation only)",
-     price_usd: 40, needs: passkey, activation: immediate}   # a draw widens nothing (DR-59)
+  - {id: B, action: "draw 27% from the pre-signed emergency-capacity envelope (Claude, October, this obligation only)",
+     share_pct: 27, needs: passkey, activation: immediate}   # a draw widens nothing (DR-59)
 never_offered: ["accept without a Referee",         # 09b §6
                 "human adjudicator in place of the missing edges"]   # the contract named no qualified human alternative (DR-69)
 founder_model_view: {option: B, match_p: 0.8}; own_view: {option: B}; shadow: {concurs: true}
 default_on_silence: {option: A, rule: "two-way inside charter"}
-material_downside: "B: $40 of a $50 envelope used; the unwritten bucket hold and the swarm leak are not yet fixed"
+material_downside: "B: 27 of the envelope's 33 points used; the unwritten bucket hold and the swarm leak are not yet fixed"
 minutes_est: {exchange: 2}
 ```
 
-**Budget.** Month forecast Anthropic $128 / OpenAI $44; actual $171 / $46. The overrun is the inherited-context swarm
-(**$38**) — correctable. It could only reach the judges because of the **invariant failure**: had the $12 hold been on
-the Anthropic bucket (DR-81), the 429 would have stopped execution at $138 and the Claude judges would have run on the
-held headroom. Reserves touched: the acceptance reserve ($12, consumed in breach of its hold, then restored from the $40
-envelope draw) and recovery ($4); obligations reserve untouched; investment checkpointed with $0 at risk. Emergency
-envelope: $40 of $50 drawn; refilling it is a signed amendment.
+**Budget** (% of the venture's monthly share; illustration). Forecast Claude 85% / Codex 88%; actual 114% / 92%. The
+overrun is the inherited-context swarm (**25%**) — correctable. It could only reach the judges because of the **invariant
+failure**: had the 8% hold been on the Claude bucket (DR-81), exhaustion would have stopped execution at 92% and the
+Claude judges would have run on the held headroom. Reserves touched: the acceptance reserve (8%, consumed in breach of its
+hold, then restored from the envelope draw) and recovery (3%); obligations reserve untouched; investment checkpointed
+with nothing at risk. Emergency envelope: 27 of 33 points drawn; refilling it is a signed amendment. Cash spent: $0.
 
-**Memory writes.** Budget Ledger: the capped-route observation and the $40 envelope draw (appended, never rewritten).
-Provider Contract Registry: spend-cap exhaustion timestamp. Brain (Signal Studio, `sealed` for client content): delivery
+**Memory writes.** Budget Ledger: the exhausted-share observation and the envelope draw (appended, never rewritten).
+Provider Contract Registry: capacity exhaustion timestamp. Brain (Signal Studio, `sealed` for client content): delivery
 receipts. Calibration Ledger: the delivery mission's cost forecast scored as a **miss** (actual 1.3× P90). Two AARs naming
 mechanism changes: (1) the invariant failure — a coverage reservation is not admitted until its provider-bucket hold is
 confirmed, and a property test asserts that no execution debit can draw on acceptance headroom (DR-81); (2) context
@@ -1021,20 +1022,20 @@ at 09:00 (phone, passkey) — **2 founder minutes**; Know × Reel for the delive
 **What the founder sees** (phone, Thu 09:00):
 ```
 SIGNAL STUDIO · client delivery Fri 17:00 · needs 1 decision (≈2 min)        [Buzz]
-Anthropic API cap reached · 5/7 checks passed · 2 judged checks waiting
+Claude capacity share used up · 5/7 checks passed · 2 judged checks waiting
  A  Ask client for +3 days (pending until they accept; if refused by Thu 18:00 → refund & notify)   (default at 12:00)
- B  Draw $40 of the emergency envelope, October only, live at once   ← AI co-founder recommends · passkey
+ B  Draw 27% from the emergency capacity envelope, October only, live at once   ← AI co-founder recommends · passkey
 Not offered: shipping without an independent judge · a human standing in for the missing judges (not in the contract).
-⚠ Invariant failure: the Claude judge's reservation was not held on the provider bucket — incident open.
+⚠ Invariant failure: the Claude judge's reservation was not held on the capacity bucket — incident open.
 ```
 
 **What could go wrong here.**
 - *A same-family judge quietly signs off to meet the deadline* → Acceptance waiting forbids the substitute; this replaces
   ENGINE-SPEC's automatic same-family sign-off on exhaustion (DR-11, 09b §6).
-- *The idle subscription is used "just this once"* → the Allocator cannot price an impermissible route (DR-45).
+- *Another venture's idle share is used "just this once"* → shares are envelopes; only a signed draw moves capacity.
 - *Investment eats the obligation's money* → reserve order obligations → acceptance → recovery → investment; Essential
   checkpoints investment first.
-- *Retry storm against a spend cap* → the runner classifies the 429 as spend cap, not rate; no retry.
+- *Retry storm against an exhausted share* → the runner classifies it as a cap, not a rate limit; no retry.
 - *Silence* → default A is two-way inside the charter, so the extension offer goes out; nothing widens. Asking is not
   obtaining: the extension stays **pending** and the Fri 17:00 obligation stands until the client's acceptance is
   recorded in the Room; a refusal or no answer by Thu 18:00 runs the refund-and-notify route [R5-walk B26].
@@ -1468,7 +1469,7 @@ flowchart TD
 | Time | What happens | Authority | Agents (title · family · model) | Skills | Cost so far |
 |---|---|---|---|---|---|
 | 06:10 | New id seen. The **Provider Contract Registry** has no entry → the model is **refused admission** (a route with unknown price is not free, 09b §2) | Fund | Changelog watcher (deterministic) | — | $0 |
-| 06:40 | Rate card and permitted-use terms fetched from the provider's own pages, hashed, `valid_until` set. Admitted on API keys only (DR-45) | Hold, Fund | Pricing Fetcher · Claude · `claude-haiku-4-5` | — | $0.20 |
+| 06:40 | Plan limits and permitted-use terms fetched from the provider's own pages, hashed, `valid_until` set. Admitted on the subscription route (DR-61) | Hold, Fund | Pricing Fetcher · Claude · `claude-haiku-4-5` | — | $0.20 |
 | 06:45 | **Pin both**: new column in every scorecard; `gpt-6-astra` stays default everywhere | Check | — | — | $0.20 |
 | 07:00 | **Judge requalification**: the judge-offset table is re-measured on the fixed paired calibration set. New model's self-preference +2.1 (vs +3.2 measured for the old Codex judge [SP3]) — diagnostic only, never subtracted. Until this finishes it cannot sit on any coverage edge | Check | Calibration Runner · Codex (new) + Claude judges | — | $14 |
 | 07:00 | **Verifiers** tagged `requalify_on: model_release` re-run their holdouts where the new model is a pre-screen judge: 11 of 11 keep their rung | Check | — | — | $17 |
@@ -1484,8 +1485,8 @@ flowchart TD
 
 **Budget.** Forecast $150–200 (illustration; 07 §18.3's range scaled for 31 re-auditions); actual **$181** to Wed 17:00,
 with the rest of the re-scoring still to run, all in the Improvement sleeve (floor 12% in the 30-day post-release window, DR-60); the armed probe's $300 comes from the Option Pool sleeve, not Improvement.
-Shadow prices: the new model's output price is 1.4× the old (illustration), so the Allocator re-ranks — the Payments
-Evidence Engineer's +0.8 clears the price difference; three other classes stay on the old model because the gain does not.
+Capacity: the new model uses 1.4× the window per task (illustration, measured), so the Allocator re-ranks — the Payments
+Evidence Engineer's +0.8 clears the difference; three other classes stay on the old model because the gain does not.
 
 **Memory writes.** Capability Registry: new column with a per-combination qualification state (22 + judges + verifiers
 qualified, the rest pending), 4 per-model deprecations, 1 per-configuration MCP retirement, SBOM updated.

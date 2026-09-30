@@ -110,9 +110,9 @@ Those outcomes must settle through Standing Orders, mandates and deterministic v
 is why the Verifier Foundry, the Probe Mandate, fleet governance of micro-ventures and the Decision Supply Bench are not
 optional. They are what the numbers require. (Expander §3, adopted.)
 
-**The compute line.** Illustrative all-in compute and tools cost falls from about $5 per matched hour (Year 1, S09's
-illustration) to about $2 (Year 5). It falls as the Model Foundry and the Verifier Foundry absorb volume. Compute as a
-share of revenue falls from about 31% to about 6%. From Year 2, a standing target keeps it at or below 18%, so that
+**The compute line.** Model work runs on subscriptions, so the constraint is measured capacity, not a metered bill
+(DR-61); it eases as the Model Foundry and the Verifier Foundry absorb volume. Subscriptions and tools as a share of
+revenue fall from about 31% to about 6% (targets). From Year 2, a standing target keeps it at or below 18%, so that
 revenue growth mechanically unlocks capacity.
 
 **If the ambition misses**, the misses are diagnostic, not fatal:

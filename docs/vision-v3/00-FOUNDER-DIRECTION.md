@@ -66,3 +66,11 @@ The founder asked the AI to see further. These are required sections, not option
 - v2: explorer https://claude.ai/artifact/98P7Rv2Qz7UQMqiVUjka4G ; `docs/vision-v2/` (package, panel, red team, 4 reviews).
 - v3 engineering specs (written 2026-09-30): `docs/vision-v3/engineering/`.
 - This repo's harness: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `mission-control/`, `scripts/`.
+
+## Decisions added 2026-09-30 (later)
+1. **Model work runs on subscriptions only** (Claude Max; ChatGPT plans for Codex) — no metered API spend. The scarce resource
+   is subscription **capacity** (5-hour window + weekly cap per account), measured from each tool's own readouts, never
+   hard-coded. Near a limit: queue, use a lighter model, or switch family/account — never stop silently; when capacity is the
+   bottleneck, say what another seat would add. Provider terms on automated use of consumer plans are a **flagged risk** (15).
+2. **Prefer free tools and free tiers; buy when really needed.** Never serve a paying customer from a non-commercial free plan.
+3. **Keep economics proportionate** — correct it, do not make it a main theme.

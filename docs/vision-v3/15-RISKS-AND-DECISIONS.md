@@ -139,7 +139,8 @@ An answer is a hypothesis until its suite passes; these are **target** residuals
 
 Risks from the section files' own failure tables, many measured in the spikes; **scored here** (R5 judgement). Owner and
 full test live in the cited table. V25–V30 have no complete answer yet (§7). V31–V35 are the scenario walker's high
-breaks that are *mechanism* risks, each answered by an R5 ruling [R5-walk].
+breaks that are *mechanism* risks, each answered by an R5 ruling [R5-walk]. V36–V39 are business risks a reviewer found
+missing (added 2026-09-30; scores are indicative and not yet on the §5.3 grid).
 
 | ID | Failure (source) | P×S | Design answer → test | Where |
 |---|---|---|---|---|
@@ -157,7 +158,7 @@ breaks that are *mechanism* risks, each answered by an R5 ruling [R5-walk].
 | V12 | **One flaw replicated across a fleet; probe spam and bans** | 12 | Ring rollout, correlated-failure map; auto-narrow at 0.3% complaints → planted flaw never spreads | 17 §13 |
 | V13 | **Approvals become reflexes; voice spoofing** | 12 | Wrist only for held two-way doors; looked-at rate; voice auth level, read-back, consequential = propose → quarterly call drill | 08 §16 |
 | V14 | **Personal skills leak into a worker** | 12 | Empty skills dir, mission OS user, lock hash → planted skill absent | 07 §19 |
-| V15 | **Provider terms change mid-operation** | 12 | Weekly terms watcher; quarterly provider-exit drill; API shadow price → drill completes single-family | 09a §10 |
+| V15 | **Provider terms change mid-operation** | 12 | Weekly terms watcher; quarterly provider-exit drill; capacity measured, never hard-coded (DR-61) → drill completes single-family | 09a §10 |
 | V16 | **Kill strands customers** | 10 | Obligation escrow; Wind-down under the Obligation Keeper → twin kill closes every promise | 17 §13 · 16 §9 |
 | V17 | **Sandbox refuses loopback** [SLICE] | 10 | Out-of-sandbox observer; apps tested in I3 → no observer read = `unresolved` | 09a §9 |
 | V18 | **Eval overfit; Worker–Referee arms race; Reel theatre; Map cries wolf** | 9 | Holdouts, monthly subtraction; checks move to systems of record; cutter lists drops; fog never interpolated | 07 §19 · 03 §15.1 · 08 §16 |
@@ -167,7 +168,7 @@ breaks that are *mechanism* risks, each answered by an R5 ruling [R5-walk].
 | V22 | **Inherited context inflates cost; surface sprawl** | 8 | Context profiles in the config digest; a surface ships only as projection + command client | 04 §13 · 08 §16 |
 | V23 | **Taste Cartographer replaces founder taste; OpCo Pack leaks lessons** | 8 | Orders never circles, override alarm >30%; taint-checked export | 04 §13 · 17 §13 |
 | V24 | **An A4 Mind edits its own limits** | 5 | Passkey-only store; never-list line 1 → shell write refused | 05 §14 |
-| V25 | **Headless subscription use contradicts DR-45** (R5-ISSUES #7) | 12 | Strict default until D2 is signed: every headless run uses an API key (DR-61) → no subscription-billed headless Receipt before D2 | **G2** · **D2** |
+| V25 | **Provider terms on automated use of consumer subscriptions** — Anthropic's Consumer Terms bar "automated or non-human" access except via an API key or explicit permission; OpenAI says programmatic Codex should use API keys (09a §10). Subscriptions-only (DR-61) runs headless work on those plans — a **flagged risk the founder accepts**, not a default | 12 | Weekly terms watcher opens an obligations item on any change; work spread across accounts so one action does not stop the organisation; the founder-enabled API fallback kept startable and drilled quarterly → provider-exit drill completes with one account suspended | 09a §10 · **G2** · **D2** |
 | V26 | **Kernel-host administrator compromise** | 10 | Residual only: anchors, provider revocation, external epoch survive | 09a §13 · **G4** |
 | V27 | **No insurer covers autonomous agent acts** | 12 | None yet: insurance `pending_broker`, commitments capped at the Repair Budget | 16 §11, §21 · **G5** · **D7** |
 | V28 | **An over-budget mission is never re-scoped** — no completion guarantor | 9 | Re-scope Review trigger (DR-74) → a twin replay of an over-budget mission re-scopes it | 03 · **G9** |
@@ -178,6 +179,10 @@ breaks that are *mechanism* risks, each answered by an R5 ruling [R5-walk].
 | V33 | **Reach ambiguity** — several reach rules give several answers for one packet [R5-walk C4] | 9 | One ordered reach table owned by 08; 05, 09b and 16 supply inputs only (DR-65) → property test: reach ≥ floor, or deferred and deadline-safe | 08 |
 | V34 | **Provisional single-family acceptance** — single-family mode quietly satisfies a missing coverage edge [R5-walk C8] | 12 | Single-family verdicts are provisional and never satisfy a missing edge; a human substitutes only if named in the coverage contract before launch (DR-69) → a provider-exit drill settles nothing | 09a §10 · 09b |
 | V35 | **Sealed-data release** — sealed derivatives leave via de-identification or a transferred prior [R5-walk B30] | 10 | Sealed derivatives stay local unless a governed **Release** effect clears them; de-identification alone changes nothing (DR-79) → a planted sealed derivative in an export is refused | 06 · 16 |
+| V36 | **No demand** — ventures ship and nobody pays | 16 | Probes before builds; kill/pivot rules and Closer Ratio tripwire → a probe with no paying signal is killed, not scaled | 03 · 17 |
+| V37 | **Running out of cash** | 12 | Cash spend starts near zero on free tiers (DR-84); runway floor protected first by the Treasury rule → runway breach freezes releases | 09b §8 |
+| V38 | **Founder overload** | 12 | Minute supply and the Attention Exchange; Standing Orders; decision minutes flat as ventures grow → overload trips narrowing, not more packets | 05 · 08 |
+| V39 | **Provider account suspended** | 12 | Seats spread across accounts and both families; single-family mode; API fallback the founder can enable (V25) → drill with one account out | 09a §10 |
 
 ## 4. The thirteen contradictions and five campaigns
 
@@ -323,12 +328,12 @@ answer; a row **stays open until its "Closes when" is met** [R5 fix plan].
 | # | Gap | Why open | Proposed answer | Owner | Closes when | Resolution |
 |---|---|---|---|---|---|---|
 | **G1** | **Q8 and Q9 have no build job** | 14 binds Q1–Q7 and Q10 subsets to jobs, but no job carries Q8 (harm, privacy, human work, repair) or Q9 (the five adaptive campaigns) | Add a Q8 job beside the Front Desk and Human Task Market jobs, and a Q9 harness job before the first A3 venture; suite code in the protected base (DR-06); attackers from both families, charged to the acceptance reserve | Acceptance; 14 | 14 lists Q8 and Q9 with phase and fixtures | Build jobs in [14](14-BUILD-PLAN.md) |
-| **G2** | **Headless subscription use** (#7, V25) | DR-45 says "interactive"; 09a runs attended headless I2 on subscription | Founder decision **D2**; until then every headless run uses an API key. DR-61 replaces DR-45's wording | Constitution | D2 signed; DR-61 and `providerMode` agree | DR-61 (strict default now); closes on **D2** |
+| **G2** | **Terms risk of headless subscription use** (#7, V25) | Subscriptions-only (DR-61, founder 2026-09-30) runs headless work on consumer plans the terms reserve to API keys | Founder accepts the risk with mitigations in **D2**: terms watch, spread across accounts, founder-enabled API fallback | Constitution | D2 signed; DR-61 and `providerMode` agree | DR-61; closes on **D2** |
 | **G3** | **Disclosure budget unmeasured** (X07) | 400 bits per recipient per 180 days has no measurement; bucketing is not formal privacy accounting | Spike the cumulative-transcript attack on three synthetic ventures (06 OQ1); set the cap at half the attacker's break-even; half budget meanwhile | Record | Result in 12; X07 re-scored | Spike in [14](14-BUILD-PLAN.md); interim half budget in [06](06-MEMORY.md) |
 | **G4** | **Kernel-host administrator compromise** (V26) | 09a §13 records the residual but proposes no mitigation | A separate admin account never used for agents; the custody keychain sealed by Touch ID; an hourly journal-head vs anchor comparison run *from the third domain*, tripping the external epoch on mismatch; provider keys revocable from the recovery kit. The residual is acknowledged in D3 | Custody | Q2 runs the case and reports what survived | [09a §13](09a-ENGINEERING.md) |
 | **G5** | **Insurance for agent acts** (V27) | Unknown whether cover responds (16 OQ3) | Broker task per entity before its first A3 money mandate; Repair-Budget cap meanwhile — in **D7** | Custody | Broker opinion per entity | **D7** + [16](16-EXTERNAL-WORLD-HUMANS.md) |
 | **G6** | **SP1 landed PARTIAL; its fixes are not yet in 03** (DR-55, #12, V30) | SP1 (2026-09-30): steering held (on intent 8/8, Referee caught 17 misattributions) but the loop never stopped by itself — it wrote a success test no worker could meet and ran to the cost cap, at 23× the control's cost | Fold SP1 §5 into 03: capability-checked success tests with an `awaiting_gate` stop state; a diminishing-returns stop (top question moves <0.1 twice); a `veto` question class exempt from VoI ranking; a Referee that can fetch pages; start a loop only when the decision is worth ~20× a single run | Execution | 03 carries the five changes; a rerun stops on its own | DR-73, in [03](03-MISSION-ENGINE.md) |
-| **G7** | **SP2 live arms and the owed isolation spikes** | Lost-edit rate and rework unmeasured; `claude -p` under a second macOS user, proxy-only VM egress and nested Seatbelt untested (09a §9) | Run in build phase one under D1; if an isolation spike fails, I3 + API for all headless work, at a measured cost that feeds D2 | Execution + Custody | Five measurements recorded | Phase one of [14](14-BUILD-PLAN.md) |
+| **G7** | **SP2 live arms and the owed isolation spikes** | Lost-edit rate and rework unmeasured; `claude -p` under a second macOS user, proxy-only VM egress and nested Seatbelt untested (09a §9) | Run in build phase one under D1; if an isolation spike fails, I3 for all headless work, at a measured capacity cost that feeds D2 | Execution + Custody | Five measurements recorded | Phase one of [14](14-BUILD-PLAN.md) |
 | **G8** | **Title vs procedure untested** (DR-54, V19) | SP3's edge came from the procedure | The four-arm spike (04 §3.4) before a second hybrid passes Shadow | Acceptance | Result in 12 | [14](14-BUILD-PLAN.md) |
 | **G9** | **No completion guarantor** (V28; 11 OQ2) | Neither 03 nor 04 names C5's re-scoping role; a failing-but-not-incident mission may never be re-scoped | 03 adds a **re-scope trigger**: tranche burn ≥80% with the settlement forecast ≥30% below admission (parameters) opens a Re-scope Review led by a fresh other-family Mission Lead, funded from the mission's reserve | Execution + Allocation | A twin replay of an over-budget mission re-scopes it | DR-74, in [03](03-MISSION-ENGINE.md) |
 | **G10** | **No trigger for congestion-priced leases** (11 OQ3) | Unpriced leases have no stated bottleneck point | Lease-wait share >15% (04's target) for two weeks on a hot resource opens a priced-lease experiment for that resource | Execution | 04 names the trigger | [04](04-AGENT-ORGANISATION.md) |
@@ -339,8 +344,8 @@ not gaps.
 
 ## 8. The founder's ten decisions
 
-The final wording of the canon's draft F1–F10 (canon §9). D2 also carries R5-ISSUES #7 (headless runs on the
-subscription). 08's wrist and Ring thresholds fold into D4 and insurance (G5) into D7, so the list stays at ten.
+The final wording of the canon's draft F1–F10 (canon §9). D2 also carries R5-ISSUES #7 (the terms risk of headless
+subscription use). 08's wrist and Ring thresholds fold into D4 and insurance (G5) into D7, so the list stays at ten.
 
 **How they reach him.** All ten arrive as **Decide · Tap** packets at the first weekly board, in deadline order, and are
 signed with the passkey as Constitution records. Each record carries a `review_on` date and a **reversal trigger** (§10
@@ -356,9 +361,8 @@ effect or first 24/7 venture at A2 (target: before 2026-12-01) · **M3** first l
 ```mermaid
 flowchart LR
   D1[D1 launch permission] --> M0((M0 first unattended launch))
-  D2a[D2 subscription rule] --> M1((M1 first headless I2 run))
-  D2b[D2 API caps] --> M2((M2 first outbound or 24/7 venture))
-  D3[D3 hosts and fencing] --> M2
+  D2[D2 seats and terms risk] --> M1((M1 first headless I2 run))
+  D3[D3 hosts and fencing] --> M2((M2 first outbound or 24/7 venture))
   D4[D4 minute supply] --> M2
   D5[D5 first autonomous ventures] --> M2
   D8[D8 outbound and selling] --> M2
@@ -383,35 +387,18 @@ flowchart LR
 - **Cost to reverse.** Very low: revoke the record, instantly; work falls back to founder-present only.
 - **Deadline.** **M0.**
 
-### D2 — Paying for model work: API caps, and headless runs on the subscription (F2 + R5-ISSUES #7)
+### D2 — Model capacity: how many seats, and accepting the terms risk (F2 + R5-ISSUES #7)
 
-- **Question.** (i) Do autonomous ventures run on capped API keys from day one? (ii) May **headless** runs use the
-  founder's **subscription** when he initiated them and is present — or must every headless run use an API key?
-- **Until signed, every headless run uses an API key (DR-61).** This is the default in force now, not an option below.
-- **What the terms said** (fetched 2026-09-30, quoted in 09a §10). Anthropic's Consumer Terms bar automated access "except
-  via an Anthropic API Key or where we otherwise explicitly permit it". The Claude Help Center says `claude -p` and the
-  Agent SDK "still draw from your subscription's usage limits". Claude Code's legal page says limits "assume ordinary,
-  individual usage" and product builders "should use API key authentication". OpenAI: "use API key authentication for
-  programmatic Codex CLI workflows". *A reading of published terms, not legal advice.*
-- **Options for (ii).** (a) **Never** — the strict reading of DR-45. (b) **Attended headless, Claude only**: founder-initiated
-  and founder-present, founder-driven ventures (A0–A1), D0–D1 data; Codex headless always on an API key. (c) Any
-  founder-owned work, including initiative-generated jobs.
-- **Recommendation: (i) yes, (ii) option (b).** Caps start at $150 Anthropic / $50 OpenAI per autonomous venture per month,
-  raised only by the Treasury rule (parameters). "Present" is defined exactly: the job was launched by his command *and* a
-  presence proof is under 30 minutes old (parameter), the venture is A0–A1 and the data is D0–D1; when he leaves, the next
-  job routes to the API. **All Codex headless runs use an API key**, and autonomous ventures, D2+ data and
-  initiative-generated jobs always do (DR-61). Subscription work
-  carries an API **shadow price** so the Allocator never prefers it for being cheap. The terms watcher flips the rule to
-  (a) on any change to the quoted pages. One written question to Anthropic support asks whether attended `claude -p` on
-  his own projects is within terms; the reply is filed as evidence (**Know · Shelf**).
-- **Why.** (b) is what the provider's help page describes and what its legal page calls ordinary individual use — his own
-  work, started by him, while he is there. (c) is automated use on his behalf, which the terms reserve to API keys. For
-  Codex, OpenAI names programmatic workflows explicitly, so (b) sends every Codex headless run to an API key; DR-61
-  requires 09a's `providerMode` to say exactly this. The asymmetry decides it: the saving is modest,
-  while an account action against his plan would cut off his own interactive work, the one input nothing replaces.
-- **Cost to reverse.** Code: one branch. Economics: the shadow price becomes real API spend (09b §1–§2).
-- **Deadline.** (ii) by **M1**; the signature settles DR-61's recommended rule, which replaces DR-45's wording (closes
-  G2); (i) by **M2**.
+- **Already decided (2026-09-30):** all model work runs on subscriptions, capacity measured, no metered API (DR-61).
+- **Question.** (i) How many seats/accounts per family to start with? (ii) Does he accept the terms risk (V25) with its
+  mitigations?
+- **Recommendation.** (i) One Claude Max and one ChatGPT plan (illustration); a second of either only when four weeks of the
+  meter show capacity binding, with Fund's case of what it adds. (ii) Accept, with: the weekly terms watcher; work spread
+  across accounts; the API fallback kept startable (off by default, he alone enables it); one written question to each
+  provider about headless use on his own projects, the reply filed as evidence (**Know · Shelf**). *A reading of
+  published terms (09a §10), not legal advice.*
+- **Cost to reverse.** Low: seats change at renewal; enabling the fallback is one Constitution flag.
+- **Deadline.** **M1** (first headless I2 run); closes G2.
 
 ### D3 — Hosts, the third failure domain and the residual host risk (F3)
 
@@ -474,6 +461,10 @@ flowchart LR
   is unknown, so exposure stays capped until a broker answers.
 - **Reverse / deadline.** Partly one-way (forming is cheap, unwinding contracts and tax status is not). **M3**; the broker
   task before the first A3 money mandate.
+- **Open item — jurisdiction and health data.** The founder's jurisdiction is **unstated (he has not answered yet)**; D7,
+  D8's outbound rules and the data policy all depend on it. Health data (HIPAA in the US, special-category data under
+  GDPR) is out of scope for every venture until he names the jurisdiction and a lawyer confirms what processing terms it
+  needs — consumer subscriptions are not a business-associate arrangement.
 
 ### D8 — Who sells, and the outbound rules (F8)
 
@@ -513,12 +504,12 @@ flowchart LR
 | # | Decision | Recommendation | Reversal cost | Deadline |
 |---|---|---|---|---|
 | D1 | Standing launch permission | Yes: launcher-only, pinned, receipted | Very low | M0 |
-| D2 | API caps; headless on subscription | $150/$50 caps; attended **Claude** headless on subscription; Codex headless always API; until signed, all headless on API (DR-61) | Trivial in code; shadow price becomes spend | M1 / M2 |
+| D2 | Seats; terms risk | One seat per family to start (illustration), more on the meter's case; accept V25 with terms watch, spread accounts, API fallback (DR-61) | Low | M1 |
 | D3 | Hosts, third domain | Dedicated Mac + cloud effectors + third-domain fencing; residual acknowledged | Moderate | M2 |
 | D4 | Minutes and reach | 45/10 + 30-min board; Ring and wrist thresholds | Negligible | M2 |
 | D5 | First autonomous ventures | Two: imported live venture A2→A3, new agency A2 | Low | M0 / M2 |
 | D6 | Deputy and Will | Accepted, drilled human Deputy; per-venture Will | Low | M3 / M4 |
-| D7 | Entities and insurance | Holding + DBAs; entity on trigger; broker before A3 money | Partly one-way | M3 |
+| D7 | Entities and insurance | Holding + DBAs; entity on trigger; broker before A3 money; **open: jurisdiction unanswered, health data out of scope until then** | Partly one-way | M3 |
 | D8 | Selling and outbound | First 10 calls his; ≤30/day disclosed 1:1; never bulk | Policy cheap; harm irreversible | M2 |
 | D9 | Scale programmes | Approve; legal review Year 1; he signs the firsts | Cheap before first deal | M5 |
 | D10 | Third acceptance route | Human adjudicators now; Model Foundry spike | Low | M3 / M5 |

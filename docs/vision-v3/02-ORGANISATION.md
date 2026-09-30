@@ -253,7 +253,7 @@ grows its scarce input · failure modes and defences · health metrics.** Mechan
 - **Purpose.** Decide what gets resources, in what order, without ever spending the same capacity twice.
 - **Held by.** The **Allocator** (deterministic code plus a periodic Portfolio Allocation session for judgment calls) and
   the **Founder Attention Exchange** (deterministic clearing).
-- **Stores.** Budget Ledger (cash, subscription allowance, API throughput, founder minutes, verifier windows); tranche
+- **Stores.** Budget Ledger (cash, subscription capacity, provider throughput, founder minutes, verifier windows); tranche
   records; reserve register keyed by obligation ID; lane and sleeve balances; shadow prices.
 - **Powers.** Reserve in order: obligations → acceptance → recovery → investment. Rank decision-shaped work by value of
   information; size arm-shaped work by Thompson sampling; fund complementary bundles all-or-none; hold admission

@@ -79,7 +79,7 @@ interface Mission {
   door: DoorType; blast_radius: 'mission' | 'venture' | 'portfolio' | 'public';
   evidence: { current: Rung; required: Rung; coverage: number; debt: EvidenceDebt[] };
   forecast: Forecast; closer_claim?: Ref;      // §7; Closer Claims owned by 05
-  tranche: { cash_usd: number; subscription: number; api_usd: number; founder_min: number;
+  tranche: { cash_usd: number; capacity: number; founder_min: number;   // capacity: measured subscription units (DR-61)
              verifier_window: WindowRef; wall_clock_h: number; kill_date: string; surprise_reserve_pct: number };
   coverage_contract: Ref;                      // reserved BEFORE launch (DR-11, DR-15)
   shape?: 'solo' | 'lead+workers' | 'swarm' | 'audition';  // Execution chooses (04)
@@ -211,7 +211,7 @@ interface MoveCandidate {
   move: MoveType; targets: QuestionRef[];
   expected_rung_gain: number;       // 0.5 = half a rung on the target
   p_changes_decision: number;       // scored at settlement
-  cost: { api_usd: number; subscription: number; cash_usd: number; verifier_min: number; founder_min: number; wall_clock_h: number };
+  cost: { capacity: number; cash_usd: number; verifier_min: number; founder_min: number; wall_clock_h: number };
   team_request?: ShapeRequest;      // Execution may grant, shrink or refuse
   why: string;                      // ≤280 chars → Traces (08)
   surprise: boolean;                // unforeseen: outside every cited recipe → may use the surprise reserve (§15.2)
@@ -564,7 +564,7 @@ a Beta/Gamma posterior on **verified value per shadow-priced dollar**.
 - *Selection-aware promotion:* the experiment family, failed and abandoned siblings and the stopping rule stay in the
   denominator; promotion needs a sealed confirmation run; inconclusive stays inconclusive [R3-red D02; DR-16].
 
-**Tranches are vectors** — cash, subscription allowance, API throughput, founder minutes and a **qualified verifier window**,
+**Tranches are vectors** — cash, subscription capacity, provider throughput, founder minutes and a **qualified verifier window**,
 never interchangeable, priced at the week's binding shadow prices ([09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) owns the
 maths). Fan-out is bounded by verification, not headcount [R3-red T01]. **Correlated-failure exposure** (one skill version,
 model config, channel or provider) is an exposure-model row, initial parameter 30% of funded work (DR-46); if unmeetable,
@@ -608,7 +608,7 @@ brand cells: [16](16-EXTERNAL-WORLD-HUMANS.md); fleet view: [17](17-VIBE-STARTUP
 probe:
   source: {pain_ref: PAIN-3312} | {option_ref: OPT-0044} | {venture: V-07, adjacent_segment: "vet clinics"}
   offer: "Remittance reconciliation for small vet clinics, $149/mo, refundable pre-order"
-  forecast: {p_graduate: 0.05, cost_p50: {cash_usd: 180, api_usd: 6}}   # nulls are priors gold
+  forecast: {p_graduate: 0.05, cost_p50: {cash_usd: 180, capacity_pct_week: 2}}   # nulls are priors gold
   graduate_if: "preorders >= 5 | booked_calls >= 8 | LOI >= 1 within 21 d"   # mandate parameters
   founder_min: 0; kill_date: +21d
 ```

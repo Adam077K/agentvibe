@@ -17,8 +17,8 @@ to `main`, and nothing should be without the founder.
 
 ## What the founder must do first
 1. **Read** the 45-minute path in the README and **answer the ten decisions** in [15 §8](15-RISKS-AND-DECISIONS.md).
-   Build phase P0 is gated on D1 and D2; D2 (subscription vs API key for headless runs) blocks every autonomous run —
-   until he signs it, every headless job uses an API key (DR-61).
+   Build phase P0 is gated on D1 and D2; model work is subscriptions-only (DR-61, decided 2026-09-30), and D2 now asks
+   only how many seats to start with and whether he accepts the provider-terms risk (15 V25) with its mitigations.
 2. **Grant a standing launch rule** for headless Claude and Codex workers. Auto-mode refused worker launches from
    subagents in SP1 and SP2 while SP3 and the slice got through — today it is inconsistent, and 14 P0 assumes a stable path.
 3. **Sign the Build Charter** (DR-60): it funds construction until Handover.
