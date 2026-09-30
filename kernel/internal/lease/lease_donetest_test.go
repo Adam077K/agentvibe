@@ -6,11 +6,23 @@
 // Run: go -C kernel test -tags donetest -count=1 ./internal/lease/
 package lease_test
 
+// Why the race is two Claimers over ONE Journal handle, not two handles or two processes: the
+// Journal has exactly one writer (09a §4.1), and the B1-01a done-test requires a second Open to be
+// refused with ErrLocked. Real runners never open it; they reach the claim through the Kernel's
+// command socket (09a §3-§4.1, B1-03), which is the one writer. So the claim must be decided in
+// the Journal, not in a Claimer's memory. Two independent Claimers show that within a process, and
+// TestB1_05_ClaimSurvivesReopen shows it across processes: a claim made by this process is refused
+// to a different OS process that opens the same file afterwards.
+
 import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -35,10 +47,61 @@ func setup(t *testing.T, path string) (journal.Journal, lease.Claimer) {
 	return j, c
 }
 
+const (
+	claimChildEnv = "AVK_DONETEST_CLAIM_CHILD" // "<journal path>|<job id>|<parent token>"
+)
+
+// TestMain lets the test binary re-execute itself as a second OS process that opens the Journal,
+// tries to claim a job and checks the first process's token.
+func TestMain(m *testing.M) {
+	if spec := os.Getenv(claimChildEnv); spec != "" {
+		os.Exit(claimChild(spec))
+	}
+	os.Exit(m.Run())
+}
+
+func claimChild(spec string) int {
+	ctx := context.Background()
+	parts := strings.Split(spec, "|")
+	if len(parts) != 3 {
+		fmt.Println("error bad spec")
+		return 0
+	}
+	token, _ := strconv.ParseUint(parts[2], 10, 64)
+	j, err := journal.Open(parts[0])
+	if err != nil {
+		fmt.Printf("error open %v\n", err)
+		return 0
+	}
+	defer j.Close()
+	c, err := lease.New(j)
+	if err != nil {
+		fmt.Printf("error new %v\n", err)
+		return 0
+	}
+	claim := "claimed"
+	if _, err := c.ClaimJob(ctx, parts[1], "runner-child", 90*time.Second); errors.Is(err, lease.ErrHeld) {
+		claim = "held"
+	} else if err != nil {
+		claim = "error " + err.Error()
+	}
+	check := "live"
+	if err := c.Check(ctx, parts[1], token); err != nil {
+		check = "check-error " + err.Error()
+	}
+	fmt.Println(claim, check)
+	return 0
+}
+
 func TestB1_05_TwoRunnerRace(t *testing.T) {
 	ctx := context.Background()
-	j, c := setup(t, filepath.Join(t.TempDir(), "journal.db"))
+	j, cA := setup(t, filepath.Join(t.TempDir(), "journal.db"))
 	defer j.Close()
+	cB, err := lease.New(j) // a second, independent Claimer: no shared in-memory state
+	if err != nil {
+		t.Fatalf("second lease.New: %v", err)
+	}
+	claimers := []lease.Claimer{cA, cB}
 
 	double, none := 0, 0
 	for i := 0; i < races; i++ {
@@ -52,7 +115,7 @@ func TestB1_05_TwoRunnerRace(t *testing.T) {
 			go func(r int) {
 				defer wg.Done()
 				<-start
-				claims[r], errs[r] = c.ClaimJob(ctx, jobID, fmt.Sprintf("runner-%c", 'a'+r), 90*time.Second)
+				claims[r], errs[r] = claimers[r].ClaimJob(ctx, jobID, fmt.Sprintf("runner-%c", 'a'+r), 90*time.Second)
 			}(r)
 		}
 		close(start)
@@ -66,8 +129,11 @@ func TestB1_05_TwoRunnerRace(t *testing.T) {
 				if claims[r].Resource != "job://"+jobID || claims[r].JobID != jobID {
 					t.Fatalf("race %d: claim on %q/%q, want job://%s", i, claims[r].Resource, claims[r].JobID, jobID)
 				}
-				if err := c.Check(ctx, jobID, claims[r].Token); err != nil {
-					t.Fatalf("race %d: the winner's own token fails Check: %v", i, err)
+				// Both Claimers must agree: the winner's token is live in the other one too.
+				for _, c := range claimers {
+					if err := c.Check(ctx, jobID, claims[r].Token); err != nil {
+						t.Fatalf("race %d: the winner's token fails Check: %v", i, err)
+					}
 				}
 			case !errors.Is(errs[r], lease.ErrHeld):
 				t.Fatalf("race %d: loser err=%v, want ErrHeld", i, errs[r])
@@ -149,12 +215,14 @@ func TestB1_05_ClaimSurvivesReopen(t *testing.T) {
 	if err := j.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
-	j, c = setup(t, path)
-	defer j.Close()
-	if _, err := c.ClaimJob(ctx, "job_durable", "runner-b", 90*time.Second); !errors.Is(err, lease.ErrHeld) {
-		t.Fatalf("claim b of a live job after reopen: %v, want ErrHeld (the claim row lives in the Journal)", err)
+	// A different OS process opens the same file: no package-level state can carry the claim.
+	cmd := exec.Command(os.Args[0], "-test.run=^$")
+	cmd.Env = append(os.Environ(), fmt.Sprintf("%s=%s|%s|%d", claimChildEnv, path, "job_durable", a.Token))
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("claim child: %v", err)
 	}
-	if err := c.Check(ctx, "job_durable", a.Token); err != nil {
-		t.Fatalf("Check(token a) after reopen: %v", err)
+	if got := strings.TrimSpace(string(out)); got != "held live" {
+		t.Fatalf("second process: %q, want \"held live\" (the claim row and its token live in the Journal)", got)
 	}
 }

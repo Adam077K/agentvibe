@@ -36,12 +36,42 @@ const (
 	maxAcksPerLife = 1500
 )
 
-// TestMain lets the test binary re-execute itself as the crash child, which the parent SIGKILLs.
+// openChildEnv: set to the Journal path, the binary only tries Open and reports the outcome.
+const openChildEnv = "AVK_DONETEST_OPEN_CHILD"
+
+// TestMain lets the test binary re-execute itself as a second OS process: the crash child, which
+// the parent SIGKILLs, or the open child, which contends for the writer lock.
 func TestMain(m *testing.M) {
 	if path := os.Getenv(crashChildEnv); path != "" {
 		os.Exit(crashChild(path))
 	}
+	if path := os.Getenv(openChildEnv); path != "" {
+		j, err := journal.Open(path)
+		switch {
+		case err == nil:
+			j.Close()
+			fmt.Println("opened")
+		case errors.Is(err, journal.ErrLocked):
+			fmt.Println("locked")
+		default:
+			fmt.Printf("error %v\n", err)
+		}
+		os.Exit(0)
+	}
 	os.Exit(m.Run())
+}
+
+// openFromSecondProcess runs Open on path in a separate OS process, so no in-process state (a
+// package-level map, a mutex) can stand in for the file lock.
+func openFromSecondProcess(t *testing.T, path string) string {
+	t.Helper()
+	cmd := exec.Command(os.Args[0], "-test.run=^$")
+	cmd.Env = append(os.Environ(), openChildEnv+"="+path)
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("open child: %v", err)
+	}
+	return strings.TrimSpace(string(out))
 }
 
 // crashChild appends random events until killed, printing one "ack" line per durable append.
@@ -121,17 +151,16 @@ type acked struct{ typ, hash, data string }
 func TestB1_01a_SingleWriter(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "journal.db")
 	j := openOrFail(t, path)
-	if second, err := journal.Open(path); !errors.Is(err, journal.ErrLocked) {
-		if second != nil {
-			second.Close()
-		}
-		t.Fatalf("second Open of a held Journal: err=%v, want ErrLocked", err)
+	if got := openFromSecondProcess(t, path); got != "locked" {
+		j.Close()
+		t.Fatalf("Open from a second process while the Journal is held: %q, want \"locked\" (ErrLocked)", got)
 	}
 	if err := j.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
-	j = openOrFail(t, path)
-	j.Close()
+	if got := openFromSecondProcess(t, path); got != "opened" {
+		t.Fatalf("Open from a second process after Close: %q, want \"opened\" (Close releases the lock)", got)
+	}
 }
 
 func TestB1_01a_OptimisticSeq(t *testing.T) {
@@ -198,6 +227,10 @@ func TestB1_01a_OptimisticSeq(t *testing.T) {
 	digest(t, j)
 }
 
+// LIMIT: SIGKILL kills the process, not the machine. The OS page cache survives it, so this test
+// proves durability across a process crash only. It cannot tell an fsync-per-commit Journal from
+// one that never fsyncs (e.g. WAL with synchronous=OFF); power-loss durability needs a different
+// harness (a VM or a fault-injecting filesystem) and is not claimed here.
 func TestB1_01a_RandomAppendsCrashRebuild(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "journal.db")

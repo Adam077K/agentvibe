@@ -38,6 +38,20 @@ type Proposal struct {
 
 // Event is one stored event. Seq is per-stream, gapless, starting at 1. PrevHash of seq 1 is 64
 // zeros. Hash and PrevHash are lowercase hex SHA-256 (09a §3 Event.prev_hash / hash).
+//
+// THE HASH FORMULA IS FROZEN (B0-17a; the B1-01b done-test recomputes it for every event).
+// With u64(n) = n as 8 bytes big-endian, and raw(h) = the 32 bytes the hex string h encodes:
+//
+//	Hash = hex(SHA-256( "avk.event.v1\n"
+//	                    || u64(len(Stream)) || Stream
+//	                    || u64(Seq)
+//	                    || u64(len(Type))   || Type
+//	                    || u64(len(Data))   || Data
+//	                    || raw(PrevHash) ))
+//
+// Every variable-length field is length-prefixed, so no two distinct events share an encoding.
+// A field added to Event later (09a §3 lists ts, actor, label, …) goes into a new domain tag,
+// "avk.event.v2\n", never silently into v1.
 type Event struct {
 	Stream   string
 	Seq      uint64
@@ -66,6 +80,13 @@ type Journal interface {
 	// ErrChainBroken.
 	Verify(ctx context.Context) error
 	// StateHash digests every stream head; reopening the same file reproduces it exactly.
+	// FROZEN: over the streams in Streams() order (sorted),
+	//
+	//	StateHash = hex(SHA-256( "avk.state.v1\n"
+	//	                         || for each stream: u64(len(stream)) || stream
+	//	                                             || u64(headSeq) || raw(headHash) ))
+	//
+	// Each head hash commits to its stream's whole history, so StateHash does too.
 	StateHash(ctx context.Context) (string, error)
 	// PutBlob stores data content-addressed under venture and returns its ref.
 	PutBlob(ctx context.Context, venture string, data []byte) (BlobRef, error)

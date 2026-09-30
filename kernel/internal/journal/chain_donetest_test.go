@@ -12,12 +12,14 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -25,6 +27,129 @@ import (
 )
 
 var hexHash = regexp.MustCompile(`^[0-9a-f]{64}$`)
+
+// The frozen formulas from api.go, recomputed here independently of the implementation.
+func u64(b *bytes.Buffer, n uint64) { binary.Write(b, binary.BigEndian, n) }
+
+func rawHash(t *testing.T, h string) []byte {
+	t.Helper()
+	r, err := hex.DecodeString(h)
+	if err != nil || len(r) != 32 {
+		t.Fatalf("%q is not a 32-byte hex hash", h)
+	}
+	return r
+}
+
+func wantEventHash(t *testing.T, stream string, seq uint64, typ string, data []byte, prev string) string {
+	t.Helper()
+	var b bytes.Buffer
+	b.WriteString("avk.event.v1\n")
+	u64(&b, uint64(len(stream)))
+	b.WriteString(stream)
+	u64(&b, seq)
+	u64(&b, uint64(len(typ)))
+	b.WriteString(typ)
+	u64(&b, uint64(len(data)))
+	b.Write(data)
+	b.Write(rawHash(t, prev))
+	sum := sha256.Sum256(b.Bytes())
+	return hex.EncodeToString(sum[:])
+}
+
+func wantStateHash(t *testing.T, j journal.Journal) string {
+	t.Helper()
+	ctx := context.Background()
+	streams, err := j.Streams(ctx)
+	if err != nil {
+		t.Fatalf("Streams: %v", err)
+	}
+	if !sort.StringsAreSorted(streams) {
+		t.Fatalf("Streams() not sorted: %v", streams)
+	}
+	var b bytes.Buffer
+	b.WriteString("avk.state.v1\n")
+	for _, s := range streams {
+		seq, h, err := j.Head(ctx, s)
+		if err != nil {
+			t.Fatalf("Head(%s): %v", s, err)
+		}
+		u64(&b, uint64(len(s)))
+		b.WriteString(s)
+		u64(&b, seq)
+		b.Write(rawHash(t, h))
+	}
+	sum := sha256.Sum256(b.Bytes())
+	return hex.EncodeToString(sum[:])
+}
+
+// checkChain recomputes every event's hash from its content and predecessor, and StateHash from
+// the heads. An implementation cannot pass with a hash that ignores content or history.
+func checkChain(t *testing.T, j journal.Journal) {
+	t.Helper()
+	ctx := context.Background()
+	streams, err := j.Streams(ctx)
+	if err != nil {
+		t.Fatalf("Streams: %v", err)
+	}
+	for _, s := range streams {
+		evs, err := j.Read(ctx, s, 1)
+		if err != nil {
+			t.Fatalf("Read(%s): %v", s, err)
+		}
+		prev := strings.Repeat("0", 64)
+		for _, e := range evs {
+			if e.PrevHash != prev {
+				t.Fatalf("%s seq %d: prev_hash %s, want %s", s, e.Seq, e.PrevHash, prev)
+			}
+			if want := wantEventHash(t, s, e.Seq, e.Type, e.Data, prev); e.Hash != want {
+				t.Fatalf("%s seq %d: hash %s, the frozen formula gives %s", s, e.Seq, e.Hash, want)
+			}
+			prev = e.Hash
+		}
+	}
+	got, err := j.StateHash(ctx)
+	if err != nil {
+		t.Fatalf("StateHash: %v", err)
+	}
+	if want := wantStateHash(t, j); got != want {
+		t.Fatalf("StateHash %s, the frozen formula gives %s", got, want)
+	}
+}
+
+// buildJournal writes datas to stream "s" of a fresh Journal and returns its head hash and
+// StateHash.
+func buildJournal(t *testing.T, datas ...string) (head, state string) {
+	t.Helper()
+	ctx := context.Background()
+	j := openOrFail(t, filepath.Join(t.TempDir(), "journal.db"))
+	defer j.Close()
+	appendN(t, j, "s", len(datas), func(i int) []byte { return []byte(datas[i]) })
+	checkChain(t, j)
+	_, head, err := j.Head(ctx, "s")
+	if err != nil {
+		t.Fatalf("Head: %v", err)
+	}
+	if state, err = j.StateHash(ctx); err != nil {
+		t.Fatalf("StateHash: %v", err)
+	}
+	return head, state
+}
+
+func TestB1_01b_HistorySensitivity(t *testing.T) {
+	baseHead, baseState := buildJournal(t, "one", "two", "three")
+	againHead, againState := buildJournal(t, "one", "two", "three")
+	if againHead != baseHead || againState != baseState {
+		t.Fatalf("identical histories gave different hashes: head %s/%s, state %s/%s", baseHead, againHead, baseState, againState)
+	}
+	editHead, editState := buildJournal(t, "ONE", "two", "three") // only event 1's Data differs
+	if editHead == baseHead || editState == baseState {
+		t.Fatalf("changing event 1's Data left head (%v) or StateHash (%v) unchanged", editHead == baseHead, editState == baseState)
+	}
+	swapHead, swapState := buildJournal(t, "two", "one", "three") // events 1 and 2 reordered
+	if swapHead == baseHead || swapState == baseState {
+		t.Fatalf("reordering two events left head (%v) or StateHash (%v) unchanged", swapHead == baseHead, swapState == baseState)
+	}
+}
 
 func appendN(t *testing.T, j journal.Journal, stream string, n int, data func(i int) []byte) {
 	t.Helper()
@@ -71,6 +196,7 @@ func TestB1_01b_ChainLinks(t *testing.T) {
 	if err := j.Verify(ctx); err != nil {
 		t.Fatalf("Verify on an untouched Journal: %v", err)
 	}
+	checkChain(t, j)
 }
 
 func TestB1_01b_StateHashReproducedOnRebuild(t *testing.T) {
@@ -93,6 +219,7 @@ func TestB1_01b_StateHashReproducedOnRebuild(t *testing.T) {
 	if err != nil || after != before {
 		t.Fatalf("StateHash after rebuild = %q (%v), before = %q", after, err, before)
 	}
+	checkChain(t, j) // the reproduced value is the frozen formula over the heads, not a file digest
 	appendN(t, j, "a", 1, func(int) []byte { return []byte("one more") })
 	if moved, _ := j.StateHash(ctx); moved == before {
 		t.Fatalf("StateHash did not change after an append; it must digest the heads")
@@ -121,23 +248,23 @@ func TestB1_01b_TamperedRowRefused(t *testing.T) {
 	}
 
 	// Edit the row the way an attacker with file access would: rewrite its bytes in place,
-	// behind the Journal's back. SQLite keeps no page checksums, so only the chain can notice.
-	flipped := 0
-	for _, f := range []string{path, path + "-wal"} {
-		b, err := os.ReadFile(f)
-		if err != nil {
-			continue
-		}
-		if n := bytes.Count(b, marker); n > 0 {
-			b = bytes.ReplaceAll(b, marker, append([]byte("XAMPER"), marker[6:]...))
-			if err := os.WriteFile(f, b, 0o600); err != nil {
-				t.Fatal(err)
-			}
-			flipped += n
-		}
+	// behind the Journal's back. Only the main database file is edited. Its pages carry no
+	// checksum, so the chain is the only thing that can notice. WAL frames DO carry checksums,
+	// and a corrupted frame is silently dropped on recovery, which would test SQLite, not the
+	// chain. That is why Close must checkpoint, and why a marker still in -wal fails this test.
+	if b, err := os.ReadFile(path + "-wal"); err == nil && bytes.Contains(b, marker) {
+		t.Fatalf("event data still in %s-wal after Close; Close must checkpoint into the database file", path)
 	}
-	if flipped == 0 {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(b, marker) {
 		t.Fatalf("event data not found verbatim in %s after Close; the Proposal.Data contract requires it", path)
+	}
+	b = bytes.ReplaceAll(b, marker, append([]byte("XAMPER"), marker[6:]...))
+	if err := os.WriteFile(path, b, 0o600); err != nil {
+		t.Fatal(err)
 	}
 
 	j2, err := journal.Open(path)
