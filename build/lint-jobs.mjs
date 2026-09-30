@@ -36,14 +36,36 @@ function jsonScalar(raw, fieldName, blockId) {
   }
 }
 
-function parseQuotedArray(inner) {
-  const out = [];
-  const re = /"(?:[^"\\]|\\.)*"/g;
-  let m;
-  while ((m = re.exec(inner)) !== null) {
-    out.push(JSON.parse(m[0]));
+/**
+ * Parses a flow-array's inner content into entries. Handles BOTH the generator's quoted-JSON
+ * form ("B1-01") and 14-BUILD-PLAN.md §6's own written form, which is unquoted
+ * (depends_on: [B1-01, B1-02]) — a parser that only recognises quotes silently drops bare
+ * tokens, which is how a dangling id like B9-99 written unquoted passed the dangling-dependency
+ * check with zero errors: the check never saw it. Every comma-separated entry is captured,
+ * quoted or bare, so nothing is silently dropped.
+ */
+function parseArrayEntries(inner) {
+  const raw = inner.trim();
+  if (!raw) return [];
+  const parts = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (c === '"' && raw[i - 1] !== '\\') inQuotes = !inQuotes;
+    if (c === ',' && !inQuotes) {
+      parts.push(cur);
+      cur = '';
+    } else {
+      cur += c;
+    }
   }
-  return out;
+  if (cur.trim() !== '') parts.push(cur);
+  return parts.map(part => {
+    const t = part.trim();
+    if (t.startsWith('"')) return JSON.parse(t);
+    return t; // bare token, e.g. B1-01 — still captured, still checked against idSet
+  });
 }
 
 function parseFamilyBlock(raw, blockId, roleName) {
@@ -59,7 +81,7 @@ function parseFamilyBlock(raw, blockId, roleName) {
   const modelMatch = raw.match(/model: (".*?")/);
   if (modelMatch) result.model = jsonScalar(modelMatch[1], `${roleName}.model`, blockId);
   const modelsMatch = raw.match(/models: \[(.*?)\]/);
-  if (modelsMatch) result.models = parseQuotedArray(modelsMatch[1]);
+  if (modelsMatch) result.models = parseArrayEntries(modelsMatch[1]);
   if (!result.model && !result.models) {
     throw new Error(`${blockId}: ${roleName} has neither model nor models`);
   }
@@ -107,13 +129,13 @@ export function parseJobsFile(content) {
       job.critical = critMatch ? critMatch[1] === 'true' : false;
 
       const dependsMatch = block.match(/^ {2}depends_on: \[(.*)\]$/m);
-      job.depends_on = dependsMatch ? parseQuotedArray(dependsMatch[1]) : [];
+      job.depends_on = dependsMatch ? parseArrayEntries(dependsMatch[1]) : [];
 
       const founderMatch = block.match(/^ {2}founder_deps: \[(.*)\]$/m);
-      job.founder_deps = founderMatch ? parseQuotedArray(founderMatch[1]) : [];
+      job.founder_deps = founderMatch ? parseArrayEntries(founderMatch[1]) : [];
 
       const gateMatch = block.match(/^ {2}gate_deps: \[(.*)\]$/m);
-      job.gate_deps = gateMatch ? parseQuotedArray(gateMatch[1]) : [];
+      job.gate_deps = gateMatch ? parseArrayEntries(gateMatch[1]) : [];
 
       const builderMatch = block.match(/^ {2}builder: \{(.*)\}$/m);
       if (!builderMatch) throw new Error(`${id}: missing builder`);
