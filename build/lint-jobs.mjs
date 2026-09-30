@@ -15,8 +15,10 @@
 //   - a protected_base job with status: admitted and no founder_present: true
 //   - a duplicate id
 //   - a dependency cycle in depends_on
+//   - (build/capabilities.yml) a non-trigger capability with no delivering job, or a
+//     delivering_jobs entry that is not a job id in this file
 //
-// Usage: node build/lint-jobs.mjs [path-to-jobs.yml]
+// Usage: node build/lint-jobs.mjs [path-to-jobs.yml] [path-to-capabilities.yml]
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,6 +27,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PATH = path.join(__dirname, 'jobs.yml');
+const DEFAULT_CAPABILITIES_PATH = path.join(__dirname, 'capabilities.yml');
 
 const SINGLE_FAMILIES = new Set(['claude', 'codex']);
 // The only family values §6's legend defines: Cl/Cx/s5/h resolve to claude or codex; "both"
@@ -182,6 +185,77 @@ export function parseJobsFile(content) {
   return { jobs, parseErrors };
 }
 
+/**
+ * Parses build/capabilities.yml's flat-list shape (same style as parseJobsFile — see that
+ * function's comment). Exported so tests can run it on a fixture file, not just in-memory data.
+ */
+export function parseCapabilitiesFile(content) {
+  const capabilities = [];
+  const parseErrors = [];
+
+  const lines = content.split('\n');
+  const blockStarts = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (/^- id: /.test(lines[i])) blockStarts.push(i);
+  }
+
+  for (let bi = 0; bi < blockStarts.length; bi++) {
+    const start = blockStarts[bi];
+    const end = bi + 1 < blockStarts.length ? blockStarts[bi + 1] : lines.length;
+    const block = lines.slice(start, end).join('\n');
+    const idMatch = block.match(/^- id: (".*")/);
+    const id = idMatch ? jsonScalar(idMatch[1], 'id', `(row ${bi + 1})`) : `(row ${bi + 1}, no id)`;
+
+    try {
+      const cap = { id };
+
+      const fileMatch = block.match(/^ {2}file: (".*")$/m);
+      cap.file = fileMatch ? jsonScalar(fileMatch[1], 'file', id) : undefined;
+
+      const descMatch = block.match(/^ {2}description: (".*")$/m);
+      cap.description = descMatch ? jsonScalar(descMatch[1], 'description', id) : undefined;
+
+      const lanesMatch = block.match(/^ {2}lanes: \[(.*)\]$/m);
+      cap.lanes = lanesMatch ? parseArrayEntries(lanesMatch[1]) : [];
+
+      const triggerMatch = block.match(/^ {2}trigger: (true|false)/m);
+      cap.trigger = triggerMatch ? triggerMatch[1] === 'true' : false;
+
+      const deliveringMatch = block.match(/^ {2}delivering_jobs: \[(.*)\]$/m);
+      if (!deliveringMatch) throw new Error(`${id}: missing delivering_jobs`);
+      cap.delivering_jobs = parseArrayEntries(deliveringMatch[1]);
+
+      capabilities.push(cap);
+    } catch (e) {
+      parseErrors.push(e.message);
+    }
+  }
+
+  return { capabilities, parseErrors };
+}
+
+/**
+ * Lints capabilities against the job id set they must resolve into. Pure function, same
+ * contract as lintJobs: no filesystem access, so a fixture array exercises every rule directly.
+ */
+export function lintCapabilities(jobs, capabilities) {
+  const errors = [];
+  const idSet = new Set(jobs.map(j => j.id));
+
+  for (const c of capabilities) {
+    if (!c.trigger && (!c.delivering_jobs || c.delivering_jobs.length === 0)) {
+      errors.push(`capability ${c.id}: no delivering job (destination capability with zero jobs)`);
+    }
+    for (const jobId of c.delivering_jobs || []) {
+      if (!idSet.has(jobId)) {
+        errors.push(`capability ${c.id}: delivering_jobs references unknown job "${jobId}"`);
+      }
+    }
+  }
+
+  return { errors };
+}
+
 function sha256(s) {
   return 'sha256:' + crypto.createHash('sha256').update(s, 'utf8').digest('hex');
 }
@@ -281,6 +355,7 @@ export function lintJobs(jobs) {
 
 function main() {
   const filePath = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_PATH;
+  const capabilitiesPath = process.argv[3] ? path.resolve(process.argv[3]) : DEFAULT_CAPABILITIES_PATH;
   if (!fs.existsSync(filePath)) {
     console.error(`ERROR: no such file: ${filePath}`);
     process.exit(1);
@@ -288,19 +363,29 @@ function main() {
   const content = fs.readFileSync(filePath, 'utf8');
   const { jobs, parseErrors } = parseJobsFile(content);
 
-  for (const e of parseErrors) console.error(`ERROR: ${e}`);
-
   const { errors, warnings } = lintJobs(jobs);
 
+  let capabilityErrors = [];
+  let capabilityParseErrors = [];
+  if (fs.existsSync(capabilitiesPath)) {
+    const capContent = fs.readFileSync(capabilitiesPath, 'utf8');
+    const parsed = parseCapabilitiesFile(capContent);
+    capabilityParseErrors = parsed.parseErrors;
+    capabilityErrors = lintCapabilities(jobs, parsed.capabilities).errors;
+  } else {
+    console.warn(`WARN: no capabilities file at ${capabilitiesPath} — coverage rule (14-BUILD-PLAN.md:67) skipped`);
+  }
+
   for (const w of warnings) console.warn(`WARN: ${w}`);
-  for (const e of errors) console.error(`ERROR: ${e}`);
+  for (const e of [...parseErrors, ...errors, ...capabilityParseErrors, ...capabilityErrors]) console.error(`ERROR: ${e}`);
 
   const perPhase = {};
   for (const j of jobs) perPhase[j.phase] = (perPhase[j.phase] || 0) + 1;
   console.log(`build/jobs.yml: ${jobs.length} jobs, per phase: ${JSON.stringify(perPhase)}`);
-  console.log(`${errors.length + parseErrors.length} errors, ${warnings.length} warnings`);
+  const totalErrors = parseErrors.length + errors.length + capabilityParseErrors.length + capabilityErrors.length;
+  console.log(`${totalErrors} errors, ${warnings.length} warnings`);
 
-  if (parseErrors.length > 0 || errors.length > 0) {
+  if (totalErrors > 0) {
     process.exit(1);
   }
   process.exit(0);

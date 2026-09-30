@@ -1,7 +1,7 @@
 # build/jobs.yml — the Build Register (14-BUILD-PLAN.md §6), as data.
 #
 # Generated from docs/vision-v3/14-BUILD-PLAN.md §6 job tables (P0-P5), one row per job,
-# by a throwaway parser (not hand-typed). Linted by build/lint-jobs.mjs (`npm run lint:jobs`).
+# by a throwaway parser (not hand-typed). Linted directly: `node build/lint-jobs.mjs` (not an npm script).
 #
 # Field notes:
 #  - depends_on: job ids, normalised from the plan's short forms within their own phase context;
