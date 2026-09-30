@@ -1,11 +1,20 @@
 # Provider Contract Registry v0 -- B0-02 (docs/vision-v3/14-BUILD-PLAN.md section 6 P0)
 #
 # One row per (plan, model) for the founder's two subscriptions. Every quote below was fetched by this
-# session via WebFetch on access_date; sha256 is computed over the exact quote text stored in this file
-# (not over the page's raw HTML -- this sandbox blocks direct curl to external hosts, and WebFetch itself
-# returns an LLM-processed rendering of the page rather than raw bytes; see README.md "Fetch method and
-# its limits"). Numbers this session could not find published anywhere (Max 20x's absolute per-window and
-# weekly token/message counts) are marked `unknown` per DR-61 -- B0-00 measures them directly.
+# session via WebFetch on access_date; sha256 is computed over the exact "text" string on the SAME quote
+# entry -- a single-line, double-quoted, JSON-compatible YAML scalar -- with node:crypto's sha256 over its
+# UTF-8 bytes, no trailing newline added. Run `node build/providers/verify-hashes.mjs` to re-derive every
+# hash from this file and fail on any mismatch; never hand-edit a sha256 line without re-running it.
+#
+# Fetch-method gap: this sandbox blocks direct curl to external hosts, so quotes came via the WebFetch
+# tool (an LLM-rendering proxy, not a raw HTTP client). Every quote here was independently confirmed with
+# a second, targeted "does this exact sentence appear on the page" fetch before being recorded. See
+# README.md "Fetch method and its limits" for the one sentence that did NOT survive that re-check and was
+# excluded.
+#
+# Numbers this session could not find published anywhere (Max 20x's absolute per-window and weekly
+# token/message counts; ChatGPT Pro's absolute weekly count) are marked `unknown` per DR-61 -- B0-00
+# measures them directly.
 #
 # valid_until: 2026-10-31 for every row (one month; provider terms and limits have changed before -- see
 # 09a-ENGINEERING.md section 10's "learned, not configured" note and the Codex 5-hour-limit removal/
@@ -21,7 +30,7 @@ rows:
     model: claude-opus-5
     access_date: *access_date
     valid_until: *valid_until
-    headless_allowed: unclear
+    headless_allowed: "unclear"
     window_cap: >-
       5-hour rolling session window (all Claude plans). Max 20x = "20 times the Pro plan's per-session
       usage allowance" -- a multiplier, not a published absolute number.
@@ -32,40 +41,23 @@ rows:
       - "Help Center: claude -p / Agent SDK usage explicitly draws from subscription limits today -- the pending credit-metering change was paused, not shipped (quote 3)."
     quotes:
       - url: https://www.anthropic.com/legal/consumer-terms
-        sha256: d8ff77cf5179e331dd98048a7c8a0d417ac7e7bd39c5ba7359a2f9178e8ec3d
-        text: >-
-          Except when you are accessing our Services via an Anthropic API Key or where we otherwise
-          explicitly permit it, to access the Services through automated or non-human means, whether
-          through a bot, script, or otherwise.
+        sha256: dcf4bc5215701e5baa41df45825ef80dca371c739162b79f6798ce9b78969e80
+        text: "Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."
       - url: https://code.claude.com/docs/en/legal-and-compliance
-        sha256: 512f9ce68f10e1cf13bb0bc99e9399e5700524dcfdcaf1e92658f06f168f9c9
-        text: >-
-          Advertised usage limits for Pro and Max plans assume ordinary, individual usage of Claude Code
-          and the Agent SDK. OAuth authentication is intended exclusively for purchasers of Claude Free,
-          Pro, Max, Team, and Enterprise subscription plans and is designed to support ordinary use of
-          Claude Code and other native Anthropic applications. Developers building products or services
-          that interact with Claude's capabilities, including those using the Agent SDK, should use API
-          key authentication through Claude Console or a supported cloud provider. Anthropic does not
-          permit third-party developers to offer Claude.ai login into their own applications, or to route
-          requests through Free, Pro, or Max plan credentials on behalf of their users.
+        sha256: 75fe6252570f719e33e2a294de53cd62e42043c80d9ded1a04b330097a4bd34a
+        text: "Advertised usage limits for Pro and Max plans assume ordinary, individual usage of Claude Code and the Agent SDK. OAuth authentication is intended exclusively for purchasers of Claude Free, Pro, Max, Team, and Enterprise subscription plans and is designed to support ordinary use of Claude Code and other native Anthropic applications. Developers building products or services that interact with Claude's capabilities, including those using the Agent SDK, should use API key authentication through Claude Console or a supported cloud provider. Anthropic does not permit third-party developers to offer Claude.ai login into their own applications, or to route requests through Free, Pro, or Max plan credentials on behalf of their users."
       - url: https://support.claude.com/en/articles/15036540
-        sha256: 896516cbb95098d2d3d820259375d2830e4e8e163878732526c56a72d56b077
-        text: >-
-          We're pausing the changes to Claude Agent SDK usage described below. For now, nothing has
-          changed: Claude Agent SDK, claude -p, and third-party app usage still draw from your
-          subscription's usage limits.
+        sha256: d76ed58ee7d97a3fb0fca026bb8cf09de9e1e74b30ea9ba59c029f8a727955c2
+        text: "We're pausing the changes to Claude Agent SDK usage described below. For now, nothing has changed: Claude Agent SDK, claude -p, and third-party app usage still draw from your subscription's usage limits."
       - url: https://support.claude.com/en/articles/11049741-what-is-the-max-plan
-        sha256: 47945c571632e476314e9a2f2a31984891854f419a144edb66205a0af0b73c9
-        text: >-
-          Max 20x includes 20 times the Pro plan's per-session usage allowance. Your session-based usage
-          limit will reset every five hours. Max plans also have a weekly usage limit that applies across
-          all models.
+        sha256: 9bcc1f628c96f68c429d56d526a3ffaed4e3002568cb9e42777c3fde6c95c913
+        text: "Max 20x includes 20 times the Pro plan's per-session usage allowance. Your session-based usage limit will reset every five hours. Max plans also have a weekly usage limit that applies across all models."
 
   - plan: Claude Max 20x
     model: claude-sonnet-5
     access_date: *access_date
     valid_until: *valid_until
-    headless_allowed: unclear
+    headless_allowed: "unclear"
     window_cap: >-
       5-hour rolling session window, shared with the plan's other Claude models. No model-specific
       carve-out found for Sonnet on Max plans; same "20x Pro per-session" multiplier applies, no absolute
@@ -76,28 +68,20 @@ rows:
       - "Same 'ordinary, individual usage' framing as claude-opus-5 (quote 2)."
     quotes:
       - url: https://www.anthropic.com/legal/consumer-terms
-        sha256: d8ff77cf5179e331dd98048a7c8a0d417ac7e7bd39c5ba7359a2f9178e8ec3d
-        text: >-
-          Except when you are accessing our Services via an Anthropic API Key or where we otherwise
-          explicitly permit it, to access the Services through automated or non-human means, whether
-          through a bot, script, or otherwise.
+        sha256: dcf4bc5215701e5baa41df45825ef80dca371c739162b79f6798ce9b78969e80
+        text: "Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."
       - url: https://code.claude.com/docs/en/legal-and-compliance
-        sha256: 512f9ce68f10e1cf13bb0bc99e9399e5700524dcfdcaf1e92658f06f168f9c9
-        text: >-
-          Advertised usage limits for Pro and Max plans assume ordinary, individual usage of Claude Code
-          and the Agent SDK.
+        sha256: e71a514ad7a0c102992ecd37d0bed3c5850b46be74659ff17515e8fa0e8a0dbb
+        text: "Advertised usage limits for Pro and Max plans assume ordinary, individual usage of Claude Code and the Agent SDK."
       - url: https://support.claude.com/en/articles/11049741-what-is-the-max-plan
-        sha256: 47945c571632e476314e9a2f2a31984891854f419a144edb66205a0af0b73c9
-        text: >-
-          Max 20x includes 20 times the Pro plan's per-session usage allowance. Your session-based usage
-          limit will reset every five hours. Max plans also have a weekly usage limit that applies across
-          all models.
+        sha256: 9bcc1f628c96f68c429d56d526a3ffaed4e3002568cb9e42777c3fde6c95c913
+        text: "Max 20x includes 20 times the Pro plan's per-session usage allowance. Your session-based usage limit will reset every five hours. Max plans also have a weekly usage limit that applies across all models."
 
   - plan: Claude Max 20x
     model: claude-haiku-4-5
     access_date: *access_date
     valid_until: *valid_until
-    headless_allowed: unclear
+    headless_allowed: "unclear"
     window_cap: >-
       5-hour rolling session window, shared pool with the plan's other Claude models. No Haiku-specific
       carve-out found; same "20x Pro per-session" multiplier, no absolute number published.
@@ -107,28 +91,20 @@ rows:
       - "Same 'ordinary, individual usage' framing as claude-opus-5 (quote 2)."
     quotes:
       - url: https://www.anthropic.com/legal/consumer-terms
-        sha256: d8ff77cf5179e331dd98048a7c8a0d417ac7e7bd39c5ba7359a2f9178e8ec3d
-        text: >-
-          Except when you are accessing our Services via an Anthropic API Key or where we otherwise
-          explicitly permit it, to access the Services through automated or non-human means, whether
-          through a bot, script, or otherwise.
+        sha256: dcf4bc5215701e5baa41df45825ef80dca371c739162b79f6798ce9b78969e80
+        text: "Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."
       - url: https://code.claude.com/docs/en/legal-and-compliance
-        sha256: 512f9ce68f10e1cf13bb0bc99e9399e5700524dcfdcaf1e92658f06f168f9c9
-        text: >-
-          Advertised usage limits for Pro and Max plans assume ordinary, individual usage of Claude Code
-          and the Agent SDK.
+        sha256: e71a514ad7a0c102992ecd37d0bed3c5850b46be74659ff17515e8fa0e8a0dbb
+        text: "Advertised usage limits for Pro and Max plans assume ordinary, individual usage of Claude Code and the Agent SDK."
       - url: https://support.claude.com/en/articles/11049741-what-is-the-max-plan
-        sha256: 47945c571632e476314e9a2f2a31984891854f419a144edb66205a0af0b73c9
-        text: >-
-          Max 20x includes 20 times the Pro plan's per-session usage allowance. Your session-based usage
-          limit will reset every five hours. Max plans also have a weekly usage limit that applies across
-          all models.
+        sha256: 9bcc1f628c96f68c429d56d526a3ffaed4e3002568cb9e42777c3fde6c95c913
+        text: "Max 20x includes 20 times the Pro plan's per-session usage allowance. Your session-based usage limit will reset every five hours. Max plans also have a weekly usage limit that applies across all models."
 
   - plan: Claude Max 20x
     model: claude-fable-5
     access_date: *access_date
     valid_until: *valid_until
-    headless_allowed: unclear
+    headless_allowed: "unclear"
     window_cap: >-
       Same 5-hour rolling session window as the rest of the Max 20x pool (no Fable-specific window figure
       published).
@@ -136,26 +112,25 @@ rows:
       "Up to 50% of your weekly usage limits" may be spent on Fable models, at no extra cost -- a share of
       the plan's (unpublished) absolute weekly number, not an absolute figure itself.
     flags:
-      - "Same Consumer Terms automated-access clause as claude-opus-5 (quote 1)."
+      - "Consumer Terms bars automated/non-human access except via an API Key or explicit permission (quote 1)."
       - "Fable-specific cap confirmed: capped at 50% of the shared weekly pool on Max plans; on Pro, Fable is excluded from plan limits entirely and billed from usage credits instead (quote 5) -- Pro is out of scope here since the founder's Claude subscription is Max 20x, noted for completeness."
     quotes:
       - url: https://www.anthropic.com/legal/consumer-terms
-        sha256: d8ff77cf5179e331dd98048a7c8a0d417ac7e7bd39c5ba7359a2f9178e8ec3d
-        text: >-
-          Except when you are accessing our Services via an Anthropic API Key or where we otherwise
-          explicitly permit it, to access the Services through automated or non-human means, whether
-          through a bot, script, or otherwise.
+        sha256: dcf4bc5215701e5baa41df45825ef80dca371c739162b79f6798ce9b78969e80
+        text: "Except when you are accessing our Services via an Anthropic API Key or where we otherwise explicitly permit it, to access the Services through automated or non-human means, whether through a bot, script, or otherwise."
       - url: https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan
-        sha256: 0073b1534768dc1bba6a299333a1c9110d7df34cdde5f8815086207b5427fca
-        text: >-
-          Fable 5 and Fable 5.1 are included as a standard part of your plan. You can use up to 50% of
-          your weekly usage limits on Fable models at no extra cost.
+        sha256: 6cab08cb7ac601b452a3b42511ad5cd3b40293547f448c8bcdaecaa4c48a878c
+        text: "Fable 5 and Fable 5.1 are included as a standard part of your plan. You can use up to 50% of your weekly usage limits on Fable models at no extra cost."
 
   - plan: ChatGPT Pro (Codex)
     model: gpt-6-astra
     access_date: *access_date
     valid_until: *valid_until
-    headless_allowed: yes
+    headless_allowed: "yes-conditional"
+    conditions:
+      - "ChatGPT-account (subscription) CI auth via ~/.codex/auth.json is documented and supported (quote 8), but: \"Do not use this workflow for public or open-source repositories.\""
+      - "API-key auth is OpenAI's stated default for automation (\"the right default for automation ... simpler to provision and rotate\"); ChatGPT-account auth is the advanced, non-default path, for enterprise teams on trusted runners or users who need ChatGPT/Codex rate limits instead of API-key quotas."
+      - "auth.json must be handled like a password/credential (quote 8) -- an operational-security condition, not a terms bar."
     window_cap: >-
       "Pro plans currently have no five-hour limit" -- explicitly stated as a Pro-tier difference from
       Plus, which does have a 5-hour message-quota window (quote 6).
@@ -163,32 +138,15 @@ rows:
       "Weekly limits may also apply" (quote 6) -- no absolute number published for Pro; unknown, per DR-61.
     flags:
       - "No fetched OpenAI page states a blanket prohibition on ChatGPT-subscription headless/automated use: codex exec and non-interactive mode are documented as an intended CI/pipeline use case (quote 8), unlike Anthropic's Consumer Terms clause."
-      - "OpenAI's own guidance recommends API-key auth as the automation default ('the right default for automation... simpler to provision and rotate') and frames ChatGPT-account (subscription) CI auth via ~/.codex/auth.json as an advanced, non-default path for 'enterprise teams... or users who need ChatGPT/Codex rate limits instead of API key usage' (quote 8) -- a preference, not a prohibition."
-      - "Real restriction found: 'Do not use this workflow for public or open-source repositories' for the ChatGPT-account CI path (quote 8) -- scoped to repo visibility, not to headless use generally."
-      - "auth.json must be handled like a password/credential (quote 8) -- an operational-security caveat, not a terms bar."
+      - "GAP: OpenAI's Terms of Use (openai.com/policies/terms-of-use and row-terms-of-use) -- the OpenAI analog to Anthropic's Consumer Terms automated-access clause -- could NOT be fetched: openai.com returned HTTP 403 Forbidden to every WebFetch attempt this session (bot-blocking, not a content issue). headless_allowed is therefore scoped to product-doc evidence (learn.chatgpt.com, developers.openai.com) only; it does not clear the account-level Terms of Use. A follow-up with a browser-capable fetch path should retrieve it directly."
+      - "See conditions: above for what qualifies 'yes-conditional'."
     quotes:
       - url: https://learn.chatgpt.com/docs/pricing
-        sha256: b15cdd5e4791a44f2ec7dd1c95b082b6455b762986d62dd77cd6c79969ece82
-        text: >-
-          Local messages and cloud chats share your plan's usage allowance. Weekly limits may also apply.
-          Pro plans currently have no five-hour limit.
+        sha256: 3b47af589a4acc0b94f821276e928d7e9504e71acb3bce298e6fe148ea1c270b
+        text: "Local messages and cloud chats share your plan's usage allowance. Weekly limits may also apply. Pro plans currently have no five-hour limit."
       - url: https://learn.chatgpt.com/docs/auth
-        sha256: c14b39b62668b4d73b73d91a8c4869ad5e1f6b08eab3f9bca3684664222598b
-        text: >-
-          1. Sign in with ChatGPT - for subscription access with workspace permissions and enterprise
-          controls
-          2. Sign in with an API key - for usage-based access through your OpenAI Platform account
-          Device code authentication (beta) serves remote or headless environments. Alternatives include
-          copying cached credentials from authenticated machines or forwarding localhost callbacks over
-          SSH.
+        sha256: 56bfc93a9c0b0f6a1e15ae39595354291ad0c01c31b21cab82daf9e58d2416e2
+        text: "1. Sign in with ChatGPT - for subscription access with workspace permissions and enterprise controls 2. Sign in with an API key - for usage-based access through your OpenAI Platform account Device code authentication (beta) serves remote or headless environments. Alternatives include copying cached credentials from authenticated machines or forwarding localhost callbacks over SSH."
       - url: https://learn.chatgpt.com/docs/non-interactive-mode
-        sha256: ea6c7441350b08ecc846a3ef3487dd938d45265ca37cc8ce2a16a9e4627f5c9
-        text: >-
-          Read this if you need to run CI/CD jobs with a Codex user account instead of an API key, such as
-          enterprise teams using ChatGPT-managed Codex access on trusted runners or users who need
-          ChatGPT/Codex rate limits instead of API key usage. API keys are the right default for
-          automation because they are simpler to provision and rotate. Use this path only if you
-          specifically need to run as your Codex account.
-          Do not use this workflow for public or open-source repositories.
-          Treat ~/.codex/auth.json like a password: it contains access tokens. Don't commit it, paste it
-          into tickets, or share it in chat.
+        sha256: fd64ecc03603e40f099825c403ff53135ed5e4d998825ef2de586752d6935720
+        text: "Read this if you need to run CI/CD jobs with a Codex user account instead of an API key, such as enterprise teams using ChatGPT-managed Codex access on trusted runners or users who need ChatGPT/Codex rate limits instead of API key usage. API keys are the right default for automation because they are simpler to provision and rotate. Use this path only if you specifically need to run as your Codex account. Do not use this workflow for public or open-source repositories. Treat ~/.codex/auth.json like a password: it contains access tokens. Don't commit it, paste it into tickets, or share it in chat."
