@@ -66,6 +66,9 @@ type Who = typeof BUILDER;
 /** The error a refused run carries on the board. One spelling, shared with the tests. */
 export const REFUSED_SUBAGENT = 'refused_subagent';
 
+/** Agent/Task in any case: a tool name that differs only by case must not slip past the refusal. */
+const NESTED_AGENT_TOOL = /^(agent|task)$/i;
+
 export type RunFn = (bin: string, args: string[], cwd: string, onLine: (l: string) => void) => Promise<{ code: number | null; stderr: string }>;
 
 /**
@@ -183,12 +186,14 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
   const children = new Map<string, LaunchReceipt>();
   let refused = false;
   let refusalTool: string | undefined;
+  let unparsed = 0;
   const t0 = Date.now();
   const { code, stderr } = await deps.run(CLAUDE_BIN, args, WORKDIR, (line) => {
     let j: any;
     try {
       j = JSON.parse(line);
     } catch {
+      unparsed++;
       return;
     }
     const parentId: string | undefined = typeof j.parent_tool_use_id === 'string' && j.parent_tool_use_id ? j.parent_tool_use_id : undefined;
@@ -225,7 +230,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
       for (const c of j.message?.content ?? []) {
         if (c.type === 'text' && c.text?.trim()) emit(BUILDER, { kind: 'message', text: clip(c.text.trim()) });
         if (c.type === 'tool_use') {
-          if (c.name === 'Agent' || c.name === 'Task') {
+          if (NESTED_AGENT_TOOL.test(String(c.name ?? ''))) {
             refused = true;
             refusalTool = c.name;
             emit(BUILDER, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: Builder called ${c.name}, which is disallowed` });
@@ -255,7 +260,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
   deps.logLaunch({ worker: 'claude', model: CLAUDE_MODEL, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
   const receipt: LaunchReceipt = {
     launchId, missionId: m.id, role: 'builder', argvHash, model: CLAUDE_MODEL,
-    startedAt: t0, endedAt: Date.now(), exit: code, turns, resultSubtype,
+    startedAt: t0, endedAt: Date.now(), exit: code, turns, resultSubtype, unparsedLines: unparsed,
   };
   appendMissionLine(receipt, launchesPath(m.id));
   for (const child of children.values()) appendMissionLine(child, launchesPath(m.id));
@@ -311,6 +316,9 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     `VERDICT: {"verdict":"PASS"|"FAIL","reasons":["short reason", "..."]}`,
   ].join('\n');
   const args = ['exec', '--json', '--skip-git-repo-check', '-s', 'read-only', '-m', CODEX_MODEL, '-C', WORKDIR, '-o', outFile, prompt];
+  const launchId = randomUUID();
+  const argvHash = createHash('sha256').update(args.join('\u0000')).digest('hex');
+  let unparsed = 0;
   emit(REFEREE, { kind: 'status', status: 'starting', text: `codex exec (${CODEX_MODEL}) read-only` });
   const t0 = Date.now();
   let lastMessage = '';
@@ -319,6 +327,7 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     try {
       j = JSON.parse(line);
     } catch {
+      unparsed++;
       return;
     }
     const item = j.item ?? {};
@@ -333,6 +342,11 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
   });
   const secs = (Date.now() - t0) / 1000;
   deps.logLaunch({ worker: 'codex', model: CODEX_MODEL, mission: m.id, seconds: secs, cost: '', exit: code });
+  // One receipt per launched process (server/missions.ts): the Referee is a launch like the Builder.
+  appendMissionLine({
+    launchId, missionId: m.id, role: 'referee', argvHash, model: CODEX_MODEL,
+    startedAt: t0, endedAt: Date.now(), exit: code, turns: null, resultSubtype: null, unparsedLines: unparsed,
+  } satisfies LaunchReceipt, launchesPath(m.id));
   if (!lastMessage) {
     try {
       lastMessage = fs.readFileSync(outFile, 'utf8');

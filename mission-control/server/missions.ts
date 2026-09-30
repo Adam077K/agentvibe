@@ -228,6 +228,9 @@ export interface LaunchReceipt {
   exit: number | null;
   turns: number | null;
   resultSubtype: string | null;
+  /** stdout lines that were not JSON. Counted, never dropped silently: a nonzero count means the
+   *  receipt was built from a stream the runner could not fully read. */
+  unparsedLines?: number;
   parentLaunchId?: string;
 }
 

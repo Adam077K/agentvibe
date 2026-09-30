@@ -52,7 +52,7 @@ function fakeDeps(script: Record<'claude' | 'codex', unknown[]>) {
   const run: RunFn = async (bin, _args, _cwd, onLine) => {
     const key = bin.includes('codex') ? 'codex' : 'claude';
     launched.push(key);
-    for (const l of script[key]) onLine(JSON.stringify(l));
+    for (const l of script[key]) onLine(typeof l === 'string' ? l : JSON.stringify(l));
     return { code: 0, stderr: '' };
   };
   const deps: RunnerDeps = { run, logLaunch: () => {} };
@@ -90,12 +90,17 @@ describe('run-missions: receipts', () => {
     const { deps, launched } = fakeDeps({ claude: [init, write, result], codex: passVerdict });
     await runMission(m, deps);
 
+    // One receipt per launched process: two launches, two receipts.
     const receipts = readLaunchReceipts(m.id, dir);
-    expect(receipts).toHaveLength(1);
-    expect(receipts[0]).toMatchObject({ missionId: m.id, role: 'builder', exit: 0, turns: 3, resultSubtype: 'success' });
-    expect(receipts[0]!.parentLaunchId).toBeUndefined();
-    expect(receipts[0]!.argvHash).toMatch(/^[0-9a-f]{64}$/);
     expect(launched).toEqual(['claude', 'codex']);
+    expect(receipts.map((r) => r.role)).toEqual(['builder', 'referee']);
+    expect(receipts[0]).toMatchObject({ missionId: m.id, role: 'builder', exit: 0, turns: 3, resultSubtype: 'success', unparsedLines: 0 });
+    expect(receipts[1]).toMatchObject({ missionId: m.id, role: 'referee', exit: 0, unparsedLines: 0 });
+    for (const r of receipts) {
+      expect(r.parentLaunchId).toBeUndefined();
+      expect(r.argvHash).toMatch(/^[0-9a-f]{64}$/);
+    }
+    expect(receipts[0]!.launchId).not.toBe(receipts[1]!.launchId);
     const after = foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!;
     expect(after).toMatchObject({ status: 'done', verdict: 'PASS' });
   });
@@ -119,6 +124,25 @@ describe('run-missions: receipts', () => {
     const builder = foldTeam(m.id, events(m.id)).agents.find((a) => a.agent === 'builder')!;
     expect(builder.status).toBe('failed');
     expect(events(m.id).some((e) => e.agent === 'runner' && e.text?.includes(REFUSED_SUBAGENT))).toBe(true);
+  });
+
+  test('the nested-agent match is case-insensitive', async () => {
+    const m = seedMission();
+    const { deps, launched } = fakeDeps({ claude: [init, agentCall('agent', 'toolu_a'), result], codex: passVerdict });
+    await runMission(m, deps);
+    expect(launched).toEqual(['claude']);
+    expect(foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!.error).toBe(REFUSED_SUBAGENT);
+  });
+
+  test('unparseable stream lines are counted into the receipt, not dropped silently', async () => {
+    const m = seedMission();
+    const out = path.join(dir, 'out.md');
+    fs.writeFileSync(out, 'hello\n');
+    const write = { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
+    const { deps } = fakeDeps({ claude: [init, 'not json', write, '{torn', result], codex: ['garbage', ...passVerdict] });
+    await runMission(m, deps);
+    const receipts = readLaunchReceipts(m.id, dir);
+    expect(receipts.map((r) => [r.role, r.unparsedLines])).toEqual([['builder', 2], ['referee', 1]]);
   });
 
   test('Task is refused the same way as Agent', async () => {
