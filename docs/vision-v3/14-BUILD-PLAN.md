@@ -19,8 +19,8 @@ are **illustrations** until job B0-02 fetches live prices; 09b's rule is *fetch,
 > *Build job* — a Job ([09a §3](09a-ENGINEERING.md#3-the-six-nouns-and-operation)) sized to ≤30 agent turns, with a lane,
 > dependencies, a builder family, a Referee family, a frozen acceptance test and a cost; refines *Job*.
 > *Build Register* — `build/jobs.yml`, the job list of §6 as linted data; refines *versioned files* in the record map (DR-07).
-> *Build Charter* — the founder-signed Charter envelope under which the organisation builds its own Userland; refines
-> *Charter*. *Handover* — the day the Build Register is imported as missions and the Kernel dispatcher, not a founder
+> *Build Charter* — the founder-signed Charter envelope that funds construction of the organisation **until Handover**;
+> afterwards residual tuning is charged to the Improvement sleeve (DR-60); refines *Charter*. *Handover* — the day the Build Register is imported as missions and the Kernel dispatcher, not a founder
 > session, launches the builders; refines the S0→S1 step of the release train ([09a §14](09a-ENGINEERING.md#14-the-protected-computing-base-and-the-release-train)).
 > *Phase gate* — a phase's exit test, run by Acceptance on a **real mission**, never on fixture data. *Self-build ratio* —
 > share of merged build jobs whose builder was launched by the Kernel launcher.
@@ -116,7 +116,7 @@ What each phase ships is its slice of the register (§6); the owning files are n
 | **G0** Ground | (a) `launcher_grant` exists as a signed Constitution record; (b) each owed spike ([09a §9](09a-ENGINEERING.md#9-the-isolation-ladder-and-the-inference-proxy)) has a filed result — pass, fail + named fallback, or `unresolved` with a rerun date; (c) the Sunday scorecard renders from receipts only, missing values as fog; (d) every P1 done-test exists, fails red and has its hash in the register |
 | **G1** Spine Night | (a) a board card launched **unattended at 03:00** by the Kernel launcher, built by one family in an I3 VM with no credentials inside, refereed by the other, moved only by the parsed verdict, every step receipted in the Journal; (b) Q3 subset green — four crash points give one effect, `uncertain` never auto-retries, a two-launcher race has one winner; (c) kill drill refuses new dispatch at p99 ≤5 s (target); (d) Kernel ≤8,000 lines on allowed modules (parameter); (e) SP2 fixtures nightly: a stale holder is rejected by storage |
 | **G2** Mind + Handover | (a) two consecutive Userland releases built by headless jobs from the previous pinned release, with no founder-landed Userland code; (b) a Fleet-Import venture completes a week at A2 with ≥90% of outcomes settled without founder contact (target); (c) the twin mission "validate idea X" runs ≥4 move families and stops on a seeded kill criterion; (d) Brain recall@8 ≥0.85, leak rate 0; (e) the W13 first-90-day indicators (canon §7) reported met or missed with reasons |
-| **G3** Outside world | (a) one venture at A3 with live customers, a signed Continuity Will and a Deputy who accepted and drilled; (b) a money effect dispatched by the gateway **settled by the broker's read** of the system of record, never by the gateway's receipt (DR-03); (c) Q1, Q2, Q3, Q5 green including their legitimate paired cases — a design that blocks everything fails; (d) kill SLO drilled weekly for 4 weeks |
+| **G3** Outside world | (a) one venture at A3 with live customers, a signed Continuity Will and a Deputy who accepted and drilled; (b) a money effect dispatched by the gateway **settled by the broker's read** of the system of record, never by the gateway's receipt (DR-03); (c) Q1, Q2, Q3, Q5 green including their legitimate paired cases — a design that blocks everything fails — plus Q8's Front Desk subset (B3-19) and Q9's five campaigns (B3-20) run before the first A3 venture [15 OG1]; (d) kill SLO drilled weekly for 4 weeks |
 | **G4** Compounding | (a) four consecutive Sunday scorecards each carry a *deployment* or *business* gain with CI above zero (target); (b) Deterministic Share ≥40% in ≥3 task classes with the 5% panel sample kept; (c) Q4, Q6, Q7 green; (d) ≥4 micro-ventures under one Fleet Charter with founder minutes flat (target) |
 | **G5** Year-1 review | Canon §7's Year-1 column reported line by line against its system of record, each miss with cause and plan; the first A4 Promotion Case (≥8 weeks at A3, DR-29) decided whatever the outcome; Chaos Friday run for 8 weeks |
 
@@ -213,10 +213,13 @@ and lanes C and S 4 weeks each before they touch a gate (parameters).
 (`s5` sonnet-5, `h` haiku-4-5), **Either** = cast by prior accuracy after the Handover. **T** = estimated turns. **$** =
 API-equivalent incl. Referee, illustrations scaled from SLICE ($1.08 small run) and SP3 ($15.95 / 34 launches),
 recalibrated by B0-02. **★** critical path; **PCB** touches the protected computing base. Before the Handover, builders
-are founder-attended sessions (harness `builder` engine; `codex exec` in a worktree) on subscriptions (DR-45); after
-it, Kernel launches on API keys.
+are founder-attended sessions (harness `builder` engine; `codex exec` in a worktree). Interactive sessions run on the
+subscriptions; **every headless run — `claude -p` or `codex exec` — uses an API key until the founder signs D2, and every
+Codex headless run uses one after it** (DR-61). After the Handover, Kernel launches run on API keys. **D1–D10** are
+canon §9's founder decisions (the drafts F1–F10 map one-to-one). All Q8 and Q9 attack spend is charged to the
+**acceptance reserve** (DR-60).
 
-### P0 Ground — 17 jobs, ≈$220 (illustration)
+### P0 Ground — 20 jobs, ≈$310 (illustration)
 
 | ID | Job | L | Deps | Build→Ref | T | Acceptance test | $ |
 |---|---|---|---|---|---|---|---|
@@ -224,21 +227,24 @@ it, Kernel launches on API keys.
 | B0-02 | Provider Contract Registry v0: fetch prices + terms for the pinned models, runner-side Codex price table | A | — | s5→Cx | 14 | Every pinned model has a row with URL, hash and `valid_until`; Codex launches show $ in `launches.csv` | 4 |
 | B0-03 | Runner receipts + child jobs: `parent_tool_use_id` keyed, `--disallowedTools Agent,Task` | S | 01 | Cx→Cl | 16 | A Builder that calls `Agent` is refused, or is drawn as "Builder › subagent" with its own receipt | 6 |
 | B0-04 | Context profile v0 (minimal `--setting-sources`, Launch-Pack stub) | K | 03 | Cl→Cx | 14 | SLICE's hello mission re-run; cost and seconds recorded against $1.08 / 152.9 s; target ≤$0.40 | 5 |
-| B0-05 | Owed spike: `claude -p` under a second macOS user via `setup-token` (I2) | K | F-host | Cl→Cx | 12 | Sibling-venture `cat` fails in the OS for both families; result filed to [12](12-SPIKE-RESULTS.md) | 4 |
-| B0-06 | Owed spike: Apple `container` VM reaches a stub proxy with no other egress (I3) | K | F-host | Cx→Cl | 18 | Egress to any non-proxy host fails from the VM; a model call through the stub proxy succeeds | 6 |
-| B0-07 | Owed spike: outer Seatbelt profile wrapping a worker's own sandbox | K | F-host | Cx→Cl | 12 | Pass/fail recorded; if fail, the named fallback (I3 + API for all headless work) is written into B1-10 | 4 |
-| B0-08 | SP2 live arms A and B under the launcher grant | K | F1 | Cx+Cl→Cl | 24 | ~16–20 launches; `summary.json` per run; C1, C2, C4–C6 decided rather than "not tested" | 40 |
-| B0-09 | SP1 fold-in gate: planner design branch chosen from SP1's result (DR-55) | M | SP1 | Cl→Cx | 8 | [03 §5](03-MISSION-ENGINE.md#5-sp1--mission-choosing-its-own-next-steps-placeholder) filled; B2-03's acceptance test rewritten if the result demands it | 3 |
-| B0-10 | Title-vs-procedure spike: four arms, ≥10 pairs × 2 replicates, within-generator | A | — | Cl+Cx→both | 28 | Pre-registration committed before generation; no published sign flips when judge families are swapped | 45 |
+| B0-05 | Owed spike: `claude -p` under a second macOS user via `setup-token` (I2) | K | F-host, D1 | Cl→Cx | 12 | Sibling-venture `cat` fails in the OS for both families; result filed to [12](12-SPIKE-RESULTS.md) [15 OG7] | 4 |
+| B0-06 | Owed spike: Apple `container` VM reaches a stub proxy with no other egress (I3) | K | F-host, D1 | Cx→Cl | 18 | Egress to any non-proxy host fails from the VM; a model call through the stub proxy succeeds [15 OG7] | 6 |
+| B0-07 | Owed spike: outer Seatbelt profile wrapping a worker's own sandbox | K | F-host, D1 | Cx→Cl | 12 | Pass/fail recorded; if fail, the named fallback (I3 + API for all headless work, at a measured cost that feeds D2) is written into B1-10 [15 OG7] | 4 |
+| B0-08 | SP2 live arms A and B under the launcher grant | K | D1 | Cx+Cl→Cl | 24 | ~16–20 launches; `summary.json` per run; C1, C2, C4–C6 decided rather than "not tested"; lost-edit rate and rework recorded [15 OG7] | 40 |
+| B0-09 | **SP1-bis**: the loop, cross-family, with DR-73's changes — ≥3 goals; arms loop, single run, single run + one Referee pass, fixed recipe; a real Codex Referee ([12 §6.4](12-SPIKE-RESULTS.md) row 3) | M | D1, B0-20 | Cl→Cx | 28 | Pre-registered: PASS if the Steward stops on its own in ≥2 of 3 goals and the loop beats run + Referee on verifiability by ≥1 point within one generator (targets); result filed to [12](12-SPIKE-RESULTS.md) and [03 §5](03-MISSION-ENGINE.md#5-sp1--mission-choosing-its-own-next-steps-results-partial); B2-03's acceptance test rewritten if the result demands it (DR-55, DR-73) | 85 |
+| B0-10 | Title-vs-procedure spike: four arms, ≥10 pairs × 2 replicates, within-generator | A | — | Cl+Cx→both | 28 | Pre-registration committed before generation; no published sign flips when judge families are swapped; the result is filed to [12](12-SPIKE-RESULTS.md) **before a second hybrid passes Shadow** (DR-54) [15 OG8] | 45 |
 | B0-11 | Referee base-rate study: 30 labelled missions, self-review vs cross-family Referee vs truth | A | 01 | Cl+Cx→both | 26 | Confusion table n≥30 with CI; rate at which the Referee is wrong is reported (SLICE unknown) | 60 |
 | B0-12 | Scorecard v0 + Budget Ledger v0 over receipts (measure first) | A | 02,03 | Cx→Cl | 20 | The Sunday scorecard renders from receipts only; missing values render as fog; founder minutes are logged by hand | 8 |
 | B0-13 | Build Register: `build/jobs.yml` + lint | G | — | Cl→Cx | 14 | The lint refuses a job with >30 turns, a same-family Referee, no test, or a dangling dependency; the register covers every destination capability | 4 |
-| B0-14 | Fleet Import census, read-only, 26 directories | V | — | h→Cx | 10 | Census table; any committed secret opens a Hygiene mission (Know · Buzz) | 2 |
+| B0-14 | Fleet Import census, read-only, 26 directories | V | 19 | h→Cx | 10 | Census table; no model reads a repo that B0-19 has not scanned; any committed secret opens a Hygiene mission (Know · Buzz); the founder's sort is classification consent and grants no authority (DR-76) | 2 |
 | B0-15 | Reconcile the worktree-protocol contradiction (agent bodies + lint predicate, one PR) | G | — | Cl→Cx | 16 | `schema-lint` 18 pass · 0 fail · 0 warnings; irreversible-tier gate PASS (CLAUDE.md "known contradiction") | 6 |
 | B0-16 ★ | `kernel/` Go module: allowed-module list, ≤8,000-line lint, CI boundary checks | K PCB | — | Cx→Cl | 16 | CI fails on a disallowed import, and on any non-`kernel/` path writing the Journal | 6 |
 | B0-17 ★ | Freeze the P1 done-tests: journal crash, Q3 subset, launcher refusals, two-runner race | A PCB | 13,16 | Cl→Cx | 26 | Every test exists, fails red against an empty implementation, and has its hash in the register | 14 |
+| B0-18 | UNPARSED-rate measurement per family over every P0 launch (B0-08, B0-09, B0-10, B0-11) | A | 03,20 | s5→Cx | 12 | UNPARSED rate recorded per family with n and CI, filed to [12](12-SPIKE-RESULTS.md); a rate above 2% (parameter) opens B1-24; UNPARSED counts against verifier capacity in T01's model [15 OG11] | 3 |
+| B0-19 | Pre-model secret scanner: deterministic, runs on every repo before any model reads it | V PCB | — | Cx→Cl | 14 | A seeded secret in each of 26 fixture repos is found with no model call; a repo not yet scanned cannot be opened by any worker (DR-76) | 5 |
+| B0-20 | Launch-log family derived from the model id, never from the slot, in `launches.csv` and the Receipt schema | K | 03 | Cl→Cx | 8 | A Codex model launched in a "Claude" slot is logged `family: codex`; a slot/model mismatch is recorded as an event (DR-83) | 3 |
 
-### P1 Spine — 23 jobs, ≈$330
+### P1 Spine — 27 jobs, ≈$370
 
 | ID | Job | L | Deps | Build→Ref | T | Acceptance test | $ |
 |---|---|---|---|---|---|---|---|
@@ -265,8 +271,12 @@ it, Kernel launches on API keys.
 | B1-21 | Decisions page v0: DecisionPacket, hash-bound, expiry; ntfy for **Buzz** | S | 15,19 | Cl→Cx | 20 | An expired packet is refused; a Decide at Buzz round-trips with an ack receipt | 10 |
 | B1-22 | Fleet Import excavation + adoption PRs, obligations first | V | B0-14 | Either→other | 24 | Obligations registered before any classification; each harness PR refereed by the other family; ~$38 total ([17 §4](17-VIBE-STARTUPING-IN-PRACTICE.md#4-fleet-import--bringing-in-the-founders-26-directories)) | 38 |
 | B1-23 | Baseline mission for the first Live venture (payments, analytics, support read) | V | 22 | Either→other | 16 | Every Vital Sign has a denominator from a system of record | 8 |
+| B1-24 | Codex adapter hardening: pseudo-TTY + streamed JSON for detached `codex exec` | K PCB | 07,B0-18 | Cx→Cl | 20 | A detached launch returns parsed output; the per-family UNPARSED rate is ≤2% (parameter) on a 50-launch rerun **before any autonomous venture** (B3-16, B3-17 depend on it) [15 OG11] | 10 |
+| B1-25 | Continuity lists in compiler v0: safe states carry `continuity:`; a P2 deny passes only listed routes | K PCB | 14 | Cl→Cx | 20 | Table tests: a listed continuity route survives a P2 deny, an unlisted one is refused, and no obligation outranks a safety rule (DR-56) | 12 |
+| B1-26 | Label wire schema v1 + published mapping (owned by [09a](09a-ENGINEERING.md)) | K PCB | 02 | Cx→Cl | 18 | Classification, boundary, retention class, retention deadline, permission, taint and origin round-trip as distinct fields; human provenance is a provenance field; every 06 label name maps to one wire name (DR-68) | 10 |
+| B1-27 | Spend-cap reservation buckets on the Budget Ledger | A | 18 | Cx→Cl | 16 | A bucket is held before every debit; execution cannot consume acceptance headroom; the S10 judge-cap exhaustion replays without a failed judgement (DR-81) | 8 |
 
-### P2 Mind + Handover — 22 jobs, ≈$320 build + probe spend under the Probe Mandate
+### P2 Mind + Handover — 27 jobs, ≈$370 build + probe spend under the Probe Mandate
 
 From B2-17 onward, every job here is a Kernel launch that the organisation casts itself. Rows keep their default
 families, but casting may swap them within the lane split.
@@ -275,8 +285,8 @@ families, but casting may swap them within the lane split.
 |---|---|---|---|---|---|---|---|
 | B2-01 ★ | Mission record, facets, lifecycle ([03 §1–2](03-MISSION-ENGINE.md#1-the-mission-record)) | M | G1 | Cl→Cx | 24 | Residual facets hold no leases; goal and metric versions freeze at admission (DR-28, DR-33) | 14 |
 | B2-02 | Framing Contracts: no measure, no money | M | 01 | Cl→Cx | 14 | A mission with no measure cannot receive a tranche | 8 |
-| B2-03 | Moves, planner, guards, stop-check (branch set by B0-09) | M | 01,B0-09 | Cl→Cx | 30 | Twin "validate idea X" runs ≥4 move families and stops on a seeded kill criterion; 3-cycle "same" stops | 20 |
-| B2-04 | Allocator v0: VoI ranking, Thompson tranches, sleeve ledger (Improvement ≤15%) | M | 01,B1-18 | Cx→Cl | 28 | Replaying 50 missions reproduces allocations; sleeve caps hold; Regulation messages cannot fund (DR-04) | 16 |
+| B2-03 | Moves, planner, guards, stop-check (branch set by B0-09) | M | 01,23,24,B0-09 | Cl→Cx | 30 | Twin "validate idea X" runs ≥4 move families and stops on a seeded kill criterion; 3-cycle "same" stops | 20 |
+| B2-04 | Allocator v0: VoI ranking, Thompson tranches, sleeve ledger (Improvement ≤15%) | M | 01,B1-18 | Cx→Cl | 28 | Replaying 50 missions reproduces allocations; sleeve caps hold; every draw is charged to exactly one pool by purpose and names a beneficiary (DR-60); Regulation messages cannot fund (DR-04) | 16 |
 | B2-05 | Identity records + compiler for both harnesses; 7 engines + lenses as seeds | M | B1-06,07 | Cl→Cx | 26 | One record, both families, the same 10-task smoke suite passes | 14 |
 | B2-06 | Cast registry + casting v0 (transparent feature table, exploration ≥10%) | M | 05 | Cx→Cl | 20 | The exploration floor holds over 100 castings; one of each family stays in every task-family pool | 10 |
 | B2-07 | Audition Ladder v0, forked from SP3's harness; power/duration calculator (DR-19) | A | 05,B0-10 | Cx→Cl | 26 | Replayed SP3 data: swapping judge families never flips a published sign; <10 pairs → refused | 14 |
@@ -289,14 +299,19 @@ families, but casting may swap them within the lane split.
 | B2-14 | Contact classes, Attention Exchange v0, Reach Router v0 | G | 13,B1-21 | Cl→Cx | 26 | Halt is never budgeted; a dismissal never suppresses an obligation or a safety reach floor (DR-32) | 14 |
 | B2-15 | Surfaces: Today, Launch Sheet, Spend, Traces with the compiled contract | S | B1-19,14 | Either→other | 30 | Every figure links to its source; "why" opens the Decision Contract that authorised the action | 18 |
 | B2-16 | Degraded modes + capacity router | A | B2-04 | Cx→Cl | 20 | With a simulated Claude limit, Codex alone completes build and review, and the verdict is flagged single-family | 12 |
-| B2-17 ★ | **Handover**: import the register under the Build Charter; release train S1 from pinned `releases/N` | G PCB | 01,05,13,18 | Cl→Cx | 20 | Userland N+1 is built by release N; no Userland code is landed by the founder that week | 10 |
+| B2-17 ★ | **Handover**: import the register as missions; close the Build Charter's funding; release train S1 from pinned `releases/N` | G PCB | 01,04,05,13,18 | Cl→Cx | 20 | Userland N+1 is built by release N; no Userland code is landed by the founder that week; from the Handover event on, no build job draws on the Build Charter and harness tuning is charged to the Improvement sleeve with the 30-day check (DR-60) | 10 |
 | B2-18 ★ | Protected-base manifest + release authority: transitive path list, headless-refusal, two-family evidence bundle | G PCB | B1-16 | Cx→Cl | 24 | A candidate bundling a permissive `VERDICT:` parser cannot promote; a candidate cannot sign its own release | 14 |
 | B2-19 | Progress Ledger, Closer Claims, busywork signatures v0 | G | 01,B1-16 | Cl→Cx | 24 | 5 seeded busywork cases are detected; a wrong-direction Closer Claim is caught by the guardrail | 14 |
 | B2-20 | Probe Swarm v0 under the Probe Mandate: landing pages, waitlists, disclosed outreach ≤30/day/cell | V | B1-12,21 | Either→other | 26 | 100 probes by W13 with receipts (target); every probe settles on E3+ evidence or is filed null | 30 |
 | B2-21 ★ | First Fleet-Import venture: Charter at A2, heartbeat on | V | 13,14,B1-23 | Either→other | 16 | One week at A2 with ≥90% of outcomes settled without founder contact (target) | 8 |
 | B2-22 | Wish-to-Ship v0 on that venture | V | 21 | Either→other | 24 | One customer wish shipped in <24 h, accepted by the other family (first-90-day indicator) | 12 |
+| B2-23 | SP1 fixes in the engine, stops: capability-checked success and kill clauses, `awaiting_gate` stop state, diminishing-returns stop, `veto` question class exempt from VoI ([03 §10](03-MISSION-ENGINE.md#10-stop-pivot-and-kill)) | M | 01 | Cl→Cx | 26 | SP1's replayed run stops in `awaiting_gate` instead of at the cost cap; a top question moving <0.1 twice forces a decision; an open `veto` question blocks `success` (DR-73) | 14 |
+| B2-24 | SP1 fixes, pricing and Referee: fetch-and-quote-match resolver before any model; loop-vs-single-run threshold (~20× a single run, parameter) given to the Allocator; cheaper Steward with compact state | M | 04,B1-16 | Cx→Cl | 24 | SP1's 26% misattributed web citations are caught with no model call; a decision below the threshold gets one run + one Referee pass (DR-73) | 12 |
+| B2-25 | Narrowing overlays: automatic narrowing written as a Journal overlay, never a rewrite of signed Constitution files | G PCB | 13 | Cl→Cx | 16 | An automatic narrowing leaves every signed file's hash unchanged and takes effect at once; lifting the overlay restores the signed state (DR-58) | 8 |
+| B2-26 | Cooling-off exceptions and the pre-signed emergency-capacity envelope | G PCB | 13 | Cx→Cl | 20 | Widening activates after 12 h; a Genesis Charter at A0–A2 within default caps and a draw on the emergency envelope activate at once, never beyond the envelope; a stolen-passkey widening is revocable inside the window; an imported Charter activates only by signature (DR-59, DR-76) | 10 |
+| B2-27 | Reach resolution table (owned by [08](08-SURFACES.md)) + property test | S | 14 | Cl→Cx | 20 | Property test over floors × ceilings: reach ≥ floor, or deferred and deadline-safe; Halt ≥ Buzz with Ring after 5 min unacked (DR-65) | 10 |
 
-### P3 Outside world — 18 jobs, ≈$260
+### P3 Outside world — 20 jobs, ≈$300
 
 | ID | Job | L | Deps | Build→Ref | T | Acceptance test | $ |
 |---|---|---|---|---|---|---|---|
@@ -315,11 +330,13 @@ families, but casting may swap them within the lane split.
 | B3-13 | Rooms + Principals for human collaborators | X | B2-13 | Cl→Cx | 24 | Revoked Room descendants cannot act; delegated authority never exceeds the intersection (Q2) | 12 |
 | B3-14 | Compiler model-checking: property-based simulation in Go | K PCB | B1-14 | Cx→Cl | 28 | Safety (nothing forbidden reachable) and progress (every blocked obligation has a remedy) checked before each Constitution release | 16 |
 | B3-15 | Legal groundwork: entity map, Books export for the accountant, Acquisition/Capital/Guild review briefs | X | F7,F9 | s5→Cx | 18 | Briefs delivered to a named lawyer and accountant; their answers are filed as founder decisions | 6 |
-| B3-16 ★ | Autonomous venture #1 (Fleet Import, live revenue): A2 → A3 with Deputy | V | 01–07 | Either→other | 20 | G3(a) and G3(b) | 12 |
-| B3-17 | Autonomous venture #2: a new agency at A2 (F5) | V | B2-20 | Either→other | 20 | Genesis ≈8 min and ≈$3 (parameters); Stage Clock running | 10 |
+| B3-16 ★ | Autonomous venture #1 (Fleet Import, live revenue): A2 → A3 with Deputy | V | 01–07,19,20,B1-24 | Either→other | 20 | G3(a) and G3(b) | 12 |
+| B3-17 | Autonomous venture #2: a new agency at A2 (F5) | V | B2-20,B1-24 | Either→other | 20 | Genesis ≈8 min and ≈$3 (parameters); Stage Clock running | 10 |
 | B3-18 | Chaos Friday in the twin: the first 4 drills | A | B3-02,07 | Cx→Cl | 22 | Kernel killed mid-send, lease expired mid-merge, one family 429s → all SLOs scored | 12 |
+| B3-19 ★ | **Q8 suite, Front Desk part**: harm, privacy and repair (H01–H03, H05, X07) beside the Front Desk; fixtures: twin + test accounts; attackers from both families; acceptance reserve | A PCB | 04,06,07 | Cx+Cl→both | 28 | An implied commitment reserves capacity or is refused; a restored backup resurrects no plaintext or key; deletion reports are honest; releases are attacked as one transcript; legitimate paired cases still pass [15 OG1] | 18 |
+| B3-20 ★ | **Q9 harness**: the five adaptive campaigns (Scenarios A–E) with an attacker budget, realistic legitimate traffic and an attacker who adapts after each refusal; fixtures: twin + production contracts; attackers from both families; acceptance reserve | A PCB | 06,08,18 | Cx+Cl→both | 30 | No campaign reaches its objective; service meets continuity targets; each campaign reruns with altered identity, timing and channel; runs **before the first A3 venture**; Scenario E reruns when B4-13 lands [15 OG1] | 24 |
 
-### P4 Compounding — 18 jobs, ≈$260
+### P4 Compounding — 19 jobs, ≈$270
 
 | ID | Job | L | Deps | Build→Ref | T | Acceptance test | $ |
 |---|---|---|---|---|---|---|---|
@@ -333,22 +350,24 @@ families, but casting may swap them within the lane split.
 | B4-08 | Model-Release Reflex: re-score every config on a new model | C | B2-07,12 | Cx→Cl | 24 | A mock release requalifies manifests and retires failing configs | 14 |
 | B4-09 | Tool Surface Lock, rollout rings, canary programme, Capability SBOM | C PCB | B2-12 | Cx→Cl | 28 | A changed backend under a pinned description is caught (X03) | 16 |
 | B4-10 | Backlot + retirement and half-life | C | 07 | Cl→Cx | 20 | Reuse % is measured; unused assets are archived with lineage | 10 |
-| B4-11 | Lesson Airlock + disclosure-budget spike ([06 OQ1](06-MEMORY.md#open-questions)) | R | B2-10 | Cx→Cl | 28 | The cumulative-transcript attack on 3 synthetic ventures sets the cap | 16 |
+| B4-11 | Lesson Airlock: sealed/guarded/open boundaries, lesson grammar, disclosure tests, per-recipient budget | R | B2-10 | Cx→Cl | 28 | Runs at half the provisional budget until B4-19 files the measured cap; the cap then comes from B4-19, never from this job's own tests | 16 |
+| B4-19 | **Disclosure-budget spike** ([06 OQ1](06-MEMORY.md#open-questions)): the cumulative-transcript attack on three synthetic ventures, attackers from both families | R | B2-10 | Cx+Cl→both | 26 | Pre-registered; the attacker's break-even measured per recipient; the cap set at half of it; result filed to [12](12-SPIKE-RESULTS.md) and X07 re-scored in [15](15-RISKS-AND-DECISIONS.md) [15 OG3] | 14 |
 | B4-12 | Priors Library, Null Registry, Pain Index | R | B2-10 | Cl→Cx | 22 | Every killed venture leaves an obituary that a later probe cites | 12 |
 | B4-13 | Homeostats, the ten stocks, the immune system (antibodies) | G | B3-08 | Cx→Cl | 30 | Scenario E: bounded attacker cost, obligations served, evidence-based restart (T06) | 18 |
 | B4-14 | Governance budget + control ROI ledger | G | 13 | Cl→Cx | 22 | Q10: an operating week reports value and full control cost; a silent control drops to 5% sampling | 12 |
 | B4-15 | Replication Engine + Strategy Cells | M | B3-17 | Cl→Cx | 28 | One working offer is replicated ×5 with independent Referees (target) | 16 |
 | B4-16 | Option Pool: Trigger-Armed Options, one registered per week | M | B3-10 | Cx→Cl | 20 | A synthetic world-change event fires the pre-armed option first | 10 |
 | B4-17 | Fleet Charters, Series mode, micro-ventures; Pivot Court | V | B3-07,16 | Either→other | 26 | 4 micro-ventures run under one Fleet Charter with founder minutes flat (target) | 14 |
-| B4-18 | Seam Miner + Forge; Decision Supply Bench | M | B2-07 | Cl→Cx | 26 | A mined hybrid enters the Audition Ladder with a pre-registered claim | 14 |
+| B4-18 | Seam Miner + Forge; Decision Supply Bench | M | B2-07,B0-10 | Cl→Cx | 26 | A mined hybrid enters the Audition Ladder with a pre-registered claim; no second hybrid passes Shadow until B0-10's title-vs-procedure result is filed (DR-54) [15 OG8] | 14 |
 
-### P5 Scale — 14 jobs, ≈$200 (legal and acquisition costs are separate founder budgets)
+### P5 Scale — 15 jobs, ≈$210 (legal and acquisition costs are separate founder budgets)
 
 | ID | Job | L | Deps | Build→Ref | T | Acceptance test | $ |
 |---|---|---|---|---|---|---|---|
 | B5-01 | Acquisition Desk: screening, diligence rooms, OpCo intake | X | B3-15 | Cl→Cx | 30 | One live screen of ≥20 targets; the first offer is founder-signed (F9) | 18 |
 | B5-02 | Capital Desk | X | B3-15 | Cx→Cl | 26 | Q7-style stress on the capital stack; nothing is committed without a founder signature | 14 |
 | B5-03 | Human Task Market | X | B3-13 | Cx→Cl | 28 | Task-splitting triggers classification review (DR-37) | 16 |
+| B5-15 | **Q8 suite, human-work part** (H04): contract before acceptance, reserved pay, paid revisions, appeal, effective-pay audit; beside the Human Task Market; attackers from both families; acceptance reserve | A PCB | 03,B3-19 | Cx+Cl→both | 22 | Every human task shows pay, deadline, paid revisions and appeal before acceptance; reserved pay cannot be clawed back by a later cap; the promised appeal is reachable [15 OG1] | 12 |
 | B5-04 | Guild: membership records, contracts, reputation | X | 03 | Cl→Cx | 26 | The first Guild contracts are founder-signed | 14 |
 | B5-05 | Human adjudicator pool for material cross-family disagreement | A | 03 | s5→Cx | 18 | ≤5% of acceptance spend (parameter); sized from the first 200 coverage contracts | 8 |
 | B5-06 | Model Foundry spike: one fine-tune on one accepted-trace class | C | B4-02 | Cx→Cl | 30 | Parity within 2 points at ≤25% of cost, or a filed null (F10) | 30 |
@@ -361,7 +380,10 @@ families, but casting may swap them within the lane split.
 | B5-13 | Alternate Kernel host: quarterly restore drill | K | B3-02 | Cl→Cx | 18 | Restore → the new epoch is refused while the old host is live → reconcile → resume | 10 |
 | B5-14 | A4 Promotion Case pack for venture #1 | G | B3-16 +8 wk | Cl→Cx | 20 | The case is decided by founder signature, whatever the outcome, with the calibration evidence attached | 8 |
 
-**Totals: 112 jobs, ≈$1,580 of API-equivalent build cost** (illustration; the pre-Handover third runs on subscriptions).
+**Totals: 128 jobs, ≈$1,840 of API-equivalent build cost** (illustration; interactive pre-Handover sessions run on
+subscriptions, and every headless run is API-keyed under DR-61). The R5 fix pass added 16 jobs: the mechanism jobs for
+DR-56, DR-58, DR-59, DR-65, DR-68, DR-73, DR-76, DR-81 and DR-83, the Q8 and Q9 suites, the disclosure-budget spike, and
+the UNPARSED measurement and Codex adapter.
 Venture operating spend is separate and sits under each Charter.
 
 **After Year 1 (triggered, never dropped):**
@@ -391,28 +413,35 @@ rather than partial.
 | 5 | Protected-base manifest + release authority enforced in CI and at the launcher | B2-18 |
 | 6 | Release N pinned at `~/.agentvibe/releases/N`, and rollback restores state on a Journal copy | B2-17 dry run |
 
-**NEW DECISION: the Build Charter.** Building the destination capabilities is *construction*, not self-improvement. It
-therefore runs under its own founder-signed **Build Charter** envelope. Charging it to the Improvement sleeve (≤15%,
-DR-47) would either starve the build or let the sleeve become the organisation's main customer (red team D04). When a
-capability's phase gate passes, its residual tuning moves to the Improvement sleeve and carries the 30-day beneficiary
-check there. *Resolves upward: the destination is funded in full and the sleeve cap keeps its meaning.*
+**DECISION (DR-60, accepted as modified): the Build Charter, bounded by the Handover.** ~~NEW DECISION: the build runs
+under its own Build Charter for the whole year~~ — modified by DR-60. Building the organisation up to the Handover is
+*construction*, not self-improvement, so it is funded by its own founder-signed **Build Charter**, signed in P0.
+Charging it to the Improvement sleeve (≤15%, DR-47) would either starve the build or let the sleeve become the
+organisation's main customer (red team D04). **The Charter's funding ends at the Handover** (B2-17). From then on each
+imported build mission is charged by purpose like any other spend (DR-60): harness tuning and other improvement to the
+**Improvement sleeve** (floor 6%, 12% for 30 days after a model release, cap 15% of investment-lane capacity;
+parameters), naming a beneficiary and facing the **30-day outcome check**; judging to the acceptance reserve; everything
+else to its investment sleeve. The Charter's authority terms (`may_never`, level, referee rule) stay in force for the
+imported missions; only the pool closes. *Resolves upward: the build is funded in full and the sleeve cap keeps its
+meaning.*
 
 ```yaml
 # constitution/charters/build.yml — founder passkey only
 charter: build
 subject: agentvibe Userland (Kernel and every protected-base path excluded)
 level: A2                       # auto for two-way doors inside the envelope; ask for costly-reversible
-grants: {spend: {api_usd_month: 600}, repos: [agentvibe], effects: [git.pr, preview.deploy], outbound: none}
+grants: {spend: {api_usd_month: 600, until: handover}, repos: [agentvibe], effects: [git.pr, preview.deploy], outbound: none}
 may_never: [edit protected_base, edit this charter, edit build/lint, promote own release, launch outside launcher]
 referee: other family per job; coverage contract per lane
 cadence: weekly build scorecard (Know · Shelf), slip on a crit job (Know · Reel)
-expires: 2027-09-29             # renewed at the Year-1 review
+after_handover: {spend: charged by purpose (DR-60), tuning: improvement_sleeve, outcome_check_days: 30}
+expires: 2027-09-29             # authority terms renewed at the Year-1 review; funding already ended at the Handover
 ```
 
 ```mermaid
 flowchart LR
   REG["build/jobs.yml<br/>(the register)"] --> INT["Intent: Build Mind orders<br/>by critical path + VoI"]
-  INT --> ALL["Allocation: tranche from<br/>Build Charter"]
+  INT --> ALL["Allocation: tranche charged<br/>by purpose (DR-60)"]
   ALL --> L["Kernel launcher<br/>(grant, caps)"]
   L --> B["Builder in I3<br/>runs from releases/N"]
   B --> R["Referee — other family<br/>coverage contract"]
@@ -467,9 +496,9 @@ parallel, Claude Code and Codex in separate worktrees, each referee'd by the oth
 
 | Day | Build lanes (jobs) | Venture lane | Founder (class · reach, minutes) |
 |---|---|---|---|
-| **D1 Thu 1 Oct** | B0-01 merge SLICE (Cl→Cx) · B0-13 register + lint (Cl→Cx) · B0-02 price fetch (s5→Cx) | — | Reads §1, §7 and §9 of this file; signs **F1 launcher grant** and **F2 API caps** (Decide · Tap, 30) |
-| **D2 Fri 2 Oct** | B0-16 kernel scaffold (Cx→Cl) · B0-03 receipts + child jobs (Cx→Cl) | — | Orders the Kernel Mac (F3); turns off data-training settings by hand (direction item 14) (Decide, 20) |
-| **D3 Sat 3 Oct** | B0-12 scorecard v0 (Cx→Cl) | **B0-14 census**, 26 dirs, Haiku, ≈6 min, ≈$1.30 [17 §4] | Founder sort of the census (Decide · Tap, 10, weekend supply) |
+| **D1 Thu 1 Oct** | B0-01 merge SLICE (Cl→Cx) · B0-13 register + lint (Cl→Cx) · B0-02 price fetch (s5→Cx) | — | Reads §1, §7 and §9 of this file; signs **F1 launcher grant** (D1), **F2 API caps** (D2) and the **Build Charter** (DR-60) (Decide · Tap, 35) |
+| **D2 Fri 2 Oct** | B0-16 kernel scaffold (Cx→Cl) · B0-03 receipts + child jobs (Cx→Cl) · B0-19 secret scanner (Cx→Cl, founder-present) · B0-20 family from model id (Cl→Cx) | — | Orders the Kernel Mac (F3); turns off data-training settings by hand (direction item 14) (Decide, 20) |
+| **D3 Sat 3 Oct** | B0-12 scorecard v0 (Cx→Cl) | B0-19 scans all 26 dirs first, then **B0-14 census**, Haiku, ≈6 min, ≈$1.30 [17 §4] | Founder sort of the census (Decide · Tap, 10, weekend supply) |
 | **D4 Sun 4 Oct** | — (no founder-attended sessions) | Hygiene missions for any committed secrets | First Sunday scorecard v0 (Know · Shelf, 5) |
 | **D5 Mon 5 Oct** | B0-08 SP2 live arms begin (Cx+Cl) · B0-15 worktree-contradiction PR (Cl→Cx) | B1-22 excavation, interactive | Approves the irreversible-tier PR for B0-15 (Decide, 10) |
 | **D6 Tue 6 Oct** | B0-10 title-vs-procedure prereg + generation · B0-04 context profile | Excavation continues (13 Claude / 11 Codex archaeologists, cast by prior accuracy) | — (Know · Reel only, 5) |
@@ -478,13 +507,13 @@ parallel, Claude Code and Codex in separate worktrees, each referee'd by the oth
 | **D9 Fri 9 Oct** | Spikes filed to [12](12-SPIKE-RESULTS.md); fallbacks named · B0-08 finishes | Adoption PRs for Live repos open | Names the Deputy candidate (F6) and the first two autonomous ventures (F5) (Decide, 15) |
 | **D10 Sat 10 Oct** | — | Donor harvest into the Backlot; obituaries into the Null Registry | — |
 | **D11 Sun 11 Oct** | — | — | Sunday scorecard: first real cost-per-accepted-job row (Know · Shelf, 5) |
-| **D12 Mon 12 Oct** | B0-10 judging (both families) · B0-11 runs · B0-09 when SP1 lands | B1-23 Baseline mission on the Live venture | — |
+| **D12 Mon 12 Oct** | B0-10 judging (both families) · B0-11 runs · B0-09 SP1-bis runs (DR-73) · B0-18 UNPARSED rate per family filed | B1-23 Baseline mission on the Live venture | — |
 | **D13 Tue 13 Oct** | G0 dress rehearsal: register lint green, tests red with hashes | — | Reviews the G0 evidence pack (Decide · Tap, 15) |
 | **D14 Wed 14 Oct** | **Gate G0 passed.** B1-01 Journal launched (Cx→Cl) as P1's first critical job | — | Signs the G0 event; a slip, if any, arrives as one Reel line (Know, 5) |
 
 **Fortnight totals (targets):**
-- about 17 build jobs;
-- about $220 API-equivalent, mostly on subscriptions;
+- about 20 build jobs;
+- about $310 API-equivalent; interactive sessions on subscriptions, every headless launch on an API key (DR-61);
 - about 3 h of founder decision minutes across 14 days, within F4's supply;
 - zero founder-written code.
 
@@ -496,7 +525,7 @@ still open. When that happens, the gate reports the blocked row as a blocker, na
 
 | Phase | Required founder action | Class · reach | Minutes (target) |
 |---|---|---|---:|
-| **P0** | Sign the **launcher grant** (F1), and **API caps** of $150 Anthropic / $50 OpenAI per autonomous venture (F2) | Decide · Tap | 30 |
+| **P0** | Sign the **launcher grant** (F1 = D1), **API caps** of $150 Anthropic / $50 OpenAI per autonomous venture (F2 = D2; until D2 is signed every headless run uses an API key, DR-61), and the **Build Charter**, which funds construction until the Handover (DR-60) | Decide · Tap (passkey) | 35 |
 | P0 | Buy and site the Kernel Mac (UPS, wired, no sleep) and open the cloud accounts for the effector host and the third domain (F3) | Decide | 60 |
 | P0 | Turn off data-training settings by hand; confirm the subscription plans | Decide | 15 |
 | P0 | Set `enforce_admins` / CODEOWNERS on `.github/workflows/**` (CLAUDE.md item 2.7: a direct push bypassed required checks) | Decide | 10 |
@@ -504,7 +533,7 @@ still open. When that happens, the gate reports the blocked row as a blocker, na
 | **P1** | Create the per-venture macOS users and run the Secure Enclave enrolment for the presence helper | Decide | 30 |
 | P1 | Land each PCB job in a founder-present session (≈16 landings × 15 min) | Decide · Tap | 240 |
 | P1 | Watch Spine Night's evidence pack and sign G1 | Decide | 20 |
-| **P2** | Sign the **Constitution v1**, the **Build Charter** and the first venture's **A2 Charter** | Decide · Tap (passkey) | 60 |
+| **P2** | Sign the **Constitution v1** and the first venture's **A2 Charter** (the Build Charter was signed in P0; its funding ends at the Handover, DR-60) | Decide · Tap (passkey) | 55 |
 | P2 | Set the minute supply (F4): 45 weekday / 10 weekend + a 30-min weekly board | Decide | 10 |
 | P2 | Sign the **Probe Mandate** (≤30 disclosed contacts/day/cell, F8) | Decide | 15 |
 | **P3** | Name and brief the **Deputy**; drill once; sign the Continuity Will per A3 venture (F6) | Decide · Ring (drill) | 90 |
@@ -555,11 +584,12 @@ This table covers the failures of *the build itself*.
 | An owed isolation spike fails (I2 or nested Seatbelt) | Named fallback: I3 + API keys for all headless work, priced into B1-11; the destination is unchanged | G0 cannot pass without a filed result or a named fallback |
 | The founder's attention is the pre-Handover bottleneck | ≤4 attended sessions; PCB landings batched into 15-minute slots; everything else is Know · Shelf | Founder decision minutes stay within F4 supply on the scorecard |
 | The Kernel sprawls past its trust budget | Size lint + allowed modules; overflow moves to Userland or is refused | CI fails at 8,001 lines (parameter) |
-| The Handover produces self-referential churn (red team D04) | Build Charter envelope + register lint: every job traces to a destination capability or a gate; the 30-day beneficiary check applies after the gate | A job with no capability reference is refused admission |
+| The Handover produces self-referential churn (red team D04) | Build Charter funding ends at the Handover; after it every build mission is charged by purpose, harness tuning to the Improvement sleeve with the 30-day outcome check (DR-60); register lint: every job traces to a destination capability or a gate | A job with no capability reference is refused admission; a post-Handover draw on the Build Charter is refused |
 | Acceptance saturates when self-build fans out (T01) | Admission needs a reserved Referee window at 70%; Verifier Foundry pulled forward if load >0.8 for 2 weeks | Q4 on the build lane itself |
 | One family is unavailable for days | Degraded mode: the other family builds and reviews; verdicts are flagged single-family and re-reviewed on return; PCB landings wait | B2-16 with a simulated outage during a crit job |
-| SP1 returns negative (open-ended missions cannot choose moves) | B0-09 switches B2-03 to the branch 03 pre-decided; the planner ships with narrower move sets and a twin evaluation | G2(c) is rewritten by B0-09, never deleted |
-| Provider terms change for headless use (DR-45) | Provider mode per job; API-only path tested in B2-16; Provider Contract Registry re-fetched weekly | A terms change is a requalification event and appears on the scorecard |
+| SP1-bis returns negative (open-ended missions cannot stop or choose moves; SP1 itself landed PARTIAL, DR-55) | B2-23 and B2-24 land DR-73's stop and pricing changes first; if B0-09 still fails, B2-03 switches to the branch 03 pre-decided, with narrower move sets and a twin evaluation | G2(c) is rewritten by B0-09, never deleted |
+| Codex headless is unreliable (empty stdout when detached) | UNPARSED is never Done; B0-18 measures the rate per family; B1-24 fixes the adapter before any autonomous venture | Rate ≤2% (parameter) on B1-24's rerun, or B3-16 is not admitted |
+| Provider terms change for headless use (DR-61) | Provider mode per job; every headless run on an API key until D2 is signed, Codex headless always; API-only path tested in B2-16; Provider Contract Registry (B0-02) re-fetched weekly | A terms change flips to strict, is a requalification event and appears on the scorecard |
 | The build starves the ventures, or the reverse | Lane V has its own admission quota (≥25% of launches after the Handover, parameter) and its missions are the phase gates | The scorecard shows the build/venture split every week |
 | Harness friction masquerades as a defect (sandbox loopback, `git worktree add` exit 128) | The out-of-sandbox observer and I3 test environments; escalation of known commands is documented, never "fixed" by editing the test | A "watched it live" claim without an observer read → `unresolved` |
 
@@ -584,22 +614,26 @@ This table covers the failures of *the build itself*.
 1. **Hand-build our own Journal, or adopt a durable-execution library?** ENGINE-SPEC Q4 set a switch rule for DBOS (our
    Journal exceeds ~2k lines, or a second writer appears). *Recommendation:* hand-build it in Go under the Kernel's size
    lint. Check the switch rule at Spine Night. Temporal or Restate stays on the trigger ladder, above 1,000 live timers.
-2. **Should self-build jobs use API keys or subscriptions?** DR-45 routes unattended work to API keys, and R5-ISSUES #7
-   leaves "founder-initiated, founder-present" headless work as a terms question. *Recommendation:* use API keys for
-   every post-Handover build job under the Build Charter's $600/month cap (parameter), and keep subscriptions for
-   founder-present PCB landings. Revisit once B0-02 has fetched the terms.
+2. ~~Should self-build jobs use API keys or subscriptions?~~ **Resolved by DR-61** (billing rule; the founder's D2 is
+   in [15](15-RISKS-AND-DECISIONS.md)). Every headless run uses an API key until D2 is signed; Codex headless always does;
+   post-Handover build jobs are Kernel launches on API keys, charged by purpose (DR-60). Interactive founder-present PCB
+   landings stay on the subscriptions.
 3. **Should the Handover move earlier, to W8?** *Recommendation:* no. The six entry conditions are the date. If Spine
    Night passes early, the Handover follows the next Thursday and no sooner. Running the build for one extra week on
    founder-attended sessions costs less than building the organisation on a single-family acceptance path.
 
 ## Sources
 
-- `00-CANON.md` §0–§4, §6 (DR-01 to DR-55), §7, §9; `00-FOUNDER-DIRECTION.md`; `_process/SEAT-CONTEXT.md`;
-  `_process/R5-ISSUES.md` (#7, #16).
+- `00-CANON.md` §0–§4, §6 (DR-01 to DR-83), §7, §9 (D1–D10); `00-FOUNDER-DIRECTION.md`; `_process/SEAT-CONTEXT.md`;
+  `_process/R5-ISSUES.md` (#7, #16, #18); `_process/R5-FIX-PLAN.md` §0 and §14; `15-RISKS-AND-DECISIONS.md` §7 open gaps
+  (OG1, OG3, OG7, OG8, OG11); `12-SPIKE-RESULTS.md` §6.4, ND-12-1, ND-12-2.
 - `02-ORGANISATION.md`; `03` §5, §12; `04` §3.4, §7; `05` §2.1, §11; `06` §14, open questions; `07` sections 4–14;
   `08` §5.2, §12, §14; `09a` §1, §2, §8, §9, §14, §15, §17, §18, §20; `09b` §0, §23, §24, §26, open questions; `16`
   sections 3–16; `17` §4, §12.
-- Spikes: `r4-spikes/SLICE-board-to-team.md` [SLICE], `SP2-collision.md` [SP2], `SP3-hybrid.md` [SP3].
+- Spikes: [`r4-spikes/SLICE-board-to-team.md`](r4-spikes/SLICE-board-to-team.md) [SLICE],
+  [`r4-spikes/SP1-mission-loop.md`](r4-spikes/SP1-mission-loop.md) [SP1],
+  [`r4-spikes/SP2-collision.md`](r4-spikes/SP2-collision.md) [SP2], [`r4-spikes/SP3-hybrid.md`](r4-spikes/SP3-hybrid.md) [SP3];
+  results in [12](12-SPIKE-RESULTS.md).
 - `engineering/ENGINE-SPEC.md` §13 (build order, M1–M10) and §14; `engineering/SURFACES-SPEC.md` §8; `r2-seats/S12-engineering.md`
   §2.15 (self-hosting path); `r3-stretch/R3-redteam-codex.md` §5 (Q-suites).
 - Harness, inspected 2026-09-30: `AGENTS.md`, `.claude/agents/` (18 files), `.claude/workflows/qa.js`, `.claude/gates.yml`,

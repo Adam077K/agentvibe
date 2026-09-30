@@ -43,3 +43,5 @@ same URL. The file has no doctype/html/head/body tags because the publisher adds
   data block.
 - The only external script is `marked` 12.0.2 from cdnjs. Fonts come from Google Fonts. The theme choice
   is kept in `localStorage` under `v3x-theme`, wrapped in try/catch.
+
+Published at https://claude.ai/artifact/Lw6qgjWGAAz6YgV7t1JAoD (private).

@@ -255,7 +255,7 @@ the Attention Exchange). **Every comparison is within one generating model** (DR
 
 | Diff | Re-enters at |
 |---|---|
-| Model version (either family) | R1 both families; R2 if R1 moves >10% |
+| Model version (either family) | R1 on **every record in both families that uses the changed model**; arms are within-model with/without pairs; R2 if R1 moves >10% [DR-75, R5-walk B37] |
 | Skill major version; fusion, thesis or **procedure** change | R2 |
 | New knowledge binding | R3 (bindings change behaviour on live data) |
 | Prompt wording | R1 |
@@ -289,10 +289,12 @@ sub-class appears; every fork clears R2. **Deprecate** after 30 dominated days (
 writes "did not beat Generalist Null on class Y, n=20, Δ=−3%" to the Null Registry; the file stays in git. **Resurrect** at R1
 in a new family after a model or skill release.
 
-**NEW DECISION (ND-04-1) — audition spend lives in the Improvement sleeve.** Auditions, Forge missions and reflex re-runs
-are self-improvement: charged to the Improvement sleeve and counted in its ≤15% cap (DR-47), with a floor of 6% of
-investment-lane capacity, 12% in the week after a model release (parameters, [S06 §10.3]). Each promotion names its
-beneficiary class and faces the 30-day outcome check (§12.2 shows one). Unspent audition budget does not roll into missions.
+**ND-04-1 — accepted as DR-60: audition spend lives in the Improvement sleeve.** Auditions, Forge missions and reflex
+re-runs are self-improvement: charged to the Improvement sleeve and counted in its ≤15% cap (DR-47), with a floor of 6% of
+investment-lane capacity, 12% for the 30 days after a model release (~~in the week after~~, DR-60) (parameters,
+[S06 §10.3]). The charging rule — one pool per purpose — is owned by [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md). Each
+promotion names its beneficiary class and faces the 30-day outcome check (§12.2 shows one). Unspent audition budget does
+not roll into missions.
 
 ## 5. Seam Miner and Forge
 
@@ -322,7 +324,9 @@ record never writes its exam [S06 §2.3]. Lint runs before the Bet can register.
 
 **The cast registry** is the record files plus an index keyed by record × task class × family, projected from verdicts with
 source offsets (DR-07) and rebuildable from the Journal. It is Record-held, peer of the Priors Library, and holds the
-organisation's running Claude-vs-Codex evidence per class [S06 §9.2].
+organisation's running Claude-vs-Codex evidence per class [S06 §9.2]. Every evidence row records the worker's **family as
+derived from the model id** in the launch log, never from the slot it was launched into, so cross-family evidence cannot be
+mislabelled ([09a](09a-ENGINEERING.md)) [DR-83].
 
 ```ts
 type SeatRequest = {
@@ -418,7 +422,7 @@ at the required quality and deadline; show a quality–cost frontier where value
 (1) every added worker has a distinct deliverable, a reason for separation and reserved acceptance capacity; a lead exists
 only for integration work; (2) **fan-out is bounded by qualified verifier windows** at the 70% ceiling (DR-15, capacity
 model in [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)) — the selector staggers, narrows or launches verifiers, never
-borrowing incident capacity; (3) each overlapping pair carries one priced integration rework (DR-22). Year 1 uses a
+borrowing incident capacity; (3) each overlapping pair carries one priced integration rework (DR-22), sized by the overlap estimator (§9.3). Year 1 uses a
 transparent feature table; a learned **topology compiler** replaces it only when replay *and* live canaries show better
 accepted outcomes, cost and deadlines without more interference.
 
@@ -593,11 +597,32 @@ still conflicted in 4 files [SP2 §5.4]. Hence **one budgeted integration rework
 the second lander. Shared Git metadata, credentials, ports, caches and databases get their own isolation (ladder in
 [09a](09a-ENGINEERING.md)); auditions work in separate namespaces with no publication authority.
 
+**The overlap estimator** prices that rework before launch, for the shape selector (§7) [R5 G-B1]:
+
+| | |
+|---|---|
+| Inputs | Declared footprints of every contribution; the hot-resource map (§9.2); per-record history of touched-vs-declared (`declared_missed`) |
+| Output | Expected integration rework launches for the TeamPlan, **with an interval**, reserved as `integration_rework` |
+| Fallback | Without enough history: a transparent count of shared resources between each pair, one rework per overlapping pair (DR-22) |
+
+The estimator is uncalibrated against live workers: SP2's arms were canned, so live-worker calibration is owed (SP2 live
+arms, [14](14-BUILD-PLAN.md)). **No universal disjointness threshold exists** — the decision to split is the expected-total-cost
+comparison of §7, never a fixed share of disjoint work.
+
+**Priced-lease trigger** [R5 OG10]. A hot resource whose lease-wait share exceeds 15% for two consecutive weeks (parameter)
+opens a priced-lease experiment for that resource alone; the rest of the table keeps optimistic, first-ready leases.
+
 ### 9.4 Integration queue and fan-in
 
-The queue fetches main, merges, re-tests and lands by compare-and-swap; verification binds candidate digest, dependency
-versions and policy version; head movement re-runs affected checks; conflicts and red tests return to **the same worker** as
-the priced rework. Main never goes red by construction.
+The queue has two stages [DR-70, R5-walk B07]:
+
+1. **Staging integration** — fetch main, merge onto a staging branch, re-test. Verification binds candidate digest,
+   dependency versions and policy version; head movement re-runs affected checks; conflicts and red tests return to **the
+   same worker** as the priced rework. Staging integration may precede acceptance.
+2. **Publication** — compare-and-swap land to main, then deploy. It runs **only after the coverage contract's required
+   verdicts** are recorded against the staged digest; nothing reaches main, a deployment or an outbound channel before them.
+
+Main never goes red by construction: only a staged, re-tested, accepted digest is ever landed.
 
 A **verifier sits at every fan-in** [S02 §2.7]:
 
@@ -668,7 +693,7 @@ Terminal takeover by the founder or a collaborator is an explicit lease transfer
 |---|---|---|---|
 | **Tripper** | Any agent seeing a trip condition | Fire the Charter's SCRAM safe state or a partial scope (definition [05](05-AUTONOMY-INITIATIVE-FOUNDER.md), enforcement Regulation) | Cannot restart |
 | **Incident Lead** | Record cast for the class (default: Reliability Experience Designer), preferably the family not running this week's Allocator review | Scoped, expiring **incident grant**; suspends investment missions on those resources | All constitutional and Custody ceilings; cannot fund or accept its own fix |
-| **Time-out Confirmer** | A second-family agent | Before each R3/R4 effect, checks the gateway's target card (account, environment, recipient count + 3 samples, amount, brand) against the intent chain, never the maker's narrative [S10 §2.6.6] | Confirms or refuses; drills seed mismatches |
+| **Time-out Confirmer** | A **named coverage edge**, not an ad-hoc role: a second-lineage check reserved with the coverage contract for every R3/R4 effect, charged to the acceptance reserve ([09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)) [DR-70, R5-walk B38] | Before each R3/R4 effect, checks the gateway's target card (account, environment, recipient count + 3 samples, amount, brand) against the intent chain, never the maker's narrative [S10 §2.6.6] | Confirms or refuses; drills seed mismatches |
 | **Maker / Referee** | Cast / coverage contract | Build / judge the fix | Normal |
 
 ```yaml

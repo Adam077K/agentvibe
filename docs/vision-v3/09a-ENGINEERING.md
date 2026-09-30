@@ -31,8 +31,9 @@ train, hosts and external fencing, the data policy, observability, the substrate
 7. **Surfaces never spawn;** only the Kernel launcher does, under one standing grant (DR-53, [SLICE], [SP2]).
 8. **Isolation is a ladder chosen by label:** provider sandbox → Unix user per venture → micro-VM per mission with no
    credentials inside → remote VM on trigger.
-9. **Provider mode per job from the providers' own terms:** API keys for autonomous ventures, customer and client data
-   and all unattended Codex; subscriptions only for founder-initiated work (DR-45).
+9. **Provider mode per job from the providers' own terms:** API keys for autonomous ventures, customer and client data,
+   initiative jobs and all Codex headless; until D2 is signed every headless run is API, after it only founder-launched,
+   present, A0–A1, D0–D1 Claude headless may use the subscription (DR-61, ~~DR-45~~).
 10. **Labels propagate transitively** over data and control dependencies; a tainted authorising context cannot authorise
     an R2+ effect (DR-40, [R3-red X01]).
 11. **The organisation builds itself on a release train it cannot use to promote its own judges** — the protected
@@ -85,19 +86,13 @@ only `effectors/*` (Go, Tier-0, §14) load credentials.
 and permission are separate fields (X01), and a snapshot reference on every effect (C01).
 
 ```ts
-type Label = {
-  origin: 'founder'|'system'|'worker'|'web'|'customer'|'counterparty'|'collaborator'|'synthetic';
-  dclass: 'D0'|'D1'|'D2'|'D3'|'D4';                // §11
-  venture: VentureId | 'portfolio';
-  tainted: boolean;                                 // true if ANY data or control ancestor is untrusted
-  provenance: SourceRef[]; confidence?: number;      // neither ever raises permission
-  permission: 'may_authorise'|'data_only'|'non_exportable';   // only a declassifier changes it (§12)
-  retention: RetentionClass; subjects?: SubjectId[]; // §11.6–11.7
-};
+type Label = LabelV1;                               // the one versioned wire schema, §12 (DR-68)
 type Event = { id: ULID; stream: string; seq: number; type: string; ts: string; actor: Actor; correlation_id: Id;
                causation_id?: ULID; label: Label; rationale?: Rationale; snapshot_ref?: SnapshotId;
                schema: number; data: unknown; prev_hash: Hex; hash: Hex };
-type Job   = { id: JobId; venture: VentureId; record_ref: IdentityRef; family: 'claude'|'codex'|string;
+type Job   = { id: JobId; venture: VentureId; record_ref: IdentityRef; model_id: string;
+               family: 'claude'|'codex'|string;     // derived from model_id, never from the slot (DR-83)
+               headless: boolean;                   // billing turns on it (§10, DR-61)
                parent_job?: JobId;                  // nested agents are team members (§8.4)
                provider_mode: 'sub'|'api'; isolation: 'I1'|'I2'|'I3'|'I4'; context_profile: ProfileId;
                tool_lease: { allowed: string[]; forbidden: string[] };
@@ -169,7 +164,10 @@ policy_snapshot:                         # immutable, content-addressed; every c
   charter: {venture: keel, version: v6, level: A3, grants: [spend, outbound, deploy]}
   mandates: [m_refund_v3]
   limits_book: l_2026-10-02T09:00
-  authorising_label: {tainted: false, dclass: D2, permission: may_authorise}
+  overlays:                              # active narrowing overlays read from the Journal (DR-58)
+    - {id: ov_4471, scope: {venture: keel, verbs: [payments.*]}, reason: "fraud alarm → freeze", expires: 2026-10-03T09:00Z}
+  safe_state: {id: ss_keel_v2, continuity: [refund_le_original_charge, notify_customer_of_delay]}   # DR-56
+  authorising_label: {schema: label/1, taint: clean, dclass: D2, boundary: guarded, permission: may_authorise}
   inputs_freshness:                      # fog is explicit (C05)
     - {input: stripe.balance, observed_at: 2026-10-02T08:58Z, max_age_s: 600, state: fresh}
     - {input: reputation.meter.keel.email, state: unknown}    # unknown is a branch, never zero
@@ -193,11 +191,41 @@ sequenceDiagram
 ```
 
 **The algorithm.** (1) Derive `effect_class` and `door` from the action, never from the proposer [S13 §1]. (2) Walk
-precedence; a denying P1 or P2 rule ends evaluation (`never`, or held under SCRAM). (3) Collect every other applicable
-rule; the rule loader refuses to place a rule typed *method* in a blocking slot (DR-05). (4) An input that is `unknown`
-or stale fails a *positive* permission closed, while an existing obligation continues on its pre-authorised continuity
-route (P3). (5) Disposition = the most restrictive survivor. (6) `valid_until` = the earliest expiry of any input,
-mandate or limit window, capped at 15 minutes (parameter).
+precedence; a denying P1 rule ends evaluation (`never`). A denying P2 rule — SCRAM, freeze, kill switch, breaker, or an
+active narrowing overlay — denies **within its scope except actions matching the safe state's `continuity:` list**; a
+match continues to P3–P8 as normal, anything else is held [DR-56]. (3) Collect every other applicable rule; the rule
+loader refuses to place a rule typed *method* in a blocking slot (DR-05). (4) An input that is `unknown` or stale fails a
+*positive* permission closed, while an existing obligation continues on its pre-authorised continuity route (P3); an
+obligation with no listed route stays pending and its latest safe start opens a continuity decision [DR-56]. (5)
+Disposition = the most restrictive survivor. (6) `valid_until` = the earliest expiry of any input, mandate, limit window
+or overlay, capped at 15 minutes (parameter).
+
+```ts
+function compile(action: Action, snap: PolicySnapshot): DecisionContract {
+  const cls  = classify(action);                        // 16's R-class + door; never the proposer's claim   [DR-57]
+  if (neverList(snap).matches(action)) return contract('never', cls, snap);             // P1
+  for (const d of p2Denies(snap)) {                     // SCRAM · freeze · kill · breaker · snap.overlays   [DR-58]
+    if (!d.scope.covers(action)) continue;
+    if (!snap.safe_state.continuity.some(r => r.matches(action)))                        // DR-56
+      return contract('held', cls, snap, blocker(d));   // owner, remedy, expiry
+  }                                                     // a continuity match falls through to P3–P8
+  const survivors = rulesP3toP8(snap, action).filter(r => r.type !== 'method');         // DR-05
+  const base = dispose(snap.charter.level, snap.charter.grants, cls.door);  // 05's one table   [DR-57]
+  return contract(mostRestrictive(base, survivors, freshness(snap)), cls, snap);
+}
+```
+
+**One consequence source, composed once [DR-57].** The compiler **composes** two tables it does not own: `classify`
+applies [16](16-EXTERNAL-WORLD-HUMANS.md)'s classification (R-class R0–R4 and door), and `dispose` applies
+[05](05-AUTONOMY-INITIATIVE-FOUNDER.md)'s disposition table (level × grant × door → auto · notify · ask · co-sign ·
+never), including its covering-mandate step. 09a keeps no local copy of either table; it loads both, versioned, into
+the decision table at policy release.
+
+**Narrowing overlays are compiler input [DR-58].** Automatic narrowing — by Regulation, SCRAM, a tripwire, a continuity
+tier or a demotion — reaches the compiler as an active **narrowing overlay** read from the Journal as of the snapshot
+offset, each with scope, reason and expiry. The compiler applies overlays on top of the signed Constitution; it never
+rewrites a signed file. An expired overlay drops out at the next snapshot; lifting one early is widening and follows the
+widening rules.
 
 **Speed.** Rules compile to a decision table per (venture, verb) at policy release, so a compile is a lookup plus
 freshness checks: targets p95 ≤5 ms, p99 ≤25 ms. Routine in-envelope effects cross ≤3 serial gates (DR-10); a contract is
@@ -399,12 +427,27 @@ observed and is right.
 Referee → verdict on the card — without breaking that [SLICE §4]. v3 keeps the split: **surfaces enqueue; only the Kernel
 launcher spawns.** SLICE's `run-missions.ts` claim-run-append loop is the launcher's prototype.
 
+**8.7 Receipts and launch logs name the family from the model id [DR-83].** Every launch Receipt and launch-log line
+records `model_id` as the worker reported it in `system/init` (or the proxy's route evidence), and `family` is
+**derived from that id** by a pinned table in the protected base — never from the slot, role or adapter the job was
+launched into. A mismatch between the slot's intended family and the derived one is journalled and the job's verdicts
+count for the derived family only; a cross-family edge claimed on a slot label alone is not a cross-family edge
+[[12](12-SPIKE-RESULTS.md) ND-12-2].
+
+**8.8 Codex headless route and the UNPARSED rate [R5 OG11].** The Codex adapter launches `codex exec` headless under a
+**pseudo-TTY** with `--json` streamed and parsed event by event, because detached from a TTY the CLI has exited 0 with
+empty stdout (the harness's Codex bug #19945). Any run whose stream the adapter cannot parse into a typed outcome is
+classified **`UNPARSED`** (a kind of `unresolved`, never `pass`). The runner measures the UNPARSED rate **per family**
+over a rolling 7-day window (parameter) and publishes it on the observability page. Above **2%** (parameter) for a
+family, no autonomous venture may rely on that family's headless route: its roles fall back to the interactive route,
+another family, or single-family mode with provisional verdicts (§10, DR-69).
+
 ## 9. The isolation ladder and the inference proxy
 
 | Level | Mechanism | Credentials inside | Used for |
 |---|---|---|---|
 | **I1** | Provider sandbox (Claude Seatbelt / Codex `workspace-write`), founder's Unix user | Founder's subscription OAuth | Interactive, founder-present sessions |
-| **I2** | I1 + **a Unix user per venture** (`av_<venture>`), roots `chmod 700`, egress via a local allowlist proxy | That user's subscription token (founder's account) or none | Headless D0–D1 work the founder initiated on founder-driven ventures |
+| **I2** | I1 + **a Unix user per venture** (`av_<venture>`), roots `chmod 700`, egress via a local allowlist proxy | An API key via the proxy; a Claude subscription token only when `providerMode` returns `sub` (after D2, §10) | Headless D0–D1 work the founder launched on A0–A1 ventures |
 | **I3** | **Apple `container` micro-VM per mission**, only the worktree mounted, model via the proxy | **None** | A3/A4 ventures, D2/D3, untrusted code, done-tests, counterparty content, intake trials, the quarantined reader |
 | **I4** | Remote microVM (Firecracker class) | None | On trigger (§17) |
 
@@ -421,11 +464,17 @@ driven by an out-of-sandbox Playwright browser [SLICE §3]; the harness's `check
 run" claim needs a Kernel-owned **out-of-sandbox observer** (its own OS user, reached as a read-effect); apps under test
 run inside the I3 VM where binding is allowed; tests that need real sockets are never edited to avoid them.
 
+**The observation broker has an out-of-sandbox fetch path [DR-73].** Acceptance's attribution check — does the cited
+page exist and does it contain the quoted span — is run by the broker, not by a worker: it fetches the claim's source
+URL from its own OS user outside every worker sandbox, stores the response digest, and matches the quote
+deterministically **before any model reads the claim**. A fetch that fails or times out is `unresolved`, never `pass`.
+The Referee and verifiers read the broker's stored copy, so no sandboxed worker needs web egress to be checked.
+
 **The inference proxy (`avk proxy`)** on a per-VM vsock or loopback address: injects the API key so none enters a VM;
 meters tokens per job exactly; refuses requests over the job budget; records request/response digests for replay;
 **enforces provider and data eligibility** — a D2 pack cannot reach a route without commercial terms, and a route change
 is a requalification event [R3-red X04]; records route and model-version evidence where returned; and is a **kill point**
-that stops all model traffic within one request. It never sees subscription OAuth (I1/I2 traffic goes direct) — which is
+that stops all model traffic within one request. It never sees subscription OAuth (I1 and `sub`-mode I2 traffic goes direct) — which is
 exactly where its guarantees stop [S12 §2.5].
 
 ## 10. Credential routing and provider terms
@@ -437,26 +486,48 @@ exactly where its guarantees stop [S12 §2.5].
 | Anthropic Consumer Terms | No access "through automated or non-human means" except "via an Anthropic API Key or where we otherwise explicitly permit it"; opt-out does not cover Feedback; accounts not "available to anyone else" | **No feedback from worker sessions**; nobody else uses the founder's plan |
 | Claude Help Center 15036540 | `claude -p` and the Agent SDK "still draw from your subscription's usage limits"; a June change was paused with "advance notice before any future change" | Permitted, unstable: subscription work carries an API **shadow price** |
 | Claude Code legal and compliance | Limits "assume ordinary, individual usage"; developers building products "should use API key authentication" | Customer-serving products and 24/7 autonomy → API |
-| OpenAI Codex auth | "Use API key authentication for programmatic Codex CLI workflows" | **Unattended Codex always uses an API key** |
+| OpenAI Codex auth | "Use API key authentication for programmatic Codex CLI workflows" | **Codex headless always uses an API key** [DR-61] |
 | Anthropic / OpenAI API data docs | No training on API content by default; ~30-day retention; ZDR on request | D2/D3 only via API under commercial terms |
 
+**The billing rule is DR-61, codified here and nowhere else in engineering.** Until the founder signs D2
+([15](15-RISKS-AND-DECISIONS.md)), `d2Signed` is false and **every headless run uses an API key**. Once signed, a
+headless job may run on the subscription only if its family is **Claude**, it was launched by the founder's command, a
+presence proof is <30 min old (parameter), the venture is at A0–A1 and the data is D0–D1. **Codex headless is always
+API.** Autonomous ventures, customer/client data (D2+) and initiative-generated jobs are always API. D4 is refused.
+
 ```ts
-function providerMode(job: Job, ctx: Ctx): 'sub' | 'api' | 'refuse' {   // at admission AND in the proxy
+function providerMode(job: Job, ctx: Ctx): 'sub' | 'api' | 'refuse' {   // at admission AND in the proxy   [DR-61]
   if (job.label.dclass === 'D4') return 'refuse';                      // no model, ever
-  if (ctx.level >= 'A3' || ctx.customerFacing || job.label.dclass >= 'D2') return 'api';
-  if (job.family === 'codex' && !ctx.founderPresent) return 'api';      // all unattended Codex
-  if (ctx.initiatedBy === 'founder' && ctx.founderPresent) return 'sub';
-  return 'api';                                                         // initiative-generated work defaults to API
+  if (ctx.level >= 'A3' || ctx.customerFacing || job.label.dclass >= 'D2') return 'api';  // autonomous, D2+
+  if (ctx.initiatedBy !== 'founder') return 'api';                     // initiative-generated work: always API
+  if (!job.headless) return ctx.founderPresent ? 'sub' : 'api';        // interactive, founder at the keyboard
+  // headless from here on
+  if (!ctx.d2Signed) return 'api';                                     // default false: all headless on API
+  if (job.family !== 'claude') return 'api';                           // Codex (and any other family) headless: always API
+  if (ctx.level > 'A1') return 'api';                                  // headless sub only at A0–A1
+  if (!ctx.launchedByFounderCommand) return 'api';
+  if (ctx.presenceProofAgeMin === undefined || ctx.presenceProofAgeMin >= 30) return 'api';  // parameter
+  return 'sub';                                                        // Claude, founder-launched, present, A0–A1, D0–D1
 }
+// Every 'sub' job is metered and receipted at the API shadow price (09b), so switching to API never changes a budget.
 ```
+
+`family` here is derived from the model id (DR-83, §8.7). A presence proof ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md))
+proves presence only; it never authorises the job — admission still needs its contract. A terms change reported by the
+watcher below flips `d2Signed` to false (strict) until the founder re-signs [DR-61].
 
 API keys carry hard monthly caps in each provider console — $150 Anthropic / $50 OpenAI per autonomous venture to start,
 raised by the Treasury Standing Order (F2; parameters). Accounts are sets of **buckets** (Claude 5-hour and weekly
 windows; Codex plan windows, reported changed twice this quarter by secondary sources and not relied on; API monthly
 USD). The first 429 is ground truth; a one-token **limit canary** runs before a batch admits. Degraded modes and shadow
 prices are [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)'s; the mechanism here guarantees that single-family mode routes
-every role to one family and flags every verdict. A weekly **terms watcher** diffs the pages and opens an
-obligations-lane item on change; a quarterly **provider-exit drill** runs a day API-only and a day single-family.
+every role to one family and flags every verdict it produces **`provisional`** [DR-69]. A provisional verdict is
+journalled and shown, but **never satisfies a missing coverage edge**: Acceptance treats that edge as still open, so no
+merge or settlement that needs it proceeds. A human substitutes for the missing edge only if the coverage contract named
+a qualified human alternative before launch. A weekly **terms watcher** diffs the pages and opens an obligations-lane
+item on change; a quarterly **provider-exit drill** runs a day API-only and a day single-family, and measures **degraded
+production only** — throughput, cost and latency of work that proceeds — never acceptance, since single-family verdicts
+from the drill are provisional like any other [DR-69].
 
 ## 11. DATA POLICY
 
@@ -469,7 +540,7 @@ change.*
 | Class | Examples | May reach | Isolation | Other rules |
 |---|---|---|---|---|
 | **D0 public** | Web pages, public docs | Any provider, any mode | any | Tainted if it came from the web |
-| **D1 internal** | Venture code, plans, Brain, Minds | Subscription (training off) or API | ≥ I2 headless | Never in feedback or sharing features |
+| **D1 internal** | Venture code, plans, Brain, Minds | Subscription (training off) only where `providerMode` returns `sub` (§10, DR-61); otherwise API | ≥ I2 headless | Never in feedback or sharing features |
 | **D2 personal** | Customer email, interviews, CRM, recordings | **API under commercial terms only**; a DPA once a customer exists | I3 | Pseudonymised before any Launch Pack where possible; transcription local (whisper.cpp); per-subject key |
 | **D3 client / NDA** | Agency client code and data | API only, only where the contract permits processors; ZDR requested where offered | I3 always | Own venture; never in the Lesson Airlock or any export |
 | **D4 secrets** | Credentials, tokens, signing keys | **No model, ever** | — | Only Custody effectors touch them; redactor scans every blob |
@@ -499,22 +570,73 @@ scheduled* and *retained under exception*, and never claims to erase uncontrolle
 before serving, so a backup cannot resurrect plaintext or a key [R3-red H03, §3.5].
 
 **11.8 Secrets.** Never in a worker environment, VM, pack, prompt or trace; honeytokens (§19, ideas) in every Brain and repo.
+**Pre-model scanning is deterministic and comes first [DR-76, R5-walk B34].** Before any model reads a repo — a Fleet
+Import census, a new venture root, a mounted worktree — a deterministic scanner (pattern and entropy rules plus
+provider key formats, no model in the loop) walks the tree and its git history. Every hit is redacted from the copy any
+model will see and replaced by an opaque reference (`secret_ref: sr_…`, pointing into Custody); the original is moved to
+Custody or flagged for rotation. Census manifests carry these references and never a secret value. A scan that did not
+complete leaves the repo unreadable by any model — incomplete is never clean.
 
-**11.9 Synthetic data.** Canaries and twin records carry `origin: synthetic, permission: non_exportable`, enforced
+**11.9 Synthetic data.** Canaries and twin records carry `origin: synthetic, exportable: false` (§12), enforced
 below semantics by the gateway and exporters; twin credentials lack production capability (DR-50, [R3-red H06]).
 
 **11.10 Jurisdiction.** Every target carries jurisdiction; unknown raises blast radius.
 
 ## 12. Labels — the mechanics
 
-Label semantics for memory and the Airlock are [06](06-MEMORY.md)'s; propagation is here.
+Label semantics for memory and the Airlock are [06](06-MEMORY.md)'s; the wire format and propagation are here.
+
+**12.0 The one wire schema [DR-68].** Every event, blob, pack, trace and export carries exactly this record, versioned;
+06 defines what the values mean and uses these names. Classification, boundary, retention class, retention deadline,
+permission, taint and origin are **seven distinct fields** — none is inferred from another.
+
+```ts
+type LabelV1 = {
+  schema: 'label/1';                                 // a new version ships with an upcaster (§14 base); readers refuse unknown versions
+  origin: 'founder'|'system_of_record'|'internal'|'public_web'|'customer'|'counterparty'|'synthetic';
+  dclass: 'D0'|'D1'|'D2'|'D3'|'D4';                  // classification, §11.1
+  boundary: 'open'|'guarded'|'sealed';               // the venture Charter's Airlock boundary class (06 §10)
+  venture: VentureId | 'portfolio';
+  retention: { class: 'journal_metadata'|'operational'|'personal'|'client'|'synthetic';   // storage lifetime, §11.6
+               hold: 'none'|'obligation'|'legal'|'safety'|'pinned';                        // what forgetting may not touch
+               deadline?: string };                  // retention deadline, computed; never a class
+  permission: 'none'|'informs'|'may_authorise';      // permission to drive an effect — NOT confidence; only a declassifier widens it
+  exportable: boolean;                               // false for synthetic and canary records (DR-50)
+  taint: 'clean'|'untrusted'|'quarantined';          // non-clean if ANY data or control ancestor is untrusted
+  provenance: SourceRef[];                           // incl. {human_principal?: PrincipalRef} — human provenance is a field, never an origin
+  consent_scope?: ConsentScopeRef;                   // participant/panel data (06 §11, 16 ParticipantProtocol); never widens
+  confidence?: number;                               // neither provenance nor confidence ever raises permission
+  subjects?: SubjectId[]; revocation_epoch: number;  // lineage inventory (§11.7); bumped on source/Room revocation
+};
+```
+
+**Mapping from 06's semantic names (published with the schema; `label/1`).**
+
+| 06 field : value | Wire |
+|---|---|
+| `data_class: public` | `dclass: D0` |
+| `data_class: internal` | `dclass: D1` |
+| `data_class: personal` | `dclass: D2` |
+| `data_class: confidential` | `dclass: D3` (client / NDA material) — boundary unchanged, set by the Charter |
+| `data_class: sealed` | `dclass: D3` **and** `boundary: sealed` — a classification plus a boundary, never one field |
+| `origin: founder · system_of_record · internal · public_web · customer · counterparty · synthetic` | same name |
+| a collaborator's or contractor's contribution | origin of the channel (`counterparty` or `internal`) + `provenance[].human_principal` |
+| `consent_scope` | same name (participant and panel data only) |
+| `taint: clean · untrusted · quarantined` | same name |
+| `authority: none · informs · may_authorise` | `permission`, same values |
+| `exportable` | same |
+| `retention: ordinary` | `retention.hold: none` |
+| `retention: obligation · legal · safety · pinned` | `retention.hold`, same value |
+| `retention: synthetic` | `retention.class: synthetic`, `hold: none`, `exportable: false` |
+| D4 secrets | no 06 value: secrets never enter memory (§11.8) |
+
 - **Join.** A job's label is the join of every Launch Pack input; outputs inherit it; derivation from a tainted fact
   taints — over **control** dependencies too (a plan chosen because of an email is tainted even with clean
   parameters) [R3-red X01].
 - **Quarantined reader.** Untrusted content is read by an I3 job with no effect grants that returns typed fields
   (amounts, dates, intents, quoted spans); the planner acts on fields, never on raw text in an authorising position
   [S12 §2.10; S13 §2.10].
-- **Compiler rule.** `effect_class ≥ R2 ∧ authorising_label.tainted → blocker`, unless parameters are re-derived from an
+- **Compiler rule.** `effect_class ≥ R2 ∧ authorising_label.taint ≠ clean → blocker`, unless parameters are re-derived from an
   **independently authorised** source (our catalogue price; the charge via the observation broker — never a paraphrase
   of the same email) or a human approves the exact canonical action.
 - **Declassification** changes `permission` only through a declassifier job with independent evidence; a settled
@@ -538,6 +660,17 @@ Label semantics for memory and the Airlock are [06](06-MEMORY.md)'s; propagation
 
 Residual exposure is written down: a compromised Kernel-host administrator defeats the local sandbox; what survives is
 the offsite anchor, provider-side key revocation and the external gateway epoch [R3-red Q2].
+
+**Kernel-host administrator mitigations [R5 OG4; D3].** They shrink the window, not the exposure:
+- **A separate admin account**, used only for OS administration and never for running agents, the Kernel or a founder
+  session; the account agents run under has no `sudo`.
+- **The custody keychain is sealed by Touch ID** (Secure Enclave, user-presence required per use), so an admin shell
+  cannot silently unlock signing or provider keys.
+- **Hourly journal-head comparison from the third domain** (§15): the third failure domain fetches the Kernel's current
+  journal head and compares it with its own anchor chain; a mismatch — a rewritten or forked history — **trips the
+  external epoch**, fencing the Kernel host out of every effector until recovery.
+- **Provider keys are revocable from the recovery kit**: the offline kit lists every provider console and key id and
+  the revocation step for each, so a compromised host's API keys die without that host's cooperation.
 
 ## 14. The protected computing base and the release train
 
@@ -583,7 +716,7 @@ flowchart LR
   ALT[Alternate host · drilled quarterly] -. restore .-> K
 ```
 
-**NEW DECISION (refines DR-09).** The fencing authority and anchor store live in a **third failure domain** — a strongly
+**Accepted as DR-62 (refines DR-09); ~~NEW DECISION~~.** The fencing authority and anchor store live in a **third failure domain** — a strongly
 consistent conditional-write store in a separate cloud account — so neither host can grant itself the epoch or rewrite
 history.
 
@@ -675,7 +808,7 @@ reconciliation task, never a retry button.
 | Stores disagree | C02 | One writer per record type, outboxes, offsets (§4) | Rebuild from zero keeps every contract's snapshot |
 | Self-improvement edits the prover | C03 | Transitive protected base, release authority (§14) | A candidate bundling a permissive parser cannot promote |
 | Stale input becomes permission | C05 | Freshness and unknown branches in the snapshot (§5) | Missing sensor → positive permission fails closed; obligations continue |
-| "Forgotten" data survives; canaries leak | H03, H06 | Lineage, per-subject keys, tombstones; `non_exportable` (§11) | Old-backup restore; canary in an export → blocked and investigated |
+| "Forgotten" data survives; canaries leak | H03, H06 | Lineage, per-subject keys, tombstones; `exportable: false` (§11, §12) | Old-backup restore; canary in an export → blocked and investigated |
 | Lazy leases deadlock; zombie writes; two runners claim one job | SP2, SLICE | All-or-nothing + detector; storage verifiers; `job://` lease (§6) | SP2 B0-greedy and drill as nightly fixtures; two-launcher race |
 | Hidden same-family reviewer; inherited context cost | SLICE | Forbidden tools, child jobs, context profiles (§8) | `Agent` refused or visible as child; profile cost diff recorded |
 | Permission layer blocks unattended launch | SP2 | Launcher grant (§8.5, F1) | SP2's live arms run under the grant |

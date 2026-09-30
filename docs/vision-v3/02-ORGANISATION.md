@@ -211,7 +211,10 @@ grows its scarce input · failure modes and defences · health metrics.** Mechan
 - **Powers.** Define and amend every right and limit; name deputies (who must accept and drill); approve releases of the
   protected computing base; sign Standing Order promotions and trust-rung promotions.
 - **Forbidden.** Nothing writes it except the founder. Continuity tiers and deputies may only **narrow** it. It never
-  funds, starts, executes or accepts.
+  funds, starts, executes or accepts. Automatic narrowing is a Journal overlay, never an edit of signed files [DR-58].
+- **Widening waits.** A signed widening activates only after a 12-hour cooling-off, so a stolen passkey cannot widen
+  instantly. Two exceptions: a Genesis Charter at A0–A2 within default caps, and draws on a pre-signed emergency-capacity
+  envelope. Narrowing stays instant. Mechanism in [05](05-AUTONOMY-INITIATIVE-FOUNDER.md) [DR-59].
 - **Interfaces.** Read by the Kernel's policy compiler on every Decision Contract; the compiler model-checks it for safety
   and progress before each release.
 - **Grows.** Founder judgment — through the **Decision Supply Bench** (expander X17): a Judgment Gym (blind re-decisions,
@@ -300,6 +303,11 @@ grows its scarce input · failure modes and defences · health metrics.** Mechan
   Progress Ledger.
 - **Powers.** Issue verdicts that alone move a board card to Done; decide merges through the integration queue; settle
   Closer Claims, wagers and forecasts; reserve judges before launch; mine and promote verifiers; demand adjudication.
+- **Publication and settlement.** Nothing is published (main, deploy, outbound) before the coverage contract's required
+  verdicts; staging integration may precede them, and R3/R4 effects need a Time-out Confirmer edge. Settlement has three
+  separate edges — artifact accepted, deployment observed, promise fulfilled [DR-70]. In single-family mode verdicts are
+  **provisional** and never satisfy a missing coverage edge; a human substitutes only if the contract named a qualified
+  human alternative before launch [DR-69].
 - **Forbidden.** Produce what it judges; be chosen or shopped for by the producing lineage; rank across generating
   models by absolute scores (within-generator rule); read the world through Custody's write gateway.
 - **Interfaces.** ← Execution (artifacts); → Observation broker → systems of record; → Record (settlements); →
@@ -370,7 +378,8 @@ grows its scarce input · failure modes and defences · health metrics.** Mechan
 - **Stores.** Stock readings (ten stocks, each from a system of record, or fog); Loop Registry; Limits Book (one
   exposure model over loss-weighted dependency groups); antibody registry; control ROI ledger; near-miss register;
   deviance monitor.
-- **Powers.** Throttle, pause, freeze, page, trip SCRAM; drop autonomy one level on correlated, causally independent
+- **Powers.** Throttle, pause, freeze, page, trip SCRAM — it narrows by overlay in the Journal, never by editing signed
+  files [DR-58]; drop autonomy one level on correlated, causally independent
   alarms (smallest justified scope first); hold admission; enforce the pairing rule; propose — never fund — remedies.
 - **Forbidden.** Start, fund, accept or widen anything; demote a Halt or a safety reach floor; put a constitutional hard
   control on probation; abandon an obligation.
@@ -401,7 +410,7 @@ Rows act on columns. **S** = may stop/narrow · **R** = may refuse inside its do
 | **Acceptance** | — | settles wagers | — | R (rejects) | — | settles disputed facts | — | — |
 | **Record** | — | — | — | R (refuses tainted packs) | — | — | — | — |
 | **Custody** | — | — | — | R (refuses effects) | — | — | — | — |
-| **Regulation** | — | S (throttles initiative) | S (narrows envelopes) | S | S (admission only, never verdicts) | — | S (freezes effectors) | — |
+| **Regulation** | — | S (overlay; throttles initiative) | S (overlay; narrows envelopes) | S (overlay) | S (overlay; admission only, never verdicts) | — | S (overlay; freezes effectors) | — |
 
 Three things are absent on purpose: nobody but the founder overrules Acceptance, and even he cannot make it say PASS;
 nobody but the founder writes the Constitution; nothing can widen through Regulation.
@@ -413,7 +422,7 @@ nobody but the founder writes the Constitution; nothing can widen through Regula
 | Two judges of different families disagree materially | Adjudication by a third route (Model Foundry family when qualified, else paid human adjudicator); verdict stands | The action is a one-way door and adjudication is unavailable before its deadline |
 | Co-founder disagrees with founder | A wager, settled later by Acceptance; the founder's call stands now | Always visible in the board pack (class Know), never blocking |
 | Intent wants to start; Allocation won't fund | Allocation's decision stands; Intent may re-bid next cycle with new evidence | The venture's founder quota lets Intent spend minutes on a Decide packet |
-| Obligation vs freeze | Precedence P2 vs P3: the obligation's pre-authorised continuity route runs under the freeze; anything new waits | No funded fallback exists and the latest safe decision time is near |
+| Obligation vs freeze | P2 still wins. The freeze's safe state lists continuity routes; an obligation proceeds only along a listed route; otherwise it stays pending and its latest safe start opens a continuity decision [DR-56, R5-walk C2] | No funded fallback exists and the latest safe decision time is near |
 | Mandate allows, Limits Book blocks | P4: the stricter wins; the contract names the Regulation remedy and expiry | The remedy is a ceiling change (Constitution) |
 | Record fact disputed by a worker | Worker deposits a counter-fact; Acceptance settles against systems of record | Never |
 | Incident Lead vs Venture Mind | The scoped, expiring incident grant wins inside its scope; authority returns on expiry to a defined safe state | Restart needs a signed limit he set at the one-way level |
@@ -534,11 +543,15 @@ sequenceDiagram
   RC-->>F: class Know → reach Reel (tomorrow's Today page, one line)
 ```
 
+**Where the dispositions come from.** The compiler does not invent `auto` / `pending` / `NEVER`: each effect is
+classified once by [16](16-EXTERNAL-WORLD-HUMANS.md) (R-class, door) and disposed by the single table in
+[05](05-AUTONOMY-INITIATIVE-FOUNDER.md) [DR-57].
+
 **What each authority did, and what it could not do.**
 
 | Authority | Did | Could not |
 |---|---|---|
-| Constitution | Supplied Keel's charter (A3, spend grant, refund mandate ≤$200, disclosure rule) to the compiler | — (read only) |
+| Constitution | Supplied Keel's charter (A3, spend grant, disclosure rule) and its signed refund Effect Mandate (≤$200 — a mandate per [16](16-EXTERNAL-WORLD-HUMANS.md), not a Charter field) to the compiler [R5 #15] | — (read only) |
 | Intent | Nothing, this time: support is an obligation, not a bet. The Venture Mind sees the weekly refund trend in the board pack | Grant the discount; change the refund mandate |
 | Allocation | Reserved capacity and a verifier window *before* launch | Spend the money itself |
 | Execution | Found the duplicate, proposed four effects | Dispatch anything; accept its own reply |

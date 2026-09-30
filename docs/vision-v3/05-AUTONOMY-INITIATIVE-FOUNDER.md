@@ -23,7 +23,8 @@ does not get a notification stream. He gets a market for his minutes, and every 
 ## 1. The design in one page
 
 1. **Law.** The Constitution is data plus a compiler, and only the founder's passkey writes it (§2).
-2. **Autonomy.** A Charter envelope: a level preset × six grants × mode × mandate (§3).
+2. **Autonomy.** A Charter envelope: a level preset × six grants × mode × **Charter terms** (§3). In this file "mandate"
+   means only an **Effect Mandate**, owned by [16](16-EXTERNAL-WORLD-HUMANS.md) [#15].
 3. **Never-list.** Seven lines; everything else can be delegated by pre-listing (§4).
 4. **Rights.** 22 decisions with one **D** each, enforced by code; any authority may narrow without a row (§5).
 5. **Initiative.** Registered prediction: every self-started piece of work cites a goal and a dated **Closer Claim** (§6).
@@ -65,13 +66,30 @@ Files: `never.yml` · `rights.yml` · `precedence.yml` · `ceilings.yml` · `cha
 
 | Change | Signs | Activation |
 |---|---|---|
-| **Narrowing** (lower a level or grant, add a CCIR line, shorten `valid_until`) | Founder, or automatic (Regulation) | Immediate; model-checked within 24 h |
-| **Widening** (raise a level or grant, pre-list a one-way door, promote a Standing Order, trust rung or bench seat) | Founder passkey | After **cooling-off** (parameter 12 h; 0 h for a Standing Order codifying a default he accepted ≥8/10 times); model-checked for safety and progress first |
+| **Narrowing by the founder** (lower a level or grant, add a CCIR line, shorten `valid_until`) | Founder passkey | Immediate; written into the signed files; model-checked within 24 h |
+| **Automatic narrowing** (Regulation, SCRAM, tripwires, demotion, continuity tiers, CCIR additions, `valid_until` shortening) | Nobody signs; the narrowing authority records it | Immediate, as a **narrowing overlay** (below) — never written into signed files [DR-58] |
+| **Widening** (raise a level or grant, pre-list a one-way door, promote a Standing Order, trust rung or bench seat; lift an overlay early) | Founder passkey | After **cooling-off** (parameter 12 h; 0 h for a Standing Order codifying a default he accepted ≥8/10 times); model-checked for safety and progress first. Two exceptions below [DR-59] |
 | **`never.yml` or `rights.yml`** | Founder passkey, twice, ≥24 h apart | After replaying the last 30 days of Decision Contracts under the new rules |
 
-> **NEW DECISION — cooling-off for widening.** Widening activates after a withdrawable cooling-off; narrowing stays instant.
-> Once powers are separated, an authentic signature over a misleading summary is the cheapest exploit left (X08). The
-> window makes a coerced or confused signature recoverable. Emergencies use a pre-listed **incident envelope** instead (§10.4).
+**Narrowing overlays** [DR-58, R5-walk C5]. Only the founder's passkey writes the signed Constitution files. Every
+automatic narrowing — a Regulation throttle or demotion, a tripwire, SCRAM, a continuity tier, a CCIR line added by a
+rule, a shortened validity — is a **narrowing overlay**: a Journal event with scope, reason, issuing authority and expiry,
+which the compiler applies on top of the signed version named in the policy snapshot. The signed files never change
+underneath it. The founder may **fold** overlays into a signed amendment, which then goes through the table above. Lifting
+an overlay before its expiry is widening and cools off like any other.
+
+**Cooling-off for widening — accepted as DR-59.** ~~NEW DECISION~~ (accepted, DR-59). Widening activates after a
+withdrawable cooling-off; narrowing stays instant. Once powers are separated, an authentic signature over a misleading
+summary is the cheapest exploit left (X08). The window makes a coerced or confused signature recoverable. Two exceptions
+exist, both signed in advance [DR-59, R5-walk B01, B24]:
+
+1. **Initial Charter activation.** Genesis ends in **one passkey signature over the complete canonical Charter** (every
+   field of §3.1, the baseline CCIR and the continuity routes, displayed as one canonical action). A Charter at **A0–A2
+   inside the default genesis caps** activates on that signature. A Charter at **A3+ or above any genesis cap** waits out
+   the cooling-off like any widening. Voice may *propose* a Charter during Genesis and may never confirm one (§2.2).
+2. **Emergency-capacity envelope.** Each Charter carries a pre-signed `emergency_capacity_envelope` bounded in money,
+   duration and purpose (§3.1). An Incident Lead or the founder may **draw** it immediately, because drawing a
+   pre-signed envelope widens nothing. Raising the envelope itself is widening (§10.4).
 
 Every widening is displayed as a **canonical action**, and that display is what the passkey signs (DR-35):
 
@@ -91,7 +109,7 @@ canonical_action:
 
 | Channel | Accepted inputs | Can | Can never |
 |---|---|---|---|
-| **Presence** ("he is alive") | Fresh possession proof: passkey on a known device, signed command | Reset continuity clocks; end Caretaker | Authorise anything |
+| **Presence** ("he is alive") | A **presence proof** (§10.2): passkey on a known device, or a registered watch's device-bound signed tap | Reset continuity clocks; end Caretaker | Authorise anything |
 | **Narrow stop** ("stop this now") | Any authenticated surface, including voice with caller ID, watch or terminal | Freeze an effect, channel, identity, venture or the world (kill levels in [16](16-EXTERNAL-WORLD-HUMANS.md)) | Resume, widen or hide the incident |
 | **Positive authorisation** ("I understood and approve") | Passkey over a canonical displayed action only | Decide above the two-way line; amendments | Come from voice: voice proposes, the passkey disposes |
 
@@ -118,13 +136,26 @@ grants:                                 # the compiler reads these, not the leve
   contract: {preapproved_terms: [processor-tos, hosting-pro, email-tos], max_annual_usd: 1200}
   contact:  {cold_outreach: false, customer_support: true, disclosure: ai_disclosed}
   people:   {task_procurement: {per_task_usd: 150, monthly_usd: 500}, employment: never_list}
-mandate: {capital_usd: 6000, founder_minutes_week: 30,   # venture-level; not an Effect Mandate (16)
-          kill_trigger: {goal_p_below: 0.15, for_days: 14, or_drawdown: 0.30}}   # freezes; never kills
-one_way_doors_prelisted: [raise-price-le-20pct, sunset-feature-with-30d-notice]
-incident_envelope: {refunds_extra_usd: 1500, duration_h: 24}
-scram_safe_state: {payments: read_only, outbound: paused, support: continue, deploys: frozen}
+charter_terms:                          # was "mandate" (renamed R5, #15); never an Effect Mandate (16)
+  capital_usd: 6000
+  founder_minutes_week: 30              # the packet quota (§9.3)
+  kill_trigger: {goal_p_below: 0.15, for_days: 14, or_drawdown: 0.30}   # freezes; never kills
+  one_way_doors_prelisted: [raise-price-le-20pct, sunset-feature-with-30d-notice]
+emergency_capacity_envelope:            # pre-signed; drawn immediately by an Incident Lead or the founder (DR-59)
+  {money_usd: 1500, duration_h: 24, purpose: [refunds, incident_recovery]}
+ccir: ccir/dispute-desk.yml@v4          # baseline from the Kind template, signed with the Charter (§9.5)
+scram_safe_state:
+  scope: {payments: read_only, outbound: paused, support: continue, deploys: frozen}
+  continuity:                           # the only routes a P2 deny lets through (DR-56)
+    refund:   {route: "refund <= original charge", max_usd_day: 600}
+    delivery: {route: sms_manual_confirm}
+    any:      {route: "notify customer of delay"}
 data_boundary: guarded; never_list: never.yml@v3; deputy: deputy_1; valid_until: 2026-12-31
 ```
+
+The **`continuity:` list** names bounded routes per obligation class. Under a freeze or SCRAM, an obligation proceeds only
+along a listed route; one with no listed route stays pending and its latest safe start opens a continuity decision.
+Obligations never outrank safety ([CANON §3](00-CANON.md), DR-56).
 
 A charter **expires like a claim**. At expiry, initiative drops to A1 (obligations continue), and a re-sign packet
 enters the board pack. It shows the diff since the last signature, the Autonomy Balance Sheet (§13) and any Promotion Case.
@@ -141,19 +172,26 @@ enters the board pack. It shows the diff since the last signature, the Autonomy 
 
 A4 is in the schema from day one. The only way to reach it is a Promotion Case after ≥8 weeks at A3 (DR-29, F5).
 
-### 3.3 Level × door → disposition
+### 3.3 Level × grant × door → disposition — the one table
 
-The compiler *computes* the effect class and door; nothing declares them. This is each level's **default**. Grants may narrow
-any cell. Only pre-listing or an explicit ceiling widens one.
+**One consequence source** [DR-57, R5-walk C1]. [16 §4](16-EXTERNAL-WORLD-HUMANS.md) owns classification: it computes the
+effect class and the door from action × target × money × audience × identity, and nothing declares them. This file owns
+**disposition**, and this is the only disposition table in the design. [09a](09a-ENGINEERING.md) composes the two once
+in the compiler; every other file links here rather than restating it. Each cell is the level's **default**. Grants may
+narrow any cell. Only pre-listing in Charter terms or an explicit ceiling widens one.
 
-| Door (class) | A0 | A1 | A2 | A3 | A4 |
+| Door (from 16) × covering grant | A0 | A1 | A2 | A3 | A4 |
 |---|---|---|---|---|---|
-| Two-way internal (R0–R1) | ask | notify | auto | auto | auto |
-| Two-way external (R2) | ask | ask | notify | auto | auto |
-| Costly-reversible (R3) | ask | ask | ask → notify at trust ≥A2 | notify | auto |
-| One-way, pre-listed (R4) | ask | ask | ask | notify | notify |
+| Two-way, within `build` | ask | notify | auto | auto | auto |
+| Two-way, within an outward grant (`publish`, `spend`, `contract`, `contact`, `people`) | ask | ask | notify | auto | auto |
+| Costly-reversible, within a grant | ask | ask | ask → notify at trust ≥A2 | notify | auto |
+| One-way, pre-listed in Charter terms | ask | ask | ask | notify | notify |
 | One-way, not listed | co-sign | co-sign | co-sign | ask | ask |
 | Never-list | never | never | never | never | never |
+| **Modifier: a signed Effect Mandate ([16 §5](16-EXTERNAL-WORLD-HUMANS.md)) covers the exact class** | one step lower (ask → notify, notify → auto); **co-sign never steps down** (a mandate cannot replace a human co-signer), and **never below notify for a one-way door**; the door never changes | ← | ← | ← | ← |
+
+At A2 the trust condition (`ask → notify at trust ≥A2`) lives in this table and nowhere else. Paid probes, ads and task
+procurement are one-way money: they run inside a founder-signed Effect Mandate as *notify*, or they ask ([CANON §3](00-CANON.md)).
 
 `co-sign` = the founder signs, and the Shadow seat's written concurrence or dissent is on the packet. `never` = the gateway
 refuses, and the only path is a Decide packet asking the founder to act *as a human*.
@@ -167,7 +205,7 @@ Active · Paused · Caretaker · Wind-down · Obligation Keeper. The **condition
 ```mermaid
 stateDiagram-v2
   [*] --> Draft
-  Draft --> Active: charter signed (passkey + cooling-off)
+  Draft --> Active: charter signed (passkey; cooling-off unless A0–A2 genesis)
   state Active {
     [*] --> Normal
     Normal --> Throttled: busywork or root-intent tripwire
@@ -190,6 +228,11 @@ stateDiagram-v2
 
 Pause freezes the investment lane and never the obligations lane. The Obligation Keeper's mechanics are in [16](16-EXTERNAL-WORLD-HUMANS.md).
 
+**Pivot versus strategy change** [DR-66, R5-walk C3]. A venture **pivot** changes intent, so it is a **new Charter**:
+it is signed by the founder's passkey only, never by silence and never automatically, and it activates under §2.1. A
+**strategy change inside the existing intent** is a goal-tree change (matrix row 4: A3 proposes, A4 decides) and needs no
+new Charter.
+
 ### 3.5 Principal modes — acting as a founder, never *being* him (founder direction 4)
 
 | Mode | Authority | Speaks as |
@@ -208,6 +251,10 @@ Micro-ventures (targets: 12 in Year 1, 300 in Year 5) cannot each carry a Flagsh
 is one signed envelope instantiated per member. Its grants hold per venture *and* as fleet sums in the exposure book, and
 trust cells pool per task family portfolio-wide. Probes run under one Probe Mandate ([03](03-MISSION-ENGINE.md),
 [17](17-VIBE-STARTUPING-IN-PRACTICE.md)). Graduating to Flagship is a widening.
+
+**Classification consent never grants authority** [DR-76, R5-walk B33]. Sorting a repo or venture into a fleet or tier
+(a Fleet Import sort, or his silence on a proposed sort) only classifies it. A **member Charter** and an **imported
+Charter** activate only by the founder's signature under §2.1; until then the venture has no grants.
 
 ### 3.7 Promotion and demotion — trust proposes, a signature grants (DR-17)
 
@@ -230,7 +277,7 @@ Without a complete case, promotion is never *offered*. A founder promotion witho
 
 **Demotion is automatic and needs no founder** (matrix row 2). It is triggered by correlated alarms, a tripwire held for 3
 weeks, a surprise in a one-way-door family, charter expiry or Caretaker. It drops initiative one level and never touches
-obligations.
+obligations. It is recorded as a narrowing overlay (§2.1, DR-58).
 
 ## 4. The never-list
 
@@ -263,7 +310,7 @@ The columns re-key S03's eight holders to the authority stack (DR-01). The gatew
 | 1 | Constitution content | **D** | P | P | | | I | | E | P | Passkey-only store |
 | 2 | Demote a level; throttle initiative | I | P | P | | | I | | E | **D** | Compiler flags |
 | 3 | Venture intent (root goal) | **D** | P | V | | | | | | | Charter signature |
-| 4 | Goal tree below intent | D <A4 | **D** A4 · P A3 | V (>30% speculative) | | | I | | | | Admission code |
+| 4 | Goal tree below intent (strategy inside existing intent; each node classed core / speculative with its cap) | D <A4 | **D** A4 · P A3 | V (>30% speculative; survives a founder overrule) | | | I | | | | Admission code; exceeding a cap needs a signed widening |
 | 5 | Theses, bets, kill criteria; kill on date | V | **D** | P | E | | I | I | | | Admission code |
 | 6 | Open an investment mission | D A0–A1 | **D** ≥A2 | | E | | | | | V | Admission gate |
 | 7 | Size, order, fund tranches | V (envelope) | P | | **D** | | | | | V | Allocator |
@@ -274,7 +321,7 @@ The columns re-key S03's eight holders to the authority stack (DR-01). The gatew
 | 12 | Accept; settle a Closer Claim or wager | | P | | | P | **D** | I | | | Parsed verdict (DR-13) |
 | 13 | Promote a deposit to a Brain fact | | P | | | P | V | **D** | | | Sleep gate |
 | 14 | Declare incident; issue incident grant | I (Halt) | P | | | P | | | E | **D** | Kernel record |
-| 15 | Kill, pivot or persist a venture | **D** | P (must pick) | P | E | | I | | E | P | Charter; line 5 |
+| 15 | Kill, pivot (new intent = new Charter) or persist a venture | **D** (passkey only; never silence) | P (must pick) | P | E | | I | | E | P | Charter signature; line 5 (DR-66) |
 | 16 | Two-way external effect in grants | I | **D** | | | P | | | E | V | Decision Contract |
 | 17 | Pre-listed one-way door | I | **D** ≥A3 · P below | V | | P | V | | E | V | Decision Contract |
 | 18 | Non-listed one-way door | **D** | P | P | | | V | | E | V | ask / co-sign |
@@ -331,6 +378,11 @@ amend the goal tree below intent.
 **Goal trees** (Venture Mind files) carry a **causal link** with an evidence rung on each edge ([03](03-MISSION-ENGINE.md)).
 Unevidenced nodes are *speculative* and may take ≤30% of investment spend (parameter). **Every amendment lists what it
 abandons.** A node that improves for two horizons while its parent stays flat is flagged **decoupled**.
+
+**Every goal-tree node carries its classification and its operative cap** [R5-walk B27] — for example
+`{class: speculative, cap: "speculative ≤30% of investment spend"}` or `{class: core}`. A founder overrule of a *strategy*
+(choosing a node, reordering bets) does **not** amend an exposure limit. Spending past a cap needs a signed **widening**
+under §2.1, and a Shadow-seat blocker on the cap is preserved on the record until that widening activates.
 
 ## 7. Alignment — "are we closer?"
 
@@ -439,6 +491,12 @@ authorities' records, which the Co-founder cannot edit.
 visual weight as a won one, and the week's overrules are listed with their open wagers. The **fleet review** runs items 1,
 2 and 9 for the whole fleet, and items 5–7 only for members that raised them.
 
+**Async board** [R5-walk G-B7]. When he is not at the Monday slot, the pack is delivered in his next return window and
+runs the same agenda. Minutes are counted **when read**, not when sent. Packet deadlines do **not** move. Un-read items
+carry forward to the next pack and are never dropped. A packet whose deadline passes unread takes its default only as the
+silence rule (§9.4) allows. A one-way Decide keeps its reach floor while it waits; the reach itself is resolved by
+[08](08-SURFACES.md).
+
 ### 8.4 Disagreement — dissent, wagers, escalation
 
 Every packet states the **founder-model view** (with a match probability) and the Co-founder's **own view** [C2 §4].
@@ -462,6 +520,11 @@ type Wager = { question: string;                 // falsifiable
 5. Three straight founder losses in one domain → the pack says so once and proposes a Standing Order or bench seat (not
    re-offered for 60 days if declined).
 
+**Settling a wager without an interested party** [DR-78, R5-walk G-B2, B14]. Every **record and lineage** with an
+interest in the outcome — the Mind incarnation that made the call, the cast records and lineages that built or argued
+for either side — is recused, not only the model family. An **uninvolved planner** executes the settlement. The
+wager's `metric.query` is **frozen at registration** and evaluated at `resolves_on`.
+
 ### 8.5 Standing Orders — judgment compiled into policy
 
 A Standing Order is a decision **policy**, never a method (DR-05). It has `valid_until`, and only the founder's signature
@@ -474,13 +537,29 @@ the Use Ledger. Before signature, the Referee back-tests the draft on its source
 decided the other way. **KPI:** the share of decisions resolved by policy, rising from ~20% to >70% by venture week 12 (target, speculative).
 Circles and taste signals may propose a Standing Order and never authorise one (DR-32).
 
+### 8.6 What the Mind carries across Pivot, Shelve and Sell [R5-walk G5]
+
+A pivot creates a new Charter (§3.4); the Venture Mind is not reset with it. The same table governs Pivot, Shelve and
+Sell. Lineage and consent scope for everything that crosses are [06](06-MEMORY.md)'s.
+
+| Mind part | On Pivot, Shelve or Sell |
+|---|---|
+| Fingerprint set | Carried |
+| Founder preferences | Carried |
+| Hypotheses | Carried **frozen**, never deleted |
+| Dissent register | Carried |
+| Wagers | **Kept and settled** on their dates |
+| Commitments | Kept |
+| Standing Orders | **Recompiled** against the new Charter and re-signed; none carries silently |
+
 ## 9. Founder contact classes and the Attention Exchange
 
 ### 9.1 Class — what he must do
 
 ENGINE-SPEC classified the founder's *obligation*. SURFACES-SPEC classified *intrusiveness*. Merged into one list, they gave
 two budgets in different units [S03 §2.9, S07 §2.1]. v3 splits them: this file owns the **class**, and [08](08-SURFACES.md)
-owns the **reach** and the deterministic Reach Router (DR-30). The router may raise reach, and never below the class's floor.
+owns the **reach** and the deterministic Reach Router (DR-30). This file supplies class, door, CCIR line and deadline;
+08's one ordered table turns them into a reach (DR-65).
 
 | Class | Founder must | Blocks? | Budget | On silence | Floor |
 |---|---|---|---|---|---|
@@ -545,14 +624,19 @@ not a volume knob. It is a **named set of predicates the founder owns**, stored 
 ```yaml
 # constitution/ccir/dispute-desk.yml — v4
 priority_intel:     # PIR — the world
-  - {id: pir-1, predicate: "competitor.pricing_change AND competitor IN watchlist", class: know}
-  - {id: pir-2, predicate: "customer.churn_notice AND customer.mrr >= 2000", class: decide}
+  - {id: pir-1, predicate: "competitor.pricing_change AND competitor IN watchlist", class: know, floor: tap}
+  - {id: pir-2, predicate: "customer.churn_notice AND customer.mrr >= 2000", class: decide, floor: tap}
 friendly_force:     # FFIR — us
-  - {id: ffir-1, predicate: "scram.tripped", class: halt}
-  - {id: ffir-2, predicate: "obligation.latest_safe_start < now+6h AND owner == none", class: decide}
-  - {id: ffir-3, predicate: "incident_grant.open_hours > 24", class: decide}
+  - {id: ffir-1, predicate: "scram.tripped", class: halt, floor: wake}
+  - {id: ffir-2, predicate: "obligation.latest_safe_start < now+6h AND owner == none", class: decide, floor: wake}
+  - {id: ffir-3, predicate: "incident_grant.open_hours > 24", class: decide, floor: tap}
 valid_until: 2026-12-31   # expiry forces review; never persists silently
 ```
+
+**Baseline CCIR** [R5-walk G1]. No Charter starts with an empty list. Genesis leaves a baseline CCIR drawn from the
+venture Kind's template and signed with the Charter in the one Genesis signature (§2.1). Each line names its **floor**
+(default Tap; a line marked `wake` may exceed quiet hours). This file sets the floor as an input; the reach itself is
+resolved by [08](08-SURFACES.md) (DR-65).
 
 A deterministic Kernel matcher checks every Journal event, with no model involved. A line that fired ≥5 times in 30 days
 without founder action is *proposed* for demotion, and one silent for 90 days is proposed for retirement. Halt lines are
@@ -564,8 +648,12 @@ never auto-demoted. Lines can be declared per fleet or portfolio-wide.
 
 Sensing is rendered in [08](08-SURFACES.md); the model and its consequences are here.
 
-Supply multipliers (parameters): **available** 1.0 · **focus** 0.5 (Halt only between windows) · **travel** 0.25 (Halt
-+ CCIR) · **offline_planned** 0 (must carry an expiry; the continuity clock is suspended until expiry + 24 h) ·
+Founder State sets **supply** (minutes) and is a **ceiling input** to reach; it never chooses a reach. For every contact
+this file emits only **class + door + CCIR line + deadline**, and [08](08-SURFACES.md)'s one ordered table resolves the
+reach from those floors and the ceilings (DR-65, R5-walk C4).
+
+Supply multipliers (parameters): **available** 1.0 · **focus** 0.5 (a ceiling input; ~~Halt only between windows~~,
+superseded by DR-65) · **travel** 0.25 (a ceiling input) · **offline_planned** 0 (declared planned absence, §10.2) ·
 **unreachable** 0 (presence tiers run) · **incapacitated** 0 (declared through a drilled Deputy procedure; Will path).
 **Overloaded** is *detected*, not declared: dismiss rate rising, looked-at rate falling, Decide above supply for 3 days.
 Its supply multiplier is 0.5. The response is to **raise defaults**, not to push harder, and the three most repeated
@@ -583,13 +671,26 @@ whatever the presence tier. Anything it cannot lawfully do stays pending and vis
 
 | Silence | Tier | Change |
 |---|---|---|
-| 24 h with Halt/Decide pending | **Reach** | Ring → SMS → email (08); the Deputy is informed, with no power |
+| 24 h with Halt/Decide pending | **Reach** | Escalated contact, reach resolved by [08](08-SURFACES.md); the Deputy is informed, with no power |
 | 72 h | **Caretaker** | No new investment; obligations only; spend ≤ run-rate; A4 acts as A3; only already-scheduled public output |
 | 7 d | **Deputy** | Sealed briefing + scoped grant: stop, caretaker, wind-down, pay due bills |
 | 14 d | **Continuity Will** | Per venture: *hold* (to the runway cap), *wind down*, or *hand over* (a legal act the Deputy performs as a human) |
 
 Succession **only narrows**, and no tier unlocks a never-list line. From Caretaker onward, outbound messages carry the
 venture's identity only. **Only a fresh presence proof resets the clocks.**
+
+**Presence proof** [R5-walk G-B5, B20]. A device-bound, signed founder gesture: a **passkey** assertion on a known
+device, or a **signed tap from a registered watch** whose key is bound to that device. It resets Clock 2 and ends
+Caretaker. It proves presence only and **never authorises an effect** (§2.2). Voice, caller ID and unsigned taps are not
+presence proofs.
+
+**Planned absence.** A declared `offline_planned` carries a stated return time. It **suspends an already-running Clock 2
+from the moment of declaration**, never retroactively: silence before the declaration still counts. The suspension expires
+at the stated return **+ 24 h** (parameter), and the clock resumes from where it was suspended. Clock 1 never suspends.
+
+**Pre-absence sweep.** On declaring an absence he is shown, early, every packet whose deadline falls inside it. The sweep
+only **presents**: each packet is disposed of by his choice, or at its deadline by a default the silence rule (§9.4)
+already permits. The sweep cannot dispose of anything on its own.
 
 ### 10.3 Deputies, the Will and re-entry
 
@@ -603,14 +704,15 @@ continuity-route actions, and pending prohibited acts with their deadlines.
 
 ### 10.4 SCRAM and incident authority (DR-27, red team T05)
 
-Each charter defines its **SCRAM safe state**. Any agent that sees a trip condition may trip SCRAM, because tripping only
+Each charter defines its **SCRAM safe state** and that state's `continuity:` routes (§3.1, DR-56). SCRAM and freezes are
+narrowing overlays (§2.1), never edits of the signed Charter. Any agent that sees a trip condition may trip SCRAM, because tripping only
 narrows. Restarting is matrix row 22. When an incident is declared (row 14), authority over the *affected resources only*
 moves to an **Incident Lead** ([04](04-AGENT-ORGANISATION.md) owns the role) under a grant [S10 §2.6.2]:
 
 ```yaml
 incident_grant:
   resources: [deploy:prod, processor:write, lease:repo/billing/**]    # suspends Mind + Allocator for these only
-  envelope: charter.incident_envelope      # inherits every constitutional and custody ceiling
+  envelope: charter.emergency_capacity_envelope   # drawn at once (DR-59); inherits every constitutional and custody ceiling
   expires: +24h                            # expiry NARROWS to the safe state; never resumes production
   replacement: {on_holder_loss: "same role, other family", max_gap_min: 10}
   restart_requires: [safe_envelope_evidence, acceptance_pass, regulation_actuation]
@@ -700,7 +802,7 @@ Full walkthroughs are in [13](13-WORKED-SCENARIOS.md). Costs here are illustrati
 
 ## 15. Open questions
 
-1. **Cooling-off length for widening.** *Recommendation:* 12 h, and 0 h for Standing Orders codifying ≥8/10 accepted
+1. **Cooling-off length for widening.** The rule is accepted (DR-59); the length stays a parameter. *Recommendation:* 12 h, and 0 h for Standing Orders codifying ≥8/10 accepted
    defaults; review after the first quarter's withdrawal rate.
 2. **Should the Judgment Gym ever change routing to the founder himself** (for example, pricing goes to a bench seat
    because his blind Brier trails)? *Recommendation:* yes, but only as a proposal in item 7 that he signs, never

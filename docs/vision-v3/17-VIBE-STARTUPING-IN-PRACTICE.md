@@ -98,7 +98,7 @@ stateDiagram-v2
   Series --> PivotCourt: renewal fails
   Series --> Replicating: E4 evidence
   Replicating --> Series: clones launched as probes
-  PivotCourt --> Discovery: Pivot
+  PivotCourt --> Discovery: Venture pivot (new Charter, founder passkey)
   PivotCourt --> Shelved: Shelve (trigger registered)
   PivotCourt --> WindDown: Wind-down
   PivotCourt --> Exit: Sell / license / spin out
@@ -118,9 +118,19 @@ Execution casts a **Genesis Operator** — Claude or Codex, whichever the cast r
 Acceptance checks that the Charter compiles and the coverage is independent; Record writes first versions; Custody
 creates nothing outward until a mandate covers it.
 
-**The three confirmations (≤3 min; class Decide, reach Tap or voice):** the one-line intent, the autonomy level
-(A0–A4), the monthly budget cap. Name, never-list additions, data boundary, entity stance and audiences are proposed and
-proceed on silence — each is a two-way door inside the Charter (silence rule, [05](05-AUTONOMY-INITIATIVE-FOUNDER.md)).
+**The three confirmations are a signing ceremony (≤3 min; class Decide, reach Tap).** The founder confirms the
+one-line intent, the autonomy level (A0–A4) and the monthly budget cap, and the ceremony ends in **one passkey
+signature over the full canonical Charter** — including the proposed name, never-list additions, data boundary, entity
+stance, audiences, the **baseline CCIR** from the Kind template and the **continuity routes** of its safe state. Those
+proposals are shown in the signed display and editable before signing; none of them takes effect by silence, because
+authority is never created by silence [DR-59, R5-walk B01, G1]. Voice can *propose* a venture or an edit; it cannot
+confirm or sign.
+
+**When the Charter becomes effective.** A Genesis Charter at A0–A2 within default caps is effective at signature — the
+Genesis exception to the 12-hour widening cooling-off. A Charter asking for A3–A4, or for caps above the defaults,
+activates only after the cooling-off. Before
+the signature nothing exists but drafts: Record's first versions are proposals, and no mission is admitted. Mechanism in
+[05](05-AUTONOMY-INITIATIVE-FOUNDER.md) [DR-59].
 
 ```mermaid
 sequenceDiagram
@@ -138,9 +148,9 @@ sequenceDiagram
   RD-->>GO: recommend / consider / pass, dissent kept
   GO->>AC: Charter draft + coverage report
   AC-->>GO: compiles; readers independent
-  GO->>F: one card, 3 confirmations (Decide · Tap)
-  F-->>GO: confirm
-  GO->>RE: Charter v1, Mind v1, Brain skeleton, 3 hypotheses, Stage Clock
+  GO->>F: one card, 3 confirmations + full canonical Charter (Decide · Tap)
+  F-->>GO: passkey signature over the full Charter (A1 ≤ default caps → effective now)
+  GO->>RE: Charter v1 (signed), Mind v1, Brain skeleton, 3 hypotheses, Stage Clock
   GO->>AL: first missions: Framing Contract · discovery · page with real payment or waitlist
   AL-->>F: "Clinic Voice is live at A1. First reel 07:30. First bet's kill date 10-29." (Know · Reel)
 ```
@@ -168,14 +178,15 @@ The rest: `adamos`, `aiclub`, `Beamix`, `beeond`, `CodeGuruMain`, `etsyc`, `eval
 
 ```mermaid
 flowchart LR
-  FS["~/VibeCoding · 26 dirs"] --> C["1 Census · Fleet Surveyor · Haiku 4.5 · read-only"]
-  C -->|secret found| H["Hygiene mission first"]
+  FS["~/VibeCoding · 26 dirs"] --> Z["0 Secret scan · deterministic · no model"]
+  Z -->|secret found| H["Repo blocked · Hygiene mission (references only, never values)"]
+  Z -->|clean manifest| C["1 Census · Fleet Surveyor · Haiku 4.5 · read-only"]
   C --> X["2 Excavation · Repo Archaeologist · Claude or Codex"]
   X -.->|revenue traces, open promises| OB["Obligations registered (P3) before any verdict"]
   X --> K["3 Classification · Portfolio Mind"]
-  K --> S{"4 Founder sort · one screen · silence = accept"}
-  S -->|Live| L["Venture at its real stage · harness by PR"]
-  S -->|Dormant| D["A0 Charter + Turnaround trigger"]
+  K --> S{"4 Founder sort · one screen · classification only, grants nothing"}
+  S -->|Live| L["Member Charter signed at adoption, else inactive · harness by PR"]
+  S -->|Dormant| D["A0 Charter (signed, else inactive) + Turnaround trigger"]
   S -->|Donor| B["Backlot harvest with provenance"]
   S -->|Archive| P["Obituary → Priors Library + Null Registry"]
   S -->|Personal| Q["Learning venture or out of scope"]
@@ -183,27 +194,39 @@ flowchart LR
 
 | Stage | Title (family) | Output | Cost/repo (parameter) | Writes? |
 |---|---|---|---:|---|
-| 1 Census | Fleet Surveyor (Haiku 4.5) | last commit, languages, LOC, deploy targets, `.claude/` drift, secrets, licence | ~$0.05 | no |
+| 0 Secret scan | deterministic scanner, no model | clean manifest, or exposure references (file, commit, key type — never the value) | ~$0 | no |
+| 1 Census | Fleet Surveyor (Haiku 4.5), on clean manifests only | last commit, languages, LOC, deploy targets, `.claude/` drift, licence | ~$0.05 | no |
 | 2 Excavation | Repo Archaeologist (either) | purpose, users, revenue traces, open promises, reusable assets | ~$0.60 | no |
 | 3 Classification | Portfolio Mind session | class + reasons + confidence | ~$0.20 | no |
-| 4 Founder sort | founder (Decide · Tap) | drag-sort, silence accepts | 5–10 min total | no |
-| 5 Adoption | Adoption Engineer (either); Referee from the other family | per class | $1–8 | **only by PR** |
+| 4 Founder sort | founder (Decide · Tap) | drag-sort; silence accepts the *classification* only | 5–10 min total | no |
+| 5 Adoption | Adoption Engineer (either); Referee from the other family | per class; member Charters signed here or left inactive | $1–8 | **only by PR** |
 
 **Rules.** One repo is at most one venture. Import never pushes to a default branch or force-pushes; rollback is one PR
-revert. A census secret opens a Hygiene mission that blocks that repo's adoption (Know · Buzz — a live exposure).
+revert. **Secret scanning is deterministic and runs before any model reads a repo**; a finding blocks that repo's census
+and adoption and opens a Hygiene mission (Know · Buzz — a live exposure) whose records carry references, never secret
+values [DR-76, R5-walk B34]. **Classification never activates authority**: the sort — silence included — decides what a
+repo *is*; a Live or Dormant repo gets a Charter only when the founder signs its member Charter at adoption, and until
+then it stays inactive, read-only under the Import Charter [DR-76, R5-walk B33].
+
+**Exposure is four separate states**, never one: *rotation* (the key revoked and replaced — Custody, first),
+*historical exposure* (`exposure: historical` recorded while the value survives in git history), *scrub* (rewriting
+history — a force-push, so a one-way door authorised **separately** as a hygiene operation outside the Import Charter,
+Decide · Tap), and *adoption* (only after rotation and after the scrub is decided, either way). Until the scrub is decided the repo
+stays blocked and marked historical [DR-76, G-B6].
 **Obligations before value:** any revenue trace, customer list or unanswered support thread becomes an Obligation record
 (precedence P3) before classification, so "Archive" can never silently abandon a paying user.
 
-**Adoption.** **Live** → Charter, Mind, Brain seeded from excavation, harness by PR, Stage Clock at its *actual* stage;
+**Adoption.** **Live** → a member Charter the founder signs (inactive until he does), Mind, Brain seeded from excavation, harness by PR, Stage Clock at its *actual* stage;
 its first mission is always a **Baseline mission** reading payments, analytics and support through the observation
-broker, so every later Closer Claim has a denominator. **Dormant** → A0 Charter, no heartbeat, a revival trigger
+broker, so every later Closer Claim has a denominator. **Dormant** → an A0 Charter, likewise active only once signed, no heartbeat, a revival trigger
 registered as a Trigger-Armed Option ([03](03-MISSION-ENGINE.md)). **Donor** → assets into the Backlot with provenance
 (`from: realestate@a1b2c3`), repo read-only. **Archive** → a one-page obituary (tried, cost, why it stopped) into the
 Null Registry. **Personal** → a learning venture at A0, or out of scope.
 
-**One Saturday morning (illustration, S08 Example B).** Census of 26 directories ~6 min, ~$1.30, two committed keys →
-two Hygiene missions. Excavation by 13 Claude and 11 Codex archaeologists cast by prior accuracy, ~$14. The founder
-re-sorts one card: **9 minutes**. Adoption: 3 harness PRs judged by the other family, ~47 Backlot assets, 5–6 obituaries.
+**One Saturday morning (illustration, S08 Example B).** The deterministic scan finds two committed keys → two
+blocked repos and two Hygiene missions; census of the other 24 directories ~6 min, ~$1.30. Excavation by 13 Claude and
+11 Codex archaeologists cast by prior accuracy, ~$14. The founder re-sorts one card and signs the member Charters he
+wants active: **9 minutes**. Adoption: 3 harness PRs judged by the other family, ~47 Backlot assets, 5–6 obituaries.
 **~$38 and 9 founder minutes.** The canon's first-90-day indicator — *one Fleet-Import venture at A2* — starts here.
 
 ## 5. Stage Clock and Vital Signs
@@ -220,13 +243,15 @@ runs week → quarter and reports by exception; a **Flagship** brings the full c
 
 | | Startup | Agency | Service | Acquired business | Research | Learning |
 |---|---|---|---|---|---|---|
-| **Week 1** | 15 problem conversations; page live; ≥1 payment attempt or ≥30 qualified waitlist; Framing Contract settled | 30 prospects via opt-in channels; 5 calls booked; offer page with price | 1 offer; payment path; 3 warm leads | Takeover drill passed; every obligation registered; SLA measured | Question stated; 25 sources triaged; 3 falsifiable hypotheses | Knowledge mapped; 2-week curriculum; first quiz |
+| **Week 1** | 15 problem conversations; page live; ≥1 payment attempt or ≥30 qualified waitlist; Framing Contract settled | 30 prospects via opt-in channels; 5 calls booked; offer page with price | 1 offer; payment path; 3 warm leads | Takeover drill passed; every obligation registered; SLA measured | Question stated; 25 sources triaged; 3 falsifiable hypotheses; participant protocol approved before any human-subjects contact | Knowledge mapped; 2-week curriculum; first quiz |
 | **Month 1** | 3 paying users or 10 committed pilots; weekly ship; activation measured | 2 paid pilots; delivery policy; margin ≥50% | 5 paying customers; score from ≥5 | Tickets <2 min; top-10 backlog shipped; churn flat or better | 1 experiment; 1 finding with a rung | Blind quiz ≥70%; 1 artifact he made |
 | **Quarter 1** | $1k MRR or a court verdict; D30 ≥20% | 5 retained clients; ≥60% margin; founder ≤2 h/wk | $3k/month; repeat ≥30% | Takeover forecast settled at day 90 | Publishable result or logged null | One decision he could not make before |
 | **Year 1** | $10–30k MRR; ≥40% "very disappointed" (n≥30); founder ≤3 h/wk at A3 | $15k MRR; 10–20 clients; A3 Series | A3; margin floor held 12/12 months | A3 at ≤1 h/wk, or relisted | Cited externally; spun into a venture or closed | Closed, or promoted to a venture |
 
 *(Startup, agency, service, research from S08 M3; acquired and learning added here. No vital may be met with internal
-revenue, §9.)*
+revenue, §9.)* **Research ventures carry protocol-approved vitals:** any vital that involves study participants counts only
+when collected under an approved participant protocol (consent, debrief, pay, withdrawal, retention), which
+[16](16-EXTERNAL-WORLD-HUMANS.md) owns [R5 G-B3].
 
 ### 5.3 The autonomy balance sheet
 
@@ -278,6 +303,17 @@ per_member_retest: [pricing, compliance, channel]
 fleet_review: weekly, exceptions only (Know · Reel; kill packet Decide · Tap)
 promote_to_flagship: "ARR ≥ $250k or founder circles it"
 ```
+
+**Probe → existing fleet** [R5-walk G7, B06]. A graduating probe whose pattern may already have a fleet does not go
+through a fresh Genesis. It passes, in order: (1) a **pattern match** against the Fleet Charter's `pattern`, settled by
+Acceptance from the probe's evidence, not asserted by the proposer; (2) the **member cap** (`members_max`) and the
+**fleet-sum checks** — the fleet envelope and exposure with the new member added; (3) **shared-trust eligibility** — the
+member inherits the fleet's trust cells only if its task families are the ones those cells were earned on; (4) the
+**per-member retests** (`pricing`, `compliance`, `channel`), never assumed to transfer; (5) **activation under the signed
+member template**, which is the only thing that grants it authority. A failure at any step falls back to an ordinary
+Genesis or a null. The probe's pre-orders are refunded at close unless each holder consents to the new member's Offer —
+the conversion rule is [16](16-EXTERNAL-WORLD-HUMANS.md)'s; until it succeeds, close and refund under the original
+Probe Mandate.
 
 **Founder-driven ventures** (his own startup, a learning venture, a client he wants to feel) stay at A0–A1 outside the
 fleet machinery, on the same records. The direction's "2–3 autonomous, others founder-driven" is this dial's Year-0
@@ -347,7 +383,9 @@ Disclosed, reversible, cheap real-world tests — refundable pre-orders, small a
 offers — under one founder-signed **Probe Mandate** [R3-X X3]. Simulated customers flatter every proposal (S09), so the
 default evidence is cheap real contact (U7). Allocation runs the sleeve; Custody holds the mandate; Regulation watches the
 exposure book; Acceptance settles "graduated" from processor and calendar records. Pre-orders sit in obligation escrow and
-auto-refund at close.
+auto-refund at close unless a holder explicitly consents to a new Offer ([16](16-EXTERNAL-WORLD-HUMANS.md) owns the
+conversion). A graduate goes to Genesis, or — when an existing fleet's pattern fits — through the probe → existing fleet
+path in §6 [R5-walk G7, B06].
 
 ```yaml
 probe_mandate:   # passkey-signed; parameters
@@ -361,7 +399,9 @@ probe: {pain_ref: pain/1187, audience: {exclusions: live_ventures.audiences},
         forecast: {p_graduate: 0.08}, receipts: [], close_by: 2026-10-25}
 ```
 
-*Illustration* (R3-X): month 4, 120 probes, 104 null with forecasts, 5 graduate, ~$18k, ~20 founder minutes. **Kill signal for the engine:** graduation under 2% for a quarter → Sideways Review on the sleeve.
+*Illustration* (R3-X, scaled to the mandate above): month 4, 120 probes averaging ~$48, 104 null with forecasts, 5
+graduate, **~$5.8k — inside the signed $6k `monthly_max_usd`**; R3-X's ~$18k month needs a Probe Mandate signed at that
+ceiling [R5-walk C10]; ~20 founder minutes. **Kill signal for the engine:** graduation under 2% for a quarter → Sideways Review on the sleeve.
 
 ### 8.2 Replication Engine — when something works, make twenty of it
 
@@ -489,11 +529,17 @@ the rules and compiles the verdict into a Decision Contract.
 
 **Verdicts and who decides** ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md) owns levels):
 
-| Level | Persevere | Pivot | Shelve | Wind-down | Sell |
-|---|---|---|---|---|---|
-| A0–A2 | auto (Log) | founder (Decide) | founder | founder | founder |
-| A3 | auto (Log) | auto, 24 h veto (Decide · Tap) | auto, 24 h veto | founder | founder |
-| A4 | auto | auto (Know · Reel) | auto (Know) | founder | founder |
+| Level | Persevere | Adjust strategy (inside existing intent) | **Venture pivot** (new intent) | Shelve | Wind-down | Sell |
+|---|---|---|---|---|---|---|
+| A0–A2 | auto (Log) | founder (Decide) | founder passkey, new Charter | founder | founder | founder |
+| A3 | auto (Log) | Mind proposes, founder decides (Decide · Tap) | founder passkey, new Charter | auto, 24 h veto | founder | founder |
+| A4 | auto | Mind decides (Know · Reel) | founder passkey, new Charter | auto (Know) | founder | founder |
+
+**Two different things share the word "pivot"** [DR-66, R5-walk C3]. A **strategy adjustment** changes the goal tree
+*below* the Charter's intent — a new price, channel or segment for the same promise — and follows the goal-tree rights:
+A3 proposes, A4 decides. A **venture pivot** changes the intent itself, so it is a **new Charter**: signed by the founder's
+passkey at every level, never on silence, never on a lapsed veto window, never automatic. The court's clerk classifies
+which one a verdict is before compiling it; a verdict it cannot place is treated as a venture pivot.
 
 Wind-down and Sell always reach him: they end obligations or a legal person — the never-list, not a preference.
 
@@ -506,7 +552,7 @@ pivot_court:
   defender: venture-mind@v17 (Claude); prosecutor: contrarian-analyst (Codex)
   options: [persevere (p=0.22), "pivot: done-for-you at 5× price (strategy cell won margin, 6 wks)",
             "shelve: trigger = open-banking price < $0.01/call"]
-  verdict: pivot; decided_by: founder (A1); minutes: 4; dissent_kept: "prosecutor argued shelve"
+  verdict: venture pivot → Charter v2; decided_by: founder passkey (A1); minutes: 4; dissent_kept: "prosecutor argued shelve"
 ```
 
 **Killing cheaply is a feature:** Year-1 target ≥8 ventures killed at ≤$300 each [S08 M3]. The Calibration Ledger charges
@@ -568,7 +614,7 @@ minutes a day, 35 working hours a week.
 |---|---|---|---|---:|
 | 03:40 | Know · Reel | — | An acquired scheduling business loses its payment webhook; SCRAM safe state reached, Incident Lead (Codex) restores, Claude verifier and Acceptance confirm restart, no customer harm — so it never rings him | 0 |
 | 07:30 | Circle | Reel, phone | 40 takes from overnight: three probe landing pages, a Fork Fleet migration diff, a Keystone essay draft; he circles 9 | 6 |
-| 08:00 | Decide · Tap | Reel | Exchange clears 5 packets: a replication case into Japan (costly-reversible, approved); a Frontier study for publication; a fleet member's Sell packet (approved with counsel scheduled); a Standing Order compiled from his last 12 identical refund answers (signed); a Pivot Court veto window he lets lapse | 11 |
+| 08:00 | Decide · Tap | Reel | Exchange clears 5 packets: a replication case into Japan (costly-reversible, approved); a Frontier study for publication; a fleet member's Sell packet (approved with counsel scheduled); a Standing Order compiled from his last 12 identical refund answers (signed); a Pivot Court Shelve veto window he lets lapse (a venture pivot never rides a veto window) | 11 |
 | 09:00–11:30 | — | Terminal | His own founder-driven venture at A0 — he builds with a Codex engineer and a Claude designer, by choice | 0 |
 | 11:30 | — | Studio mic | **Founder Broadcast**: 10 minutes of his real voice, cut into three clips by agents, published through the Keystone's brand cell | 0 |
 | 13:00 | — | Call | First sales call of Flagship 10 (F8: founder takes the first ten); a Deal Desk Analyst preps and follows up | 0 |
@@ -588,7 +634,7 @@ graduated, ~60 wishes shipped behind flags, ~90% of acceptances decided with no 
 | Tue | as §15 | Board for one Flagship; sales call; Broadcast | 30 |
 | Wed | Terminal + counsel call | **Acquisition signing** with human counsel (one-way door, founder + lawyer, reverse Transfer Drill passed); signs the new Fleet Charter for the physio-voice pattern | 25 |
 | Thu | Terminal | Judgment Gym for 15 min ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md) Decision Supply Bench); forges a hybrid and sends it to the Audition Ladder; one Flagship board | 28 |
-| Fri | Mission Control → Map | **Fleet review**: 300 micro-ventures, six lit off-band; three Pivot Court verdicts (two auto at A3, one Sell he approves); Probe Mandate renewed | 30 |
+| Fri | Mission Control → Map | **Fleet review**: 300 micro-ventures, six lit off-band; three Pivot Court verdicts (two Persevere/Shelve auto at A3, one Sell he approves); Probe Mandate renewed | 30 |
 | Sat | — | Founder State `offline_planned`; Reach Router holds everything but Halt | 0 |
 | Sun | Wrist | Two two-way approvals under $50 with held-dispatch undo; reads the weekly scorecard | 3 |
 

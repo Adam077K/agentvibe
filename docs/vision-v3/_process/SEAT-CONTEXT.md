@@ -26,7 +26,7 @@ except in Round 0 where you read it only after your outward research).
 - **Write your output with the Write tool** to the exact path in your brief. Then return a **≤200-word summary** — not the doc.
 - Never read a file over ~200 KB whole — grep and range-read. `CLAUDE.md` is 69 KB of history: grep it, never read it whole.
   Never open `F2-07-outside-review.md` or contract registries whole.
-- Do not write backticked ids that look like `c-something` — the ledger lint treats them as claim ids.
+- Do not write backticked ids that start with the letter c and a hyphen — the ledger lint treats them as claim ids.
 - Do not commit, push, or touch files outside your output path unless your brief says so.
 - Codex CLI (`gpt-6-astra`) is available on this machine; Claude and Codex seats run independently in their first pass.
 

@@ -74,7 +74,7 @@ owed · what happened · what's unknown · which decision needs me · how do I s
 | **Email digest** | weekly board pack, re-entry brief | archival | reply-to-intent | no | Reel | — |
 | **Calendar** (Google, one-way publish + three written kinds) | goals, kill dates, windows, board | planning | drag a slot → schedule | no | Reel | sync <60 s |
 | **Office Window** (lamp + e-ink) | "is anything wrong?" at a glance | ambient | no | stop-all button only | Buzz (light) | <5 s |
-| **Wrist** (watch) | Buzz/Tap haptics; two-way disposal | 2 s | no | two-way, under threshold, held dispatch | Buzz | <10 s |
+| **Wrist** (watch) | Buzz/Tap haptics; two-way disposal; presence tap | 2 s | no | two-way, under threshold, held dispatch — never offers, concessions, outbound or publishing (DR-80) | Buzz | <10 s |
 
 All latency figures are **targets**, carried from SURFACES-SPEC §1.1 and §7.3.
 
@@ -154,7 +154,7 @@ hard a surface reaches and belongs here.
 |---|---|---|---|
 | **Ring** | an outbound call on the Company Line | phone | Halt unacknowledged ≥5 min; Decide only if cost of delay > the founder's **ring price** |
 | **Buzz** | time-sensitive push; watch 3-tap; Office Window lamp red/amber | ntfy priority 5, watch, lamp | Halt; Decide above the clearing price with deadline <4 h |
-| **Tap** | passive push; Telegram message; watch 1-tap | ntfy default, Telegram, watch | Decide above the clearing price with deadline <24 h; Know only by a founder override in Settings |
+| **Tap** | passive push; Telegram message; watch 1-tap | ntfy default, Telegram, watch | Decide above the clearing price with deadline <24 h; one-way Decide; Know when a CCIR line's floor raises it. ~~Know only by a founder override in Settings~~ (superseded, DR-64 / DR-65) |
 | **Reel** | the next decision window: Today, the Dailies Reel, the phone Decide tab, the board pack | MC, PWA, email digest | Decide on default-on-silence, Circle, Know |
 | **Shelf** | pull only: Traces, Live, Updates, Brain, Venture Mind | MC, `av`, voice "why" | Log — and everything else, always |
 
@@ -165,10 +165,11 @@ at most 2 unscheduled Decide calls a day (Halt calls are never capped); Halt Buz
 ### 2.2 The Reach Router
 
 A deterministic function in Userland — no model, no learning at run time — that picks **the lowest reach that still
-meets the deadline**, then clamps it between a **floor** (what the class, door and CCIR demand) and a **ceiling** (what
-Founder State and focus allow). If floor > ceiling, the floor wins for Halt and one-way doors, and the envelope is routed
-to the Deputy path defined by continuity in [05](05-AUTONOMY-INITIATIVE-FOUNDER.md) when Founder State is `unreachable`
-or `incapacitated`.
+meets the deadline**, then resolves it against a **floor** and a **ceiling** by **one ordered table** (below). This is the
+only place in the design that chooses a reach [DR-65]: [05](05-AUTONOMY-INITIATIVE-FOUNDER.md) supplies class, door, CCIR
+line and deadline; [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) supplies the clearing price and minute budget;
+[16](16-EXTERNAL-WORLD-HUMANS.md) supplies the effect's consequence classification. None of them chooses a reach
+[C4, G2, G-B4, B21].
 
 ```ts
 // Emitted by an authority (Intent, Allocation, Acceptance, Regulation, Custody) as a Journal event.
@@ -176,10 +177,12 @@ type ContactEnvelope = {
   id: string; venture: string; authority: 'intent'|'allocation'|'execution'|'acceptance'|'record'|'custody'|'regulation';
   class: 'halt'|'decide'|'circle'|'know'|'log';                  // owned by 05
   door: 'two_way'|'costly_reversible'|'one_way';                  // computed by the Kernel, never declared
+  option_doors?: Door[];                                          // mixed-option packet: floor = highest option's floor
+  effect_executed?: boolean;                                      // Know about an effect already done (one-way → floor Reel)
   deadline?: string;  on_silence?: string;                        // on_silence mandatory for decide (silence rule, 05)
   cost_of_delay_per_h: number;                                    // Allocation-computed
   burden_min: { requester: number; independent: number };        // DR-31: the Exchange's own estimate governs
-  ccir_match?: string;                                            // "wake me if" hit → reach floor Buzz
+  ccir_match?: { line: string; floor: Reach; wake: boolean };     // the CCIR line's SIGNED floor (default Tap); wake may pass quiet hours
   obligation_id?: string;                                         // age/deadline floor applies
   canonical_action?: CanonicalAction;                             // what a passkey would sign (§9)
   cause: { correlation_id: string; causation_id: string };
@@ -188,17 +191,25 @@ type ContactEnvelope = {
 type Delivery = {
   envelope: string; reach: 'ring'|'buzz'|'tap'|'reel'|'shelf';
   channel: 'call'|'ntfy'|'watch'|'telegram'|'lamp'|'today'|'reel'|'email';
-  floor: Reach; ceiling: Reach; reason: string; founder_state: FounderState; at: string;
+  floor: Reach; ceiling: Reach; step: 1|2|3|4;                    // which row of the ordered table decided
+  deferred_until?: string;                                        // step 3b: first permitted moment
+  silence_rule_applied?: boolean;                                 // step 3b: that moment fell after the deadline
+  reason: string; founder_state: FounderState; at: string;
 };
 ```
 
-| Floors (never lowered — DR-32) | Ceilings (lower reach, never suppress) |
-|---|---|
-| Halt ≥ Buzz, escalating to Ring after 5 min unacknowledged | Founder State `focus` or a calendar focus block: ≤ Reel, except floors |
-| Decide on a **one-way** door ≥ Tap and always above the Exchange line, whatever its bid [S07 §7] | `travel` (driving, flying): ≤ Reel for anything needing a passkey; Halt by Ring still passes |
-| CCIR match ≥ Buzz | quiet hours (Settings): ≤ Reel, except Halt |
-| Obligation whose latest safe decision time is <24 h ≥ Tap (the age/deadline floor, DR-31) | `overloaded`: minute supply scaled down by 05; bundling on |
-| — | `offline_planned` / `unreachable` / `incapacitated`: route per continuity tier (05); the Router never pretends delivery happened |
+**The ordered routing table** [DR-65]. Evaluated top to bottom for every envelope; the first row that decides, decides.
+
+| Step | Rule | Result |
+|---|---|---|
+| **1. Floor** (never lowered — DR-32) | Take the **highest** of: **Halt ≥ Buzz**, escalating to Ring after 5 min unacknowledged · **Decide on a one-way door ≥ Tap**, always above the Exchange line whatever its bid [S07 §7] · **Know about an executed one-way effect ≥ Reel**, unless a CCIR line raises it · the matched **CCIR line's signed floor** (default **Tap**; a `wake` line may exceed quiet hours) · an obligation whose latest safe decision time is <24 h ≥ Tap (the age/deadline floor, DR-31) · a **mixed-option packet** takes the floor of its highest option (a Decide with any one-way option is a one-way Decide) [B21] | `floor` |
+| **2. Ceiling** | Take the **lowest** of: Founder State `focus` or a calendar focus block ≤ Reel · `travel` (driving, flying) ≤ Reel for anything needing a passkey · quiet hours ≤ Reel · the minute budget (`overloaded`: supply scaled down, bundling on) · `offline_planned` / `unreachable` / `incapacitated` → the continuity tier in 05 decides the recipient; the Router never pretends delivery happened | `ceiling` |
+| **3a. Floor > ceiling — floor wins** | Only for: **Halt** · **`wake` CCIR lines** · **one-way Decides whose deadline precedes the next permitted window** | delivered at the floor, now |
+| **3b. Floor > ceiling — deferred** | Everything else is **deferred** to the first moment the ceiling permits the floor. If that moment is after the deadline, the **silence rule** ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)) applies — the Router records that it did and never invents a disposition of its own | `deferred_until`; `silence_rule_applied` |
+| **4. Floor ≤ ceiling** | Lowest reach that meets the deadline, clamped into [floor, ceiling] | delivered |
+
+A Know about an executed one-way effect can never be Shelf-only: the founder learns about every irreversible thing in the
+next Reel at the latest.
 
 ```mermaid
 flowchart TD
@@ -214,8 +225,9 @@ flowchart TD
   CL -- circle --> REEL
   CL -- know --> REEL
   CL -- log --> SHELF[Shelf]
-  FL[Floors: one-way · CCIR · obligation deadline] -. raise .-> BUZZ & TAP
-  FS[Ceilings: Founder State · focus · quiet hours] -. cap, never below floor .-> BUZZ & TAP
+  FL[1 Floors: one-way · executed one-way Know · CCIR line · obligation deadline] -. raise .-> BUZZ & TAP & REEL
+  FS[2 Ceilings: Founder State · focus · quiet hours · budget] -. cap .-> BUZZ & TAP
+  FS -. 3 floor > ceiling, not Halt / wake / urgent one-way .-> DEF[Deferred to first permitted moment<br/>past deadline → silence rule]
   BUZZ & TAP & REEL --> RX[Reaction logged:<br/>opened · acted · changed default · dismissed <3 s]
   RX --> SO[Weekly: Standing Order and demotion<br/>PROPOSALS in the board pack]
 ```
@@ -226,11 +238,15 @@ with no action is *proposed* for demotion. Neither is ever applied silently, and
 obligation or a safety floor (DR-32). Founder-authored notification preferences are a versioned file separate from
 escalation conditions, so tuning comfort never edits safety [R3-red §3.8].
 
-**Authority and store.** The Router is surface code (Userland). Its inputs come from 05 (the class matrix, a linted YAML
-data file), Allocation (clearing price) and Founder State. Envelopes and Deliveries are Journal events. Regulation may
-issue a Halt at any time; nothing may widen a ceiling except the founder. **Failure mode:** a class with no reach for
-some Founder State. **Test:** a property test enumerates class × door × Founder State × focus × CCIR and asserts every
-combination yields a reach ≥ its floor, and that `halt` never yields `reel` or `shelf`.
+**Authority and store.** The Router is surface code (Userland). Its inputs come from 05 (class, door, CCIR line and
+deadline — the class matrix is a linted YAML data file), 16 (the consequence classification behind the door), 09b and
+Allocation (clearing price, minute budget) and Founder State; **inputs only — 05, 09b and 16 never choose a reach**
+[DR-65]. Envelopes and Deliveries are Journal events. Regulation may issue a Halt at any time; nothing may widen a
+ceiling except the founder. **Failure mode:** a class with no reach for some Founder State, or a deferral that silently
+misses a deadline. **Test:** a property test enumerates class × door × executed × CCIR line (floor, `wake`) × deadline ×
+Founder State × focus × quiet hours and asserts every combination yields **reach ≥ floor, or deferred and
+deadline-safe** (delivered before the deadline, or the silence rule recorded), and that `halt` never yields `reel`,
+`shelf` or a deferral.
 
 ## 3. Mission Control: the shell and the page map
 
@@ -499,14 +515,14 @@ lifecycle); a drag is a **command with a preview**, never a silent status label.
 | **Waiting** | Framing, Funded (not launched) | founder, Intent, Allocation | cast *proposed*, tranche, lane |
 | **Working** | Active | `mission.launch` (founder or Standing Order) | team, checks, burn |
 | **Refereeing** | Settling (acceptance facet open) | **engine only**, when the done-test runs | coverage progress, rework loops |
-| **Done** | acceptance facet has a **parsed verdict** | **Referee only** (or a logged overrule) | verdict badge, settlement, residuals |
+| **Done** | acceptance facet has a **parsed verdict** | **Referee only** (or a logged overrule) | verdict badge, three settlement edges, ⇪ published marker, residuals |
 
 ```
 + Missions · All · group: venture ▾ · lane ◇/⚑ · ⌘N new · m move · a audition ------------------+
 |PARKED| WAITING (4)        | WORKING (3)          | REFEREEING (2)       | DONE (wk 9)         |
 | 14 ▸ |+ Nimbus ◇ b_12 ---+|+ Nimbus ◇ lead+2 ---+|+ Ledger ◇ ----------+|+ Keel -------------+|
 |      ||Referral loop v1  |||Team invites        |||Pricing page copy   |||skill v2  ● PASS   ||
-|      ||cast proposed ▸   |||▓▓▓▓▓░ 5/8 checks   |||coverage 3/5        |||settled ✓          ||
+|      ||cast proposed ▸   |||▓▓▓▓▓░ 5/8 checks   |||coverage 3/5        |||A✓ O◐ F○ · ⇪pub    ||
 |      ||~2h · $0 API · sub|||tranche 42% · 1h12m |||Codex comp, e2e both||+-------------------+|
 |      |+------------------+|+--------------------+||rework ↺1 (priced)  ||+ Ledger -----------+|
 |      |+ Studio ●A2 ⚑ ----+|+ Studio ◇ swarm×4 --+|+--------------------+||Hello mission      ||
@@ -516,16 +532,30 @@ lifecycle); a drag is a **command with a preview**, never a silent status label.
 |      |+------------------+|+--------------------+|+--------------------+|+-------------------+|
 +------+--------------------+----------------------+----------------------+---------------------+
  ◇ investment lane  ⚑ obligations lane  ●A2 autonomy  ↺ integration/acceptance rework (priced, DR-22)
+ A accepted · O observed in production · F promise fulfilled (✓ done ◐ pending ○ not yet) · ⇪pub published (DR-70)
 ```
 
 **Verdict badge rules (DR-13).** A card's column and its verdict are two facts:
 
 | Badge | Meaning | What it permits |
 |---|---|---|
-| **● PASS** | Referee's parsed verdict is PASS under the coverage contract | merge, settlement, Backlot strike |
+| **● PASS** | Referee's parsed verdict is PASS under the coverage contract | publication once every required verdict is in (DR-70), the *accepted* settlement edge, Backlot strike |
 | **✗ FAIL** | Referee's parsed verdict is FAIL, with reasons | **Re-queue with the Referee's reasons** (a new `waiting` record whose goal carries them — the board stays append-only [SLICE §5.4]); Shelve; Overrule |
-| **⚠ UNPARSED** | the Referee exited but no verdict line parsed | nothing — the card stays in Refereeing; an unresolved check never passes (harness rule 10) |
+| **⚠ UNPARSED** | the Referee exited but no verdict line parsed (accepted into canon, DR-64) | nothing — the card stays in Refereeing; an unresolved check never passes (harness rule 10) |
 | **⚑ OVERRULED** | the founder dragged to Done or shipped a FAIL | the work lands; the overrule is counted by the deviance monitor and **never** recorded as acceptance or as a Referee false positive ([09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)) |
+
+**Settlement edges and the published marker (DR-70).** Done means one thing — a parsed verdict — and it is not the same
+fact as "live" or "kept". Every Done card shows three separate settlement edges and a separate published marker:
+
+| Mark | Fact | Written by |
+|---|---|---|
+| **A** accepted | the artifact passed the coverage contract's required verdicts | Acceptance (Referee) |
+| **O** observed | the deployment is confirmed by independent production observation, not by a deploy receipt | Acceptance, through the observation broker |
+| **F** fulfilled | the promise to the customer or counterparty is kept | Acceptance, against the obligation ([16](16-EXTERNAL-WORLD-HUMANS.md)) |
+| **⇪ published** | landed to main, deployed or sent outbound — only after the required verdicts; staging integration may precede them and shows no ⇪ | the integration queue ([04](04-AGENT-ORGANISATION.md)) |
+
+A card can be Done with A ✓ and O, F still pending; the board never folds the three into one "settled ✓", and a ⇪ never
+appears on a card whose required verdicts are missing. Edge definitions are [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)'s.
 
 Nobody can turn a FAIL into a PASS ([00 §2](00-CANON.md), Acceptance row). A worker's "reviewed ✓" in its own summary is
 displayed, if at all, as an unlabelled claim inside the run log — never as a badge.
@@ -645,7 +675,7 @@ stateDiagram-v2
 |          support for hand-editing."                                                           |
 | SELF-REVIEW (not a verdict) Builder's nested same-family reviewer said PASS — shown for       |
 |          calibration only; excluded from acceptance (DR-11) ▸                                 |
-| FACETS  delivery ✓ · acceptance ✗ · settlement — · learning: Wrap Deposit due 14:30 · oblig — |
+| FACETS  delivery ✓ · acceptance ✗ · settlement A— O— F— · ⇪ not published · Wrap Deposit 14:30|
 | COST     $1.08 · Builder 152.9 s · context profile inherited (⚠ drove cost, SLICE) ▸          |
 | NEXT     [Re-queue with reasons ⏎] [Send back to same Builder] [Shelve] [Overrule ⚑ passkey]  |
 | TRACE ▸  CONTRACT ▸  RECEIPTS 3 ▸  RUN LOGS ▸                                                 |
@@ -1002,13 +1032,13 @@ Constitution amendment in 05, passkey bound to the displayed canonical text).
 + Settings · Attention & reach ----------------------------------------------- preferences v23  +
 | MINUTE SUPPLY  Mon–Fri 45 · Sat–Sun 10 · board 30/wk · windows 08:00 17:00 · Circle 3/day     |
 | RING           price $200/h cost of delay · Decide calls ≤2/day · Halt: never capped          |
-| QUIET HOURS    22:30–07:00 → ceiling Reel (Halt passes) · focus blocks from calendar ☑        |
-| REACH MATRIX   (class × reach, defaults from 05 · your overrides logged)                      |
+| QUIET HOURS    22:30–07:00 → ceiling Reel (Halt, wake CCIR lines pass) · focus blocks ☑       |
+| REACH MATRIX   (class × reach; floors per §2.2 table · CCIR lines signed, default Tap)        |
 |                 Ring  Buzz  Tap  Reel  Shelf                                                  |
 |   Halt           ●     ●     ·    ·     ·     floor Buzz 🔒                                   |
 |   Decide         ◐     ◐     ●    ●     ·     one-way ≥ Tap 🔒                                |
 |   Circle         ·     ·     ·    ●     ·                                                     |
-|   Know           ·     ·     ◐    ●     ●     Nimbus: Tap for incidents (override ▸)          |
+|   Know           ·     ·     ◐    ●     ●     one-way done ≥ Reel 🔒 · CCIR lines ▸            |
 |   Log            ·     ·     ·    ·     ●                                                     |
 | FOUNDER STATE SENSING  calendar ☑ · focus mode ☑ · travel ☑ · sleep ☐ (opt-in, local only)    |
 |   today it changed: 2 Buzz → Reel during focus 10:00–12:00 ▸                                  |
@@ -1251,10 +1281,31 @@ Haptics as a language, and a narrow disposal path:
 | 1 tap | a Tap-reach item | Tap |
 | 2 taps | the reel is ready | Reel (only if the founder opted in) |
 | 3 long | Halt | Buzz |
+| 1 long (founder-initiated) | presence tap signed — not an approval | — |
 
 Raise-to-answer shows **one** two-way packet with its default; crown-yes / crown-no disposes it — two-way doors under a
-money threshold (parameter $50, S07 §9), never outbound or publish, and always with a **1-hour held-for-dispatch** undo
-(§9.2). Everything else says "Open on phone".
+money threshold (parameter $50, S07 §9), and always with a **1-hour held-for-dispatch** undo (§9.2). The threshold is
+checked against the item's **full commitment value** as 09b and 16 compile it, not its first-month cost — two months at
+20% off a $2.4k-MRR account is a $960 concession, not $80 [DR-80, B19].
+
+**The wrist never approves** offers, concessions, outbound messages or publishing, whatever their size or door: those
+route to the phone at **Tap** and the watch shows only "Open on phone" [DR-80, B19]. Everything else outside the grammar
+says the same.
+
+**Presence tap** [G-B5]. The watch also carries the founder's **presence proof** — a device-bound, signed tap from a
+registered watch that resets the continuity clock (05). It is rendered as its own screen, visibly unlike an approval:
+no packet, no default, no crown-yes; a distinct haptic (one long) and the words "I'm here — this approves nothing". The
+Journal records it as `founder.presence`, never as a disposal, and it authorises no effect.
+
+```
++------------------+
+| PRESENCE         |
+| I'm here         |
+| approves nothing |
+| clock reset      |
+| [ hold to sign ] |
++------------------+
+```
 
 ```
 +------------------+
@@ -1402,7 +1453,7 @@ A refusal always carries the contract id, so "why was I refused?" opens the Cont
 | View server never writes or spawns | today's `crosscheck.test.ts` + `write-barrier.test.ts`, unchanged |
 | Gateway forwards, never interprets | a test fails on any command-name branch in gateway source |
 | Only the Referee's parsed verdict moves a card to Done | fixture stream (§5.3) |
-| Every class × Founder State has a reach ≥ its floor | property test (§2.2) |
+| Every envelope gets reach ≥ floor, or is deferred and deadline-safe (DR-65) | property test (§2.2) |
 | Displayed canonical action = signed bytes | renderer hash test (§9.1) |
 | Undo shown only while held | gateway state-machine test (§9.2) |
 | Every number has a source; no activity rewards | Honest Scoreboard lint (§13) |
@@ -1422,9 +1473,9 @@ Illustrative; every time, cost and count is an **illustration**. Every founder t
 | 07:44 | Desktop, Missions | Decide (launch) · Reel | drags *Referral loop v1* to Working; Launch Sheet: Engineer (product, Claude) + Growth engineer (hybrid, Codex); coverage: component judges opposite family, e2e both; tool lease forbids Agent/Task. Presses **Audition** | two leads, one per family; a fresh cross-family judge picks at 10:40 |
 | 07:47 | — | — | Studio's kill packet stays below the line → kills Sunday on default | Null Registry entry pre-drafted |
 | 10:40 | Updates (Shelf) | Log | audition settled: Codex-lead wins within-family paired comparison on this task class | Cast evidence; never an absolute cross-family rank |
-| 13:10 | Telegram | Know · Tap (his override for Ledger FAILs) | "Ledger m_88 ✗ FAIL (Codex Referee): 'claim unsupported by the source'. Re-queue with reasons?" He replies "yes" | `mission.requeued`, new record carrying the reasons |
+| 13:10 | Telegram | Know · Tap (his signed CCIR line "Ledger FAILs", floor Tap) | "Ledger m_88 ✗ FAIL (Codex Referee): 'claim unsupported by the source'. Re-queue with reasons?" He replies "yes" | `mission.requeued`, new record carrying the reasons |
 | 16:00 | Office Hours | Decide · Reel (scheduled) | the Referee (Codex) wins a slot: the proration spec is wrong. 5 min, voice. He amends the spec | spec change receipted; 2 FAILs re-queued |
-| 22:30 | — | quiet hours begin | ceiling Reel, Halt passes | — |
+| 22:30 | — | quiet hours begin | ceiling Reel; Halt and `wake` CCIR lines pass; other items above Reel defer to 07:00 | — |
 | 03:10 | — | Know · Shelf+Reel | Nimbus Stripe webhook failures spike. Obligations-lane mission; Incident Lead (Codex, best payments record) + Referee (Claude, reading Stripe through the observation broker); rollback from the Backlot; closed 03:21 | receipts ×3; tomorrow's Today: "1 incident closed (auto)" |
 | 03:25 *(variant)* | Buzz → Ring | **Halt** | had the rollback **not confirmed**, SCRAM freezes signups (safe state), class becomes Halt → Buzz → unacknowledged 5 min → **Ring at 03:31**: "Nimbus payments are failing and the rollback did not confirm. I've paused new signups. Say 'details', 'call me in 15', or 'stop Nimbus'." | Delivery logged with reason; call ≈3 min × $0.08 |
 
@@ -1440,7 +1491,7 @@ per settled outcome, so this Wednesday is also a data point in the "one founder 
 | **Hidden team members** — nested agents inside a run [SLICE §5.2] | child cards keyed by parent link; forbidden tools in the lease; ⛔ on attempts | runner test on stream-json parent ids |
 | **Reel becomes theatre** | raw artifacts only; the cutter lists what it dropped; circle rate and "circles that changed a decision" reported weekly; unmarked ≠ approval | weekly Reel audit |
 | **Exchange mis-prices or is gamed** [R3-red D06] | independent burden estimate; door-type floors; age/deadline floor; material downside and best rejected alternative always shown; audit of what was not shown | Exchange audit on Today |
-| **Approvals become reflexes** | wrist and Telegram only for two-way under threshold, with held dispatch; looked-at rate shown on every level promotion; passkey for everything else | looked-at rate trend on Ventures |
+| **Approvals become reflexes** | wrist and Telegram only for two-way under threshold (full commitment value), with held dispatch; never offers, concessions, outbound or publishing on the wrist (DR-80); looked-at rate shown on every level promotion; passkey for everything else | looked-at rate trend on Ventures |
 | **Misleading summary above an authentic passkey** [R3-red X08] | canonical action rendered by one shared renderer; summaries may not restate fields | renderer hash test |
 | **Undo overstates reversibility** [R3-red H02] | four gateway states; undo only while held; exact UI strings | state-machine test |
 | **Dismissal trains silence** | dismissal proposes demotion; never suppresses obligations or safety floors (DR-32) | property test on floors |
@@ -1450,7 +1501,7 @@ per settled outcome, so this Wednesday is also a data point in the "one founder 
 | **Single Kernel host down** | voice edge snapshot says "unreachable"; out-of-band stop via push action and the physical button over the tailnet; alternate host drilled (DR-09) | quarterly host drill |
 | **The Map cries wolf or paints calm over blindness** | bands re-tuned when the Map is rarely grey; fog never interpolated | "calm is information" check; fog fixture |
 | **Cross-family numbers read as a ranking** (DR-12) | no rank column; within-family paired comparisons only | Honest Scoreboard lint |
-| **Class drift between 05 and 08** | class matrix is linted data owned by 05; the Router is code owned by 08 | property test over every class × state |
+| **Class drift between 05 and 08** | class matrix is linted data owned by 05; reach is chosen only by 08's ordered table (DR-65); 05, 09b and 16 supply inputs | property test over every class × state |
 
 ## 17. Ideas the founder did not ask for
 
@@ -1480,7 +1531,8 @@ per settled outcome, so this Wednesday is also a data point in the "one founder 
 ## 18. Open questions
 
 1. **Can the wrist dispose two-way effects without a passkey?** *Recommend yes*, under a $50 threshold (parameter), with a
-   1-hour held-for-dispatch undo, receipts, never outbound or publish — and only for effects whose deadline absorbs the
+   1-hour held-for-dispatch undo, receipts, the threshold checked on full commitment value, never offers, concessions,
+   outbound or publish (DR-80) — and only for effects whose deadline absorbs the
    hold. Revisit after four weeks of looked-at-rate data.
 2. **Default ring price and Decide-call cap.** *Recommend Ring for Halt always; for Decide only above $200/h cost of delay,
    at most 2 calls a day*, re-derived monthly from reaction data alongside the minute supply (F4).
@@ -1489,7 +1541,8 @@ per settled outcome, so this Wednesday is also a data point in the "one founder 
 
 ## Sources
 
-- `00-CANON.md` (binding: §2–§8, DR-11, DR-12, DR-13, DR-24, DR-30–DR-32, DR-35, DR-38, DR-45, DR-49, DR-51, DR-53, F4)
+- `00-CANON.md` (binding: §2–§8, DR-11, DR-12, DR-13, DR-24, DR-30–DR-32, DR-35, DR-38, DR-45, DR-49, DR-51, DR-53, DR-64, DR-65, DR-70, DR-80, F4); `_process/R5-FIX-PLAN.md` §08 and
+  `_process/R5-SCENARIO-WALK-codex.md` (B19, B21, C4, G2, G-B4, G-B5) — R5 fix pass
 - `00-FOUNDER-DIRECTION.md` (item 12: Mission Control pages, board, terminal, voice, future surfaces)
 - `r2-seats/S07-surfaces-voice.md` [S07] — primary: sixteen pages, contact grammar, Launch Sheet, drag semantics,
   terminal, chat, PWA, Company Line, six future surfaces, worked examples, risks

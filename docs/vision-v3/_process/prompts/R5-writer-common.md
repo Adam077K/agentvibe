@@ -18,7 +18,7 @@ Range-read large seat files; never read a 40–60 KB seat whole just to skim.
   e.g. `[S04 §2.3]`, `[R3-red X01]`, `[SP3]`.
 - Every risk gets a design answer, never a cut. Mark targets and speculation as such; never invent facts about real companies.
 - End with **"Open questions"** (≤3, each with a recommendation) and **"Sources"** (the files you drew on).
-- Do not write backticked ids of the form c-something (the ledger lint treats them as claim ids).
+- Do not write backticked ids that start with the letter c and a hyphen (the ledger lint treats them as claim ids).
 
 ## Mechanics
 - Use the **Write** tool to write your file (path in your brief). Write the skeleton with all headings first, then fill

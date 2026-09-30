@@ -6,10 +6,15 @@ record of that competition: what each concept was, how it did, where the judges 
 without declaring a single winner, and — because a founder should be able to see the paths not taken, not just the
 one taken — what v3 would look like today if any one of the other four had won outright instead.*
 
-*Destinations below are named by **authority** (Intent · Allocation · Execution · Acceptance · Custody · Regulation ·
-Record, above them a Constitution layer — see [R1-SYNTHESIS §2] and [R2-CHALLENGES](_process/R2-CHALLENGES.md)), not
-by file number: `00-CANON.md` and its file map did not exist when this was written. The canon's map governs once it
-exists.*
+*Destinations below are named by **authority** — the seven authorities under one Constitution: Intent · Allocation ·
+Execution · Acceptance · Record · Custody · Regulation (see [00-CANON](00-CANON.md) §2, [R1-SYNTHESIS §2] and
+[R2-CHALLENGES](_process/R2-CHALLENGES.md)) — not by file number; the canon's file map (§8) governs where each lands.*
+
+*Vocabulary. Where this file states the **final design** — destination columns, §4's resolution, §5's landings — it
+uses the canon's words (§4–§5): **Record**, not "Learning layer"; the **Acceptance Coverage Contract** and its review
+coverage graph, not "the other family from the builder"; **Books**, **Budget Ledger** or **Calibration Ledger**, not
+"the Ledger" [R5-ISSUES #1]. The concept descriptions (each concept's idea, diagram, day in the life, fatal flaw) and
+§7's counterfactuals keep their original **Round 1 vocabulary**, because they record what was proposed.*
 
 ## 1. The five concepts
 
@@ -114,11 +119,11 @@ the A4 example also still routes routine refunds through the Co-founder, a bottl
 |---|---|---|
 | Mind-as-record | **Yes**, central | Intent — "Venture Mind" is the standing vocabulary term |
 | Fingerprint gate | **Yes**, generalised | Record — every config promotion (models, prompts, skills, identities) |
-| Wager ledger | **Yes**, merged | Acceptance/Record — one ledger with C4's Calibration Ledger |
+| Wager ledger | **Yes**, merged | Acceptance — settled wagers are scored in the Calibration Ledger (canon §4) |
 | Standing Orders | **Yes**, central | Intent — a Standing Order that dictates steps fails lint, same as a playbook |
 | Hiring Charter + Exit Interview | **Partial** | typed launch/dissolve persists in the Mission spec; named artifacts don't reappear verbatim |
 | Title Forging + bake-off ladder | **Yes**, tightened | Agent Identity — screen 3/5 → trial 15/20 → shadow 10 → ≤25% rollout [R2-CHALLENGES S06] |
-| Shadow seat (other family) | **Superseded** | replaced by a review coverage graph — a single "other family" reviewer is shoppable [R2-CHALLENGES S02+S09] |
+| Shadow seat (other family) | **Superseded** | replaced by the Acceptance Coverage Contract and its review coverage graph — a single "other family" reviewer is shoppable [R2-CHALLENGES S02+S09] |
 | Founder-model / own-view split | **Yes** | Surfaces — every founder-facing packet states both views separately |
 
 ### 1.3 C3 — The Swarm (Codex advocate)
@@ -172,7 +177,7 @@ opposite direction [J1 §3]:
 | Evidence-linked world model | **Yes**, central | Execution — the per-venture company brain |
 | Expiring attention traces (obligations lane) | **Yes** | Execution — obligations lane, never waiting on a bet cycle |
 | Fenced contribution leases | **Yes**, central | Execution — named vocabulary term, unmodified |
-| Artifact-bound acceptance | **Yes**, refined | Acceptance — became the review coverage graph correction [R2-CHALLENGES S02+S09] |
+| Artifact-bound acceptance | **Yes**, refined | Acceptance — became the Acceptance Coverage Contract (review coverage graph) [R2-CHALLENGES S02+S09] |
 | Capability-gap recruitment | **Yes** | Skills & Tools economy — matches founder direction #11 |
 | Autonomy charters | **Yes**, central | Constitution/Autonomy — A0–A4 presets, six capability grants [R2-CHALLENGES S03] |
 | Read-and-outcome memory | **Yes**, merged | Record — retrieval-logged, held-out-citation replay |
@@ -228,9 +233,9 @@ essentially unmodified:
 | Bet record + Pre-registration Registry | **Yes**, scoped down | Allocation — required only when entering the Priors Library, buying a tranche, or crossing a door type |
 | Default-kill on kill date | **Yes**, central | Allocation |
 | Portfolio Allocator (Thompson sampling) | **Yes**, extended | Allocation — now also VoI-ranks work and prices verifier- and founder-minutes [R2-CHALLENGES S01] |
-| Cross-family Referee | **Yes**, corrected | Acceptance — folded into the review coverage graph [R2-CHALLENGES S02+S09] |
+| Cross-family Referee | **Yes**, corrected | Acceptance — folded into the Acceptance Coverage Contract (review coverage graph) [R2-CHALLENGES S02+S09] |
 | Evidence ladder × door type | **Yes**, central | Allocation + Autonomy — standing vocabulary term |
-| Calibration Ledger | **Yes**, merged | Record — one ledger with C2's wager ledger |
+| Calibration Ledger | **Yes**, merged | Acceptance — one Calibration Ledger, also scoring C2's wagers (canon §4) |
 | Org Science (champion/challenger, replay) | **Yes** | feeds S06's hybrid ladder and S09's eval tiers |
 | Priors Library + Null Registry | **Yes**, central | Record — named vocabulary terms, unmodified |
 | Conviction tokens | **No** — not carried by name | taste capture runs through C5's circled takes and C1's Attention Exchange instead |
@@ -343,8 +348,8 @@ flowchart TB
   INT["Intent (C2) — Venture Mind, Standing Orders,<br/>founder-model / own-view split"]
   ALL["Allocation (C4 + C1) — Bet Designer, Allocator,<br/>Framing Contracts, Founder Attention Exchange"]
   EXE["Execution (C3, spine) — world model, leases,<br/>merge queue, effect gateway"]
-  ACC["Acceptance (C4 + C3) — review coverage graph,<br/>authoritative metrics only"]
-  REC["Record (C1 + C2 + C4 + C5) — Priors Library,<br/>Backlot, Calibration Ledger, memory royalties"]
+  ACC["Acceptance (C4 + C3) — Acceptance Coverage Contract,<br/>Calibration Ledger, authoritative metrics only"]
+  REC["Record (C1 + C2 + C4 + C5) — Priors Library,<br/>Backlot, memory royalties"]
   CON --> INT --> ALL --> EXE --> ACC
   ACC -->|receipts, outcomes| REC
   REC --> INT
@@ -356,8 +361,9 @@ The organising principle this produces is the one line every later v3 file inher
 matters, funds it, does it and judges it"** [R1-SYNTHESIS §2]. That sentence is the actual resolution of the
 Lab-vs-Swarm disagreement — not a tie-break between two scores, but a structural rule both judges' preferred
 mechanisms satisfy simultaneously, because each now owns exactly one authority instead of competing to own all of
-them. Round 2's fourteen specialist seats extended this from four authorities to a wider stack — adding Constitution,
-Custody (see §5) and Regulation — without reopening the Lab-vs-Swarm question, because the seats were never asking
+them. Round 2's fourteen specialist seats extended this into the final stack — **seven authorities under one
+Constitution** (Intent, Allocation, Execution, Acceptance, Record, Custody, Regulation; canon §2), adding Custody (see
+§5) and Regulation and placing the Constitution above them as signed data, not an agent — without reopening the Lab-vs-Swarm question, because the seats were never asking
 "which concept wins," only "which authority owns this."
 
 ## 5. What all five concepts missed
@@ -368,12 +374,12 @@ judging *work*, and none was built around the organisation's existence as a lega
 
 | Gap | J1 | J2 | Where it landed |
 |---|---|---|---|
-| Legal-financial body — entities, tax, banking, liability | §4.1 | — | S08 — the fifth authority, **Custody**: no allocating, executing or refereeing agent may move money |
+| Legal-financial body — entities, tax, banking, liability | §4.1 | — | S08 — the **Custody** authority (Hold): no allocating, executing or refereeing agent may move money |
 | Founder continuity — his state, a dead-man switch, succession | §4.2 | — | S03 — Caretaker 72h → Deputy 7d → Continuity Will 14d |
 | Counterparty agents — A2A commerce, injection defence | §4.3 | — | S13 — Effect Mandates, Negotiation Envelope, quarantine |
 | Reputation as a breakable, shared asset | §4.4 | — | S13 — one Outbound Claims Standard, 5-level kill |
 | Model-release reflex — re-benchmark on new capability | §4.5 | (implicit S09) | S12 — generalised Fingerprint gate |
-| Human-task market | §4.6 | (implicit) | S13 — same ledger as agents |
+| Human-task market | §4.6 | (implicit) | S13 — Human Task Market, paid on the same Books and Budget Ledger as agents |
 | Self-funding capital loops and exits | §4.7 | — | S14 — treasury Standing Order recycles surplus to compute |
 | "Out-building thousands" measure | §4.8 | — | flagged as still needed; unclosed |
 | Inter-venture economy | §4.9 | — | S08 — ventures trade at list price, capped 30% of revenue |
@@ -381,8 +387,9 @@ judging *work*, and none was built around the organisation's existence as a lega
 | Missing-evidence audits, complementary bundles, relationship repair | — | §4.2–4.4 | not yet assigned |
 | Transferable operating-company packages | — | §4.5 | S08 — Fleet Import / handover language, partial |
 
-Two of these — Custody and the correlated-failure pairing rule — turned out load-bearing enough that Round 2 treated
-them as new authorities in their own right rather than as features bolted onto an existing one.
+Two of these — the legal-financial body and correlated-failure budgeting — turned out load-bearing enough that Round 2
+gave each an authority of its own rather than bolting it onto an existing one: **Custody** (Hold) and **Regulation**
+(Brake), whose pairing rule and correlated-alarm autonomy drop live in the Limits Book (canon §2, §4).
 
 ## 6. The evidence checks
 
@@ -456,7 +463,8 @@ wraps — because the ladder meant to replace a playbook is, underneath, still o
 2. **The completion guarantor (C5) converges with, but is not identical to, S10's Incident Lead** — one re-scopes
    an over-budget production, the other takes and returns authority during a live incident. **Recommendation:**
    name both as distinct roles with distinct triggers in the Mission Engine file; conflating them risks a
-   failing-but-not-incident-shaped mission never getting re-scoped.
+   failing-but-not-incident-shaped mission never getting re-scoped. *Resolved:* the completion guarantor is the
+   Re-scope Review trigger in [03-MISSION-ENGINE](03-MISSION-ENGINE.md) [DR-74].
 3. **C1's priced, congestion-aware leases were dropped for C3's flat, un-priced ones** — simpler, harder to game,
    with no answer yet for what happens when concurrent-mission count makes leases themselves the bottleneck.
    **Recommendation:** keep un-priced leases as default; the Allocation file should name a concrete concurrency
@@ -466,5 +474,5 @@ wraps — because the ladder meant to replace a playbook is, underneath, still o
 
 `docs/vision-v3/r1-concepts/`: C1-market.md · C2-cofounder.md · C3-swarm-codex.md · C4-lab.md · C5-studio.md ·
 J1-judge-claude.md · J2-judge-codex.md · R1-SYNTHESIS.md. Vocabulary and Round 2 adoption destinations cross-checked
-against `docs/vision-v3/_process/R2-CHALLENGES.md`. `00-CANON.md` did not exist at time of writing; authority names
-follow R1-SYNTHESIS §2–4 and R2-CHALLENGES pending the canon's file map.
+against `docs/vision-v3/_process/R2-CHALLENGES.md`. Final-design vocabulary aligned with [00-CANON](00-CANON.md) §2,
+§4–§5 in the R5 fix pass [R5-ISSUES #1]; concept descriptions keep R1-SYNTHESIS §2–4 wording.

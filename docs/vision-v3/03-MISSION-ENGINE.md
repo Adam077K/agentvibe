@@ -16,11 +16,14 @@ learning**, with self-challenge and explicit stop conditions, **without a script
    planner proposes **K = 3** moves (parameter), the engine picks by marginal value of information under deterministic
    **guards**, runs, scores narrative-free, stop-checks.
 4. **The Allocator layers two methods** — VoI ranks decision-shaped work; Thompson sampling sizes arm-shaped work.
-5. **Two lanes, six sleeves** — Obligations first; Investment split into **Probe, Replication, Strategy Cells, Option Pool,
-   Long-Horizon, Improvement**, each a reinforcing loop that cannot be funded without a named balancer (pairing rule).
+5. **Two lanes, six sleeves plus Core** — Obligations first; Investment split into **Probe, Replication, Strategy Cells,
+   Option Pool, Long-Horizon, Improvement**, each a reinforcing loop that cannot be funded without a named balancer (pairing
+   rule), with **Core** as the residual allocation beside them [C10].
 6. **Evidence rungs × door type** set the rung to commit, the challenge and the founder's contact class; shortfalls
    become **evidence debt**. Self-challenge votes on facts and only *generates* objections elsewhere.
 7. **Every mission forecasts itself**; settlement scores it. **Patterns are learned, never gates** (DR-05).
+8. **Every mission can stop by itself** — on success, kill, budget, or **`awaiting_gate`** when its next step needs a human
+   gate or a capability no worker has; a diminishing-returns stop forces a decision (DR-73, §4.5, §10).
 
 ### 0.1 Which authority owns which part
 
@@ -98,7 +101,8 @@ Acceptance cannot absorb is not admitted (70% utilisation ceiling, parameter, DR
 
 Every transition is a Journal event. **Who moves each state:** Draft → Allocation (VoI screen) · Framing → Acceptance
 (accepts the frame) · Funded → Allocation, then Execution casts · Active → Execution · AwaitingFounder → founder via the
-Exchange (05) · Frozen → Regulation freezes, the owner clears · Settling and Killed → Acceptance · Pivoted → Intent proposes,
+Exchange (05) · AwaitingGate → Execution stops and emits the gate request; the gate's owner (a named human gate, or
+Allocation granting the missing capability) releases it (DR-73) · Frozen → Regulation freezes, the owner clears · Settling and Killed → Acceptance · Pivoted → Intent proposes,
 Allocation funds the child · WindDown → Obligations lane · Wrapped → Record accepts the deposit.
 
 ```mermaid
@@ -120,6 +124,9 @@ stateDiagram-v2
   }
   Active --> AwaitingFounder: above altitude
   AwaitingFounder --> Active: answered / silence (two-way)
+  Active --> AwaitingGate: next step is a human gate / unavailable capability
+  AwaitingGate --> Active: gate passed · capability granted
+  AwaitingGate --> Settling: gate refused · kill date
   Active --> Frozen: guardrail · andon · SCRAM
   Frozen --> Active: cleared
   Frozen --> Settling: 24h
@@ -164,6 +171,8 @@ framing_contract:
     cheapest_test: lowest rung that could move the decision, with its cost vector
     unmeasurable: what stays a judgment call (→ founder taste or a forecast bet)
     guardrails: ≥1 customer-outcome + ≥1 harm guardrail, measured independently of success   # R3-red D01
+    capability_map: each success/kill clause → an available worker capability or a named human gate   # DR-73, §4.5
+    veto_questions: legal / regulatory / safety questions the mission must resolve before stop_success   # DR-73
   budget: {share: 5–8% of the parent's expected tranche (parameter), wall_clock_h: 4}
   accept_by: Referee per coverage contract (never the framing lineage); founder only if door ≠ two-way
 ```
@@ -205,7 +214,7 @@ interface MoveCandidate {
   cost: { api_usd: number; subscription: number; cash_usd: number; verifier_min: number; founder_min: number; wall_clock_h: number };
   team_request?: ShapeRequest;      // Execution may grant, shrink or refuse
   why: string;                      // ≤280 chars → Traces (08)
-  surprise: boolean;                // outside every cited recipe → may use the surprise reserve
+  surprise: boolean;                // unforeseen: outside every cited recipe → may use the surprise reserve (§15.2)
 }
 interface MoveChoice { mission: Id; cycle: number; planner_config: ConfigRef; family: 'claude' | 'codex' | 'foundry'; candidates: MoveCandidate[] }
 ```
@@ -215,6 +224,9 @@ interface MoveChoice { mission: Id; cycle: number; planner_config: ConfigRef; fa
 within 10%, both read-only, planner config < 5 settled missions in the class → run both, record the comparison. A move with
 `p_changes_decision` ≈ 0 cannot win unless it is Learn or a guard forces objections. Instead of a move the planner may emit a
 **child mission**, a **tranche request** or a **bundle proposal** — all go to Allocation; the planner never funds itself.
+**What pays for a move:** the tranche for planned moves; the **recovery reserve** and the priced integration rework of each
+overlapping pair ([04](04-AGENT-ORGANISATION.md), DR-22) for integration rework and recovery; the **surprise reserve** (§15.2)
+only for moves no one foresaw. A `surprise` flag on rework or recovery is refused [R5-walk B22; DR-60].
 **Family rotation:** the planner's family (Claude Code or Codex) is a Thompson draw over planner configurations, compared
 within each family's own history, never by absolute cross-family score (DR-12).
 
@@ -225,9 +237,9 @@ Fixed, few, typed (DR-05). The compiler rejects any guard whose predicate requir
 | # | Guard | Type | Source |
 |---|---|---|---|
 | G1 | No proposed effect of class R2+ until objections on its justifying decision are on record | consequence | ENGINE-SPEC rule 1, re-typed |
-| G2 | A third consecutive Research move is refused if the prior two gained < 0.1 rung (parameter) | consequence | ENGINE-SPEC rule 2, as a refusal not a prescription |
+| G2 | **Diminishing returns:** when the top question's value moves < 0.1 (parameter) over two consecutive cycles, no further move may target that question; the next move must be a decision — pivot, gate (`awaiting_gate`) or accept the current answer | invariant | ENGINE-SPEC rule 2 ~~"a third consecutive Research move is refused"~~ re-typed as an invariant (DR-67, DR-73) [R5-walk C6, B31] |
 | G3 | Execute > 1 day of effort needs recorded objections and a kill criterion | consequence | ENGINE-SPEC rule 3 |
-| G4 | A one-way Decide runs a **k = 5 mixed-family vote on each factual premise** + red team for objections | consequence | **Replaces** ENGINE-SPEC rule 4 (debate): R0-A, voting explains most debate gains at matched compute [S01 §2.11] |
+| G4 | A one-way commit needs, on record, **independently generated objections** and **verification of each factual premise by ≥ 2 model families**; any method producing that evidence satisfies it — a k = 5 mixed-family vote plus a red team is the default recipe, not the rule | invariant | **Replaces** ENGINE-SPEC rule 4 (debate): R0-A, voting explains most debate gains at matched compute [S01 §2.11]; ~~method-named vote~~ re-typed (DR-67) [R5-walk C6] |
 | G5 | Learn runs at conclusion, including kill and pivot | invariant | ENGINE-SPEC rule 5 |
 | G6 | **No objection is silently dropped** — each ends as test, criterion or owned accepted risk | invariant | [S01 §2.11] |
 | G7 | No move adds a reviewer to its own team or reaches outside its tool lease; nested agents are visible members | invariant | SLICE, DR-24 |
@@ -270,6 +282,38 @@ sequenceDiagram
 *Illustration:* a Research move with a 5-worker read-only swarm ~20–40 min, ~$3–8 API; a k = 5 vote ~$2–4 — replaced by the
 Budget Ledger's medians after the first 200 missions.
 
+### 4.5 Stopping by itself — the SP1 changes (DR-73)
+
+SP1's loop steered well and never stopped on its own: its success test needed a real prospect no worker could reach, so it
+researched until the $20 cap ([§5](#5-sp1--mission-choosing-its-own-next-steps-results-partial); ND-12-1, accepted as DR-73
+via DR-83). Six rules close that gap.
+
+1. **Capability-checked success tests.** At Framing (§3 `capability_map`), every success and kill clause maps to an
+   available worker capability ([07](07-SKILLS-TOOLS-MCP.md)'s Registry) or a **named human gate** (a founder call, a signature, a prospect meeting).
+   A test with an unmapped clause is **rejected** and the frame goes back — never funded and discovered unreachable later.
+2. **`awaiting_gate`** is a first-class stop state beside `stop_success`, `kill` and `stop_budget` (§10). When the
+   highest-mVoI move is a gated clause, the mission stops, emits the gate request to its owner (Exchange for the founder,
+   [05](05-AUTONOMY-INITIATIVE-FOUNDER.md); Allocation for a capability) and releases its leases. It does not keep
+   researching around the gate.
+3. **Diminishing-returns stop.** The top question's value moving < 0.1 (parameter) over two consecutive cycles forces a
+   decision — pivot, gate or accept (G2, §10 `diminishing_returns`).
+4. **`veto` question class.** Legal, regulatory and safety questions are listed at Framing, are **exempt from VoI ranking**
+   (a low mVoI cannot starve them) and must each be resolved before `stop_success` is reachable.
+5. **Loop-worth threshold.** A mission-shaped loop runs only if the decision it changes is worth ~20× (parameter) a single
+   run's expected cost; otherwise the work is a single run plus one Referee pass. SP1's loop cost 23× its control
+   (measured, n = 1, [12 §2](12-SPIKE-RESULTS.md#2-sp1--a-mission-choosing-its-own-next-steps)).
+6. **A cheaper Steward.** The move-choosing seat runs on a cheaper model tier with the compact state view (§4.2) only; the
+   Referee, not the Steward, carries verification cost.
+
+The Referee's attribution check — fetch the cited page and match the quote before any model reads it — is Acceptance's,
+specified in [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) (DR-73).
+
+**Re-scope Review (DR-74).** A mission whose tranche burn reaches **≥ 80%** while its settlement forecast sits **≥ 30% below
+its admission forecast** (parameters) triggers a Re-scope Review, led by a **fresh Mission Lead of the other lineage** and
+funded from the mission's own reserve. It returns exactly one of **re-scope** (new tranche request with a new forecast),
+**kill**, or **continue-with-falsifier** (a named observation that, if it arrives, kills the mission without another
+review) [OG9]. The failing Lead cannot run it and cannot waive it.
+
 <a id="5-sp1--mission-choosing-its-own-next-steps-placeholder"></a>
 ## 5. SP1 — mission choosing its own next steps (results: PARTIAL)
 
@@ -304,16 +348,17 @@ It does not yet *stop* on its own.
 | Guards fire without catching anything | control ROI line drops to 5% sampling (DR-10) | Untested; SP1 had no §4.3 guards |
 | Evaluator's `same` often disagrees with Acceptance | evaluator becomes a Verifier Foundry target | Untested; SP1 had no narrative-free evaluator |
 
-**What the table did not pre-decide, and is therefore not applied here.** SP1 proposed five changes [SP1 §5]:
+**What the table did not pre-decide** ~~, and is therefore not applied here~~ — **now applied as DR-73 in §3, §4.5 and §10.**
+This section stays as the evidence; §4.5 states the design. SP1 proposed five changes [SP1 §5]:
 
 - capability-checked success tests, with an `awaiting_gate` stop;
-- a diminishing-returns stop on question confidence (§4.3 G2 and §10 `no_progress` are the nearest rules);
+- a diminishing-returns stop on question confidence (now §4.3 G2 and §10 `diminishing_returns`);
 - an attribution-checking Referee that fetches pages;
 - `veto`-class questions that VoI ranking cannot starve;
 - a loop-worth threshold of about 20–25× a single run.
 
-[12 §2.5](12-SPIKE-RESULTS.md#25-what-it-changed-in-v3-and-what-did-not-land) records where each stands, and proposes
-them as **ND-12-1** for the architect to fold into §3, §10 and §11. The **fixed-recipe arm and a real cross-family
+[12 §2.5](12-SPIKE-RESULTS.md#25-what-it-changed-in-v3-and-what-did-not-land) records where each stands, and proposed
+them as **ND-12-1**, accepted as DR-73 (DR-83). The **fixed-recipe arm and a real cross-family
 Referee** run in SP1-bis (B0-09).
 
 Every branch keeps the destination — open-ended work without playbooks. SP1 decides *how much machinery*, not *whether*.
@@ -381,11 +426,31 @@ DR-17]: scored with sharpness, resolution, difficulty, abstention and realised u
 |---|---|---|---|---|
 | **two-way** | E1 | guards only | coverage contract, async | **Log** (Dailies Reel) |
 | **costly-reversible** | E3 | pre-mortem + assumption audit; k = 3 vote on load-bearing facts; reversal drill (§15) | blocking | **Know** with 24 h default-on-silence (parameter) unless the Charter delegates; **Decide** above its cash threshold |
-| **one-way** | E4 **or** founder conviction token | G4 vote + red team + reversal drill where partly reversible | blocking + systems of record | **Decide**: default, dissent, steelman, best rejected alternative, material downside (DR-31) |
+| **one-way** | E4 **or** founder conviction token | G4 evidence (independent objections + ≥ 2-family premise verification) + reversal drill where partly reversible | blocking + systems of record | **Decide**: default, dissent, steelman, best rejected alternative, material downside (DR-31) |
 
-**Evidence debt.** Committing below the rung (founder token or Obligations emergency only) writes
-`{decision, rung_had, rung_owed, due_by, owner_mission}`. Repayment missions are funded from the Obligations lane; debt past
-due becomes a **Decide** packet; the Map shows it like technical debt.
+**Rung-bearing evidence matches the exact proposition (DR-77).** A rung is awarded to the proposition the evidence tested,
+not to a broader one it suggests: one customer accepting one flat-fee offer is E4 for "this customer pays this fee", never
+for "flat fees are required". The Referee checks the claim's wording against the evidence's population, offer and outcome
+before the rung is written [R5-walk B02, B18].
+
+**Evidence debt (DR-77).** Committing below the rung (founder token or Obligations emergency only) writes a durable record:
+
+```yaml
+evidence_debt:                     # values are an illustration
+  id: ED-0217                      # durable; never reused, survives mission death and pivot
+  decision: Ref; rung_had: E2; rung_owed: E4; due_by: 2026-11-15
+  owner_mission: M-0412
+  successor_owner: Venture Mind of V-07    # inherits on kill, pivot or wind-down
+  frozen_question: "Do ≥ 5 of 40 qualified clinics pre-pay $149/mo?"   # hashed; the proposition that must be evidenced
+  repayment_test: "E4 on the frozen question, coverage ≥ 0.9 (parameter)"
+  events: [debt.created, debt.reassigned, debt.repaid, debt.defaulted]
+```
+
+A pivot or kill emits `debt.reassigned` to the successor; it never erases the debt. **Repaying debt is not the hypothesis
+succeeding:** repayment means the owed rung was *obtained* on the frozen question, whatever the answer; a hypothesis
+succeeding is a separate settlement. An **underpowered** result is a typed null ([06](06-MEMORY.md)) and never counts as
+repayment. Repayment missions are funded from the Obligations lane; debt past due becomes a **Decide** packet; the Map shows
+it like technical debt [13 G6].
 
 **Coverage — the missing-evidence audit.** Any claim ≥ E3 and every Priors write carries a coverage figure [S01 §2.10]:
 
@@ -419,17 +484,21 @@ Debate does not beat self-consistency voting at matched compute (R0-A via [S01 �
 
 **Correlated votes are not independent:** agreement is measured per premise class, and where both families agree so
 reliably that the vote is uninformative, k rises or a third route is added (Model Foundry or a paid human adjudicator,
-[CANON §9 F10](00-CANON.md#9-draft-founder-decisions-10)). **Challenge yield** — objections later proved true per form per
+[CANON §9 D10](00-CANON.md#9-founder-decisions-d1d10-aligned-with-15)). **Challenge yield** — objections later proved true per form per
 dollar — makes the forms Thompson arms; a form finding nothing on a door class for 90 days drops to sampling (DR-10).
 
 ## 10. Stop, pivot and kill
 
 ```ts
+type StopState = 'stop_success' | 'kill' | 'stop_budget' | 'awaiting_gate';   // DR-73: four first-class stops
 type StopRule =
-  | { kind: 'success' | 'kill'; criteria: Ref[] }       // kill preregistered
+  | { kind: 'success' | 'kill'; criteria: Ref[] }       // kill preregistered; success unreachable while a veto question is open
   | { kind: 'kill_date'; date: string }                 // default-kill unless affirmatively renewed
-  | { kind: 'budget'; pct: 100 }                        // any resource in the vector
+  | { kind: 'budget'; pct: 100 }                        // any resource in the vector → stop_budget
+  | { kind: 'awaiting_gate'; gate: Ref }                // next step is a named human gate or unavailable capability (§4.5)
+  | { kind: 'diminishing_returns'; delta: 0.1; cycles: 2 }  // top question's value; forces pivot | gate | accept (parameters)
   | { kind: 'no_progress'; cycles: 3 }                  // 'same' ×3 or rung velocity < 25% of prior (parameters)
+  | { kind: 'rescope_review'; burn_pct: 80; forecast_drop_pct: 30 }  // DR-74 → re-scope | kill | continue-with-falsifier
   | { kind: 'voi_exhausted' }                           // every candidate mVoI < 0
   | { kind: 'question_expired'; question: Ref }         // half-life: answer arrives too late
   | { kind: 'guardrail'; metric: Ref; bound: number }   // → Frozen, not Killed
@@ -437,6 +506,13 @@ type StopRule =
   | { kind: 'superseded'; by: Ref }                     // still settled on its frozen version
   | { kind: 'founder_stop' };
 ```
+
+**Stop states (DR-73).** Every mission ends a cycle in one of four named stops or continues: `stop_success` (criteria met
+and every `veto` question resolved), `kill`, `stop_budget` (any resource exhausted) or **`awaiting_gate`** (the mission
+stops and emits the gate request, §4.5). A mission that hits its cap without having named one of the other three is a
+defect in its frame, and the Framing capability check is re-run. **`diminishing_returns`** is a forced decision, not a
+stop: the Mission Lead must choose pivot, gate or accept within the cycle. **`rescope_review`** opens the Re-scope Review
+(§4.5, DR-74).
 
 **Kill carries a steelman for continuing;** renewal needs a new forecast and a non-sunk-cost reason, checked by the Referee
 against the preregistration. **Pivot** = conclude + child with `pivoted_from`, inheriting verified claims and open
@@ -478,7 +554,9 @@ when the answer would arrive too late.
 
 **Thompson.** Arms: approaches, channels, prices, planner configs, challenge forms, Strategy Cells, probe templates. Each has
 a Beta/Gamma posterior on **verified value per shadow-priced dollar**.
-- *Warm starts* from pooled task-family priors through the Lesson Airlock, with per-venture shrinkage.
+- *Warm starts* from pooled task-family priors through the Lesson Airlock, with per-venture shrinkage. When
+  [06](06-MEMORY.md) reports a domain **non-exchangeable**, the Allocator uses 06's wide labelled prior instead, and that
+  arm's exploration share comes from [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)'s bounds [13 G4].
 - *Delayed outcomes:* provisional E3 credit at a learned discount until E4/E5 arrive.
 - *Exploration floor:* ≥ 10% of draws within a sleeve (parameter) to arms with < 5 settlements. Distinct denominators from
   casting exploration (04) and Regulation's **exploration temperature** (novel-bet share of Investment in [15%, 35%],
@@ -499,9 +577,9 @@ waits for a bet cycle; it has priority **within real resources and never manufac
 a funded fallback and a latest safe decision time (CANON §3). Its reserve is a cap as well as a floor; Investment below its
 floor for 3 weeks is the **Obligation Lock-in** attractor [S11 A9]. The **Investment lane** holds everything chosen, always
 with kill dates. Round 2's third "moonshot" lane [S01 §2.1] is retired into the Long-Horizon sleeve, which gives patience the
-same protection with milestone discipline.
+same protection with milestone discipline — two lanes, accepted [#11].
 
-### 12.1 Six sleeves and the pairing rule
+### 12.1 Six sleeves, Core, and the pairing rule
 
 A sleeve is a bounded share of Investment with its own admission logic; without sleeves, a single VoI ranking starves
 patient, volume and self-improvement work or lets one of them eat everything [R3-X U4, X16]. **Every sleeve is a
@@ -510,13 +588,13 @@ its sensor produced an event in the last 7 days (parameter). A broken sensor fre
 
 | Sleeve | Share (parameter; Constitution sets ceilings) | Reinforcing loop | Balancer · live sensor |
 |---|---|---|---|
-| **Core** | remainder, ≥ 35% floor | goal work → evidence → sharper goals | busywork tripwires (05) · Progress Ledger |
+| **Core** — the **residual allocation**, not one of the six named sleeves [C10] | whatever the six leave, ≥ 35% floor | goal work → evidence → sharper goals | busywork tripwires (05) · Progress Ledger |
 | **Probe** | ~15% (cash under the Probe Mandate) | probes → graduations → more pains → more probes | complaint-rate breaker at 0.3% narrows the mandate · Front Desk complaints, unsubscribes |
 | **Replication** | ~10% | working venture → clones → revenue → clones | ring rollout + shared-lineage exposure row · clone vital signs vs source |
 | **Strategy Cells** | ~10% | draws → budget to the leading cell | ≤ 5 cells, 21-day minimum, disjoint audiences · audience-collision detector |
 | **Option Pool** | ~5% armed budgets | options → probes → ventures → options | expiry + false-fire rate · trigger-evaluator logs |
 | **Long-Horizon** | 10–15% (target, X16) | patient bets → capability → larger bets | two missed milestones kill; Season Review · milestone settlements |
-| **Improvement** | **≤ 15% cap** (DR-47) | improvement → better configs → more proposals | beneficiary + 30-day outcome check · beneficiary's ledgers |
+| **Improvement** | floor 6%, 12% for 30 days after a model release; **≤ 15% cap** (DR-47, DR-60) | improvement → better configs → more proposals | beneficiary + 30-day outcome check · beneficiary's ledgers |
 
 Shares illustrate an initial allocation for ~3 Flagships and ~12 Micro-ventures; Allocation moves them by settled yield per
 sleeve inside the ceilings, and the founder sees the ceilings at the Season Review.
@@ -535,6 +613,12 @@ probe:
   founder_min: 0; kill_date: +21d
 ```
 
+**One probe with four arms is not four probes** [R5-walk B05]. A single probe testing four offers or templates against one
+pain holds **one reservation** and settles in **one graduation decision**; its arms share the mandate's cash cap and are
+compared within the probe. **Four bundled probes** are four missions with **four reservations** and four graduation
+decisions, funded together as a bundle (§13). The shape is declared at admission and cannot change after launch; the charged
+cost vector for each is [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)'s.
+
 Admission is **Thompson over probe templates** (landing + refundable pre-order; small ad buy; ≤ 50-prospect disclosed
 outreach; concierge). Every probe settles; nulls go to the Null Registry with their forecast. Graduation opens a Venture
 Genesis mission in Core with the probe's receipts as E3/E4 evidence. Target: 1,000 probes in Year 1 at 4% graduation (CANON §7).
@@ -551,7 +635,9 @@ lessons only, and **ring rollout** (1 → 3 → rest). A defect found in one clo
 When a venture-level mission has **≥ 2 credible, disagreeing strategies**, the engine opens **2–5 cells** as sibling
 missions: preregistered kill each, disjoint audiences, weekly Thompson budget draws with a 10% floor and 21-day minimum
 (parameters). The twin may pre-screen up to 20 at E2 with falsifiers listed. One Venture Mind thesis names *which question
-the cells jointly answer*, so no cell survives by answering another. *Illustration:* reseller vs direct vs done-for-you;
+the cells jointly answer*, so no cell survives by answering another. **Compared cells share an estimand** — the same
+population, outcome metric and window — or their results are labelled **descriptive** and cannot enter the Priors Library as
+a causal prior [R5-walk B14]. *Illustration:* reseller vs direct vs done-for-you;
 done-for-you wins on margin by week 6.
 
 ### 12.5 Option Pool — first when the world changes [R3-X X4]
@@ -567,7 +653,8 @@ option:
 ```
 
 Trigger kinds: capability (own bench), price (diffed pages), regulation (official journals), platform (changelogs),
-competitor (Pain Index). **On fire:** a ≤ 2 h refresh mission re-checks assumptions and terms, then launches **a probe,
+competitor (**competitor change events from the Brain**, [06 §11](06-MEMORY.md#11-minds-the-portfolio-store-and-the-pain-index) —
+not the Pain Index, which carries customer pain) [13 G3]. **On fire:** a ≤ 2 h refresh mission re-checks assumptions and terms, then launches **a probe,
 never a venture**. Record owns sensors; Allocation owns the pool. Target: one option registered per week.
 
 ### 12.6 Long-Horizon — protected patience [R3-X X16]
@@ -602,10 +689,13 @@ deterministic verifiers first, so verifier-minute cost and its shadow price fall
 90%, targets, DR-14) — which directly raises fan-out; every Evaluate move's panel decision is Foundry material; workers never
 read or author verifiers for their own class.
 
-> **NEW DECISION (for CANON §6).** Verifier-building missions are funded from the **acceptance reserve**, not the
-> Improvement sleeve. They manufacture the constraint the reserve order already protects second, and a 15% discretionary cap
-> would ration what clause 3 of the organising principle says to grow. D04's discipline still applies: a named task class as
-> beneficiary and a 30-day Deterministic Share check against *later real outcomes*, or the tranche returns.
+> **DECISION — accepted as DR-60 (modified).** Verifier-building missions draw **only on the acceptance reserve's uncommitted
+> headroom, ≤ 25% of it per month (parameter), never on windows reserved for admitted missions** ~~— funded from the
+> acceptance reserve~~ (DR-60 narrowed it to headroom, capped [#11]). Not the Improvement sleeve: they manufacture the
+> constraint the reserve order already protects second, and a 15% discretionary cap would ration what clause 3 of the
+> organising principle says to grow. D04's discipline still applies: a named task class as beneficiary and a 30-day
+> Deterministic Share check against *later real outcomes*, or the tranche returns. The charging rule itself is owned by
+> [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md).
 
 ## 13. Complementary bundles
 
@@ -686,8 +776,11 @@ launches enter as sleeve candidates and forecasts the planner may cite or ignore
    treated one step closer to one-way [S01 §6].
 3. **Ghost planners** — 5% of missions (parameter, Improvement sleeve) run a shadow planner whose moves are recorded, never
    executed, and scored by counterfactual replay, always labelled as counterfactual [R3-red D07].
-4. **Surprise reserve** — 10% of every tranche (parameter) for moves outside every cited recipe; if surprises pay often,
-   recipes are over-fitted and the forced-blind rate rises.
+4. **Surprise reserve** — 10% of every tranche (parameter) **only** for unforeseen moves outside every cited recipe; if
+   surprises pay often, recipes are over-fitted and the forced-blind rate rises. Integration rework and recovery are **not**
+   surprises: they are funded from the recovery reserve and each overlapping pair's priced integration rework
+   ([04](04-AGENT-ORGANISATION.md)). An override of the 10% parameter on any tranche is recorded as a Journal event with its
+   reason [R5-walk B22; DR-60].
 5. **Realised-VoI receipt** — each settlement records which decision it actually changed and by how much; estimated vs
    realised VoI per planner config is the Allocator's most honest signal.
 6. **Counterfactual kill audit** — 5% of killed missions (parameter) are cheaply reopened after 90 days; the false-kill rate
@@ -748,7 +841,8 @@ replication families and cell results to [17](17-VIBE-STARTUPING-IN-PRACTICE.md)
 
 ## Sources
 
-- `00-CANON.md` (binding; DR-04, 05, 07, 10–19, 24, 28, 31, 33, 40, 46, 47, 55), `00-FOUNDER-DIRECTION.md`.
+- `00-CANON.md` (binding; DR-04, 05, 07, 10–19, 22, 24, 28, 31, 33, 40, 46, 47, 55, 60, 67, 73, 74, 77, 83), `00-FOUNDER-DIRECTION.md`.
+- `_process/R5-FIX-PLAN.md` §03 — R5-walk B02, B05, B14, B18, B22, B31, C6, C10; 13 G3, G4, G6; OG6, OG9; #11; 12's ND-12-1.
 - `r2-seats/S01-mission-engine.md` — primary: record, framing, lifecycle, next-step selection, Bets, ladder, stop rules,
   forecasts, miner and anti-cage rules, coverage audit, self-challenge, Allocator, bundles, examples, ideas.
 - `r3-stretch/R3-expander.md` — X3, X4, X5, X9, X16; X1 as it touches missions; U1, U4, U10.

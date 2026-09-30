@@ -148,7 +148,8 @@ The **steering** half of the hypothesis holds. The **stopping** half fails.
 | 6 | Cross-family refereeing is unproven by SP1 | [14 §6](14-BUILD-PLAN.md) B0-11 and B0-09 | **✓ scheduled** |
 | — | 03's pre-decided outcome table | [03 §5](03-MISSION-ENGINE.md) now holds the result. Only row 1 applies, provisionally, because no fixed-recipe arm ran | **✓** |
 
-**NEW DECISION (ND-12-1).** Changes 1, 4 and 5 enter 03 as design:
+**NEW DECISION (ND-12-1) — accepted as DR-73** ([00-CANON](00-CANON.md) §6), which lands all of SP1's changes in 03.
+Changes 1, 4 and 5 enter 03 as design:
 
 - a `gate` stop kind, `{kind: 'awaiting_gate'; gate: Ref; clause: Ref}`;
 - a `veto` class on questions in the uncertainty map, which blocks `success` until resolved;
@@ -477,7 +478,7 @@ rows and the **C6 judge row** all read `family = codex` beside `model = claude-o
 `*-codex.out.md`. The column records the slot, not the family. The SP1 report itself is correct [SP1 §1b]. But anyone who
 aggregates launch logs by family would count SP1 as cross-family evidence, and it is none.
 
-**NEW DECISION (ND-12-2).** Every spike receipt and every Kernel Receipt derives `family` from the model id, through the
+**NEW DECISION (ND-12-2) — accepted as DR-83** ([00-CANON](00-CANON.md) §6). Every spike receipt and every Kernel Receipt derives `family` from the model id, through the
 Provider Contract Registry ([09b §2](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)). A declared family that disagrees with the
 model id fails lint.
 
@@ -551,7 +552,7 @@ spike:
 ## 8. Open questions
 
 1. **Land ND-12-1 in 03 now, or wait for SP1-bis?** *Recommendation:* now. Each change adds a way to stop and removes no
-   freedom, and SP1-bis should test the engine as it will ship.
+   freedom, and SP1-bis should test the engine as it will ship. *Resolved:* landed now, as DR-73.
 2. **Should the launcher auto-retry a template the classifier refuses?** *Recommendation:* no. Drop the template from the
    census and send a **Know** item to the founder. Silent retries bring back the inconsistency in §6.1.
 3. **How much should one cross-family catch weigh before the base rate exists?** *Recommendation:* keep DR-11 mandatory. In
@@ -570,4 +571,4 @@ spike:
   `referee-last-message.txt`, `01-working.png`, `02-done-referee-fail.png`); branch `vision/v3-slice` at `8320af0`.
 - Where the changes landed: `03-MISSION-ENGINE.md`, `04-AGENT-ORGANISATION.md`, `08-SURFACES.md`, `09a-ENGINEERING.md`,
   `09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md`, `14-BUILD-PLAN.md` (sections as cited inline).
-- `00-CANON.md` §2, §4–§6 (DR-11, 12, 13, 16, 19–22, 24, 53–55), §8, §9 (F1); `00-FOUNDER-DIRECTION.md`.
+- `00-CANON.md` §2, §4–§6 (DR-11, 12, 13, 16, 19–22, 24, 53–55, 73, 83), §8, §9 (F1); `00-FOUNDER-DIRECTION.md`.

@@ -66,8 +66,8 @@ Fifteen principles. Each names the mechanism that makes it true, because a princ
 | 9 | **Titles, not names.** Agents are records of title and expertise, launched when needed and dissolved after. | Identity records, launch-on-demand, Wrap Deposit (04, 06) |
 | 10 | **Fuse fields no human could.** Hybrid specialties are tested against classic roles and against a generalist. | Fusion Thesis, Generalist Null, Audition Ladder (04) |
 | 11 | **Memory without a graveyard.** Only what is read and used keeps standing. | Use Ledger, Orphan lint, Sleep, forgetting verbs (06) |
-| 12 | **Every effect is a receipt.** The outside world is touched through one door, under a mandate, and the touch is recorded. | Effect Gateway, Operation IDs, mandates, honest undo (16, 09a) |
-| 13 | **Brakes nobody can remove.** Narrowing is instant and free; widening needs the founder. | Regulation, SCRAM safe states, five-level kill, never-list (02, 05) |
+| 12 | **Every effect is a receipt.** The outside world is touched through one door, under a mandate, and the touch is recorded. Every effect is classified once, from one rule source [DR-57]. | Effect Gateway, Operation IDs, mandates, honest undo ([16](16-EXTERNAL-WORLD-HUMANS.md), 09a) |
+| 13 | **Brakes nobody can remove.** Narrowing is instant and free; widening needs the founder — and waits out a 12-hour cooling-off. Automatic narrowing is a Journal overlay on the signed Constitution, never a rewrite of it [DR-58, DR-59]. | Regulation, SCRAM safe states, narrowing overlays, five-level kill, never-list (02, [05](05-AUTONOMY-INITIATIVE-FOUNDER.md)) |
 | 14 | **Startup speed, engineering discipline.** Test, measure, pivot — with a governance budget so that control never eats speed. | Governance budget per door type, control ROI ledger, ≤3 serial gates (09b) |
 | 15 | **Honest numbers.** Every number traces to a system of record; unknown state is drawn as fog. | Honest Scoreboard, the Map, labels (08, 06) |
 

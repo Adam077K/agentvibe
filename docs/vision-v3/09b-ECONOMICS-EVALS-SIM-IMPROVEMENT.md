@@ -1,7 +1,7 @@
 # 09b — Economics, evals, simulation and improvement
 
 *Round 5 section file, 2026-09-30. Obeys [00-CANON](00-CANON.md). Owns (canon §8, row 09b): the four resources, reserves,
-Budget Ledger, forecasting whole missions, degraded modes, treasury, correlated-failure budget; the Acceptance Coverage
+Budget Ledger and the charging rule (DR-60), forecasting whole missions, degraded modes, treasury, correlated-failure budget; the Acceptance Coverage
 Contract and coverage graph, Verifier Foundry, eval tiers, twin, calibration, leverage and FTE-equivalent; Regulation's
 stocks, homeostats, exposure book, immune system, governance budget and control ROI; the weekly scorecard; the
 self-improvement loop.*
@@ -55,7 +55,9 @@ conflict-free integration: one rework per overlapping pair. Each is a design inp
 > *Stress case*: a named joint shock across cash, permission and capacity. *Judge offset*: a judge family's measured
 > self-preference per rubric. *Verifier rung*: advisory · pre-screen · decide. *Fidelity certificate*: a twin component's
 > scoped, prospectively validated claim. *Control line*: a row of the control ROI ledger. *Gain label*: benchmark ·
-> deployment · business.
+> deployment · business. *Charged vector*: the per-component resource charge of a mission, probe or arm (§3.2).
+> *Concession exposure*: a concession's full commitment value (§3.3, DR-80). *Provisional verdict*: a single-family
+> verdict that settles nothing (§6, DR-69).
 
 Not specified here (link instead): Allocator ranking, lanes, sleeves, bundles → [03](03-MISSION-ENGINE.md); Audition
 Ladder rungs, casting, identity records → [04](04-AGENT-ORGANISATION.md); autonomy promotion, Closer Claims, Progress
@@ -117,15 +119,18 @@ type ProviderContract = {
   id: string; provider: 'anthropic' | 'openai' | 'foundry';   // foundry = the Model Foundry family (07)
   account_ref: string;                 // opaque, never a credential
   route: 'subscription' | 'credits' | 'api'; plan: string; rate_card_ref: string;
-  permitted_use_ref: string;           // DR-45 routing by provider terms (09a)
+  permitted_use_ref: string;           // DR-61 billing rule by provider terms (09a providerMode)
   allowance_buckets: string[]; throughput_buckets: string[];   // observed, never assumed universal
   overflow_grant_ref: string | null;   // an enabled credit reload is not a grant
   evidence: { url: string; fetched_at: string; sha256: string }[]; valid_until: string;
 };
 ```
 
-DR-45 binds: API keys for autonomous ventures, customer data and all unattended Codex; subscriptions only for
-founder-initiated interactive work — the Allocator cannot price an impermissible route, however cheap. F2 starts API caps at
+The billing rule binds (DR-61, ~~DR-45's wording~~): until the founder signs D2, **every headless run uses an API key**.
+The D2 recommendation allows attended headless on the subscription for **Claude only** (launched by his command, presence
+proof <30 min old, venture at A0–A1, data D0–D1); all Codex headless, autonomous ventures, D2+ data and initiative jobs use
+API keys, and subscription work carries an API shadow price — the Allocator cannot price an impermissible route, however
+cheap. F2 starts API caps at
 **$150 Anthropic / $50 OpenAI per autonomous venture per month** (parameter), raised only by the Treasury rule. **Renewal is
 an experiment:** compare plans over the same observed workload — fee, overflow, missed deadlines, idle allowance, accepted
 outcomes; an upgrade wins only if expected savings in metered cost and delay beat its fee under uncertainty. The candidate
@@ -146,6 +151,10 @@ type EconomicEvent = {
   source: 'provider' | 'invoice' | 'measured' | 'estimated';
   replaces?: string;                    // corrections append; history is never rewritten
   root_purpose: string;                 // every descendant charged to a root purpose (DR-47)
+  charged_pool: 'obligations' | 'acceptance' | 'recovery' | 'acceptance_headroom' | 'improvement'
+              | 'build_charter' | `sleeve:${string}`;   // exactly one, by purpose (§3.1, DR-60)
+  beneficiary: string;                  // named on every draw; 30-day outcome check
+  reservation_ref?: string;             // the probe / arm hold this debit consumes (§3.2)
 };
 ```
 
@@ -164,6 +173,80 @@ categories so reasoning tokens are never counted twice.
 accepted, the surface prints *"no accepted outcomes; $X spent"*. Every scope shows three numbers — **spent · committed ·
 available to authorise** — and capacity with timestamp and confidence ([08](08-SURFACES.md)).
 
+### 3.1 The charging rule — one pool per purpose (canonical home) [DR-60]
+
+Every spend is charged by its **purpose** to exactly one pool. The Budget Ledger refuses an `EconomicEvent` whose
+`charged_pool` does not match its purpose row.
+
+| Purpose of spend | Pool | Denominator of the cap |
+|---|---|---|
+| Delivering an obligation | Obligations reserve | the obligation's own reserve, keyed by obligation ID |
+| Judging funded work — verifiers, judges, Time-out Confirmers, adjudication | Acceptance reserve | the admitted mission's completion reserve (§4) |
+| Recovery | Recovery reserve | the admitted mission's completion reserve (§4) |
+| Manufacturing acceptance capacity (Verifier Foundry, §12) | Acceptance reserve's **uncommitted headroom only** | ≤25% per month (parameter) **of uncommitted acceptance reserve**; never windows reserved for admitted missions |
+| Improving how the organisation works — auditions, Forge, config trials, Skill Foundry, reflex re-runs, post-Handover harness tuning | Improvement sleeve | floor 6%, 12% for the 30 days after a model release, cap 15% (parameters) — **of monthly investment-lane capacity, per resource** |
+| Constructing the organisation until Handover | Build Charter (ends at Handover) | the founder-signed Charter envelope |
+| Everything else | Its investment sleeve | the sleeve's share of monthly investment-lane capacity, per resource |
+
+"Per resource" means the percentage is applied separately to each component of the `ResourceVector` (§1) — 15% of the
+lane's cash, 15% of its allowance, 15% of its verifier windows — never to a blended dollar figure. Every draw names a
+**beneficiary** and faces the **30-day outcome check** (DR-47); an unproven draw returns and its null is kept.
+
+This table reconciles three proposals made elsewhere: the audition budget and 30-day post-release window (ND-04-1,
+accepted — [04 §4.5](04-AGENT-ORGANISATION.md)); verifier-building from the acceptance reserve (modified to headroom-only
+and capped — [03 §12.8](03-MISSION-ENGINE.md)); and the Build Charter (modified to end at Handover, after which tuning is
+charged to the Improvement sleeve — [14 §7](14-BUILD-PLAN.md)).
+
+### 3.2 Denominators, the charged vector and overrides [R5-walk C10, B05, B22]
+
+**Every cap names its denominator** — a percentage without one is refused by lint. The rows this file owns:
+
+| Cap | Denominator |
+|---|---|
+| Improvement sleeve 6% / 12% / 15% | monthly investment-lane capacity, per resource (§3.1) |
+| Foundry draw ≤25%/month | uncommitted acceptance reserve at the start of the month (§3.1) |
+| Investment exploration floor 15% (§4) | investment-lane capacity, per resource, rolling 30 days |
+| Mandate headroom (monthly) | the signed mandate envelope, **all** resource components charged to that mandate — never one spend line such as ads |
+| Correlated-failure budget 40% (§7) | loss-weighted obligations across the portfolio |
+| Verifier utilisation ceiling 70% (§13) | the route's measured qualified-window throughput |
+| Surprise reserve (03 parameter) | the mission's execution + integration-rework holds |
+
+**The charged vector.** Every mission, probe and arm is charged a vector, never a single number: `{cash, allowance,
+throughput, founder_minutes, verifier_windows}` (§1). Forecast, reservation, consumption and release are all posted per
+component; a summary dollar figure is a view over the vector, labelled with the view it uses (§3 cost views).
+
+**A reservation ledger per probe or arm.** A mission running four probes holds four reservations; one probe with four arms
+holds one reservation with four arm sub-holds. Which of the two a mission is, is 03's framing decision; the ledger records
+it, so a "graduated result" can never be booked against holds that were not made.
+
+**The full reserved tranche** (§4) shows every hold — execution, integration rework, acceptance, recovery — and its
+**authorised contingency draw** (the surprise reserve) as a separate line with its authority. Predictable rework (an
+overlapping pair, §5) is budgeted as `integration_rework`, never drawn from contingency; contingency is only for work
+outside every cited recipe (03).
+
+**Parameter overrides are records.** An illustration or mission may use a value other than the initial parameter (a 15%
+surprise reserve where 03 says 10%) only as a `parameter_override {parameter, default, value, authority, reason,
+expires}` event; the surface shows it beside the number. An override with no authority is refused.
+
+### 3.3 Concession exposure [DR-80, R5-walk B19]
+
+A concession, discount, credit or extended term is charged at its **full commitment value** — e.g. two months at 20% off an
+account with $2,400 MRR is **2 × 0.20 × $2,400 = $960** of concession exposure, not the first invoice's $80. Grants
+(per-effect and weekly) are checked against that full value, and it sits in the exposure book (§19) until the commitment
+ends. 16 compiles the commitment; this ledger books it.
+
+### 3.4 Founder-time accounting categories [R5-walk B39]
+
+Founder minutes are posted in three disjoint categories, never summed into one figure without a label:
+
+| Category | Contains | Used for |
+|---|---|---|
+| **Decision minutes** | time on Decide packets and Halts only | the ≤30 decision-minutes/day target; seconds per accepted outcome (§9) |
+| **Total attention** | decision minutes + Know, Circle and Reel reading | Founder Attention stock (§17) |
+| **Work time** | founder-performed work (a signature ritual, a call, rescue) | F in Leverage (§9) together with total attention |
+
+Elapsed-time figures state their start and end timestamps; a "48-hour" window is computed from them, never asserted.
+
 ## 4. Admission with completion reserves
 
 **Reserve order: obligations → acceptance → recovery → investment** (canon §5). A launched mission must be able to reach
@@ -175,9 +258,15 @@ tranche:
   mission: agency/offer-validation
   lane: investment                 # lanes, sleeves, ranking: 03
   policy_snapshot: l_2026-10-02T09:00
-  cash_cap_usd: 120
-  holds_usd: {execution: 80, acceptance: 20, recovery: 20}      # completion reserve = 40
+  cash_cap_usd: 120                # = every hold below, contingency included
+  holds_usd: {execution: 64, integration_rework: 8, acceptance: 20, recovery: 20}   # completion reserve = 40
+  contingency: {pool: surprise_reserve, usd: 8, authority: "03 parameter: 10% of execution+rework, rounded up"}   # separate line
+  charged_vector: {cash_usd: 120, allowance: [claude-max: 0], throughput: [anthropic/api: fc-142, openai/api: fc-143],
+                   founder_minutes: 8, verifier_windows: 3}                                          # §3.2
+  reservations: [probe-1: {arms: [a, b], cash_usd: 64}]   # one probe, two arms — one hold, two sub-holds
+  parameter_overrides: []          # each {parameter, default, value, authority, reason, expires}
   capacity_holds: [anthropic/api/agency: fc-142, openai/api/agency: fc-143]
+  acceptance_bucket_holds: [anthropic/api/agency:acceptance: fc-142a]   # held before any debit (DR-81)
   verifier_windows: [component:codex-judge by 11:00, end-to-end:both-families by 12:00]
   acceptance_coverage_contract: acc-7731    # never a reviewer-family string (R3-red §3.9)
   founder_minutes_cap: 8
@@ -187,7 +276,15 @@ tranche:
 
 **Admission invariant:** consumed + unsettled exposure + active reservations + protected reserves ≤ authorised envelope,
 checked atomically (compare-and-swap) at portfolio, venture, mission and bucket level. Subagents and retries debit their
-parent; a nested agent is a visible team member (DR-24), never a way to mint budget. Investment may borrow operational
+parent; a nested agent is a visible team member (DR-24), never a way to mint budget.
+
+**Provider spend caps are reservation buckets held before every debit** [DR-81, R5-walk B23]. A provider cap (e.g. F2's
+$150 Anthropic per venture per month) is split into buckets — execution, acceptance, recovery — and the acceptance bucket
+is **held at admission** for the coverage contract's windows. Every debit first checks and decrements its own bucket;
+**execution can never consume acceptance headroom**, however much execution cap remains unspent elsewhere. If a debit
+nonetheless lands against a held acceptance bucket, that is not a bad forecast: it is an `invariant_violation
+{invariant, bucket, debit_id, held, consumed}` event, a labelled failure of the reservation implementation that halts
+admission on that bucket and opens a near miss (§22). Investment may borrow operational
 headroom only if it can checkpoint before an obligation's latest safe start; irreversible commitments never borrow
 recallable capacity. The investment lane keeps a 15% exploration floor (parameter); obligations eroding it for three weeks
 raise a structural capacity proposal (attractor A9).
@@ -206,7 +303,8 @@ arithmetic. The writer is usually the smaller half of the bill:
 ```
 E[cost] = Σ workers (context_load + work + retries·p_retry)
         + Σ coverage (deterministic + judges·route_price) · (1 + p_disagree·adjudication)
-        + integration_rework · overlapping_pairs
+        + refereeing                                  # per loop cycle × forecast cycles (DR-73)
+        + integration_rework · E[reworks]             # from 04's overlap estimator, with its interval
         + recovery_reserve · p_checkpoint
         + founder_minutes · shadow_price          # decision view only
 ```
@@ -214,7 +312,8 @@ E[cost] = Σ workers (context_load + work + retries·p_retry)
 | Term | Measured | Consequence |
 |---|---|---|
 | context_load | SLICE: a 173-word summary cost $1.08 and 153 s on the Builder, mostly inherited context and self-review, vs 24 s for the Referee | the context profile is chosen per mission ([04](04-AGENT-ORGANISATION.md)); a profile change resets the prior |
-| integration_rework | SP2: one rework launch per overlapping pair; leases idled the fast worker 13.2 of 21.6 s | every overlapping pair budgets one rework (DR-22) |
+| integration_rework | SP2: one rework launch per overlapping pair; leases idled the fast worker 13.2 of 21.6 s | priced from the **overlap estimator** ([04 §9.3](04-AGENT-ORGANISATION.md)): expected rework launches with an interval, reserved as `integration_rework` at the interval's upper bound; without history, its fallback of one rework per overlapping pair (DR-22) [R5 G-B1] |
+| refereeing | SP1: the Referee was **42%** of the loop's cost (measured, $8.72 of the run) | every mission forecast carries a refereeing line; deterministic claim-source fetch and quote-match run before any model to shrink it (§10, DR-73) [SP1] |
 | coverage | SP3: ~290 s per Claude judge pass, ~130 s per Codex pass; cross-family caught what self-review missed | review is reserved and priced before launch (§13) |
 
 ```ts
@@ -243,7 +342,7 @@ same-family sign-off on exhaustion [S14 §2.5].
 | **Conserve** | P(deadline) < 0.8 or reserve pressure (parameter) | cut speculative fan-out, compact context, batch, Batch/Flex pricing | touch obligations |
 | **Essential** | reserve breach forecast | obligations, active acceptance, recovery; checkpoint investment | start investment |
 | **Route unavailable** | limit, outage, expired rights, auth mismatch | switch to an admitted route inside an existing grant and data policy | treat an API key's presence as a grant |
-| **Acceptance waiting** | no qualified judge for a required edge | preserve artifacts; deterministic dimensions settle; pre-authorised deterministic rollback | dispatch a dependent effect; substitute a same-family judge |
+| **Acceptance waiting** | no qualified judge for a required edge | preserve artifacts; deterministic dimensions settle; pre-authorised deterministic rollback; a **qualified human alternative** only if the coverage contract named it before launch | dispatch a dependent effect; substitute a same-family judge; let a provisional verdict satisfy the edge |
 | **Hold** | no route fits authority and resources | persist state; one bounded Decide packet | retry forever; borrow customer funds |
 
 ```mermaid
@@ -265,9 +364,19 @@ stateDiagram-v2
 **The runner enforces recovery:** stop new effects and preserve artifacts and request IDs → fence the old worker (new
 epoch, DR-20), keep uncertain exposure reserved → classify (rate, allowance, spend cap, availability, permission) → backoff,
 switch inside a grant, or Hold → reconcile effects; `uncertain` never auto-retries (DR-26) → new lease, revalidated policy
-snapshot and Brain version. **Founder contact:** Conserve, Essential and in-grant switches are **Log** (Shelf); Hold is a
-**Decide** packet at the next window (Tap), raised to Buzz if an obligation's latest safe decision time falls inside it.
-The packet offers wait (deadline impact), buy bounded capacity (price) or change timing — never "accept without a Referee".
+snapshot and Brain version.
+
+**Single-family mode is provisional** [DR-69, R5-walk B25]. When only one family is available, its verdicts are recorded
+as `provisional`: they may inform work and settle nothing. A provisional verdict **never satisfies a missing coverage
+edge**. A human may stand in for the missing edge only if the coverage contract named a **qualified human alternative**
+(who, qualification, deadline) *before launch*; a human found after the fact is an adjudicator request, not a substitute.
+
+**Founder contact.** 09b does not choose reach [C4, DR-65]. Each mode transition emits to 08 a contact record with the
+packet's **class** (Conserve, Essential and in-grant switches are *Log*; Hold is *Decide*), its **deadline** (the
+obligation's latest safe decision time, if any) and its **cost of delay** (per hour, in the charged vector); 08's one
+ordered reach table resolves the channel. ~~Hold raised to Buzz if an obligation's latest safe decision time falls inside
+the window~~ (DR-65). The Hold packet offers wait (deadline impact), buy bounded capacity (price) or change timing — never
+"accept without a Referee".
 
 ## 7. Correlated-failure budget and joint stress
 
@@ -375,7 +484,14 @@ acceptance_coverage_contract:
     - {edge: component,  target: api-change,   family: claude, fresh: true}
     - {edge: component,  target: pricing-copy, family: codex,  fresh: true}
     - {edge: end_to_end, target: integration,  families: [claude, codex], blind: true}
-  disagreement: {material_if: [verdict_flip, unrefuted_defect], route: third_route}   # F10
+  disagreement: {material_if: [verdict_flip, unrefuted_defect], route: third_route}   # F10; DR-71 below
+  publication_gate: [deterministic_checks, component, end_to_end]   # required before main / deploy / outbound (DR-70)
+  time_out_confirmer: null           # required edge only when an R3/R4 effect is planned (DR-70)
+  settlement_edges:                  # three separate facts, never one (DR-70)
+    - {edge: artifact_accepted,     by: parsed_verdict}
+    - {edge: deployment_observed,   by: "observation broker — independent production observation"}
+    - {edge: promise_fulfilled,     by: "obligation register / system of record"}
+  human_alternative: null            # named before launch or not at all (DR-69)
   scoring: within_generator_only     # §11, DR-12
   self_review_counts: false          # SLICE
   verdict_moves_card: parsed_line_only   # DR-13
@@ -398,11 +514,26 @@ flowchart LR
 
 **Rules.** (1) Each component gets an opposite-family judge. (2) Mixed authorship gets independent end-to-end judgments
 from **both** families; neither alone satisfies the other-family condition. (3) Deterministic checks and observations run
-first; no judge overrules a failed deterministic check. (4) Material disagreement (a PASS/FAIL flip, or a defect one judge
-raises and the other cannot refute with evidence) goes to a **third route**: a Model Foundry judge once qualified,
-meanwhile a paid human pool (F10). (5) The producing lineage never picks, shops for or retries its reviewer; judges see no
-builder identity, preferred verdict or self-assessment. (6) FAIL offers re-queue with reasons; **Done and passed are
-separate facts** (DR-13).
+first; no judge overrules a failed deterministic check. The Referee's first act on any factual claim is deterministic:
+**fetch the claim's source and match the quote** before any model is invoked; a missing or unmatched quote fails the
+claim with no judgment spent (DR-73). (4) **Acknowledged defect closes without adjudication** (DR-71): when the producer
+accepts a FAIL's defect and reworks, the old candidate **stays FAIL**, the rework is a new candidate judged afresh, and no
+third route is needed. Adjudication is required only to **accept a candidate over an unrefuted FAIL** — a PASS/FAIL flip,
+or a defect one judge raises and the other cannot refute with evidence — and goes to a **third route**: a Model Foundry
+judge once qualified, meanwhile a paid human pool (F10). **Independence is judged per component and lineage**, not by
+family name: a judge sharing a component's model version, prompt lineage or fine-tune ancestry with its producer is not
+independent of it, whatever its family label (qualification key, canon §5). (5) The producing lineage never picks, shops
+for or retries its reviewer; judges see no builder identity, preferred verdict or self-assessment. (6) FAIL offers
+re-queue with reasons; **Done and passed are separate facts** (DR-13).
+
+**What gates publication** [DR-70, R5-walk B07, B09, B38]. Workers may integrate on a staging branch before any verdict.
+**Publication** — a CAS land to main, a deploy, or any outbound effect — waits for every edge the contract lists under
+`publication_gate`: its deterministic checks, each component edge and the end-to-end edge(s). A **Time-out Confirmer**
+edge (a second-lineage check of the target card) is reserved only for contracts that plan an R3/R4 effect, and gates that
+effect. After publication, **settlement is three separate edges**: *artifact accepted* (the parsed verdict), *deployment
+observed* (an independent production observation through the broker — its own edge, never inferred from a green deploy),
+and *promise fulfilled* (the obligation's system of record). Each settles independently; a card may show accepted and
+still-unobserved at once.
 
 **Why cross-family is mandatory though its scores are biased.** SP3's cross-family judge was the only one to catch an
 unsourced fear claim (*"one underpayment penalty typically costs more than a full year"*) that the same-family judge scored
@@ -476,7 +607,10 @@ within 90 days. **The KPI is accepted outcomes that later held, never verifier c
 Economist's 600 tickets/week, all panel-reviewed (~30 panel-hours), gain five checks (concession ≤ policy; refund
 reconciles in 10 min; no promise without an Obligation record; reply cites a Brain fact; tone classifier at pre-screen).
 By week 6, 82% settle deterministically, panel time ≈ 4 h. **Trigger:** a class below target or above 5 panel-hours a
-week (parameter) opens a Foundry mission charged to Acceptance capacity as its root purpose.
+week (parameter) opens a Foundry mission charged to the **acceptance reserve's uncommitted headroom**, ≤25% of it per
+month (parameter), never windows already reserved for admitted missions (§3.1, DR-60). A Foundry mission that would need
+more waits for next month's headroom or asks Allocation for an investment-sleeve tranche; it never borrows reserved
+acceptance.
 
 ## 13. Verifier capacity: qualified service windows
 
@@ -487,6 +621,11 @@ deterministic verifier, or human adjudicator) with a measured service rate, dead
 - **70% utilisation ceiling** per route (parameter, DR-15); above it admission holds new acceptance-dependent missions
   (ground delay) with a stated reason and expected start.
 - **Whole review paths are reserved**: component edges, both end-to-end judges, forecast retries and forecast adjudication.
+- **UNPARSED counts against capacity** [R5 OG11]: a judgment returning UNPARSED (canon §5) consumed its window and
+  settled nothing. Each route's service rate is its *parsed* verdicts per hour, and the retry forecast uses that route's
+  measured UNPARSED rate per family. A family whose headless UNPARSED rate exceeds 2% (parameter) is not counted as
+  autonomous acceptance capacity until its adapter is fixed (mechanism and measurement: [09a](09a-ENGINEERING.md),
+  [14](14-BUILD-PLAN.md)).
 - **Correlated demand is simulated, not summed**: integration failures and disagreements arrive when a provider slows.
 - **Little's-law WIP bound**: open acceptance-requiring missions ≤ verified throughput × target cycle time.
 - **Pre-emption order**: obligations and incident recovery → acceptance of work already produced → investment trials →
@@ -611,7 +750,7 @@ An agent that runs forty minutes and dissolves is weather; the climate is what i
 | Founder Attention | Attention Exchange | ≤ supply (F4: 45 weekday min); ≤5 open packets |
 | Trust | Calibration Ledger | no cell draining > 2 weeks |
 | Capability | Backlot, Capability Registry, cast registry | reuse not falling 3 weeks |
-| Knowledge | Priors, Nulls, Use Ledger | orphan lint = 0 |
+| Knowledge | Priors, Nulls, Use Ledger; memory mass ([06 §7](06-MEMORY.md)) | orphan lint = 0; **memory mass** (active records × mean pack share, per venture) within its set-point band — above it, a typed consolidation proposal to Allocation, never a deletion [R5 #4] |
 | Cash + Compute | Budget Ledger, Books | runway ≥ floor; burn in band |
 | Reputation | complaints, unsubscribes, replies per brand cell | meter bands ([16](16-EXTERNAL-WORLD-HUMANS.md)) |
 | Obligations | obligation register | none past latest safe start |
@@ -657,9 +796,15 @@ table that "funds a verifier mission", R3-red §3.6) is closed in the schema: ty
 | Spend | burn in band | degrade tier; batch; pause investment lane (never obligations) | propose scouting if starving |
 | Attention | load ≤ supply | bundle; defer Know items; propose Standing-Order compilation | offer optional Circle choices |
 | WIP | open ≤ Little's-law bound | stop starting, start finishing | allow starts |
-| Exploration | novel share ∈ [15%, 35%] | slow new bets | propose cheap scouts |
+| Exploration | novel share ∈ [15%, 35%] of investment-lane capacity (exploration temperature); set-point at **35%** for a domain with no exchangeable prior [R5 G4] | slow new bets | propose cheap scouts |
 | Reputation | meters in band | pause outbound for that brand cell | — |
 | Governance | overhead ≤ door budget (§21) | propose sampling for zero-catch controls | — |
+
+**Exploration temperature without an exchangeable prior** [R5 G4]. When the exchangeability check (03 §11, 06 §9) finds
+a new domain's outcomes not exchangeable with the portfolio pool, the domain gets a wide, labelled prior and its
+exploration temperature is held at the **top of the band (35%)**, never above it, until the domain has ≥10 settlements of
+its own (parameter); it then returns to the portfolio set-point. The bounds never widen past [15%, 35%] — a domain with
+no prior buys information inside the band, not by exceeding it.
 
 ```yaml
 homeostat:
@@ -669,7 +814,8 @@ homeostat:
   max_actuation_per_hour: 1
   actuators: [hold_admission, prefer_decide_rung, propose:foundry_mission]
   can_start_work: false; can_fund: false; can_accept: false     # schema-checked
-  escalation: {after_hours_out_of_band: 24, class: Decide, reach: Tap}
+  escalation: {after_hours_out_of_band: 24, class: Decide, deadline: from_time_to_boundary, cost_of_delay: per_hour}
+                                 # 08's reach table chooses the channel (DR-65)
 ```
 
 **Arbitration order** when homeostats disagree: obligations > reputation > verifier > spend > exploration > memory [S11 §8].
@@ -714,6 +860,8 @@ limits_book:
     - {quantity: open_customer_promises,   window: now, group: venture,    limit: 25,   enforce: admission_hold}
     - {quantity: irreversible_in_flight,   window: now, group: venture,    limit: 3,    enforce: gateway_refuse}
     - {quantity: money_at_risk_usd,        window: now, group: venture,    limit: 1500, enforce: gateway_refuse}
+    - {quantity: concession_exposure_usd,  window: now, group: venture,    limit: 1000, enforce: gateway_refuse,
+       measure: "full commitment value (§3.3, DR-80)"}   # limit is an illustration
     - {quantity: funded_work_share,        window: 30d, group: dependency:model-family, limit: 0.30, enforce: warn,
        feasibility: "checked against eligible routes — two families cannot both sit below 30%"}
     - {quantity: casting_share,            window: 30d, group: task-class×config, limit: 0.40, enforce: soft}
@@ -746,6 +894,18 @@ antibody:
   false_block: {later_judged_harmless: 0.02, per_eligible_benign_traffic: 0.001}
   expires: 2027-01-04                 # renewed only if it fired or its vaccine still exercises it
 ```
+
+**Containment and antibodies are separate mechanisms** [DR-72, R5-walk B11]:
+
+| | Immediate scoped SCRAM | Antibody lifecycle |
+|---|---|---|
+| Purpose | stop the harm now | detect the pattern next time |
+| Trigger | stop-loss trip (§19) or Incident Lead | incident, reversal or Referee rejection with a root cause |
+| Timing | immediate, no probation | observe → warn → block, each step earned |
+| Scope | the affected scope (channel, brand cell, venture) moved to its Charter's SCRAM safe state; extended to **siblings** only with recorded applicability evidence (same dependency group, same skill version, same pattern) | portfolio-wide as a pattern, never with data |
+| Ends | Incident Lead or founder restart on evidence | expiry, broken vaccine or promotion to innate |
+
+A SCRAM never promotes a detector, and a detector's `block` mode is never a way to contain a live incident.
 
 **The red team's corrections, built in.** (1) A new antibody is an *observation*; it blocks only after proving it enforces
 an authorised consequence, never a preferred method — an unfamiliar method meeting the same consequence stays executable
@@ -865,7 +1025,7 @@ Evolution, not design, is the engine: *variation, selection by an external crite
 ```mermaid
 sequenceDiagram
   participant W as Missions (Claude + Codex)
-  participant AL as Allocation (Improvement sleeve ≤15%)
+  participant AL as Allocation (Improvement sleeve 6–15%)
   participant T as Twin / replay
   participant R as Referee (within generator)
   participant RA as Release authority
@@ -882,8 +1042,10 @@ sequenceDiagram
 ```
 
 **Disciplines.** *Charged and capped:* every descendant is charged to a root purpose; discretionary improvement lives in
-the **Improvement sleeve ≤15%** (DR-47), each tranche with a beneficiary and a 30-day outcome check — unproven tranches
-return and the null is kept (D04). *Proposing is free, activating is not:* changes to the protected computing base need the
+the **Improvement sleeve** — floor 6%, 12% for the 30 days after a model release, cap 15% of monthly investment-lane
+capacity per resource (parameters; §3.1, DR-47, DR-60) — each tranche with a beneficiary and a 30-day outcome check —
+unproven tranches return and the null is kept (D04). Until Handover, *constructing* the organisation is charged to the
+Build Charter, not this sleeve; afterwards residual harness tuning comes here ([14 §7](14-BUILD-PLAN.md)). *Proposing is free, activating is not:* changes to the protected computing base need the
 release authority — founder plus independent evidence from both families, old decisions replayed under new semantics; a
 candidate never evaluates its own promotion (DR-06, C03). *Diversity floor:* at least two live lineages per task family and
 one of each model family stay in the pool even when behind. *Mutation share is tuned:* 10% to start, tuned monthly by gain
@@ -913,7 +1075,8 @@ display). Tranche $40 (execution 26 · acceptance 8 · recovery 6), three qualif
 
 **$5.91 of $40**; unused reserve released after reconciliation. Founder: zero minutes required; the headline appears on
 the Dailies Reel as an optional **Circle** (Reel). Two verifiers replaced two judgments; the defect came from the
-cross-family judge and blocked without adjudication because the Claude judge could not refute it (§11 rule 5); no
+cross-family judge and blocked because the Claude judge could not refute it (§11 rule 5); the producer accepted the defect,
+so the old candidate stays FAIL and no adjudication was needed — the fix is a new candidate (DR-71); no
 cross-family score was compared. **Memory writes:** verdict + coverage record; near miss (price display); Foundry candidate
 "annual price label matches billing interval"; cost residual (forecast $7.50, actual $5.91) to the Calibration Ledger.
 
@@ -1000,8 +1163,11 @@ Ranks are the red team's P × S [R3-red §1]; tests are its Q-suites plus this f
 
 ## Sources
 
-- `00-CANON.md` (§2, §3, §5, §6 DR-04, DR-10–DR-19, DR-22, DR-26, DR-45–DR-47, DR-50, DR-54, §7, §9 F2/F3/F10);
-  `00-FOUNDER-DIRECTION.md`; `02-ORGANISATION.md` §4.2, §4.4, §4.7, §6.
+- `00-CANON.md` (§2, §3, §5, §6 DR-04, DR-10–DR-19, DR-22, DR-26, DR-45–DR-47, DR-50, DR-54, DR-60, DR-61, DR-65,
+  DR-69–DR-73, DR-80, DR-81, §7, §9 F2/F3/F10, D2); `00-FOUNDER-DIRECTION.md`; `02-ORGANISATION.md` §4.2, §4.4, §4.7, §6.
+- `_process/R5-FIX-PLAN.md` §0 and §09b; `_process/R5-SCENARIO-WALK-codex.md` (B05, B07–B09, B11, B17, B19, B22, B23,
+  B25, B38, B39, C4, C10); `13-WORKED-SCENARIOS.md` gaps G4, G-B1; `15-RISKS-AND-DECISIONS.md` §7 (OG11); R5-ISSUES #4.
+- `r4-spikes/SP1-mission-loop.md` — Referee 42% of the loop's cost (via [12](12-SPIKE-RESULTS.md)).
 - `r2-seats/S14-economics-capacity-codex.md` — resources, Provider Contract Registry and pricing fetched 2026-09-30 from
   provider pages, ledger, completion reserves, degraded modes, failure reserve, treasury, outcome economics, examples.
 - `r2-seats/S09-simulation-evals-codex.md` — twin, fidelity certificates, Vault and replay, Acceptance Firewall and the

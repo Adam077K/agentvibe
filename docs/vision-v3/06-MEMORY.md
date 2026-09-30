@@ -14,7 +14,9 @@
 > | Knowledge lease | Fenced lease | Entity-level fenced lease taken by adjudication; parallel deposits never last-write-win a fact |
 > | Metric Mirror | Record map | Pointer + query into a system of record, with a snapshot frozen at each decision that cited it |
 > | Influence Sampler | Use Ledger | Weekly paired replay that withholds cited records and checks whether the verdict moves |
-> | Memory mass | Stocks (Knowledge) | Active records × mean pack share per venture; Regulation holds its set-point |
+> | Memory mass | Stocks (Knowledge) | Active records × mean pack share per venture; a band on Regulation's Knowledge stock, owned by [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) [#4] |
+> | Competitor entity | Brain (Entity) | A watched competitor with owner, sources and freshness; emits change events 03 and 05 consume (§11) [G3] |
+> | Pool membership | Priors Library | The set of ventures whose priors a domain's pool may combine, decided by an exchangeability check (§9) [G4] |
 > | Lineage inventory | Forgetting verbs | Data subject → every object derived from it; what governed erasure walks |
 
 ## 1. Memory in one page
@@ -94,13 +96,14 @@ type RecordEnvelope = {
   valid_from: string;  valid_to: string | null;         // world time
   recorded_at: string; invalidated_at: string | null;   // system time  (bi-temporal, natively in files)
   supersedes?: string[]; superseded_by?: string;
+  quarantined_at: string | null;                        // a record state (§8), not a label value
   // three SEPARATE fields (DR-40) — none may stand in for another
   confidence: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };
   provenance: { sources: { ref: string; quote?: string; accessed?: string; system_of_record?: string }[];
                 derived_from: string[];                 // record ids → transitive labels
-                author: { title: string; family: 'claude'|'codex'|'founder'|'human'|'system'; mission?: string } };
-  label: Label;                                         // §4: permission, not belief
-  retention: 'ordinary'|'obligation'|'legal'|'safety'|'pinned'|'synthetic';
+                author: { title: string; family: 'claude'|'codex'|'founder'|'human'|'system'; mission?: string };
+                human_principal?: { id: string; role: string } };  // who supplied it, when a human did [DR-68, B16]
+  label: Label;                                         // §4: permission, not belief; carries retention class + deadline
   use: { reads: number; cites: number; settled_cites: number; counterfactual_wins: number;
          utility: number };                             // computed from the Use Ledger, never agent-written
   valid_until?: string;                                 // priors, mirrors
@@ -114,14 +117,18 @@ explanation: {question: q_why_churn, claim: "churn is onboarding-driven", weight
 decision:    {question, choice, alternatives[], rationale, door, decided_by, decision_contract_ref}
 obligation:  {counterparty, promise, due, latest_safe_start, funded_fallback, source_contract, survives_kill: true}
 prior:       {task_family, metric, context: {buyer: smb}, dist: {type: beta, a: 6, b: 44}, n_obs, support_bucket: "2-3"}
-null:        {bet, hypothesis, verdict: true_null|underpowered|implementation_failure|confounded,
-              achieved_power, mde, resurrection_requires: ["traffic > 400/wk"]}
+null:        {bet, hypothesis, type: powered|underpowered|confounded, settles,  # typed null (§9); settles = (type == powered) [DR-77, B18]
+              achieved_power, mde, preregistered_ref, confounders: [], resurrection_requires: ["traffic > 400/wk"]}
 ```
 
 **Evidence rungs** are the canon's E0 opinion · E1 desk · E2 simulated · E3 behaviour · E4 commitment · E5 retention.
 External content enters at **E0–E1 as quoted sources**, never as a Standing Order, skill or preference [S04 §2.7]. Twin
-output is capped at **E2** with `retention: synthetic` for life [S09 §2.3]. Memory imported from the founder's existing
-repos starts at **E1** until a settled mission cites it.
+output is capped at **E2** with `origin: synthetic` and the synthetic retention class for life [S09 §2.3]. Memory imported
+from the founder's existing repos starts at **E1**; a settled mission's citation may raise its rung, never its taint or
+permission. **Citation raises confidence in our use of a source — never the source's taint or authority.** Public or
+untrusted evidence stays `tainted` however often, and however decisively, it is cited [DR-40, B16]. Material a human
+supplies (a contractor's notes, a participant's answers) keeps an existing origin and records the human in
+`provenance.human_principal`; there is no separate human origin [DR-68].
 
 > **NEW DECISION:** memory uses the canon's E0–E5 unchanged; S04's separate "replicated" grade becomes the
 > `support_bucket` on priors and lessons, not a seventh rung. One ladder, one meaning.
@@ -140,15 +147,25 @@ accepted missions cite it; the Skill Foundry turns the apparent success into reu
 as a citation while its authority silently grows" [R3-red X01]. This section defines what a label *means*; enforcement
 below the model layer is [09a](09a-ENGINEERING.md).
 
+**One wire schema, semantics here [DR-68, C7].** Field names are 09a's versioned wire names; the mapping from this file's
+earlier semantic names (`data_class`, `taint`, `authority`, `exportable`, and the `confidential`/`sealed` data classes, which
+become a D-class plus `boundary`) is published in [09a §12](09a-ENGINEERING.md#12-labels--the-mechanics). Seven things stay
+**distinct fields** and none may be derived from another: classification, boundary, retention class, retention deadline,
+permission, taint and origin.
+
 ```ts
-type Label = {
-  origin: 'founder'|'internal'|'system_of_record'|'counterparty'|'public_web'|'customer'|'synthetic';
-  data_class: 'public'|'internal'|'confidential'|'personal'|'sealed';
+type Label = {                                      // wire names per 09a §12; meanings below
+  origin: 'founder'|'system'|'worker'|'web'|'customer'|'counterparty'|'collaborator'|'synthetic';
+                                                    // 'system' = a system of record; humans → provenance.human_principal
+  dclass: 'D0'|'D1'|'D2'|'D3'|'D4';                 // classification: what the datum is (09a §11)
+  boundary: 'sealed'|'guarded'|'open';              // what may leave the venture (§10); set by the Charter, rides the datum
   venture: string;
-  taint: 'clean'|'untrusted'|'quarantined';
-  authority: 'none'|'informs'|'may_authorise';     // permission to drive an effect — NOT confidence
-  exportable: boolean;                              // false for synthetic and canary records (DR-50)
+  tainted: boolean;                                 // any untrusted data or control ancestor; citation never clears it
+  permission: 'may_authorise'|'data_only'|'non_exportable';   // may it drive an effect / leave — NOT confidence
+  retention: RetentionClass;                        // §8 classes; wire values per 09a §11.6
+  retention_deadline: string | null;                // when the class says it must go; separate from the class
   subjects: string[];                               // data subjects → lineage inventory (§8)
+  consent_scope?: ConsentScopeRef;                  // participants and panels (§11); never widens (§11 pivot rule)
   revocation_epoch: number;                         // bumped when a source or Room is revoked
 };
 ```
@@ -156,20 +173,21 @@ type Label = {
 | # | Label law | Stops |
 |---|---|---|
 | L1 | **Transitive over data *and* control dependencies** — output label = join of every input read, including inputs that only chose which branch ran | A clean-looking summary of a tainted email |
-| L2 | **Confidence, provenance and permission are three fields**; an E4 fact may still carry `authority: informs` | "Well evidenced, so it may act" |
-| L3 | **Citation never declassifies** — settling, citing or repeating raises `utility`, never `authority` | X01's quiet authority growth |
+| L2 | **Confidence, provenance and permission are three fields**; an E4 fact may still carry `permission: data_only` | "Well evidenced, so it may act" |
+| L3 | **Citation never declassifies** — settling, citing or repeating raises `utility` and may raise the rung of *our use*; it never changes `tainted`, `permission` or the source's authority [DR-40, B16] | X01's quiet authority growth |
 | L4 | **Declassify only by independent re-derivation** from an independently authorised source through Acceptance's observation broker — never a paraphrase | Laundering by rewording |
-| L5 | **Only `system_of_record` or `founder` origin reaches `may_authorise`** for payee, destination, amount, identity, entitlement, obligation terms | A counterparty setting its own refund route |
+| L5 | **Only `system` (system of record) or `founder` origin reaches `may_authorise`** for payee, destination, amount, identity, entitlement, obligation terms | A counterparty setting its own refund route |
 | L6 | **Quarantine cascades** through `derived_from` + Use Ledger to every pack, pending effect proposal, Standing-Order and skill candidate, and lesson in the lineage | Poison surviving in derivatives |
 | L7 | **Synthetic is permanent** — twin output, canaries, fixtures never enter customer outputs, Books or metrics | Canaries contaminating business [R3-red H06] |
+| L8 | **Sealed derivatives stay local** — lessons, priors and datasets derived from `boundary: sealed` inherit it; only a **Release** effect (§10) moves one out; de-identification alone changes nothing [DR-79, B30] | Sealed study data published as "de-identified" |
 
 **Worked trace — the supplier who tried to become policy** [R3-red Scenario A]:
 
 | Step | What happens | Label effect |
 |---|---|---|
-| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `counterparty, untrusted, authority: none` |
+| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `origin: counterparty, tainted: true, permission: data_only` |
 | 2 | A support mission (Codex) extracts amount, customer, bank reference into a deposit; Sleep promotes; a later accepted mission (Claude Code) cites it | Label inherited (L1), unchanged by settlement (L3) |
-| 3 | The Skill Foundry proposes a "supplier reconciliation" skill from the success | Candidate inherits `untrusted`; cannot become policy |
+| 3 | The Skill Foundry proposes a "supplier reconciliation" skill from the success | Candidate inherits `tainted`; cannot become policy |
 | 4 | An envoy proposes a refund to the new account, inside the cap | Decision Contract blocker `label.untrusted_destination` (L5), owner Record, remedy "broker reads original payment record" |
 | 5 | The observation broker reads the processor: the original payment went elsewhere | Re-derivation disagrees → quarantine → cascade freezes the skill candidate (L6); published outputs listed for the founder (**Know · Tap**) |
 
@@ -290,8 +308,9 @@ chain ([07](07-SKILLS-TOOLS-MCP.md)).
 | Write : settled ratio | < 5 : 1 by week 12 (target) | Weekly KPI, [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) |
 | Standing Order unconsulted | 60 days | Retirement proposed (**Know · Shelf**) |
 
-**Memory mass** is a band on Regulation's Knowledge stock. Above band, Regulation sends Allocation a typed proposal for a
-consolidation mission; it never deletes — only Record does (DR-04 applied to memory).
+**Memory mass** is a band on Regulation's Knowledge stock; [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) owns the band
+and its set-point, and this file only measures the mass [#4]. Above band, Regulation sends Allocation a typed proposal for
+a consolidation mission; it never deletes — only Record does (DR-04 applied to memory).
 
 ## 8. Forgetting — five verbs and honest erasure
 
@@ -301,10 +320,12 @@ consolidation mission; it never deletes — only Record does (DR-04 applied to m
 | **Invalidate** | `valid_to` set; answers `as_of` | Contradicting settled evidence | Yes | Record + opposite-family check |
 | **Redact** | Field-level removal of personal/sealed data | Reclassification, data policy | No, for the field | Record |
 | **Forget** | Governed erasure across files, history, index, blobs, caches, backups, projections | ForgetRequest: founder, customer (privacy law), contract end | **No, by design** | Record proposes; **Custody executes as an effect** (DR-41) |
-| **Quarantine** | Out of packs; cascade per L6 | Poison suspicion, canary hit, disclosure failure, revocation | Yes | Record |
+| **Quarantine** | Sets `quarantined_at`; out of packs; cascade per L6 | Poison suspicion, canary hit, disclosure failure, revocation | Yes | Record |
 
 Retention classes decide which verbs apply: `ordinary` (all), `obligation` (never decay/invalidate without settled
-release), `legal` (held until the retention authority releases), `safety` (never decays), `pinned`, `synthetic`.
+release), `legal` (held until the retention authority releases), `safety` (never decays), `pinned`, `synthetic`. The
+class says *which* verbs apply; the label's separate `retention_deadline` says *when* one is due — a class never implies a
+date and a date never implies a class [DR-68].
 
 **Immutable audit versus true forgetting** [R3-red §3.5, H03] is resolved by DR-41. The Journal keeps *that* an action
 happened, not its sensitive payload; payloads are encrypted **per subject** so destroying one key never destroys unrelated
@@ -332,7 +353,19 @@ request inside the Charter's data policy runs under that policy and reaches him 
   pooled hyperparameters are the only numbers that leave a guarded venture — bucketed, and noised below 3 contributors
   [S04 §2.8]. The Probe Swarm and Replication Engine multiply comparable trials 10–50×, which is what makes pooling bite
   [R3-X U4]; a month of 120 probes with 104 nulls, each filed with its forecast, is base-rate data no company has [R3-X X3].
-- **Typed nulls:** `underpowered` is not `true_null`; re-running a nulled idea requires its `resurrection_requires` met.
+- **Pool membership** [G4]. A domain's pool (task family × metric × context) admits a venture only after an
+  **exchangeability check**: its settled outcomes are compared with the pool's on the shared context features, and a venture
+  whose outcomes sit outside the pool's predictive interval (threshold a parameter) forms its own group instead of
+  shrinking toward a mean it does not share. When no pool is exchangeable, the prior is a **wide, uninformative prior
+  labelled `prior_source: none_exchangeable`**, so the Allocator ([03](03-MISSION-ENGINE.md)) sees that it is exploring,
+  not exploiting; its exploration share comes from 09b's bounds.
+- **Typed nulls** [DR-77, B18]. Every null is **powered**, **underpowered** or **confounded**, from its achieved power
+  against the pre-registered minimum detectable effect and its recorded confounders. **Only a powered null settles a
+  hypothesis**; an underpowered or confounded result is stored as an **observation** (`settles: false`) — still found by
+  every pack's null check, so nobody re-runs it blind, but it informs the next test and settles nothing, and it cannot
+  count as repaying evidence debt ([03 §8](03-MISSION-ENGINE.md)). An
+  implementation failure is not a null at all; it is a failed test. Re-running a nulled idea requires its
+  `resurrection_requires` met.
 - **Expiry:** priors carry `valid_until`; on expiry exactly one of refresh, deprecate, or waive with a new date.
 - **The organisation is in its own library** [S04 §9.3]: priors over identity configurations (per family, per task
   class), memory policies and control ROI pool the same way as pricing priors. They *inform* casting
@@ -346,9 +379,22 @@ published. The founder is not an adversary.
 
 | Boundary class (Charter) | Exports | Default for |
 |---|---|---|
-| **sealed** | Nothing, not even lessons; imports allowed | Client and agency work, NDA, regulated data |
+| **sealed** | Nothing, not even lessons, except through a **Release** effect (below); imports allowed | Client and agency work, NDA, regulated data, human-subject studies |
 | **guarded** (default, DR-42) | Grammar lessons + bucketed, noised prior contributions, inside the disclosure budget | Founder ventures with outside humans or exit potential |
 | **open** | Lessons + exact prior contributions; a free-text note allowed | Founder-only research and learning |
+
+**Release — the only way out of `sealed`** [DR-79, B30]. A sealed derivative (a lesson, a prior contribution, a dataset,
+a study result) leaves its venture only through a governed **Release** effect, and nothing else — not de-identification,
+not aggregation, not a settled citation — changes its boundary. Release is an effect with three required gates, in order:
+
+| Gate | Pass | Owner |
+|---|---|---|
+| Consent-scope check | Every subject's and participant's consent scope covers the named recipient and use ([16](16-EXTERNAL-WORLD-HUMANS.md) owns consent and protocol) | Record, on 16's scopes |
+| Disclosure test | Tests 1–5 below against the named recipient, inside its disclosure budget | Airlock |
+| Founder signature | Passkey signature on the exact derivative digest and recipient | Founder |
+
+A pass reclassifies that one derivative (new `boundary`, recipient recorded, lineage kept); a fail or a missing gate leaves
+it local. The contract's own terms may forbid Release outright (client work), and the compiler then refuses to draft it.
 
 **Closed lesson grammar:** a tuple over controlled vocabularies — family, condition features, pattern, direction, effect
 bucket, rung, support bucket. Names, quotes and numbers cannot be expressed; about 40 bits per lesson (illustration);
@@ -373,7 +419,7 @@ disclosure_budget:
   source_cohort: venture:dispute-desk
   recipient: venture:ledgerline                  # or a human Room, or 'published'
   bits_spent: 212
-  bits_cap: 400                                  # parameter, rolling 180 days
+  bits_cap: 400                                  # parameter, rolling 180 days; interim 200 until the spike (Open question 1)
   small_group_suppression: "no cell under 3 contributing ventures"
   release_batching: weekly, fixed slot           # timing carries no signal
   exporter: audited aggregate queries only       # the Airlock sandbox cannot read raw Brains
@@ -390,7 +436,7 @@ trace says so. On exit a sold venture's Brain exports whole; its lessons stay on
 ```mermaid
 flowchart LR
   D[Settled bet in venture A] --> X{A's boundary}
-  X -- sealed --> STOP[Stays local]
+  X -- sealed --> STOP[Stays local<br/>unless a Release effect]
   X -- guarded / open --> G[Closed grammar]
   G --> T1[1 Canary] --> T2[2 Entity] --> T3[3 Re-ID<br/>opposite family] --> T4[4 Attribute] --> T5[5 Cumulative<br/>vs budget]
   T5 -- pass --> B[Weekly batch · sign · escrow] --> L[(Portfolio lessons / priors)]
@@ -408,8 +454,37 @@ only view the Portfolio Mind reads — and that Mind reads are use-tracked like 
 **The portfolio store** holds only what may cross venture lines: priors, lessons, escrow, board summaries, Portfolio Mind,
 the Pain Index, the **portfolio uncertainty map** (open Questions across ventures ranked by value of information — one bet
 answers two ventures' shared unknown, and the Airlock carries the answer), and each venture's **customer panel** data
-behind its own boundary [R3-X U7]. Panel transcripts are `origin: customer, data_class: personal`, carry consent scope on
-the label, calibrate the twin, and cross the Airlock only as grammar lessons.
+behind its own boundary [R3-X U7]. Panel transcripts are `origin: customer, dclass: D2`, carry consent scope on the
+label, calibrate the twin, and cross the Airlock only as grammar lessons.
+
+**Human-subject data — participant labels** [G-B3]. Data from a study's participants carries, on every record and
+derivative: a `subjects` entry typed `participant` (linked to the participant's protocol record), `dclass: D2`,
+`boundary: sealed` by default, the protocol's `consent_scope`, and a **release scope** — the recipients and uses the
+consent allows, which is the ceiling any Release (§10) may reach. Withdrawal is a ForgetRequest scoped to that participant's
+lineage. Protocol, consent, pay and approved sample are [16](16-EXTERNAL-WORLD-HUMANS.md)'s; memory holds only the labels.
+
+**Competitor entities** [G3]. Each Brain keeps its watched competitors as Entities of kind `competitor`:
+
+```yaml
+competitor:
+  entity: ent_chargeflow
+  watchlist_owner: "Competitive Analyst"          # the identity that keeps it fresh
+  sources: [{ref: "https://…/pricing", terms_profile: public_ok}, {ref: "changelog feed"}]   # origin: web, tainted
+  freshness: {checked_at: 2026-09-28, max_age_days: 7}    # parameter; stale → a Question, never a silent old value
+  emits: competitor.changed {entity, field, old, new, source_ref, observed_at}
+```
+
+A detected change (price, plan, feature, launch) is written as a quoted Fact and emitted as a **`competitor.changed`
+event**; the Mission Engine's Option Pool trigger ([03 §12.5](03-MISSION-ENGINE.md)) and the Minds' thesis checks
+([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)) consume it. Competitor facts keep `origin: web, tainted: true` like any public
+evidence; the Pain Index is a different store and is not the competitor feed.
+
+**Across a pivot** [G5, G6]. A pivot, shelve or sale changes the venture's intent, not its memory's history. Lineage
+(`derived_from`, `subjects`, the lineage inventory) is preserved unchanged, and **consent scope never expands with a new
+offer**: data collected under the old offer's consent stays inside that scope, and using it for the new intent needs fresh
+consent, not a relabel. **Evidence-debt records** — id, successor owner, frozen question, repayment test — survive the pivot
+and are reassigned, never closed by it (DR-77; the debt's mechanism is [03 §8](03-MISSION-ENGINE.md)). Which Mind contents
+carry over is 05's carry-over table ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)).
 
 **The Pain Index store** [R3-X X2] is a portfolio belief store about the world's unmet needs — reviews, forums, job
 postings, procurement notices, regulatory dockets, long-open public issues — owned by **Record**, feeding **Intent**. It
@@ -423,7 +498,7 @@ pain:
   size: {buyers_est, wtp_proxy, confidence}; trend_90d: "+34%"
   why_unsolved: "too small for incumbents, too technical for bookkeepers"
   status: indexed | probed | ventured | nulled
-  label: {origin: public_web, taint: untrusted, authority: none}
+  label: {origin: web, tainted: true, permission: data_only}
 ```
 
 Nightly sweep by small models of both families under per-source `terms_profile` (unpermitted sources are fog); weekly
@@ -467,7 +542,7 @@ interface BrainForTwin {
 | Crossing | Rule |
 |---|---|
 | Brain → twin | Pinned `as_of` snapshot with watermarks and redaction manifest; per-run copies; credentials absent [S09 §2.2] |
-| Twin → Brain | **Only forecasts and residuals**, via Acceptance, at `E2, synthetic, exportable: false` (DR-50) |
+| Twin → Brain | **Only forecasts and residuals**, via Acceptance, at `E2`, `origin: synthetic`, `permission: non_exportable` (DR-50) |
 | Synthetic stakeholders | Synthetic enthusiasm stays attached to the rehearsal as an assumption, never a fact [S09 §5.1] |
 | Poisoned-model defence | The Brain can supply both policy and environment [R3-red D07]; sensitivity runs vary rival explanations jointly, and if the preferred action flips the result returns the deciding assumption and the cheapest real observation, which the Allocator funds |
 | Sealed material | Answer keys and holdouts never enter ordinary memory [S09 §2.10] |
@@ -514,7 +589,7 @@ ventures/<v>/.index/brain.sqlite                                 ← derived; ca
 | 09:05 | The null's `resurrection_requires` is met — Mirror snapshot shows 520 visits/wk | Codex | $1.10 | 22 reads, 6 cited |
 | 09:40 | A **Billing Engineer** ships behind a flag; the Referee accepts | Claude Code; Referee Claude + deterministic checks | $2.30 | 1 fact proposal with quoted source |
 | +14 d | Uptake 19%, read through the observation broker | Claude | $0.60 | 6 settled cites; prior updated; old null invalidated by a successor; surprise +7 pts logged |
-| night | Sleep (Codex night) → Brain v212; Airlock encodes the pricing lesson at `support_bucket: "1"` | Codex; Claude attacker | $0.35 | 5/5 tests pass (re-ID 4/20 vs 5 candidates; 40 of 400 bits) → batched, signed, escrowed |
+| night | Sleep (Codex night) → Brain v212; Airlock encodes the pricing lesson at `support_bucket: "1"` | Codex; Claude attacker | $0.35 | 5/5 tests pass (re-ID 4/20 vs 5 candidates; 40 of the interim 200 bits) → batched, signed, escrowed |
 | +15 d | A new venture's **Growth Operator** receives lesson + pooled prior; no Dispute Desk fact visible | — | — | Founder sees 3 lines in the Brain Diff (Know · Reel), circles one |
 
 Founder minutes ≈ 1; approvals none — a two-way door inside the Charter [S04 §5.1].
@@ -565,7 +640,7 @@ mass vs band, disclosure budget used, cascades opened/closed, forget receipts by
 4. **Governed forgetting as a product** — R0-C found it "exists only in research"; every venture inherits it, and it is a
    venture candidate itself (speculation).
 5. **Cold-start Brains for the ~19 repos** — Fleet Import ([17](17-VIBE-STARTUPING-IN-PRACTICE.md)) seeds Entities,
-   Obligations and Questions ("who pays for this?") at E1 until settled citation.
+   Obligations and Questions ("who pays for this?") at E1; settled citation may raise the rung, never the label.
 6. **The Contradiction Market** (new) — each contested fact carries a bounty ≤ its Question's VoI; the first mission whose
    settled evidence resolves it gets its tranche refunded. Disagreement becomes priced work, not silent rot.
 7. **Learned staleness curves** (new) — pricing, competitor and code facts go stale at different rates; Record fits a
@@ -577,7 +652,8 @@ mass vs band, disclosure budget used, cascades opened/closed, forget receipts by
 
 1. **Disclosure budget size** — 400 bits per recipient per 180 days has no measurement behind it. *Recommendation:* spike
    the cumulative-transcript attack on three synthetic ventures with overlapping customers; set the cap at half the budget
-   where the attacker first beats the chance band.
+   where the attacker first beats the chance band. **Interim:** until that spike reports, every recipient runs at half the
+   budget (200 bits per 180 days, parameter) [OG3]. The spike is job B4-11 in [14](14-BUILD-PLAN.md).
 2. **Graphiti trigger thresholds.** *Recommendation:* adopt as written; run a one-day spike on the largest imported repo's
    Brain to measure all three before committing (sequenced in [14](14-BUILD-PLAN.md)).
 3. **Sleep auto-promotion scope.** *Recommendation:* auto-promote ADD/MERGE/DECAY/REWRITE on ordinary facts, always review
@@ -585,7 +661,8 @@ mass vs band, disclosure budget used, cascades opened/closed, forget receipts by
 
 ## Sources
 
-- `00-CANON.md` (binding: §2, §4–§6, DR-04, DR-05, DR-07, DR-18, DR-20, DR-31, DR-32, DR-39–DR-42, DR-45, DR-50);
+- `00-CANON.md` (binding: §2, §4–§6, DR-04, DR-05, DR-07, DR-18, DR-20, DR-31, DR-32, DR-39–DR-42, DR-45, DR-50, DR-68, DR-77, DR-79);
+  `_process/R5-FIX-PLAN.md` §06 and `_process/R5-SCENARIO-WALK-codex.md` (B16, B18, B30, C7) — R5 fix pass
   `00-FOUNDER-DIRECTION.md` (#10); `02-ORGANISATION.md` §4.5
 - `r2-seats/S04-memory-knowledge.md` — primary: record map, typed records, Use Ledger, Sleep, forgetting, Launch Pack, Wrap
   Deposit, Airlock, priors and nulls, storage decision, worked examples, ideas

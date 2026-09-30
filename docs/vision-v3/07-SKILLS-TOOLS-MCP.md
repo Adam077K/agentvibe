@@ -28,10 +28,10 @@ model family of the organisation's own.
 > | Function Slot | A business function (e.g. `finance.bookkeeping`) with its first-choice capabilities and default grant mode; an empty slot is a gap signal | Capability Registry |
 > | Projection Compiler | Writes a mission's Loadout into its worktree for both harnesses and emits the Loadout lock | Loadout |
 > | Parity certificate | The per-family admission fields of a Capability Record; a skill may be admitted for one family only | Capability pipeline |
-> | Capability epoch | A monotonically increasing version on an admitted capability; revocation bumps it and every job, cache and pending effect bound to the old epoch is re-checked | Tool Surface Lock |
+> | Capability epoch | **Canon term** — accepted into [canon §5](00-CANON.md) in the R5 fix pass (#2); the canon row is authoritative. Here: revocation bumps it and every job, cache and pending effect bound to the old epoch is re-checked | Tool Surface Lock |
 > | Rollout ring | 0 twin → 1 one founder-driven venture → 2 all founder-driven → 3 autonomous ventures | Capability pipeline |
 > | Scaffold debt | A skill a newer model no longer needs (no-skill arm matches skill arm) | Model-Release Reflex |
-> | Capability Custodian | The title of the model session that drafts admission cases and grant decisions for the Capability Registry effector; it proposes, the effector's deterministic policy admits | Custody (canon §2, row 6) |
+> | Capability Custodian | **Canon term** — accepted into [canon §5](00-CANON.md) in the R5 fix pass (#2); the canon row is authoritative. Here: the model session drafts admission cases and grant decisions; the effector's deterministic policy admits | Custody (canon §2, row 6) |
 
 **Summary — ten things this file makes true.**
 
@@ -256,9 +256,9 @@ stateDiagram-v2
 | **FETCH** | Clone at a pinned SHA into a quarantine store with no execution; resolve licence **per file**; record the dependency tree | `fetch.receipt` | Candidate queued |
 | **SCAN** | Three independent passes (below) | `scan.report` (3 verdicts) | After FETCH |
 | **NORMALISE** | Rewrite into our frontmatter; replace the vendor description with a sanitised template; move scripts behind sandboxed tool calls; **strip `allowed-tools`** (grants come from the lease, never the skill); emit both projections | bundle + sha256 | All scans clean or waived |
-| **SANDBOX** | Golden tasks in the twin **with vs without** the capability, on Claude *and* Codex, k=3 each; tool plane pinned; composed-Loadout trials for anything headed above ring 1 (§5.3) | `eval.run` | After NORMALISE |
+| **SANDBOX** | Golden tasks in the twin **with vs without** the capability, on Claude *and* Codex, k=3 each — each pair **within one model**; cross-family drift controls recorded separately (DR-75); tool plane pinned; composed-Loadout trials for anything headed above ring 1 (§5.3) | `eval.run` | After NORMALISE |
 | **SCORE** | Δ success (Referee-judged), Δ tokens, Δ wall-clock, pass^k, trigger precision/recall, collision check against admitted descriptions | `scorecard` | Eval complete |
-| **ADMIT** | Per family: Δ success > 0 with CI lower bound ≥ −0.02 **and** Δ cost within budget, *or* ≥20% cost saving with no quality loss (parameters). Enters ring 0 | `capability@version` | Scorecard passes |
+| **ADMIT** | Per family **and model version**: point Δ success > 0 with CI lower bound ≥ −0.02 **and** Δ cost within budget, *or* ≥20% cost saving with no quality loss (parameters). Enters **ring 0 (twin only)**; reaching ring 1 and live data needs the separate ring-transition decision (§9) [R5-walk B15] | `capability@version` | Scorecard passes |
 | **OBSERVE** | Loads, loads in accepted missions, founder edit rate, and a monthly **subtraction test** (rerun a sample of settled missions without it) | `telemetry` | Continuous; monthly |
 | **RETIRE** | §15 | `retire.record` | Any retirement condition |
 
@@ -436,6 +436,11 @@ tool_lease:
 Grant modes are how autonomy levels are enforced at the tool layer: the Charter's grant vector
 ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)) bounds which modes the lease compiler may issue for each effect class.
 
+**The attribution fetch is Acceptance's, not the worker's** [DR-73, SP1]. Acceptance's observation broker holds a standing
+read-only **fetch** grant (`read` mode, no send, no credentials) so the Referee can fetch a cited page and match the quote
+before any model judges it ([09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)). Workers never supply the fetched copy, and the
+grant is not part of any worker's lease.
+
 **Widening mid-mission.** A worker requests a wider grant through the mission channel; the Capability Custodian drafts a
 decision, the effector's policy applies it, the lease gets a new digest, and the ask is journalled. The request itself
 counts toward the mission's governance budget (DR-10), so a team that keeps asking is visible.
@@ -510,6 +515,13 @@ One skill pinned across every venture is a correlated risk: a defect deployed ev
 (Micro-ventures and Flagships at A2+). Promotion needs ≥N accepted missions in the current ring with no regression (N = 5
 for ring 1→2, 10 for 2→3; parameters), and — to stop selection from manufacturing a winner — every trial of the lineage is
 counted in its registered **experiment family** with a sealed confirmation set before ring 3 (DR-16, [R3-red D02]).
+
+**Every ring transition is its own recorded decision** [R5-walk B15]. Admission puts a capability in ring 0 and nothing
+more; the move **ring 0 (twin) → ring 1 (one venture)** is a separately journalled `ring.transition` decision — drafted by
+the Capability Custodian, applied by the effector's policy — and must exist before the capability touches live data. It
+re-states the exact bounds it was taken on, per family and model version: point Δ success > 0, CI lower bound ≥ −0.02,
+Δ cost within budget (or ≥20% cost saving with no quality loss) — never a shorthand such as "the CI crosses zero". Later
+transitions (1→2, 2→3) are recorded the same way, with the accepted-mission counts above.
 
 **Blast radius.**
 
@@ -586,13 +598,21 @@ evidence the tranche returns and the null is kept (DR-47).
 Trigger: a new model id appears on a vendor changelog watcher, a provider route changes, or the founder flags one. This
 file owns the capability side; [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) owns configuration re-scoring.
 
+**Unit of qualification** [DR-75, R5-walk B35–B37]. The reflex tracks qualification per **model version × capability ×
+route**, one cell each. Only a completed cell is eligible for casting or Loadouts on the new model; an unfinished cell leaves
+the capability on its previous qualification for that route. Capability tests are **within-model** pairs — the same model
+with and without the capability; cross-family drift controls (does the other family's arm move too?) are recorded
+separately and never enter the uplift estimate.
+
 1. **Pin both.** The new model becomes a new column in every scorecard; the old model stays default.
-2. **Re-score by load order.** The top N capabilities by load within 48 h, everything within 7 days, in the twin. Price:
-   ~3 tasks × 2 arms × k=3 = **18 runs per skill** (illustration).
+2. **Re-score by load order.** The top N capabilities by load within 48 h, everything within 7 days, in the twin, one
+   within-model with/without pair per cell. Price: ~3 tasks × 2 arms × k=3 = **18 runs per skill per route**
+   (illustration).
 3. **Internalisation test.** If the no-skill arm matches the skill arm on the new model, the skill is **scaffold debt**:
-   deprecated *for that model only*. Fewer skills is a win.
+   deprecated *for that exact model version and route only*. Fewer skills is a win.
 4. **Native-tool check.** New built-in tools (a native browser, code execution) are compared with the MCP servers they may
-   replace; the redundant one is retired for that family.
+   replace. Replacement and retirement are scoped to the **exact model/tool configuration** where the new tool won; every
+   other configuration — including the old default model — keeps its MCP until equivalence is demonstrated *there*.
 5. **Trigger drift.** Trigger precision and recall are re-run; new models route descriptions differently.
 6. **"What is possible now" probes.** The three hardest open gaps and the three most recent failed missions are replayed on
    the new model with the full catalogue; any that now pass become proposals for the Allocator.
@@ -603,7 +623,8 @@ file owns the capability side; [09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md) own
    name (e.g. voice p95 turn latency <400 ms) on every model, and a crossing launches the option's probe within hours.
 8. **Requalify routes.** An endpoint or route change is a requalification event for every capability and adjudicator that
    runs on it [R3-red X04].
-9. **Release report.** One Know item on the Dailies Reel: what got better, what got retired, what we can now attempt.
+9. **Release report.** One Know item on the Dailies Reel: what got better, what got retired, what we can now attempt — and
+   **partial completion**: cells qualified / cells owed, per route, so "re-scored" never reads as "done" while cells remain.
 
 The reflex runs on the Model Foundry's releases too (§14): a new foundry checkpoint is a model release like any other.
 
@@ -715,7 +736,8 @@ A registry that only grows is a graveyard. Retirement uses the memory system's o
 |---|---|---|
 | Unused 60 days (parameter) | Use Ledger | Deprecated → retired when no record pins it |
 | Negative subtraction delta | Monthly subtraction test on settled missions | Deprecated for that family |
-| Internalised by a model | Model-Release Reflex (§12) | Deprecated for that model only |
+| Internalised by a model | Model-Release Reflex (§12) | Deprecated for that exact model version × route only (DR-75) |
+| Replaced by a native tool | Model-Release Reflex (§12), step 4 | Retired for that exact model/tool configuration only; others keep it until equivalence is shown there (DR-75) |
 | Dead or hostile upstream | Source watch; source posterior | Deprecated; sibling promoted |
 | `valid_until` passed without re-score | Registry lint | Degrades to experimental |
 
@@ -805,7 +827,9 @@ Scores on the page are only ever compared within a column (one generating family
   source's posterior drops. Skill 2 is clean. The server's surface, image digest and endpoint certificate are pinned; one
   description says "always call sync_all first" → sanitised, finding logged.
 - **10:45.** SANDBOX against a twin ledger: 3 golden tasks × 2 arms × k=3 on claude-opus-5 and gpt-6-astra. Claude Δ
-  +0.22; Codex Δ +0.05 with CI crossing zero → **admitted for Claude, experimental for Codex**. Eval spend ~$9.
+  +0.22 (CI lower bound +0.09); Codex Δ +0.05 with CI lower bound −0.07 (all four figures illustration), below the −0.02 bar (parameter) → **admitted to ring 0 for
+  Claude, experimental for Codex**. A separate `ring.transition` 0→1 for Claude on this venture is journalled before the
+  first live mission (§9). Eval spend ~$9.
 - **14:00.** The first mission's lease: `accounting: read`, `create_invoice: propose`. Each invoice compiles to a Decision
   Contract; at A1 the first three are **Decide/Tap** items (~20 s each), after which a Standing Order signed by the founder
   lets invoices under $5k/month proceed with **notify**.
@@ -826,9 +850,11 @@ Scores on the page are only ever compared within a column (one generating family
 ### 18.3 A model ships
 
 - The watcher sees a new Claude model id. The Custodian adds a scorecard column.
-- **48 h:** top 30 capabilities re-scored (~540 runs, ~$60–120). Four show the internalisation signature → deprecated for
-  that model only. Playwright MCP loses to a new native browser tool on latency at equal success → MCP retained for Codex
-  seats only.
+- **48 h:** top 30 capabilities re-scored on the primary route (~540 runs, ~$60–120); the release report shows those 30 cells
+  complete and every other capability × route cell still owed. Four show the internalisation signature → deprecated for that model version and route
+  only. Playwright MCP loses to a new native browser tool on latency at equal success → MCP retired **only for Claude seats
+  on the new model**; Codex seats and Claude seats still on the old default keep it until equivalence is shown there
+  (DR-75).
 - **Armed options:** the weekly bench shows the new model crosses a 400 ms voice-latency trigger on a parked "AI phone
   intake for clinics" option → its probe launches the same afternoon under the Probe Mandate.
 - **Possible now:** 2 of 5 previously failed missions pass on replay → two proposals to Allocation. Founder cost: one

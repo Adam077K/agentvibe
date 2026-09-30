@@ -148,17 +148,30 @@ two_way: default
 blast: min(100, 20*log10(audience+1) + sqrt(money_usd) + 25*identity_is_new + 30*jurisdiction_unknown)   # parameters
 ```
 
-| Class | Door | Inside a covering mandate | Without a mandate |
-|---|---|---|---|
-| R0 | Internal (drafts, shadow sends) | auto | auto |
-| R1 | Two-way, blast <40 | auto | notify at A2+, ask at A0–A1 |
-| R2 | Two-way, blast ≥40 | auto at A3+, notify at A2 | ask |
-| R3 | Costly-reversible | auto at A3+, notify at A2 | ask |
-| R4 | One-way | see below | ask, or co-sign by a human the Charter names |
-| — | Never-list | **never** | never |
+**This file owns classification; it does not own disposition** [DR-57; canon §3; R5-walk C1, B04]. The gateway computes
+two things and nothing else here: the **effect class** and the **door**. Neither is ever declared by the proposer.
 
-The levels themselves are defined in [05](05-AUTONOMY-INITIATIVE-FOUNDER.md). This table only shows how the gateway reads
-them.
+| Effect class | Covers | Examples |
+|---|---|---|
+| R0 read/think | No state changes outside the mission | Drafts, research, shadow sends |
+| R1 internal reversible | Internal state that a revert undoes | A branch, a staging deploy, a Brain proposal |
+| R2 internal significant | Internal state whose undo costs real work or reaches other missions | A schema change in staging, a policy-file proposal, a Standing Order draft |
+| R3 external reversible | Reaches the world, and the provider supports a real undo | A social post, a production deploy with a standing rollback, a price change on a live Offer |
+| R4 external one-way, money out, legal or identity | Reaches the world and cannot be taken back | Outgoing money; e-sign, filings, entity acts; a new identity or credential; a **public comparative claim** [R5-walk B13]; any commitment without an Offer |
+
+The door (two-way · costly-reversible · one-way) is derived from action × target × money × audience × identity by the
+rules above. **Blast radius moves the door, never the R-class**: a large audience can make an R3 post a one-way door, but
+it stays R3.
+
+**Money floor** [DR-57]. Outgoing money is one-way, except a refund that qualifies (to the original payment method, within
+the mandate's refund cap). Paid probes, ads and task procurement are one-way money: they run inside a founder-signed
+Effect Mandate as **notify**, or they ask.
+
+**Disposition is not decided here.** The one disposition table (autonomy level × grant × door → auto · notify · ask ·
+co-sign · never) is in [05](05-AUTONOMY-INITIATIVE-FOUNDER.md), and [09a](09a-ENGINEERING.md) composes it with this
+classification once, into the Decision Contract. A signed Effect Mandate covering the exact class lowers disposition one
+step, never below notify for a one-way door, and never changes the door. ~~This section's own A-level × class disposition
+table~~ is removed [DR-57].
 
 **One-way doors involve humans in three different ways** (DR-36; R3-red §3.2). This settles a Round 2 contradiction.
 
@@ -174,8 +187,8 @@ S13's co-signature row for A4.
 The same action gets the same answer on chat, checkout, API and phone. A replay test sends it through all four and
 compares the results.
 
-An `ask` is class **Decide**. Its reach is **Ring** if the deadline is under 1 h; otherwise **Tap** or the next decision
-window ([08](08-SURFACES.md)). The passkey binds to the canonical displayed action [DR-35; R3-red X08].
+An `ask` is class **Decide**; its reach is chosen by [08](08-SURFACES.md), not here [R5-walk C1]. The passkey binds to
+the canonical displayed action [DR-35; R3-red X08].
 
 ## 5. Effect Mandates — approval by class, not by instance
 
@@ -237,6 +250,10 @@ Offer:                                  # founder-signed; agents choose Offers, 
 
 Quotes, checkouts, agent-to-agent proposals and phone answers all compile from the same Offer. When capacity runs out,
 the Offer stops compiling and the answer becomes "waitlist".
+
+**Pre-orders taken by a probe** [R5-walk B06]. Money taken to test demand is held, not earned. When the probe closes,
+every pre-order is **refunded automatically** unless its holder explicitly consents to a new Offer (the real product,
+its price, its date). Escrowed funds convert to revenue only on that consent; silence means refund.
 
 **The Outbound Claims Standard.** Every factual sentence becomes a `ClaimRef`, and it must resolve before sending.
 Freshness depends on the kind of claim (parameters). A flat "≤30 days" rule was too stale for fast-moving metrics.
@@ -319,6 +336,17 @@ just mean that people had no easy way to object [R3-red H05]. So Regulation adds
 4. Each venture has an accountability page naming the entity and its holding, stating that it uses AI, and giving a
    way to reach a human.
 
+**Outbound limits are an intersection, never a sum** [R5-walk B03]. A send is allowed only if it fits **all** of: the
+campaign's size, the cell's daily rate, the recipient's consent record, the jurisdiction's rules, and the portfolio
+contact-frequency cap above. The tightest one binds; anything beyond it is **queued**, never dropped and never sent
+early. A Probe Mandate sets the probe's own budget and audience; it never erases or raises any of these limits.
+
+**Audience eligibility is checked before dispatch** [R5-walk B28]. Before any outbound effect leaves the gateway, every
+recipient is checked against the Charter's **contact grant** (who this venture may contact, on which channels, from
+which sources). A recipient outside it is refused at the gateway. A goal-tree change — a new objective, a new ICP, a
+promoted bet — never grants contact; only a signed Charter change does, and widening follows the activation rules
+(canon §3, DR-59).
+
 ## 9. Kill levels and the Obligation Keeper
 
 A kill is checked twice: at admission and again at the effector. So a contract compiled before a kill cannot be sent
@@ -355,6 +383,25 @@ per deficit, not one per customer. Wind-downs and ventures with an unreachable f
 ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)). Test Q7: an outage combined with a cash hold must surface every unmet duty,
 each with an owner.
 
+**Residual obligations need a real hand-off** [R5-walk B12]. An obligation that outlives its venture, its mission or its
+owner is discharged in one of two ways only, each **before its latest safe start**: an **acknowledged responsibility
+transfer** (the receiving principal or entity accepts it, and the acceptance is recorded in the Journal), or a
+**verified fallback** (the funded route has been exercised or checked by Acceptance). An unacknowledged transfer counts
+as no transfer; the latest safe start then opens a service-continuity decision.
+
+**Extensions are a state machine, not a hope** [R5-walk B26]. When the Keeper negotiates an extension, each request is
+recorded with one of four states, and the counterparty's answer is observed independently (their reply or a system of
+record, never the gateway's own receipt):
+
+| State | Meaning | Due date in force | Next funded fallback named |
+|---|---|---|---|
+| Requested | Asked, no answer yet | **The original** | Yes — the route taken if it is refused or expires |
+| Accepted | The counterparty agreed, observed independently | The new date | Yes — for the new date |
+| Refused | The counterparty said no | The original | Yes — now live |
+| Expired | No answer by the request's own deadline | The original | Yes — now live |
+
+The original due date stands until acceptance is recorded. Asking for more time is never the same as having it.
+
 ## 10. The Front Desk and counterparty agents
 
 | Arrival | Detected by | Lane |
@@ -365,7 +412,7 @@ each with an owner.
 | Unsigned agent | A self-declared card | Counterparty lane, tier T0 |
 | Payment-bearing | An ACP token, AP2 Cart Mandate or x402 header | Commerce lane; the payment is verified before any model is used |
 | Legal notice | A registered-agent feed | Obligations lane; Halt if the deadline is under 72 h |
-| Hostile or flooding | Rate, reputation, or the injection classifier | Dropped; campaign correlation runs |
+| Hostile or flooding | Rate, reputation, or the injection classifier | The offending payload or session is quarantined; campaign correlation runs (see below) |
 
 **Laundered evidence.** The quarantined reader has no secrets and no permission to send. Only its schema-bound fields
 reach anything that can act. But that protects only the first boundary. The red team's top-ranked failure goes like
@@ -380,6 +427,15 @@ and three rules apply at the door:
    same counterparty does not count.
 3. **Quarantine spreads along the taint trace.** It invalidates the Launch Packs, pending effects and Skill Foundry
    candidates the fact touched.
+
+**The unit of quarantine is the payload or the session, not the person** [R5-walk B32]. A customer whose message carried
+an injection is usually a victim of it, and may still be owed a refund. So the tainted payload (or the whole session, if
+the channel cannot separate payloads) is quarantined, and the principal keeps their Room, their obligations and their
+open cases. A principal is **banned** only for flooding or for repeated hostility (a parameter: three quarantined
+sessions in 30 days), and a ban is itself a K1-logged effect with an appeal route. **Clean continuation route:** the
+Front Desk replies in a fresh session with a checked message asking the person to restate their request through a typed
+form (or a human callback for a legal notice or a payment dispute); only fields from that new session reach anything
+that can act.
 
 **Counterparties.** The Counterparty Registry tracks each counterparty's tier: T0 unknown → T1 signed → T2 transacted →
 T3 contracted. A signature proves *who* someone is, never what they are *entitled to*.
@@ -434,7 +490,7 @@ for.
 ```yaml
 # ventures/beacon/body/authority.yml — founder passkey only
 entity: beacon-labs-llc
-effects:
+effects:          # disposition here is the entity's ceiling for its mandates; the effective one comes from 05's table [DR-57]
   - { class: invoice.send,   max_usd: 5000, disposition: auto }
   - { class: payment.refund, max_usd: 200, per_customer_90d: 1, disposition: auto }
   - { class: price.change,   floor_margin: 0.55, disposition: notify_24h_veto }
@@ -444,7 +500,10 @@ liability:
   insurance: { professional: pending_broker, cyber: pending_broker }                               # open, not assumed
 ```
 
-If an insurer imposes AI-use conditions, they become never-list entries for that entity.
+**Insurance is a precondition, not an assumption** [R5 OG5; D7 in [15](15-RISKS-AND-DECISIONS.md)]. Each entity gets a
+broker HumanTask before its **first A3 money mandate**. Until the broker confirms cover, that entity's commitment-class
+mandates are capped at its Repair Budget. If an insurer imposes AI-use conditions, they become never-list entries for
+that entity.
 
 **Books tell the truth.** Reconciled against the bank through the observation broker, never the gateway's receipts; an
 unexplained difference puts K2 on payments-out until an accountant closes it. Internal revenue is its own account type and
@@ -493,6 +552,7 @@ fixed *before* the worker accepts it:
 ```yaml
 HumanTask:
   kind: signature | notarization | physical | human_only_call | licensed_review | taste_panel | kyc | local_presence
+        | contribution | participant                       # contribution = writing, analysis, design [R5-walk C9]
   actor_of_record: { entity: beacon-labs-llc, accountable_human: founder }
   why_human: legal_requirement | accountability | recipient_preference | measured_quality | not_yet_automatable
   spec: { deliverable: "notarised PDF", evidence: [signed_pdf, notary_commission_id] }
@@ -516,6 +576,37 @@ recurring schedule, directed hours, exclusivity) triggers counsel's classificati
 compensation** is audited by Acceptance (volunteered minutes vs pay, rejections, revisions, time to accept); under-floor
 missions are repriced and their requester's record debited. Appeals are their own service obligations, never queued
 behind the Attention Exchange.
+
+**Contribution tasks** [R5-walk C9]. Not all human work is a signature or an errand. A `contribution` task buys
+creative or analytic work — writing, analysis, design — under the same contract. Its deliverable is accepted by the
+mission's coverage contract like any agent artifact, and the contributor keeps the attribution rights the contract names.
+
+**Contracts are bound, and a change is an amendment** [R5-walk B29]. Every task or recruitment contract is bound, by
+hash, to the approval that allowed it, the reservation that funds it (payment and review window) and, for recruitment,
+the approved sample. Changing any term — pay, deadline, deliverable, audience, sample, screener — is an **amendment**:
+it compiles a new Decision Contract and needs the same approval again. A worker who accepted the old terms may keep them
+or leave with pay for work done.
+
+**Participant protocol** [R5-walk C9, G-B3, B30]. When people take part in research — interviews, usability sessions,
+studies, taste panels — the task is of kind `participant` and carries a protocol fixed before the first invitation:
+
+```yaml
+ParticipantProtocol:
+  principal: principal:study-lead-contractor      # who runs it
+  protocol: { purpose, method, questions_ref, duration_min: 30 }
+  accountable_reviewer: human:named-reviewer        # independent of the requesting mission
+  consent_scope: [analysis_in_venture, quotes_anonymised]   # what the data may be used for
+  pay: { amount_usd: 40, paid_on: completion_or_withdrawal } # illustration
+  withdrawal: { any_time: true, data: deleted_on_request, pay: kept }
+  approved_sample: { size: 12, criteria_ref, source: consented_panel }
+  amendments: new_protocol_version + re-approval + re-consent if scope widens
+  deception: none                                   # consistent with the no-deception procurement rule
+  debrief: { required: true, content: purpose + who ran it + that an AI agent posted it }
+```
+
+Deception is never used: the procurement rule above already forbids it, and a study that needs it is out of scope.
+**Consent scope governs every later use.** Study data is sealed; any derivative leaves that scope only through a governed
+**Release** effect ([06](06-MEMORY.md); DR-79), never through de-identification alone.
 
 ## 14. The Guild
 
@@ -711,9 +802,9 @@ refuses every agent has not passed.
    never allowed (canon F8).
 2. **Can a human co-founder co-sign one-way doors without the founder?** *Recommendation:* yes, within their own venture
    and under a money cap set in the Charter. The AI Co-founder never signs.
-3. **Does insurance cover actions agents take on their own?** Unknown. *Recommendation:* fund a broker HumanTask for each
-   entity before its first A3 mandate that involves money or commitments. Until then, cap that entity's commitment-class
-   mandates at its Repair Budget.
+3. **Does insurance cover actions agents take on their own?** Unknown, so it is not assumed. ~~Open recommendation~~
+   settled as a rule in §11 and D7 in [15](15-RISKS-AND-DECISIONS.md) [R5 OG5]: a broker HumanTask per entity before its
+   first A3 money mandate; commitment mandates capped at the Repair Budget until cover is confirmed.
 
 ## 22. Sources
 
