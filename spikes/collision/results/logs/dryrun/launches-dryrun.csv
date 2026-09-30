@@ -1,0 +1,11 @@
+arm,run,task,phase,worker,model,started_at,secs,exit,cost_usd,in_tokens,out_tokens,self_report
+B,B0,tax,work,codex,canned(no-model),2026-09-30T10:49:21.571Z,8.1,0,,0,0,none
+B,B0,discount,work,claude,canned(no-model),2026-09-30T10:49:21.486Z,20.1,0,0,0,0,DONE
+B,B0-greedy,tax,work,codex,canned(no-model),2026-09-30T10:52:13.094Z,8.0,0,,0,0,none
+B,B0-greedy,discount,work,claude,canned(no-model),2026-09-30T10:52:13.056Z,20.0,0,0,0,0,DONE
+B,B0,tax,work,codex,canned(no-model),2026-09-30T10:52:58.933Z,8.0,0,,0,0,none
+B,B0,discount,work,claude,canned(no-model),2026-09-30T10:52:58.895Z,20.0,0,0,0,0,DONE
+B,B0,tax,rework1,codex,canned(no-model),2026-09-30T10:53:20.500Z,8.0,0,,0,0,none
+B,B0-drill,tax,work,codex,canned(no-model),2026-09-30T10:53:36.038Z,8.0,0,,0,0,none
+B,B0-drill,discount,work,claude,canned(no-model),2026-09-30T10:53:36.001Z,20.0,0,0,0,0,DONE
+B,B0-drill,discount,rework1,claude,canned(no-model),2026-09-30T10:53:56.142Z,20.0,0,0,0,0,DONE

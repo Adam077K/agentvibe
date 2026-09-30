@@ -1,0 +1,69 @@
+{
+  "arm": "B",
+  "run": "B0",
+  "wall_s": 30.2,
+  "tasks": {
+    "discount": {
+      "conflicts": 0,
+      "reworks": 0,
+      "fence_rejections": 0,
+      "test_rejections": 0,
+      "lease_wait_s": 0,
+      "undeclared": [
+        "src/config.ts#<header>"
+      ],
+      "landed": true,
+      "worker_secs": [
+        "20.0"
+      ],
+      "cost": [
+        0
+      ]
+    },
+    "tax": {
+      "conflicts": 1,
+      "reworks": 1,
+      "fence_rejections": 0,
+      "test_rejections": 0,
+      "lease_wait_s": 13.168,
+      "undeclared": [
+        "src/config.ts#<header>"
+      ],
+      "landed": true,
+      "worker_secs": [
+        "8.0",
+        "8.0"
+      ],
+      "cost": [
+        "",
+        ""
+      ]
+    }
+  },
+  "lease_blocks": 8,
+  "main_health": [
+    {
+      "sha": "0fc65f60",
+      "green": true
+    },
+    {
+      "sha": "851420ff",
+      "green": true
+    },
+    {
+      "sha": "5e364641",
+      "green": true
+    }
+  ],
+  "eval": {
+    "own_tests_pass": true,
+    "own_summary": "5p/0f",
+    "discount_accept": true,
+    "discount_summary": "3p/0f",
+    "tax_accept": true,
+    "tax_summary": "3p/0f",
+    "combined_accept": true,
+    "combined_summary": "2p/0f"
+  },
+  "fence_log": "2026-09-30T10:53:20.303Z ACCEPT discount 851420ff41b00b1a3506a59fead949b3e0606a1a src/config.ts#<header>,src/config.ts#config,src/discounts.ts#*,src/index.ts#*,src/pricing.ts#<header>,src/pricing.ts#computeTotal,src/types.ts#+DiscountCode,src/types.ts#<eof>,src/types.ts#Cart,src/types.ts#Totals\n2026-09-30T10:53:28.910Z ACCEPT tax 0fc65f60e36bb3eb249514e84dcba364760c8f7d src/config.ts#<header>,src/config.ts#config,src/index.ts#*,src/pricing.ts#<header>,src/pricing.ts#computeTotal,src/tax.ts#*,src/types.ts#+Region,src/types.ts#<eof>,src/types.ts#Cart,src/types.ts#Totals\n"
+}

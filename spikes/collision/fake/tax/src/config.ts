@@ -1,0 +1,14 @@
+import type { Region } from "./types";
+
+// Single shared configuration object for the shop.
+
+export const config = {
+  currency: "USD",
+  // Orders whose subtotal is at or above this (in cents) ship free.
+  freeShippingThreshold: 5000,
+  shippingFlat: 499,
+  maxQtyPerLine: 99,
+  taxRates: { "US-CA": 0.0725, "US-NY": 0.08875, "EU-DE": 0.19 } as Record<Region, number>,
+};
+
+export type Config = typeof config;

@@ -1,0 +1,119 @@
+diff --git a/src/config.ts b/src/config.ts
+index c74307e..e54f466 100644
+--- a/src/config.ts
++++ b/src/config.ts
+@@ -1,3 +1,5 @@
++import type { DiscountCode, Region } from "./types";
++
+ // Single shared configuration object for the shop.
+ 
+ export const config = {
+@@ -6,6 +8,11 @@ export const config = {
+   freeShippingThreshold: 5000,
+   shippingFlat: 499,
+   maxQtyPerLine: 99,
++  discountCodes: [
++    { code: "SAVE10", kind: "percent", value: 10 },
++    { code: "FIVEOFF", kind: "fixed", value: 500 },
++  ] as DiscountCode[],
++  taxRates: { "US-CA": 0.0725, "US-NY": 0.08875, "EU-DE": 0.19 } as Record<Region, number>,
+ };
+ 
+ export type Config = typeof config;
+diff --git a/src/discounts.ts b/src/discounts.ts
+new file mode 100644
+index 0000000..5ade3a1
+--- /dev/null
++++ b/src/discounts.ts
+@@ -0,0 +1,14 @@
++import type { Cents, DiscountCode } from "./types";
++import { config } from "./config";
++import { roundCents } from "./money";
++
++export function findDiscount(code: string | undefined): DiscountCode | undefined {
++  if (!code) return undefined;
++  return config.discountCodes.find((d) => d.code.toLowerCase() === code.toLowerCase());
++}
++
++export function discountAmount(sub: Cents, code: string | undefined): Cents {
++  const d = findDiscount(code);
++  if (!d) return 0;
++  return d.kind === "percent" ? roundCents((sub * d.value) / 100) : Math.min(d.value, sub);
++}
+diff --git a/src/index.ts b/src/index.ts
+index 6eb5f14..9f8366c 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -3,3 +3,5 @@ export { config } from "./config";
+ export { roundCents, formatMoney } from "./money";
+ export { emptyCart, addItem, removeItem, subtotal } from "./cart";
+ export { shipping, computeTotal } from "./pricing";
++export { findDiscount, discountAmount } from "./discounts";
++export { taxRate, taxAmount } from "./tax";
+diff --git a/src/pricing.ts b/src/pricing.ts
+index 70a4572..33255b9 100644
+--- a/src/pricing.ts
++++ b/src/pricing.ts
+@@ -1,6 +1,8 @@
+ import type { Cart, Cents, Totals } from "./types";
+ import { config } from "./config";
+ import { subtotal } from "./cart";
++import { taxAmount } from "./tax";
++import { discountAmount } from "./discounts";
+ 
+ export function shipping(sub: Cents): Cents {
+   if (sub === 0) return 0;
+@@ -9,6 +11,8 @@ export function shipping(sub: Cents): Cents {
+ 
+ export function computeTotal(cart: Cart): Totals {
+   const sub = subtotal(cart);
++  const discount = discountAmount(sub, cart.discountCode);
++  const tax = taxAmount(sub - discount, cart.region);
+   const ship = shipping(sub);
+-  return { subtotal: sub, shipping: ship, total: sub + ship };
++  return { subtotal: sub, discount, tax, shipping: ship, total: sub - discount + tax + ship };
+ }
+diff --git a/src/tax.ts b/src/tax.ts
+new file mode 100644
+index 0000000..4b0543f
+--- /dev/null
++++ b/src/tax.ts
+@@ -0,0 +1,11 @@
++import type { Cents, Region } from "./types";
++import { config } from "./config";
++import { roundCents } from "./money";
++
++export function taxRate(region: Region | undefined): number {
++  return region ? config.taxRates[region] ?? 0 : 0;
++}
++
++export function taxAmount(taxable: Cents, region: Region | undefined): Cents {
++  return roundCents(taxable * taxRate(region));
++}
+diff --git a/src/types.ts b/src/types.ts
+index a4cbf81..53bae94 100644
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -15,10 +15,22 @@ export interface LineItem {
+ 
+ export interface Cart {
+   items: LineItem[];
++  discountCode?: string;
++  region?: Region;
+ }
+ 
+ export interface Totals {
+   subtotal: Cents;
+   shipping: Cents;
++  discount: Cents;
++  tax: Cents;
+   total: Cents;
+ }
++
++export interface DiscountCode {
++  code: string;
++  kind: "percent" | "fixed";
++  value: number;
++}
++
++export type Region = "US-CA" | "US-NY" | "EU-DE";

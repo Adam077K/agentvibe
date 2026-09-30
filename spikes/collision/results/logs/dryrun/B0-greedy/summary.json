@@ -1,0 +1,33 @@
+{
+  "arm": "B",
+  "run": "B0-greedy",
+  "wall_s": 35.5,
+  "tasks": {
+    "discount": {
+      "error": "Error: discount: lease wait > 12 min (deadlock)",
+      "landed": false
+    },
+    "tax": {
+      "error": "Error: tax: lease wait > 12 min (deadlock)",
+      "landed": false
+    }
+  },
+  "lease_blocks": 9,
+  "main_health": [
+    {
+      "sha": "e6ec484d",
+      "green": true
+    }
+  ],
+  "eval": {
+    "own_tests_pass": true,
+    "own_summary": "5p/0f",
+    "discount_accept": false,
+    "discount_summary": "0p/3f",
+    "tax_accept": false,
+    "tax_summary": "0p/3f",
+    "combined_accept": false,
+    "combined_summary": "0p/2f"
+  },
+  "fence_log": "cat: /tmp/claude-501/sp2runs/B0-greedy/origin.git/fence.log: No such file or directory\n"
+}
