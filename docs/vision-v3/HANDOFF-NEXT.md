@@ -25,13 +25,12 @@ decision: [BUILD-LOG.md](../08-agents_work/BUILD-LOG.md). Plan: [14-BUILD-PLAN.m
 | #143 | B0-16 kernel scaffold + boundary checker | lite* | verdict; *consider a tier floor `kernel/** → irreversible` |
 | #144 → #143 | B0-16 CI wiring (`check:kernel`) | irreversible | #143; multi-judge + founder |
 | #146 → #143 | B0-19 secret scanner + RequireScanned | lite | #143; verdict |
+| #147 → #143 | B0-17 frozen P1 done-tests (17 red) + hash register | lite | #143, #142; verdict (reconcile commit unreviewed) |
 
 ## In flight when this session ended (branches pushed)
-- **`build/b0-17`** — B0-17 reconcile of `build/b0-17a` (PASS @ 00df1bd) + `build/b0-17b` (PASS @ ac872ea): frozen P1
-  done-tests for B1-01a/01b/05/08/12, one hash checker. If the branch is missing or incomplete, redo the reconcile (brief
-  in BUILD-LOG decision "one done-test register format"), then open its PR stacked on #143.
-- **`build/b1-01a`** — Journal core against the frozen tests (off `build/b0-17a`), incl. SQLite's transitive modules
-  (BUILD-LOG decision). Check its state; then review (other family if Codex is available).
+- **`build/b1-01a`** — Journal core against the frozen tests (branched off `build/b0-17a`; merge `build/b0-17` into it
+  before its PR), incl. SQLite's transitive modules (BUILD-LOG decision). Check its state; then review (other family if
+  Codex is available). The frozen tests must stay hash-locked: `node build/check-done-tests.mjs` exit 0.
 
 ## Next jobs to start (P0 remainder + P1 critical path)
 - **B1-01b** chain + blobs (after B1-01a) · **B1-05** job:// lease (after B1-04 per plan; tests exist) · **B1-02** nouns.

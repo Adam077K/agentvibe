@@ -61,3 +61,4 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 | 2026-10-01 | B0-03 | #145 (full, stacked on #139) | runner receipts per launch (builder+referee), subagent refusal | founder + Codex review |
 | 2026-10-01 | B0-19 | #146 (stacked on #143) | pre-model secret scanner + RequireScanned gate; 2 review rounds | B1-08 wires the gate |
 | 2026-10-01 | B0-17a | — (PASS at 00df1bd) | frozen done-tests B1-01a/01b/05, hash formulas pinned in api.go | reconcile with B0-17b → one PR |
+| 2026-10-01 | B0-17 | #147 (stacked on #143) | reconciled frozen P1 done-tests, 17 red, one checker | B1-01a implements against them |
