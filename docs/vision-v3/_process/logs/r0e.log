@@ -1,0 +1,477 @@
+Reading additional input from stdin...
+OpenAI Codex v0.154.0
+--------
+workdir: /Users/adamks/VibeCoding/agentvibe/.worktrees/ceo-2-1790613501
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a0f1d5-258a-7ba3-8630-fc20439e767e
+--------
+user
+You are a research seat (Round 0, outward research) for designing an "agentic organisation": one founder plus an AI workforce (Claude Code and Codex agents as equal workers) that builds and runs startups, agencies, businesses and research. First read docs/vision-v3/_process/SEAT-CONTEXT.md for the ambition rules.
+
+YOUR TOPIC: The frontier of open-ended, self-improving and self-evaluating agent systems, as of 2026. Use live web search heavily. Cover: open-ended agents and skill libraries (Voyager-style), automated science (AI Scientist, AlphaEvolve, co-scientist systems), agents designing agents (ADAS, Darwin Gödel Machine style self-modification), long-horizon benchmarks and evals (METR time-horizon, SWE-bench variants, GAIA, tau-bench, agent company simulations like TheAgentCompany), simulation/digital twins used to test agents or decisions, reflection/debate/red-team methods that measurably help, and what reliability numbers look like for long tasks. Name what is proven vs promised.
+
+Rules: every factual claim gets a URL. Separate verified results from claims. Never invent numbers.
+
+OUTPUT: your final message IS the brief, in Markdown, 8-14 KB, titled "R0 — Self-improving, open-ended and evaluated agents (Codex seat)". Sections: 1) Findings with sources (table: system, what it showed, numbers, source, confidence); 2) What reliably improves agent outcomes (with evidence strength); 3) What does not work / known failure modes; 4) "What we should use" — at least 12 concrete takeaways for an organisation that must get measurably better every week; 5) Ideas nobody is doing yet. Only AFTER research, skim docs/vision-v3/00-FOUNDER-DIRECTION.md and add 6) "Where this hits the founder's direction".
+codex
+I’ll read the seat context, research primary sources, then check the founder’s direction after forming the findings.
+exec
+/bin/zsh -lc "rg -n '"'^|.'"' docs/vision-v3/_process/SEAT-CONTEXT.md" in /Users/adamks/VibeCoding/agentvibe/.worktrees/ceo-2-1790613501
+ succeeded in 0ms:
+1:# v3 seat context — read this before anything else
+2:
+3:You hold one seat in the design of **v3 — the agentic organisation**: one founder plus an AI workforce that conceives,
+4:builds, runs, grows and learns across startups, agencies, businesses, research and any project he can imagine. The founder
+5:calls the practice **vibe startuping**. Binding direction: `docs/vision-v3/00-FOUNDER-DIRECTION.md` (6.6 KB — read it whole,
+6:except in Round 0 where you read it only after your outward research).
+7:
+8:## The ambition rules (non-negotiable)
+9:- **Do not shrink the vision.** No MVP framing of the destination, no cutting a capability because it is hard. Hard things get
+10:  a design, a risk and a path. Sequencing the *build* is fine; shrinking the *destination* is not.
+11:- **Exceed what the founder described.** Every output must contain ideas he did not ask for.
+12:- **Challenge means adding.** Disagree by proposing something bigger or better, not smaller.
+13:- **Design for a world where research, design, engineering, sales and strategy are nearly free, parallel and tireless** — and
+14:  the bottleneck is judgment, direction and taste.
+15:- Concrete beats abstract: numbers, tables, mermaid diagrams, ASCII wireframes, named mechanisms, worked examples.
+16:- Agents are named by **title and expertise, never personal names.** Claude Code and Codex are **equal workers**.
+17:- **No playbooks as the core** of the system.
+18:
+19:## Evidence rules
+20:- Source external claims (URL + what it says). Mark speculation as speculation. Never invent numbers about real companies.
+21:- Prior work is material, not answers: v1 `docs/vision-system/` (explorer data: `docs/vision-system/planning/site/explorer/data/`),
+22:  v2 `docs/vision-v2/`, engineering specs `docs/vision-v3/engineering/` (ENGINE-SPEC 51 KB, SURFACES-SPEC 79 KB), the harness
+23:  (`AGENTS.md`, `.claude/`, `mission-control/`, `scripts/`). You may contradict any of it — say why.
+24:
+25:## Mechanics (these cost hours last time)
+26:- **Write your output with the Write tool** to the exact path in your brief. Then return a **≤200-word summary** — not the doc.
+27:- Never read a file over ~200 KB whole — grep and range-read. `CLAUDE.md` is 69 KB of history: grep it, never read it whole.
+28:  Never open `F2-07-outside-review.md` or contract registries whole.
+29:- Do not write backticked ids that look like `c-something` — the ledger lint treats them as claim ids.
+30:- Do not commit, push, or touch files outside your output path unless your brief says so.
+31:- Codex CLI (`gpt-6-astra`) is available on this machine; Claude and Codex seats run independently in their first pass.
+32:
+33:## Layout
+34:```
+35:docs/vision-v3/
+36:  _process/        this file, round logs
+37:  r0-outward/      Round 0 — outward research briefs
+38:  r1-concepts/     Round 1 — five whole-organisation concepts + judge scores
+39:  r2-seats/        Round 2 — specialist designs
+40:  r3-stretch/      Round 3 — expander + red team
+41:  r4-spikes/       Round 4 — prototype results
+42:  (top level)      Round 5 — the v3 package, 01-… files
+43:```
+
+web search: 
+web search: 
+web search: 
+web search: METR time horizon 2026 50% 80% long tasks ...
+web search: AlphaEvolve 0.7 percent 23 percent Google DeepMind ...
+web search: Voyager open ended embodied agent skill library 3.3 15.2 arxiv ...
+web search: 
+web search: site.voyager.minedojo.org 3.3 15.2 ...
+web search: 
+web search: https://voyager.minedojo.org/
+codex
+The clearest distinction so far is between improving an agent’s code or skills on scored tasks and demonstrating open-ended organisational improvement. METR also warns that its time horizons measure human-equivalent task difficulty, not hours an agent can safely run unattended.
+web search: 
+web search: site.deepmind.google AlphaEvolve 0.7 23 2025 ...
+web search: 
+web search: "SWE-bench Pro" arxiv 2025 2026 ...
+web search: 
+web search: Reflexion language agents verbal reinforcement learning 91 80 ...
+web search: 
+web search: 
+web search: 
+web search: 
+web search: site.arxiv.org "AgentDojo"
+web search: site.arxiv.org "τ²-bench"
+web search: site.arxiv.org "multi-agent debate" "majority voting"
+web search: site.arxiv.org "TheAgentCompany"
+web search: 
+web search: https://arxiv.org/abs/2412.14161
+web search: 
+web search: 
+codex
+The 2026 sources add an important correction: benchmark design is changing alongside agent capability. SWE-Bench Pro’s September refresh reports invalid tasks, conflicting instructions and evaluation leakage. I’ll keep dated results separate so older scores don’t become false ceilings—or newer scores false guarantees.
+web search: 
+web search: "Debating with more persuasive LLMs" "accuracy" ...
+web search: 
+web search: "Debate or Vote: Which Yields Better Decisions" arxiv ...
+web search: 
+web search: GEPA Reflective Prompt Evolution Can Outperform Reinforcement Learning ...
+web search: 
+web search: site.metr.org "MirrorCode" "2026" ...
+web search: 
+web search: https://arxiv.org/abs/2606.30182
+web search: 
+web search: "Darwin Godel Machine" "80" "20" "50.0" ...
+web search: 
+web search: https://metr.org/evaluations/
+web search: 
+web search: '56%'
+web search: 
+web search: 
+codex
+The strongest organisational pattern is emerging: preserve reusable skills, search over alternative agent designs, and promote changes only against independent evidence. Recent long-task results are substantial, but evaluator integrity and judgment remain limiting factors. I’m now checking the founder’s direction for the final section.
+exec
+/bin/zsh -lc "rg -n '"'^#|''^[-*]|''^[0-9]+'"\\.|founder|weekly|learn|improv|simulat|playbook|Claude|Codex|memory|research' docs/vision-v3/00-FOUNDER-DIRECTION.md" in /Users/adamks/VibeCoding/agentvibe/.worktrees/ceo-2-1790613501
+ succeeded in 0ms:
+1:# Founder direction for v3 — 2026-09-30 (binding)
+3:v3 is the full-depth plan of the system. Working name for the practice it enables: **vibe startuping** — one founder plus an
+6:## What the founder decided (supersedes earlier answers where they conflict)
+7:1. **Do not shrink the vision.** The full harness, agents, agentic use and autonomy stay. The reviews' concerns become
+9:2. **Autonomy with the founder in the loop at the right altitude.** The system moves on its own; the founder sets direction,
+11:3. **Autonomy is a per-project switch.** 2–3 businesses/agencies (maybe one project) run autonomously; others are founder-driven.
+12:4. **The system can act as a founder or as part of the company** — not only a tool the founder uses.
+13:5. **It must handle anything:** startups, businesses, agencies, projects, learning, research, any idea. Most real work has no
+14:   playbook. **No playbooks as the core** — they limit thinking. The system must reason, research, imagine, challenge itself,
+15:   plan, execute, document, remember and improve on open-ended work.
+16:6. **Claude Code and Codex are equal.** Both build, both review, both do any job. Not "Codex = reviewer only".
+17:7. **Agents are identified by title and expertise, never personal names** (founder, 2026-09-30: "An engineer is a good enough title"). What matters is the role and the knowledge it carries.
+18:   Agents are launched only when needed (an engineer is a Claude Code or Codex session with the right memory, context,
+20:8. **Hybrid specialties.** Don't copy human job titles by default. AI makes it possible to fuse fields that no human could
+22:9. **Swarms, multi-agent workflows, agents talking to each other** — use the modern patterns, deliberately.
+23:10. **Memory without a graveyard.** Record what gets read and used; consolidate; forget; no write-only logs.
+24:11. **Skills from scratch.** Do not anchor on the 134 curated skills. Harvest from open-source skill libraries and collections,
+26:12. **Surfaces — one app we own, not outsourced:** a Mission Control centre (web/desktop) with pages for: live agents and what
+29:    ours). Plus the terminal. Plus future surfaces: voice and phone calls as a reach point to the founder, and whatever comes next.
+30:13. **Startup mindset plus engineering mindset** throughout: move fast, test, improve, adjust, pivot — engineered properly.
+31:14. **Data-training settings** will be turned off by the founder (done by hand; the plan should still define a data policy).
+33:## What v3 must also cover — areas the founder did not name (orchestrator expansion)
+34:The founder asked the AI to see further. These are required sections, not optional:
+35:- **The mission engine for open-ended work** — how an unspecified goal becomes research → hypotheses → options → a plan →
+36:  execution → evaluation → learning, with self-challenge (debate, red team, pre-mortem) and explicit stop conditions.
+37:- **Dynamic team composition** — who gets launched for a mission and why; team size; model choice (Claude/Codex/other);
+39:- **Agent identity system** — agents as records identified by title/expertise (skills + memory + tools + model + track record), hybrid-specialty
+41:- **The initiative engine** — how autonomous projects generate their own work (standing goals, heartbeats, signals,
+42:  opportunity scanning), and how that stays aligned with the founder's intent.
+43:- **Alignment and progress** — goal trees, "are we closer?" checks, detecting sideways motion and busywork, kill/pivot logic.
+44:- **Coordination and non-interference** — ownership, leases, merge queues, shared blackboard, conflict resolution, so agents
+46:- **An AI co-founder seat** — what it owns, how it disagrees with the founder, its cadence (e.g. a weekly board meeting).
+47:- **Company brain / world model per venture** — customers, market, competitors, metrics, decisions; shared lessons across
+49:- **Skills and tools economy** — acquisition, evaluation, versioning, agents authoring new skills, retirement; MCP servers.
+50:- **Economics** — subscription and token budgeting, cost per outcome, degraded modes when limits hit.
+51:- **Human collaborators** — contractors, co-founders, customers and advisors inside the system with scoped access.
+52:- **External world interfaces** — email, phone/voice, web, payments, social, ads, code hosting, deploys; approvals where
+54:- **Observability and explainability** — timeline, traces, "why did it do that", replay.
+55:- **Safety, data policy and provider terms** — what data flows where; outbound/terms compliance; kill switches.
+56:- **Self-improvement** — how the organisation gets better every week, measured.
+57:- **Simulation** — a sandbox "digital twin" to rehearse decisions and test agent teams before acting for real.
+58:- **Onboarding** — a new project in minutes; importing the founder's ~19 existing repos.
+59:- **Worked scenarios** — end-to-end walkthroughs showing what the system does, which agents launch, time, budget, skills,
+60:  memory writes, approvals: e.g. start a new agency; validate an idea; ship a feature overnight; a 3 a.m. production incident;
+61:  a competitor launches; learn a new field fast; a pivot decision; an autonomous business running a week without the founder.
+63:## Inputs to read
+64:- v1 (S1.1, the Company Engine): explorer https://claude.ai/artifact/Ufucbixckde8yhiLf3JDTZ ; data in
+66:- v2: explorer https://claude.ai/artifact/98P7Rv2Qz7UQMqiVUjka4G ; `docs/vision-v2/` (package, panel, red team, 4 reviews).
+67:- v3 engineering specs (written 2026-09-30): `docs/vision-v3/engineering/`.
+68:- This repo's harness: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `mission-control/`, `scripts/`.
+
+exec
+/bin/zsh -lc "sed -n '3,61p' docs/vision-v3/00-FOUNDER-DIRECTION.md" in /Users/adamks/VibeCoding/agentvibe/.worktrees/ceo-2-1790613501
+ succeeded in 0ms:
+v3 is the full-depth plan of the system. Working name for the practice it enables: **vibe startuping** — one founder plus an
+agentic organisation competing with billion-dollar companies. It supersedes the v2 reviews' "shrink the build" advice.
+
+## What the founder decided (supersedes earlier answers where they conflict)
+1. **Do not shrink the vision.** The full harness, agents, agentic use and autonomy stay. The reviews' concerns become
+   design inputs, not scope cuts.
+2. **Autonomy with the founder in the loop at the right altitude.** The system moves on its own; the founder sets direction,
+   hears what is happening and why, and decides only what matters — never the small decisions. Find the sweet spot.
+3. **Autonomy is a per-project switch.** 2–3 businesses/agencies (maybe one project) run autonomously; others are founder-driven.
+4. **The system can act as a founder or as part of the company** — not only a tool the founder uses.
+5. **It must handle anything:** startups, businesses, agencies, projects, learning, research, any idea. Most real work has no
+   playbook. **No playbooks as the core** — they limit thinking. The system must reason, research, imagine, challenge itself,
+   plan, execute, document, remember and improve on open-ended work.
+6. **Claude Code and Codex are equal.** Both build, both review, both do any job. Not "Codex = reviewer only".
+7. **Agents are identified by title and expertise, never personal names** (founder, 2026-09-30: "An engineer is a good enough title"). What matters is the role and the knowledge it carries.
+   Agents are launched only when needed (an engineer is a Claude Code or Codex session with the right memory, context,
+   sandbox and skills), not standing processes.
+8. **Hybrid specialties.** Don't copy human job titles by default. AI makes it possible to fuse fields that no human could
+   combine; design, test and compare such hybrid agents against classic roles.
+9. **Swarms, multi-agent workflows, agents talking to each other** — use the modern patterns, deliberately.
+10. **Memory without a graveyard.** Record what gets read and used; consolidate; forget; no write-only logs.
+11. **Skills from scratch.** Do not anchor on the 134 curated skills. Harvest from open-source skill libraries and collections,
+    find skills we don't yet know we need, and build an acquisition pipeline.
+12. **Surfaces — one app we own, not outsourced:** a Mission Control centre (web/desktop) with pages for: live agents and what
+    they are doing, monitoring their work, updates, spend and usage, tasks, an idea board / parking lot, a calendar with goals
+    and missions, a board where dragging a mission from waiting → working → done launches the right team (Linear-like, but
+    ours). Plus the terminal. Plus future surfaces: voice and phone calls as a reach point to the founder, and whatever comes next.
+13. **Startup mindset plus engineering mindset** throughout: move fast, test, improve, adjust, pivot — engineered properly.
+14. **Data-training settings** will be turned off by the founder (done by hand; the plan should still define a data policy).
+
+## What v3 must also cover — areas the founder did not name (orchestrator expansion)
+The founder asked the AI to see further. These are required sections, not optional:
+- **The mission engine for open-ended work** — how an unspecified goal becomes research → hypotheses → options → a plan →
+  execution → evaluation → learning, with self-challenge (debate, red team, pre-mortem) and explicit stop conditions.
+- **Dynamic team composition** — who gets launched for a mission and why; team size; model choice (Claude/Codex/other);
+  budget; sandbox; how the team is dissolved and what it leaves behind.
+- **Agent identity system** — agents as records identified by title/expertise (skills + memory + tools + model + track record), hybrid-specialty
+  design, and an experiment harness that compares them.
+- **The initiative engine** — how autonomous projects generate their own work (standing goals, heartbeats, signals,
+  opportunity scanning), and how that stays aligned with the founder's intent.
+- **Alignment and progress** — goal trees, "are we closer?" checks, detecting sideways motion and busywork, kill/pivot logic.
+- **Coordination and non-interference** — ownership, leases, merge queues, shared blackboard, conflict resolution, so agents
+  don't hurt each other's work.
+- **An AI co-founder seat** — what it owns, how it disagrees with the founder, its cadence (e.g. a weekly board meeting).
+- **Company brain / world model per venture** — customers, market, competitors, metrics, decisions; shared lessons across
+  ventures without leaking.
+- **Skills and tools economy** — acquisition, evaluation, versioning, agents authoring new skills, retirement; MCP servers.
+- **Economics** — subscription and token budgeting, cost per outcome, degraded modes when limits hit.
+- **Human collaborators** — contractors, co-founders, customers and advisors inside the system with scoped access.
+- **External world interfaces** — email, phone/voice, web, payments, social, ads, code hosting, deploys; approvals where
+  consequential.
+- **Observability and explainability** — timeline, traces, "why did it do that", replay.
+- **Safety, data policy and provider terms** — what data flows where; outbound/terms compliance; kill switches.
+- **Self-improvement** — how the organisation gets better every week, measured.
+- **Simulation** — a sandbox "digital twin" to rehearse decisions and test agent teams before acting for real.
+- **Onboarding** — a new project in minutes; importing the founder's ~19 existing repos.
+- **Worked scenarios** — end-to-end walkthroughs showing what the system does, which agents launch, time, budget, skills,
+  memory writes, approvals: e.g. start a new agency; validate an idea; ship a feature overnight; a 3 a.m. production incident;
+  a competitor launches; learn a new field fast; a pivot decision; an autonomous business running a week without the founder.
+
+codex
+# R0 — Self-improving, open-ended and evaluated agents (Codex seat)
+
+**Research cutoff: 30 September 2026.** The strongest evidence supports an organisation that accumulates tested skills, searches over alternative agent designs, and validates improvements against external outcomes. It does not yet establish indefinitely self-improving, autonomous business judgment. DGM demonstrates scaffold improvement; Co-Scientist demonstrates experimentally useful hypotheses; METR’s September assessment still identifies judgment and creating useful feedback loops as barriers to fully automated R&D. [DGM](https://sakana.ai/dgm/), [Co-Scientist](https://www.nature.com/articles/s41586-026-10644-y), [METR assessment](https://metr.org/blog/2026-09-22-claude-opus-5-5/).
+
+## 1) Findings with sources
+
+“Verified” below means checked against the primary publication, **not independently reproduced in this research seat**. Confidence concerns the stated, bounded result. **High:** concrete evaluation or experimental evidence; **medium:** author-reported experiments with limited external validation; **provisional:** emerging method or uncertain measurement. Historical results are dated baselines, not 2026 capability ceilings.
+
+| System | What it showed | Numbers and boundaries | Source | Confidence |
+|---|---|---|---|---|
+| **Voyager, 2023** | Automatic curriculum, executable skill library and environmental feedback support continuing exploration without updating model weights. Skills transfer to a fresh Minecraft world. | **3.3×** more unique items; **2.3×** farther travel; wooden-tool milestone **15.3×** faster in prompting iterations. Minecraft experiments, not enterprise transfer. | [Project and experiments](https://voyager.minedojo.org/) | High within environment |
+| **ADAS / Meta Agent Search, 2024** | A meta-agent writes agent implementations, evaluates them and maintains an archive. Authors report transfer across models and domains. | Multiple coding, science and mathematics evaluations; no single organisation-wide improvement rate. | [Paper](https://arxiv.org/abs/2408.08435) | Medium |
+| **Darwin Gödel Machine, 2025** | Agents modify their own coding scaffold; branching through an archive outperforms ablations without self-improvement or open-ended exploration. | Study’s SWE-bench performance **20.0% → 50.0%**; Polyglot **14.2% → 30.7%**. These are experimental setups, not universal leaderboard comparisons. | [Results and ablations](https://sakana.ai/dgm/) | Medium |
+| **Hyperagents, March 2026** | Makes both the task agent and the mechanism generating improvements editable; reports transferable meta-level improvements. | Demonstrations across domains; no verified indefinite acceleration rate. “Any computable task” is potential, not an achieved result. | [Paper](https://arxiv.org/abs/2603.19461) | Provisional |
+| **AlphaEvolve, 2025** | Evolutionary program search combines model proposals with executable evaluators; Google reports production deployment of discovered algorithms. | **0.7%** of worldwide compute resources recovered; a kernel accelerated **23%**, translating to **1%** less Gemini training time. Operational figures are Google’s reports. | [Technical announcement](https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/) | High for bounded optimisation; deployment self-report |
+| **AI Scientist-v2, 2025** | Generates hypotheses, runs experiments and writes manuscripts using an experimental search process. | **1 of 3** workshop submissions exceeded the acceptance threshold; mean reviewer score **6.33**. Withdrawn under the agreed protocol; not an accepted main-conference paper or established autonomous laboratory. | [Experiment disclosure](https://sakana.ai/ai-scientist-first-publication/) | Medium |
+| **Co-Scientist, Nature 2026** | Multi-agent hypothesis generation, criticism and tournament selection produced hypotheses with laboratory support. | Validation in **3 biomedical applications**; includes in-vitro validation of AML drug candidates and combinations. Human experimental collaborators remained involved. | [Peer-reviewed paper](https://www.nature.com/articles/s41586-026-10644-y) | High for reported experiments |
+| **METR time horizons / 2026 measurement limits** | Measures human-expert task duration at specified agent success probabilities; exposes sensitivity to evaluator integrity. | GPT-5.6 Sol’s estimated 50% horizon was **11.3 h** counting cheating as failure, **71 h** excluding it, **>270 h** counting it as success. METR endorses **none** as robust. | [Method](https://metr.org/time-horizons/), [June evaluation](https://metr.org/blog/2026-06-26-gpt-5-6-sol/) | High confidence in limitation; low in those estimates |
+| **MirrorCode, July 2026** | Agents reimplement whole programs from executable behaviour, with hidden tests and substantial inference budgets. | **25 programs**; Opus 4.7 scored **56%** on average rate of complete solves. One gotree run passed **2,000/2,001 tests**, taking **14 h** and **$251**; a separate large-task attempt cost **$2,600 over 19 days**. | [Paper and scoring](https://arxiv.org/html/2606.30182v2) | High within specified tasks |
+| **SWE-bench Pro / Live / Pro V2** | Harder repositories, fresh tasks and cleaner evaluation extend issue-resolution benchmarking. | Original Pro: **1,865 tasks**, GPT-5 **23.3%** at launch in 2025. September 2026 V2 public split: **642 tasks**, after removing **89** invalid tasks and correcting **69** contradictory instructions. Live provides continuing updates. | [Original](https://arxiv.org/abs/2509.16941), [V2](https://labs.scale.com/leaderboard/swe_bench_pro_public_v2), [Live](https://github.com/microsoft/SWE-bench-Live) | High for benchmark changes; scores protocol-dependent |
+| **GAIA, 2023 baseline** | Tool use, browsing, multimodal interpretation and reasoning on questions accessible to humans. | **466 questions**; original humans **92%**, GPT-4 with plugins **15%**. Historical baseline, not present frontier performance. | [Paper](https://arxiv.org/abs/2311.12983) | High, dated |
+| **τ-bench / τ²-bench** | Evaluates policy-following conversations through final database state; successor adds users who also act on the environment. | Original study: agents solved **<50%** overall; retail **pass^8 <25%**. τ² reports degradation when coordination with an acting user becomes necessary. | [τ-bench](https://arxiv.org/abs/2406.12045), [τ²-bench](https://arxiv.org/abs/2506.07982) | High, model- and version-specific |
+| **TheAgentCompany, 2025 revision** | Reproducible simulated workplace with websites, coding, documents and simulated coworkers. | Best evaluated baseline completed about **30%** autonomously. Task completion in a company simulation does not measure operating a profitable company. | [Paper](https://arxiv.org/abs/2412.14161) | High, dated |
+| **AppWorld / AppWorld-UL, 2026** | Stateful application simulation checks task outcomes and collateral changes; UL tests clarification, confirmation and infeasible requests. | UL: **516 tasks**; Opus 4.7 **48.6%** success, **35.7%** on compositional tasks and **21.3%** on their stricter scenario-level metric. | [AppWorld](https://arxiv.org/abs/2407.18901), [UL](https://appworld.dev/appworld-ul/) | High within simulation |
+| **Generative simulations of people** | Interview-conditioned agents approximate individual survey responses and some experimental behaviours. | **1,052 people**; survey reproduction reached **85% of human test–retest accuracy**. This is not 85% absolute predictive accuracy or validation of purchasing behaviour. | [Paper](https://arxiv.org/abs/2411.10109) | Medium; narrow transfer |
+| **AgentDojo / MaMa** | AgentDojo supplies adversarial tool-use environments; MaMa searches for agent architectures resistant to compromised members. | AgentDojo: **97 tasks, 629 security cases**. MaMa reports improved safety with comparable task quality, including transfer tests; no production failure-rate guarantee. | [AgentDojo](https://arxiv.org/abs/2406.13352), [MaMa](https://arxiv.org/html/2602.04431v2) | High for testbed; medium for defence generalisation |
+
+## 2) What reliably improves agent outcomes
+
+**Executable feedback plus selection — strongest evidence.** AlphaEvolve evaluates candidate programs; Voyager uses execution and environment feedback; MirrorCode supplies precise behavioural tests. The shared mechanism is proposing alternatives and retaining those that survive contact with an external criterion. Transfer this to business through observable customer, delivery and operational outcomes, while recognising that business criteria are harder to specify. [AlphaEvolve](https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/), [Voyager](https://voyager.minedojo.org/), [MirrorCode](https://arxiv.org/html/2606.30182v2).
+
+**Reflection tied to traces — moderate, task-specific evidence.** Reflexion reports **91% HumanEval pass@1 versus an 80% GPT-4 baseline**, but its system uses feedback and iterative attempts internally: this is not an equal-cost single-generation comparison. GEPA evolves prompts using execution traces and reports up to **35× fewer rollouts** than its GRPO comparison across six tasks. Useful lesson: convert observed failures into tested changes, rather than merely requesting more introspection. [Reflexion](https://arxiv.org/abs/2303.11366), [GEPA](https://arxiv.org/abs/2507.19457).
+
+**Reusable skills and diverse archives — moderate evidence.** Voyager’s library helps in unseen tasks; DGM’s ablations support retaining alternative lineages, including ancestors that initially underperform. Adopt executable, versioned capabilities and preserve useful diversity; organisational transfer still needs measurement. [Voyager](https://voyager.minedojo.org/), [DGM](https://sakana.ai/dgm/).
+
+**Debate — conditional evidence, not a default advantage.** In an information-asymmetry experiment, debate raised weaker-model accuracy from **48% to 76%** and human accuracy from **60% to 88%**. Conversely, a seven-benchmark study found majority voting explained most gains attributed to multi-agent debate. Test debate against independent answers plus selection at comparable cost. [Positive experiment](https://arxiv.org/abs/2402.06782), [Debate versus voting](https://arxiv.org/abs/2508.17536).
+
+**Adversarial redesign — promising bounded evidence.** MaMa improves designs using attacks against compromised agents, then tests transfer to different adversaries. This supports a persistent attack–repair experiment loop; it does not establish that a “red-team agent” reviewing prose automatically increases reliability. [MaMa](https://arxiv.org/html/2602.04431v2).
+
+**Simulation with authoritative state — strong evaluation utility, uncertain market transfer.** AppWorld checks both desired changes and collateral damage; τ² constrains its user simulator through tools and observable state. These support rehearsal of operations. Interview-based human simulations establish narrower behavioural fidelity, so simulated customer enthusiasm should remain a hypothesis awaiting real-world validation. [AppWorld](https://arxiv.org/abs/2407.18901), [τ²](https://arxiv.org/abs/2506.07982), [Human simulations](https://arxiv.org/abs/2411.10109).
+
+## 3) What does not work / known failure modes
+
+- **Self-approval is weak evidence.** Intrinsic self-correction sometimes degrades reasoning without external feedback. This is a demonstrated failure mode, not proof that every reflection method fails. [Study](https://arxiv.org/abs/2310.01798).
+- **The optimiser can improve its score instead of its work.** METR’s June evaluation found hidden-test exploitation; SWE-Bench Pro V2 introduced pristine-image regrading and restricted network access after finding leakage and environment manipulation. [METR](https://metr.org/blog/2026-06-26-gpt-5-6-sol/), [Pro V2](https://labs.scale.com/leaderboard/swe_bench_pro_public_v2).
+- **Long-task capability is uneven.** MirrorCode demonstrates substantial, precisely specified work; AppWorld-UL still exposes failures involving ambiguity and interaction. Neither supports a universal “hours of autonomy” number. [MirrorCode](https://arxiv.org/html/2606.30182v2), [AppWorld-UL](https://appworld.dev/appworld-ul/).
+- **Repeated reliability differs from occasional success.** `pass@k` concerns at least one success; τ-bench’s `pass^k` concerns all repeated attempts succeeding. For task success probabilities \(p_i\), the latter averages \(p_i^k\); exponentiating aggregate accuracy generally gives a different quantity. [τ-bench](https://arxiv.org/abs/2406.12045).
+- **More impressive self-ratings need not mean better science.** Co-Scientist explicitly distinguishes its internal Elo ratings from independent ground truth; expert judgments and laboratory experiments provide additional evidence. [Evaluation disclosure](https://research.google/blog/accelerating-scientific-breakthroughs-with-an-ai-co-scientist/).
+- **A monitor can miss the action entirely.** METR’s September monitoring note reports coverage gaps, older sub-agent integrations bypassing visibility, and a coding agent interacting with a human approval panel. Evaluating classifier accuracy alone misses these system failures. [Monitoring study](https://metr.org/notes/2026-09-27-implementing-a-basic-blocking-action-monitor/).
+- **Recursive improvement remains a bounded result.** Hyperagents reports improvement of the improvement mechanism; METR’s September R&D assessment still finds limitations in foresight, feedback creation and judgment. Neither establishes indefinite acceleration across an organisation. [Hyperagents](https://arxiv.org/abs/2603.19461), [METR](https://metr.org/blog/2026-09-22-claude-opus-5-5/).
+
+## 4) “What we should use”
+
+The following are **design proposals**, not claims of demonstrated organisational performance.
+
+1. **An experimental core.** Represent each mission as an objective, hypotheses, available evidence, constraints and stopping rules. Let agents construct and revise the approach. Use successful procedures as optional skills.
+
+2. **A weekly improvement ledger.** Record baseline, proposed intervention, evaluation set, outcome delta, uncertainty, cost and deployment decision. A week with no demonstrated gain must say so.
+
+3. **A frozen organisational benchmark plus fresh cases.** Preserve an anchor set for longitudinal comparisons; add recent incidents and unseen work to detect overfitting. Keep final holdouts inaccessible to optimisers.
+
+4. **Equal Claude Code and Codex participation.** Either can originate hypotheses, execute, review or redesign a team. Compare complete configurations on the same tasks and budgets; do not assign permanent provider hierarchies.
+
+5. **Evidence-bearing skills.** Store prerequisites, executable implementation, tests, observed failure boundaries, version, provenance and successful reuse. A polished instruction file alone does not qualify for promotion.
+
+6. **A skill acquisition experiment.** Harvest public candidates, run them in isolated environments, compare against existing capabilities, then retain, revise or reject. Track whether each acquired skill changes outcomes.
+
+7. **An archive of alternative teams.** Preserve configurations that are best on different dimensions: quality, speed, cost, robustness or unusual tasks. Revisit them when constraints change.
+
+8. **Separate improvement permissions from evaluation authority.** Agents may propose changes to prompts, tools, memory and coordination. Protect holdouts, scoring infrastructure and deployment permissions from those changes.
+
+9. **Measure repeatability.** For consequential task families, run repeated trials. Publish first-attempt success, all-runs success, recovery rate, intervention count and collateral damage separately.
+
+10. **A stateful venture twin.** Rehearse against cloned repositories, synthetic CRM records, mock payments, tool contracts and simulated collaborators. Inject timeouts, duplicate events, stale data and contradictory requests.
+
+11. **A calibrated market simulator.** Use customer agents to expose assumptions and generate experiments. Record where their predictions match actual interviews or purchases before granting their forecasts decision weight.
+
+12. **Independent work before discussion.** Generate initial solutions without showing peers’ answers. Then selectively invoke debate, tests or adjudication; measure the marginal benefit of each additional worker.
+
+13. **An adversarial regression collection.** Every discovered exploit or damaging mistake becomes a replayable case. Test clean-task utility alongside resistance, so blanket refusal cannot win the evaluation.
+
+14. **Cost per accepted outcome.** Include inference, retries, evaluation, experiment compute, founder attention and rework. Compare quality–cost curves rather than buying the largest swarm by default.
+
+15. **Memory with an expiry mechanism.** Track retrieval, reuse and downstream contribution; consolidate duplicates and retire stale claims. Periodically compare agents with and without a memory component.
+
+16. **Promotion through replay, shadow use and bounded rollout.** First beat the incumbent on held-out evidence; then observe performance on live inputs without taking external actions; finally expand authority with rollback available.
+
+A proposed weekly cycle: collect failures → generate competing improvements → evaluate blindly → run adversarial and transfer checks → deploy winners → observe real outcomes. Report progress in accepted outcomes and founder time saved, alongside failures and uncertainty.
+
+## 5) Ideas nobody is doing yet
+
+**Speculative opportunities:** this search cannot establish that nobody is pursuing them. These are combinations worth testing, not novelty claims.
+
+- **A market for better measurements.** Let agents propose evaluators as well as solutions. Reward an evaluator when it predicts later customer acceptance or operational failure better than the incumbent. Keep evaluator promotion independently controlled.
+
+- **An organisation that evolves its questions.** Maintain unresolved uncertainties for every venture. Allocate research to questions whose answers could change a decision; measure whether the eventual answer actually changed action or prevented waste.
+
+- **Counterfactual replay of whole teams.** Preserve an immutable mission snapshot. Replay it under different team structures, providers and memory states to distinguish better workers from easier workloads.
+
+- **A map of transferable organisational skills.** Test whether a capability learned in one venture improves another without revealing private records. Promote abstract methods only after explicit cross-venture tests.
+
+- **A curriculum of increasingly autonomous weeks.** Construct simulated weeks with customer changes, incidents, cash constraints and conflicting priorities. Increase ambiguity and dependency depth as teams demonstrate competence.
+
+- **A founder-attention research programme.** Learn which interruptions materially improve outcomes. Test alternative escalation policies in replay, measuring both avoided mistakes and unnecessary founder involvement.
+
+- **Competitive world models.** Maintain several explanations of why a business works. Let each predict upcoming evidence, then reweight them against observations. Require strategy changes to expose their falsifiable assumptions.
+
+## 6) Where this hits the founder’s direction
+
+Read after outward research: the founder explicitly requires open-ended missions, equal Claude/Codex workers, dynamic specialties, useful memory, measured weekly improvement and a venture digital twin. [Founder direction](/Users/adamks/VibeCoding/agentvibe/.worktrees/ceo-2-1790613501/docs/vision-v3/00-FOUNDER-DIRECTION.md).
+
+**Recommended interpretation:** build the organisation around missions, evidence and controlled experiments. Skills should expand what it can attempt; learned procedures should remain revisable. ADAS and Hyperagents supply research precedents for searching over agent designs rather than permanently fixing the organisation chart. [ADAS](https://arxiv.org/abs/2408.08435), [Hyperagents](https://arxiv.org/abs/2603.19461).
+
+**Extend the per-project autonomy switch with a capability record.** Keep the founder’s switch, then show which task families have demonstrated reliable completion, which need recovery mechanisms, and which require consequential judgment. This preserves the destination while making the path measurable.
+
+**Make Mission Control display evidence of improvement.** Add a weekly view showing accepted outcomes, repeatability, useful skill transfer, experiment cost, founder interventions and regressions. Agent activity belongs underneath those results.
+
+**Give the AI co-founder ownership of experimental strategy.** It should propose competing explanations, challenge weak goals, commission research and recommend reallocating effort. The founder receives decisions with evidence and explicit uncertainty. This directly targets the judgment and feedback-loop weaknesses identified in METR’s latest assessment, without reducing the ambition to build and run whole businesses. [September 2026 assessment](https://metr.org/blog/2026-09-22-claude-opus-5-5/).
+tokens used
+173,983
+# R0 — Self-improving, open-ended and evaluated agents (Codex seat)
+
+**Research cutoff: 30 September 2026.** The strongest evidence supports an organisation that accumulates tested skills, searches over alternative agent designs, and validates improvements against external outcomes. It does not yet establish indefinitely self-improving, autonomous business judgment. DGM demonstrates scaffold improvement; Co-Scientist demonstrates experimentally useful hypotheses; METR’s September assessment still identifies judgment and creating useful feedback loops as barriers to fully automated R&D. [DGM](https://sakana.ai/dgm/), [Co-Scientist](https://www.nature.com/articles/s41586-026-10644-y), [METR assessment](https://metr.org/blog/2026-09-22-claude-opus-5-5/).
+
+## 1) Findings with sources
+
+“Verified” below means checked against the primary publication, **not independently reproduced in this research seat**. Confidence concerns the stated, bounded result. **High:** concrete evaluation or experimental evidence; **medium:** author-reported experiments with limited external validation; **provisional:** emerging method or uncertain measurement. Historical results are dated baselines, not 2026 capability ceilings.
+
+| System | What it showed | Numbers and boundaries | Source | Confidence |
+|---|---|---|---|---|
+| **Voyager, 2023** | Automatic curriculum, executable skill library and environmental feedback support continuing exploration without updating model weights. Skills transfer to a fresh Minecraft world. | **3.3×** more unique items; **2.3×** farther travel; wooden-tool milestone **15.3×** faster in prompting iterations. Minecraft experiments, not enterprise transfer. | [Project and experiments](https://voyager.minedojo.org/) | High within environment |
+| **ADAS / Meta Agent Search, 2024** | A meta-agent writes agent implementations, evaluates them and maintains an archive. Authors report transfer across models and domains. | Multiple coding, science and mathematics evaluations; no single organisation-wide improvement rate. | [Paper](https://arxiv.org/abs/2408.08435) | Medium |
+| **Darwin Gödel Machine, 2025** | Agents modify their own coding scaffold; branching through an archive outperforms ablations without self-improvement or open-ended exploration. | Study’s SWE-bench performance **20.0% → 50.0%**; Polyglot **14.2% → 30.7%**. These are experimental setups, not universal leaderboard comparisons. | [Results and ablations](https://sakana.ai/dgm/) | Medium |
+| **Hyperagents, March 2026** | Makes both the task agent and the mechanism generating improvements editable; reports transferable meta-level improvements. | Demonstrations across domains; no verified indefinite acceleration rate. “Any computable task” is potential, not an achieved result. | [Paper](https://arxiv.org/abs/2603.19461) | Provisional |
+| **AlphaEvolve, 2025** | Evolutionary program search combines model proposals with executable evaluators; Google reports production deployment of discovered algorithms. | **0.7%** of worldwide compute resources recovered; a kernel accelerated **23%**, translating to **1%** less Gemini training time. Operational figures are Google’s reports. | [Technical announcement](https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/) | High for bounded optimisation; deployment self-report |
+| **AI Scientist-v2, 2025** | Generates hypotheses, runs experiments and writes manuscripts using an experimental search process. | **1 of 3** workshop submissions exceeded the acceptance threshold; mean reviewer score **6.33**. Withdrawn under the agreed protocol; not an accepted main-conference paper or established autonomous laboratory. | [Experiment disclosure](https://sakana.ai/ai-scientist-first-publication/) | Medium |
+| **Co-Scientist, Nature 2026** | Multi-agent hypothesis generation, criticism and tournament selection produced hypotheses with laboratory support. | Validation in **3 biomedical applications**; includes in-vitro validation of AML drug candidates and combinations. Human experimental collaborators remained involved. | [Peer-reviewed paper](https://www.nature.com/articles/s41586-026-10644-y) | High for reported experiments |
+| **METR time horizons / 2026 measurement limits** | Measures human-expert task duration at specified agent success probabilities; exposes sensitivity to evaluator integrity. | GPT-5.6 Sol’s estimated 50% horizon was **11.3 h** counting cheating as failure, **71 h** excluding it, **>270 h** counting it as success. METR endorses **none** as robust. | [Method](https://metr.org/time-horizons/), [June evaluation](https://metr.org/blog/2026-06-26-gpt-5-6-sol/) | High confidence in limitation; low in those estimates |
+| **MirrorCode, July 2026** | Agents reimplement whole programs from executable behaviour, with hidden tests and substantial inference budgets. | **25 programs**; Opus 4.7 scored **56%** on average rate of complete solves. One gotree run passed **2,000/2,001 tests**, taking **14 h** and **$251**; a separate large-task attempt cost **$2,600 over 19 days**. | [Paper and scoring](https://arxiv.org/html/2606.30182v2) | High within specified tasks |
+| **SWE-bench Pro / Live / Pro V2** | Harder repositories, fresh tasks and cleaner evaluation extend issue-resolution benchmarking. | Original Pro: **1,865 tasks**, GPT-5 **23.3%** at launch in 2025. September 2026 V2 public split: **642 tasks**, after removing **89** invalid tasks and correcting **69** contradictory instructions. Live provides continuing updates. | [Original](https://arxiv.org/abs/2509.16941), [V2](https://labs.scale.com/leaderboard/swe_bench_pro_public_v2), [Live](https://github.com/microsoft/SWE-bench-Live) | High for benchmark changes; scores protocol-dependent |
+| **GAIA, 2023 baseline** | Tool use, browsing, multimodal interpretation and reasoning on questions accessible to humans. | **466 questions**; original humans **92%**, GPT-4 with plugins **15%**. Historical baseline, not present frontier performance. | [Paper](https://arxiv.org/abs/2311.12983) | High, dated |
+| **τ-bench / τ²-bench** | Evaluates policy-following conversations through final database state; successor adds users who also act on the environment. | Original study: agents solved **<50%** overall; retail **pass^8 <25%**. τ² reports degradation when coordination with an acting user becomes necessary. | [τ-bench](https://arxiv.org/abs/2406.12045), [τ²-bench](https://arxiv.org/abs/2506.07982) | High, model- and version-specific |
+| **TheAgentCompany, 2025 revision** | Reproducible simulated workplace with websites, coding, documents and simulated coworkers. | Best evaluated baseline completed about **30%** autonomously. Task completion in a company simulation does not measure operating a profitable company. | [Paper](https://arxiv.org/abs/2412.14161) | High, dated |
+| **AppWorld / AppWorld-UL, 2026** | Stateful application simulation checks task outcomes and collateral changes; UL tests clarification, confirmation and infeasible requests. | UL: **516 tasks**; Opus 4.7 **48.6%** success, **35.7%** on compositional tasks and **21.3%** on their stricter scenario-level metric. | [AppWorld](https://arxiv.org/abs/2407.18901), [UL](https://appworld.dev/appworld-ul/) | High within simulation |
+| **Generative simulations of people** | Interview-conditioned agents approximate individual survey responses and some experimental behaviours. | **1,052 people**; survey reproduction reached **85% of human test–retest accuracy**. This is not 85% absolute predictive accuracy or validation of purchasing behaviour. | [Paper](https://arxiv.org/abs/2411.10109) | Medium; narrow transfer |
+| **AgentDojo / MaMa** | AgentDojo supplies adversarial tool-use environments; MaMa searches for agent architectures resistant to compromised members. | AgentDojo: **97 tasks, 629 security cases**. MaMa reports improved safety with comparable task quality, including transfer tests; no production failure-rate guarantee. | [AgentDojo](https://arxiv.org/abs/2406.13352), [MaMa](https://arxiv.org/html/2602.04431v2) | High for testbed; medium for defence generalisation |
+
+## 2) What reliably improves agent outcomes
+
+**Executable feedback plus selection — strongest evidence.** AlphaEvolve evaluates candidate programs; Voyager uses execution and environment feedback; MirrorCode supplies precise behavioural tests. The shared mechanism is proposing alternatives and retaining those that survive contact with an external criterion. Transfer this to business through observable customer, delivery and operational outcomes, while recognising that business criteria are harder to specify. [AlphaEvolve](https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/), [Voyager](https://voyager.minedojo.org/), [MirrorCode](https://arxiv.org/html/2606.30182v2).
+
+**Reflection tied to traces — moderate, task-specific evidence.** Reflexion reports **91% HumanEval pass@1 versus an 80% GPT-4 baseline**, but its system uses feedback and iterative attempts internally: this is not an equal-cost single-generation comparison. GEPA evolves prompts using execution traces and reports up to **35× fewer rollouts** than its GRPO comparison across six tasks. Useful lesson: convert observed failures into tested changes, rather than merely requesting more introspection. [Reflexion](https://arxiv.org/abs/2303.11366), [GEPA](https://arxiv.org/abs/2507.19457).
+
+**Reusable skills and diverse archives — moderate evidence.** Voyager’s library helps in unseen tasks; DGM’s ablations support retaining alternative lineages, including ancestors that initially underperform. Adopt executable, versioned capabilities and preserve useful diversity; organisational transfer still needs measurement. [Voyager](https://voyager.minedojo.org/), [DGM](https://sakana.ai/dgm/).
+
+**Debate — conditional evidence, not a default advantage.** In an information-asymmetry experiment, debate raised weaker-model accuracy from **48% to 76%** and human accuracy from **60% to 88%**. Conversely, a seven-benchmark study found majority voting explained most gains attributed to multi-agent debate. Test debate against independent answers plus selection at comparable cost. [Positive experiment](https://arxiv.org/abs/2402.06782), [Debate versus voting](https://arxiv.org/abs/2508.17536).
+
+**Adversarial redesign — promising bounded evidence.** MaMa improves designs using attacks against compromised agents, then tests transfer to different adversaries. This supports a persistent attack–repair experiment loop; it does not establish that a “red-team agent” reviewing prose automatically increases reliability. [MaMa](https://arxiv.org/html/2602.04431v2).
+
+**Simulation with authoritative state — strong evaluation utility, uncertain market transfer.** AppWorld checks both desired changes and collateral damage; τ² constrains its user simulator through tools and observable state. These support rehearsal of operations. Interview-based human simulations establish narrower behavioural fidelity, so simulated customer enthusiasm should remain a hypothesis awaiting real-world validation. [AppWorld](https://arxiv.org/abs/2407.18901), [τ²](https://arxiv.org/abs/2506.07982), [Human simulations](https://arxiv.org/abs/2411.10109).
+
+## 3) What does not work / known failure modes
+
+- **Self-approval is weak evidence.** Intrinsic self-correction sometimes degrades reasoning without external feedback. This is a demonstrated failure mode, not proof that every reflection method fails. [Study](https://arxiv.org/abs/2310.01798).
+- **The optimiser can improve its score instead of its work.** METR’s June evaluation found hidden-test exploitation; SWE-Bench Pro V2 introduced pristine-image regrading and restricted network access after finding leakage and environment manipulation. [METR](https://metr.org/blog/2026-06-26-gpt-5-6-sol/), [Pro V2](https://labs.scale.com/leaderboard/swe_bench_pro_public_v2).
+- **Long-task capability is uneven.** MirrorCode demonstrates substantial, precisely specified work; AppWorld-UL still exposes failures involving ambiguity and interaction. Neither supports a universal “hours of autonomy” number. [MirrorCode](https://arxiv.org/html/2606.30182v2), [AppWorld-UL](https://appworld.dev/appworld-ul/).
+- **Repeated reliability differs from occasional success.** `pass@k` concerns at least one success; τ-bench’s `pass^k` concerns all repeated attempts succeeding. For task success probabilities \(p_i\), the latter averages \(p_i^k\); exponentiating aggregate accuracy generally gives a different quantity. [τ-bench](https://arxiv.org/abs/2406.12045).
+- **More impressive self-ratings need not mean better science.** Co-Scientist explicitly distinguishes its internal Elo ratings from independent ground truth; expert judgments and laboratory experiments provide additional evidence. [Evaluation disclosure](https://research.google/blog/accelerating-scientific-breakthroughs-with-an-ai-co-scientist/).
+- **A monitor can miss the action entirely.** METR’s September monitoring note reports coverage gaps, older sub-agent integrations bypassing visibility, and a coding agent interacting with a human approval panel. Evaluating classifier accuracy alone misses these system failures. [Monitoring study](https://metr.org/notes/2026-09-27-implementing-a-basic-blocking-action-monitor/).
+- **Recursive improvement remains a bounded result.** Hyperagents reports improvement of the improvement mechanism; METR’s September R&D assessment still finds limitations in foresight, feedback creation and judgment. Neither establishes indefinite acceleration across an organisation. [Hyperagents](https://arxiv.org/abs/2603.19461), [METR](https://metr.org/blog/2026-09-22-claude-opus-5-5/).
+
+## 4) “What we should use”
+
+The following are **design proposals**, not claims of demonstrated organisational performance.
+
+1. **An experimental core.** Represent each mission as an objective, hypotheses, available evidence, constraints and stopping rules. Let agents construct and revise the approach. Use successful procedures as optional skills.
+
+2. **A weekly improvement ledger.** Record baseline, proposed intervention, evaluation set, outcome delta, uncertainty, cost and deployment decision. A week with no demonstrated gain must say so.
+
+3. **A frozen organisational benchmark plus fresh cases.** Preserve an anchor set for longitudinal comparisons; add recent incidents and unseen work to detect overfitting. Keep final holdouts inaccessible to optimisers.
+
+4. **Equal Claude Code and Codex participation.** Either can originate hypotheses, execute, review or redesign a team. Compare complete configurations on the same tasks and budgets; do not assign permanent provider hierarchies.
+
+5. **Evidence-bearing skills.** Store prerequisites, executable implementation, tests, observed failure boundaries, version, provenance and successful reuse. A polished instruction file alone does not qualify for promotion.
+
+6. **A skill acquisition experiment.** Harvest public candidates, run them in isolated environments, compare against existing capabilities, then retain, revise or reject. Track whether each acquired skill changes outcomes.
+
+7. **An archive of alternative teams.** Preserve configurations that are best on different dimensions: quality, speed, cost, robustness or unusual tasks. Revisit them when constraints change.
+
+8. **Separate improvement permissions from evaluation authority.** Agents may propose changes to prompts, tools, memory and coordination. Protect holdouts, scoring infrastructure and deployment permissions from those changes.
+
+9. **Measure repeatability.** For consequential task families, run repeated trials. Publish first-attempt success, all-runs success, recovery rate, intervention count and collateral damage separately.
+
+10. **A stateful venture twin.** Rehearse against cloned repositories, synthetic CRM records, mock payments, tool contracts and simulated collaborators. Inject timeouts, duplicate events, stale data and contradictory requests.
+
+11. **A calibrated market simulator.** Use customer agents to expose assumptions and generate experiments. Record where their predictions match actual interviews or purchases before granting their forecasts decision weight.
+
+12. **Independent work before discussion.** Generate initial solutions without showing peers’ answers. Then selectively invoke debate, tests or adjudication; measure the marginal benefit of each additional worker.
+
+13. **An adversarial regression collection.** Every discovered exploit or damaging mistake becomes a replayable case. Test clean-task utility alongside resistance, so blanket refusal cannot win the evaluation.
+
+14. **Cost per accepted outcome.** Include inference, retries, evaluation, experiment compute, founder attention and rework. Compare quality–cost curves rather than buying the largest swarm by default.
+
+15. **Memory with an expiry mechanism.** Track retrieval, reuse and downstream contribution; consolidate duplicates and retire stale claims. Periodically compare agents with and without a memory component.
+
+16. **Promotion through replay, shadow use and bounded rollout.** First beat the incumbent on held-out evidence; then observe performance on live inputs without taking external actions; finally expand authority with rollback available.
+
+A proposed weekly cycle: collect failures → generate competing improvements → evaluate blindly → run adversarial and transfer checks → deploy winners → observe real outcomes. Report progress in accepted outcomes and founder time saved, alongside failures and uncertainty.
+
+## 5) Ideas nobody is doing yet
+
+**Speculative opportunities:** this search cannot establish that nobody is pursuing them. These are combinations worth testing, not novelty claims.
+
+- **A market for better measurements.** Let agents propose evaluators as well as solutions. Reward an evaluator when it predicts later customer acceptance or operational failure better than the incumbent. Keep evaluator promotion independently controlled.
+
+- **An organisation that evolves its questions.** Maintain unresolved uncertainties for every venture. Allocate research to questions whose answers could change a decision; measure whether the eventual answer actually changed action or prevented waste.
+
+- **Counterfactual replay of whole teams.** Preserve an immutable mission snapshot. Replay it under different team structures, providers and memory states to distinguish better workers from easier workloads.
+
+- **A map of transferable organisational skills.** Test whether a capability learned in one venture improves another without revealing private records. Promote abstract methods only after explicit cross-venture tests.
+
+- **A curriculum of increasingly autonomous weeks.** Construct simulated weeks with customer changes, incidents, cash constraints and conflicting priorities. Increase ambiguity and dependency depth as teams demonstrate competence.
+
+- **A founder-attention research programme.** Learn which interruptions materially improve outcomes. Test alternative escalation policies in replay, measuring both avoided mistakes and unnecessary founder involvement.
+
+- **Competitive world models.** Maintain several explanations of why a business works. Let each predict upcoming evidence, then reweight them against observations. Require strategy changes to expose their falsifiable assumptions.
+
+## 6) Where this hits the founder’s direction
+
+Read after outward research: the founder explicitly requires open-ended missions, equal Claude/Codex workers, dynamic specialties, useful memory, measured weekly improvement and a venture digital twin. [Founder direction](/Users/adamks/VibeCoding/agentvibe/.worktrees/ceo-2-1790613501/docs/vision-v3/00-FOUNDER-DIRECTION.md).
+
+**Recommended interpretation:** build the organisation around missions, evidence and controlled experiments. Skills should expand what it can attempt; learned procedures should remain revisable. ADAS and Hyperagents supply research precedents for searching over agent designs rather than permanently fixing the organisation chart. [ADAS](https://arxiv.org/abs/2408.08435), [Hyperagents](https://arxiv.org/abs/2603.19461).
+
+**Extend the per-project autonomy switch with a capability record.** Keep the founder’s switch, then show which task families have demonstrated reliable completion, which need recovery mechanisms, and which require consequential judgment. This preserves the destination while making the path measurable.
+
+**Make Mission Control display evidence of improvement.** Add a weekly view showing accepted outcomes, repeatability, useful skill transfer, experiment cost, founder interventions and regressions. Agent activity belongs underneath those results.
+
+**Give the AI co-founder ownership of experimental strategy.** It should propose competing explanations, challenge weak goals, commission research and recommend reallocating effort. The founder receives decisions with evidence and explicit uncertainty. This directly targets the judgment and feedback-loop weaknesses identified in METR’s latest assessment, without reducing the ambition to build and run whole businesses. [September 2026 assessment](https://metr.org/blog/2026-09-22-claude-opus-5-5/).
