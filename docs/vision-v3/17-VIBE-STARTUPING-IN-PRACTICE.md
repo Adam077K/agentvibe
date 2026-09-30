@@ -319,11 +319,8 @@ Probe Mandate.
 fleet machinery, on the same records. The direction's "2–3 autonomous, others founder-driven" is this dial's Year-0
 setting (canon F5).
 
-**The first autonomous venture: beeond (new version)** (founder decision D5, 2026-09-30). A **new** venture, a new
-version of his old `beeond` project, started by Genesis rather than imported; the old `beeond` directory is Fleet Import
-input only. **Details are pending from the founder** — its customers, offer, business model and target level are not
-stated here and must not be invented; the Genesis Framing Contract waits for his brief. It climbs A0 → A2 → A3 only
-through the Promotion evidence of [05 §3.7](05-AUTONOMY-INITIATIVE-FOUNDER.md).
+**The first autonomous venture** is the founder's choice (D5, recorded in [15 §8](15-RISKS-AND-DECISIONS.md)); he
+launches it himself once the system is ready. Nothing here is built around it.
 
 ## 7. The seven operating loops, and Series mode
 

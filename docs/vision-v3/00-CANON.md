@@ -572,7 +572,7 @@ three definitions, all required, because each alone can be gamed: **value**, **o
 
 **First-90-day leading indicators (targets):** 100 probes with ≥3 graduations; Deterministic Share ≥20% in two task
 classes; one Trigger-Armed Option registered per week; one customer wish shipped in <24 h; founder decision minutes flat
-as ventures are added; the first autonomous venture, beeond (new version) (D5), running at A2; the first cross-family Referee FAIL caught before a
+as ventures are added; the founder's chosen first autonomous venture (D5) running at A2; the first cross-family Referee FAIL caught before a
 customer saw it (SLICE did this once on day zero).
 
 **Per-venture parameters (initial, tunable):** venture genesis ≈8 min (capacity measured, not priced) with 3 founder confirmations (S08);

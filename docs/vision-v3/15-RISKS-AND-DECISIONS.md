@@ -457,10 +457,9 @@ flowchart LR
   Keeper). Names by **M0**, so Fleet Import can buy baselines; switch at **M2**.
 - **Decided (2026-09-30): differently from (b).** The first autonomous venture is **a new venture: "beeond (new
   version)"**, a new version of his old beeond project. **Details are pending from the founder** — its business model,
-  customers and target level are not yet stated and must not be invented. **Consequences:** no imported live-revenue
-  venture goes autonomous first, so the imported-versus-greenfield comparison is dropped; beeond starts as a greenfield
-  Genesis at A0–A2 and reaches A3 only through the Promotion evidence of 05 §3.7; a second autonomous venture waits for
-  his choice and T01's residual P (the reversal trigger stands).
+  customers and target level are not yet stated and must not be invented. **Consequences:** none for the design — the system is
+  built venture-agnostic, and the founder launches his chosen venture himself when the system is ready; it climbs to A3
+  only through the Promotion evidence of 05 §3.7, like any venture.
 
 ### D6 — Deputy and Continuity Will (F6)
 
