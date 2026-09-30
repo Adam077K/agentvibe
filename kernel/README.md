@@ -8,11 +8,28 @@ Check it, from the repository root:
 go -C kernel test -count=1 ./...
 ```
 
-That runs `avk-boundary` against the real tree and the negative fixtures that prove each check fails:
+That runs `avk-boundary` against the real tree and the negative fixtures proving each check fails.
+The principle is default-deny on what the checker cannot see:
 
-- every module in the build is stdlib or listed in `ALLOWED_MODULES`, and none is `replace`d;
-- non-test Go source stays at or under 8,000 lines (`-max-lines`);
-- no source file outside `kernel/` names the Journal (`internal/journal.Path`).
+- **Modules:** `go.mod` and `go.sum` are read directly. Only `module`, `go`, `toolchain` and a
+  `require` of a module in `ALLOWED_MODULES` are permitted, so `replace`, `tool` and unknown
+  directives all fail. Every import in every `.go` file is parsed, whatever its build constraints.
+  The build is also resolved with `go list` on {darwin,linux}×{arm64,amd64}, with and without every
+  build tag the sources use.
+- **Tree:** no symlink, cgo, non-Go source (`.c .h .s .m .cc .syso …`), nested `go.mod`, `go.work`
+  or `vendor/` anywhere under `kernel/`.
+- **Size:** at most 8,000 lines (`-max-lines`) of `.go` outside `_test.go` files. That covers every
+  directory, including `testdata`, `_` and `.` directories and anything behind a link.
+- **Journal:** no file outside `kernel/` names the Journal (`internal/journal.Path`). The scan
+  covers every file whatever its name or encoding: raw bytes, with NULs dropped so UTF-16 reads.
+  It is case-insensitive and matches the file name, the directory as separate tokens, and globs
+  aimed at it. Only regular `docs/**/*.md` files are exempt, as prose; a script under `docs/` is
+  scanned.
 
-`-count=1` is required: a cached pass would not rescan the repository. For readable findings:
-`go -C kernel run ./cmd/avk-boundary` (exit 0 clean · 1 finding · 2 could not check).
+**The Journal scan is a tripwire, not the boundary.** A path assembled at run time from pieces that
+never spell a token defeats any static scan. What actually keeps Userland out is the OS: the Journal
+is owned by `avk` with mode 600. Userland reaches the Kernel only through the command socket, mode
+660 (09a §2, §4.1; B1-03).
+
+`-count=1` is required, because a cached pass would not rescan the repository. For readable
+findings, run `go -C kernel run ./cmd/avk-boundary` (exit 0 clean · 1 finding · 2 could not check).

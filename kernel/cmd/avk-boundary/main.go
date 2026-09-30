@@ -60,24 +60,45 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return fail(fmt.Errorf("kernel %s is not a directory inside repo %s", kernelAbs, repoAbs))
 	}
 
+	ctx := context.Background()
 	allowed, err := boundary.LoadAllowed(*allowedPath)
 	if err != nil {
 		return fail(err)
 	}
-	modFindings, err := boundary.CheckModules(context.Background(), kernelAbs, allowed)
+	// Static reads first: they see every file whatever the platform or build flags, so they are
+	// the default-deny. The go list matrix then confirms what an actual build resolves.
+	var findings []boundary.Finding
+	goModFindings, modulePath, err := boundary.CheckGoMod(kernelAbs, allowed)
 	if err != nil {
 		return fail(err)
 	}
+	findings = append(findings, goModFindings...)
+	treeFindings, err := boundary.CheckKernelTree(kernelAbs)
+	if err != nil {
+		return fail(err)
+	}
+	findings = append(findings, treeFindings...)
+	importFindings, err := boundary.CheckImports(ctx, kernelAbs, modulePath, allowed)
+	if err != nil {
+		return fail(err)
+	}
+	findings = append(findings, importFindings...)
+	listFindings, err := boundary.CheckModules(ctx, kernelAbs, allowed)
+	if err != nil {
+		return fail(err)
+	}
+	findings = append(findings, listFindings...)
 	sizeFindings, lines, err := boundary.CheckSize(kernelAbs, *maxLines)
 	if err != nil {
 		return fail(err)
 	}
+	findings = append(findings, sizeFindings...)
 	journalFindings, err := boundary.CheckJournalWriters(repoAbs, kernelRel)
 	if err != nil {
 		return fail(err)
 	}
+	findings = append(findings, journalFindings...)
 
-	findings := append(append(modFindings, sizeFindings...), journalFindings...)
 	for _, f := range findings {
 		fmt.Fprintln(stderr, f)
 	}

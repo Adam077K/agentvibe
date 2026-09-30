@@ -14,6 +14,8 @@ const (
 	repoRoot   = "../../.."
 )
 
+var ctx = context.Background()
+
 // offline keeps every go invocation off the network: a fixture that needed a download is a broken
 // fixture, and a download would make the answer depend on the proxy.
 func offline(t *testing.T) {
@@ -22,13 +24,41 @@ func offline(t *testing.T) {
 	t.Setenv("GOFLAGS", "")
 }
 
-func mustModules(t *testing.T, dir string, allowed map[string]bool) []Finding {
+// tree writes files under a fresh temporary root. A kernel that violates its own boundary cannot be
+// committed under kernel/ (the real-tree tests would fail on it), so every kernel-side negative
+// fixture is built here at run time.
+func tree(t *testing.T, files map[string]string) string {
 	t.Helper()
-	findings, err := CheckModules(context.Background(), dir, allowed)
-	if err != nil {
-		t.Fatalf("CheckModules(%s): %v", dir, err)
+	root := t.TempDir()
+	for rel, body := range files {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
-	return findings
+	return root
+}
+
+// has reports whether any finding sits at where (a prefix match on the location) and says detail.
+func has(fs []Finding, where, detail string) bool {
+	for _, f := range fs {
+		if strings.HasPrefix(f.Where, where) && strings.Contains(f.Detail, detail) {
+			return true
+		}
+	}
+	return false
+}
+
+const cleanGoMod = "module example.com/k\n\ngo 1.25\n"
+
+func mustNone(t *testing.T, what string, fs []Finding, err error) {
+	t.Helper()
+	if err != nil || len(fs) != 0 {
+		t.Fatalf("%s: findings=%v err=%v", what, fs, err)
+	}
 }
 
 func TestParseAllowed(t *testing.T) {
@@ -46,134 +76,247 @@ func TestParseAllowed(t *testing.T) {
 	}
 }
 
-func TestModulesRealKernelPasses(t *testing.T) {
+// Every kernel-side check passes on the kernel as committed, and the Journal scan on the repository.
+func TestRealTreePasses(t *testing.T) {
 	offline(t)
 	allowed, err := LoadAllowed(filepath.Join(kernelRoot, "ALLOWED_MODULES"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f := mustModules(t, kernelRoot, allowed); len(f) != 0 {
-		t.Fatalf("real kernel: %v", f)
+	fs, mod, err := CheckGoMod(kernelRoot, allowed)
+	mustNone(t, "go.mod", fs, err)
+	fs, err = CheckKernelTree(kernelRoot)
+	mustNone(t, "tree", fs, err)
+	fs, err = CheckImports(ctx, kernelRoot, mod, allowed)
+	mustNone(t, "imports", fs, err)
+	fs, err = CheckModules(ctx, kernelRoot, allowed)
+	mustNone(t, "go list matrix", fs, err)
+	fs, n, err := CheckSize(kernelRoot, DefaultMaxLines)
+	mustNone(t, "size", fs, err)
+	if n == 0 {
+		t.Fatal("counted zero lines in the real kernel")
 	}
+	fs, err = CheckJournalWriters(repoRoot, "kernel")
+	mustNone(t, "journal", fs, err)
 }
 
-func TestModulesStdlibOnlyPasses(t *testing.T) {
+// A stdlib-only kernel, Ed25519 included, passes every module check.
+func TestStdlibKernelPasses(t *testing.T) {
 	offline(t)
-	if f := mustModules(t, "testdata/modules/stdlib", nil); len(f) != 0 {
-		t.Fatalf("stdlib-only fixture: %v", f)
-	}
+	root := tree(t, map[string]string{
+		"go.mod":  cleanGoMod,
+		"main.go": "package main\n\nimport (\n\t\"crypto/ed25519\"\n\t\"fmt\"\n)\n\nfunc main() { fmt.Println(ed25519.PublicKeySize) }\n",
+	})
+	fs, mod, err := CheckGoMod(root, nil)
+	mustNone(t, "go.mod", fs, err)
+	fs, err = CheckImports(ctx, root, mod, nil)
+	mustNone(t, "imports", fs, err)
+	fs, err = CheckModules(ctx, root, nil)
+	mustNone(t, "go list matrix", fs, err)
 }
 
-func TestModulesDisallowedImportFails(t *testing.T) {
+// An unrequired import cannot resolve; go list reports it and the check fails rather than passing.
+func TestUnresolvableImportFails(t *testing.T) {
 	offline(t)
-	f := mustModules(t, "testdata/modules/disallowed", map[string]bool{"modernc.org/sqlite": true})
-	if len(f) != 1 || f[0].Where != "example.com/evil" || !strings.Contains(f[0].Detail, "not in ALLOWED_MODULES") {
-		t.Fatalf("want one disallowed finding for example.com/evil, got %v", f)
+	root := tree(t, map[string]string{
+		"go.mod":  cleanGoMod,
+		"main.go": "package main\n\nimport \"example.com/nowhere\"\n\nfunc main() { nowhere.Do() }\n",
+	})
+	fs, err := CheckModules(ctx, root, nil)
+	if err != nil || !has(fs, "example.com/nowhere", "could not resolve") {
+		t.Fatalf("want an unresolved finding, got findings=%v err=%v", fs, err)
+	}
+	fs, err = CheckImports(ctx, root, "example.com/k", nil)
+	if err != nil || !has(fs, "main.go", "example.com/nowhere") {
+		t.Fatalf("want a static import finding, got findings=%v err=%v", fs, err)
 	}
 }
 
-// Listing a module by name must not admit a different body of code under that name.
-func TestModulesReplacedModuleFailsEvenWhenAllowed(t *testing.T) {
+// Reviewer bypass: a darwin-only file importing a replaced module, checked from GOOS=linux, where
+// the go tool never lists that file. Refused four ways: the require, the replace, the import as
+// parsed, and the darwin cells of the go list matrix.
+func TestBypassPlatformOnlyReplacedModule(t *testing.T) {
 	offline(t)
-	f := mustModules(t, "testdata/modules/disallowed", map[string]bool{"example.com/evil": true})
-	if len(f) != 1 || f[0].Where != "example.com/evil" || !strings.Contains(f[0].Detail, "replaced by ./evil") {
-		t.Fatalf("want one replace finding for example.com/evil, got %v", f)
+	t.Setenv("GOOS", "linux")
+	root := tree(t, map[string]string{
+		"go.mod":       cleanGoMod + "\nrequire example.com/evil v0.0.0\n\nreplace example.com/evil => ./evil\n",
+		"main.go":      "package main\n\nfunc main() {}\n",
+		"x_darwin.go":  "package main\n\nimport _ \"example.com/evil\"\n",
+		"evil/go.mod":  "module example.com/evil\n\ngo 1.25\n",
+		"evil/evil.go": "package evil\n",
+	})
+	fs, mod, err := CheckGoMod(root, nil)
+	if err != nil || !has(fs, "go.mod:5", "requires example.com/evil") || !has(fs, "go.mod:7", `"replace" directive`) {
+		t.Fatalf("go.mod: findings=%v err=%v", fs, err)
+	}
+	// Listing the module does not admit a replacement of it.
+	fs, _, _ = CheckGoMod(root, map[string]bool{"example.com/evil": true})
+	if len(fs) != 1 || !has(fs, "go.mod:7", `"replace" directive`) {
+		t.Fatalf("go.mod with evil allowed: want only the replace finding, got %v", fs)
+	}
+	fs, err = CheckImports(ctx, root, mod, nil)
+	if err != nil || !has(fs, "x_darwin.go", "example.com/evil") {
+		t.Fatalf("imports: findings=%v err=%v", fs, err)
+	}
+	fs, err = CheckModules(ctx, root, nil)
+	if err != nil || !has(fs, "example.com/evil", "darwin/") {
+		t.Fatalf("go list matrix: findings=%v err=%v", fs, err)
+	}
+	fs, err = CheckKernelTree(root)
+	if err != nil || !has(fs, "evil/go.mod", "nested module") {
+		t.Fatalf("tree: findings=%v err=%v", fs, err)
 	}
 }
 
-// An import no go.mod requires makes go list fail, and a check that could not look must not pass.
-func TestModulesUnlistableIsAnError(t *testing.T) {
-	offline(t)
-	if f, err := CheckModules(context.Background(), "testdata/modules/unrequired", nil); err == nil {
-		t.Fatalf("want an error, got findings %v and no error", f)
-	}
-}
-
-func TestSizeRealKernelPasses(t *testing.T) {
-	f, n, err := CheckSize(kernelRoot, DefaultMaxLines)
+// Reviewer bypasses: a nested module (kernel/tools/go.mod), cgo, foreign source, a workspace file
+// and a vendor directory. Each is refused by what it is, not by what it imports.
+func TestBypassTreeContents(t *testing.T) {
+	root := tree(t, map[string]string{
+		"go.mod":          cleanGoMod,
+		"tools/go.mod":    "module example.com/tools\n\ngo 1.25\n",
+		"tools/t.go":      "package tools\n",
+		"cgo.go":          "package k\n\n// int f(void) { return 1; }\nimport \"C\"\n",
+		"helper.c":        "int g(void) { return 2; }\n",
+		"blob.syso":       "\x00",
+		"go.work":         "go 1.25\n\nuse ./tools\n",
+		"vendor/x/y/y.go": "package y\n",
+		"broken.go":       "this is not go\n",
+	})
+	fs, err := CheckKernelTree(root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(f) != 0 || n == 0 {
-		t.Fatalf("real kernel: %d lines, findings %v", n, f)
+	for _, want := range [][2]string{
+		{"tools/go.mod", "nested module"}, {"cgo.go", `imports "C"`}, {"helper.c", ".c source"},
+		{"blob.syso", ".syso source"}, {"go.work", "workspace"}, {"vendor/x/y/y.go", "vendor"},
+		{"broken.go", "does not parse"},
+	} {
+		if !has(fs, want[0], want[1]) {
+			t.Errorf("no finding at %s saying %q; got %v", want[0], want[1], fs)
+		}
 	}
 }
 
-// testdata/size holds 5 lines of kernel code, plus a _test.go file, a nested testdata directory and
-// an _underscore directory that the Go tool never compiles and so must not count.
-func TestSizeBudget(t *testing.T) {
-	const fixture, lines = "testdata/size", 5
-	if f, n, err := CheckSize(fixture, lines); err != nil || len(f) != 0 || n != lines {
-		t.Fatalf("at the budget: n=%d findings=%v err=%v; want n=%d and no finding", n, f, err, lines)
-	}
-	f, _, err := CheckSize(fixture, lines-1)
-	if err != nil || len(f) != 1 || f[0].Check != CheckLines {
-		t.Fatalf("one line over the budget: findings=%v err=%v; want one size finding", f, err)
-	}
-}
-
-func TestJournalRealRepoPasses(t *testing.T) {
-	f, err := CheckJournalWriters(repoRoot, "kernel")
-	if err != nil {
+// Reviewer bypasses: code parked in an _underscore or testdata directory, or behind a symlinked
+// directory, where the go tool does not look. All of it counts, and the symlink itself is refused.
+func TestBypassHiddenLines(t *testing.T) {
+	outside := tree(t, map[string]string{"far.go": strings.Repeat("// far\n", 7)})
+	root := tree(t, map[string]string{
+		"a.go":          "package k\n",               // 1
+		"a_test.go":     strings.Repeat("//\n", 50),  // tests do not count
+		"_big/b.go":     strings.Repeat("// b\n", 5), // 5
+		"testdata/c.go": strings.Repeat("// c\n", 3), // 3
+	})
+	if err := os.Symlink(outside, filepath.Join(root, "linked")); err != nil {
 		t.Fatal(err)
 	}
-	if len(f) != 0 {
-		t.Fatalf("real repo: %v", f)
+	const want = 1 + 5 + 3 + 7
+	if fs, n, err := CheckSize(root, want); err != nil || len(fs) != 0 || n != want {
+		t.Fatalf("at the budget: n=%d findings=%v err=%v; want n=%d", n, fs, err, want)
+	}
+	if fs, _, err := CheckSize(root, want-1); err != nil || len(fs) != 1 {
+		t.Fatalf("one line over: findings=%v err=%v; want one size finding", fs, err)
+	}
+	if fs, err := CheckKernelTree(root); err != nil || !has(fs, "linked", "symlink") {
+		t.Fatalf("tree: want the symlink refused, got findings=%v err=%v", fs, err)
 	}
 }
 
 func TestJournalCleanFixturePasses(t *testing.T) {
-	f, err := CheckJournalWriters("testdata/journal/clean", "kernel")
-	if err != nil || len(f) != 0 {
-		t.Fatalf("clean fixture: findings=%v err=%v", f, err)
-	}
+	fs, err := CheckJournalWriters("testdata/journal/clean", "kernel")
+	mustNone(t, "clean fixture", fs, err)
 }
 
 func TestJournalWriterOutsideKernelFails(t *testing.T) {
-	f, err := CheckJournalWriters("testdata/journal/violating", "kernel")
+	fs, err := CheckJournalWriters("testdata/journal/violating", "kernel")
 	if err != nil {
 		t.Fatal(err)
 	}
 	got := map[string]bool{}
-	for _, x := range f {
+	for _, x := range fs {
 		got[x.Where] = true
 	}
-	// kernel/store.go names it too and is exempt; docs/notes.md is prose, not code.
+	// kernel/store.go names it too and is exempt. docs/ is prose and exempt; everything else,
+	// Markdown included, is scanned.
 	want := []string{"bin/tap:3", "scripts/open-journal.mjs:5", "scripts/tap.sh:2", "tools/peek.py:4"}
 	if len(got) != len(want) {
-		t.Fatalf("got %v, want exactly %v", f, want)
+		t.Fatalf("got %v, want exactly %v", fs, want)
 	}
 	for _, w := range want {
 		if !got[w] {
-			t.Errorf("missing finding at %s; got %v", w, f)
+			t.Errorf("missing finding at %s; got %v", w, fs)
 		}
 	}
 }
 
-// Dependencies and nested checkouts are not this tree. Built at run time because git will not commit
-// a directory entry named .git, and node_modules/ is ignored by this repository.
-func TestJournalSkipsDependenciesAndNestedCheckouts(t *testing.T) {
-	root := t.TempDir()
-	write := func(rel, body string) {
-		t.Helper()
-		p := filepath.Join(root, rel)
-		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
-			t.Fatal(err)
-		}
+// Reviewer bypasses: the Journal named where no source extension is — a workflow, a package.json
+// script, a Makefile, node_modules, an agent command file — and a symlink whose target names it.
+// A nested checkout is still skipped: it is not this tree, and git cannot commit a .git entry.
+func TestBypassJournalInAnyFile(t *testing.T) {
+	root := tree(t, map[string]string{
+		".github/workflows/w.yml":   "steps:\n  - run: sqlite3 ~/.agentvibe/kernel/journal.db .dump\n",
+		"package.json":              "{\n  \"scripts\": {\"tap\": \"sqlite3 $HOME/.agentvibe/kernel/journal.db\"}\n}\n",
+		"Makefile":                  "tap:\n\tsqlite3 ~/.agentvibe/kernel/journal.db\n",
+		"node_modules/pkg/index.js": "open('.agentvibe/kernel/journal.db')\n",
+		".claude/commands/tap.md":   "Run `sqlite3 ~/.agentvibe/kernel/journal.db`.\n",
+		"other/.git":                "gitdir: elsewhere\n",
+		"other/x.js":                "open('.agentvibe/kernel/journal.db')\n",
+		"docs/design.md":            "The Journal lives at ~/.agentvibe/kernel/journal.db.\n",
+		"docs/tap.sh":               "sqlite3 ~/.agentvibe/kernel/journal.db\n",
+		"docs/lib/j.mjs":            "export const j = '.agentvibe/kernel/journal.db'\n",
+		"assets/blob.bin":           "\x00\x01\x02\nsqlite3 ~/.agentvibe/kernel/journal.db\x00\n",
+		"notes-utf16.txt":           "j\x00o\x00u\x00r\x00n\x00a\x00l\x00.\x00d\x00b\x00\n\x00",
+	})
+	if err := os.Symlink("/home/avk/.agentvibe/kernel/journal.db", filepath.Join(root, "j")); err != nil {
+		t.Fatal(err)
 	}
-	ref := "open('.agentvibe/kernel/journal.db')\n"
-	write("node_modules/pkg/index.js", ref)
-	write("other-checkout/.git", "gitdir: elsewhere\n")
-	write("other-checkout/scripts/x.js", ref)
-	write("nested/kernel/x.ts", ref) // only the top-level kernel/ is exempt
-	f, err := CheckJournalWriters(root, "kernel")
+	fs, err := CheckJournalWriters(root, "kernel")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(f) != 1 || f[0].Where != "nested/kernel/x.ts:1" {
-		t.Fatalf("want exactly nested/kernel/x.ts:1, got %v", f)
+	want := []string{".github/workflows/w.yml:2", "package.json:2", "Makefile:2", "node_modules/pkg/index.js:1",
+		".claude/commands/tap.md:1", "j", "docs/tap.sh:1", "docs/lib/j.mjs:1", "assets/blob.bin:2",
+		"notes-utf16.txt:1"}
+	if len(fs) != len(want) {
+		t.Fatalf("got %v, want exactly %v", fs, want)
+	}
+	for _, w := range want {
+		if !has(fs, w, "") {
+			t.Errorf("missing finding at %s; got %v", w, fs)
+		}
+	}
+}
+
+// Reviewer bypass: a case variant, which names the same file on the case-insensitive file systems
+// the Kernel runs on, and the directory spelled as separate tokens.
+func TestBypassJournalCaseAndTokens(t *testing.T) {
+	root := tree(t, map[string]string{
+		"a.mjs": "open(join(homedir(), '.AgentVibe', 'Kernel', 'Journal.DB'))\n",
+		"b.py":  "d = os.path.join(HOME, '.agentvibe', 'kernel')\n",
+		"c.sh":  "ls ~/.agentvibe/releases  # not the Journal\n",
+	})
+	fs, err := CheckJournalWriters(root, "kernel")
+	if err != nil || len(fs) != 2 || !has(fs, "a.mjs:1", "file") || !has(fs, "b.py:1", "directory") {
+		t.Fatalf("want a.mjs:1 (file) and b.py:1 (directory) only, got findings=%v err=%v", fs, err)
+	}
+}
+
+// Reviewer bypass: a glob that matches the Journal without spelling it. Globs too broad to be aimed
+// at anything (`*`, `*/*`) are not findings.
+func TestBypassJournalGlob(t *testing.T) {
+	for _, line := range []string{
+		"sqlite3 ~/.agentvibe/*/journal.*",
+		"cp ~/.agentvibe/k?rnel/*.db /tmp",
+		"glob('**/j[o]urnal.d?')",
+		`open("C:\\Users\\x\\.agentvibe\\kern*\\*.db")`,
+	} {
+		if matchJournal(strings.ToLower(line)) == "" {
+			t.Errorf("%q: not matched", line)
+		}
+	}
+	for _, line := range []string{"rm -rf *", "cp */* out/", "for f in *.*; do", "x = a[0] * b"} {
+		if why := matchJournal(strings.ToLower(line)); why != "" {
+			t.Errorf("%q: matched (%s), want no finding", line, why)
+		}
 	}
 }

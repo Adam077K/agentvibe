@@ -1,12 +1,19 @@
 // Package boundary checks the three lines the Kernel must not cross
 // (docs/vision-v3/09a-ENGINEERING.md §2):
 //
-//   - every module in the Kernel's build is stdlib or named in ALLOWED_MODULES (CheckModules);
+//   - every module the Kernel can reach is stdlib or named in ALLOWED_MODULES: go.mod and go.sum
+//     read directly (CheckGoMod), every import in every file parsed (CheckImports), and the build
+//     resolved on a GOOS/GOARCH/tag matrix (CheckModules);
+//   - the tree holds only Go: no symlink, cgo, foreign source, nested module, workspace or vendor
+//     directory (CheckKernelTree);
 //   - the Kernel's non-test Go source stays under a line budget (CheckSize);
-//   - nothing outside kernel/ names the Journal (CheckJournalWriters).
+//   - nothing outside kernel/ names the Journal (CheckJournalWriters, a tripwire; see its doc).
 //
-// Each check returns findings for violations and an error only when it could not look. A caller must
-// treat an error as a failure: a check that could not run has not passed.
+// The principle is default-deny on what the checker cannot see: a file the go tool would skip on
+// this platform is still read, and a directive or file kind the checker cannot reason about is
+// refused rather than trusted. Each check returns findings for violations and an error only when it
+// could not look. A caller must treat an error as a failure: a check that could not run has not
+// passed.
 package boundary
 
 import "fmt"
