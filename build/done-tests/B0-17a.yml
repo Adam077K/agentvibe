@@ -1,0 +1,22 @@
+# Done-test register, B0-17a (docs/vision-v3/14-BUILD-PLAN.md §6, B0-17: "Every test exists, fails
+# red against an empty implementation, and has its hash in the register"). Checked by
+# `node build/check-done-tests.mjs`. A changed hash is a changed acceptance test: re-register it as
+# a reviewed decision, never to make a build green. B1-01b's tests share TestMain and helpers with
+# the B1-01a file, so both files are registered for it. api.go and lease.go are NOT registered:
+# they are the interfaces the jobs implement.
+register: B0-17a
+jobs:
+  - id: B1-01a
+    files:
+      - path: kernel/internal/journal/core_donetest_test.go
+        sha256: a230e9a5ed77015280b39f351d012fe7b1423b73e83602a9d00ed1c439dfa8ee
+  - id: B1-01b
+    files:
+      - path: kernel/internal/journal/chain_donetest_test.go
+        sha256: 4b3afbaeadcca7d31bf2849b8c55a8ec0e19add8b56e79ea8af859ed6fccb9be
+      - path: kernel/internal/journal/core_donetest_test.go
+        sha256: a230e9a5ed77015280b39f351d012fe7b1423b73e83602a9d00ed1c439dfa8ee
+  - id: B1-05
+    files:
+      - path: kernel/internal/lease/lease_donetest_test.go
+        sha256: 44b966683db8c41b7d294913c3c0144d5363e2b0b4780d9b379fded3be1d179b
