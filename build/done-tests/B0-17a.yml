@@ -9,14 +9,14 @@ jobs:
   - id: B1-01a
     files:
       - path: kernel/internal/journal/core_donetest_test.go
-        sha256: a230e9a5ed77015280b39f351d012fe7b1423b73e83602a9d00ed1c439dfa8ee
+        sha256: 156d74c0940fd2c2c42a363d7adfa526828507bce35aa224eaa4fcd8fe704977
   - id: B1-01b
     files:
       - path: kernel/internal/journal/chain_donetest_test.go
-        sha256: 4b3afbaeadcca7d31bf2849b8c55a8ec0e19add8b56e79ea8af859ed6fccb9be
+        sha256: 6401d6637d24ef4aa703d3d04cf76585a9d9d15dd825f84226602e7082fd907a
       - path: kernel/internal/journal/core_donetest_test.go
-        sha256: a230e9a5ed77015280b39f351d012fe7b1423b73e83602a9d00ed1c439dfa8ee
+        sha256: 156d74c0940fd2c2c42a363d7adfa526828507bce35aa224eaa4fcd8fe704977
   - id: B1-05
     files:
       - path: kernel/internal/lease/lease_donetest_test.go
-        sha256: 44b966683db8c41b7d294913c3c0144d5363e2b0b4780d9b379fded3be1d179b
+        sha256: 8c397b8f3c3ab2c23423aecf06939d12aa8ab05eaaeb70af9646ebac8e9e70b3
