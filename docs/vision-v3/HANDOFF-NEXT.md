@@ -28,9 +28,14 @@ decision: [BUILD-LOG.md](../08-agents_work/BUILD-LOG.md). Plan: [14-BUILD-PLAN.m
 | #147 → #143 | B0-17 frozen P1 done-tests (17 red) + hash register | lite | #143, #142; verdict (reconcile commit unreviewed) |
 
 ## In flight when this session ended (branches pushed)
-- **`build/b1-01a`** — Journal core against the frozen tests (branched off `build/b0-17a`; merge `build/b0-17` into it
-  before its PR), incl. SQLite's transitive modules (BUILD-LOG decision). Check its state; then review (other family if
-  Codex is available). The frozen tests must stay hash-locked: `node build/check-done-tests.mjs` exit 0.
+- **`build/b1-01a` @ fa788e6 — BLOCKED on a module download.** Landed: frozen hash formulas (`hash.go`), cross-process
+  single-writer lock (`lock.go`, `ErrLocked`) + tests; `go test ./...` green, checker exit 0. Done-tests still red
+  (B1-01a 0/3, B1-01b 0/5) because `Open` has no store: `go` could not fetch `modernc.org/sqlite` — inside the sandbox
+  the TLS check fails (x509 OSStatus -26276), and the unsandboxed retry was classifier-refused. **Founder, one
+  command from a normal terminal:** `cd kernel && go get modernc.org/sqlite@latest && go mod tidy` on that branch (or
+  allow `go get`/`go mod download` for proxy.golang.org, sum.golang.org, storage.googleapis.com). Then re-dispatch
+  B1-01a to finish the SQLite store, pin the version, and add its `go list -m all` closure to `ALLOWED_MODULES`
+  (BUILD-LOG decision). Merge `build/b0-17` into it before its PR; keep `node build/check-done-tests.mjs` exit 0.
 
 ## Next jobs to start (P0 remainder + P1 critical path)
 - **B1-01b** chain + blobs (after B1-01a) · **B1-05** job:// lease (after B1-04 per plan; tests exist) · **B1-02** nouns.
