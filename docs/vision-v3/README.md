@@ -30,7 +30,7 @@ written 2026-09-30 by a five-round process with Claude and Codex as equal thinke
 | [11-CONCEPTS-AND-JUDGES](11-CONCEPTS-AND-JUDGES.md) | The five organisations considered, both judges' scores, the road not taken |
 | [12-SPIKE-RESULTS](12-SPIKE-RESULTS.md) | Four real-run prototypes (Claude + Codex): what happened and what it changed |
 | [13-WORKED-SCENARIOS](13-WORKED-SCENARIOS.md) | Fifteen end-to-end walkthroughs |
-| [14-BUILD-PLAN](14-BUILD-PLAN.md) | Six phases, 112 jobs ≤30 turns, lanes, the hand-over where the organisation builds itself |
+| [14-BUILD-PLAN](14-BUILD-PLAN.md) | Six phases, 128 jobs ≤30 turns, lanes, the hand-over where the organisation builds itself |
 | [15-RISKS-AND-DECISIONS](15-RISKS-AND-DECISIONS.md) | Risk register (every red-team failure with its answer and test) and the ten founder decisions |
 | [16-EXTERNAL-WORLD-HUMANS](16-EXTERNAL-WORLD-HUMANS.md) | Effect gateway, mandates, disclosure, legal body, human collaborators, counterparty agents |
 | [17-VIBE-STARTUPING-IN-PRACTICE](17-VIBE-STARTUPING-IN-PRACTICE.md) | Genesis, Fleet Import, stage targets, operating loops, offence engines, exits, a founder's week |
