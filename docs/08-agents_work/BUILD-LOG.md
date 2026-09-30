@@ -63,3 +63,5 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 | 2026-10-01 | B0-17a | — (PASS at 00df1bd) | frozen done-tests B1-01a/01b/05, hash formulas pinned in api.go | reconcile with B0-17b → one PR |
 | 2026-10-01 | B0-17 | #147 (stacked on #143) | reconciled frozen P1 done-tests, 17 red, one checker | B1-01a implements against them |
 | 2026-10-01 | B1-01a | — (`build/b1-01a` @ fa788e6) | hash formulas + cross-process writer lock; SQLite store blocked (module fetch refused) | founder fetches modernc.org/sqlite; re-dispatch |
+| 2026-10-01 | B0-20 | #149 (full, stacked on #145) | family from model id; mismatch event once per launch; 1 review round | UI event family still from slot (ticket) |
+| 2026-10-01 | B0-12 | #150 (full, stacked on #145) | scorecard + ledger v0 from receipts, all-FOG W40; 2 review rounds | runs once receipts exist |

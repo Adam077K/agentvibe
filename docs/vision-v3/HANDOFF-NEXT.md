@@ -26,6 +26,9 @@ decision: [BUILD-LOG.md](../08-agents_work/BUILD-LOG.md). Plan: [14-BUILD-PLAN.m
 | #144 → #143 | B0-16 CI wiring (`check:kernel`) | irreversible | #143; multi-judge + founder |
 | #146 → #143 | B0-19 secret scanner + RequireScanned | lite | #143; verdict |
 | #147 → #143 | B0-17 frozen P1 done-tests (17 red) + hash register | lite | #143, #142; verdict (reconcile commit unreviewed) |
+| #149 → #145 | B0-20 launch family from model id + mismatch event | full | #145; Codex review |
+| #150 → #145 | B0-12 Sunday scorecard + budget ledger v0 (FOG-honest) | full | #145, #141; Codex review |
+| #148 | session-1 docs (this log, handoff, session record) | trivial | verdict |
 
 ## In flight when this session ended (branches pushed)
 - **`build/b1-01a` @ fa788e6 — BLOCKED on a module download.** Landed: frozen hash formulas (`hash.go`), cross-process
@@ -39,7 +42,6 @@ decision: [BUILD-LOG.md](../08-agents_work/BUILD-LOG.md). Plan: [14-BUILD-PLAN.m
 
 ## Next jobs to start (P0 remainder + P1 critical path)
 - **B1-01b** chain + blobs (after B1-01a) · **B1-05** job:// lease (after B1-04 per plan; tests exist) · **B1-02** nouns.
-- **B0-20** launch-log family from model id (after B0-03) · **B0-12** scorecard v0 (after B0-02, B0-03).
 - **B0-00** capacity measurement — needs a dedicated session (it spends the window it measures).
 - Follow-ups: wire `lint:jobs`/`test:jobs` into `check-suite.js` (irreversible); B0-13 non-blocking key-spelling gap;
   B0-19 non-blocking gaps (`.npmrc`, `DATABASE_URL`, mode bits, case-variant receipt path).
