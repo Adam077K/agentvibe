@@ -1,0 +1,15 @@
+# Done-test register, B0-17b (docs/vision-v3/14-BUILD-PLAN.md §6 P0, B0-17).
+# Each frozen done-test file with the sha256 of its bytes. Verify: node build/check-done-tests.mjs
+# Run: go -C kernel test -count=1 -tags donetest ./internal/launcher/... ./internal/outbox/...
+# Frozen red against ErrNotImplemented on 2026-10-01.
+jobs:
+  B1-08:
+    done_test: "--dangerously-skip-permissions refused before exec; an unattended 03:00 launch succeeds; the 121st launch in an hour is refused"
+    files:
+      - path: kernel/internal/launcher/launcher_donetest_test.go
+        sha256: a67b13917b6cbf759fce21284e23fa5955224e0cf026ce92106b49e7c5d0bdbb
+  B1-12:
+    done_test: "Q3 subset: faults at 4 crash points -> one effect; uncertain never auto-retries; a two-launcher race has one winner (G1(b))"
+    files:
+      - path: kernel/internal/outbox/outbox_donetest_test.go
+        sha256: b7dbed6f4400a7c4030f12b2e10fdc98b11e5a94a5e50e90415eb233ee4def51
