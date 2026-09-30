@@ -1366,3 +1366,16 @@ export function classifyDispatches(entries: DispatchEntry[]): DispatchWork {
   }
   return work;
 }
+
+// ── v3 slice: Missions board ─────────────────────────────────────────────────────────────────
+//
+// The board's one write, here because this is the one server file crosscheck.test.ts allows a
+// write call in. Same append-only discipline as appendDispatch(): one complete JSON line per
+// call, O_APPEND, never an edit. The runner appends later transitions to the same file through
+// this same function, so there is one writer implementation and not two.
+
+/** Appends one board transition. Throws on failure — the route turns that into a 500. */
+export function appendMissionLine(line: object, file: string): void {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.appendFileSync(file, JSON.stringify(line) + '\n', 'utf8');
+}
