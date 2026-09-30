@@ -629,19 +629,32 @@ confound, not yet a finding about nesting. The rerun must be run from an **unsan
 
 ```
 # from an UNSANDBOXED founder terminal, repo root
-mkdir -p /tmp/b0-07-S && echo SECRET > /tmp/b0-07-S/secret.txt
+# NOTE: /tmp is a symlink to /private/tmp on macOS and Seatbelt matches the REAL (resolved) path,
+# so S_PATH must be the /private/tmp form or a deny rule on it may never fire, falsely reading as
+# "the outer profile holds" or falsely triggering the fallback.
+mkdir -p /private/tmp/b0-07-S && echo SECRET > /private/tmp/b0-07-S/secret.txt
 
-# outer denies read of S; inner is fully permissive -- nested, one process launching the other
-/usr/bin/sandbox-exec -D S_PATH=/tmp/b0-07-S -f spikes/b0-07/profiles/outer-deny-read.sb \
-  /usr/bin/sandbox-exec -f spikes/b0-07/profiles/inner-permissive.sb cat /tmp/b0-07-S/secret.txt
+# Control step (must run FIRST): outer alone, no nesting -- confirms the deny rule actually
+# fires on this real path. If this does NOT refuse (i.e. it prints SECRET, or exits 0), the
+# profile is not denying the right path and the whole run below is VOID -- fix S_PATH/the
+# profile before proceeding, do not interpret the nested step.
+/usr/bin/sandbox-exec -D S_PATH=/private/tmp/b0-07-S -f spikes/b0-07/profiles/outer-deny-read.sb \
+  cat /private/tmp/b0-07-S/secret.txt
+# expect: refused (non-zero exit, no SECRET printed). If not, STOP -- do not run the nested step.
+
+# Nested step: outer denies read of S; inner is fully permissive -- one sandbox-exec launching another
+/usr/bin/sandbox-exec -D S_PATH=/private/tmp/b0-07-S -f spikes/b0-07/profiles/outer-deny-read.sb \
+  /usr/bin/sandbox-exec -f spikes/b0-07/profiles/inner-permissive.sb cat /private/tmp/b0-07-S/secret.txt
 ```
 
-Record, n≥3: exit code, stderr, and whether `cat` printed `SECRET` (inner escaped the outer's deny) or was
-refused (outer held). If the *outer* `sandbox-exec` itself already fails with `sandbox_apply: Operation not
-permitted` from an unsandboxed shell, that would show the EPERM is not specific to Claude Code's enclosing
-sandbox, and should be recorded as such rather than folded into the nesting question. This needs either a
-human running it directly or a founder-approved Bash permission rule scoped to `sandbox-exec` — an agent in
-this session may not retry it, per the auto-mode classifier's denial of the equivalent comparison run.
+Record, n≥3 for both steps: exit code, stderr, and whether `cat` printed `SECRET`. The control step must
+refuse before the nested step's result means anything -- a nested result recorded without a passing control
+is void, not a finding. If the control step's *outer* `sandbox-exec` itself fails with `sandbox_apply:
+Operation not permitted` from an unsandboxed shell, that would show the EPERM is not specific to Claude
+Code's enclosing sandbox, and should be recorded as such rather than folded into the nesting question. This
+needs either a human running it directly or a founder-approved Bash permission rule scoped to
+`sandbox-exec` — an agent in this session may not retry it, per the auto-mode classifier's denial of the
+equivalent comparison run.
 
 **If the 2026-10-02 rerun fails to show the outer profile holding against a nested inner sandbox** —
 including the case where nesting cannot be exercised at all — the named fallback in
