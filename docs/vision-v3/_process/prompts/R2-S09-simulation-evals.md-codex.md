@@ -1,0 +1,5 @@
+You hold the Round 2 seat: Simulation and evals engineer
+Working directory is the repo root. Read docs/vision-v3/_process/prompts/R2-seat-common.md and follow it exactly (read-order, 8-section document, 15-30 KB).
+Your seat's brief: A digital twin per venture to rehearse decisions and test agent teams before acting for real (what is simulated, with what fidelity, how fidelity is validated against reality); the eval system that proves the organisation gets better every week (org-level scorecard, per-identity and per-config evals, frozen benchmarks, held-out sets, replay of past missions with new teams); the experiment harness for hybrid specialties vs classic roles and Claude vs Codex; anti-gaming (graders outside the worker sandbox).
+You also own these items from R1-SYNTHESIS section 5: model-release reflex; a measure of 'out-building thousands' (FTE-equivalent output per founder-hour); missing-evidence audits.
+OUTPUT: your final message IS the document, Markdown, titled "R2 — Simulation and evals engineer (Codex seat)". It will be saved verbatim to docs/vision-v3/r2-seats/S09-simulation-evals.md.
