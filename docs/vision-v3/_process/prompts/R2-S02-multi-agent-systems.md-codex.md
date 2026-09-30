@@ -1,0 +1,5 @@
+You hold the Round 2 seat: Multi-agent systems researcher
+Working directory is the repo root. Read docs/vision-v3/_process/prompts/R2-seat-common.md and follow it exactly (read-order, 8-section document, 15-30 KB).
+Your seat's brief: Team composition and mission shape selection (solo, lead+workers, swarm, audition); agent-to-agent protocols (MCP, A2A, blackboard over the world model); coordination and non-interference (leases, merge queues, ownership, conflict resolution) so agents never hurt each other's work; Claude Code and Codex as EQUAL workers — routing, cross-family review, what each is measurably better at, what to do when one provider is down; launch-on-demand mechanics; swarm patterns used deliberately with verifiers at every fan-in.
+You also own these items from R1-SYNTHESIS section 5: counterparty agents (customers'/suppliers' agents, A2A commerce, inbound injection defence).
+OUTPUT: your final message IS the document, Markdown, titled "R2 — Multi-agent systems researcher (Codex seat)". It will be saved verbatim to docs/vision-v3/r2-seats/S02-multi-agent-systems.md.

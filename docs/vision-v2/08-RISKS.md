@@ -1,0 +1,20 @@
+# 08 — Risks that survive synthesis
+
+Owner is who acts when the signal fires. "Runner" means an automatic mechanism; "founder" means a decision.
+
+| # | Risk | Likelihood × impact | Mitigation in v2 | Signal | Owner |
+|---|---|---|---|---|---|
+| R1 | **The build becomes the company again** — v2 is ~30 harness jobs and still zero venture work | High × High | 3-week timebox (D3); M1 is a live venture, not a rehearsal; harness-ratio alarm after the build; off-path ideas go to a dated backlog | Harness-ratio >20% two weeks running; J29 slips past week 3 | Founder |
+| R2 | **Subscription terms or limits change** (headless use re-priced, window cut, account action) | Medium × High | `provider_mode` + `models.yml`; degraded mode; overflow off; no subscription tokens in CI; always-on customer-facing automation moves to an API key at first customer | Limit errors, billing-page change, nightly contract check | Founder (decide), runner (pause) |
+| R3 | **Single model family in practice** — the Codex path breaks and waivers creep back | Medium × High | J07 known-defect test runs nightly; empty = `unresolved`; J29 needs a non-empty Codex PASS; any waiver needs `until` | Codex canary fails two nights running | Runner, then founder |
+| R4 | **Silent false success** in a path the canaries do not cover | Medium × High | Runner-computed status; replay fixtures for every job; new failure → new fixture | A founder-found defect in a `done` job | Orchestrator adds fixture |
+| R5 | **Approval fatigue across ventures** → rubber-stamping | Medium × Medium | 10/day cap, expiry → refuse, batch templates, grouped by venture, approval-without-edit rate shown | Expired >20% or edit rate falls to ~0 | Founder |
+| R6 | **Injection or cross-venture action** on one Mac with shared identity | Low–Medium × High | Three-flag refusal, write quarantine, per-venture env files and domains, loader refuses cross-venture paths; seeded tests 6 and 7 | Any refusal in the runner log is reviewed that week | Runner, founder |
+| R7 | **Synthetic validation** — plausible personas and scraped quotes pass as evidence | Medium × High | `user-language` claims need a transcript or sourced verbatim quote; stage gates need *did*/*paid*; Mom Test lens | Stage change with only *said* evidence | Reviewer lens, founder |
+| R8 | **Outbound blow-back** — domain or account reputation damage | Medium × Medium | Email only, per-venture domain, rate limit, batch approval, no social automation | Bounce/complaint rate from Resend | Founder |
+| R9 | **Mac loss or founder absence** | Low × High | Nightly backup of runner DB and transcripts, FileVault, RUNBOOK, `runner stop --all`; nothing runs that needs the founder while they are away (unanswered = refuse) | Backup restore check monthly | Founder |
+| R10 | **Fleet drift** — stale `.claude/` copies override the harness in venture repos | High × Medium | Fleet census (J11), plugin distribution (J12), preflight hash check (J06) | Hash mismatch on any job | Runner |
+| R11 | **Self-grading drift once the loop starts** | Medium × Medium | Loop dormant until trigger; Codex judges blind; candidate cannot touch evals, hooks, logs; loop pauses on any drift alarm | Drift alarm ≥20% | Founder |
+| R12 | **Inherited harness debt** — 3 unresolvable judge claims, `enforce_admins=false`, direct pushes bypassing required checks, accepted single-family risk to 2026-11-17 | Certain × Medium | Codex judge can resolve the three judge claims after J07; founder sets branch protection (2.7) before the waiver ends | 2026-11-17 exit date | Founder |
+| R13 | **Client/NDA data through consumer subscriptions; AGPL tools near client deliverables** | Unknown × High | D12 first; separate repos; licence check before any AGPL tool touches client work | D12 answer | Founder |
+| R14 | **This synthesis is single-family** (red team and architect both Claude) | Certain × Low–Medium | J00's acceptance file and J29's report are judged by Codex; founder may re-run the red-team role on Codex before J00 | — | Founder |

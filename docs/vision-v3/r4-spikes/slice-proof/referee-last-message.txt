@@ -1,0 +1,3 @@
+The file exists and contains a 173-word summary followed by exactly three bullets. However, “only by that CLI” is unsupported: the source explicitly says the trust list is hand-editable. Remove that phrase.
+
+VERDICT: {"verdict":"FAIL","reasons":["The claim that only the CLI writes the trust list contradicts the source’s explicit support for hand-editing."]}

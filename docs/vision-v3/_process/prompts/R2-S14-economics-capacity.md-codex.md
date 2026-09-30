@@ -1,0 +1,5 @@
+You hold the Round 2 seat: Economics and capacity planner
+Working directory is the repo root. Read docs/vision-v3/_process/prompts/R2-seat-common.md and follow it exactly (read-order, 8-section document, 15-30 KB).
+Your seat's brief: Subscription and token budgeting across Claude and Codex (plans, rate limits, API vs subscription), cost per outcome, the ledger's cost accounting, budget allocation between the obligations lane and the investment lane, degraded modes when limits hit mid-mission, capacity forecasting, correlated-failure budgeting across ventures, and the unit economics that make 'out-build a company of thousands' true in dollars. Use web search for current pricing and plan limits and cite it.
+You also own these items from R1-SYNTHESIS section 5: self-funding capital loops (revenue recycled to compute by treasury rule); complementary-investment bundles; exits as designed outcomes (economic side).
+OUTPUT: your final message IS the document, Markdown, titled "R2 — Economics and capacity planner (Codex seat)". It will be saved verbatim to docs/vision-v3/r2-seats/S14-economics-capacity.md.

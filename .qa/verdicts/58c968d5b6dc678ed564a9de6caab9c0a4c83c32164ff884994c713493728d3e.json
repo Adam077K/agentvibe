@@ -1,0 +1,11 @@
+{
+  "subject": "58c968d5b6dc678ed564a9de6caab9c0a4c83c32164ff884994c713493728d3e",
+  "base": "89f726e0ca7043d4d360d77807e94466806d2744",
+  "tier": "lite",
+  "tier_driver": ".claude/ledger/index.json",
+  "verdict": "PASS",
+  "by": "reviewer",
+  "run_id": null,
+  "evidence": "Lite tier. Independent reviewer (reviewer engine, claude-opus, single family) on origin/main...HEAD: security PASS (secret/PII grep over 121 added non-PNG files; PNG chunks clean), correctness PASS (both site builders run sandboxed, write only to output dir, no network, JSON escaped; ledger index reproduces byte-identically, 75 claims; 6 new claims in SOURCED-CLAIMS.md), evidence PASS (canon targets labelled; SP2 stand-in figures relabelled in 09b). semgrep NOT run (not installed locally). Low findings left: marked from cdnjs without SRI; v2 site lacks .gitignore; one third-party-sourced licence claim. Single model family; not a multi-judge panel.",
+  "recorded_at": "2026-09-30T16:12:27.110Z"
+}
