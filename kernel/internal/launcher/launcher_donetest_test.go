@@ -152,31 +152,57 @@ func TestB108UnattendedLaunchAt0300Succeeds(t *testing.T) {
 	}
 }
 
-// B1-08 · done-test 3: the 121st launch in an hour is refused; the cap is a window, not a ban.
+// B1-08 · done-test 3: the 121st launch in an hour is refused. "An hour" is a ROLLING 60-minute
+// window: a counter that resets on the clock hour, or all at once, fails. Every run starts
+// mid-hour and crosses an hour boundary.
 func TestB108HundredTwentyFirstLaunchInAnHourRefused(t *testing.T) {
-	r := newRig(t, at0300())
 	ctx := context.Background()
-	const spacing = 29 * time.Second // 120 launches span 57m31s, inside one hour
-	for i := 1; i <= 120; i++ {
-		if _, err := r.l.Launch(ctx, request("job-rate")); err != nil {
-			t.Fatalf("launch %d of 120: %v, want success", i, err)
+	launch := func(r rig) error { _, err := r.l.Launch(ctx, request("job-rate")); return err }
+	refused := func(t *testing.T, r rig, when string) {
+		t.Helper()
+		execs, rcpts := len(r.exec.calls), len(r.rcpt.got)
+		if err := launch(r); !errors.Is(err, ErrRateCap) {
+			t.Fatalf("%s: error = %v, want ErrRateCap", when, err)
 		}
-		r.clock.Advance(spacing)
+		if len(r.exec.calls) != execs || len(r.rcpt.got) != rcpts {
+			t.Errorf("%s: a refused launch reached exec or wrote a receipt", when)
+		}
 	}
-	execs := len(r.exec.calls)
-	_, err := r.l.Launch(ctx, request("job-rate"))
-	if !errors.Is(err, ErrRateCap) {
-		t.Fatalf("121st launch in the hour: error = %v, want ErrRateCap", err)
-	}
-	if len(r.exec.calls) != execs {
-		t.Errorf("121st launch reached exec (%d -> %d calls)", execs, len(r.exec.calls))
-	}
-	if len(r.rcpt.got) != 120 {
-		t.Errorf("receipts = %d, want 120 (one per launch that ran)", len(r.rcpt.got))
-	}
-	// Paired legitimate case: once the first launch leaves the trailing hour, a launch succeeds.
-	r.clock.t = at0300().Add(time.Hour + time.Second)
-	if _, err := r.l.Launch(ctx, request("job-rate")); err != nil {
-		t.Errorf("launch after the window slid: %v, want success (a cap that blocks everything fails)", err)
-	}
+
+	t.Run("spread across 04:00", func(t *testing.T) {
+		start := time.Date(2026, 10, 13, 3, 17, 23, 0, time.UTC)
+		r := newRig(t, start)
+		for i := 0; i < 120; i++ { // 03:17:23 .. 04:14:54, 29s apart
+			r.clock.t = start.Add(time.Duration(i) * 29 * time.Second)
+			if err := launch(r); err != nil {
+				t.Fatalf("launch %d of 120 at %s: %v, want success", i+1, r.clock.t.Format("15:04:05"), err)
+			}
+		}
+		r.clock.t = start.Add(57*time.Minute + 30*time.Second) // 04:14:53 + ..., still < 60m after the first
+		refused(t, r, "121st launch 57m30s after the first")
+		if len(r.rcpt.got) != 120 {
+			t.Errorf("receipts = %d, want 120 (one per launch that ran)", len(r.rcpt.got))
+		}
+	})
+
+	t.Run("burst at 03:59 then 04:00", func(t *testing.T) {
+		start := time.Date(2026, 10, 13, 3, 59, 0, 0, time.UTC)
+		r := newRig(t, start)
+		for i := 0; i < 120; i++ { // 03:59:00.0 .. 03:59:59.5
+			r.clock.t = start.Add(time.Duration(i) * 500 * time.Millisecond)
+			if err := launch(r); err != nil {
+				t.Fatalf("burst launch %d: %v, want success", i+1, err)
+			}
+		}
+		r.clock.t = time.Date(2026, 10, 13, 4, 0, 30, 0, time.UTC)
+		refused(t, r, "04:00:30, a new clock hour but the same rolling hour")
+		r.clock.t = time.Date(2026, 10, 13, 4, 58, 59, 0, time.UTC)
+		refused(t, r, "04:58:59, every burst launch still inside the window")
+		// Paired legitimate case: exactly one launch has aged out, so exactly one is admitted.
+		r.clock.t = start.Add(time.Hour + 250*time.Millisecond)
+		if err := launch(r); err != nil {
+			t.Fatalf("first launch aged out: %v, want success (a cap that blocks everything fails)", err)
+		}
+		refused(t, r, "the next launch, with only one slot freed")
+	})
 }
