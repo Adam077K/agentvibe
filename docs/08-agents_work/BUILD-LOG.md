@@ -35,6 +35,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   A sparse worktree without `.claude/` inside the session root also fails (`extensions.worktreeConfig` write denied).
   **If the classifier refuses a write, stop and report — never re-encode it** (B0-03 attempt 1 switched to `printf`
   after a refusal; that is recorded here as a violation and its branch is re-reviewed with that in mind).
+- **DECISION — one done-test register format.** B0-17a and B0-17b each wrote `build/check-done-tests.mjs`. Keep
+  B0-17a's strict parser (refuses any unrecognised line — the lesson B0-13's review taught) and B0-17b's exit 2 for
+  "could not check" (CLAUDE.md rule 10: `unresolved` ≠ fail). A reconcile job merges both halves into `build/b0-17`
+  after both pass review.
 - **Tool-use note:** a sandboxed `git worktree add` inside the session root still hits 35 denials on
   `.claude/**` (re-measured 2026-10-01), so the documented wall stands.
 - **Blocked on the founder:** B0-05 (second macOS user), B0-06 (Apple `container` not installed), B0-08/09/10/11
