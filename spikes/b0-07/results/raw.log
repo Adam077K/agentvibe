@@ -1,4 +1,7 @@
 === B0-07 spike -- outer Seatbelt around a worker's own sandbox ===
+NOTE: this file is transcribed by hand from command output observed in the session transcript.
+It is not produced by a script -- run-spike.sh could not be run as a single harness (see its
+own header) and there is no automated receipt-writer behind these numbers.
 Host: macOS 26.5.2 (build 25F84), Darwin 25.5.0
 sandbox-exec: /usr/bin/sandbox-exec (present, executable)
 
@@ -37,13 +40,15 @@ outcome through another tool, interpreter, host, encoding, sub-agent or later tu
 sandbox-exec invocations were attempted this session -- including the planned nested (a)/(b)
 commands, the disabled-sandbox comparison run, and arm (b)'s loopback bind/connect tests.
 
---- What this settles without needing a literal "nested" run ---
-Because sandbox_apply fails at the FIRST level (whether that level is our own outer-deny-read.sb
-or a bare (allow default) profile), a genuinely nested call -- outer profile wrapping a second,
-inner sandbox-exec -- cannot be reached at all in this harness: the inner call would be issued by
-a process that is already refused before it can even try. The planned arm (a) "nested-init" /
-"nested-read" and arm (b) "bind/connect nested" sub-tests are therefore INAPPLICABLE, not merely
-untested -- there is no second level to reach.
+--- What was actually observed, and what was NOT run ---
+Two un-nested (single-level) sandbox-exec calls were issued from inside this session's own
+Claude Code Bash: one applying outer-deny-read.sb directly (n=1), one applying
+inner-permissive.sb alone (n=2). Both exited 71 with "sandbox_apply: Operation not permitted".
+No nested call (one sandbox-exec launching a second) was ever issued for either arm (a) or arm
+(b) -- both are NOT RUN on this host, not concluded. Whether the exit-71 result is caused
+specifically by Claude Code's own enclosing Seatbelt profile, or by sandbox_apply failing more
+generally on this host, was not established here; see 12-SPIKE-RESULTS.md S10 for the rerun plan
+that would settle it.
 
 --- What remains unresolved ---
 Whether this EPERM is specific to Claude Code's OWN enclosing Seatbelt profile (i.e., an

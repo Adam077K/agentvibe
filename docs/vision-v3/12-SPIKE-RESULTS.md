@@ -602,42 +602,60 @@ sandbox-exec: sandbox_apply: Operation not permitted   (exit 71)
 ```
 
 Reproduced twice, byte-identical. A third identical run was refused *before execution* by the auto-mode
-classifier as a repeated pattern ("Safety Bypass Flag") — so this probe has **n=2**, not the pre-registered
-n≥3, and no further `sandbox-exec` invocation was attempted this session, including the planned nested
-sub-tests, arm (b)'s network probe, and the one comparison run that would isolate the cause (identical
-command with `dangerouslyDisableSandbox: true`) — that run was itself refused by the same classifier before
-it could execute.
+classifier as a repeated pattern ("Safety Bypass Flag") — so this probe has **n=2**, short of the n≥3 this
+task asked for (no commit fixes that n≥3 as a pre-registered criterion — it is this task's instruction, not
+a pre-registration this spike itself committed to). No further `sandbox-exec` invocation was attempted this
+session, including the planned nested sub-tests, arm (b)'s network probe, and the one comparison run that
+would isolate the cause (identical command with `dangerouslyDisableSandbox: true`) — that run was itself
+refused by the same classifier before it could execute.
 
 **Verdict, per arm:**
 
 | Arm | What it asked | Result |
 |---|---|---|
-| **(a)** outer denies read of sibling `S`; inner nested and permissive — does nested `sandbox_init` succeed, can inner read `S`? | **INAPPLICABLE.** `sandbox_apply` fails at the *first* level, on a profile that never even reaches the `S`-specific rule. There is no second level to nest a call from. |
-| **(b)** outer denies network except a stub; inner nested and permissive — does inner egress escape? | **NOT RUN.** Blocked for the same reason as (a) before any network rule could be exercised, and the classifier's repeated-pattern refusal closed off further `sandbox-exec` calls before this arm's loopback-only design (see below) could be tried. |
-| **(c)** this session's own Bash is already inside Claude Code's Seatbelt — what does nesting do from there? | **This is the answer to all three arms.** A single, un-nested `sandbox-exec -f (allow default)` — the most permissive profile expressible — cannot even initialize from inside this session's own sandboxed Bash. The outer Seatbelt refuses `sandbox_apply` itself, not the permissions the inner profile would have granted. |
+| **(a)** outer denies read of sibling `S`; inner nested and permissive — does nested `sandbox_init` succeed, can inner read `S`? | **NOT RUN.** One un-nested `sandbox-exec -f outer-deny-read.sb cat …` call was issued (n=1) and observed exit 71, `sandbox_apply: Operation not permitted`. The nested outer→inner command for this arm was never issued. |
+| **(b)** outer denies network except a stub; inner nested and permissive — does inner egress escape? | **NOT RUN.** No `sandbox-exec` command for this arm was issued at all. |
+| **(c)** this session's own Bash is already inside Claude Code's Seatbelt — what does nesting do from there? | **Observed, not concluded.** A bare, un-nested `sandbox-exec -f (allow default)` call (n=2, identical) exited 71 with `sandbox_apply: Operation not permitted` when run from inside this session's own Claude Code Bash. Whether that is Claude Code's enclosing sandbox specifically refusing re-sandboxing, versus `sandbox_apply` failing generally on this host, was not established — no nested call and no unsandboxed comparison were run. |
 
-**What remains `unresolved`, and the permission it needs.** Whether the `EPERM` is *specific to Claude Code's
-own* enclosing Seatbelt profile — i.e., an unsandboxed process, or one sandboxed some other way, *can*
-successfully call `sandbox_apply` a second time — versus `sandbox_apply` being broken or
-entitlement-gated on this host (macOS 26.5.2 / Darwin 25.5.0) regardless of Claude, was not established. The
-one run that would settle it — the identical bare `sandbox-exec -f inner-permissive.sb echo …` with
-`dangerouslyDisableSandbox: true` — was refused by the auto-mode classifier ("Safety Bypass Flag") before
-executing, and per that denial's own terms an agent may not pursue the same outcome through another route
-this session. **It needs either a human running that one comparison command directly, or a founder-approved
-Bash permission rule scoped to `sandbox-exec` for a future session.** Re-run date: alongside the next owed
-isolation spike (B0-05/B0-06), or sooner if I3 planning (below) needs the answer first.
+**Overall verdict: `unresolved`.** All three arms fall short of what B0-07 asked for: (a) and (b) were not
+run at all in the nested form the spike specifies, and (c)'s two identical exit-71 results are consistent
+with more than one cause. Nothing here should be read as showing that an outer Seatbelt profile does or does
+not hold against a worker's own nested sandbox — only that this session could not get far enough to find out.
 
-**If the outer profile does not hold — and on the evidence gathered, `sandbox-exec` nesting cannot be
-exercised at all inside this harness's own Bash sandbox, which is the harder failure than "does not hold":
-the named fallback applies.** Per [14 B0-07](14-BUILD-PLAN.md) and [09a §9](09a-ENGINEERING.md#9): **I3 for
-all headless work, at a measured capacity cost** — an Apple `container` micro-VM per mission rather than a
-Unix-user-plus-Seatbelt layer for A3/A4 ventures, D2/D3, untrusted code, and the quarantined reader. Carried
-into [B1-10](14-BUILD-PLAN.md) as a note: do not design a headless isolation tier that depends on a worker
-successfully re-sandboxing itself under an enclosing Seatbelt profile — this session's evidence is that the
-attempt fails before its own rules are evaluated, for the *most permissive* profile expressible, not only a
-restrictive one.
+**Rerun plan — 2026-10-02, the B0-05/B0-06 slot.** This session's own shell is itself sandboxed by Claude
+Code, so every `sandbox-exec` call here starts from inside an enclosing Seatbelt profile — that is a
+confound, not yet a finding about nesting. The rerun must be run from an **unsandboxed founder shell**
+(outside Claude Code, or with its sandbox off), and must actually nest one `sandbox-exec` inside another:
+
+```
+# from an UNSANDBOXED founder terminal, repo root
+mkdir -p /tmp/b0-07-S && echo SECRET > /tmp/b0-07-S/secret.txt
+
+# outer denies read of S; inner is fully permissive -- nested, one process launching the other
+/usr/bin/sandbox-exec -D S_PATH=/tmp/b0-07-S -f spikes/b0-07/profiles/outer-deny-read.sb \
+  /usr/bin/sandbox-exec -f spikes/b0-07/profiles/inner-permissive.sb cat /tmp/b0-07-S/secret.txt
+```
+
+Record, n≥3: exit code, stderr, and whether `cat` printed `SECRET` (inner escaped the outer's deny) or was
+refused (outer held). If the *outer* `sandbox-exec` itself already fails with `sandbox_apply: Operation not
+permitted` from an unsandboxed shell, that would show the EPERM is not specific to Claude Code's enclosing
+sandbox, and should be recorded as such rather than folded into the nesting question. This needs either a
+human running it directly or a founder-approved Bash permission rule scoped to `sandbox-exec` — an agent in
+this session may not retry it, per the auto-mode classifier's denial of the equivalent comparison run.
+
+**If the 2026-10-02 rerun fails to show the outer profile holding against a nested inner sandbox** —
+including the case where nesting cannot be exercised at all — the named fallback in
+[14 B0-07](14-BUILD-PLAN.md) and [09a §9](09a-ENGINEERING.md#9) applies, conditionally: **I2's headless
+work moves to I3.** Concretely, that means the ventures [09a:451](09a-ENGINEERING.md) currently places at I2
+(headless D0–D1 work on **A0–A2** ventures) would move up to I3, at a measured capacity cost. A3/A4
+ventures, D2/D3, untrusted code and the quarantined reader are already I3 today
+([09a:452](09a-ENGINEERING.md)) and are unaffected by this fallback either way — this spike does not touch
+them. See the conditional note added to the B1-10 acceptance cell in
+[14-BUILD-PLAN.md](14-BUILD-PLAN.md).
 
 **Sources.** `spikes/b0-07/profiles/*.sb`, `spikes/b0-07/run-spike.sh` (record of the literal commands run —
 this session's git-worktree-isolation guard refuses wrapping `sandbox-exec` in a loop or runtime variable
-substitution, so each probe was issued as its own single Bash call), `spikes/b0-07/results/raw.log` (verbatim
-transcript and exit codes); branch `build/b0-07`.
+substitution, so each probe was issued as its own single Bash call), `spikes/b0-07/results/raw.log`
+(**transcribed by hand from the command output shown in the session transcript, not machine-generated** —
+there is no script that produced it, so treat it as a record of what was observed, not a receipt in the
+sense [§7](#7-the-spike-standard) uses for the other spikes); branch `build/b0-07`.
