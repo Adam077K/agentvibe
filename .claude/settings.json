@@ -29,7 +29,9 @@
       "Bash(sed *)",
       "Bash(diff *)",
       "Bash(which *)",
-      "Bash(echo *)"
+      "Bash(echo *)",
+      "Bash(claude -p:*)",
+      "Bash(codex exec:*)"
     ],
     "deny": [
       "Bash(rm -rf *)",
@@ -78,6 +80,8 @@
   "sandbox": {
     "enabled": true,
     "failIfUnavailable": true,
+    "excludedCommands": ["claude -p *", "codex exec *", "git worktree *"],
+    "network": { "allowLocalBinding": true },
     "filesystem": {
       "denyRead": [
         "~/.ssh",
