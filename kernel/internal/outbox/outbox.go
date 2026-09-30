@@ -5,10 +5,13 @@
 // donetest). The implementation is B1-12's; until it lands every entry point returns
 // ErrNotImplemented and the done-tests fail red.
 //
-// The outbox persists under a directory handed to Open. A crash is simulated by abandoning an
-// Outbox mid-call and opening the same directory again; two launchers are two Outboxes open on
-// the same directory at once. So an implementation must not rely on in-process state for
-// correctness, and must not hold a lock that a second Open in the same process cannot pass.
+// The outbox persists under a directory handed to Open. The done-tests crash it for real: a
+// worker process is SIGKILLed at a named Point and the next life is another process opening
+// the same directory, so only what is on disk survives. A test process may also Open the same
+// directory several times without closing, so an implementation must not hold a lock that a
+// second Open in the same process cannot pass.
+//
+// The two-launcher race of gate G1(b) is not this package's: it is the job:// lease (B1-05).
 package outbox
 
 import (
