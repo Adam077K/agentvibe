@@ -15,8 +15,11 @@
 //   - a protected_base job with status: admitted and no founder_present: true
 //   - a duplicate id
 //   - a dependency cycle in depends_on
-//   - (build/capabilities.yml) a non-trigger capability with no delivering job, or a
-//     delivering_jobs entry that is not a job id in this file
+//   - a depends_on/founder_deps/gate_deps line that is not the one accepted single-line flow
+//     array form (a trailing comment, a YAML block list, or an array spanning several lines all
+//     used to parse as silently empty)
+//   - a non-trigger capability with no delivering job, or a delivering_jobs entry that is not a
+//     job id in this file, INCLUDING a missing build/capabilities.yml itself
 //
 // Usage: node build/lint-jobs.mjs [path-to-jobs.yml] [path-to-capabilities.yml]
 
@@ -77,7 +80,33 @@ function parseArrayEntries(inner) {
   });
 }
 
+/**
+ * There is exactly ONE accepted written form for a dep-like field: a single-line flow array on
+ * the field's own line, e.g. "  depends_on: [B1-01, B1-02]" (or "[]") — nothing after the
+ * closing bracket, nothing before the opening one, all on one line. A trailing "# comment", a
+ * YAML block list, or an array spanning several lines are all real YAML that this parser used to
+ * accept silently as "no entries": the line-anchored regex found no match, and the caller
+ * treated "no match" the same as "the key is absent" — an empty array. A job could lose its
+ * whole dependency list this way and still pass. Any line that starts with the key is now
+ * REQUIRED to fully match the one accepted form, or parsing fails, naming that exact line.
+ */
+function parseDepField(block, key, blockId) {
+  const lines = block.split('\n');
+  const startRe = new RegExp('^ {2}' + key + ':');
+  const strictRe = new RegExp('^ {2}' + key + ': \\[(.*)\\]$');
+  for (const line of lines) {
+    if (!startRe.test(line)) continue;
+    const strict = line.match(strictRe);
+    if (!strict) {
+      throw new Error(blockId + ': ' + key + ' line is not the one accepted form (a single-line flow array, e.g. ' + key + ': [B1-01, B1-02]): "' + line + '"');
+    }
+    return parseArrayEntries(strict[1]);
+  }
+  return [];
+}
+
 function parseFamilyBlock(raw, blockId, roleName) {
+
   // raw is the inner content of {...}, e.g.:
   //   title: "Kernel Engineer", family: codex, model: "gpt-6-astra"
   //   family: both, models: ["gpt-6-astra", "claude-opus-5"]
@@ -141,14 +170,9 @@ export function parseJobsFile(content) {
       const critMatch = block.match(/^ {2}critical: (true|false)/m);
       job.critical = critMatch ? critMatch[1] === 'true' : false;
 
-      const dependsMatch = block.match(/^ {2}depends_on: \[(.*)\]$/m);
-      job.depends_on = dependsMatch ? parseArrayEntries(dependsMatch[1]) : [];
-
-      const founderMatch = block.match(/^ {2}founder_deps: \[(.*)\]$/m);
-      job.founder_deps = founderMatch ? parseArrayEntries(founderMatch[1]) : [];
-
-      const gateMatch = block.match(/^ {2}gate_deps: \[(.*)\]$/m);
-      job.gate_deps = gateMatch ? parseArrayEntries(gateMatch[1]) : [];
+      job.depends_on = parseDepField(block, 'depends_on', id);
+      job.founder_deps = parseDepField(block, 'founder_deps', id);
+      job.gate_deps = parseDepField(block, 'gate_deps', id);
 
       const builderMatch = block.match(/^ {2}builder: \{(.*)\}$/m);
       if (!builderMatch) throw new Error(`${id}: missing builder`);
@@ -373,7 +397,7 @@ function main() {
     capabilityParseErrors = parsed.parseErrors;
     capabilityErrors = lintCapabilities(jobs, parsed.capabilities).errors;
   } else {
-    console.warn(`WARN: no capabilities file at ${capabilitiesPath} — coverage rule (14-BUILD-PLAN.md:67) skipped`);
+    capabilityErrors = [`no capabilities file at ${capabilitiesPath} — coverage rule (14-BUILD-PLAN.md:67) cannot be checked`];
   }
 
   for (const w of warnings) console.warn(`WARN: ${w}`);

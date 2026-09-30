@@ -7,6 +7,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { parseJobsFile, lintJobs, parseCapabilitiesFile, lintCapabilities } from './lint-jobs.mjs';
+import { spawnSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -116,6 +117,15 @@ test('refuses a dangling depends_on, including 14-BUILD-PLAN.md §6\'s own unquo
   assert.deepEqual(parsedJobs[0].depends_on, ['B9-99']);
   const bareResult = lintJobs(parsedJobs);
   assert.ok(bareResult.errors.some(e => e.includes('X-BARE') && e.includes('dangling depends_on "B9-99"')));
+
+  // A trailing comment, a YAML block list, and a multi-line array all used to parse as a
+  // silent [] — the dangling check never saw the dependency at all. Each must now name the
+  // exact offending line instead.
+  for (const badLine of ['  depends_on: [B0-01] # comment', '  depends_on:', '  depends_on: [B0-01,']) {
+    const bad = jobYaml('X-BADLINE').replace('  depends_on: []', badLine);
+    const { parseErrors: badErrors } = parseJobsFile(bad);
+    assert.ok(badErrors.some(e => e.includes('X-BADLINE') && e.includes('not the one accepted form') && e.includes(badLine)), badLine);
+  }
 });
 
 test('refuses a protected_base job admitted without founder_present: true', () => {
@@ -174,6 +184,12 @@ test('refuses a capability with no delivering job (unless trigger: true) or a da
   ].join('\n');
   const { capabilities: triggerCap } = parseCapabilitiesFile(triggerCapYaml);
   assert.deepEqual(lintCapabilities(jobs, triggerCap).errors, []);
+
+  // A missing build/capabilities.yml is an error (exit 1), not a skipped-with-a-warning check —
+  // run the real CLI end to end against a real jobs.yml and a deliberately absent path.
+  const result = spawnSync('node', ['lint-jobs.mjs', 'jobs.yml', '/does/not/exist/capabilities.yml'], { cwd: __dirname, encoding: 'utf8' });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /no capabilities file at .*cannot be checked/);
 });
 
 test('the real build/jobs.yml register and build/capabilities.yml both parse and pass with 0 errors, and row/capability counts match the plan', () => {
