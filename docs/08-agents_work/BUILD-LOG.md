@@ -41,3 +41,4 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 | 2026-10-01 | B0-07 | #140 | spike `unresolved`; nested rerun commands for an unsandboxed shell, dated 2026-10-02; conditional I3 fallback in B1-10 | founder: run rerun, record verdict |
 | 2026-10-01 | B0-02 | #141 | provider registry v0, 15/15 hashes verified; Claude headless `unclear`, Codex `yes-conditional` | B0-00 measures caps; B0-20 wires launches.csv |
 | 2026-10-01 | B0-13 | #142 | build/jobs.yml (143) + capabilities.yml + lint (10 tests) | wire into check-suite (irreversible follow-up); B0-17 uses it |
+| 2026-10-01 | B0-19 | — | **abandoned first attempt** (sonnet, 96 tool calls, nothing committed, test file does not parse); draft left untracked at `.claude/worktrees/agent-adef12bfff3252fb4/kernel/internal/secretscan` | relaunch on opus off the final `build/b0-16` |
