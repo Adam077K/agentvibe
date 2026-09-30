@@ -1,0 +1,27 @@
+[
+  {
+    "id": "T1",
+    "name": "landing-hero",
+    "brief": "Write the landing-page HERO for Keel: one headline (max 10 words), one subhead (max 30 words), one primary CTA button label (max 5 words) and one line of microcopy under the button. Then write an A/B test plan: your hero (variant) vs the current control hero 'Smart tax savings for freelancers' / 'Automate your estimated taxes with Keel.' / 'Start free trial'. Traffic: 9,000 unique visitors/week to the landing page (paid + organic, stable). Baseline: 3.2% of unique visitors start a trial."
+  },
+  {
+    "id": "T2",
+    "name": "pricing-page",
+    "brief": "Write the PRICING PAGE top section for Keel: a headline (max 10 words), a one-sentence value line under it, and the copy for the single plan card (plan name, 3 bullet benefits max 10 words each, CTA label). Then write an A/B test plan for this change: control shows monthly price ($12/mo) by default; variant shows the annual price by default ($108/yr, framed however you choose) with a toggle to monthly. Traffic: 2,400 pricing-page visits/week. Baseline: 6.0% of pricing-page visits start a trial."
+  },
+  {
+    "id": "T3",
+    "name": "activation-email",
+    "brief": "Write the DAY-2 ACTIVATION EMAIL for trial users who signed up but have NOT connected a bank account (without a connected bank Keel does nothing). Provide 2 subject-line options (max 8 words each), a preheader, and a body of max 120 words with one CTA. Then write an A/B test plan: your email vs the current control email (subject 'Finish setting up Keel', generic 'connect your bank to get started' body). Volume: 1,800 new trial signups/week, of whom about 55% have not connected a bank by day 2 and will receive this email. Baseline: 41% of email recipients connect a bank within 7 days of the email."
+  },
+  {
+    "id": "T4",
+    "name": "cancel-save",
+    "brief": "Write the CANCELLATION-FLOW SAVE SCREEN shown when a paying Keel user clicks 'Cancel subscription': a headline, max 60 words of body, a primary 'stay' action label, a secondary action label, and the confirm-cancel label. You may include one offer if you judge it wise. Then write an A/B test plan: your save screen vs the current control (a plain 'Are you sure?' confirm dialog). Volume: about 300 cancellation attempts per MONTH. Baseline: 12% of cancellation attempts end with the user staying (not cancelling)."
+  },
+  {
+    "id": "T5",
+    "name": "search-ad",
+    "brief": "Write a GOOGLE RESPONSIVE SEARCH AD for Keel targeting the keyword cluster 'freelancer quarterly taxes / estimated tax calculator self employed': 5 headlines (max 30 characters each, count them) and 2 descriptions (max 90 characters each). Then write a test plan comparing your ad vs the current control ad. Volume: 40,000 impressions/week on this cluster. Baseline: 4.1% click-through rate; of clicks, 3.0% start a trial. Say which metric you would make primary and why, and size the test for it."
+  }
+]
