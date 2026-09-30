@@ -307,7 +307,7 @@ E[cost] = Σ workers (context_load + work + retries·p_retry)
 | Term | Measured | Consequence |
 |---|---|---|
 | context_load | SLICE: a 173-word summary cost $1.08 and 153 s on the Builder, mostly inherited context and self-review, vs 24 s for the Referee | the context profile is chosen per mission ([04](04-AGENT-ORGANISATION.md)); a profile change resets the prior |
-| integration_rework | SP2: one rework launch per overlapping pair; leases idled the fast worker 13.2 of 21.6 s | priced from the **overlap estimator** ([04 §9.3](04-AGENT-ORGANISATION.md)): expected rework launches with an interval, reserved as `integration_rework` at the interval's upper bound; without history, its fallback of one rework per overlapping pair (DR-22) [R5 G-B1] |
+| integration_rework | SP2 (**scripted stand-in workers, not model runs** — [12 §3](12-SPIKE-RESULTS.md)): one rework per overlapping pair; leases idled the faster worker 13.2 s of a 30.2 s run | priced from the **overlap estimator** ([04 §9.3](04-AGENT-ORGANISATION.md)): expected rework launches with an interval, reserved as `integration_rework` at the interval's upper bound; without history, its fallback of one rework per overlapping pair (DR-22) [R5 G-B1] |
 | refereeing | SP1: the Referee was **42%** of the loop's cost (measured, $8.72 of the run) | every mission forecast carries a refereeing line; deterministic claim-source fetch and quote-match run before any model to shrink it (§10, DR-73) [SP1] |
 | coverage | SP3: ~290 s per Claude judge pass, ~130 s per Codex pass; cross-family caught what self-review missed | review is reserved and priced before launch (§13) |
 
