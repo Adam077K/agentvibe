@@ -8,10 +8,13 @@
 #    a dependency on a split parent (e.g. B1-16) expands to both halves (B1-16a, B1-16b).
 #  - founder_deps: non-job founder decisions/drafts from canon §9 (e.g. F1, D1, F-host).
 #  - gate_deps: phase-gate events from §4 (G0-G5) a job waits on, distinct from job ids.
-#  - builder/referee family: claude | codex | both (both families build/referee jointly) |
-#    either (cast by prior accuracy post-Handover) | other (whichever family did not build).
-#    "both"/"either"/"other" are the legal cross-family forms named in 14-BUILD-PLAN.md §6's
-#    legend and are never flagged as a same-family referee.
+#  - builder/referee family is one of exactly four values: claude | codex | both (both families
+#    build/referee jointly) | either (cast by prior accuracy post-Handover; used for both sides of
+#    the plan's "Either→other" row, since "other" is not a distinct family — it names "whichever
+#    family did not build", which is what "either" already means from the referee's side). "both"
+#    and "either" are the legal cross-family forms named in 14-BUILD-PLAN.md §6's legend and are
+#    never flagged as a same-family referee. Validated and compared case-exact by
+#    build/lint-jobs.mjs — run it directly: `node build/lint-jobs.mjs` (not an npm script).
 #  - builder.title is a lane default (14-BUILD-PLAN.md §5), not a per-job assignment — the plan
 #    names lane titles, not per-job titles.
 #  - window_hours_est = turns_est / 8 (illustration ratio, 14-BUILD-PLAN.md §1, until B0-00).
@@ -388,7 +391,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 12
   window_hours_est: 1.5
   status: not_started
@@ -869,7 +872,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -886,7 +889,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -1248,7 +1251,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Surface Engineer", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 30
   window_hours_est: 3.8
   status: not_started
@@ -1335,7 +1338,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -1352,7 +1355,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -1369,7 +1372,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -1803,7 +1806,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -1820,7 +1823,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -2218,7 +2221,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -2389,7 +2392,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: other, models: ["claude-opus-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started

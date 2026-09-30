@@ -27,6 +27,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PATH = path.join(__dirname, 'jobs.yml');
 
 const SINGLE_FAMILIES = new Set(['claude', 'codex']);
+// The only family values §6's legend defines: Cl/Cx/s5/h resolve to claude or codex; "both"
+// (both families build/referee jointly) and "either" (cast by prior accuracy post-Handover,
+// paired with "other" in the plan's own "Either→other" row) are the named cross-family forms.
+// Exact case only — a value outside this set, in any case, is refused rather than silently
+// falling through the same-family check.
+const ALLOWED_FAMILIES = new Set(['claude', 'codex', 'either', 'both']);
 
 function jsonScalar(raw, fieldName, blockId) {
   try {
@@ -77,7 +83,11 @@ function parseFamilyBlock(raw, blockId, roleName) {
   if (titleMatch) result.title = jsonScalar(titleMatch[1], `${roleName}.title`, blockId);
   const familyMatch = raw.match(/family: (\w+)/);
   if (!familyMatch) throw new Error(`${blockId}: ${roleName} has no family`);
-  result.family = familyMatch[1];
+  const rawFamily = familyMatch[1];
+  if (!ALLOWED_FAMILIES.has(rawFamily)) {
+    throw new Error(`${blockId}: ${roleName}.family "${rawFamily}" is not one of claude|codex|either|both (exact case)`);
+  }
+  result.family = rawFamily;
   const modelMatch = raw.match(/model: (".*?")/);
   if (modelMatch) result.model = jsonScalar(modelMatch[1], `${roleName}.model`, blockId);
   const modelsMatch = raw.match(/models: \[(.*?)\]/);
@@ -208,8 +218,11 @@ export function lintJobs(jobs) {
       }
     }
 
-    const bFamily = j.builder && j.builder.family;
-    const rFamily = j.referee && j.referee.family;
+    // Compared normalised (trim + lowercase) so a family value that is already invalid on its
+    // own terms (caught above, at parse time) can never ALSO slip past this check on a case
+    // technicality — the two checks are independent defences, not one relying on the other.
+    const bFamily = (j.builder && j.builder.family || '').trim().toLowerCase();
+    const rFamily = (j.referee && j.referee.family || '').trim().toLowerCase();
     if (SINGLE_FAMILIES.has(bFamily) && bFamily === rFamily) {
       errors.push(`${j.id}: same-family referee (builder ${bFamily}, referee ${rFamily})`);
     }
