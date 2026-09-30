@@ -83,9 +83,22 @@ func matchLine(line string) []string {
 		return hits
 	}
 	for _, m := range assignRE.FindAllStringSubmatch(line, -1) {
-		if entropy(m[3]) >= minEntropy {
+		if entropy(m[3]) >= minEntropy && !isReference(m[3]) {
 			return []string{RuleAssignedKey}
 		}
 	}
 	return nil
+}
+
+var (
+	dottedRE = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$`)
+	phraseRE = regexp.MustCompile(`^[a-z0-9]+([-_][a-z0-9]+){2,}$`)
+)
+
+// isReference reports an assigned value that names something rather than holds a secret: a dotted
+// member path (process.env.JWT_SECRET, intent.client_secret) or three or more lowercase words joined
+// by '-' or '_' (not-a-real-secret). Both were false positives when the scanner was first run over
+// this repository. The cost, stated: a lowercase, hyphen-grouped secret (a UUID-shaped one) is missed.
+func isReference(v string) bool {
+	return dottedRE.MatchString(v) || phraseRE.MatchString(v)
 }

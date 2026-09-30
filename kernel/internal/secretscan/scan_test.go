@@ -107,7 +107,8 @@ func TestSeededSecretInEach26FixturesIsFound(t *testing.T) {
 func TestCleanRepoHasZeroFindings(t *testing.T) {
 	dir := t.TempDir()
 	fixture(t, dir)
-	write(t, dir, "deploy/app.env", "API_KEY=${API_KEY}\nSESSION_TOKEN: \"changeme-changeme-changeme\"\nPORT=8080\n")
+	write(t, dir, "deploy/app.env", "API_KEY=${API_KEY}\nSESSION_TOKEN: \"changeme-changeme-changeme\"\nPORT=8080\n"+
+		"const JWT_SECRET = process.env.JWT_SECRET;\nFAKE_TOKEN=not-a-real-secret-written-by-b0-19\n")
 	write(t, dir, "assets/logo.bin", "\x00\x01"+"gh"+"p_"+strings.Repeat("Ab3", 12)) // binary: skipped
 	// A token under .git is outside the working tree and must not be read.
 	write(t, dir, ".git/config", "url = https://x:"+"gh"+"p_"+pick(rand.New(rand.NewPCG(1, 2)), alnum, 36)+"@example.invalid\n")
