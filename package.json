@@ -9,6 +9,7 @@
     "fleet:install": "node bin/fleet-install.mjs",
     "check": "node scripts/run-checks.mjs",
     "check:ci-chains": "node scripts/check-ci-chains.mjs",
+    "check:kernel": "go -C kernel test -count=1 ./...",
     "check:figures": "node scripts/check-figures.mjs",
     "test:figures": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-figures.test.mjs",
     "test:check-suite": "node --require ./scripts/protected-write-tripwire.cjs --test scripts/check-suite.test.mjs scripts/fleet-install.test.mjs",
