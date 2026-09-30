@@ -49,11 +49,11 @@ keeps citing it.
 audition picked a mixed-family team from three blind spikes; a research venture bought its own oracle before any
 research began. Founder total: **~35 minutes**, almost all valuation and taste [C1 §8].
 
-**Fatal flaw, per the judges.** J1: C1 is **"a synthetic economy with real incentives to cheat"** — stakes reward
-gaming the oracle (R0-A: ~80% hidden-test hacking attempts in MirrorCode), and correlated LLM bidders can produce a
+**Fatal flaw, per the judges.** J1: **"a synthetic economy with real incentives to cheat"** — stakes reward gaming
+the oracle (R0-A: ~80% hidden-test hacking attempts in MirrorCode), and correlated LLM bidders can produce a
 confident, wrong price that still drives an auto-freeze [J1 §2]. J2: **"a convincing market without independent
-information"** — synthetic bidders need not supply independent knowledge, sparse outcomes weaken calibration, and
-unvalidated prices must never acquire the authority to freeze a venture [J2 §2].
+information"** — synthetic bidders need not supply independent knowledge, and unvalidated prices must never
+acquire the authority to freeze a venture [J2 §2].
 
 **What survived into v3, and where:**
 
@@ -103,23 +103,23 @@ catches a data leak and halts it in 40 minutes. Eleven specialists hired and dis
 
 **Fatal flaw, per the judges.** J1: **"one judgment, correlated everywhere."** Every venture inherits the same
 blind spot; a poisoned or drifted Mind propagates through every incarnation, and the Shadow seat can only advise,
-not stop it [J1 §2]. J2: **"institutionalised error"** — incarnations share one Mind, and an
-85%-historical-agreement Fingerprint gate can reject genuine improvement as readily as drift, so it must preserve
-*constraints*, not *mistakes*; the A4 example also still routes routine refunds through the Co-founder — a
-founder-shaped bottleneck reappearing one level down [J2 §2].
+not stop it [J1 §2]. J2: **"institutionalised error"** — a Fingerprint gate scored on 85% historical agreement
+can reject genuine improvement as readily as it rejects drift, so it must preserve *constraints*, not *mistakes*;
+the A4 example also still routes routine refunds through the Co-founder, a bottleneck reappearing one level down
+[J2 §2].
 
 **What survived into v3, and where:**
 
 | Mechanism | Survived? | Destination |
 |---|---|---|
-| Mind-as-record | **Yes**, central | Intent — "Venture Mind" is the standing vocabulary term [R1-SYNTHESIS §3] |
-| Fingerprint gate | **Yes**, generalised | Record — every config promotion (models, prompts, skills, identities) [R1-SYNTHESIS §4.5] |
-| Wager ledger | **Yes**, merged | Acceptance/Record — one ledger with C4's Calibration Ledger [R1-SYNTHESIS §4.2] |
-| Standing Orders | **Yes**, central | Intent — a Standing Order that dictates steps fails lint, same as a playbook [R1-SYNTHESIS §4.6] |
+| Mind-as-record | **Yes**, central | Intent — "Venture Mind" is the standing vocabulary term |
+| Fingerprint gate | **Yes**, generalised | Record — every config promotion (models, prompts, skills, identities) |
+| Wager ledger | **Yes**, merged | Acceptance/Record — one ledger with C4's Calibration Ledger |
+| Standing Orders | **Yes**, central | Intent — a Standing Order that dictates steps fails lint, same as a playbook |
 | Hiring Charter + Exit Interview | **Partial** | typed launch/dissolve persists in the Mission spec; named artifacts don't reappear verbatim |
-| Title Forging + bake-off ladder | **Yes**, tightened | Agent Identity — screen 3/5 → trial 15/20 → shadow 10 → ≤25% rollout, plus a generalist-baseline check [R2-CHALLENGES S06] |
-| Shadow seat (other family) | **Superseded** | replaced by a review coverage graph — opposite-family review + independent acceptance; one reviewer is shoppable [R2-CHALLENGES S02+S09] |
-| Founder-model / own-view split | **Yes** | Surfaces — every founder-facing packet states both views separately [J1 §3] |
+| Title Forging + bake-off ladder | **Yes**, tightened | Agent Identity — screen 3/5 → trial 15/20 → shadow 10 → ≤25% rollout [R2-CHALLENGES S06] |
+| Shadow seat (other family) | **Superseded** | replaced by a review coverage graph — a single "other family" reviewer is shoppable [R2-CHALLENGES S02+S09] |
+| Founder-model / own-view split | **Yes** | Surfaces — every founder-facing packet states both views separately |
 
 ### 1.3 C3 — The Swarm (Codex advocate)
 
@@ -161,8 +161,7 @@ intervention: a ten-minute window choosing the lab's direction. Total AI-work ce
 **Fatal flaw, per the judges.** J1: **"no owner of direction."** The attention field optimises locally; busywork
 is only caught after "two experiments without progress," and nobody holds the portfolio thesis between weekly
 packets [J1 §2]. J2, more precisely: **"locally correct work without a coherent venture bet."** Goal links
-establish relevance, not strategic ownership; C3's co-founder function can only recommend, never commit its peers
-— which is why J2's own synthesis grafts in a replaceable strategic seat with bounded allocation authority [J2 §2].
+establish relevance, not ownership; C3's co-founder function can only recommend, never commit its peers [J2 §2].
 
 **What survived into v3, and where.** More of C3 survived unmodified than any other concept — J2's synthesis names it
 outright as **the execution spine** [J2 §3], and J1's independent synthesis reaches the same substrate from the
@@ -170,14 +169,14 @@ opposite direction [J1 §3]:
 
 | Mechanism | Survived? | Destination |
 |---|---|---|
-| Evidence-linked world model | **Yes**, central | Execution — the per-venture company brain [R1-SYNTHESIS §3] |
-| Expiring attention traces (obligations lane) | **Yes** | Execution — obligations lane, never waiting on a bet cycle [R1-SYNTHESIS §2] |
-| Fenced contribution leases | **Yes**, central | Execution — named vocabulary term, unmodified [R1-SYNTHESIS §3] |
+| Evidence-linked world model | **Yes**, central | Execution — the per-venture company brain |
+| Expiring attention traces (obligations lane) | **Yes** | Execution — obligations lane, never waiting on a bet cycle |
+| Fenced contribution leases | **Yes**, central | Execution — named vocabulary term, unmodified |
 | Artifact-bound acceptance | **Yes**, refined | Acceptance — became the review coverage graph correction [R2-CHALLENGES S02+S09] |
 | Capability-gap recruitment | **Yes** | Skills & Tools economy — matches founder direction #11 |
 | Autonomy charters | **Yes**, central | Constitution/Autonomy — A0–A4 presets, six capability grants [R2-CHALLENGES S03] |
-| Read-and-outcome memory | **Yes**, merged | Record — retrieval-logged, held-out-citation replay [R2-CHALLENGES S04] |
-| Counterfactual organisation replay | **Yes** | Simulation/Evals — the venture twin, fidelity scoped per decision [R2-CHALLENGES S09] |
+| Read-and-outcome memory | **Yes**, merged | Record — retrieval-logged, held-out-citation replay |
+| Counterfactual organisation replay | **Yes** | Simulation/Evals — the venture twin, fidelity scoped per decision |
 
 ### 1.4 C4 — The Lab
 
@@ -217,9 +216,8 @@ totals: **31 bets live, 4 killed, 2 scaled, founder 44 minutes** [C4 §8].
 **Fatal flaw, per the judges.** J1: **"everything-is-a-bet overhead and small-N theatre."** Most real business
 decisions have an unreachable minimum detectable effect at any sane budget, so the ceremony risks false precision
 at the speed of paperwork [J1 §2]. J2, about *timing* rather than *ceremony*: **"an evidence timetable mistaken
-for business reality."** Delayed retention signals can kill a sound thesis prematurely; the design must
-distinguish disproved, underpowered and not-yet-observable, and a bet's expiry must never override a live customer
-obligation [J2 §2].
+for business reality."** Delayed retention signals can kill a sound thesis prematurely, and a bet's expiry must
+never override a live customer obligation [J2 §2].
 
 **What survived into v3, and where.** C4 is J1's pick for spine — the highest score any concept received on any
 criterion in the whole round is C4's Learning score of 10 [J1 §1] — and its Allocator and evidence ladder survive
@@ -227,14 +225,14 @@ essentially unmodified:
 
 | Mechanism | Survived? | Destination |
 |---|---|---|
-| Bet record + Pre-registration Registry | **Yes**, scoped down | Allocation — required only when entering the Priors Library, buying a tranche, or crossing a door type [R1-SYNTHESIS §4.4] |
+| Bet record + Pre-registration Registry | **Yes**, scoped down | Allocation — required only when entering the Priors Library, buying a tranche, or crossing a door type |
 | Default-kill on kill date | **Yes**, central | Allocation |
 | Portfolio Allocator (Thompson sampling) | **Yes**, extended | Allocation — now also VoI-ranks work and prices verifier- and founder-minutes [R2-CHALLENGES S01] |
 | Cross-family Referee | **Yes**, corrected | Acceptance — folded into the review coverage graph [R2-CHALLENGES S02+S09] |
-| Evidence ladder × door type | **Yes**, central | Allocation + Autonomy — standing vocabulary term [R1-SYNTHESIS §3] |
-| Calibration Ledger | **Yes**, merged | Record — one ledger with C2's wager ledger [R1-SYNTHESIS §4.2] |
+| Evidence ladder × door type | **Yes**, central | Allocation + Autonomy — standing vocabulary term |
+| Calibration Ledger | **Yes**, merged | Record — one ledger with C2's wager ledger |
 | Org Science (champion/challenger, replay) | **Yes** | feeds S06's hybrid ladder and S09's eval tiers |
-| Priors Library + Null Registry | **Yes**, central | Record — named vocabulary terms, unmodified [R1-SYNTHESIS §3] |
+| Priors Library + Null Registry | **Yes**, central | Record — named vocabulary terms, unmodified |
 | Conviction tokens | **No** — not carried by name | taste capture runs through C5's circled takes and C1's Attention Exchange instead |
 
 ### 1.5 C5 — The Studio
@@ -281,14 +279,14 @@ completion guarantor must never silently redefine the founder's actual outcome w
 
 | Mechanism | Survived? | Destination |
 |---|---|---|
-| Greenlight ladder (tranches of money + autonomy) | **Yes**, merged | Allocation — merged with C4's evidence ladder, not kept as a separate rung system |
+| Greenlight ladder (tranches of money + autonomy) | **Yes**, merged | Allocation — merged with C4's evidence ladder, not a separate rung system |
 | Dailies Reel + circled takes | **Yes**, central | Surfaces — circling a take is its own class in the attention exchange [R2-CHALLENGES S07] |
-| Backlot with mandatory strike | **Yes**, central | Record — named vocabulary term, unmodified [R1-SYNTHESIS §3] |
+| Backlot with mandatory strike | **Yes**, central | Record — named vocabulary term, unmodified |
 | Screen tests | **Yes**, folded in | Agent Identity — the "screen 3/5" stage of the hybrid bake-off ladder [R2-CHALLENGES S06] |
-| Final-cut grades A0–A3 + Series mode | **Partial** | grades superseded by the six-grant Charter; **Episodic/Series mode carried forward unchanged** [R2-CHALLENGES S03] |
+| Final-cut grades A0–A3 + Series mode | **Partial** | grades superseded by the six-grant Charter; **Series mode carried forward unchanged** [R2-CHALLENGES S03] |
 | Call sheet + edit bay | **No** — function persists, vocabulary does not | superseded by C3's leases + merge queue |
 | Greenlight calibration ledger (missed-upside charge) | **Partial** | merges into the unified Calibration Ledger; missed-upside charge not yet confirmed forward |
-| Completion guarantor | **Echoed, not named** | converges with S10's Incident Lead, a related but not identical mechanism [R2-CHALLENGES S10] |
+| Completion guarantor | **Echoed, not named** | converges with S10's Incident Lead, a related but not identical mechanism |
 
 ## 2. The full scoring, both judges side by side
 
@@ -356,12 +354,11 @@ flowchart TB
 
 The organising principle this produces is the one line every later v3 file inherits: **"no agent both decides what
 matters, funds it, does it and judges it"** [R1-SYNTHESIS §2]. That sentence is the actual resolution of the
-Lab-vs-Swarm disagreement — not a tie-break between two scores, but a structural rule that both judges' preferred
+Lab-vs-Swarm disagreement — not a tie-break between two scores, but a structural rule both judges' preferred
 mechanisms satisfy simultaneously, because each now owns exactly one authority instead of competing to own all of
-them. Round 2's fourteen specialist seats extended this from four authorities to a wider stack — Constitution,
-Intent, Allocation, Execution, Acceptance, Custody (a fifth authority for money, signatures and legal identity that
-none of the five concepts had; see §5), Regulation and Record — without reopening the Lab-vs-Swarm question, because
-the question the seats were answering was never "which concept wins," it was "which authority owns this."
+them. Round 2's fourteen specialist seats extended this from four authorities to a wider stack — adding Constitution,
+Custody (see §5) and Regulation — without reopening the Lab-vs-Swarm question, because the seats were never asking
+"which concept wins," only "which authority owns this."
 
 ## 5. What all five concepts missed
 
@@ -369,21 +366,19 @@ Independently, both judges converged on much of the same list — evidence that 
 oversights but one blind spot five designs shared, because all five were built around funding, executing and
 judging *work*, and none was built around the organisation's existence as a legal, financial and social actor.
 
-| Gap | J1 | J2 | Where it landed in Round 2 |
+| Gap | J1 | J2 | Where it landed |
 |---|---|---|---|
 | Legal-financial body — entities, tax, banking, liability | §4.1 | — | S08 — the fifth authority, **Custody**: no allocating, executing or refereeing agent may move money |
-| Founder continuity — his state, a dead-man switch, succession | §4.2 | — | S03 — Caretaker 72h → human Deputy 7d → Continuity Will 14d |
-| Counterparty agents — A2A commerce, inbound injection defence | §4.3 | — | S13 — Effect Mandates, Negotiation Envelope, content quarantine |
-| Reputation as a breakable, shared asset | §4.4 | — | S13 — one Outbound Claims Standard, per-venture accounts, 5-level kill |
-| Model-release reflex — re-benchmark every new capability | §4.5 | (implicit S09) | S12 — generalised Fingerprint gate |
+| Founder continuity — his state, a dead-man switch, succession | §4.2 | — | S03 — Caretaker 72h → Deputy 7d → Continuity Will 14d |
+| Counterparty agents — A2A commerce, injection defence | §4.3 | — | S13 — Effect Mandates, Negotiation Envelope, quarantine |
+| Reputation as a breakable, shared asset | §4.4 | — | S13 — one Outbound Claims Standard, 5-level kill |
+| Model-release reflex — re-benchmark on new capability | §4.5 | (implicit S09) | S12 — generalised Fingerprint gate |
 | Human-task market | §4.6 | (implicit) | S13 — same ledger as agents |
 | Self-funding capital loops and exits | §4.7 | — | S14 — treasury Standing Order recycles surplus to compute |
-| "Out-building thousands" measure | §4.8 | — | flagged as still needed; no seat closed it |
+| "Out-building thousands" measure | §4.8 | — | flagged as still needed; unclosed |
 | Inter-venture economy | §4.9 | — | S08 — ventures trade at list price, capped 30% of revenue |
 | Correlated-failure budgeting | — | §4.1 | S11 — pairing rule, correlated-alarm autonomy drop |
-| Missing-evidence audits | — | §4.2 | not yet assigned |
-| Complementary-investment bundles | — | §4.3 | not yet assigned |
-| Relationship repair after harm | — | §4.4 | not yet assigned |
+| Missing-evidence audits, complementary bundles, relationship repair | — | §4.2–4.4 | not yet assigned |
 | Transferable operating-company packages | — | §4.5 | S08 — Fleet Import / handover language, partial |
 
 Two of these — Custody and the correlated-failure pairing rule — turned out load-bearing enough that Round 2 treated
