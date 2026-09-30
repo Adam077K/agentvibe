@@ -1,0 +1,4 @@
+Find a real, underserved B2B niche where a one-person AI-run agency could sign its first paying client within 30 days; produce the evidence and a first offer.
+
+Research this properly on the live web (WebSearch/WebFetch), take as long as you need, then write the final deliverable. Cite a real URL inline for every factual claim. Structure: 1) the niche and why it is underserved, 2) evidence (buyer pain, reachability, willingness-to-pay/price anchors, competitive gap), 3) the first offer (scope, price, deliverables, 30-day path to a signed client), 4) open risks. 600-1200 words. Markdown. Output only the deliverable.
+TOOLING NOTE: you have WebSearch only (no page fetch). A source counts only if it appeared in your search results; the quote must be text shown in those results for that URL.
