@@ -1424,14 +1424,18 @@ test('an exclusion that says CI still covers it is checked against ci.yml, not t
     'deleting the `ledger verify` step from ci.yml left the check:ledger exemption looking covered'
   );
 
-  // And the fact the check:mc entry's account of its own history depends on. If someone reinstates
-  // a sandbox.excludedCommands key, that entry has to be re-measured, not re-read.
+  // And the fact the check:mc entry's account of its own history depends on. The key that skewed that
+  // history named check:mc itself, exempting the standalone cell only. A sandbox.excludedCommands key
+  // is back since 2026-09-30 (founder D1/D3: worker launches and worktrees) and check:mc was
+  // re-measured under it; what must never return is an exclusion that covers check:mc, which would
+  // make the two cells differ again for a reason that is not the code.
   const settings = JSON.parse(fs.readFileSync(path.join(REPO, '.claude', 'settings.json'), 'utf8'));
+  const excluded = (settings.sandbox && settings.sandbox.excludedCommands) || [];
   assert.ok(
-    !(settings.sandbox && 'excludedCommands' in settings.sandbox),
-    'sandbox.excludedCommands is back in .claude/settings.json. The check:mc exclusion states that both ' +
-      'its cells fail BECAUSE that key is absent; with it present, standalone check:mc may pass again and ' +
-      'the entry needs re-measuring rather than a re-read.'
+    !excluded.some((pattern) => /check:mc|npm run \*|^npm \*|^\*$/.test(pattern)),
+    'sandbox.excludedCommands covers check:mc. The check:mc exclusion was measured with the check INSIDE ' +
+      'the sandbox; a key that exempts it makes standalone and nested cells differ again, which is exactly ' +
+      'the false "nesting is the variable" reading ab46d40 reverted. Re-measure instead of exempting.'
   );
 });
 
