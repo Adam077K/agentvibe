@@ -1,0 +1,4 @@
+{"id":"452880aa-0fc7-45f0-b8c7-1a849c5f73c3","ts":1790765357350,"status":"waiting","title":"Hello mission","goal":"Write docs/demo/hello-mission.md: a summary (under 200 words, then 3 bullets) of the \"Trusted projects\" section of mission-control/README.md. Every claim must be supported by that section. Have it reviewed."}
+{"id":"452880aa-0fc7-45f0-b8c7-1a849c5f73c3","ts":1790765370736,"status":"queued"}
+{"id":"452880aa-0fc7-45f0-b8c7-1a849c5f73c3","ts":1790765371580,"status":"working","runnerPid":93100}
+{"id":"452880aa-0fc7-45f0-b8c7-1a849c5f73c3","ts":1790765548184,"status":"done","verdict":"FAIL","verdictReasons":["The claim that only the CLI writes the trust list contradicts the source’s explicit support for hand-editing."],"costUsd":1.08188285}
