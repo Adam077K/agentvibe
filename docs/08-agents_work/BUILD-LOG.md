@@ -20,6 +20,13 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **DECISION — PCB jobs follow the classifier.** 14 §7 says PCB lands founder-present; the later founder grant G1 scopes
   merge authority by the classifier tier. `kernel/**` classifies `lite` today, so kernel PRs merge under G1 — but only
   with a non-builder verdict — and a tier-floor proposal (`kernel/** → irreversible`) is left open for the founder.
+- **DECISION — Bash writes are sanctioned inside a job's own harness worktree.** `pre-tool-use.sh` anchors Edit/Write
+  to the session root (`.worktrees/ceo-3-…`), so it refuses the harness worktrees under `agentvibe/.claude/worktrees/`;
+  the sandbox allowlist names exactly those paths. Per CLAUDE.md's per-path rule for Bash/Write divergence, the sandbox
+  is right for these paths. Nowhere else. Durable fix (hook learns this session's harness worktrees) is harness
+  self-edit → irreversible → founder.
+- **Tool-use note:** a sandboxed `git worktree add` inside the session root still hits 35 denials on
+  `.claude/**` (re-measured 2026-10-01), so the documented wall stands.
 - **Blocked on the founder:** B0-05 (second macOS user), B0-06 (Apple `container` not installed), B0-08/09/10/11
   (headless worker launches refused), B0-21 (founder-driven V0), F1 grant + Build Charter signature.
 
