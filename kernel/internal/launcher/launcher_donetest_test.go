@@ -8,7 +8,10 @@ package launcher
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 )
@@ -16,7 +19,64 @@ import (
 const (
 	claudeBin    = "/opt/av/bin/claude"
 	claudeDigest = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+	codexBin     = "/opt/av/bin/codex"
+	codexDigest  = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
 )
+
+// The pinned launch lines of 09a §8, as templates. "<name>" tokens are slots.
+var (
+	claudeTokens = []string{"-p", "--setting-sources", "<profile>", "--settings", "<job.json>",
+		"--agents", "<compiled.json>", "--agent", "<record>", "--permission-mode", "dontAsk",
+		"--allowedTools", "<allowed>", "--disallowedTools", "<forbidden>",
+		"--output-format", "stream-json", "--verbose", "--json-schema", "<f>",
+		"--max-budget-usd", "<B>", "--session-id", "<uuid>"}
+	codexTokens = []string{"exec", "-C", "<worktree>", "-s", "workspace-write", "-p", "<profile>",
+		"--json", "--output-schema", "<f>", "-o", "<result.json>", "--ephemeral"}
+	slotValues = map[string]string{
+		"<profile>": "project", "<job.json>": "/run/av/job-1/job.json", "<compiled.json>": "/run/av/job-1/agents.json",
+		"<record>": "builder", "<allowed>": "Read,Edit,Bash", "<forbidden>": "Agent,Task",
+		"<f>": "/run/av/job-1/schema.json", "<B>": "5", "<uuid>": "0192f7a4-6f1e-7c3a-9b1d-3c5e7a9b1d3c",
+		"<worktree>": "/w/job-1", "<result.json>": "/run/av/job-1/result.json",
+	}
+)
+
+// argvDigest is the frozen digest encoding documented on ArgvTemplate.
+func argvDigest(tokens []string) string {
+	s := sha256.Sum256([]byte(strings.Join(tokens, "\x00")))
+	return "sha256:" + hex.EncodeToString(s[:])
+}
+
+// render fills a template's slots with slotValues.
+func render(tokens []string) []string {
+	out := make([]string, len(tokens))
+	for i, tok := range tokens {
+		if v, ok := slotValues[tok]; ok {
+			out[i] = v
+		} else {
+			out[i] = tok
+		}
+	}
+	return out
+}
+
+// with returns a copy of argv with argv[i] replaced (or, for i == len, appended).
+func with(argv []string, i int, v ...string) []string {
+	out := append([]string{}, argv[:i]...)
+	out = append(out, v...)
+	if i < len(argv) {
+		out = append(out, argv[i+1:]...)
+	}
+	return out
+}
+
+func index(argv []string, tok string) int {
+	for i, a := range argv {
+		if a == tok {
+			return i
+		}
+	}
+	panic("token not in argv: " + tok)
+}
 
 type fakeClock struct{ t time.Time }
 
@@ -47,9 +107,22 @@ func (r *receipts) Append(x Receipt) error { r.got = append(r.got, x); return ni
 func grant() Grant {
 	return Grant{
 		Holder:         "kernel.launcher",
-		Binaries:       []Binary{{Path: claudeBin, Digest: claudeDigest}},
+		Binaries: []Binary{{Path: claudeBin, Digest: claudeDigest}, {Path: codexBin, Digest: codexDigest}},
+		Templates: []ArgvTemplate{
+			{Binary: claudeBin, Tokens: claudeTokens, Digest: argvDigest(claudeTokens)},
+			{Binary: codexBin, Tokens: codexTokens, Digest: argvDigest(codexTokens)},
+		},
 		ForbiddenFlags: []string{"--dangerously-skip-permissions", "--bare", "-s danger-full-access"},
 		Caps:           Caps{Concurrent: 12, PerHour: 120},
+	}
+}
+
+func deps(r *rig) Deps {
+	return Deps{
+		Clock:    r.clock,
+		Exec:     r.exec,
+		Digester: fakeDigester{claudeBin: claudeDigest, codexBin: codexDigest},
+		Receipts: r.rcpt,
 	}
 }
 
@@ -58,7 +131,7 @@ func request(job string) Request {
 	return Request{
 		JobID:      job,
 		Binary:     claudeBin,
-		Argv:       []string{"-p", "--output-format", "stream-json", "--permission-mode", "acceptEdits"},
+		Argv:       render(claudeTokens),
 		Unattended: true,
 		Requires: Prerequisites{
 			AdmittedJob:    true,
@@ -83,12 +156,7 @@ type rig struct {
 func newRig(t *testing.T, at time.Time) rig {
 	t.Helper()
 	r := rig{clock: &fakeClock{t: at}, exec: &fakeExec{}, rcpt: &receipts{}}
-	l, err := New(grant(), Deps{
-		Clock:    r.clock,
-		Exec:     r.exec,
-		Digester: fakeDigester{claudeBin: claudeDigest},
-		Receipts: r.rcpt,
-	})
+	l, err := New(grant(), deps(&r))
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -101,29 +169,75 @@ func newRig(t *testing.T, at time.Time) rig {
 
 func at0300() time.Time { return time.Date(2026, 10, 13, 3, 0, 0, 0, time.UTC) }
 
-// B1-08 · done-test 1: --dangerously-skip-permissions is refused before exec.
+// B1-08 · done-test 1: --dangerously-skip-permissions is refused before exec — and so is every
+// argv that is not a pinned template. A denylist alone fails this test: it lets
+// "--permission-mode bypassPermissions" through.
 func TestB108ForbiddenFlagRefusedBeforeExec(t *testing.T) {
-	cases := map[string][]string{
-		"skip-permissions":        {"-p", "--dangerously-skip-permissions"},
-		"skip-permissions=true":   {"-p", "--dangerously-skip-permissions=true"},
-		"bare":                    {"-p", "--bare"},
-		"sandbox danger two args": {"exec", "-s", "danger-full-access"},
-		"sandbox danger joined":   {"exec", "-s=danger-full-access"},
+	good := render(claudeTokens)
+	pm := index(good, "--permission-mode")
+	cases := []struct {
+		name   string
+		binary string
+		argv   []string
+	}{
+		{"skip-permissions appended", claudeBin, with(good, len(good), "--dangerously-skip-permissions")},
+		{"skip-permissions=true appended", claudeBin, with(good, len(good), "--dangerously-skip-permissions=true")},
+		{"bare prepended", claudeBin, with(good, 0, "--bare", good[0])},
+		{"skip-permissions in a slot", claudeBin, with(good, index(good, "builder"), "--dangerously-skip-permissions")},
+		{"bypassPermissions for dontAsk", claudeBin, with(good, pm+1, "bypassPermissions")},
+		{"acceptEdits for dontAsk", claudeBin, with(good, pm+1, "acceptEdits")},
+		{"equivalent spelling --permission-mode=dontAsk", claudeBin, with(with(good, pm, "--permission-mode=dontAsk"), pm+1)},
+		{"unknown flag appended", claudeBin, with(good, len(good), "--add-dir", "/")},
+		{"pinned flag repeated", claudeBin, with(good, len(good), "--verbose")},
+		{"two pinned pairs reordered", claudeBin, append(append(append([]string{}, good[:1]...), good[3:5]...), append(append([]string{}, good[1:3]...), good[5:]...)...)},
+		{"pinned token dropped", claudeBin, with(good, index(good, "--verbose"))},
+		{"empty argv", claudeBin, nil},
+		{"codex argv on the claude binary", claudeBin, render(codexTokens)},
+		{"codex danger-full-access", codexBin, with(render(codexTokens), index(render(codexTokens), "workspace-write"), "danger-full-access")},
+		{"codex -s=danger-full-access", codexBin, with(with(render(codexTokens), 3, "-s=danger-full-access"), 4)},
 	}
-	for name, argv := range cases {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
 			r := newRig(t, at0300())
-			req := request("job-forbidden")
-			req.Argv = argv
+			req := request("job-refused")
+			req.Binary, req.Argv = tc.binary, tc.argv
 			_, err := r.l.Launch(context.Background(), req)
-			if !errors.Is(err, ErrForbiddenFlag) {
-				t.Errorf("Launch(%q) error = %v, want ErrForbiddenFlag", argv, err)
+			if !errors.Is(err, ErrArgvNotPinned) && !errors.Is(err, ErrForbiddenFlag) {
+				t.Errorf("Launch(%q) error = %v, want ErrArgvNotPinned or ErrForbiddenFlag", tc.argv, err)
 			}
-			if len(r.exec.calls) != 0 {
-				t.Errorf("exec called %d times for a forbidden flag, want 0", len(r.exec.calls))
+			if len(r.exec.calls) != 0 || len(r.rcpt.got) != 0 {
+				t.Errorf("refused argv reached exec (%d calls, %d receipts), want 0", len(r.exec.calls), len(r.rcpt.got))
 			}
 		})
 	}
+
+	t.Run("paired: both pinned lines run", func(t *testing.T) {
+		r := newRig(t, at0300())
+		for _, req := range []Request{request("job-claude"), func() Request {
+			q := request("job-codex")
+			q.Binary, q.Argv = codexBin, render(codexTokens)
+			return q
+		}()} {
+			if _, err := r.l.Launch(context.Background(), req); err != nil {
+				t.Errorf("pinned %s launch: %v, want success", req.Binary, err)
+			}
+		}
+	})
+
+	t.Run("grant integrity", func(t *testing.T) {
+		r := rig{clock: &fakeClock{t: at0300()}, exec: &fakeExec{}, rcpt: &receipts{}}
+		g := grant()
+		g.Templates[0].Digest = argvDigest(append(append([]string{}, claudeTokens...), "--add-dir", "/"))
+		if _, err := New(g, deps(&r)); !errors.Is(err, ErrGrant) {
+			t.Errorf("New with a template whose digest does not match its tokens: %v, want ErrGrant", err)
+		}
+		g = grant()
+		bad := with(claudeTokens, index(claudeTokens, "dontAsk"), "dontAsk", "--dangerously-skip-permissions")
+		g.Templates[0] = ArgvTemplate{Binary: claudeBin, Tokens: bad, Digest: argvDigest(bad)}
+		if _, err := New(g, deps(&r)); !errors.Is(err, ErrForbiddenFlag) {
+			t.Errorf("New with a pinned template carrying a forbidden flag: %v, want ErrForbiddenFlag", err)
+		}
+	})
 }
 
 // B1-08 · done-test 2: an unattended 03:00 launch succeeds — one exec, one Receipt, no human.
@@ -144,8 +258,8 @@ func TestB108UnattendedLaunchAt0300Succeeds(t *testing.T) {
 		t.Fatalf("receipts = %d, want exactly 1 per launch", len(r.rcpt.got))
 	}
 	got := r.rcpt.got[0]
-	if got.JobID != req.JobID || got.Digest != claudeDigest || !got.At.Equal(at0300()) {
-		t.Errorf("receipt = %+v, want job %q digest %q at %v", got, req.JobID, claudeDigest, at0300())
+	if got.JobID != req.JobID || got.Digest != claudeDigest || got.Template != argvDigest(claudeTokens) || !got.At.Equal(at0300()) {
+		t.Errorf("receipt = %+v, want job %q digest %q template %q at %v", got, req.JobID, claudeDigest, argvDigest(claudeTokens), at0300())
 	}
 	if rc.JobID != got.JobID || rc.Digest != got.Digest {
 		t.Errorf("returned receipt %+v differs from the appended one %+v", rc, got)
