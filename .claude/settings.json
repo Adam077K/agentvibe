@@ -30,8 +30,8 @@
       "Bash(diff *)",
       "Bash(which *)",
       "Bash(echo *)",
-      "Bash(claude -p:*)",
-      "Bash(codex exec:*)"
+      "Bash(claude -p *)",
+      "Bash(codex exec *)"
     ],
     "deny": [
       "Bash(rm -rf *)",

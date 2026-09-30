@@ -170,7 +170,12 @@ const EXCLUDED = {
     'green, so it is the only place it is checked, and scripts/check-suite.test.mjs now reads ci.yml and ' +
     'fails if that step is deleted. NOTHING SCHEDULES ITS RETURN, and calling it temporary would be a ' +
     'promise nobody has made: it returns when a loopback bind can be permitted, and the sandbox exposes ' +
-    'no inbound or loopback setting to grant one. FALSIFY THIS: delete this entry, put check:mc back in ' +
+    'no inbound or loopback setting to grant one. RE-MEASURED 2026-09-30 after the founder enabled ' +
+    'sandbox.network.allowLocalBinding: the loopback bind now succeeds inside the sandbox and ' +
+    'stream.test.ts passes, but `npm run check:mc` still exits 1 at 486 pass / 2 fail — a real-corpus ' +
+    'performance budget (3.0s vs 250ms) and a 120s ledger-verify timeout, the same two seen unsandboxed ' +
+    'on the vision/v3-slice run, so load and environment, not the sandbox. The exclusion stands for that ' +
+    'reason until those two are made deterministic. FALSIFY THIS: delete this entry, put check:mc back in ' +
     'STEPS, and run `npm run check` with the sandbox armed. If it goes green, the sandbox behaviour ' +
     'changed and this exclusion should not survive.',
   'test:probe-workflow-reach':
