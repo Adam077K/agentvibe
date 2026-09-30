@@ -10,8 +10,8 @@
 // missing: an absent reading is fog, never zero (09b §1). A line that cannot be read as a receipt is
 // COUNTED as unparsed with its location, never dropped silently.
 //
-// Window and weekly caps are FOG until B0-00 measures them: the registry holds published text, which is
-// not a measurement.
+// Window and weekly caps are FOG while no capacity measurement is among the inputs (B0-00 is the job that
+// would produce one): the registry holds published text, which is not a measurement.
 //
 // CLI:  bun run scripts/scorecard.ts --week 2026-W40 [--missions-dir D] [--minutes F] [--registry F] [--out F]
 //       writes docs/08-agents_work/scorecards/<week>.md by default.
@@ -40,6 +40,10 @@ export interface Unparsed { file: string; line: number; reason: string }
 export interface ParsedReceipt {
   launchId: string; missionId: string; role: string; model: string;
   startedAt: number; endedAt: number; exit: number | null; turns: number | null;
+  /** runner-side count of stdout lines it could not read while building this receipt */
+  unparsedLines: number | null;
+  /** set on a child (e.g. builder-subagent) receipt: its time runs INSIDE the parent launch */
+  parentLaunchId: string | null;
   file: string; line: number;
 }
 export interface MinuteRow { date: string; minutes: number; kind: string; file: string; line: number }
@@ -127,14 +131,24 @@ export function parseReceipts(sources: SourceText[]): { receipts: ParsedReceipt[
         unparsed.push({ file, line, reason: 'endedAt before startedAt' });
         return;
       }
-      if (p.turns !== null && p.turns !== undefined && !(isNum(p.turns) && p.turns >= 0)) {
-        unparsed.push({ file, line, reason: 'turns is neither a count nor null' });
+      // A type-invalid optional field makes the whole receipt unparsed: it must never become a value
+      // (or a null that reads as "not recorded").
+      const bad: string[] = [];
+      const countOrNull = (v: unknown) => v === null || v === undefined || (Number.isInteger(v) && (v as number) >= 0);
+      if (!countOrNull(p.turns)) bad.push('turns');
+      if (!(p.exit === null || p.exit === undefined || Number.isInteger(p.exit))) bad.push('exit');
+      if (!countOrNull(p.unparsedLines)) bad.push('unparsedLines');
+      if (!(p.parentLaunchId === undefined || isStr(p.parentLaunchId))) bad.push('parentLaunchId');
+      if (bad.length) {
+        unparsed.push({ file, line, reason: `mistyped: ${bad.join(', ')}` });
         return;
       }
       receipts.push({
         launchId: p.launchId as string, missionId: p.missionId as string, role: p.role as string,
         model: p.model as string, startedAt: p.startedAt as number, endedAt: p.endedAt as number,
-        exit: isNum(p.exit) ? p.exit : null, turns: isNum(p.turns) ? p.turns : null, file, line,
+        exit: isNum(p.exit) ? p.exit : null, turns: isNum(p.turns) ? p.turns : null,
+        unparsedLines: isNum(p.unparsedLines) ? p.unparsedLines : null,
+        parentLaunchId: isStr(p.parentLaunchId) ? p.parentLaunchId : null, file, line,
       });
     });
   }
@@ -222,9 +236,23 @@ const NO_RECEIPT_KIND = 'no receipt kind records this yet (P0 receipts are launc
 export function buildScorecard(input: ScorecardInput): Scorecard {
   const { start, end } = isoWeekWindow(input.week);
   const parsed = parseReceipts(input.receipts);
-  const inWeek = parsed.receipts.filter((r) => r.startedAt >= start && r.startedAt < end);
+  const weekAll = parsed.receipts.filter((r) => r.startedAt >= start && r.startedAt < end);
+  // Child receipts (parentLaunchId set) run inside their parent's process: counting them as launches, or
+  // adding their wall-clock, would double-count the parent. They are reported on their own row.
+  const inWeek = weekAll.filter((r) => r.parentLaunchId === null);
+  const children = weekAll.filter((r) => r.parentLaunchId !== null);
   const noneInWeek = input.receipts.length === 0 ? 'no receipt: no launches.jsonl found' : `no receipt: no launch started in ${input.week}`;
   const all = receiptMetrics(inWeek, noneInWeek);
+  const childCell: Cell = children.length === 0
+    ? fog(input.receipts.length === 0 ? noneInWeek : `no receipt: no child receipt (parentLaunchId) in ${input.week}`)
+    : { kind: 'value', value: children.length, unit: 'child launches', provenance: fromReceipts(children, 'inside parent launches; excluded from launches and wall-clock') };
+  const withStream = weekAll.filter((r) => r.unparsedLines !== null);
+  const streamCell: Cell = weekAll.length === 0
+    ? fog(noneInWeek)
+    : withStream.length === 0
+      ? fog(`${weekAll.length} receipt(s), none carry unparsedLines`)
+      : { kind: 'value', value: withStream.reduce((a, r) => a + (r.unparsedLines ?? 0), 0), unit: 'lines',
+          provenance: fromReceipts(withStream, withStream.length < weekAll.length ? `${withStream.length} of ${weekAll.length} receipts carry unparsedLines` : undefined) };
 
   const unparsed = [...parsed.unparsed];
   let founder: Cell;
@@ -259,7 +287,9 @@ export function buildScorecard(input: ScorecardInput): Scorecard {
     { dimension: 'Founder', measure: 'decision + rescue minutes (hand-logged)', cell: founder },
     { dimension: 'Compute', measure: 'turns', cell: all.turns },
     { dimension: 'Compute', measure: 'wall-clock', cell: all.wallClock },
+    { dimension: 'Compute', measure: 'child launches (inside a parent)', cell: childCell },
     { dimension: 'Measurement', measure: 'unparsed input lines', cell: unparsedCell },
+    { dimension: 'Measurement', measure: 'worker stream lines unread (receipt unparsedLines)', cell: streamCell },
     { dimension: 'Improvement', measure: 'weeks with no demonstrated improvement', cell: fog(NO_RECEIPT_KIND) },
   ];
 
@@ -277,7 +307,7 @@ export function buildScorecard(input: ScorecardInput): Scorecard {
     const m = receiptMetrics(rs, `no receipt: no ${family} launch in ${input.week}`);
     const capFog = regRows.length === 0
       ? fog('not measured: model absent from the provider registry')
-      : fog(`not measured: B0-00 has not run (registry lines ${regRows.map((r) => r.line).join(', ')} hold published text, not a measurement)`);
+      : fog(`not measured: no capacity measurement found among the inputs (registry lines ${regRows.map((r) => r.line).join(', ')} hold published text, not a measurement)`);
     return {
       family,
       models: [...new Set([...regRows.map((r) => r.model), ...rs.map((r) => r.model)])].sort(),

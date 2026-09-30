@@ -42,7 +42,9 @@ describe('scorecard v0', () => {
     const claude = s.budgetLedger.find((f) => f.family === 'Claude Max 20x')!;
     expectValue(claude.launches, 1);
     // caps stay fog even with a receipt: published registry text is not a measurement
-    expect(claude.windowCap).toMatchObject({ kind: 'fog', reason: expect.stringContaining('B0-00 has not run') });
+    // and the reason is derived from the inputs, not an assertion about another job's state
+    expect(claude.windowCap).toMatchObject({ kind: 'fog', reason: expect.stringContaining('no capacity measurement found') });
+    expect(renderMarkdown(s)).not.toContain('B0-00 has not run');
     expect(s.budgetLedger.find((f) => f.family === 'ChatGPT Pro (Codex)')!.launches.kind).toBe('fog');
   });
 
@@ -81,6 +83,32 @@ describe('scorecard v0', () => {
     expect(metric(s, 'unparsed input lines')).toMatchObject({ kind: 'value', value: 2, provenance: { locations: ['x.jsonl:2-3'] } });
     expect(metric(s, 'launches')).toMatchObject({ kind: 'value', value: 2, provenance: { locations: ['x.jsonl:1', 'x.jsonl:5'] } });
     expect(renderMarkdown(s)).toContain('`x.jsonl:2` — not a JSON object');
+  });
+
+  test('a child receipt (parentLaunchId) is counted on its own row and never adds launches or wall-clock', () => {
+    const text = [
+      receipt(), // parent: 152.9 s
+      receipt({ launchId: 'L1:tu_1', role: 'builder-subagent', parentLaunchId: 'L1', startedAt: T + 1_000, endedAt: T + 100_000, turns: null }),
+    ].join('\n');
+    const s = buildScorecard({ week: WEEK, receipts: [{ file: 'p.jsonl', text }], founderMinutes: null, registry: REGISTRY });
+    expect(metric(s, 'launches')).toMatchObject({ kind: 'value', value: 1, provenance: { launchIds: ['L1'] } });
+    expect(metric(s, 'wall-clock')).toMatchObject({ kind: 'value', value: 153 });
+    expect(metric(s, 'child launches (inside a parent)')).toMatchObject({ kind: 'value', value: 1, provenance: { launchIds: ['L1:tu_1'], locations: ['p.jsonl:2'] } });
+    const claude = s.budgetLedger.find((f) => f.family === 'Claude Max 20x')!;
+    expect(claude.launches).toMatchObject({ value: 1 });
+    expect(claude.wallClock).toMatchObject({ value: 153 });
+  });
+
+  test('receipt unparsedLines is carried; a type-invalid field makes the receipt unparsed, not a value', () => {
+    const text = [receipt({ unparsedLines: 3 }), receipt({ launchId: 'L2', exit: 'boom' }), receipt({ launchId: 'L3', unparsedLines: -1 })].join('\n');
+    const s = buildScorecard({ week: WEEK, receipts: [{ file: 'u.jsonl', text }], founderMinutes: null, registry: REGISTRY });
+    expect(metric(s, 'worker stream lines unread (receipt unparsedLines)')).toMatchObject({ kind: 'value', value: 3, provenance: { launchIds: ['L1'] } });
+    expect(s.unparsed).toEqual([
+      { file: 'u.jsonl', line: 2, reason: 'mistyped: exit' },
+      { file: 'u.jsonl', line: 3, reason: 'mistyped: unparsedLines' },
+    ]);
+    expect(metric(s, 'launches')).toMatchObject({ kind: 'value', value: 1 });
+    expect(metric(s, 'launches exiting non-zero')).toMatchObject({ kind: 'value', value: 0, provenance: { launchIds: ['L1'] } });
   });
 
   test('a model absent from the registry gets its own family row with fog caps, not a guessed family', () => {
