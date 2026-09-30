@@ -373,8 +373,8 @@ output; Claude Code documents programmatic execution and structured streaming; b
 
 **Families as correlated failure.** Diversity is not independence; a compromised provider or proxy could weaken maker and
 critic together [R3-red X04]. Receipts record authenticated route and model-version evidence; an endpoint change is a
-re-qualification (R1); deterministic checks stay model-free; a third route (Model Foundry, human adjudicators — F10) stays
-warm for evacuation.
+re-qualification (R1); deterministic checks stay model-free; a third route (Model Foundry when qualified; otherwise
+structured reconciliation, then the founder — D10, DR-88) stays warm for evacuation.
 
 **Provider continuity.** When one family is down, the other executes any eligible role from durable checkpoints; required
 cross-family verdicts stay **pending**, never waived; pre-authorised hash-bound recovery runs under its incident mandate

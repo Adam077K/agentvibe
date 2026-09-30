@@ -6,7 +6,7 @@ earlier round disagrees with it, this file wins until the founder changes it. Bi
 ## 0. How to use this file
 
 - **Reading budget.** Read §0–§4, §8 and §10 whole (~25 KB). The glossary (§5, ~180 terms) and the decisions register
-  (§6, 83 entries incl. the R5 fix-pass rulings DR-56–DR-83) are reference: search them for your topic's terms rather than reading them end to end.
+  (§6, 88 entries incl. the R5 fix-pass rulings DR-56–DR-83 and the founder-answer rulings DR-85–DR-88) are reference: search them for your topic's terms rather than reading them end to end.
 - **Terms.** Use the words in §4–§5 exactly. If you need a new term, define it in your file's glossary box and say which
   §5 entry it refines; never re-define a §5 term.
 - **Conflicts.** §6 settles every conflict the rounds raised. Do not reopen one. If your topic exposes a *new* conflict,
@@ -219,8 +219,8 @@ One definition per term. **Owner** = the file that specifies it; everyone else l
 | Sideways Review | A mission opened by a busywork tripwire; returns re-aim, kill, push through or escalate | 05 |
 | CCIR ("wake me if") | The founder's pre-declared list of conditions that always reach him | 05 |
 | Founder State | available · focus · travel · offline_planned · overloaded · unreachable · incapacitated; scales minute supply and reach | 05 |
-| Continuity | Deadline-driven measures per obligation (latest safe start) plus presence tiers: Reach 24 h → Caretaker 72 h → Deputy 7 d → Continuity Will 14 d; succession only narrows | 05 |
-| Deputy | A named human who has accepted a scoped grant (stop, caretaker, wind-down, pay due bills) and passed a drill | 05 / 16 |
+| Continuity | Deadline-driven measures per obligation (latest safe start) plus presence tiers: Reach 24 h → Caretaker 72 h → continuity freeze 7 d → hold 14 d+ (parameters); succession only narrows | 05 |
+| Deputy | ~~A named human with a scoped grant~~ **None** (D6, DR-85): nobody acts for the founder; the continuity freeze replaces it | 05 |
 | Decision Supply Bench | Expander X17: grows founder-side judgment — a Judgment Gym, calibrated circle weights per domain, trusted human reviewers for delegated taste | 05 |
 | Class / Reach / Reach Router | See §4. Router is deterministic, picks the lowest reach that meets the deadline given Founder State and remaining minutes | 05 (class) / 08 (reach) |
 | Founder Attention Exchange | Clears Decide packets by priority per minute at decision windows; supply set by founder, scaled by Founder State | 05 |
@@ -304,7 +304,7 @@ One definition per term. **Owner** = the file that specifies it; everyone else l
 |---|---|---|
 | Referee | The Acceptance function in a mission: deterministic verifiers plus fresh judges assigned by the coverage contract, outside the worker sandbox. Its **parsed verdict** is the only thing that moves a card to Done | 04 / 09b |
 | Acceptance Coverage Contract | Per artifact: components, dependencies, required observations, deterministic checks and independent judgments; reserved before launch | 09b |
-| Review coverage graph | Component-level opposite-family review + end-to-end acceptance by fresh judges of both families for mixed-family work; material disagreement → third route (third family or human adjudicator) | 09b |
+| Review coverage graph | Component-level opposite-family review + end-to-end acceptance by fresh judges of both families for mixed-family work; material disagreement → structured reconciliation, then the founder (DR-88) | 09b |
 | Within-generator rule | Quality comparisons and rankings are made only within one generating model; absolute cross-family scores never rank agents (SP3: self-preference +1.1 Claude, +3.2 Codex) | 09b |
 | Verifier Foundry | Acceptance programme that mines deterministic verifiers from panel decisions; promoted advisory → pre-screen → decide against later real outcomes; permanent 5% panel sample | 09b |
 | Deterministic Share | Share of acceptance decisions settled with no model | 09b |
@@ -426,7 +426,7 @@ id); SP2, SP3, SLICE spikes; R1 synthesis.
 | DR-06 | Proposing a control change is free; activating one needs the release authority; the protected computing base is defined transitively | Self-improvement must not edit the machinery that proves improvement | S03, S12; R3-RT C03, §3.12 |
 | DR-07 | Record map: Journal (events, authority), versioned files (policy, Minds, curated Brain, records), projections (databases, indexes) with source offsets; external systems canonical for external state | Three stores competed to be truth | S04, S07, S12; R3-RT C02, §3.11 |
 | DR-08 | Two-tier stack: Go Kernel (six nouns + Operation) and TypeScript/Node 24 Userland | The only credential holder must have the smallest dependency surface | S12 |
-| DR-09 | Kernel on a dedicated always-on Mac; Front Desk and outbound effectors on a small cloud host with an **external fencing authority** and exclusive gateway epoch; alternate host tested | Resolves S12 vs S13 host conflict; host failure must not defeat the kill path | S12, S13; R3-RT T07 |
+| DR-09 | *(Amended by DR-86: the founder's Mac, dedicated one optional; cloud holds no subscription credential.)* Kernel on a dedicated always-on Mac; Front Desk and outbound effectors on a small cloud host with an **external fencing authority** and exclusive gateway epoch; alternate host tested | Resolves S12 vs S13 host conflict; host failure must not defeat the kill path | S12, S13; R3-RT T07 |
 | DR-10 | Governance budget per door type, ≤3 serial gates for routine effects, control ROI ledger | Controls must not eat the speed that is the point | R3-X U1; R3-RT C06 |
 
 **Acceptance and evaluation**
@@ -466,7 +466,7 @@ id); SP2, SP3, SLICE spikes; R1 synthesis.
 | DR-31 | The Exchange estimates burden independently of the requester, shows material downside and best rejected alternative, keeps an age/deadline floor, and audits what the founder was *not* shown | Requesters learn to win attention | R3-RT D06 |
 | DR-32 | Observed dismissal may *propose* demotion; it never suppresses an obligation or a safety reach floor | Ignoring a hazard must not train silence | S03, S07, S10; R3-RT §3.8 |
 | DR-33 | Goal and metric versions freeze at mission admission; every goal-tree amendment shows abandoned outcomes; independent customer and harm guardrails | Closer Claims can reward wrong-direction motion | S03; R3-RT D01 |
-| DR-34 | Continuity is deadline-driven per obligation, not only calendar tiers; deputies must accept and drill; planned absence expires | A duty may expire tonight | S03; R3-RT T02 |
+| DR-34 | Continuity is deadline-driven per obligation, not only calendar tiers; ~~deputies must accept and drill~~ no Deputy — a continuity freeze (DR-85); planned absence expires | A duty may expire tonight | S03; R3-RT T02 |
 | DR-35 | Presence, narrow stop and positive authorisation are separate; approvals bind the canonical displayed action (what you see is what you sign); voice proposes, passkey disposes | Authentic identity ≠ informed authority | S03, S07, S13; R3-RT X08 |
 | DR-36 | Human-signed delegation, per-instance approval and legally required human execution are three different things | Same action, same disposition on every channel | S03, S13; R3-RT §3.2 |
 | DR-37 | Task procurement is autonomous within signed terms; creating/changing employment is never-list; task-splitting triggers classification review | Hiring was allowed and forbidden at once | S03, S13; R3-RT §3.3 |
@@ -529,6 +529,15 @@ gaps (OG). The execution list is `_process/R5-FIX-PLAN.md`.
 | DR-83 | Launch logs derive the worker **family from the model id**, never from the slot it was launched into (accepts 12's ND-12-2). DR-73 is 12's ND-12-1, accepted | Slot-derived family mislabels cross-family evidence | 12 ND-12-1, ND-12-2 |
 | DR-82 | Package reading paths live in canon §11; every file's links are relative siblings (`05-…md`, not `../05-…md`) | #5, #9, B40 | #5, #9, B40 |
 
+**Founder answers 2026-09-30** — mechanisms changed by D3, D6, D8 and D10 (15 §8).
+
+| # | Decision | Rationale | Source |
+|---|---|---|---|
+| DR-85 | **No human Deputy** (amends DR-34). Nobody acts for the founder. After unplanned silence the tiers run Reach → Caretaker → **continuity freeze**: every autonomous venture enters its SCRAM safe state and only its `continuity:` routes run, keeping existing customer obligations. Tier timings are parameters. Human-only acts wait on the Re-entry Brief; a venture with live customers must show a funded route for every obligation (a drilled freeze) before it passes A2 | Founder: "nobody acts for him — pause everything" | D6 |
+| DR-86 | **Hosting topology** (amends DR-09; DR-62 stands). Subscription-authenticated agents run on the **founder's Mac** on his logins, or on **vendor clouds** (Claude cloud sessions/routines, Codex cloud tasks); his login on a rented VPS/CI is avoided by default (grey zone). Components holding no subscription credential — web UI, DB, queue, scheduler, webhooks, notification relay, Front Desk, effectors — may run in the cloud; the cloud enqueues and the Mac pulls. Nothing relays others' requests through his subscription. A dedicated always-on Mac becomes optional | Credential stays with him and first-party clients (09a §15.1) | D3; `_process/R7-RESEARCH-hosting-and-reach.md` |
+| DR-87 | **Outbound contact to people is off by default.** A venture gets agent-initiated contact (email, calls, DMs) only when the founder asks the system to build it for that project; identity, disclosure, per-cell meters and "bulk never" apply when it is on. Replies and inbound conversations are unaffected | Founder: no agent outreach by default | D8 |
+| DR-88 | **Judge disagreement → structured reconciliation, then the founder.** Premise-by-premise facts table; each judge challenges the other's reasoning with evidence; ≤2 rounds (parameter); a shared-understanding record; still split → a Decide packet. Not free-form debate (R0-A: debate ≈ voting at equal compute). Replaces the paid adjudicator pool | Founder's D10 answer; R0-A | D10 |
+
 
 
 ## 7. Numeric targets (TARGETS, not facts)
@@ -563,7 +572,7 @@ three definitions, all required, because each alone can be gamed: **value**, **o
 
 **First-90-day leading indicators (targets):** 100 probes with ≥3 graduations; Deterministic Share ≥20% in two task
 classes; one Trigger-Armed Option registered per week; one customer wish shipped in <24 h; founder decision minutes flat
-as ventures are added; one venture from Fleet Import running at A2; the first cross-family Referee FAIL caught before a
+as ventures are added; the first autonomous venture, beeond (new version) (D5), running at A2; the first cross-family Referee FAIL caught before a
 customer saw it (SLICE did this once on day zero).
 
 **Per-venture parameters (initial, tunable):** venture genesis ≈8 min (capacity measured, not priced) with 3 founder confirmations (S08);
@@ -597,25 +606,27 @@ Writers own their topic fully and **link** for everything else. "Not here" lists
 | **16-EXTERNAL-WORLD-HUMANS** | Effect Gateway and Front Desk behaviour, mandates, Offer objects, claims standard, identity and disclosure, brand cells, kill levels, Obligation Keeper, legal body (entities, Books, contracts, tax), Rooms, Human Task Market, Guild, counterparty agents, Atoms Gateway, Acquisition Desk and Capital Desk mechanics, relationship repair | Venture strategy (17) |
 | **17-VIBE-STARTUPING-IN-PRACTICE** | Genesis, Fleet Import, Stage Clock and Vital Signs, the seven operating loops, venture tiers and fleets, Probe Swarm, Replication Engine, Wish-to-Ship, Fork Fleet, Keystones, Frontier Program, inter-venture economy, exits and OpCo Packs, Pivot Court, a founder's day and week | Mechanism internals |
 
-## 9. Founder decisions (D1–D10, aligned with 15)
+## 9. Founder decisions (D1–D10) — DECIDED 2026-09-30
 
-Final wording, options and deadlines live in [15 §8](15-RISKS-AND-DECISIONS.md). The canon's draft F1–F10 map one-to-one
-onto D1–D10. Milestones M0–M5 are 15's build-milestone deadlines (targets).
+All ten were decided by the founder on 2026-09-30 (`_process/FOUNDER-ANSWERS-2026-09-30.md`); analysis, options and the
+consequences of each answer live in [15 §8](15-RISKS-AND-DECISIONS.md). The canon's draft F1–F10 map one-to-one onto
+D1–D10. Milestones M0–M5 are 15's build-milestone deadlines (targets). Where an answer changed a mechanism, its DR is named.
 
-| # | Decision | Recommendation | Deadline |
+| # | Decision | Decided | Deadline |
 |---|---|---|---|
-| D1 | Standing launch permission for the Kernel's dispatcher | Yes: launcher-only, binaries pinned by digest, argv templates, forbidden flags, per-launch tool lease with forbidden list, isolation ≥ I2 if headless, budget cap, fenced lease; 12 concurrent / 120 per hour (parameters); a Receipt per launch | M0 |
-| D2 | Model capacity: seats to start with, and the terms risk | Subscriptions only is decided (DR-61). He still decides: how many seats/accounts per family to start (illustration: one Claude Max + one ChatGPT plan, a second of either when the meter shows capacity binding), and whether he accepts the terms risk (15 V25) with its mitigations — terms watch, work spread across accounts, the founder-enabled API fallback | M1 |
-| D3 | Hosts, third failure domain, residual host risk | Dedicated always-on Mac (Kernel) + small cloud host (Front Desk, effectors) + third-domain fencing and anchors (DR-62); alternate host drilled quarterly; Kernel-host admin compromise acknowledged, mitigated per 09a | M2 |
-| D4 | Founder minute supply and reach | 45 min weekdays / 10 weekends + 30-min board; windows 08:00 and 17:00; Ring for Halt and for Decide above $200/h cost of delay, ≤2 calls/day; wrist only for two-way doors <$50 with 1-h held undo, never offers, outbound or publishing | M2 |
-| D5 | First autonomous ventures | Two: an imported live-revenue venture A2 → A3 and a new agency at A2; A4 only by Promotion Case after ≥8 weeks at A3; he names them | M0 / M2 |
-| D6 | Deputy and Continuity Will | A named human Deputy who accepts a scoped grant and passes a drill (a professional Deputy acceptable), plus an alternate; per-venture Will; required before any A3+ venture with live customers | M3 / M4 |
-| D7 | Legal holding structure and insurance | Holding entity + DBAs pre-revenue; own entity on 16's triggers; lawyer and accountant confirm; broker opinion per entity before its first A3 money mandate; until then commitment mandates capped at the Repair Budget | M3 |
-| D8 | Who sells; outbound rules | First 10 sales calls per Flagship are his; 1:1 disclosed cold outreach ≤30/day/cell, US and consenting B2B, under an A2+ mandate; EU/IL per-batch approval; bulk cold email never | M2 |
-| D9 | Acquisition Desk, Capital Desk, Guild | Approve as destination capabilities; fund legal review (incl. contractor classification) in Year 1; he signs the first acquisition and first Guild contracts | M5 |
-| D10 | A third acceptance route | Paid human adjudicator pool (3, ≤5% of acceptance spend) now; Model Foundry spike (parity within 2 points at ≤25% cost, or a null) | M3 / M5 |
+| D1 | Standing launch permission for the Kernel's dispatcher | **Yes** (as recommended): launcher-only, binaries pinned by digest, argv templates, forbidden flags, per-launch tool lease, isolation ≥ I2 if headless, budget cap, fenced lease; 12 concurrent / 120 per hour (parameters); a Receipt per launch (DR-53) | M0 |
+| D2 | Model capacity and the terms risk | **1 Claude + 1 Codex seat** to start; add seats when the capacity meter shows the bottleneck; terms risk (15 V25) accepted with DR-61's mitigations | M1 |
+| D3 | Hosts | **Agents run on the founder's Mac on his logins** (headless included); vendor clouds (Claude cloud sessions/routines, Codex cloud) allowed on the subscription; his login on a rented VPS/CI avoided by default; web UI, DB, queue, scheduler, webhooks, notification relay in the cloud — the cloud enqueues, the Mac pulls; third-domain fencing kept (**DR-86**) | M2 |
+| D4 | Founder minute supply and reach | Channels: **Mac, Mission Control web, Claude/Codex app push, calls only if free** → 08's stack (Mac notifications, MC web inbox, Remote Control push + ntfy free, **Pushover emergency** as Ring, call optional). No minute figure: 45/10 + 30-min board stay **parameters** | M2 |
+| D5 | First autonomous venture | **One new venture: "beeond (new version)"**; details pending from the founder (no business model assumed) | M0 / M2 |
+| D6 | Continuity | **No human Deputy — pause everything.** After silence, autonomous ventures freeze in their safe state and keep only existing customer obligations (**DR-85**, amends DR-34) | M3 / M4 |
+| D7 | Legal structure, insurance, jurisdiction | **Sole business under the founder first; a company per venture later**; accountant/lawyer before the first autonomous money movement. **Jurisdiction: Israel** — Israeli Privacy Protection Law + 2024 Amendment 13 (lawyer to confirm); GDPR only for EU customers; health data out of scope until a venture needs it. Client data on subscriptions with training off; business/API terms only if a contract or health data requires it | M3 |
+| D8 | Selling and outbound | **No agent outreach by default**; built per project when the founder asks; disclosure rules apply when on (**DR-87**) | M2 |
+| D9 | Acquisition Desk, Capital Desk, Guild | **Approve the design** (as recommended); he signs each first deal of each kind | M5 |
+| D10 | Claude vs Codex judge disagreement | **Structured reconciliation, then the founder** — facts table, evidence-backed cross-challenge, bounded rounds, shared-understanding record (**DR-88**) | M3 / M5 |
 
-Not founder decisions (mechanism changes inside Allocation's or an owner's envelope): DR-56 to DR-82.
+Not founder decisions (mechanism changes inside Allocation's or an owner's envelope): DR-56 to DR-84. DR-85 to DR-88
+record mechanisms his 2026-09-30 answers changed.
 
 ## 10. Rules for section writers
 

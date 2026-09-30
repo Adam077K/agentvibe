@@ -74,3 +74,16 @@ The founder asked the AI to see further. These are required sections, not option
    bottleneck, say what another seat would add. Provider terms on automated use of consumer plans are a **flagged risk** (15).
 2. **Prefer free tools and free tiers; buy when really needed.** Never serve a paying customer from a non-commercial free plan.
 3. **Keep economics proportionate** — correct it, do not make it a main theme.
+
+## Founder answers 2026-09-30 (binding; closes 15 §8 D1–D10 — full record `_process/FOUNDER-ANSWERS-2026-09-30.md`)
+- **D1** Standing launch permission: yes — dispatcher-only, pinned commands, every launch receipted.
+- **D2** Seats: 1 Claude + 1 Codex; add seats when the capacity meter shows the bottleneck.
+- **D3** Hosts: agents run on his Mac on his logins (vendor clouds also allowed); everything else may run in the cloud (DR-86).
+- **D4** Reach: his Mac, the Mission Control website, Claude/Codex app push, calls only if free (08's stack); minutes stay default.
+- **D5** First autonomous venture: **beeond (new version)** — details to follow from the founder.
+- **D6** Continuity: nobody acts for him; after silence autonomous ventures freeze and keep existing promises only (DR-85).
+- **D7** Legal: sole business first, a company per venture later; accountant/lawyer before the first autonomous money move.
+- **Jurisdiction** Israel (Privacy Protection Law + Amendment 13, lawyer to confirm; GDPR only for EU customers).
+- **Client data**: subscriptions with training off; business/API terms only if a contract or health data requires it.
+- **D8** No agent outreach by default; built per project when he asks (DR-87). **D9** Approve; he signs each first deal.
+- **D10** Judge splits: structured reconciliation (facts table, evidence-backed cross-challenge), then him (DR-88).

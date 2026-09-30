@@ -109,7 +109,7 @@ flowchart TB
     CH[Charters · A0–A4 · grants · modes]
     NL[Never-list · decision rights]
     PR[Precedence · ceilings · release authority]
-    CW[Continuity Will · Deputies]
+    CW[Continuity Will · freeze, no Deputy]
   end
   subgraph INT[INTENT — Want]
     VM[Venture Minds<br/>theses · goal trees · wagers · Standing Orders]
@@ -206,11 +206,11 @@ grows its scarce input · failure modes and defences · health metrics.** Mechan
   (action, target, amount, audience, policy version, nonce, expiry — red team X08). Drafting may be done by any session;
   signing may not.
 - **Stores.** `constitution/` — versioned, signed files: charters per venture and per fleet, `rights.yml` (the 22-row
-  decision-rights matrix), the never-list, precedence, set-point ceilings, the Continuity Will, deputies, the release
+  decision-rights matrix), the never-list, precedence, set-point ceilings, the Continuity Will (no deputies, D6), the release
   authority for the protected computing base.
-- **Powers.** Define and amend every right and limit; name deputies (who must accept and drill); approve releases of the
+- **Powers.** Define and amend every right and limit; sign each venture's Continuity Will (freeze and keep obligations; DR-85); approve releases of the
   protected computing base; sign Standing Order promotions and trust-rung promotions.
-- **Forbidden.** Nothing writes it except the founder. Continuity tiers and deputies may only **narrow** it. It never
+- **Forbidden.** Nothing writes it except the founder. Continuity tiers may only **narrow** it. It never
   funds, starts, executes or accepts. Automatic narrowing is a Journal overlay, never an edit of signed files [DR-58].
 - **Widening waits.** A signed widening activates only after a 12-hour cooling-off, so a stolen passkey cannot widen
   instantly. Two exceptions: a Genesis Charter at A0–A2 within default caps, and draws on a pre-signed emergency-capacity
@@ -419,7 +419,7 @@ nobody but the founder writes the Constitution; nothing can widen through Regula
 
 | Disagreement | Resolution path | Reaches founder only if |
 |---|---|---|
-| Two judges of different families disagree materially | Adjudication by a third route (Model Foundry family when qualified, else paid human adjudicator); verdict stands | The action is a one-way door and adjudication is unavailable before its deadline |
+| Two judges of different families disagree materially | Structured reconciliation (facts table, evidence-backed cross-challenge, bounded rounds), then the founder if still split (D10, DR-88); verdict stands | The action is a one-way door and adjudication is unavailable before its deadline |
 | Co-founder disagrees with founder | A wager, settled later by Acceptance; the founder's call stands now | Always visible in the board pack (class Know), never blocking |
 | Intent wants to start; Allocation won't fund | Allocation's decision stands; Intent may re-bid next cycle with new evidence | The venture's founder quota lets Intent spend minutes on a Decide packet |
 | Obligation vs freeze | P2 still wins. The freeze's safe state lists continuity routes; an obligation proceeds only along a listed route; otherwise it stays pending and its latest safe start opens a continuity decision [DR-56, R5-walk C2] | No funded fallback exists and the latest safe decision time is near |
@@ -439,7 +439,7 @@ nobody but the founder writes the Constitution; nothing can widen through Regula
 | Weekly | Board meeting per Flagship; fleet review; Progress Ledger settlement; scorecard incl. "weeks with no demonstrated improvement" | Intent, Acceptance, Regulation |
 | Every 2–5 weeks, random | Forced leave for Series ventures | Execution, Regulation |
 | On model release | Model-Release Reflex: requalify configurations and capabilities | Custody, Acceptance |
-| Quarterly | Season Review (blind re-decisions), alternate-host drill, deputy drill, Constitution model-check | Constitution, Regulation |
+| Quarterly | Season Review (blind re-decisions), alternate-host drill, continuity-freeze drill, Constitution model-check | Constitution, Regulation |
 
 ### 5.4 Handoffs between authorities (all are Journal events)
 
@@ -595,7 +595,7 @@ answers the top ten (full register and tests in `15-RISKS-AND-DECISIONS.md`):
 | 7 | Eight authorities disagree | The Decision Contract with precedence, owner, remedy, expiry | Constitution (compiler) |
 | 8 | Admitted capability changes behaviour | Digest-pinned executables and endpoints; egress enforced independent of advertised verb; composed-Loadout trials | Custody |
 | 9 | Selection manufactures improvement | Preregistered experiment families; selection-aware statistics; sealed confirmation; prospective rollout | Acceptance |
-| 10 | Founder absence leaves nobody able to act | Deadline-driven continuity; drilled deputies; pre-authorised refund/notify/preserve duties | Constitution + Custody |
+| 10 | Founder absence leaves nobody able to act | Deadline-driven continuity; a drilled continuity freeze (no Deputy, D6); pre-authorised refund/notify/preserve duties | Constitution + Custody |
 
 **The complexity budget.** The red team's C06 warns the control system can become a full-time bureaucracy for one
 founder. Three mechanisms keep it honest, and each is measured weekly: the **governance budget** per door type, **serial

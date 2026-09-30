@@ -763,21 +763,27 @@ source. Model ids are those the adapters resolve today (`claude-opus-5`, `claude
 
 ## Scenario 8 — An autonomous business runs a week without the founder
 
+> **Hypothetical under the founder's 2026-09-30 answers.** This scenario assumes a venture for which the founder has
+> *asked the system to build outbound contact* (DR-87 — off by default) and has brought health data into scope with the
+> required contract (out of scope until a venture needs it; jurisdiction Israel, lawyer to confirm — 15 §8). Read it as
+> how the mechanisms behave once both are switched on, not as the default posture.
+
 **Situation.** Clinic Voice (AI receptionist agency for appointment-based clinics; Flagship; $5.4k MRR, 31 clinics) has
 held A3 for nine weeks. Its Promotion Case to A4 was signed last month: Closer Ratio 0.52, trust cells 100% on the unlocked
-families, twin replay plus a prospective check, a Deputy accepted and drilled ([05 §3.7](05-AUTONOMY-INITIATIVE-FOUNDER.md)).
+families, twin replay plus a prospective check, a continuity freeze drilled ([05 §3.7](05-AUTONOMY-INITIATIVE-FOUNDER.md); no
+Deputy, D6).
 It runs in **Series** mode (episodes, forced leave, 90-day renewal). The founder leaves for a seven-day conference abroad,
 with one 16-hour flight in the middle.
 
 **Charter in force.** `clinic-voice.yml@v11`: A4 · Series · principal mode Proxy · grants: build R2, publish R3,
 spend $500/week (per-effect $150), refunds ≤$99/customer, contract = three pre-listed terms, contact = full under the
 Outbound Claims Standard, people = tasks ≤$150 · pre-listed one-way doors `[raise-price-le-20pct, sunset-feature-30d]` ·
-`scram_safe_state: {booking: sms_manual_confirm, outbound: paused, deploys: frozen}` · founder_minutes_week 30 · Deputy
-`deputy_1` (drilled 2026-09-12).
+`scram_safe_state: {booking: sms_manual_confirm, outbound: paused, deploys: frozen}` · founder_minutes_week 30 ·
+continuity `pause_and_keep` (freeze drilled 2026-09-12).
 
 | Time | What happens | Authority | Agents (title · family · model) | Skills loaded | Cost so far |
 |---|---|---|---|---|---|
-| Sun 20:00 | Founder sets `travel` (7 d). Kernel runs the pre-absence check: 3 obligations fall due in the week, all have latest safe starts and funded routes; Deputy drill current; CCIR v5 live | Know, Brake | Kernel only | — | $0 |
+| Sun 20:00 | Founder sets `travel` (7 d). Kernel runs the pre-absence check: 3 obligations fall due in the week, all have latest safe starts and funded routes; freeze drill current; CCIR v5 live | Know, Brake | Kernel only | — | $0 |
 | Sun 20:04 | Pre-absence sweep ([05 §10](05-AUTONOMY-INITIATIVE-FOUNDER.md), G-B5): the Exchange clears 3 packets early rather than let them age through `travel`. His passkey on these is the week's first **presence proof** (Sun 20:04) | Fund | — | — | $0 |
 | Mon 00:00 | **Forced leave** (Series, 48 h, Mon 00:00 → Wed 00:00 [R5-walk B39]): a fresh config — Showrunner · Codex · `gpt-6-astra` — takes over, loading only processor, calendar, support inbox and the Brain; the outgoing Claude Showrunner is on read-back only | Do | Showrunner · Codex | `email-systems`, `stripe-integration` | $9 |
 | Mon 08:30 | Weekly board runs **async** (Founder State travel; [05 §8](05-AUTONOMY-INITIATIVE-FOUNDER.md), G-B7): pack delivered to the Reel, voice optional | Want | AI co-founder, Clinic Voice · Claude · `claude-opus-5`; Shadow seat · Codex · `gpt-6-astra` | — | $14 |
@@ -840,7 +846,8 @@ Nothing was sent in your name.
 - *A spoofed "founder" call from abroad approves the BAA* → voice proposes, passkey disposes (DR-35); line 3 of the
   never-list is untouched by any tier.
 - *The Mind uses the week to widen its own reach* → charter edits are line 1 of the never-list; the Kernel store refuses.
-- *He never lands* → `offline_planned` expiry + 24 h resumes the tiers: Reach → Caretaker (A4 acts as A3) → Deputy.
+- *He never lands* → `offline_planned` expiry + 24 h resumes the tiers: Reach → Caretaker (A4 acts as A3) → continuity freeze: the safe state holds and only the
+  obligations' listed routes run; nobody acts for him (D6, DR-85).
 - *A discount is booked at its first month's value and slips under the grant* → concession exposure is the full
   commitment, checked against the grants before the offer is sent (DR-80).
 

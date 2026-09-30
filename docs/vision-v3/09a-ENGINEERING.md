@@ -38,8 +38,9 @@ train, hosts and external fencing, the data policy, observability, the substrate
     an R2+ effect (DR-40, [R3-red X01]).
 11. **The organisation builds itself on a release train it cannot use to promote its own judges** — the protected
     computing base is transitive and changes only through the release authority (DR-06, [R3-red C03]).
-12. **Two failure domains and a third referee:** Kernel on a dedicated always-on Mac, Front Desk and outbound effectors
-    on a small cloud host, the gateway epoch and Journal anchors in a third place neither can overwrite (DR-09).
+12. **Two failure domains and a third referee:** Kernel and agents on the founder's Mac (his logins; vendor clouds for
+    overflow), Front Desk, outbound effectors, web UI, queue and notification relay in the cloud with no subscription
+    credential (D3, DR-86), the gateway epoch and Journal anchors in a third place neither can overwrite (DR-09).
 
 ---
 
@@ -574,7 +575,11 @@ complete leaves the repo unreadable by any model — incomplete is never clean.
 **11.9 Synthetic data.** Canaries and twin records carry `origin: synthetic, exportable: false` (§12), enforced
 below semantics by the gateway and exporters; twin credentials lack production capability (DR-50, [R3-red H06]).
 
-**11.10 Jurisdiction.** Every target carries jurisdiction; unknown raises blast radius.
+**11.10 Jurisdiction.** Every target carries jurisdiction; unknown raises blast radius. The founder's home jurisdiction
+is **Israel** (2026-09-30): the Israeli Privacy Protection Law and its 2024 Amendment 13 are the default data regime
+(*to be confirmed by a lawyer*); GDPR applies only to EU customers; health data is out of scope until a venture needs it.
+**Client data route** (founder, 2026-09-30): client data runs on the subscriptions with training off; a venture is
+upgraded to business/API terms only when a contract or health data requires it (`needsProcessorTerms`, §10).
 
 ## 12. Labels — the mechanics
 
@@ -686,18 +691,42 @@ copy; a release whose rollback cannot restore state is refused.
 
 ## 15. Hosts, external fencing and the kill path
 
+### 15.1 Where each component runs (founder decision D3, 2026-09-30; DR-86)
+
+The founder decided that the **agents run on his Mac and everything else may run in the cloud**, and asked for research
+(`_process/R7-RESEARCH-hosting-and-reach.md`, sources accessed 2026-09-30). The research corrects the belief slightly: no
+document ties a Pro/Max login to one machine. The binding rule is **"the credential stays with him and the vendor's own
+clients, and only he uses it"**. The Mac is the cleanest place to satisfy it; the vendors' own clouds satisfy it too. *A
+reading of published terms, not legal advice.*
+
+| Component | Runs on | Why (source) |
+|---|---|---|
+| Claude Code and Codex CLI sessions on his subscriptions — interactive, headless (`claude -p`, `codex exec`), parallel worktrees; the Kernel, launcher and inference proxy that hold those credentials | **The founder's Mac, on his own logins** (default) | "Ordinary, individual usage" through first-party clients ([Claude Code legal and compliance](https://code.claude.com/docs/en/legal-and-compliance)); `claude -p` and the Agent SDK still draw on the subscription ([support 15036540](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan)); keychain credentials never leave the machine; Remote Control assumes it ([remote-control](https://code.claude.com/docs/en/remote-control)) |
+| Overflow and "laptop closed" agent work | **Vendor clouds, on the subscription:** Claude cloud sessions and routines; Codex cloud tasks | First-party and documented: cloud sessions "always use your subscription credentials" with no separate compute charge ([claude-code-on-the-web](https://code.claude.com/docs/en/claude-code-on-the-web), [authentication](https://code.claude.com/docs/en/authentication)); routines draw on the subscription, ≥1-hour interval, research preview ([routines](https://code.claude.com/docs/en/routines)). Cost: shared rate limits, metered like any other seat use (DR-61) |
+| The same agents on a **rented VPS or CI runner with his login** (`CLAUDE_CODE_OAUTH_TOKEN`, a copied `~/.codex/auth.json`) | **Avoided by default — grey zone** | Mechanically documented (`claude setup-token` "for CI pipelines, scripts"; Codex ChatGPT-login CI only on "trusted private infrastructure", one serialized stream per `auth.json`, never a public repo: [ci-cd-auth](https://learn.chatgpt.com/docs/auth/ci-cd-auth)) but not endorsed for a personal plan at fleet scale; no official statement on a self-rented VPS [UNVERIFIED]. If ever enabled (founder only): one private machine he controls, one stream per credential, never shared |
+| Mission Control web UI, database, job queue and scheduler, webhooks, notification relay (ntfy, Pushover, optional call escalation), Front Desk and outbound effectors | **The cloud** | They hold **no subscription credential**, so the subscription terms are not engaged. A Claude routine's `/fire` token is a routine-scoped trigger, not a login, so a cloud scheduler may hold it |
+| Anything that relays other people's requests through his subscription | **Nowhere** | Banned by both vendors ([legal-and-compliance](https://code.claude.com/docs/en/legal-and-compliance); OpenAI Terms of Use) |
+
+**The pull rule.** The cloud side only **enqueues**. The Mac **pulls** work by outbound polling (the pattern Remote
+Control uses), runs the agent locally and posts results back. No inbound connection to the Mac is needed, and no cloud
+component ever holds a subscription credential. This keeps DR-09's split (Kernel local, effectors remote) and DR-62's
+third domain; it replaces "a dedicated always-on Mac" as a *requirement* with "the founder's Mac", and a second
+always-on Mac stays an option when uptime needs it (laptop sleep pauses local work; overflow goes to vendor clouds).
+
 ```mermaid
 flowchart LR
-  subgraph MAC[Kernel host — dedicated always-on Mac · UPS · wired · no sleep]
+  subgraph MAC[Kernel host — the founder's Mac, his logins · agents run here · pulls work]
     K[avk Kernel + Journal] --- WD[Watchdog]
     K --- PX[Inference proxy]
     K --- VM[I2 users · I3 VMs]
     K --- OB[Observation broker]
   end
-  subgraph CLOUD[Effector host — small cloud VM]
+  subgraph CLOUD[Cloud — no subscription credential]
     GW[Effect Gateway + outbound effectors]
     FD[Front Desk]
+    MCW[Mission Control web · DB · queue · scheduler · notification relay]
   end
+  MCW -. enqueue; the Mac pulls .-> K
   subgraph THIRD[Third failure domain]
     FA[(Fencing authority · gateway epoch · CAS)]
     AN[(Anchor store · object-locked)]
@@ -787,8 +816,8 @@ cleared, tokens → 7703; the effector host still holds the epoch and reconciles
 **Supplier payment times out while the founder travels** [R3-red Scenario C]. `op_pay` (`keel ‖ payment.pay ‖
 supplier_44 ‖ invoice_8812`) loses its response and the Kernel crashes. A replacement **Accounts Payable Operator**
 (Codex) re-proposes and receives the **same** Operation, `uncertain`, cash still reserved; the broker reads the bank
-ledger after the visibility lag — paid, settled once. Without proof before the deadline, the Deputy gets a bounded
-reconciliation task, never a retry button.
+ledger after the visibility lag — paid, settled once. Without proof before the deadline, the Operation stays `uncertain`, the supplier obligation's continuity route
+(notify of delay) runs, and the founder gets a bounded reconciliation task on return — never a retry button (no Deputy, D6).
 
 **Every failure in this topic, with its design answer and test** (the full register is [15](15-RISKS-AND-DECISIONS.md)'s):
 
@@ -837,6 +866,10 @@ reconciliation task, never a retry button.
   https://code.claude.com/docs/en/legal-and-compliance · https://support.claude.com/en/articles/15036540 ·
   https://learn.chatgpt.com/docs/auth · https://developers.openai.com/api/docs/guides/your-data ·
   https://platform.claude.com/docs/en/manage-claude/api-and-data-retention
+- Hosting (§15.1), researched 2026-09-30 in `_process/R7-RESEARCH-hosting-and-reach.md`:
+  https://code.claude.com/docs/en/authentication · https://code.claude.com/docs/en/claude-code-on-the-web ·
+  https://code.claude.com/docs/en/routines · https://code.claude.com/docs/en/remote-control ·
+  https://learn.chatgpt.com/docs/auth/ci-cd-auth · https://learn.chatgpt.com/docs/remote-connections
 - CaMeL https://arxiv.org/abs/2503.18813 · Kleppmann, fencing tokens
   https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html · https://litestream.io ·
   https://github.com/apple/container

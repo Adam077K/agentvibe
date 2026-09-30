@@ -504,7 +504,9 @@ flowchart LR
   JE2[Fresh Codex judge] -->|end-to-end| I
   JE1 & JE2 --> M{material disagreement?}
   M -->|no| V[Parsed verdict → card]
-  M -->|yes| T[Third route: Foundry judge or human adjudicator] --> V
+  M -->|yes| R[Structured reconciliation<br/>facts table · cross-challenge · ≤2 rounds] --> S{shared understanding?}
+  S -->|yes| V
+  S -->|no| F[Founder decides · Decide packet] --> V
 ```
 
 **Rules.** (1) Each component gets an opposite-family judge. (2) Mixed authorship gets independent end-to-end judgments
@@ -514,12 +516,38 @@ first; no judge overrules a failed deterministic check. The Referee's first act 
 claim with no judgment spent (DR-73). (4) **Acknowledged defect closes without adjudication** (DR-71): when the producer
 accepts a FAIL's defect and reworks, the old candidate **stays FAIL**, the rework is a new candidate judged afresh, and no
 third route is needed. Adjudication is required only to **accept a candidate over an unrefuted FAIL** — a PASS/FAIL flip,
-or a defect one judge raises and the other cannot refute with evidence — and goes to a **third route**: a Model Foundry
-judge once qualified, meanwhile a paid human pool (F10). **Independence is judged per component and lineage**, not by
+or a defect one judge raises and the other cannot refute with evidence — and goes to **structured reconciliation**,
+then the founder (D10, below). **Independence is judged per component and lineage**, not by
 family name: a judge sharing a component's model version, prompt lineage or fine-tune ancestry with its producer is not
 independent of it, whatever its family label (qualification key, canon §5). (5) The producing lineage never picks, shops
 for or retries its reviewer; judges see no builder identity, preferred verdict or self-assessment. (6) FAIL offers
 re-queue with reasons; **Done and passed are separate facts** (DR-13).
+
+**When the Claude and Codex judges disagree — structured reconciliation** (founder decision D10, 2026-09-30; DR-88).
+The founder chose *himself, or a reconciliation in which the two challenge each other's reasoning and reach a shared
+understanding through well-organised facts and argument*. It is **structured, not free-form debate**, because R0-A's
+evidence is that multi-agent debate does not beat independent sampling plus voting at matched compute — voting explains
+most of the gain ([arXiv 2502.08788](https://arxiv.org/abs/2502.08788), via `r0-outward/R0-A-agent-platforms.md`).
+Debate earns its cost only by surfacing objections, so the procedure spends it there:
+
+1. **Facts table, premise by premise.** Each judge decomposes its verdict into the premises it rests on (claim, evidence
+   pointer, deterministic check if one exists). The two lists are aligned into one table with a column per judge:
+   *agree · disagree · not addressed*. Deterministic checks and fetched sources settle any premise they can before a model
+   argues about it.
+2. **Cross-challenge with evidence.** For each disputed premise, each judge must challenge the **other's** reasoning with
+   evidence (a quote, a test, an observation), and answer the challenge against its own. An assertion without evidence
+   does not count as a move.
+3. **Bounded rounds.** At most 2 rounds (parameter), charged to the acceptance reserve; judges stay blind to builder
+   identity and preferred verdict (rule 5).
+4. **Shared-understanding record.** The output is the updated table: premises now agreed, the verdict each judge holds,
+   and any premise still split with both sides' best evidence. If both verdicts now agree, that parsed verdict moves the
+   card; the record is journalled as evidence.
+5. **Still split → the founder**, as a Decide packet carrying the one-page record (the split premise first), priced by
+   the Exchange like any other packet. Silence never accepts a candidate over an unrefuted FAIL (05 §9.4).
+
+The disagreement and reconciliation rates are measured per task class; a class that often reaches step 5 is a Verifier
+Foundry target. A qualified Model Foundry judge (07) may later join as a third voice; no paid human adjudicator pool is
+planned.
 
 **What gates publication** [DR-70, R5-walk B07, B09, B38]. Workers may integrate on a staging branch before any verdict.
 **Publication** — a CAS land to main, a deploy, or any outbound effect — waits for every edge the contract lists under
@@ -1152,9 +1180,9 @@ Ranks are the red team's P × S [R3-red §1]; tests are its Q-suites plus this f
 2. **How many seats to start with?** §4's seat count and incident reserve are illustrations. *Recommendation:* start
    with one seat per family, read the meter for four weeks, and buy a seat only on the meter's case (D2 in
    [15](15-RISKS-AND-DECISIONS.md)).
-3. **How big is the third acceptance route before the Model Foundry qualifies?** *Recommendation:* three paid domain
-   adjudicators on per-item terms via the Human Task Market ([16](16-EXTERNAL-WORLD-HUMANS.md)), capped at 5% of acceptance
-   spend, resized from the measured material-disagreement rate after the first 200 coverage contracts.
+3. ~~**How big is the third acceptance route before the Model Foundry qualifies?** *Recommendation:* three paid domain
+   adjudicators…~~ **Decided (D10, 2026-09-30):** structured reconciliation, then the founder (§ above, DR-88). Open
+   only as a measurement: the rate of splits reaching the founder, reviewed after the first 200 coverage contracts.
 
 ## Sources
 

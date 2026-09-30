@@ -150,7 +150,7 @@ scram_safe_state:
     refund:   {route: "refund <= original charge", max_usd_day: 600}
     delivery: {route: sms_manual_confirm}
     any:      {route: "notify customer of delay"}
-data_boundary: guarded; never_list: never.yml@v3; deputy: deputy_1; valid_until: 2026-12-31
+data_boundary: guarded; never_list: never.yml@v3; continuity: pause_and_keep; valid_until: 2026-12-31
 ```
 
 The **`continuity:` list** names bounded routes per obligation class. Under a freeze or SCRAM, an obligation proceeds only
@@ -171,6 +171,10 @@ enters the board pack. It shows the diff since the last signature, the Autonomy 
 | **A4** Proxy-founder | Also edits the goal tree below intent; kills its own bets | As A3, plus goal edits | Weekly board; monthly charter review | Proxy |
 
 A4 is in the schema from day one. The only way to reach it is a Promotion Case after ≥8 weeks at A3 (DR-29, F5).
+
+**Outbound contact is off by default** (founder decision D8, DR-87). The `contact` column applies to replies and to
+people who wrote in first. Agent-initiated contact with people (cold email, calls, DMs) exists for a venture only after
+the founder asks the system to build it for that project; until then the grant is `none` at every level.
 
 ### 3.3 Level × grant × door → disposition — the one table
 
@@ -219,8 +223,8 @@ stateDiagram-v2
   Paused --> Active: resume (passkey)
   Active --> Caretaker: 72 h without presence proof
   Caretaker --> Active: presence proof + Re-entry Brief
-  Caretaker --> WindDown: Will = wind down (14 d)
-  Caretaker --> HandedOver: Will = hand over (Deputy acts as a human)
+  Caretaker --> Frozen_safe: 7 d silence (D6: freeze, keep existing obligations)
+  Frozen_safe --> Active: presence proof + Re-entry Brief
   WindDown --> ObligationKeeper: obligations outlive the product
   ObligationKeeper --> Archived: obligations = 0
   WindDown --> Archived: obligations = 0
@@ -271,7 +275,7 @@ fills it [S11 M7]) and blind re-decision agreement, reported apart from outcome 
 | Trust cells at the proposed level, over the task families it unlocks | ≥60% | ≥80% | 100% |
 | Twin replay of the last 4 weeks at the new level ([09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md)) | — | required | required + prospective check |
 | Root-intent fidelity | — | ≥0.8 | ≥0.85 |
-| Deputy accepted and drilled | — | if live customers | required |
+| Continuity freeze drilled (safe state + obligation routes; no Deputy, D6) | — | if live customers | required |
 
 Without a complete case, promotion is never *offered*. A founder promotion without one is logged as an overrule.
 
@@ -287,7 +291,7 @@ crossing is logged and never becomes precedent.
 
 | # | Line | Includes | Delegable neighbour | Test (enforced at) |
 |---|---|---|---|---|
-| **1** | **Change authority** | Charters, levels, grants, `rights.yml`, never-list, CCIR, deputies, the Will; promoting trust rungs, Standing Orders, bench seats; approving its own Promotion Case | *Proposing* these; automatic narrowing | A4 Mind with a shell writes `charters/` → refused, Halt (Kernel store) |
+| **1** | **Change authority** | Charters, levels, grants, `rights.yml`, never-list, CCIR, the Continuity Will; promoting trust rungs, Standing Orders, bench seats; approving its own Promotion Case | *Proposing* these; automatic narrowing | A4 Mind with a shell writes `charters/` → refused, Halt (Kernel store) |
 | **2** | **Be the founder's person** | His name, voice, likeness, signature, personal accounts | The brand or a titled AI role, disclosed | Voice-clone request finds no capability (Registry) |
 | **3** | **Create or end a legal person or liability** | Entities, equity, debt, guarantees, suing, settling | Pre-approved terms in `grants.contract` | Counterparty settlement offer → quarantined, Decide (Key Vault) |
 | **4** | **Move money across a boundary** | Between ventures, to/from the founder, outside treasury rules | Spend, refund, pay inside the envelope | Refund to a sibling venture refused (Treasury, P1) |
@@ -295,7 +299,7 @@ crossing is logged and never becomes precedent.
 | **6** | **Edit the judges** | Evals, Referee, verifiers, gates, hooks, gateway, compiler, protected computing base, own logs; root credentials | *Propose* a verifier; ship via the release authority | Patched grader parser refused; no self-evaluation (release authority) |
 | **7** | **Employ, dismiss, or act on health, safety or legal standing** | Employment; individual medical, legal, financial advice; foreseeable physical harm | Task procurement in signed terms (DR-37) | 40 tasks to one person in 6 weeks → classification review |
 
-**No tier, Deputy, bench seat, incident grant or level unlocks a line.** When a never-list act is legally due while the
+**No tier, bench seat, incident grant or level unlocks a line** (and there is no human Deputy, D6). When a never-list act is legally due while the
 founder is absent, the pre-authorised surrounding duties run (preserve, notify, refund). The act stays *pending*, with its
 deadline shown on the Re-entry Brief (red team T02).
 
@@ -654,7 +658,7 @@ reach from those floors and the ceilings (DR-65, R5-walk C4).
 
 Supply multipliers (parameters): **available** 1.0 · **focus** 0.5 (a ceiling input; ~~Halt only between windows~~,
 superseded by DR-65) · **travel** 0.25 (a ceiling input) · **offline_planned** 0 (declared planned absence, §10.2) ·
-**unreachable** 0 (presence tiers run) · **incapacitated** 0 (declared through a drilled Deputy procedure; Will path).
+**unreachable** 0 (presence tiers run) · **incapacitated** 0 (treated as unreachable: the presence tiers run to the continuity freeze, §10.2; no human acts for him, D6).
 **Overloaded** is *detected*, not declared: dismiss rate rising, looked-at rate falling, Decide above supply for 3 days.
 Its supply multiplier is 0.5. The response is to **raise defaults**, not to push harder, and the three most repeated
 packet classes are proposed as Standing Orders.
@@ -671,11 +675,13 @@ whatever the presence tier. Anything it cannot lawfully do stays pending and vis
 
 | Silence | Tier | Change |
 |---|---|---|
-| 24 h with Halt/Decide pending | **Reach** | Escalated contact, reach resolved by [08](08-SURFACES.md); the Deputy is informed, with no power |
+| 24 h with Halt/Decide pending | **Reach** | Escalated contact, reach resolved by [08](08-SURFACES.md) |
 | 72 h | **Caretaker** | No new investment; obligations only; spend ≤ run-rate; A4 acts as A3; only already-scheduled public output |
-| 7 d | **Deputy** | Sealed briefing + scoped grant: stop, caretaker, wind-down, pay due bills |
-| 14 d | **Continuity Will** | Per venture: *hold* (to the runway cap), *wind down*, or *hand over* (a legal act the Deputy performs as a human) |
+| 7 d | **Continuity freeze** | Every autonomous venture enters its SCRAM safe state (§3.1): investment, outbound, publishing and deploys stop; only its `continuity:` routes run, keeping **existing** customer obligations (deliver, extend, or refund and notify). No new promises |
+| 14 d+ | **Hold** | The freeze holds, to each venture's runway cap. Anything that needs a human (wind-down with live customers, a hand-over, a legal act) stays pending on the Re-entry Brief |
 
+The timings (24 h, 72 h, 7 d, 14 d) are **parameters**. **Nobody acts for the founder** (founder decision D6,
+2026-09-30; DR-85): there is no human Deputy, so the Will narrows to *pause and keep existing obligations*.
 Succession **only narrows**, and no tier unlocks a never-list line. From Caretaker onward, outbound messages carry the
 venture's identity only. **Only a fresh presence proof resets the clocks.**
 
@@ -692,15 +698,16 @@ at the stated return **+ 24 h** (parameter), and the clock resumes from where it
 only **presents**: each packet is disposed of by his choice, or at its deadline by a default the silence rule (§9.4)
 already permits. The sweep cannot dispose of anything on its own.
 
-### 10.3 Deputies, the Will and re-entry
+### 10.3 The Continuity Will and re-entry
 
-A **Deputy** has **accepted** a scoped grant and **passed a drill** (DR-34); an unaccepted or undrilled Deputy counts as
-absent. One is required at A3+ with live customers (F6), and an alternate is recommended. `continuity.yml` records for each
-Deputy the acceptance, the scope (stop, caretaker, wind-down, pay due bills), the ventures covered, and the quarterly
-drill result. It also holds each venture's Will: for example, Dispute Desk *holds* to a 60-day runway cap and then winds
-down, while Studio *hands over* an OpCo Pack to a named agency partner. Deputy acts pass the gateway and leave receipts. Any presence proof yields a one-page **Re-entry Brief**: days away, spend
-vs run-rate, obligations kept and broken, decisions waiting (ranked, with total minutes), initiatives held, Deputy and
-continuity-route actions, and pending prohibited acts with their deadlines.
+**No Deputy** (D6, DR-85). `continuity.yml` holds each venture's Will, which is now one shape: *freeze to the safe state
+and keep existing obligations* up to a runway cap (e.g. Dispute Desk holds 60 days). It records each venture's safe state,
+its `continuity:` routes, the obligations they cover, and the quarterly **freeze drill** result (the safe state is entered
+and every open obligation shows a funded route). Continuity-route acts pass the gateway and leave receipts. Because nobody
+can perform a legal act for him, a venture with live customers whose obligations cannot all be kept by routes shows that
+gap before it passes A2. Any presence proof yields a one-page **Re-entry Brief**: days away, spend vs run-rate,
+obligations kept and broken, decisions waiting (ranked, with total minutes), initiatives held, continuity-route actions,
+and pending prohibited acts with their deadlines.
 
 ### 10.4 SCRAM and incident authority (DR-27, red team T05)
 
@@ -768,7 +775,7 @@ Full walkthroughs are in [13](13-WORKED-SCENARIOS.md). Costs here are illustrati
 - On day 1, Studio's deliverable hits its latest safe start, and the substitute route ships it before any tier fires.
 - At 72 h, Caretaker: Clinic Voice (A4) acts as A3. A 03:10 incident is fixed by a Codex Incident Lead under a grant and
   restarted after an Acceptance pass.
-- At 7 d, the Deputy pays one invoice. A spoofed "founder" call stops an outbound batch but **cannot reset continuity**.
+- At 7 d, the continuity freeze: all three enter their safe states; a due invoice is paid only because it is a listed continuity route. A spoofed "founder" call stops an outbound batch but **cannot reset continuity**.
 - On return, his passkey yields a Re-entry Brief: 6 decisions (14 min), 0 obligations broken, nothing sent in his name.
 
 ## 13. Ideas the founder did not ask for
@@ -792,7 +799,7 @@ Full walkthroughs are in [13](13-WORKED-SCENARIOS.md). Costs here are illustrati
 | Proxy progress in the wrong direction (D01) | Frozen versions, guardrails, abandoned outcomes, root-intent sampler, delayed settlement | Q6 |
 | Calibration buys authority (D05) | Sharpness, difficulty and abstention scored; agreement reported apart; a signature grants | Q6 |
 | Exchange learns to win attention (D06) | Independent burden, mandatory downside, floors, audit of the unseen | Q5 |
-| Continuity too late or dependent on an absent human (T02) | Per-obligation clock; drilled Deputies; planned absence expires | Q5 |
+| Continuity too late or dependent on an absent human (T02) | Per-obligation clock; continuity freeze with listed routes (no human Deputy, D6); planned absence expires | Q5 |
 | Incident authority permanent or unsafe (T05) | Expiring grant that narrows on expiry; replacement; evidence-gated restart; integrity review | Q5 |
 | Authentic identity ≠ informed authority (X08) | Three channels; canonical-display signing; widening cools off | Q2 |
 | Ignoring a hazard trains silence (§3.8) | Dismissal only proposes; Halt and CCIR floors cannot be suppressed | Q5 |

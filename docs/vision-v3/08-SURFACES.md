@@ -69,7 +69,7 @@ owed · what happened · what's unknown · which decision needs me · how do I s
 | **Mission Control — phone** (PWA) | decide, circle, glance, stop | 30 s–5 min | yes | yes (Face ID passkey) | Tap, Reel | first paint <1.5 s on LTE |
 | **Terminal** — Claude Code / Codex CLI, `av` CLI/TUI, MC MCP server | build, inspect, take over a run | hours | yes | via passkey hand-off or hardware key | Shelf | <300 ms per `av` command |
 | **Telegram** | "I want X", status, steer by reply | conversational | yes (Mission Draft) | two-way doors under a money threshold only | Tap | reply <5 s |
-| **Push** (ntfy → Web Push) | deliver Buzz and Tap | glance | no | no (opens the packet) | Buzz | <10 s from event |
+| **Push** (ntfy free · Claude Remote Control push · Mac notifications · Pushover emergency; D4 stack, §2.1) | deliver Ring, Buzz and Tap | glance | no | no (opens the packet) | Ring (Pushover p2) | <10 s from event |
 | **Company Line** (phone, in + out) | hands-free status, steer, start, **stop** | walking, driving | yes | **stop yes; everything else propose-only** | Ring | voice-to-voice p95 <1 s |
 | **Email digest** | weekly board pack, re-entry brief | archival | reply-to-intent | no | Reel | — |
 | **Calendar** (Google, one-way publish + three written kinds) | goals, kill dates, windows, board | planning | drag a slot → schedule | no | Reel | sync <60 s |
@@ -89,7 +89,7 @@ flowchart LR
     W[Wrist · Office Window]:::s
     EM[Email · Calendar]:::s
   end
-  subgraph MAC[Kernel host — dedicated Mac, DR-09]
+  subgraph MAC[Kernel host — founder's Mac, DR-09 as amended by DR-86]
     GW[mc-gateway<br/>static · sessions · WebAuthn verify · route<br/>forwards, never interprets]
     VS[View server<br/>today's mission-control/server<br/>read-only projections]
     RR[Reach Router<br/>deterministic, no model]
@@ -111,6 +111,10 @@ flowchart LR
   V <--> VG -->|voice token, tailnet| GW
   classDef s fill:#1f2937,color:#e5e7eb,stroke:#6b7280
 ```
+
+**Hosting (D3, DR-86).** The agents and the Kernel stay on the founder's Mac. The Mission Control **web** inbox, the
+notification relay (ntfy, Pushover, optional call escalation) and the queue may run in the cloud because they hold no
+subscription credential; the cloud enqueues and the Mac pulls. Topology and sources: [09a](09a-ENGINEERING.md) §15.
 
 **Four architectural rules** (each has a test in §14):
 
@@ -152,15 +156,34 @@ hard a surface reaches and belongs here.
 
 | Reach | Rendering | Channels | May carry |
 |---|---|---|---|
-| **Ring** | an outbound call on the Company Line | phone | Halt unacknowledged ≥5 min; Decide only if cost of delay > the founder's **ring price** |
-| **Buzz** | time-sensitive push; watch 3-tap; Office Window lamp red/amber | ntfy priority 5, watch, lamp | Halt; Decide above the clearing price with deadline <4 h |
-| **Tap** | passive push; Telegram message; watch 1-tap | ntfy default, Telegram, watch | Decide above the clearing price with deadline <24 h; one-way Decide; Know when a CCIR line's floor raises it. ~~Know only by a founder override in Settings~~ (superseded, DR-64 / DR-65) |
+| **Ring** | the night-wake path: a **Pushover emergency-priority** alert (iOS Critical Alert, repeats until acknowledged); a phone call only as the optional fallback below | Pushover p2; optional call | Halt unacknowledged ≥5 min; Decide only if cost of delay > the founder's **ring price** |
+| **Buzz** | time-sensitive push; Mac notification; watch 3-tap; Office Window lamp red/amber | ntfy priority 4–5, Claude Remote Control push, Mac notification, watch, lamp | Halt; Decide above the clearing price with deadline <4 h |
+| **Tap** | passive push; Telegram message; watch 1-tap | ntfy default, Claude Remote Control push, Mac notification, Telegram, watch | Decide above the clearing price with deadline <24 h; one-way Decide; Know when a CCIR line's floor raises it. ~~Know only by a founder override in Settings~~ (superseded, DR-64 / DR-65) |
 | **Reel** | the next decision window: Today, the Dailies Reel, the phone Decide tab, the board pack | MC, PWA, email digest | Decide on default-on-silence, Circle, Know |
 | **Shelf** | pull only: Traces, Live, Updates, Brain, Venture Mind | MC, `av`, voice "why" | Log — and everything else, always |
 
 **Parameters (initial, tunable, set in Settings):** minute supply 45 weekdays / 10 weekends + a 30-minute weekly board;
 two 10-minute decision windows at 08:00 and 17:00 ([00 §9 F4](00-CANON.md)); ring price $200/h cost of delay [S07 §9];
 at most 2 unscheduled Decide calls a day (Halt calls are never capped); Halt Buzz → Ring after 5 minutes unacknowledged.
+The founder gave no minute figure on 2026-09-30, so these stay default **parameters**.
+
+**The founder's reach stack (decision D4, 2026-09-30; sourced in `_process/R7-RESEARCH-hosting-and-reach.md`).** He named
+four channels: his Mac, the Mission Control website, phone calls only if a free way exists, and the push built into the
+Claude and Codex phone apps. The free stack that serves them, in order of reach:
+
+| # | Channel | Carries | Cost | Notes and source |
+|---|---|---|---|---|
+| 1 | **Mac notifications** — Claude Code `Notification` and `Stop` hooks; Codex `notify` | Tap/Buzz while he is at the desk | $0 | Hooks fire on permission prompts, idle, agent completed, and can run any command ([hooks](https://code.claude.com/docs/en/hooks)). Codex `notify` fires on turn complete only, not on approvals [secondary] |
+| 2 | **Mission Control web** | **The one inbox of record.** Every envelope that needs him writes a row here; every other channel only deep-links to it | $0 | Cloud-hosted, holds no subscription credential ([09a](09a-ENGINEERING.md) hosts) |
+| 3 | **Claude Remote Control push** ("Push when actions required") + **ntfy free tier** (priority 3–4) | Routine phone alerts, Tap and Buzz, for every family (ntfy covers Codex) | $0 (ntfy free: 250 msgs/day) | Remote Control push needs the Mac on with `claude` running and has no public API for arbitrary events ([remote-control](https://code.claude.com/docs/en/remote-control)); ntfy ([docs.ntfy.sh](https://docs.ntfy.sh/publish/)) is sent by the hooks and the cloud relay |
+| 4 | **Pushover emergency priority (2)** with iOS Critical Alerts | **Ring** — the night-wake path; bypasses mute and Do Not Disturb; repeats every ≥30 s until acknowledged | **$4.99 one-time** (after a 30-day trial) | The one paid item, and the only verified near-free path that beats iOS DND ([pushover.net/api](https://pushover.net/api)) |
+| 5 | **Phone call** — optional fallback only | A Pushover emergency unacknowledged after N minutes (parameter) | not free | **No free, reliable call option was found**: CallMeBot Telegram calls are free but unofficial and unreliable; Twilio is carrier-grade but paid after a trial that may not reach an Israeli number. Off unless he enables it; the escalation logic lives in the cloud relay so it works while the Mac sleeps |
+
+**Codex mobile push is unreliable today** — open issues report ChatGPT-app pushes not delivered on iOS in the background
+([#32908](https://github.com/openai/codex/issues/32908), [#33300](https://github.com/openai/codex/issues/33300)) — so it is
+never a floor-carrying channel; Codex events reach his phone through ntfy or Pushover from the relay. **Neither vendor push
+wakes him at night**: both are best-effort and suppressed by iOS Focus. The Company Line (§11) stays designed for
+hands-free voice; as a *reach* channel, Ring renders as Pushover first.
 
 ### 2.2 The Reach Router
 
@@ -190,7 +213,7 @@ type ContactEnvelope = {
 // The Router's output — also a Journal event, so every ring has a Trace.
 type Delivery = {
   envelope: string; reach: 'ring'|'buzz'|'tap'|'reel'|'shelf';
-  channel: 'call'|'ntfy'|'watch'|'telegram'|'lamp'|'today'|'reel'|'email';
+  channel: 'pushover'|'call'|'ntfy'|'rc_push'|'mac'|'watch'|'telegram'|'lamp'|'today'|'reel'|'email';  // D4 stack
   floor: Reach; ceiling: Reach; step: 1|2|3|4;                    // which row of the ordered table decided
   deferred_until?: string;                                        // step 3b: first permitted moment
   silence_rule_applied?: boolean;                                 // step 3b: that moment fell after the deadline
@@ -215,8 +238,8 @@ next Reel at the latest.
 flowchart TD
   ENV[ContactEnvelope] --> CL{class}
   CL -- halt --> HB[Buzz now<br/>lamp red · watch 3-long] --> ACK{acked ≤5 min?}
-  ACK -- no --> RING[Ring: Company Line] --> ACK2{answered?}
-  ACK2 -- no --> DEP[Continuity path in 05<br/>Deputy / Caretaker]
+  ACK -- no --> RING[Ring: Pushover emergency<br/>optional call fallback] --> ACK2{acknowledged?}
+  ACK2 -- no --> DEP[Continuity path in 05<br/>safe state holds · Caretaker · freeze]
   ACK -- yes --> LOG1[Delivery logged]
   CL -- decide --> EX[Attention Exchange clears<br/>at 08:00 / 17:00 windows]
   EX -->|above line · deadline <4h| BUZZ[Buzz]
@@ -694,13 +717,13 @@ Missions are funded work by agents; Tasks is everything owed **by a human** — 
 bank), Human Task Market jobs, and customer promises from the obligations lane ([16](16-EXTERNAL-WORLD-HUMANS.md)).
 
 ```
-+ Tasks · owed by humans · [mine 2] [contractors 3] [promises 5] [deputy drills 1] ------------+
++ Tasks · owed by humans · [mine 2] [contractors 3] [promises 5] [freeze drills 1] ------------+
 | MINE        ☐ Sign annual report (Keel legal) · 3 min · due Oct 12 · never-list: founder act |
 |             ☐ 15-min call with Acme's CTO (they asked for a human) · Thu 14:00 ✆             |
 | CONTRACTORS ◐ Photographer · product shots · $180 · contract ✓ · due Fri · Room ▸            |
 | PROMISES    ● Nimbus → Acme: SSO beta by Oct 20 · latest safe start Oct 13 · on track        |
 |             ● Ledger → 9 interviewees: summary by Oct 9 · m_88 re-queued after FAIL ⚠        |
-| DEPUTY      ◷ Quarterly stop drill for Deputy (ops) · due Oct 30 (05)                        |
+| FREEZE      ◷ Quarterly continuity-freeze drill (ops) · due Oct 30 (05)                      |
 | Every task an agent could do shows [Delegate → Mission Draft]                                |
 +----------------------------------------------------------------------------------------------+
 ```
@@ -1050,7 +1073,7 @@ Other sections: **Profile & passkeys** (devices, hardware key, voice passphrase)
 view of the Constitution; amend ▸) · **Budgets, treasury rule, degraded modes** (09b values, founder caps) · **Providers
 & data policy** (which provider sees which data class; training off, attested by date — the founder turns it off by hand,
 the page records when and shows the provider's terms version) · **Surfaces** (Telegram pairing, ntfy topic, phone
-numbers, watch, Office Window) · **Continuity** (deadline-driven duties, Deputy, Continuity Will — read-only with a link
+numbers, watch, Office Window) · **Continuity** (deadline-driven duties, continuity freeze, Continuity Will; no Deputy, D6 — read-only with a link
 to 05) · **Trusted projects** (today's `bun run trust`, read-only with the command) · **Kill switches** (stop-all; revoke
 all surface tokens; disable voice; per-brand outbound kill; the five kill levels of [16](16-EXTERNAL-WORLD-HUMANS.md)) ·
 **Audit log** (every preference change, every overrule, every step-up).
@@ -1357,7 +1380,7 @@ continuity deadline hands off to 05's continuity rules and shows a re-entry brie
 |---|---|---|
 | calendar focus block / macOS Focus | `focus` | ≤ Reel except floors |
 | calendar "flight" / motion + CarPlay | `travel` | ≤ Reel for passkey items; Halt still rings |
-| planned absence set in Settings | `offline_planned` | Deputy path for Halt; Reel queues for return |
+| planned absence set in Settings | `offline_planned` | Halt: safe state holds, continuity path (05); Reel queues for return |
 | sleep data (opt-in) inside quiet hours | (quiet hours) | Halt only, Ring after 5 min |
 | 3 days of dismissals >2× baseline | proposal: `overloaded` | never applied automatically; proposed in the board pack |
 
@@ -1536,7 +1559,9 @@ per settled outcome, so this Wednesday is also a data point in the "one founder 
    outbound or publish (DR-80) — and only for effects whose deadline absorbs the
    hold. Revisit after four weeks of looked-at-rate data.
 2. **Default ring price and Decide-call cap.** *Recommend Ring for Halt always; for Decide only above $200/h cost of delay,
-   at most 2 calls a day*, re-derived monthly from reaction data alongside the minute supply (F4).
+   at most 2 calls a day*, re-derived monthly from reaction data alongside the minute supply (F4). **Decided (D4,
+   2026-09-30):** channels are fixed by the §2.1 reach stack (Ring = Pushover emergency; a call only as an optional
+   fallback); the thresholds stay default parameters since he gave no figure.
 3. **When does the Map replace Today as Home?** *Recommend at >20 live agents or ≥5 autonomous ventures, whichever comes
    first*, with Today one keystroke away; measure time-to-first-decision on both for two weeks before switching.
 

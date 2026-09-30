@@ -483,8 +483,8 @@ Debate does not beat self-consistency voting at matched compute (R0-A via [S01 �
 | Does the simulation prove it? | **Twin interrogation** [R3-red D07] | inherited assumptions, unsupported mechanisms, falsifiers |
 
 **Correlated votes are not independent:** agreement is measured per premise class, and where both families agree so
-reliably that the vote is uninformative, k rises or a third route is added (Model Foundry or a paid human adjudicator,
-[CANON §9 D10](00-CANON.md#9-founder-decisions-d1d10-aligned-with-15)). **Challenge yield** — objections later proved true per form per
+reliably that the vote is uninformative, k rises or a third route is added (a qualified Model Foundry judge; splits go to structured reconciliation, then the
+founder — [CANON §9 D10](00-CANON.md), DR-88). **Challenge yield** — objections later proved true per form per
 dollar — makes the forms Thompson arms; a form finding nothing on a door class for 90 days drops to sampling (DR-10).
 
 ## 10. Stop, pivot and kill

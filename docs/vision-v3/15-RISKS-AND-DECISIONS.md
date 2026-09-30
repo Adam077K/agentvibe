@@ -85,7 +85,7 @@ All thirty-six failures [R3-red §2] in the red team's rank order — **X** expl
 | 7 | **C01 Authorities disagree on one action.** Charter, mandate, limit, incident role, acceptance rule conflict | 20 | One Decision Contract per action on one policy snapshot; precedence P1–P8; each blocker has owner, remedy, expiry; model-checked for safety and progress (DR-02) | Constitution (compiler) | **Q4, Q10**; every blocked action has an owner and a reachable remedy | 00 §3 · 09a §5 · 08 P16 |
 | 8 | **X03 Admitted capability changes behaviour.** Scans pass → description pinned → backend or dependency turns | 16 | Admission pins digests, endpoint, egress, data classes; runtime egress proxy enforces destination and argument disclosure regardless of verb; composed-Loadout canary trials; capability epochs (DR-44) | Custody | **Q1, Q2**; Scenario B: changed backend → blocked disclosure, sibling keeps working | 07 §3, §5 · 09a §13 |
 | 9 | **D02 Selection manufactures improvement.** Repeated forks and stopping times → lucky winner promoted | 16 | Pre-registered experiment families; failures kept in denominators; selection-aware statistics; sealed confirmation; prospective rollout (DR-16) | Acceptance | **Q6**; 20 null hybrids → false promotions ≤5% (parameter) | 04 §4.3 · 09b §14 · 07 §9 |
-| 10 | **T02 Founder absence leaves nobody to act.** Spoofed presence or unaccepted Deputy → obligations age | 16 | Two clocks: per-obligation deadline clock starts pre-authorised refund/notify/preserve duties on time; Deputies count only once accepted and drilled; planned absence expires; only fresh presence proof resets (DR-34) | Constitution + Custody | **Q5**; a duty due before the 72 h tier is met; spoofed caller ID resets nothing | 05 §10.2–10.3 |
+| 10 | **T02 Founder absence leaves nobody to act.** Spoofed presence or unaccepted Deputy → obligations age | 16 | Two clocks: per-obligation deadline clock starts pre-authorised refund/notify/preserve duties on time; no Deputy (D6) — a continuity freeze keeps existing obligations by listed routes; planned absence expires; only fresh presence proof resets (DR-34) | Constitution + Custody | **Q5**; a duty due before the 72 h tier is met; spoofed caller ID resets nothing | 05 §10.2–10.3 |
 
 ### 2.2 Ranks 11–36
 
@@ -133,7 +133,7 @@ An answer is a hypothesis until its suite passes; these are **target** residuals
 | C01 | 5 | 2 | Model check of the precedence core before each Constitution release (09a OQ3) |
 | X03 | 4 | 2 | Q1/Q2 with changed-backend fixtures; canary crossings = 0 |
 | D02 | 4 | 2 | False-promotion rate measured across ten experiment families |
-| T02 | 4 | 2 | Quarterly absence drill with a real Deputy (decision D6) |
+| T02 | 4 | 2 | Quarterly absence drill: the continuity freeze keeps every obligation by route (decision D6, no Deputy) |
 
 ## 3. Risks raised inside the section files
 
@@ -307,7 +307,7 @@ suite that blocks everything fails.**
 | **Q2** Principal, provider, Custody, control-plane compromise | X02 X03 X04 X06 X08 C03 | Authority never exceeds its intersection; approval binds exactly; a lying gateway is caught; candidates cannot sign releases | Twin, isolated effectors | Acceptance + Custody |
 | **Q3** Effect identity, crashes, fencing, cancellation | X05 T04 T07 H02 C02 | One active Operation; stale epochs cannot dispatch; no blind retry | CI fault injection; alternate host quarterly | Custody |
 | **Q4** Progress, saturation, outage recovery | T01 T04–T08 C01 C04 C05 | No state needs an expired principal; reservations ≤ eligible capacity | Model check + twin | Constitution + Acceptance |
-| **Q5** Absence, attention, emergency authority | T02 T05 X08 D06 | Weak presence resets nothing; silence never widens; continuity starts in time | Quarterly drill with the real Deputy | Constitution + Intent |
+| **Q5** Absence, attention, emergency authority | T02 T05 X08 D06 | Weak presence resets nothing; silence never widens; continuity starts in time | Quarterly continuity-freeze drill (no Deputy, D6) | Constitution + Intent |
 | **Q6** Goodhart, promotion integrity | D01–D08 C03 | Failures stay in denominators; guardrails block harmful gains; "no improvement" is a legal result | Twin + Benchmark Vault | Acceptance |
 | **Q7** Joint financial and capacity stress | T03 D08 C04 | Nothing spent twice; internal trade adds no surplus; shortfalls named | Twin, quarterly | Allocation + Custody |
 | **Q8** Harm, privacy, human work, repair | H01–H06 X07 | Commitments reserve capacity; humans get promised appeal and pay; deletion reports are honest | Twin + test accounts | Custody + Acceptance |
@@ -328,7 +328,7 @@ answer; a row **stays open until its "Closes when" is met** [R5 fix plan].
 | # | Gap | Why open | Proposed answer | Owner | Closes when | Resolution |
 |---|---|---|---|---|---|---|
 | **G1** | **Q8 and Q9 have no build job** | 14 binds Q1–Q7 and Q10 subsets to jobs, but no job carries Q8 (harm, privacy, human work, repair) or Q9 (the five adaptive campaigns) | Add a Q8 job beside the Front Desk and Human Task Market jobs, and a Q9 harness job before the first A3 venture; suite code in the protected base (DR-06); attackers from both families, charged to the acceptance reserve | Acceptance; 14 | 14 lists Q8 and Q9 with phase and fixtures | Build jobs in [14](14-BUILD-PLAN.md) |
-| **G2** | **Terms risk of headless subscription use** (#7, V25) | Subscriptions-only (DR-61, founder 2026-09-30) runs headless work on consumer plans the terms reserve to API keys | Founder accepts the risk with mitigations in **D2**: terms watch, spread across accounts, founder-enabled API fallback | Constitution | D2 signed; DR-61 and `providerMode` agree | DR-61; closes on **D2** |
+| **G2** | **Terms risk of headless subscription use** (#7, V25) | Subscriptions-only (DR-61, founder 2026-09-30) runs headless work on consumer plans the terms reserve to API keys | Founder accepts the risk with mitigations in **D2**: terms watch, spread across accounts, founder-enabled API fallback | Constitution | D2 signed; DR-61 and `providerMode` agree | DR-61; **D2 decided 2026-09-30**; D3's hosting rule (DR-86) narrows it |
 | **G3** | **Disclosure budget unmeasured** (X07) | 400 bits per recipient per 180 days has no measurement; bucketing is not formal privacy accounting | Spike the cumulative-transcript attack on three synthetic ventures (06 OQ1); set the cap at half the attacker's break-even; half budget meanwhile | Record | Result in 12; X07 re-scored | Spike in [14](14-BUILD-PLAN.md); interim half budget in [06](06-MEMORY.md) |
 | **G4** | **Kernel-host administrator compromise** (V26) | 09a §13 records the residual but proposes no mitigation | A separate admin account never used for agents; the custody keychain sealed by Touch ID; an hourly journal-head vs anchor comparison run *from the third domain*, tripping the external epoch on mismatch; provider keys revocable from the recovery kit. The residual is acknowledged in D3 | Custody | Q2 runs the case and reports what survived | [09a §13](09a-ENGINEERING.md) |
 | **G5** | **Insurance for agent acts** (V27) | Unknown whether cover responds (16 OQ3) | Broker task per entity before its first A3 money mandate; Repair-Budget cap meanwhile — in **D7** | Custody | Broker opinion per entity | **D7** + [16](16-EXTERNAL-WORLD-HUMANS.md) |
@@ -344,7 +344,8 @@ not gaps.
 
 ## 8. The founder's ten decisions
 
-The final wording of the canon's draft F1–F10 (canon §9). D2 also carries R5-ISSUES #7 (the terms risk of headless
+**Status: all ten DECIDED by the founder, 2026-09-30.** Each keeps its original analysis and ends with a **Decided:**
+line; where he chose differently, that line restates the consequences. The final wording of the canon's draft F1–F10 (canon §9). D2 also carries R5-ISSUES #7 (the terms risk of headless
 subscription use). 08's wrist and Ring thresholds fold into D4 and insurance (G5) into D7, so the list stays at ten.
 
 **How they reach him.** All ten arrive as **Decide · Tap** packets at the first weekly board, in deadline order, and are
@@ -367,8 +368,8 @@ flowchart LR
   D5[D5 first autonomous ventures] --> M2
   D8[D8 outbound and selling] --> M2
   D7[D7 entity and insurance] --> M3((M3 first customer under autonomy))
-  D10a[D10 adjudicator pool] --> M3
-  D6[D6 Deputy and Will] --> M4((M4 first A3 with customers))
+  D10a[D10 structured reconciliation] --> M3
+  D6[D6 continuity freeze and Will] --> M4((M4 first A3 with customers))
   D9[D9 legal review of scale programmes] --> M5((M5 Year 1 Q2))
   D10b[D10 Model Foundry spike] --> M5
   M0 --> M1 --> M2 --> M3 --> M4 --> M5
@@ -386,6 +387,7 @@ flowchart LR
   launch Codex at all. Option (c) recreates SLICE's hidden same-family reviewer (V02).
 - **Cost to reverse.** Very low: revoke the record, instantly; work falls back to founder-present only.
 - **Deadline.** **M0.**
+- **Decided (2026-09-30): (b), as recommended** — a standing rule: dispatcher-only, pinned commands, every launch receipted.
 
 ### D2 — Model capacity: how many seats, and accepting the terms risk (F2 + R5-ISSUES #7)
 
@@ -399,6 +401,9 @@ flowchart LR
   published terms (09a §10), not legal advice.*
 - **Cost to reverse.** Low: seats change at renewal; enabling the fallback is one Constitution flag.
 - **Deadline.** **M1** (first headless I2 run); closes G2.
+- **Decided (2026-09-30): as recommended** — **1 Claude + 1 Codex** seat to start; add seats when the capacity meter shows
+  the bottleneck. Terms risk accepted with the DR-61 mitigations; D3's hosting rule (agents on his Mac or vendor clouds)
+  narrows it further.
 
 ### D3 — Hosts, the third failure domain and the residual host risk (F3)
 
@@ -412,6 +417,14 @@ flowchart LR
   the Secure Enclave passkey and from the I1/I2 path that D2 relies on. In a third domain no host can grant itself the epoch.
 - **Reverse / deadline.** Moderate (hardware, a small cloud bill; the move is the drill already rehearsed). **M2**:
   fencing live before the first outbound dispatch.
+- **Decided (2026-09-30): differently from (b).** **The agents (Claude Code and Codex sessions, headless included) run on
+  the founder's Mac on his own logins; everything else may run in the cloud.** Research (`_process/R7-…`, [09a §15.1](09a-ENGINEERING.md))
+  refines it: vendor clouds (Claude cloud sessions and routines, Codex cloud tasks) are also allowed on the subscription;
+  his login on a rented VPS or CI is avoided by default (grey zone); web UI, database, queue, scheduler, webhooks and the
+  notification relay run in the cloud because they hold no subscription credential — the cloud enqueues, the Mac pulls.
+  **Consequences:** a *dedicated* always-on Mac is no longer required (an option if uptime needs it); laptop sleep pauses
+  local work, and overflow goes to vendor clouds; DR-62's third-domain fencing and the G4 residual are unchanged; the
+  quarterly alternate-host drill becomes "restore onto another Mac of his". DR-86.
 
 ### D4 — Founder minute supply and reach (F4 + 08 §18 OQ1–OQ2)
 
@@ -424,6 +437,13 @@ flowchart LR
 - **Why.** The Exchange needs a supply to price anything (D06); without a budget, C06 lands on him; the wrist rule keeps
   reflex approvals (V13) off anything that cannot be held.
 - **Reverse / deadline.** Negligible (parameters). **M2.**
+- **Decided (2026-09-30): channels chosen, no minute figure.** Channels: **his Mac, the Mission Control website, phone
+  calls only if a free way exists, and the push built into the Claude and Codex phone apps.** The minute supply stays at
+  (b)'s default as a **parameter**. **Consequences** ([08 §2.1](08-SURFACES.md)): Mac notifications via Claude hooks and
+  Codex `notify`; Mission Control web as the one inbox; Claude Remote Control push plus ntfy free for routine phone
+  alerts; **Ring renders as Pushover emergency priority** ($4.99 one-time, iOS Critical Alerts), the night-wake path; a
+  phone call is only an optional fallback, since no free reliable call option was found; Codex mobile push is unreliable
+  today and never carries a floor.
 
 ### D5 — Which ventures go autonomous first, and how high (F5)
 
@@ -435,6 +455,12 @@ flowchart LR
   venture waits until T01's residual P reaches 2, which is this decision's reversal trigger.
 - **Reverse / deadline.** Low (narrowing is instant; an imported venture with customers winds down under the Obligation
   Keeper). Names by **M0**, so Fleet Import can buy baselines; switch at **M2**.
+- **Decided (2026-09-30): differently from (b).** The first autonomous venture is **a new venture: "beeond (new
+  version)"**, a new version of his old beeond project. **Details are pending from the founder** — its business model,
+  customers and target level are not yet stated and must not be invented. **Consequences:** no imported live-revenue
+  venture goes autonomous first, so the imported-versus-greenfield comparison is dropped; beeond starts as a greenfield
+  Genesis at A0–A2 and reaches A3 only through the Promotion evidence of 05 §3.7; a second autonomous venture waits for
+  his choice and T01's residual P (the reversal trigger stands).
 
 ### D6 — Deputy and Continuity Will (F6)
 
@@ -447,6 +473,14 @@ flowchart LR
   act on it, and handing a venture over is a legal act only a human can perform.
 - **Reverse / deadline.** Low (a new acceptance and drill); the sealed briefing, once read, is the one-way part. Will
   before **M3**, Deputy before **M4**. Without one, no customer-facing venture passes A2.
+- **Decided (2026-09-30): differently — (a), narrowed.** **Nobody acts for him; everything pauses.** After unplanned
+  silence, autonomous ventures **freeze in their safe state** and keep only **existing** customer obligations through
+  their listed continuity routes. **Consequences** ([05 §10](05-AUTONOMY-INITIATIVE-FOUNDER.md), DR-85): no human Deputy,
+  no alternate, no Deputy drill; the Continuity Will has one shape (freeze and keep obligations to a runway cap); the
+  tier timings stay as parameters; acts only a human can perform (a hand-over, a wind-down with live customers) wait on
+  the Re-entry Brief. T02's residual rises for duties no route can keep, so a venture with live customers must show a
+  funded route for every obligation (a drilled freeze) before it passes A2. Will before **M3**; the freeze drill replaces
+  the Deputy gate at **M4**.
 
 ### D7 — Legal holding structure and insurance (F7 + G5)
 
@@ -461,10 +495,13 @@ flowchart LR
   is unknown, so exposure stays capped until a broker answers.
 - **Reverse / deadline.** Partly one-way (forming is cheap, unwinding contracts and tax status is not). **M3**; the broker
   task before the first A3 money mandate.
-- **Open item — jurisdiction and health data.** The founder's jurisdiction is **unstated (he has not answered yet)**; D7,
-  D8's outbound rules and the data policy all depend on it. Health data (HIPAA in the US, special-category data under
-  GDPR) is out of scope for every venture until he names the jurisdiction and a lawyer confirms what processing terms it
-  needs — consumer subscriptions are not a business-associate arrangement.
+- **Decided (2026-09-30): as recommended, adapted** — start under the founder as a sole business; a company per venture
+  later, on 16 §11's triggers; an accountant and a lawyer before the first autonomous money movement.
+- ~~**Open item — jurisdiction and health data.** The founder's jurisdiction is unstated~~ **Closed (2026-09-30):
+  Israel.** The data regime is the **Israeli Privacy Protection Law and its 2024 Amendment 13** (*needs a lawyer's
+  confirmation*); **GDPR only for EU customers**; **health data is out of scope until a venture needs it**. Client data:
+  subscriptions with training off; that venture moves to business/API terms only if a contract or health data requires
+  it ([09a §11.10](09a-ENGINEERING.md)). Entities and tax follow Israeli rules, confirmed by the accountant.
 
 ### D8 — Who sells, and the outbound rules (F8)
 
@@ -477,6 +514,12 @@ flowchart LR
 - **Why.** Customer judgment is what he must keep; H01 and H05 are costly, and per-cell meters (V12) contain one cell.
 - **Reverse / deadline.** Policy is cheap to change; reputation or domain damage already done is **irreversible**, hence
   the low start. **M2.**
+- **Decided (2026-09-30): differently — stricter than (c).** **No agent outreach by default.** If a venture needs agents
+  to contact people, the founder asks the system to build that capability for that project. **Consequences**
+  ([16](16-EXTERNAL-WORLD-HUMANS.md), DR-87): the outbound-contact effect class is **off** in every Charter by default; the
+  ≤30/day cold-outreach allowance is not a default; replies and inbound conversations are unaffected; when he turns it on
+  for a venture, the disclosure rules, per-cell meters and "bulk cold email never" still apply, and Israel's rules on
+  unsolicited commercial messages are checked by the lawyer first. Reversal trigger unchanged.
 
 ### D9 — Acquisition Desk, Capital Desk and Guild (F9)
 
@@ -487,6 +530,7 @@ flowchart LR
 - **Why.** Canon §7's Year-5 targets need them; they are the most legally exposed programmes, so the first instances stay
   in human hands.
 - **Reverse / deadline.** Cheap before the first contract. Review funded and started by **M5**; no deal before it reports.
+- **Decided (2026-09-30): (b), as recommended** — the design is approved; he signs each first deal of each kind.
 
 ### D10 — A third acceptance route (F10)
 
@@ -498,21 +542,29 @@ flowchart LR
 - **Why.** (a) spends the scarcest input on the hardest calls; (c) breaks DR-12, since SP3's self-preference exceeded the
   effect; X04 needs an independent route.
 - **Reverse / deadline.** Low. Pool by **M3**; spike by **M5**.
+- **Decided (2026-09-30): differently — (a) plus a structured reconciliation.** **The founder, or a reconciliation in
+  which the two judges challenge each other's reasoning and reach a shared understanding through well-organised facts and
+  argument.** **Consequences** ([09b](09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md), DR-88): a premise-by-premise facts table,
+  cross-challenge with evidence, ≤2 rounds (parameter), a shared-understanding record; still split → a Decide packet to
+  him. Not free-form debate: R0-A found debate ≈ voting at equal compute. No paid adjudicator pool; the Model Foundry
+  spike stays optional by **M5**. To keep (a)'s cost off him, the split rate per task class feeds the Verifier Foundry.
 
 ### Summary
 
-| # | Decision | Recommendation | Reversal cost | Deadline |
+All ten were **decided by the founder on 2026-09-30** (`_process/FOUNDER-ANSWERS-2026-09-30.md`).
+
+| # | Decision | Decided (2026-09-30) | Reversal cost | Deadline |
 |---|---|---|---|---|
-| D1 | Standing launch permission | Yes: launcher-only, pinned, receipted | Very low | M0 |
-| D2 | Seats; terms risk | One seat per family to start (illustration), more on the meter's case; accept V25 with terms watch, spread accounts, API fallback (DR-61) | Low | M1 |
-| D3 | Hosts, third domain | Dedicated Mac + cloud effectors + third-domain fencing; residual acknowledged | Moderate | M2 |
-| D4 | Minutes and reach | 45/10 + 30-min board; Ring and wrist thresholds | Negligible | M2 |
-| D5 | First autonomous ventures | Two: imported live venture A2→A3, new agency A2 | Low | M0 / M2 |
-| D6 | Deputy and Will | Accepted, drilled human Deputy; per-venture Will | Low | M3 / M4 |
-| D7 | Entities and insurance | Holding + DBAs; entity on trigger; broker before A3 money; **open: jurisdiction unanswered, health data out of scope until then** | Partly one-way | M3 |
-| D8 | Selling and outbound | First 10 calls his; ≤30/day disclosed 1:1; never bulk | Policy cheap; harm irreversible | M2 |
-| D9 | Scale programmes | Approve; legal review Year 1; he signs the firsts | Cheap before first deal | M5 |
-| D10 | Third acceptance route | Human adjudicators now; Model Foundry spike | Low | M3 / M5 |
+| D1 | Standing launch permission | Yes: dispatcher-only, pinned, every launch receipted (as recommended) | Very low | M0 |
+| D2 | Seats; terms risk | 1 Claude + 1 Codex seat; add on the meter's case; V25 accepted with DR-61 mitigations (as recommended) | Low | M1 |
+| D3 | Hosts, third domain | **Changed:** agents on his Mac (his logins) or vendor clouds; rented VPS/CI with his login avoided; UI, DB, queue, relay in the cloud; third-domain fencing kept (DR-86) | Moderate | M2 |
+| D4 | Minutes and reach | **Changed:** Mac, Mission Control web, Claude/Codex app push + ntfy, Pushover emergency as Ring; call optional; minutes stay default parameters | Negligible | M2 |
+| D5 | First autonomous venture | **Changed:** one new venture, "beeond (new version)"; details pending from the founder | Low | M0 / M2 |
+| D6 | Deputy and Will | **Changed:** no Deputy; freeze to safe state, keep existing obligations only (DR-85) | Low | M3 / M4 |
+| D7 | Entities and insurance | Sole business first, company per venture later; accountant/lawyer before first autonomous money; **Israel** (Privacy Protection Law + Amendment 13, lawyer to confirm; GDPR for EU customers only; health data out of scope) | Partly one-way | M3 |
+| D8 | Selling and outbound | **Changed:** no agent outreach by default; built per project on his request, disclosure rules apply when on (DR-87) | Policy cheap; harm irreversible | M2 |
+| D9 | Scale programmes | Approve; he signs each first deal (as recommended) | Cheap before first deal | M5 |
+| D10 | Judge disagreement | **Changed:** structured reconciliation, then the founder (DR-88) | Low | M3 / M5 |
 
 ## 9. Decisions that do not need the founder
 
@@ -549,7 +601,7 @@ By design the founder never decides anything whose remedy is an owner's action r
 5. **Decisions with reversal triggers** — D2 reopens on any change to the quoted terms; D5 when T01's residual P reaches 2;
    D8 when per-cell complaints exceed 0.3%. A decision that states its falsifier cannot quietly become dogma.
 6. **The founder's personal exposure line** on the Map — effects he signed, open one-way doors, entities without cover
-   (D7), A3+ ventures without a Deputy (D6): "how much could hurt me this week", derived from the register.
+   (D7), A3+ ventures with obligations no continuity route keeps (D6): "how much could hurt me this week", derived from the register.
 7. **Pre-mortem from the register** — every one-way-door packet lists the rows its effect class touches, with residuals
    and last drill: 06's Graveyard Walk applied to risks.
 

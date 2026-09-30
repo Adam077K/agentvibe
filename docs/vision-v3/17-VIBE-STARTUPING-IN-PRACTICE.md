@@ -319,11 +319,22 @@ Probe Mandate.
 fleet machinery, on the same records. The direction's "2–3 autonomous, others founder-driven" is this dial's Year-0
 setting (canon F5).
 
+**The first autonomous venture: beeond (new version)** (founder decision D5, 2026-09-30). A **new** venture, a new
+version of his old `beeond` project, started by Genesis rather than imported; the old `beeond` directory is Fleet Import
+input only. **Details are pending from the founder** — its customers, offer, business model and target level are not
+stated here and must not be invented; the Genesis Framing Contract waits for his brief. It climbs A0 → A2 → A3 only
+through the Promotion evidence of [05 §3.7](05-AUTONOMY-INITIATIVE-FOUNDER.md).
+
 ## 7. The seven operating loops, and Series mode
 
 Departments exist because human labour must be kept busy in one place. This organisation runs **operating loops**
 [S08 M4]: each answers one question the venture must keep answering, maps to authorities ([02](02-ORGANISATION.md)),
 and owns no people. Obligation work runs in the obligations lane; growth work competes in the investment lane.
+
+**Outbound contact is off by default** (D8, DR-87). The Demand loop's agent-initiated contact with people — outreach
+email, calls, DMs, the Probe Swarm's `cold_email_le_50` — exists in a venture only after the founder asks the system to
+build it for that project. Until then Demand works through inbound, content, pages and ads, and every rule below
+(disclosure, ≤1 touch per contact per week, opt-in) governs outreach once he has turned it on.
 
 | Loop | Question | Titles (either family) | The guard that makes it safe | Founder touch |
 |---|---|---|---|---|
@@ -379,8 +390,8 @@ flowchart LR
 
 ### 8.1 Probe Swarm — a hundred honest demand tests a week
 
-Disclosed, reversible, cheap real-world tests — refundable pre-orders, small ad buys, ≤50-prospect outreach, concierge
-offers — under one founder-signed **Probe Mandate** [R3-X X3]. Simulated customers flatter every proposal (S09), so the
+Disclosed, reversible, cheap real-world tests — refundable pre-orders, small ad buys, concierge offers, and ≤50-prospect
+outreach only where the founder has turned outbound on (D8) — under one founder-signed **Probe Mandate** [R3-X X3]. Simulated customers flatter every proposal (S09), so the
 default evidence is cheap real contact (U7). Allocation runs the sleeve; Custody holds the mandate; Regulation watches the
 exposure book; Acceptance settles "graduated" from processor and calendar records. Pre-orders sit in obligation escrow and
 auto-refund at close unless a holder explicitly consents to a new Offer ([16](16-EXTERNAL-WORLD-HUMANS.md) owns the
@@ -390,7 +401,8 @@ path in §6 [R5-walk G7, B06].
 ```yaml
 probe_mandate:   # passkey-signed; parameters
   per_probe_max_usd: 300; live_max: 40; monthly_max_usd: 6000
-  allowed: [landing_page, paid_ads, cold_email_le_50, refundable_preorder, booking, concierge_offer]
+  allowed: [landing_page, paid_ads, refundable_preorder, booking, concierge_offer]
+  on_founder_request: [cold_email_le_50]   # outbound contact off by default (D8, DR-87)
   forbidden: [non_refundable_capture, speaking_as_founder, regulated_claims]
   identity: probe cell, disclosed as "early test by <holding company>"
   graduate_if: "preorders >= 5 | booked_calls >= 8 | LOI >= 1, within 21 days"

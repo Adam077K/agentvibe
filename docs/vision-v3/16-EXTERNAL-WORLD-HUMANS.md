@@ -24,7 +24,9 @@ Every mechanism names four things: its **authority** (canon §2), its **store** 
 2. **Consequence is computed** into one Decision Contract; a proposer never labels its own effect [S13 §2.2].
 3. **Mandates, not approvals** — the founder signs classes of effects, the largest founder-minute lever [S13 §2.3].
 4. **Words people can rely on are effects** — terms from **Offer objects**, facts bound to evidence [DR-48; R3-red H01].
-5. **Disclosed brand agents only**; the founder's voice is never synthesised; "Are you a bot?" gets "Yes".
+5. **Disclosed brand agents only**; the founder's voice is never synthesised; "Are you a bot?" gets "Yes". **Outbound
+   contact to people is off by default** (founder decision D8, DR-87): a venture gets it only when the founder asks the
+   system to build it for that project; the disclosure rules below govern it whenever it is on.
 6. **Reputation is metered** in per-venture **brand cells**, plus portfolio-wide contact controls [R3-red H05].
 7. **Five kill levels**; a kill never abandons an obligation — the **Obligation Keeper** serves it.
 8. **Every effect has a legal actor of record** (entity + accountable human); agents prepare, humans sign [S08 M5].
@@ -58,7 +60,7 @@ flowchart LR
 
 **Hosts** ([09a](09a-ENGINEERING.md)):
 - The Front Desk and the effectors run on an always-on cloud host. Inbound mail and calls need a stable IP reputation.
-- The Kernel runs on the dedicated Mac.
+- The Kernel runs on the founder's Mac (D3, DR-86); the gateway and Front Desk run in the cloud with no subscription credential.
 - An external fencing authority grants one exclusive gateway epoch. A revived old host therefore cannot send anything
   [DR-09; R3-red T07].
 
@@ -114,8 +116,8 @@ flowchart TD
 | Channel | Default door | Rule |
 |---|---|---|
 | Email, transactional | Two-way | Opt-in only. RFC 8058 unsubscribe. Warn at 0.1% spam; Gmail's ceiling is 0.3% |
-| Email, first touch | Costly-reversible | Warmed per-venture mailbox with a daily cap. Never sent via a transactional ESP (Resend's AUP bans cold outreach) |
-| Voice | Inbound two-way; outbound costly-reversible | US outbound AI voice needs prior express consent (FCC 24-17). Voice stack per DR-51 |
+| Email, first touch | Costly-reversible | **Off by default (DR-87)**; exists only in a venture the founder asked to have it built for. Then: warmed per-venture mailbox with a daily cap. Never sent via a transactional ESP (Resend's AUP bans cold outreach) |
+| Voice | Inbound two-way; outbound costly-reversible (outbound to people **off by default**, DR-87) | US outbound AI voice needs prior express consent (FCC 24-17). Voice stack per DR-51 |
 | Web actions | Browse two-way; sign-up under terms one-way | Signed with Web Bot Auth. Never defeats anti-bot controls |
 | Payments | Refund within cap two-way; spend and transfer one-way | Agent cards are issued by a human, and the agent cannot change their limits (Mercury) |
 | Agentic buying | ACP / AP2 / x402: one-way | Shared Payment Tokens are tied to one seller, amount and expiry (Stripe) |
@@ -181,7 +183,7 @@ table~~ is removed [DR-57].
 | Per-instance approval | An $18k fixed-price proposal | The default for any one-way door outside a mandate |
 | Legally required human execution | Sign an order form; notarise; file taxes | A HumanTask for a named person. No mandate can substitute |
 
-**The AI Co-founder never signs.** A human co-founder or a Deputy co-signs, within an accepted grant. This supersedes
+**The AI Co-founder never signs.** A human co-founder co-signs, within an accepted grant; there is no Deputy (D6). This supersedes
 S13's co-signature row for A4.
 
 The same action gets the same answer on chat, checkout, API and phone. A replay test sends it through all four and
@@ -479,8 +481,9 @@ hold it [S08 M5]. Nothing here is legal advice: every jurisdictional question be
 | Banking | One account per entity; one virtual card per venture per purpose | Spend within limits, invoice, dun, gather dispute evidence | Open accounts, raise limits, make transfers above mandate |
 | Authority Matrix | The effect classes the entity is liable for | Compile it into mandates | Change it (founder passkey) |
 
-**Entity stance.** `none_yet` → DBA under the holding → own entity when any trigger fires (parameters, confirm with
-counsel — canon F7): an invoice over threshold, a liability-bearing contract, the first contractor, an outside investor, a
+**Entity stance** (D7 decided 2026-09-30: **start under the founder as a sole business in Israel**; an accountant and a
+lawyer before the first autonomous money movement). `none_yet` → the founder's sole business → own company when any
+trigger fires (parameters, confirm with counsel): an invoice over threshold, a liability-bearing contract, the first contractor, an outside investor, a
 risk profile to isolate, an acquisition. The Charter records `entity_stance` and the Authority Matrix pointer.
 
 **Actor of record.** Every receipt carries the entity, the accountable human, the Decision Contract, the mandate, the
@@ -522,7 +525,6 @@ change is written to the Journal.
 | Principal | Sees | Can |
 |---|---|---|
 | Human co-founder | The Venture Mind, the Books, the dissent register | Co-sign per the Charter; direct agents; sign mandates |
-| Deputy | Obligations and the Keeper register | Only the grant they accepted and drilled on ([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)) |
 | Contractor | Assigned missions and Backlot assets; PII is redacted | Claim work, submit it, raise hazards |
 | Advisor | A packet of ≤2 pages | Answer; dissent (non-binding) |
 | Investor | Metrics reconciled from systems of record | Ask questions (each becomes a mission); open the data room during a raise |
@@ -796,10 +798,11 @@ refuses every agent has not passed.
 
 ## 21. Open questions
 
-1. **Should cold outbound run under brand agents?** *Recommendation:* 1:1 and disclosed only, from warmed per-venture
-   mailboxes, at ≤30 per day per cell (parameter), inside a mandate at A2+, in the US and in B2B settings where consent
-   exists. For the EU and Israel, the founder approves each batch until a licensed review clears it. Bulk cold email is
-   never allowed (canon F8).
+1. ~~**Should cold outbound run under brand agents?**~~ **Decided (D8, 2026-09-30; DR-87):** no agent outreach by
+   default. When the founder asks for it in a venture, the rules that apply are the earlier recommendation: 1:1 and
+   disclosed only, from warmed per-venture mailboxes, at ≤30 per day per cell (parameter), inside a mandate at A2+, in
+   the US and in B2B settings where consent exists; for the EU and Israel (his jurisdiction) the founder approves each
+   batch until a licensed review clears it. Bulk cold email is never allowed.
 2. **Can a human co-founder co-sign one-way doors without the founder?** *Recommendation:* yes, within their own venture
    and under a money cap set in the Charter. The AI Co-founder never signs.
 3. **Does insurance cover actions agents take on their own?** Unknown, so it is not assumed. ~~Open recommendation~~
