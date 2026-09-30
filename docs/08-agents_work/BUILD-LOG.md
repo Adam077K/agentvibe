@@ -36,3 +36,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 
 | Date | Job | PR | Landed | Next |
 |---|---|---|---|---|
+| 2026-10-01 | B0-15 | — | already resolved on `main`; CLAUDE.md bullet reconciled on the session branch | — |
+| 2026-10-01 | B0-01 | #139 (draft) | v3 slice squashed onto main; 47/48 — `test:probe-readonly` census "of 94" needs a founder design decision | founder: re-settle census, Codex review (full tier) |
+| 2026-10-01 | B0-07 | #140 | spike `unresolved`; nested rerun commands for an unsandboxed shell, dated 2026-10-02; conditional I3 fallback in B1-10 | founder: run rerun, record verdict |
+| 2026-10-01 | B0-02 | #141 | provider registry v0, 15/15 hashes verified; Claude headless `unclear`, Codex `yes-conditional` | B0-00 measures caps; B0-20 wires launches.csv |
+| 2026-10-01 | B0-13 | #142 | build/jobs.yml (143) + capabilities.yml + lint (10 tests) | wire into check-suite (irreversible follow-up); B0-17 uses it |
