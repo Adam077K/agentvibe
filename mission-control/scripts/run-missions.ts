@@ -60,8 +60,40 @@ const CODEX_BIN = process.env.MC_CODEX_BIN ?? 'codex';
 const BUILDER = { agent: 'builder', title: 'Builder', model: CLAUDE_MODEL, family: 'anthropic' };
 const REFEREE = { agent: 'referee', title: 'Referee', model: CODEX_MODEL, family: 'openai' };
 const RUNNER = { agent: 'runner', title: 'Runner', model: '-', family: '-' };
-const SUBAGENT = { agent: 'builder-subagent', title: 'Builder > subagent', model: CLAUDE_MODEL, family: 'anthropic' };
+export const SUBAGENT = { agent: 'builder-subagent', title: 'Builder › subagent', model: CLAUDE_MODEL, family: 'anthropic' };
 type Who = typeof BUILDER;
+
+/** The error a refused run carries on the board. One spelling, shared with the tests. */
+export const REFUSED_SUBAGENT = 'refused_subagent';
+
+export type RunFn = (bin: string, args: string[], cwd: string, onLine: (l: string) => void) => Promise<{ code: number | null; stderr: string }>;
+
+/**
+ * What runMission() reaches outside itself. Defaults are the real spawn and the real CSV log; the
+ * fixture tests replace both, so no test ever launches `claude -p` or `codex exec`.
+ */
+export interface RunnerDeps {
+  run: RunFn;
+  logLaunch: (row: { worker: string; model: string; mission: string; seconds: number; cost: string; exit: number | null }) => void;
+}
+
+/**
+ * The Builder's pinned launch line (09a-ENGINEERING "Pinned launch lines": forbid nested-agent
+ * tools). `Bash` stays disallowed as well: the SLICE was registered as "Claude `acceptEdits`
+ * without Bash" (12-SPIKE-RESULTS), and this Builder writes files, it does not run them.
+ */
+export function builderArgs(prompt: string): string[] {
+  return [
+    '-p', prompt,
+    '--model', CLAUDE_MODEL,
+    '--output-format', 'stream-json', '--verbose',
+    '--permission-mode', 'acceptEdits',
+    '--allowedTools', 'Read,Write,Edit,Glob,Grep',
+    '--disallowedTools', 'Bash,Agent,Task',
+    '--max-budget-usd', CLAUDE_BUDGET,
+    '--no-session-persistence',
+  ];
+}
 
 function board(): string {
   return boardPath(missionsDir());
@@ -86,7 +118,7 @@ function logLaunch(row: { worker: string; model: string; mission: string; second
 }
 
 /** Spawn with an args array (no shell), feed each stdout line to `onLine`, resolve with the exit code. */
-function run(bin: string, args: string[], cwd: string, onLine: (l: string) => void): Promise<{ code: number | null; stderr: string }> {
+const run: RunFn = (bin, args, cwd, onLine) => {
   return new Promise((resolve) => {
     const child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     let buf = '';
@@ -109,7 +141,9 @@ function run(bin: string, args: string[], cwd: string, onLine: (l: string) => vo
       resolve({ code, stderr });
     });
   });
-}
+};
+
+const REAL_DEPS: RunnerDeps = { run, logLaunch };
 
 const clip = (s: string, n = 240) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
@@ -124,7 +158,7 @@ function sha256File(p: string): { sha256: string; bytes: number } | null {
 
 // ── Builder: Claude Code ─────────────────────────────────────────────────────────────────────
 
-async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
+async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: RunnerDeps) {
   const prompt = [
     `You are the Builder on a mission from a Mission Control board.`,
     `Mission title: ${m.title}`,
@@ -134,16 +168,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
     `When done, reply with one short paragraph naming each file you wrote.`,
   ].join('\n');
   const launchId = randomUUID();
-  const args = [
-    '-p', prompt,
-    '--model', CLAUDE_MODEL,
-    '--output-format', 'stream-json', '--verbose',
-    '--permission-mode', 'acceptEdits',
-    '--allowedTools', 'Read,Write,Edit,Glob,Grep',
-    '--disallowedTools', 'Bash,Agent,Task',
-    '--max-budget-usd', CLAUDE_BUDGET,
-    '--no-session-persistence',
-  ];
+  const args = builderArgs(prompt);
   const argvHash = createHash('sha256').update(args.join('\u0000')).digest('hex');
   emit(BUILDER, { kind: 'status', status: 'starting', text: `claude -p (${CLAUDE_MODEL}) in ${WORKDIR}` });
   const written = new Set<string>();
@@ -152,25 +177,27 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
   let isError = false;
   let turns: number | null = null;
   let resultSubtype: string | null = null;
-  const agentToolUseIds = new Set<string>();
-  const seenChildParents = new Set<string>();
-  const childReceipts: LaunchReceipt[] = [];
+  // A message carrying a parent_tool_use_id came from a nested agent, whether or not the tool_use
+  // that spawned it was seen first: only Agent/Task produce such messages, and a child whose parent
+  // line was dropped must still get its own receipt rather than be drawn as the Builder.
+  const children = new Map<string, LaunchReceipt>();
   let refused = false;
   let refusalTool: string | undefined;
   const t0 = Date.now();
-  const { code, stderr } = await run(CLAUDE_BIN, args, WORKDIR, (line) => {
+  const { code, stderr } = await deps.run(CLAUDE_BIN, args, WORKDIR, (line) => {
     let j: any;
     try {
       j = JSON.parse(line);
     } catch {
       return;
     }
-    const parentId: string | undefined = j.parent_tool_use_id ?? undefined;
-    if (parentId && agentToolUseIds.has(parentId)) {
+    const parentId: string | undefined = typeof j.parent_tool_use_id === 'string' && j.parent_tool_use_id ? j.parent_tool_use_id : undefined;
+    if (parentId) {
       refused = true;
-      if (!seenChildParents.has(parentId)) {
-        seenChildParents.add(parentId);
-        childReceipts.push({
+      const seen = children.get(parentId);
+      if (seen) seen.endedAt = Date.now();
+      else {
+        children.set(parentId, {
           launchId: `${launchId}:${parentId}`,
           missionId: m.id,
           role: 'builder-subagent',
@@ -199,10 +226,9 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
         if (c.type === 'text' && c.text?.trim()) emit(BUILDER, { kind: 'message', text: clip(c.text.trim()) });
         if (c.type === 'tool_use') {
           if (c.name === 'Agent' || c.name === 'Task') {
-            if (c.id) agentToolUseIds.add(c.id);
             refused = true;
             refusalTool = c.name;
-            emit(BUILDER, { kind: 'status', status: 'failed', text: `refused_subagent: Builder called ${c.name}, which is disallowed` });
+            emit(BUILDER, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: Builder called ${c.name}, which is disallowed` });
             continue;
           }
           const fp = c.input?.file_path ?? c.input?.path ?? c.input?.pattern ?? '';
@@ -226,15 +252,20 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
     }
   });
   const secs = (Date.now() - t0) / 1000;
-  logLaunch({ worker: 'claude', model: CLAUDE_MODEL, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
+  deps.logLaunch({ worker: 'claude', model: CLAUDE_MODEL, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
   const receipt: LaunchReceipt = {
     launchId, missionId: m.id, role: 'builder', argvHash, model: CLAUDE_MODEL,
     startedAt: t0, endedAt: Date.now(), exit: code, turns, resultSubtype,
   };
   appendMissionLine(receipt, launchesPath(m.id));
-  for (const child of childReceipts) appendMissionLine(child, launchesPath(m.id));
+  for (const child of children.values()) appendMissionLine(child, launchesPath(m.id));
   if (refused) {
-    emit(RUNNER, { kind: 'receipt', text: `builder refused_subagent (${refusalTool ?? 'nested agent'}); card not advanced`, data: { by: 'builder', refused: true, launchId } });
+    // The result line may have drawn the Builder `finished`; a refused run must not end that way,
+    // and a child card must not be left `starting` after the process that carried it has exited.
+    const why = refusalTool ? `Builder called ${refusalTool}` : 'a nested agent ran';
+    emit(BUILDER, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: ${why}` });
+    for (const [parentId] of children) emit(SUBAGENT, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: nested agent under tool_use ${parentId}` });
+    emit(RUNNER, { kind: 'receipt', text: `builder ${REFUSED_SUBAGENT} (${refusalTool ?? 'nested agent'}); card not advanced`, data: { by: 'builder', refused: true, launchId, children: children.size } });
     return { ok: false, files: [] as string[], summary, cost, refused: true };
   }
   if (code !== 0 && !isError) emit(BUILDER, { kind: 'status', status: 'failed', text: `exit ${code}: ${clip(stderr)}` });
@@ -264,7 +295,7 @@ export function parseVerdict(text: string): { verdict: Verdict; reasons: string[
   return null;
 }
 
-async function runReferee(m: Mission, built: { files: string[]; summary: string }, emit: ReturnType<typeof emitter>) {
+async function runReferee(m: Mission, built: { files: string[]; summary: string }, emit: ReturnType<typeof emitter>, deps: RunnerDeps) {
   const rel = built.files.map((f) => path.relative(WORKDIR, f));
   const outFile = path.join(path.dirname(eventsPath(m.id)), 'referee-last-message.txt');
   const prompt = [
@@ -283,7 +314,7 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
   emit(REFEREE, { kind: 'status', status: 'starting', text: `codex exec (${CODEX_MODEL}) read-only` });
   const t0 = Date.now();
   let lastMessage = '';
-  const { code, stderr } = await run(CODEX_BIN, args, WORKDIR, (line) => {
+  const { code, stderr } = await deps.run(CODEX_BIN, args, WORKDIR, (line) => {
     let j: any;
     try {
       j = JSON.parse(line);
@@ -301,7 +332,7 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     else if (j.type === 'turn.failed' || j.type === 'error') emit(REFEREE, { kind: 'status', status: 'failed', text: clip(JSON.stringify(j)) });
   });
   const secs = (Date.now() - t0) / 1000;
-  logLaunch({ worker: 'codex', model: CODEX_MODEL, mission: m.id, seconds: secs, cost: '', exit: code });
+  deps.logLaunch({ worker: 'codex', model: CODEX_MODEL, mission: m.id, seconds: secs, cost: '', exit: code });
   if (!lastMessage) {
     try {
       lastMessage = fs.readFileSync(outFile, 'utf8');
@@ -318,13 +349,22 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
 
 // ── Mission loop ─────────────────────────────────────────────────────────────────────────────
 
-async function runMission(m: Mission) {
+export async function runMission(m: Mission, deps: RunnerDeps = REAL_DEPS) {
   const claim: MissionLine = { id: m.id, ts: Date.now(), status: 'working', runnerPid: process.pid };
   appendMissionLine(claim, board());
   const emit = emitter(m.id);
   emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}` });
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);
-  const built = await runBuilder(m, emit);
+  const built = await runBuilder(m, emit, deps);
+  if (built.refused) {
+    // Not a generic failure, and not a Done card. The Builder broke the one-process rule, so its
+    // output is not the Builder's alone and the Referee is not asked to judge it. The card goes
+    // back to Waiting -- the column it was launched from -- carrying the reason, so the founder
+    // sees why it did not advance and can relaunch it (the launch route only accepts `waiting`).
+    appendMissionLine({ id: m.id, ts: Date.now(), status: 'waiting', error: REFUSED_SUBAGENT, costUsd: built.cost } satisfies MissionLine, board());
+    console.log(`[runner] mission ${m.id} ${REFUSED_SUBAGENT}: card not advanced`);
+    return;
+  }
   if (!built.ok || built.files.length === 0) {
     const error = built.ok ? 'builder reported no files written' : 'builder failed';
     appendMissionLine({ id: m.id, ts: Date.now(), status: 'failed', error, costUsd: built.cost } satisfies MissionLine, board());
@@ -332,7 +372,7 @@ async function runMission(m: Mission) {
     return;
   }
   console.log(`[runner] mission ${m.id} — referee starting`);
-  const ref = await runReferee(m, built, emit);
+  const ref = await runReferee(m, built, emit, deps);
   const line: MissionLine = ref.verdict
     ? { id: m.id, ts: Date.now(), status: 'done', verdict: ref.verdict.verdict, verdictReasons: ref.verdict.reasons, costUsd: built.cost }
     : { id: m.id, ts: Date.now(), status: 'failed', error: 'referee returned no verdict', costUsd: built.cost };
