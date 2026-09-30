@@ -52,3 +52,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 | 2026-10-01 | B0-02 | #141 | provider registry v0, 15/15 hashes verified; Claude headless `unclear`, Codex `yes-conditional` | B0-00 measures caps; B0-20 wires launches.csv |
 | 2026-10-01 | B0-13 | #142 | build/jobs.yml (143) + capabilities.yml + lint (10 tests) | wire into check-suite (irreversible follow-up); B0-17 uses it |
 | 2026-10-01 | B0-19 | — | **abandoned first attempt** (sonnet, 96 tool calls, nothing committed, test file does not parse); draft left untracked at `.claude/worktrees/agent-adef12bfff3252fb4/kernel/internal/secretscan` | relaunch on opus off the final `build/b0-16` |
+| 2026-10-01 | B0-16 | #143 | kernel/ Go module + avk-boundary checker (default-deny imports/size/Journal writers); 3 review rounds | founder: tier-floor `kernel/**`; wiring #144 |
+| 2026-10-01 | B0-16w | #144 (irreversible, stacked on #143) | check:kernel in check-suite + CI setup-go | founder gate |
+| 2026-10-01 | B0-03 | #145 (full, stacked on #139) | runner receipts per launch (builder+referee), subagent refusal | founder + Codex review |
+| 2026-10-01 | B0-19 | #146 (stacked on #143) | pre-model secret scanner + RequireScanned gate; 2 review rounds | B1-08 wires the gate |
+| 2026-10-01 | B0-17a | — (PASS at 00df1bd) | frozen done-tests B1-01a/01b/05, hash formulas pinned in api.go | reconcile with B0-17b → one PR |
