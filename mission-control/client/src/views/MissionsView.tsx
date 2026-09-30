@@ -148,7 +148,7 @@ function TeamPanel({ mission, now }: { mission: Mission; now: number }) {
             </div>
             <ol className="mt-2 space-y-1">
               {a.latest.map((e, i) => (
-                <li key={i} className="text-[11.5px] text-muted">
+                <li key={i} className="text-[11px] text-muted">
                   <span className="fig text-dim">{formatRelative(e.ts, now)}</span> <span className="text-text">{e.kind}</span> {e.text}
                 </li>
               ))}
