@@ -103,7 +103,8 @@ func ScanAndRecord(repo, receiptDir string, now time.Time) (*Result, string, err
 // RequireScanned returns nil only when receiptDir holds a receipt for repo's CURRENT tree, made
 // under the current rule set, with zero findings. Otherwise it refuses with ErrNotScanned (no receipt
 // for this repository at all), ErrStale (a receipt exists, but for another tree or rule set) or
-// ErrFindings (the current tree was scanned and holds secrets). It never scans: a worker launcher
+// ErrFindings (the current tree was scanned and holds secrets), and with ErrReceiptInRepo when
+// receiptDir lies inside repo. It never scans: a worker launcher
 // calls it, and only a deliberate ScanAndRecord can satisfy it.
 func RequireScanned(repo, receiptDir string) error {
 	root, hash, err := TreeHash(repo, receiptDir)

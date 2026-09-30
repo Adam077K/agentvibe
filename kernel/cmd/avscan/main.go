@@ -42,7 +42,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "avscan: %s has a clean receipt for its current tree\n", repo)
 			return 0
 		case errors.Is(err, secretscan.ErrNotScanned), errors.Is(err, secretscan.ErrStale),
-			errors.Is(err, secretscan.ErrFindings):
+			errors.Is(err, secretscan.ErrFindings), errors.Is(err, secretscan.ErrReceiptInRepo):
 			fmt.Fprintf(stderr, "avscan: refused: %v\n", err)
 			return 1
 		default:

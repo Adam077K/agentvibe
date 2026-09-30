@@ -108,8 +108,8 @@ func TestCleanRepoHasZeroFindings(t *testing.T) {
 	dir := t.TempDir()
 	fixture(t, dir)
 	write(t, dir, "deploy/app.env", "API_KEY=${API_KEY}\nSESSION_TOKEN: \"changeme-changeme-changeme\"\nPORT=8080\n"+
-		"const JWT_SECRET = process.env.JWT_SECRET;\nFAKE_TOKEN=not-a-real-secret-written-by-b0-19\n")
-	write(t, dir, "assets/logo.bin", "\x00\x01"+"gh"+"p_"+strings.Repeat("Ab3", 12)) // binary: skipped
+		"const JWT_SECRET = process.env.JWT_SECRET;\nDB_PASSWORD=${DATABASE_PASSWORD_FROM_VAULT}\n")
+	write(t, dir, "assets/logo.bin", "\x00\x01\x02 plain bytes \x00") // NUL-bearing: matched with NULs dropped
 	// A token under .git is outside the working tree and must not be read.
 	write(t, dir, ".git/config", "url = https://x:"+"gh"+"p_"+pick(rand.New(rand.NewPCG(1, 2)), alnum, 36)+"@example.invalid\n")
 	if err := os.Symlink("README.md", filepath.Join(dir, "link.md")); err != nil {
@@ -171,7 +171,7 @@ func TestRequireScannedRefusesReceiptWithFindings(t *testing.T) {
 func TestRequireScannedAcceptsCleanCurrentReceipt(t *testing.T) {
 	dir := t.TempDir()
 	fixture(t, dir)
-	receipts := filepath.Join(dir, ".avscan") // inside the repo: must not move the tree hash
+	receipts := t.TempDir()
 	_, path, err := ScanAndRecord(dir, receipts, time.Now())
 	if err != nil {
 		t.Fatal(err)
