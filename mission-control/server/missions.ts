@@ -201,3 +201,53 @@ export function foldTeam(missionId: string, events: TeamEvent[], latestN = 6): T
   }
   return { missionId, agents: [...cards.values()], receipts, total: events.length };
 }
+
+// -- Launch receipts --------------------------------------------------------------------------
+//
+// One receipt per process the runner actually spawned: a Builder run, a Referee run, or -- when
+// the Builder's --disallowedTools Agent,Task flag fails to hold -- a nested subagent whose
+// stream-json messages carry a parent_tool_use_id matching a tool_use the Builder attempted.
+// parentLaunchId links that child receipt back to the launch it grew out of; it is absent on a
+// top-level launch. Written by scripts/run-missions.ts via index-cache.ts's generic
+// appendMissionLine() -- this file stays read-only, matching every other export here.
+
+/** Beside events.jsonl: one line per process the runner actually launched for this mission. */
+export function launchesPath(id: string, dir: string = missionsDir()): string {
+  if (MISSION_ID.exec(id) === null) throw new Error('invalid mission id: ' + id);
+  return path.join(dir, id, 'launches.jsonl');
+}
+
+export interface LaunchReceipt {
+  launchId: string;
+  missionId: string;
+  role: string;
+  argvHash: string;
+  model: string;
+  startedAt: number;
+  endedAt: number;
+  exit: number | null;
+  turns: number | null;
+  resultSubtype: string | null;
+  parentLaunchId?: string;
+}
+
+export function readLaunchReceipts(id: string, dir: string = missionsDir()): LaunchReceipt[] {
+  let text: string;
+  try {
+    text = fs.readFileSync(launchesPath(id, dir), 'utf8');
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw e;
+  }
+  const out: LaunchReceipt[] = [];
+  for (const raw of text.split('\n')) {
+    if (!raw.trim()) continue;
+    try {
+      const p = JSON.parse(raw) as LaunchReceipt;
+      if (typeof p.launchId === 'string' && typeof p.missionId === 'string' && typeof p.role === 'string') out.push(p);
+    } catch {
+      /* torn line */
+    }
+  }
+  return out;
+}

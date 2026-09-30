@@ -23,13 +23,15 @@
 // This script, like consume-dispatch.ts, is OUTSIDE server/**: spawning is its whole job.
 
 import { spawn } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
 import {
   boardPath,
   eventsPath,
+  launchesPath,
+  type LaunchReceipt,
   foldBoard,
   missionsDir,
   readBoardLines,
@@ -58,6 +60,7 @@ const CODEX_BIN = process.env.MC_CODEX_BIN ?? 'codex';
 const BUILDER = { agent: 'builder', title: 'Builder', model: CLAUDE_MODEL, family: 'anthropic' };
 const REFEREE = { agent: 'referee', title: 'Referee', model: CODEX_MODEL, family: 'openai' };
 const RUNNER = { agent: 'runner', title: 'Runner', model: '-', family: '-' };
+const SUBAGENT = { agent: 'builder-subagent', title: 'Builder > subagent', model: CLAUDE_MODEL, family: 'anthropic' };
 type Who = typeof BUILDER;
 
 function board(): string {
@@ -130,21 +133,30 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
     `Work in the current directory. Write only the file(s) the goal names. Do not modify anything else.`,
     `When done, reply with one short paragraph naming each file you wrote.`,
   ].join('\n');
+  const launchId = randomUUID();
   const args = [
     '-p', prompt,
     '--model', CLAUDE_MODEL,
     '--output-format', 'stream-json', '--verbose',
     '--permission-mode', 'acceptEdits',
     '--allowedTools', 'Read,Write,Edit,Glob,Grep',
-    '--disallowedTools', 'Bash',
+    '--disallowedTools', 'Bash,Agent,Task',
     '--max-budget-usd', CLAUDE_BUDGET,
     '--no-session-persistence',
   ];
+  const argvHash = createHash('sha256').update(args.join('\u0000')).digest('hex');
   emit(BUILDER, { kind: 'status', status: 'starting', text: `claude -p (${CLAUDE_MODEL}) in ${WORKDIR}` });
   const written = new Set<string>();
   let cost: number | undefined;
   let summary = '';
   let isError = false;
+  let turns: number | null = null;
+  let resultSubtype: string | null = null;
+  const agentToolUseIds = new Set<string>();
+  const seenChildParents = new Set<string>();
+  const childReceipts: LaunchReceipt[] = [];
+  let refused = false;
+  let refusalTool: string | undefined;
   const t0 = Date.now();
   const { code, stderr } = await run(CLAUDE_BIN, args, WORKDIR, (line) => {
     let j: any;
@@ -153,12 +165,46 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
     } catch {
       return;
     }
+    const parentId: string | undefined = j.parent_tool_use_id ?? undefined;
+    if (parentId && agentToolUseIds.has(parentId)) {
+      refused = true;
+      if (!seenChildParents.has(parentId)) {
+        seenChildParents.add(parentId);
+        childReceipts.push({
+          launchId: `${launchId}:${parentId}`,
+          missionId: m.id,
+          role: 'builder-subagent',
+          argvHash,
+          model: CLAUDE_MODEL,
+          startedAt: Date.now(),
+          endedAt: Date.now(),
+          exit: null,
+          turns: null,
+          resultSubtype: null,
+          parentLaunchId: launchId,
+        });
+        emit(SUBAGENT, { kind: 'status', status: 'starting', text: `Builder subagent (parent tool_use ${parentId})` });
+      }
+      if (j.type === 'assistant') {
+        for (const c of j.message?.content ?? []) {
+          if (c.type === 'text' && c.text?.trim()) emit(SUBAGENT, { kind: 'message', text: clip(c.text.trim()) });
+        }
+      }
+      return;
+    }
     if (j.type === 'system' && j.subtype === 'init') {
       emit(BUILDER, { kind: 'status', status: 'working', model: j.model, text: `session ${j.session_id}`, data: { session_id: j.session_id } });
     } else if (j.type === 'assistant') {
       for (const c of j.message?.content ?? []) {
         if (c.type === 'text' && c.text?.trim()) emit(BUILDER, { kind: 'message', text: clip(c.text.trim()) });
         if (c.type === 'tool_use') {
+          if (c.name === 'Agent' || c.name === 'Task') {
+            if (c.id) agentToolUseIds.add(c.id);
+            refused = true;
+            refusalTool = c.name;
+            emit(BUILDER, { kind: 'status', status: 'failed', text: `refused_subagent: Builder called ${c.name}, which is disallowed` });
+            continue;
+          }
           const fp = c.input?.file_path ?? c.input?.path ?? c.input?.pattern ?? '';
           if ((c.name === 'Write' || c.name === 'Edit') && c.input?.file_path) written.add(c.input.file_path);
           emit(BUILDER, { kind: 'tool', text: `${c.name} ${clip(String(fp), 120)}` });
@@ -168,6 +214,8 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
       cost = j.total_cost_usd;
       summary = String(j.result ?? '');
       isError = !!j.is_error;
+      turns = typeof j.num_turns === 'number' ? j.num_turns : null;
+      resultSubtype = j.subtype ?? null;
       emit(BUILDER, {
         kind: 'result',
         status: isError ? 'failed' : 'finished',
@@ -179,6 +227,16 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
   });
   const secs = (Date.now() - t0) / 1000;
   logLaunch({ worker: 'claude', model: CLAUDE_MODEL, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
+  const receipt: LaunchReceipt = {
+    launchId, missionId: m.id, role: 'builder', argvHash, model: CLAUDE_MODEL,
+    startedAt: t0, endedAt: Date.now(), exit: code, turns, resultSubtype,
+  };
+  appendMissionLine(receipt, launchesPath(m.id));
+  for (const child of childReceipts) appendMissionLine(child, launchesPath(m.id));
+  if (refused) {
+    emit(RUNNER, { kind: 'receipt', text: `builder refused_subagent (${refusalTool ?? 'nested agent'}); card not advanced`, data: { by: 'builder', refused: true, launchId } });
+    return { ok: false, files: [] as string[], summary, cost, refused: true };
+  }
   if (code !== 0 && !isError) emit(BUILDER, { kind: 'status', status: 'failed', text: `exit ${code}: ${clip(stderr)}` });
   const files = [...written].map((f) => path.resolve(WORKDIR, f));
   for (const f of files) {
@@ -186,7 +244,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
     emit(RUNNER, { kind: 'receipt', text: `file ${path.relative(WORKDIR, f)}`, data: { by: 'builder', file: path.relative(WORKDIR, f), ...(h ?? { missing: true }) } });
   }
   emit(RUNNER, { kind: 'receipt', text: `builder exit ${code}, ${secs.toFixed(1)}s, $${cost?.toFixed(4) ?? '?'}`, data: { by: 'builder', exit: code, seconds: secs, costUsd: cost } });
-  return { ok: code === 0 && !isError, files, summary, cost };
+  return { ok: code === 0 && !isError, files, summary, cost, refused: false };
 }
 
 // ── Referee: Codex ───────────────────────────────────────────────────────────────────────────
