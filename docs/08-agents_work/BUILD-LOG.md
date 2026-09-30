@@ -25,6 +25,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   the sandbox allowlist names exactly those paths. Per CLAUDE.md's per-path rule for Bash/Write divergence, the sandbox
   is right for these paths. Nowhere else. Durable fix (hook learns this session's harness worktrees) is harness
   self-edit → irreversible → founder.
+- **DECISION — no merges this session.** Recording a QA verdict from an orchestrator-dispatched finisher agent was
+  refused by the auto-mode classifier ("CI Bypass"). Not worked around. Every reviewed job becomes a PR carrying the
+  reviewer's evidence; the founder records the verdict (or re-reviews) and merges. Downstream jobs build on stacked
+  branches instead of `main`.
 - **Tool-use note:** a sandboxed `git worktree add` inside the session root still hits 35 denials on
   `.claude/**` (re-measured 2026-10-01), so the documented wall stands.
 - **Blocked on the founder:** B0-05 (second macOS user), B0-06 (Apple `container` not installed), B0-08/09/10/11
