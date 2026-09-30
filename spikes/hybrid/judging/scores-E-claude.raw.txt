@@ -1,0 +1,32 @@
+```json
+[
+{"id":"I5950","D1":9,"D2":5,"D3":8,"D4":6,"note":"Vivid 'see coming' headline echoes Q18; microcopy crams 5 facts, violates 'one line'."},
+{"id":"I2089","D1":8,"D2":6,"D3":7,"D4":6,"note":"Solid 'stop guessing' framing; plan has no guardrails; microcopy overstuffed with 4 facts."},
+{"id":"I3957","D1":8,"D2":6,"D3":9,"D4":6,"note":"Same copy as I2089 but far more rigorous plan: exact n match, guardrails, no-peeking."},
+{"id":"I7256","D1":9,"D2":8,"D3":8,"D4":9,"note":"Best T1: 'moved before you see it' plus proactive bank-trust microcopy; clean, disciplined plan."},
+{"id":"I6761","D1":8,"D2":7,"D3":7,"D4":7,"note":"Strong 'gone before you spend it'; decent plan but weak guardrail handling, no explicit no-peek."},
+{"id":"I3817","D1":8,"D2":7,"D3":9,"D4":8,"note":"Excellent plan (SRM check, corpus-tied guardrail on scope confusion); slightly generic 'surprised' headline."},
+{"id":"I3328","D1":8,"D2":5,"D3":7,"D4":5,"note":"Good Q4 echo but bloated pricing-stuffed microcopy; plan lacks any guardrail metrics."},
+{"id":"I9774","D1":8,"D2":7,"D3":6,"D4":7,"note":"Good copy, sensible day-14 guardrail, but plan extends duration on interim significance (peeking)."},
+{"id":"I3390","D1":8,"D2":6,"D3":7,"D4":6,"note":"Decent Q2/Q4 echo but verbose value line and long CTA; correct n, thinner rigor."},
+{"id":"I2555","D1":7,"D2":7,"D3":9,"D4":6,"note":"Solid mechanism copy; format drifts from brief; excellent n match, clear decision rule."},
+{"id":"I5580","D1":8,"D2":8,"D3":10,"D4":8,"note":"Best T2 copy: concrete $36 savings; textbook stats plan with revenue/refund guardrails."},
+{"id":"I8726","D1":9,"D2":8,"D3":9,"D4":9,"note":"Great 'lumpy income' corpus callback; rigorous, self-aware near-ceiling duration with contingency."},
+{"id":"I1080","D1":9,"D2":9,"D3":9,"D4":8,"note":"Strong bank-trust + no-dashboard copy; near-exact n match, thoughtful security-anxiety guardrail."},
+{"id":"I7973","D1":7,"D2":6,"D3":7,"D4":6,"note":"Nice 'has a job' opener but skips trust detail despite that being email's whole point."},
+{"id":"I6257","D1":10,"D2":8,"D3":10,"D4":9,"note":"Near-verbatim Q18 quote as subject; exact n match; quantified guardrail thresholds, best T3."},
+{"id":"I9830","D1":8,"D2":8,"D3":7,"D4":7,"note":"Good trust-focused copy; correct n but no maturity-window buffer, no explicit no-peek."},
+{"id":"I7705","D1":6,"D2":6,"D3":7,"D4":5,"note":"Plain 'set-asides' copy, no offer, draws attention to cancel; correct math, no infeasibility framing."},
+{"id":"I8725","D1":6,"D2":6,"D3":7,"D4":5,"note":"Similar plain copy; correct stats, notes 'smaller lifts need longer test' but thin."},
+{"id":"I6907","D1":9,"D2":9,"D3":10,"D4":9,"note":"Best T4: concrete pause offer + mental-math echo; exemplary staged infeasibility analysis with fallback."},
+{"id":"I5226","D1":7,"D2":5,"D3":8,"D4":5,"note":"Merges secondary/confirm labels (brief gap); honest but jumps to extreme 100%-lift MDE."},
+{"id":"I7729","D1":9,"D2":9,"D3":9,"D4":9,"note":"Strong penalty-framed copy (Q20/Q11); justified one-sided test, explicit infeasibility + alternatives."},
+{"id":"I6854","D1":7,"D2":7,"D3":6,"D4":7,"note":"Good pause offer, smart 90-day churn guardrail; stated duration under-shoots own required n, mild peek."},
+{"id":"I8829","D1":7,"D2":6,"D3":9,"D4":6,"note":"Plain 'fewer surprises' copy, no offer; flawless honest infeasibility handling, zero peeking."},
+{"id":"I1459","D1":8,"D2":8,"D3":9,"D4":8,"note":"Ties pricing to penalty insight explicitly; near-exact n/duration, smart deadline-seasonality note."},
+{"id":"I1695","D1":6,"D2":7,"D3":8,"D4":6,"note":"Functional keyword-matched ad; correct trial/impression sizing but generic, lacks penalty/dashboard hooks."},
+{"id":"I2498","D1":9,"D2":9,"D3":10,"D4":9,"note":"Best T5: 'before you see it', 'no dashboards', penalty headline; textbook CTR-primary trade-off analysis."},
+{"id":"I2087","D1":8,"D2":8,"D3":9,"D4":8,"note":"Strong penalty/surprise headlines; rigorous conversion-primary plan naming CTR risk, near-exact n."},
+{"id":"I6746","D1":7,"D2":7,"D3":9,"D4":6,"note":"Reuses generic I1695 headlines plus 'mental math' nod; very precise multi-MDE feasibility math."}
+]
+```

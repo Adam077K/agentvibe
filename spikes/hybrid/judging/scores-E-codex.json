@@ -1,0 +1,254 @@
+[
+  {
+    "id": "I5195",
+    "D1": 8,
+    "D2": 9,
+    "D3": 10,
+    "D4": 8,
+    "note": "Clear uncertainty framing and accurate mechanism; rigorous test, though dense microcopy weakens the hero.",
+    "label": "T1_hybrid_codex_r2"
+  },
+  {
+    "id": "I6668",
+    "D1": 10,
+    "D2": 10,
+    "D3": 10,
+    "D4": 9,
+    "note": "Customer-native surprise framing, concise mechanism, accurate expectations, and a fully specified fixed-horizon test.",
+    "label": "T1_hybrid_codex_r1"
+  },
+  {
+    "id": "I4474",
+    "D1": 7,
+    "D2": 5,
+    "D3": 9,
+    "D4": 5,
+    "note": "Relevant surprise framing undermined by absolute promises and unsupported read-only security claims; paid-outcome maturation is unspecified.",
+    "label": "T1_hybrid_claude_r1"
+  },
+  {
+    "id": "I2339",
+    "D1": 9,
+    "D2": 7,
+    "D3": 8,
+    "D4": 7,
+    "note": "Strong customer phrasing, but instant transfers and guaranteed certainty overpromise; guardrail maturation and noninferiority margins are missing.",
+    "label": "T1_hybrid_claude_r2"
+  },
+  {
+    "id": "I3924",
+    "D1": 8,
+    "D2": 7,
+    "D3": 8,
+    "D4": 6,
+    "note": "'Gone' risks alarming bank-anxious visitors; unsupported security claim and contradictory guardrail instructions weaken otherwise sound sizing.",
+    "label": "T1_classic_claude_r1"
+  },
+  {
+    "id": "I3608",
+    "D1": 8,
+    "D2": 9,
+    "D3": 8,
+    "D4": 8,
+    "note": "Accurate, concrete hero and correctly matured fixed-horizon test; lacks downstream guardrails.",
+    "label": "T1_classic_codex_r1"
+  },
+  {
+    "id": "I2895",
+    "D1": 9,
+    "D2": 9,
+    "D3": 8,
+    "D4": 9,
+    "note": "Strong spending-money framing with honest product scope; correct test sizing and stopping rule, but no guardrails.",
+    "label": "T1_classic_codex_r2"
+  },
+  {
+    "id": "I2829",
+    "D1": 8,
+    "D2": 6,
+    "D3": 5,
+    "D4": 5,
+    "note": "Exact-tax and security promises exceed evidence; extending an insignificant test permits peeking, and nonsignificance cannot establish downstream safety.",
+    "label": "T1_classic_claude_r2"
+  },
+  {
+    "id": "I6077",
+    "D1": 9,
+    "D2": 10,
+    "D3": 10,
+    "D4": 9,
+    "note": "Clear annual commitment and savings, faithful benefits, and rigorous testing that checks mature revenue before rollout.",
+    "label": "T2_hybrid_codex_r1"
+  },
+  {
+    "id": "I1536",
+    "D1": 9,
+    "D2": 9,
+    "D3": 9,
+    "D4": 9,
+    "note": "Transparent annual pricing and customer-grounded benefits; sound sizing and downstream checks, with weaker visit-independence assumptions.",
+    "label": "T2_classic_codex_r1"
+  },
+  {
+    "id": "I2800",
+    "D1": 8,
+    "D2": 6,
+    "D3": 8,
+    "D4": 6,
+    "note": "Lumpy-income language resonates, but exact liability overpromises; day-seven paid conversion is premature for a fourteen-day trial.",
+    "label": "T2_hybrid_claude_r1"
+  },
+  {
+    "id": "I4791",
+    "D1": 6,
+    "D2": 5,
+    "D3": 7,
+    "D4": 4,
+    "note": "Cluttered value line, exact-liability promises, and invented bank equivalence weaken trust; assignment persists only within sessions.",
+    "label": "T2_classic_claude_r1"
+  },
+  {
+    "id": "I5057",
+    "D1": 7,
+    "D2": 4,
+    "D3": 8,
+    "D4": 3,
+    "note": "Addresses real hesitation with unsupported access, security, and setup-time assurances; five-week analysis omits final outcome maturation.",
+    "label": "T3_hybrid_claude_r1"
+  },
+  {
+    "id": "I4367",
+    "D1": 9,
+    "D2": 9,
+    "D3": 9,
+    "D4": 9,
+    "note": "Clear mental-math benefit and honest Plaid disclosure; correctly sized test includes outcome maturation and complaint guardrails.",
+    "label": "T3_classic_codex_r1"
+  },
+  {
+    "id": "I4161",
+    "D1": 5,
+    "D2": 4,
+    "D3": 7,
+    "D4": 2,
+    "note": "Accusatory opening and contradictory read-only transfer claims damage trust; subject selection and final outcome maturation remain unspecified.",
+    "label": "T3_classic_claude_r1"
+  },
+  {
+    "id": "I8119",
+    "D1": 10,
+    "D2": 10,
+    "D3": 10,
+    "D4": 10,
+    "note": "Precisely reflects surprise and stale-estimate anxiety, explains activation honestly, and supplies a complete, correctly powered test.",
+    "label": "T3_hybrid_codex_r1"
+  },
+  {
+    "id": "I6414",
+    "D1": 6,
+    "D2": 5,
+    "D3": 4,
+    "D4": 4,
+    "note": "Fear-heavy cancellation claims and pause-counted saves inflate apparent success; outcome-dependent extension and optimistic feasibility undermine testing.",
+    "label": "T4_classic_claude_r1"
+  },
+  {
+    "id": "I7123",
+    "D1": 8,
+    "D2": 9,
+    "D3": 8,
+    "D4": 8,
+    "note": "Respectful, concrete reminder with explicit saves and durable-retention checks; does not plainly acknowledge underpowering for realistic smaller lifts.",
+    "label": "T4_classic_codex_r1"
+  },
+  {
+    "id": "I5993",
+    "D1": 5,
+    "D2": 3,
+    "D3": 6,
+    "D4": 1,
+    "note": "Invents exact liability and already-funded savings; correct feasibility arithmetic is undermined by an unconditional qualitative fallback to shipping.",
+    "label": "T4_hybrid_claude_r2"
+  },
+  {
+    "id": "I6545",
+    "D1": 9,
+    "D2": 10,
+    "D3": 10,
+    "D4": 9,
+    "note": "Faithful separation framing, transparent cancellation, and an honestly limited large-effect test with mature retention checks.",
+    "label": "T4_hybrid_codex_r2"
+  },
+  {
+    "id": "I5322",
+    "D1": 6,
+    "D2": 4,
+    "D3": 6,
+    "D4": 2,
+    "note": "Unsupported typical-penalty and exact-liability claims pressure users; valid one-sided sizing is weakened by outcome-driven extension and repowering.",
+    "label": "T4_hybrid_claude_r1"
+  },
+  {
+    "id": "I5861",
+    "D1": 7,
+    "D2": 5,
+    "D3": 5,
+    "D4": 4,
+    "note": "Relevant mental-math framing, but pause terms conflict with ninety-day promise; planned interim peeking invalidates otherwise reasonable sizing.",
+    "label": "T4_classic_claude_r2"
+  },
+  {
+    "id": "I4866",
+    "D1": 8,
+    "D2": 8,
+    "D3": 8,
+    "D4": 7,
+    "note": "Accurate benefits and correct large-effect sizing; added cancellation step risks friction, and realistic-lift feasibility remains understated.",
+    "label": "T4_classic_codex_r2"
+  },
+  {
+    "id": "I6469",
+    "D1": 9,
+    "D2": 9,
+    "D3": 10,
+    "D4": 8,
+    "note": "Customer-grounded copy and explicit-save measurement; excellent feasibility disclosure, fixed horizon, and mature retention guardrails.",
+    "label": "T4_hybrid_codex_r1"
+  },
+  {
+    "id": "I8372",
+    "D1": 9,
+    "D2": 10,
+    "D3": 10,
+    "D4": 9,
+    "note": "Accurate, counted assets connect mental math to mechanism; downstream-primary test handles feasibility and attribution rigorously. Control copy is unspecified.",
+    "label": "T5_hybrid_codex_r1"
+  },
+  {
+    "id": "I5179",
+    "D1": 8,
+    "D2": 9,
+    "D3": 8,
+    "D4": 8,
+    "note": "Concrete, accurate assets and sound downstream-primary sizing; lacks guardrails. Conversion forecast remains conditional because control copy is unspecified.",
+    "label": "T5_classic_codex_r1"
+  },
+  {
+    "id": "I5274",
+    "D1": 6,
+    "D2": 6,
+    "D3": 7,
+    "D4": 4,
+    "note": "Penalty-avoidance and security promises exceed evidence; correct downstream sizing, but ambiguous eight-to-nine-week horizon and weak randomization specification.",
+    "label": "T5_classic_claude_r1"
+  },
+  {
+    "id": "I8477",
+    "D1": 7,
+    "D2": 6,
+    "D3": 8,
+    "D4": 5,
+    "note": "Calculator and penalty framing risk mismatched expectations; correct CTR sizing acknowledges downstream risk, but ad rotation does not establish randomization.",
+    "label": "T5_hybrid_claude_r1"
+  }
+]

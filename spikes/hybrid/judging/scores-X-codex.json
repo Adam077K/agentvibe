@@ -1,0 +1,128 @@
+[
+  {
+    "id": "I1675",
+    "D1": 8,
+    "D2": 7,
+    "D3": 6,
+    "D4": 7,
+    "note": "Strong spending-prevention framing; exact tax and security claims overreach. Extending after nonsignificance invalidates the fixed horizon.",
+    "label": "T1_classic_claude_r2"
+  },
+  {
+    "id": "I7436",
+    "D1": 8,
+    "D2": 6,
+    "D3": 10,
+    "D4": 5,
+    "note": "Excellent statistical plan; absolute surprise prevention and unsupported read-only access weaken credibility.",
+    "label": "T1_hybrid_claude_r1"
+  },
+  {
+    "id": "I8619",
+    "D1": 9,
+    "D2": 8,
+    "D3": 10,
+    "D4": 9,
+    "note": "Closest to customer phrasing, with a clear mechanism and rigorous fixed-horizon plan; April promise remains too absolute.",
+    "label": "T1_hybrid_claude_r2"
+  },
+  {
+    "id": "I1766",
+    "D1": 8,
+    "D2": 8,
+    "D3": 8,
+    "D4": 6,
+    "note": "Concrete mechanism and correct sizing; 'gone' creates bank-access anxiety, and guardrail instructions contradict the shipping rule.",
+    "label": "T1_classic_claude_r1"
+  },
+  {
+    "id": "I1932",
+    "D1": 7,
+    "D2": 6,
+    "D3": 8,
+    "D4": 5,
+    "note": "Correct sizing and revenue follow-up; dense copy, exact-tax promises, and unsupported bank comparisons undermine persuasion.",
+    "label": "T2_classic_claude_r1"
+  },
+  {
+    "id": "I2923",
+    "D1": 9,
+    "D2": 8,
+    "D3": 7,
+    "D4": 8,
+    "note": "Strong uncertainty and lumpy-income language; correct sizing, but Day-7 paid conversion poorly fits a 14-day trial.",
+    "label": "T2_hybrid_claude_r1"
+  },
+  {
+    "id": "I3434",
+    "D1": 7,
+    "D2": 5,
+    "D3": 7,
+    "D4": 3,
+    "note": "Alarmist opening and contradictory read-only transfer claims hurt trust; sizing works, but tested subject and outcome maturation remain unspecified.",
+    "label": "T3_classic_claude_r1"
+  },
+  {
+    "id": "I4233",
+    "D1": 9,
+    "D2": 6,
+    "D3": 9,
+    "D4": 5,
+    "note": "Strong customer pains and clean subject selection; unsupported security assurances contradict automatic transfers. Seven-day outcome maturation needs clarification.",
+    "label": "T3_hybrid_claude_r1"
+  },
+  {
+    "id": "I4531",
+    "D1": 7,
+    "D2": 6,
+    "D3": 5,
+    "D4": 5,
+    "note": "Relevant guessing pain and tangible offer; assumes immediate cancellation effects, permits conditional extension, and understates realistic-lift feasibility problems.",
+    "label": "T4_classic_claude_r1"
+  },
+  {
+    "id": "I5309",
+    "D1": 7,
+    "D2": 6,
+    "D3": 8,
+    "D4": 4,
+    "note": "Correct one-sided sizing and honest limited power; unsupported typical-penalty claim pressures users, and observed-effect repowering needs safeguards.",
+    "label": "T4_hybrid_claude_r1"
+  },
+  {
+    "id": "I7016",
+    "D1": 6,
+    "D2": 4,
+    "D3": 7,
+    "D4": 2,
+    "note": "Invents a fully funded, precisely known tax obligation. Sound sizing is undermined by unconditional shipping and 'no downside' assertions.",
+    "label": "T4_hybrid_claude_r2"
+  },
+  {
+    "id": "I4593",
+    "D1": 8,
+    "D2": 6,
+    "D3": 5,
+    "D4": 5,
+    "note": "Recognizable customer language; 90-day offer conflicts with earlier resumption. Correct large sample, but interim peeking undermines inference.",
+    "label": "T4_classic_claude_r2"
+  },
+  {
+    "id": "I7595",
+    "D1": 8,
+    "D2": 8,
+    "D3": 9,
+    "D4": 8,
+    "note": "Specific, correctly counted assets and strong CTR trade-off analysis; universal penalty comparison overreaches, and even rotation doesn't establish randomization.",
+    "label": "T5_hybrid_claude_r1"
+  },
+  {
+    "id": "I7955",
+    "D1": 6,
+    "D2": 7,
+    "D3": 8,
+    "D4": 5,
+    "note": "Correct downstream sizing and proxy critique; generic promises imply broader tax handling. Eight-to-nine-week horizon should specify nine weeks.",
+    "label": "T5_classic_claude_r1"
+  }
+]

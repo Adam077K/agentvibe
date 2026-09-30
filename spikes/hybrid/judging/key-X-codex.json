@@ -1,0 +1,16 @@
+{
+  "I1675": "T1_classic_claude_r2",
+  "I7436": "T1_hybrid_claude_r1",
+  "I8619": "T1_hybrid_claude_r2",
+  "I1766": "T1_classic_claude_r1",
+  "I1932": "T2_classic_claude_r1",
+  "I2923": "T2_hybrid_claude_r1",
+  "I3434": "T3_classic_claude_r1",
+  "I4233": "T3_hybrid_claude_r1",
+  "I4531": "T4_classic_claude_r1",
+  "I5309": "T4_hybrid_claude_r1",
+  "I7016": "T4_hybrid_claude_r2",
+  "I4593": "T4_classic_claude_r2",
+  "I7595": "T5_hybrid_claude_r1",
+  "I7955": "T5_classic_claude_r1"
+}
