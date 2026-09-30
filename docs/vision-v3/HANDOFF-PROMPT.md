@@ -92,3 +92,10 @@ visual and decisive**, and it is judged by worked scenarios, not by reviews of p
 v3 files written and committed on a branch off `vision/v2-reenvision`; the explorer published; every worked scenario walks through
 without an unexplained gap; a founder decision list of ≤10 items; session file with `qa_verdict`; push the branch. Do not merge to
 `main` without the founder.
+
+### Reconcile first (the two engineering specs, written in parallel)
+- Founder-contact classes: ENGINE-SPEC says interrupt / ask (≤10 a day) / tell / log; SURFACES-SPEC says interrupt / nudge
+  (≤3 a day) / brief / record-only, with an unacknowledged interrupt escalating to a phone call after 5 minutes. Pick one model.
+- Confirm the command contract end to end: surfaces send commands and read SSE views, never write state; the engine returns
+  accepted / queued / refused and `requires_step_up`; every command, stop included, is reported requested → acknowledged → confirmed.
+- Both specs overran their size targets (engine 51 KB, surfaces 79 KB, mostly wireframes). Treat them as source, not as final text.
