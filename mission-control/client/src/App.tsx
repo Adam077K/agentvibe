@@ -34,6 +34,7 @@ import { ConflictsView } from './views/ConflictsView.tsx';
 import { InboxView } from './views/InboxView.tsx';
 import { ProjectView } from './views/ProjectView.tsx';
 import { DispatchView } from './views/DispatchView.tsx';
+import { MissionsView } from './views/MissionsView.tsx';
 
 /**
  * What a fetched (non-stream) view knows about its own data's age.
@@ -171,6 +172,8 @@ export const VIEWS = [
   // when the consumer acts, not on every transcript tick, so a streaming subscription would
   // push unchanged data on every fleet or session update.
   { id: 'dispatch', label: 'Dispatch', stream: false, nav: true, render: ({ now, onFreshness }) => <DispatchView now={now} onFreshness={onFreshness} /> },
+  // v3 SLICE — the Missions board: create a card, launch a two-family team, watch it live.
+  { id: 'missions', label: 'Missions', stream: false, nav: true, render: ({ now, onFreshness }) => <MissionsView now={now} onFreshness={onFreshness} /> },
   {
     id: 'project',
     label: 'Project',

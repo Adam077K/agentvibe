@@ -40,6 +40,8 @@ export type {
   DispatchError,
   DispatchPayload,
 } from '../../server/routes/api.ts';
+export type { MissionsPayload, Mission, TeamView, MissionCreateRequest } from '../../server/routes/missions.ts';
+export type { AgentCard, TeamEvent } from '../../server/missions.ts';
 export type { TrustState } from '../../server/trust.ts';
 export type { EmptyState } from '../../server/collectors/empty.ts';
 export type { EventsSummary } from '../../server/collectors/events.ts';
