@@ -1,0 +1,46 @@
+# Done-test register, B1-26 (docs/vision-v3/14-BUILD-PLAN.md:315: "Classification, boundary, retention
+# class, retention deadline, permission, taint and origin round-trip as distinct fields; human
+# provenance is a provenance field; every 06 label name maps to one wire name (DR-68)").
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run (Go):       go -C kernel test -count=1 -tags donetest ./internal/label/
+# Run (Userland): pnpm --dir userland install --frozen-lockfile --ignore-scripts && node --test userland/test/label.donetest.test.ts
+#
+# Canon: 09a-ENGINEERING.md §12 (LabelV1, Provenance, SourceRef, PrincipalRef, both mapping tables,
+# Join); 06-MEMORY.md §4 (L1, L3, L8); _process/DR-LABEL-RECONCILE-2026-10-01.md (founder decisions
+# 1-8, A-C, E-I). Every fixture case carries a `cite` naming the canon line it enforces.
+#
+# Frozen red on 2026-10-02 against ErrNotImplemented / NotImplementedError: Go 7 of 7 tests fail;
+# Userland 7 of 7 top-level tests fail, 380 of 380 with subtests. kernel/internal/label/label.go and
+# userland/src/label.ts are NOT registered: they are the interface the job implements (the B1-02
+# pattern). Proved against a throwaway correct implementation kept only in $TMPDIR (Go 7/7 tests,
+# 241 subtests; Userland 380/380) and 29 deliberately wrong ones, all killed (16 Go, 13 Userland).
+#
+# Location: a new package, kernel/internal/label, and userland/src/label.ts. nouns.Label (B1-02,
+# frozen) still carries the pre-2026-10-01 shape (provenance as an array, confidence as a number), and
+# B1-02's frozen fixtures use it; changing it in place would break a frozen register. OPEN for the
+# orchestrator: whether B1-26's implementer re-points nouns.Label at label.V1, which re-freezes B1-02.
+#
+# Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
+# B1-26 lands; the Go run line for B1-02 (./internal/nouns/) is unaffected.
+#
+# The five fixture files are registered because they are the wire contract: the Go and Userland tests
+# read the same bytes, so a fixture edit changes both languages' acceptance at once.
+register: B1-26
+jobs:
+  - id: B1-26
+    files:
+      - path: kernel/internal/label/label_donetest_test.go
+        sha256: 451846c98b619bfeca58b328359861e72a2f6566181fd32441c71ddbf8898aa8
+      - path: kernel/internal/label/testdata/label/valid.json
+        sha256: dccc7ef0dc57b3d43c0187dc1be25aa91f2086901cd15c8e1e1934b5f90ab2c8
+      - path: kernel/internal/label/testdata/label/invalid.json
+        sha256: b08f452b1b31c315c7eb51c3649d5e5cd3953065d5a0150907b2dc1f334f1084
+      - path: kernel/internal/label/testdata/label/mapping.json
+        sha256: 7ad94ed273202e7fb20c01cf198b58aa4159bc0a5b7dd221b8dea81653b85d14
+      - path: kernel/internal/label/testdata/label/origin.json
+        sha256: 33db02d4e18917e3ad7f9fa5f9a212b88c37ff940303254602510c129ff3160d
+      - path: kernel/internal/label/testdata/label/join.json
+        sha256: 13ee318c97e300f87e648e4173067114e00cfc6b3666f5c913bba58db5b8f2d4
+      - path: userland/test/label.donetest.test.ts
+        sha256: bd55d36918bf1af37944f14101004dff38fe70d630d8637673dc9b40983003df
