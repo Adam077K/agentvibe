@@ -1,0 +1,25 @@
+{
+  "fixture": "SP2 B0-greedy and B0, ported from spikes/collision at commit 2162926 (branch vision/v3-sp2-collision)",
+  "sources": {
+    "declared": "spikes/collision/armB.mjs TASKS (common + per-task)",
+    "greedy_trace": "spikes/collision/results/logs/dryrun/B0-greedy/events.jsonl",
+    "touched_at_land": "spikes/collision/results/logs/dryrun/B0/receipts.jsonl resources"
+  },
+  "uri_prefix": "repo://shop-core/",
+  "dispatch_order": ["discount", "tax"],
+  "hot": ["src/config.ts#<header>"],
+  "declared": {
+    "discount": ["src/types.ts#Cart", "src/types.ts#Totals", "src/types.ts#<eof>", "src/config.ts#config", "src/pricing.ts#computeTotal", "src/pricing.ts#<header>", "src/index.ts#*", "test/pricing.test.ts#*", "src/types.ts#+DiscountCode", "src/discounts.ts#*"],
+    "tax": ["src/types.ts#Cart", "src/types.ts#Totals", "src/types.ts#<eof>", "src/config.ts#config", "src/pricing.ts#computeTotal", "src/pricing.ts#<header>", "src/index.ts#*", "test/pricing.test.ts#*", "src/types.ts#+Region", "src/tax.ts#*"]
+  },
+  "greedy": {
+    "tax_dispatch_granted": ["src/types.ts#+Region", "src/tax.ts#*"],
+    "tax_land_granted": ["src/config.ts#<header>"],
+    "tax_missing": ["src/config.ts#config", "src/index.ts#*", "src/pricing.ts#<header>", "src/pricing.ts#computeTotal", "src/types.ts#<eof>", "src/types.ts#Cart", "src/types.ts#Totals"],
+    "discount_missing": ["src/config.ts#<header>"]
+  },
+  "touched": {
+    "discount": ["src/config.ts#<header>", "src/config.ts#config", "src/discounts.ts#*", "src/index.ts#*", "src/pricing.ts#<header>", "src/pricing.ts#computeTotal", "src/types.ts#+DiscountCode", "src/types.ts#<eof>", "src/types.ts#Cart", "src/types.ts#Totals"],
+    "tax": ["src/config.ts#<header>", "src/config.ts#config", "src/index.ts#*", "src/pricing.ts#<header>", "src/pricing.ts#computeTotal", "src/tax.ts#*", "src/types.ts#+Region", "src/types.ts#<eof>", "src/types.ts#Cart", "src/types.ts#Totals"]
+  }
+}

@@ -595,17 +595,29 @@ type LabelV1 = {
   origin: 'founder'|'system_of_record'|'internal'|'public_web'|'customer'|'counterparty'|'synthetic';
   dclass: 'D0'|'D1'|'D2'|'D3'|'D4';                  // classification, §11.1
   boundary: 'open'|'guarded'|'sealed';               // the venture Charter's Airlock boundary class (06 §10)
-  venture: VentureId | 'portfolio';
+  venture: VentureId | 'portfolio' | 'founder';     // 'founder' = the founder's own data, not one venture's (06 §12) (founder, 2026-10-01)
   retention: { class: 'journal_metadata'|'operational'|'personal'|'client'|'synthetic';   // storage lifetime, §11.6
                hold: 'none'|'obligation'|'legal'|'safety'|'pinned';                        // what forgetting may not touch
                deadline?: string };                  // retention deadline, computed; never a class
   permission: 'none'|'informs'|'may_authorise';      // permission to drive an effect — NOT confidence; only a declassifier widens it
   exportable: boolean;                               // false for synthetic and canary records (DR-50)
   taint: 'clean'|'untrusted'|'quarantined';          // non-clean if ANY data or control ancestor is untrusted
-  provenance: SourceRef[];                           // incl. {human_principal?: PrincipalRef} — human provenance is a field, never an origin
+  provenance: Provenance;                            // the ONLY copy; a record envelope references it (founder, 2026-10-01). Human provenance is a field, never an origin
   consent_scope?: ConsentScopeRef;                   // participant/panel data (06 §11, 16 ParticipantProtocol); never widens
-  confidence?: number;                               // neither provenance nor confidence ever raises permission
+  confidence?: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };  // the ONLY copy (founder, 2026-10-01); a record keeps no other (06 §3); never raises permission
   subjects?: SubjectId[]; revocation_epoch: number;  // lineage inventory (§11.7); bumped on source/Room revocation
+};
+
+type Provenance = {                                  // moved whole from 06 §3's record envelope (founder, 2026-10-01)
+  sources: SourceRef[];
+  derived_from: string[];                            // record ids → transitive labels
+  author: { title: string; family: 'claude'|'codex'|'founder'|'human'|'system'; mission?: string };
+  human_principal?: PrincipalRef;                    // who supplied it, when a human did; one per record, not per source (founder, 2026-10-01)
+};
+type SourceRef = { ref: string; quote?: string; accessed?: string; system_of_record?: string };  // 06 §3 sources[]
+type PrincipalRef = {
+  id: string;                                        // a stable person id (founder, 2026-10-01)
+  role: 'founder'|'collaborator'|'contractor'|'customer';   // relationship to the founder (founder, 2026-10-01)
 };
 ```
 
@@ -619,7 +631,7 @@ type LabelV1 = {
 | `data_class: confidential` | `dclass: D3` (client / NDA material) — boundary unchanged, set by the Charter |
 | `data_class: sealed` | `dclass: D3` **and** `boundary: sealed` — a classification plus a boundary, never one field |
 | `origin: founder · system_of_record · internal · public_web · customer · counterparty · synthetic` | same name |
-| a collaborator's or contractor's contribution | origin of the channel (`counterparty` or `internal`) + `provenance[].human_principal` |
+| a person's contribution, on any channel (HumanTask, email, form, Room) | origin follows the author, and `provenance.human_principal` records the person (founder, 2026-10-01). The founder → `founder`, so the founder's own messages, email included, keep `may_authorise` under 06's L5. A HumanTask the founder does himself is also `founder`. The founder's agents and collaborators → `internal`. A collaborator is a Principal with `PrincipalRef.role: collaborator`. Of 16 §12's Principals ("Human collaborators"), the human co-founder, advisor and investor take that role, with no new role added (founder, 2026-10-01). Contractors and customers are outside people. A customer's own messages → `customer`, and so does anything written on a customer's behalf, such as the customer's accountant (founder, 2026-10-01); except that a taste-panel transcript is a `participant` HumanTask and stays `counterparty` (decision B). Any other outside person → `counterparty` (founder, 2026-10-01). That includes every HumanTask an outside person does, with `participant` tasks and taste panels among them ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), and the broker's corrections in [13](13-WORKED-SCENARIOS.md) already follow it |
 | `consent_scope` | same name (participant and panel data only) |
 | `taint: clean · untrusted · quarantined` | same name |
 | `authority: none · informs · may_authorise` | `permission`, same values |
@@ -629,9 +641,32 @@ type LabelV1 = {
 | `retention: synthetic` | `retention.class: synthetic`, `hold: none`, `exportable: false` |
 | D4 secrets | no 06 value: secrets never enter memory (§11.8) |
 
+**06 → wire: names 06's `Label` used before 2026-10-01.** 06 now writes the wire names. These rows map the older ones,
+so a reader of an older record or document has exactly one wire value for each. Line-level citations are in
+[DR-LABEL-RECONCILE-2026-10-01](_process/DR-LABEL-RECONCILE-2026-10-01.md).
+
+| Former 06 name | Wire | Basis |
+|---|---|---|
+| `origin: system` | `origin: system_of_record` | 06 §4 defined it as "a system of record" (L5: "`system` (system of record)") |
+| `origin: web` | `origin: public_web` | 06 §11 labels public competitor and Pain Index evidence `web`. 13 labels the same kind of public-source findings `public_web` |
+| `origin: worker` | `origin: internal` | founder, 2026-10-01 |
+| `origin: collaborator` | not an origin: the channel row above, plus `provenance.human_principal` | DR-68; 06 §3 ("there is no separate human origin") |
+| `tainted: true` · `tainted: false` | `taint: untrusted` · `taint: clean` | `LabelV1.taint` is "non-clean if ANY data or control ancestor is untrusted". 06 defined `tainted` with the same predicate |
+| — | `taint: quarantined` | A label value. 06 §3's `quarantined_at` records when it was set (founder, 2026-10-01) |
+| `permission: data_only` | `permission: informs`: it may shape a decision and never authorises an action | founder, 2026-10-01 |
+| `permission: non_exportable` | `exportable: false`, a separate field. `permission` is not implied | §11.9; DR-50 |
+| `retention` (06 §8 names `ordinary` … `synthetic`) | `retention.hold`, per the rows above. `synthetic` → `retention.class: synthetic` | the rows above. 06 had also said "wire values per 09a §11.6", which are `retention.class` values: that comment was wrong |
+| `retention_deadline` | `retention.deadline` | `LabelV1`: "retention deadline, computed; never a class" |
+| `venture: string` · `subjects: string[]` | `venture: VentureId \| 'portfolio'` · `subjects?: SubjectId[]` | `LabelV1`. `venture: 'founder'` is also allowed, for founder memory (06 §12) (founder, 2026-10-01) |
+| envelope `confidence` · `provenance` (06 §3) | `label.confidence` · `label.provenance`, the only copies | founder, 2026-10-01 |
+| `provenance.human_principal: {id, role: string}` | `PrincipalRef`, with `role` one of `founder` · `collaborator` · `contractor` · `customer` | founder, 2026-10-01 |
+
 - **Join.** A job's label is the join of every Launch Pack input; outputs inherit it; derivation from a tainted fact
   taints — over **control** dependencies too (a plan chosen because of an email is tainted even with clean
   parameters) [R3-red X01].
+  **Provenance is not joined.** `author` and `human_principal` describe the output itself: its producing job, and a
+  human only when one supplied it. The inputs stay reachable through `provenance.derived_from`, which 06 §3 defines as
+  "record ids → transitive labels". A join's `confidence.rung` starts at the lowest input rung, and later evidence may raise it as 06 §3 allows (founder, 2026-10-01).
 - **Quarantined reader.** Untrusted content is read by an I3 job with no effect grants that returns typed fields
   (amounts, dates, intents, quoted spans); the planner acts on fields, never on raw text in an authorising position
   [S12 §2.10; S13 §2.10].

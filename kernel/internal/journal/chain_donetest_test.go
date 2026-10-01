@@ -4,6 +4,10 @@
 // on rebuild; a tampered row breaks the chain and is refused". Hash-registered in
 // build/done-tests/B0-17a.yml. Shares TestMain and helpers with core_donetest_test.go.
 //
+// Re-frozen 2026-10-01 on two B1-01b review findings, by a builder that is not the implementer:
+// a store without the prev_hash link check (M10) and an Open that skips verification (M1) both
+// passed. Added: refusedAfterOpen in TamperedRowRefused, and SelfConsistentRewriteRefused.
+//
 // Run: go -C kernel test -tags donetest -count=1 ./internal/journal/
 package journal_test
 
@@ -267,6 +271,18 @@ func TestB1_01b_TamperedRowRefused(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Open alone must have checked the chain: no Verify and no other call first, and a fresh Open
+	// for each check so one call's refusal cannot arm the next. The Read starts past the edited
+	// row (seq 5), where every row it returns is intact; only a walk from seq 1 can know.
+	refusedAfterOpen(t, path, "Append to the tampered stream", func(j journal.Journal) error {
+		_, err := j.Append(ctx, journal.Proposal{Stream: "tamper", ExpectSeq: 10, Type: "t", Data: []byte("extend")})
+		return err
+	})
+	refusedAfterOpen(t, path, "Read of the tampered stream from seq 7", func(j journal.Journal) error {
+		_, err := j.Read(ctx, "tamper", 7)
+		return err
+	})
+
 	j2, err := journal.Open(path)
 	if err != nil {
 		if !errors.Is(err, journal.ErrChainBroken) {
@@ -284,6 +300,94 @@ func TestB1_01b_TamperedRowRefused(t *testing.T) {
 	head, _, _ := j2.Head(ctx, "tamper")
 	if _, err := j2.Append(ctx, journal.Proposal{Stream: "tamper", ExpectSeq: head, Type: "t", Data: []byte("extend")}); !errors.Is(err, journal.ErrChainBroken) {
 		t.Fatalf("Append to the tampered stream: %v, want ErrChainBroken (a broken chain is not extended)", err)
+	}
+}
+
+// refusedAfterOpen opens path afresh and requires call, the first call made on it, to fail with
+// ErrChainBroken. Open refusing the file with ErrChainBroken also satisfies it.
+func refusedAfterOpen(t *testing.T, path, what string, call func(journal.Journal) error) {
+	t.Helper()
+	j, err := journal.Open(path)
+	if err != nil {
+		if !errors.Is(err, journal.ErrChainBroken) {
+			t.Fatalf("Open of a tampered Journal: %v, want ErrChainBroken", err)
+		}
+		return // refused at the door
+	}
+	defer j.Close()
+	if err := call(j); !errors.Is(err, journal.ErrChainBroken) {
+		t.Fatalf("%s, first call after Open, no Verify: %v, want ErrChainBroken", what, err)
+	}
+}
+
+// A middle row rewritten together with its own hash still recomputes from its content; only the
+// next row's prev_hash link can expose it. The file is edited as in TamperedRowRefused, and the
+// row's hash is rewritten too. Where the implementation stores that hash is its own business, so
+// every stored copy of it (lowercase hex or raw bytes) is rewritten in turn, each in a fresh copy
+// of the file, and every copy must be refused. The copy holding the row's own hash is the
+// self-consistent forgery; the others are plain tampering.
+func TestB1_01b_SelfConsistentRewriteRefused(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "journal.db")
+	j := openOrFail(t, path)
+	nonce := make([]byte, 16)
+	rand.Read(nonce)
+	marker := []byte("TAMPER-MARKER-" + hex.EncodeToString(nonce))
+	appendN(t, j, "tamper", 10, func(i int) []byte {
+		if i == 4 {
+			return marker
+		}
+		return []byte(fmt.Sprintf("row-%d", i))
+	})
+	evs, err := j.Read(ctx, "tamper", 1)
+	if err != nil || len(evs) != 10 {
+		t.Fatalf("Read(tamper): %d events, %v", len(evs), err)
+	}
+	if err := j.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if b, err := os.ReadFile(path + "-wal"); err == nil && bytes.Contains(b, marker) {
+		t.Fatalf("event data still in %s-wal after Close; Close must checkpoint into the database file", path)
+	}
+	orig, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	forged := append([]byte("XAMPER"), marker[6:]...)
+	base := bytes.ReplaceAll(orig, marker, forged)
+	if bytes.Equal(base, orig) {
+		t.Fatalf("event data not found verbatim in %s after Close; the Proposal.Data contract requires it", path)
+	}
+	row := evs[4]
+	newHash := wantEventHash(t, "tamper", row.Seq, row.Type, forged, row.PrevHash)
+	copies := 0
+	for _, enc := range [][2][]byte{
+		{[]byte(row.Hash), []byte(newHash)},
+		{rawHash(t, row.Hash), rawHash(t, newHash)},
+	} {
+		for off := 0; ; {
+			i := bytes.Index(base[off:], enc[0])
+			if i < 0 {
+				break
+			}
+			at := off + i
+			off = at + 1
+			b := bytes.Clone(base)
+			copy(b[at:], enc[1])
+			copies++
+			p := filepath.Join(dir, fmt.Sprintf("forged-%d.db", copies))
+			if err := os.WriteFile(p, b, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			refusedAfterOpen(t, p, fmt.Sprintf("Read of seq 5 rewritten with its hash recomputed (copy %d, offset %d)", copies, at), func(j journal.Journal) error {
+				_, err := j.Read(ctx, "tamper", 1)
+				return err
+			})
+		}
+	}
+	if copies == 0 {
+		t.Fatalf("seq 5's hash %s not found in %s as hex or raw bytes; nothing to rewrite", row.Hash, path)
 	}
 }
 
