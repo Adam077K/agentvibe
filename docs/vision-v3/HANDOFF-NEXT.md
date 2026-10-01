@@ -56,3 +56,13 @@ Launcher grant (D1/F1) + Build Charter signature · Kernel host siting · data-t
 - Every reviewer pass found real defects — 3 of 8 jobs needed 3 rounds. Budget two review rounds per job.
 - Frozen done-tests: reviewers must try a *wrong* implementation against them; two of two first drafts were vacuous.
 - Harness-worktree agents lose write access when they finish; resuming them (SendMessage) restores it.
+
+## Update — founder said "do all" (2026-10-01, later)
+- **Merged:** #141 (92c58a7) · #142 (d84310d) · #143 (c50bb9b). #146, #147, #144 retargeted to `main`.
+- **Founder's merge scope:** lite tier only. Still to finish the same way: **#146, #147, #140, #148**. Leave the full-tier and irreversible PRs (#139, #145, #149, #150, #144) for Codex review + founder sign-off.
+- **How each lite PR was finished** (script: merge `origin/main` → session file `qa_verdict: PASS` → `node scripts/verdict.mjs record --by reviewer-opus` → commit → push → CI + QA green → `gh pr merge --merge`). **Run verdict.mjs with `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.abbrev GIT_CONFIG_VALUE_0=8`.**
+- **BUG (irreversible fix, founder):** `scripts/verdict.mjs` hashes `git diff` including abbreviated `index` hashes. CI's git abbreviates to 8 chars, the local repo to 7, so a locally recorded verdict never matches CI. Fix: add `--full-index` to the diff in `computeSubject` (this changes every subject).
+- **Branch switches:** use `git switch --no-track`. Upstream-config writes are sandbox-denied, and `checkout -B` then leaves HEAD unmoved with a dirty index.
+- **#139 census:** founder chose **exclude MissionsView from the design-probe corpus**. Not done yet; it's a small builder job on `build/b0-01`.
+- **B1-01a:** `build/b1-01a` @ 5c2b483. SQLite v1.60.1 pinned (fetched into `~/.agentvibe/gomod`; build offline with `GOMODCACHE=~/.agentvibe/gomod GOPROXY=off`). B1-01a done-tests 3/3 green, B1-01b 3/5, B1-05 0/4. The go directive rose 1.25 → 1.26, so #144's setup-go must be 1.26. Needs a review, then a PR.
+- **Leftover stashes to drop:** `ceo3-partial-merge-residue`, `ceo3-pr141-checkout-residue`.
