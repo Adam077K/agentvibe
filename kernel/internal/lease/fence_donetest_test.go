@@ -154,9 +154,24 @@ func accept(t *testing.T, v lease.Verifier, p lease.Push) {
 	}
 }
 
+// refuseExactly is refuse, plus: the error names no touched resource outside refused.
+func refuseExactly(t *testing.T, v lease.Verifier, p lease.Push, want []error, refused []string) {
+	t.Helper()
+	err := refuse(t, v, p, want, refused)
+	in := map[string]bool{}
+	for _, r := range refused {
+		in[r] = true
+	}
+	for _, r := range p.Touched {
+		if !in[r] && strings.Contains(err.Error(), r) {
+			t.Fatalf("Receive(%s): refusal names %s, which is not among the %d refused: %v", p.Job, r, len(refused), err)
+		}
+	}
+}
+
 // refuse checks p is refused wrapping every sentinel in want, and that the error names every
-// resource in named.
-func refuse(t *testing.T, v lease.Verifier, p lease.Push, want []error, named []string) {
+// resource in named. It returns the refusal.
+func refuse(t *testing.T, v lease.Verifier, p lease.Push, want []error, named []string) error {
 	t.Helper()
 	err := v.Receive(context.Background(), p)
 	if err == nil {
@@ -171,6 +186,29 @@ func refuse(t *testing.T, v lease.Verifier, p lease.Push, want []error, named []
 		if !strings.Contains(err.Error(), r) {
 			t.Fatalf("Receive(%s): refusal does not name %s: %v", p.Job, r, err)
 		}
+	}
+	return err
+}
+
+// wantWait checks job's outstanding wait is exactly res (none when res is empty).
+func wantWait(t *testing.T, c lease.Coordinator, job string, res ...string) {
+	t.Helper()
+	got, ok, err := c.Waiting(context.Background(), job)
+	if err != nil {
+		t.Fatalf("Waiting(%s): %v", job, err)
+	}
+	if len(res) == 0 {
+		if ok || len(got) != 0 {
+			t.Fatalf("Waiting(%s) = %v, %v; want no outstanding wait", job, got, ok)
+		}
+		return
+	}
+	g := append([]string(nil), got...)
+	w := append([]string(nil), res...)
+	sort.Strings(g)
+	sort.Strings(w)
+	if !ok || strings.Join(g, " ") != strings.Join(w, " ") {
+		t.Fatalf("Waiting(%s) = %v, %v; want %v", job, got, ok, res)
 	}
 }
 
@@ -337,11 +375,13 @@ func TestB1_04_AllOrNothingRace(t *testing.T) {
 }
 
 // TestB1_04_WoundWait: the older mission wounds a younger holder (the younger's token goes stale at
-// storage); a younger mission waits for an older holder and wounds nothing. Age is Born, never the
-// job id and never arrival order; both name orders are run.
+// storage); a younger mission waits for an older holder and wounds nothing; a mission facing both
+// an older and a younger holder waits and wounds nobody. Age is Born, never the job id and never
+// arrival order; both name orders are run.
 //
 // Kills: wait-die (roles swapped); requester-always-wins; holder-always-wins (plain
-// all-or-nothing); ordering by job id; ordering by arrival (young asks first in step 1).
+// all-or-nothing); ordering by job id; ordering by arrival (young asks first in step 1); wounding
+// the younger holders of a request that then waits on an older one (step 3).
 func TestB1_04_WoundWait(t *testing.T) {
 	for _, names := range [][2]string{{"zz_old", "aa_young"}, {"aa_old", "zz_young"}} {
 		old, young := names[0], names[1]
@@ -376,11 +416,72 @@ func TestB1_04_WoundWait(t *testing.T) {
 				t.Fatalf("waiting younger request was partly granted: R3 held by %q", h)
 			}
 			accept(t, v, lease.Push{Job: old, Tokens: go1.Tokens, Touched: []string{R1, R2}})
+
+			// 3. Mixed: a middle-aged mission asks for R1 (held by the older) and R3 (held by the
+			// younger). One busy holder is older, so it waits and wounds NOBODY, not even the younger.
+			mid, bornMid := "mm_mid", b104Epoch.Add(30*time.Second)
+			gy3 := mustGrant(t, c, b104Req(young, bornYoung, lease.WoundWait, R3))
+			mustWait(t, c, b104Req(mid, bornMid, lease.WoundWait, R1, R3))
+			if h, tok := holder(t, c, R3); h != young || tok != gy3.Tokens[R3] {
+				t.Fatalf("a request that waited wounded the younger holder: R3 held by %q token %d, want %s token %d", h, tok, young, gy3.Tokens[R3])
+			}
+			if h, tok := holder(t, c, R1); h != old || tok != go1.Tokens[R1] {
+				t.Fatalf("a request that waited disturbed R1: held by %q token %d, want %s token %d", h, tok, old, go1.Tokens[R1])
+			}
+			accept(t, v, lease.Push{Job: young, Tokens: gy3.Tokens, Touched: []string{R3}})
+			accept(t, v, lease.Push{Job: old, Tokens: go1.Tokens, Touched: []string{R1, R2}})
 		})
 	}
 }
 
-// TestB1_04_DeadlockDetectorBreaksCycle: a constructed three-job cycle is found and broken at its
+// TestB1_04_WaitReplacedAndDropped: a job has at most one outstanding wait. A new refused request
+// replaces it, a grant clears it, Release drops it.
+//
+// Kills: waits that accumulate across requests (Detect then breaks a "cycle" through job_1's
+// abandoned wait on B, and Waiting shows both); a Release that leaves the wait behind; a grant
+// that leaves it behind. The Release case is visible only through Waiting: a released job holds
+// nothing, so no cycle can run through it.
+func TestB1_04_WaitReplacedAndDropped(t *testing.T) {
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	const A, B, C = "repo://beacon/src/a.ts#*", "repo://beacon/src/b.ts#*", "repo://beacon/src/c.ts#*"
+	born := map[string]time.Time{"job_1": b104Epoch, "job_2": b104Epoch.Add(time.Minute), "job_3": b104Epoch.Add(2 * time.Minute)}
+	req := func(job string, res ...string) lease.Request {
+		return b104Req(job, born[job], lease.AllOrNothing, res...)
+	}
+	mustGrant(t, c, req("job_1", A))
+	mustGrant(t, c, req("job_2", B))
+	mustGrant(t, c, req("job_3", C))
+
+	mustWait(t, c, req("job_1", B))
+	wantWait(t, c, "job_1", B)
+	mustWait(t, c, req("job_1", C)) // replaces the wait on B
+	wantWait(t, c, "job_1", C)
+	mustWait(t, c, req("job_2", A)) // job_2 → job_1 → job_3: no cycle once B is no longer waited on
+	if br := detect(t, c); len(br) != 0 {
+		t.Fatalf("Detect broke %+v: job_1's replaced wait on B still counted", br)
+	}
+
+	if err := c.Release(context.Background(), "job_1"); err != nil {
+		t.Fatalf("Release(job_1): %v", err)
+	}
+	wantWait(t, c, "job_1")
+	mustGrant(t, c, req("job_2", A)) // A is free now; the grant clears job_2's wait
+	wantWait(t, c, "job_2")
+
+	mustWait(t, c, req("job_3", A)) // job_3 holds C and waits on job_2
+	wantWait(t, c, "job_3", A)
+	if err := c.Release(context.Background(), "job_3"); err != nil {
+		t.Fatalf("Release(job_3): %v", err)
+	}
+	wantWait(t, c, "job_3")
+	if h, _ := holder(t, c, C); h != "" {
+		t.Fatalf("released job_3 still holds C (held by %q)", h)
+	}
+}
+
+// TestB1_04_DeadlockDetectorBreaksCycle:a constructed three-job cycle is found and broken at its
 // youngest mission, which loses every lease (stale at storage) and its wait; the break is journaled;
 // a waiter outside the cycle — even a younger one — is never broken; and once broken, the cycle's
 // next job can be granted.
@@ -492,7 +593,7 @@ func TestB1_04_TouchedNotDeclaredRefused(t *testing.T) {
 		"repo://beacon/src/index.ts#*",
 	} {
 		touched := append(append([]string(nil), in...), out)
-		refuse(t, v, lease.Push{Job: "job_billing", Tokens: g.Tokens, Touched: touched}, []error{lease.ErrUndeclared}, []string{out})
+		refuseExactly(t, v, lease.Push{Job: "job_billing", Tokens: g.Tokens, Touched: touched}, []error{lease.ErrUndeclared}, []string{out})
 	}
 	// The lease exists, but no token for it came with the push.
 	refuse(t, v, lease.Push{Job: "job_billing", Tokens: onlyTokens(g, glob), Touched: []string{cfg}},
@@ -651,13 +752,14 @@ func TestB1_04_SP2B0Greedy(t *testing.T) {
 // 4). discount's leases are not renewed and expire; tax is granted the resources with higher tokens
 // and lands; discount then pushes STRAIGHT TO STORAGE with the tokens it remembers, never asking a
 // Coordinator. The verifier refuses exactly SP2's 7 resources (6 stale tokens and the undeclared
-// header), from Journal state alone: a fresh Verifier, and one over the Journal reopened from disk,
-// refuse it too. discount then re-acquires with higher tokens and lands.
+// header) and names no other, from Journal state alone: a fresh Verifier, and one over the Journal
+// reopened from disk, refuse it too. discount then re-acquires with higher tokens and lands.
 //
 // Kills: a verifier that trusts the presented token (accepts the zombie); one that accepts any token
 // at least the current one (tax presenting its own tokens + 1; SP2's hook demands equality); one
-// that checks the token but not its holder (the borrowed push); one that reads a Coordinator's memory rather than storage (the reopened Journal);
-// a Coordinator whose re-grant token does not exceed the expired one.
+// that checks the token but not its holder (the borrowed push); one that refuses or names more than
+// the 7 (exactness); one that reads a Coordinator's memory rather than storage (the reopened
+// Journal); a Coordinator whose re-grant token does not exceed the expired one.
 func TestB1_04_SP2DrillStaleHolderRejectedByStorage(t *testing.T) {
 	f := b104Load(t, "b0-drill.json")
 	disc, tax := f.DispatchOrder[0], f.DispatchOrder[1]
@@ -675,7 +777,31 @@ func TestB1_04_SP2DrillStaleHolderRejectedByStorage(t *testing.T) {
 	cDisc := b104Coord(t, j, clk)
 	cTax := b104Coord(t, j, clk)
 
-	remembered := mustGrant(t, cDisc, req(disc, f.uris(f.Declared[disc]))).Tokens
+	// SP2's zombie lost all 10 leases, but only the 8 that tax took back mattered: nobody claimed
+	// discount's 2 private resources (+DiscountCode, discounts.ts). Here those 2 are held with the
+	// long default TTL, so they are still live and current at the zombie push. The refusal must then
+	// be EXACTLY SP2's 7 under any verifier, whether or not it also refuses an expired-but-unreclaimed
+	// token (not frozen here; a logged follow-up, 09a §6).
+	inTax := map[string]bool{}
+	for _, r := range f.Declared[tax] {
+		inTax[r] = true
+	}
+	var shared, private []string
+	for _, r := range f.Declared[disc] {
+		if inTax[r] {
+			shared = append(shared, r)
+		} else {
+			private = append(private, r)
+		}
+	}
+	if len(shared) != 8 || len(private) != 2 {
+		t.Fatalf("fixture: discount shares %d declared resources with tax and keeps %d, SP2 had 8 and 2", len(shared), len(private))
+	}
+	remembered := mustGrant(t, cDisc, req(disc, f.uris(shared))).Tokens
+	gPriv := mustGrant(t, cDisc, b104Req(disc, f.born(disc), lease.AllOrNothing, f.uris(private)...))
+	for r, tok := range gPriv.Tokens {
+		remembered[r] = tok
+	}
 	mustWait(t, cTax, req(tax, f.uris(f.Declared[tax])))
 	clk.Advance(ttl + time.Second) // discount hung: never renewed
 	gTax := mustGrant(t, cTax, req(tax, f.uris(f.Declared[tax], f.Hot)))
@@ -692,7 +818,7 @@ func TestB1_04_SP2DrillStaleHolderRejectedByStorage(t *testing.T) {
 		t.Fatalf("fixture names %d refused resources, SP2 recorded 7", len(named))
 	}
 	both := []error{lease.ErrStaleToken, lease.ErrUndeclared}
-	refuse(t, b104Verifier(t, j), zombie, both, named)
+	refuseExactly(t, b104Verifier(t, j), zombie, both, named)
 
 	forged := map[string]uint64{}
 	for r := range remembered {
@@ -710,14 +836,17 @@ func TestB1_04_SP2DrillStaleHolderRejectedByStorage(t *testing.T) {
 	if err := cTax.Release(context.Background(), tax); err != nil {
 		t.Fatalf("Release(%s): %v", tax, err)
 	}
-	gDisc := mustGrant(t, cDisc, req(disc, f.uris(f.Declared[disc], f.Hot)))
-	for r, old := range remembered {
-		if gDisc.Tokens[r] <= old {
-			t.Fatalf("%s re-acquired with token %d, not above the zombie's %d", r, gDisc.Tokens[r], old)
+	gDisc := mustGrant(t, cDisc, req(disc, f.uris(shared, f.Hot))) // what it lost, plus the hot header
+	for _, r := range f.uris(shared) {
+		if gDisc.Tokens[r] <= remembered[r] {
+			t.Fatalf("%s re-acquired with token %d, not above the zombie's %d", r, gDisc.Tokens[r], remembered[r])
 		}
 	}
+	for r, tok := range gPriv.Tokens {
+		gDisc.Tokens[r] = tok
+	}
 	accept(t, b104Verifier(t, j), lease.Push{Job: disc, Tokens: gDisc.Tokens, Touched: f.uris(f.Touched[disc])})
-	refuse(t, b104Verifier(t, j), zombie, []error{lease.ErrStaleToken}, f.uris(f.ZombieRefused["stale"]))
+	refuseExactly(t, b104Verifier(t, j), zombie, both, named)
 
 	// From disk alone: close the Journal every Coordinator used, reopen the file, build a Verifier
 	// that has never met a Coordinator.
@@ -730,6 +859,6 @@ func TestB1_04_SP2DrillStaleHolderRejectedByStorage(t *testing.T) {
 	}
 	defer j2.Close()
 	v2 := b104Verifier(t, j2)
-	refuse(t, v2, zombie, []error{lease.ErrStaleToken}, f.uris(f.ZombieRefused["stale"]))
+	refuseExactly(t, v2, zombie, both, named)
 	accept(t, v2, lease.Push{Job: disc, Tokens: gDisc.Tokens, Touched: f.uris(f.Touched[disc])})
 }

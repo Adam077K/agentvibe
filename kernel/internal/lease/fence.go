@@ -102,6 +102,10 @@ type Coordinator interface {
 	Release(ctx context.Context, job string) error
 	// Holder returns the live lease on resource, if there is one.
 	Holder(ctx context.Context, resource string) (Lease, bool, error)
+	// Waiting returns the resources of job's outstanding wait, if it has one. It is the only way
+	// to see that Release dropped a wait: a released job holds nothing, so no cycle can pass
+	// through it, and its next grant clears the wait anyway.
+	Waiting(ctx context.Context, job string) ([]string, bool, error)
 	// Detect builds the wait-for graph (each outstanding wait → the live holders of its busy
 	// resources), breaks every cycle at the youngest mission in that cycle — revoking every lease the
 	// victim holds and dropping its wait — journals one TypeDeadlockBroken event per break, and
@@ -130,7 +134,8 @@ type Verifier interface {
 	// token storage currently records for it, issued to p.Job, else ErrStaleToken. A released or
 	// revoked lease has no current token for its former holder. A presented resource covers a touched
 	// one when the two are equal, or when the presented one ends in "/**" and the touched one starts
-	// with everything before the "**". Refusal names every refused touched resource; when a push is
+	// with everything before the "**". Refusal names every refused touched resource and no touched
+	// resource it would have accepted (so it does not echo the push); when a push is
 	// refused for both reasons, the error wraps both sentinels.
 	Receive(ctx context.Context, p Push) error
 }
