@@ -1,0 +1,11 @@
+{
+  "subject": "41e05277e63de3e60506a9862fb046124f12a05e1bdccad25210e090ee3047dc",
+  "base": "b3ad1477707b3efe3bbae48632588acb6aa97d08",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B1-02.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B1-02 Opus reviewers PASS: Go at 18a9d4d, Userland at 0531c37; founder ordered the merge 2026-10-01",
+  "recorded_at": "2026-10-01T15:00:28.517Z"
+}
