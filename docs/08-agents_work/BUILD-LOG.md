@@ -124,3 +124,12 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 | 2026-10-01 | B1-01b | #152 (stacked on #151) | hash chain + blobs; review round 2 PASS at 690d6a2 | founder: verdict + merge after #151; Codex re-review owed |
 - **FINDING — git authorship cannot prove builder separation.** Every agent commits as one author, so "a different
   builder re-froze the tests" rests on the register comment only. Per-agent commit identity is a follow-up.
+- **B1-05 re-freeze 1** — `build/b1-05` @ 183320e (different builder): B1-01b merged forward; frozen tests gain the
+  expiry check and one forced ExpectSeq conflict; register 8c397b8f → 79a77e01.
+- **B1-05 review round 2 — FAIL at 183320e**, on tests again. Round-1 code findings fixed and covered. But mutant M1
+  (decide on one read, append at a fresh head) is caught by the frozen race test only 7 of 20 runs: the cut-in fires
+  after M1's second Head. Reviewer prototyped moving it after the first Head: correct 20/20 pass, M1 and M2 20/20 fail.
+  Re-freeze 2 running (fresh non-implementer builder). Also fixing lease.go's pointer to BUILD-LOG, which is not on
+  that branch; it will point at the plan row gap instead.
+- **B1-02** — test author writing and freezing its done-tests on `build/b1-02-tests` (Go + TS round-trip, upcaster
+  replay). Implementation comes after those tests are reviewed.
