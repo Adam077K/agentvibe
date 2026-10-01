@@ -1,0 +1,263 @@
+{
+  "cases": [
+    {
+      "name": "founder/human_task",
+      "author": {
+        "kind": "founder",
+        "channel": "human_task",
+        "task": "signature"
+      },
+      "origin": "founder",
+      "cite": "09a-ENGINEERING.md:634 (the founder -> founder; email included; a HumanTask he does himself); DR-LABEL-RECONCILE:68,76 (A, C)"
+    },
+    {
+      "name": "founder/email",
+      "author": {
+        "kind": "founder",
+        "channel": "email"
+      },
+      "origin": "founder",
+      "cite": "09a-ENGINEERING.md:634 (the founder -> founder; email included; a HumanTask he does himself); DR-LABEL-RECONCILE:68,76 (A, C)"
+    },
+    {
+      "name": "founder/form",
+      "author": {
+        "kind": "founder",
+        "channel": "form"
+      },
+      "origin": "founder",
+      "cite": "09a-ENGINEERING.md:634 (the founder -> founder; email included; a HumanTask he does himself); DR-LABEL-RECONCILE:68,76 (A, C)"
+    },
+    {
+      "name": "founder/room",
+      "author": {
+        "kind": "founder",
+        "channel": "room"
+      },
+      "origin": "founder",
+      "cite": "09a-ENGINEERING.md:634 (the founder -> founder; email included; a HumanTask he does himself); DR-LABEL-RECONCILE:68,76 (A, C)"
+    },
+    {
+      "name": "agent/email",
+      "author": {
+        "kind": "agent",
+        "channel": "email"
+      },
+      "origin": "internal",
+      "cite": "09a-ENGINEERING.md:634 (the founder's agents -> internal); DR-LABEL-RECONCILE:73 (A)"
+    },
+    {
+      "name": "agent/form",
+      "author": {
+        "kind": "agent",
+        "channel": "form"
+      },
+      "origin": "internal",
+      "cite": "09a-ENGINEERING.md:634 (the founder's agents -> internal); DR-LABEL-RECONCILE:73 (A)"
+    },
+    {
+      "name": "agent/room",
+      "author": {
+        "kind": "agent",
+        "channel": "room"
+      },
+      "origin": "internal",
+      "cite": "09a-ENGINEERING.md:634 (the founder's agents -> internal); DR-LABEL-RECONCILE:73 (A)"
+    },
+    {
+      "name": "collaborator/human_task",
+      "author": {
+        "kind": "collaborator",
+        "channel": "human_task",
+        "task": "contribution"
+      },
+      "origin": "internal",
+      "cite": "09a-ENGINEERING.md:634 (collaborators -> internal; co-founder, advisor, investor take role collaborator); DR-LABEL-RECONCILE:110 (H), 77 (C: only an outside person's HumanTask is counterparty)"
+    },
+    {
+      "name": "collaborator/email",
+      "author": {
+        "kind": "collaborator",
+        "channel": "email"
+      },
+      "origin": "internal",
+      "cite": "09a-ENGINEERING.md:634 (collaborators -> internal; co-founder, advisor, investor take role collaborator); DR-LABEL-RECONCILE:110 (H), 77 (C: only an outside person's HumanTask is counterparty)"
+    },
+    {
+      "name": "collaborator/form",
+      "author": {
+        "kind": "collaborator",
+        "channel": "form"
+      },
+      "origin": "internal",
+      "cite": "09a-ENGINEERING.md:634 (collaborators -> internal; co-founder, advisor, investor take role collaborator); DR-LABEL-RECONCILE:110 (H), 77 (C: only an outside person's HumanTask is counterparty)"
+    },
+    {
+      "name": "collaborator/room",
+      "author": {
+        "kind": "collaborator",
+        "channel": "room"
+      },
+      "origin": "internal",
+      "cite": "09a-ENGINEERING.md:634 (collaborators -> internal; co-founder, advisor, investor take role collaborator); DR-LABEL-RECONCILE:110 (H), 77 (C: only an outside person's HumanTask is counterparty)"
+    },
+    {
+      "name": "contractor/human_task",
+      "author": {
+        "kind": "contractor",
+        "channel": "human_task",
+        "task": "licensed_review"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (contractors are outside people; any other outside person -> counterparty)"
+    },
+    {
+      "name": "contractor/email",
+      "author": {
+        "kind": "contractor",
+        "channel": "email"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (contractors are outside people; any other outside person -> counterparty)"
+    },
+    {
+      "name": "contractor/form",
+      "author": {
+        "kind": "contractor",
+        "channel": "form"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (contractors are outside people; any other outside person -> counterparty)"
+    },
+    {
+      "name": "contractor/room",
+      "author": {
+        "kind": "contractor",
+        "channel": "room"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (contractors are outside people; any other outside person -> counterparty)"
+    },
+    {
+      "name": "outsider/human_task",
+      "author": {
+        "kind": "outsider",
+        "channel": "human_task",
+        "task": "contribution"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (any other outside person -> counterparty, every HumanTask included)"
+    },
+    {
+      "name": "outsider/email",
+      "author": {
+        "kind": "outsider",
+        "channel": "email"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (any other outside person -> counterparty, every HumanTask included)"
+    },
+    {
+      "name": "outsider/form",
+      "author": {
+        "kind": "outsider",
+        "channel": "form"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (any other outside person -> counterparty, every HumanTask included)"
+    },
+    {
+      "name": "outsider/room",
+      "author": {
+        "kind": "outsider",
+        "channel": "room"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (any other outside person -> counterparty, every HumanTask included)"
+    },
+    {
+      "name": "outsider-participant/human_task",
+      "author": {
+        "kind": "outsider",
+        "channel": "human_task",
+        "task": "participant"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (participant tasks among them); DR-LABEL-RECONCILE:41 (decision 3)"
+    },
+    {
+      "name": "customer/email",
+      "author": {
+        "kind": "customer",
+        "channel": "email"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (a customer's own messages -> customer); DR-LABEL-RECONCILE:92 (E)"
+    },
+    {
+      "name": "customer/form",
+      "author": {
+        "kind": "customer",
+        "channel": "form"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (a customer's own messages -> customer); DR-LABEL-RECONCILE:92 (E)"
+    },
+    {
+      "name": "customer/room",
+      "author": {
+        "kind": "customer",
+        "channel": "room"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (a customer's own messages -> customer); DR-LABEL-RECONCILE:92 (E)"
+    },
+    {
+      "name": "customer-proxy/email",
+      "author": {
+        "kind": "customer_proxy",
+        "channel": "email"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (anything written on a customer's behalf, e.g. the customer's accountant); DR-LABEL-RECONCILE:112 (I)"
+    },
+    {
+      "name": "customer-proxy/form",
+      "author": {
+        "kind": "customer_proxy",
+        "channel": "form"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (anything written on a customer's behalf, e.g. the customer's accountant); DR-LABEL-RECONCILE:112 (I)"
+    },
+    {
+      "name": "customer-proxy/room",
+      "author": {
+        "kind": "customer_proxy",
+        "channel": "room"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (anything written on a customer's behalf, e.g. the customer's accountant); DR-LABEL-RECONCILE:112 (I)"
+    },
+    {
+      "name": "customer-participant/human_task",
+      "author": {
+        "kind": "customer",
+        "channel": "human_task",
+        "task": "participant"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634 (except a taste-panel transcript: a participant HumanTask stays counterparty); DR-LABEL-RECONCILE:74 (B)"
+    },
+    {
+      "name": "customer-taste-panel/human_task",
+      "author": {
+        "kind": "customer",
+        "channel": "human_task",
+        "task": "taste_panel"
+      },
+      "origin": "counterparty",
+      "cite": "09a-ENGINEERING.md:634; DR-LABEL-RECONCILE:74 (B: taste-panel transcripts are counterparty); 16-EXTERNAL-WORLD-HUMANS.md:556"
+    }
+  ]
+}

@@ -1,0 +1,2351 @@
+{
+  "cases": [
+    {
+      "name": "label.schema-label2",
+      "error": "unknown_schema",
+      "why": "label/2 is not a version this reader knows",
+      "cite": "09a-ENGINEERING.md:594 (readers refuse unknown versions)",
+      "value": {
+        "schema": "label/2",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.schema-label0",
+      "error": "unknown_schema",
+      "why": "label/0 is not a version this reader knows",
+      "cite": "09a-ENGINEERING.md:594 (readers refuse unknown versions)",
+      "value": {
+        "schema": "label/0",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.schema-missing",
+      "error": "invalid",
+      "why": "schema is required",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-not-enum-participant",
+      "error": "invalid",
+      "why": "origin \"participant\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:595",
+      "value": {
+        "schema": "label/1",
+        "origin": "participant",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-not-enum-external",
+      "error": "invalid",
+      "why": "origin \"external\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:595",
+      "value": {
+        "schema": "label/1",
+        "origin": "external",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.dclass-not-enum-D5",
+      "error": "invalid",
+      "why": "dclass \"D5\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:596",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D5",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.boundary-not-enum-closed",
+      "error": "invalid",
+      "why": "boundary \"closed\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:597",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "closed",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-class-not-enum-forever",
+      "error": "invalid",
+      "why": "retention.class \"forever\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:599",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "forever",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-hold-not-enum-frozen",
+      "error": "invalid",
+      "why": "retention.hold \"frozen\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:600",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "frozen"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.permission-not-enum-authorise",
+      "error": "invalid",
+      "why": "permission \"authorise\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:602",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "authorise",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.taint-not-enum-dirty",
+      "error": "invalid",
+      "why": "taint \"dirty\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:604",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "dirty",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.provenance-author-family-not-enum-gpt",
+      "error": "invalid",
+      "why": "provenance.author.family \"gpt\" is outside the closed set",
+      "cite": "09a-ENGINEERING.md:614",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "gpt"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.confidence-not-enum-E6",
+      "error": "invalid",
+      "why": "confidence {\"rung\":\"E6\"} is outside the closed set",
+      "cite": "09a-ENGINEERING.md:607",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E6"
+        }
+      }
+    },
+    {
+      "name": "label.confidence-not-enum-e3",
+      "error": "invalid",
+      "why": "confidence {\"rung\":\"e3\"} is outside the closed set",
+      "cite": "09a-ENGINEERING.md:607",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "e3"
+        }
+      }
+    },
+    {
+      "name": "label.provenance-human_principal-not-enum-friend",
+      "error": "invalid",
+      "why": "provenance.human_principal {\"id\":\"person_x\",\"role\":\"friend\"} is outside the closed set",
+      "cite": "09a-ENGINEERING.md:620",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "person_x",
+            "role": "friend"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.provenance-human_principal-not-enum-participant",
+      "error": "invalid",
+      "why": "provenance.human_principal {\"id\":\"person_x\",\"role\":\"participant\"} is outside the closed set",
+      "cite": "09a-ENGINEERING.md:620 (participant is a HumanTask kind, not a role)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "person_x",
+            "role": "participant"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-origin-system",
+      "error": "invalid",
+      "why": "former 06 origin 'system' is system_of_record on the wire",
+      "cite": "09a-ENGINEERING.md:650",
+      "value": {
+        "schema": "label/1",
+        "origin": "system",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-origin-web",
+      "error": "invalid",
+      "why": "former 06 origin 'web' is public_web on the wire",
+      "cite": "09a-ENGINEERING.md:651",
+      "value": {
+        "schema": "label/1",
+        "origin": "web",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-origin-worker",
+      "error": "invalid",
+      "why": "former 06 origin 'worker' is internal on the wire",
+      "cite": "09a-ENGINEERING.md:652",
+      "value": {
+        "schema": "label/1",
+        "origin": "worker",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-origin-collaborator",
+      "error": "invalid",
+      "why": "'collaborator' is not an origin",
+      "cite": "09a-ENGINEERING.md:653; 06-MEMORY.md:127",
+      "value": {
+        "schema": "label/1",
+        "origin": "collaborator",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-dclass-public",
+      "error": "invalid",
+      "why": "06 data_class names are D-classes on the wire",
+      "cite": "09a-ENGINEERING.md:628",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "public",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-dclass-confidential",
+      "error": "invalid",
+      "why": "confidential is D3 on the wire",
+      "cite": "09a-ENGINEERING.md:631",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "confidential",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-dclass-sealed",
+      "error": "invalid",
+      "why": "sealed is D3 plus boundary sealed, never one field",
+      "cite": "09a-ENGINEERING.md:632",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "sealed",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-permission-data_only",
+      "error": "invalid",
+      "why": "data_only is informs on the wire",
+      "cite": "09a-ENGINEERING.md:656",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "data_only",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-permission-non_exportable",
+      "error": "invalid",
+      "why": "non_exportable is exportable:false, a separate field",
+      "cite": "09a-ENGINEERING.md:657",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "non_exportable",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-taint-tainted",
+      "error": "invalid",
+      "why": "tainted is not a taint value",
+      "cite": "09a-ENGINEERING.md:654",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "tainted",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-retention-hold-ordinary",
+      "error": "invalid",
+      "why": "ordinary is hold none on the wire",
+      "cite": "09a-ENGINEERING.md:639",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "ordinary"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-retention-string",
+      "error": "invalid",
+      "why": "a single 06 retention name is not the retention record",
+      "cite": "09a-ENGINEERING.md:658",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": "ordinary",
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-key-tainted",
+      "error": "invalid",
+      "why": "tainted is a removed 06 key; the wire field is taint",
+      "cite": "09a-ENGINEERING.md:654; 09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "tainted": true
+      }
+    },
+    {
+      "name": "label.legacy-key-data_class",
+      "error": "invalid",
+      "why": "data_class is a removed 06 key; the wire field is dclass",
+      "cite": "09a-ENGINEERING.md:628-632; 09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "data_class": "internal"
+      }
+    },
+    {
+      "name": "label.legacy-key-authority",
+      "error": "invalid",
+      "why": "authority is a removed 06 key; the wire field is permission",
+      "cite": "09a-ENGINEERING.md:637; 09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "authority": "informs"
+      }
+    },
+    {
+      "name": "label.legacy-key-retention_deadline",
+      "error": "invalid",
+      "why": "retention_deadline is retention.deadline on the wire",
+      "cite": "09a-ENGINEERING.md:659; 09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "retention_deadline": "2027-01-01T00:00:00Z"
+      }
+    },
+    {
+      "name": "label.legacy-provenance-array",
+      "error": "invalid",
+      "why": "provenance is a Provenance record, not the pre-2026-10-01 SourceRef[]",
+      "cite": "09a-ENGINEERING.md:605,611-616; DR-LABEL-RECONCILE:57",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": [],
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-confidence-number",
+      "error": "invalid",
+      "why": "confidence is {rung, p?}, not the pre-2026-10-01 number",
+      "cite": "09a-ENGINEERING.md:607; DR-LABEL-RECONCILE:59",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": 0.7
+      }
+    },
+    {
+      "name": "label.legacy-sourceref-human_principal",
+      "error": "invalid",
+      "why": "human_principal is one per record and no longer on SourceRef",
+      "cite": "09a-ENGINEERING.md:617; DR-LABEL-RECONCILE:50-51 (decision 7)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "email:msg_01",
+              "human_principal": "person_x"
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.legacy-principal-string",
+      "error": "invalid",
+      "why": "human_principal is a PrincipalRef {id, role}, not a string",
+      "cite": "09a-ENGINEERING.md:615,618-621; DR-LABEL-RECONCILE:47",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": "founder"
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-origin",
+      "error": "invalid",
+      "why": "origin is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-dclass",
+      "error": "invalid",
+      "why": "dclass is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-boundary",
+      "error": "invalid",
+      "why": "boundary is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-venture",
+      "error": "invalid",
+      "why": "venture is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-retention",
+      "error": "invalid",
+      "why": "retention is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-retention-class",
+      "error": "invalid",
+      "why": "retention.class is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-retention-hold",
+      "error": "invalid",
+      "why": "retention.hold is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-permission",
+      "error": "invalid",
+      "why": "permission is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-exportable",
+      "error": "invalid",
+      "why": "exportable is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-taint",
+      "error": "invalid",
+      "why": "taint is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-provenance",
+      "error": "invalid",
+      "why": "provenance is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-provenance-sources",
+      "error": "invalid",
+      "why": "provenance.sources is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-provenance-derived_from",
+      "error": "invalid",
+      "why": "provenance.derived_from is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-provenance-author",
+      "error": "invalid",
+      "why": "provenance.author is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": []
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-provenance-author-title",
+      "error": "invalid",
+      "why": "provenance.author.title is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-provenance-author-family",
+      "error": "invalid",
+      "why": "provenance.author.family is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-revocation_epoch",
+      "error": "invalid",
+      "why": "revocation_epoch is required; none is inferred from another",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:592-609 (LabelV1)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        }
+      }
+    },
+    {
+      "name": "label.missing-confidence-rung",
+      "error": "invalid",
+      "why": "confidence.rung is required when confidence is present",
+      "cite": "09a-ENGINEERING.md:607",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "p": 0.5
+        }
+      }
+    },
+    {
+      "name": "label.missing-principal-id",
+      "error": "invalid",
+      "why": "PrincipalRef.id is required",
+      "cite": "09a-ENGINEERING.md:619",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "role": "customer"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-principal-role",
+      "error": "invalid",
+      "why": "PrincipalRef.role is required",
+      "cite": "09a-ENGINEERING.md:620",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "person_x"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.missing-sourceref-ref",
+      "error": "invalid",
+      "why": "SourceRef.ref is required",
+      "cite": "09a-ENGINEERING.md:617",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "quote": "q"
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-origin-number",
+      "error": "invalid",
+      "why": "origin 3 has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": 3,
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-venture-number",
+      "error": "invalid",
+      "why": "venture 7 has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": 7,
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-exportable-string",
+      "error": "invalid",
+      "why": "exportable \"false\" has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": "false",
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-exportable-number",
+      "error": "invalid",
+      "why": "exportable 0 has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": 0,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-revocation_epoch-string",
+      "error": "invalid",
+      "why": "revocation_epoch \"0\" has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": "0"
+      }
+    },
+    {
+      "name": "label.type-subjects-string",
+      "error": "invalid",
+      "why": "subjects \"subj_ana\" has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "subjects": "subj_ana"
+      }
+    },
+    {
+      "name": "label.type-provenance-sources-object",
+      "error": "invalid",
+      "why": "provenance.sources {} has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": {},
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-provenance-derived_from-string",
+      "error": "invalid",
+      "why": "provenance.derived_from \"rec_01\" has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": "rec_01",
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-provenance-author-string",
+      "error": "invalid",
+      "why": "provenance.author \"Kernel Engineer\" has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": "Kernel Engineer"
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-confidence-object",
+      "error": "invalid",
+      "why": "confidence {\"rung\":\"E1\",\"p\":\"0.5\"} has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E1",
+          "p": "0.5"
+        }
+      }
+    },
+    {
+      "name": "label.type-confidence-null",
+      "error": "invalid",
+      "why": "confidence null has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": null
+      }
+    },
+    {
+      "name": "label.type-consent_scope-null",
+      "error": "invalid",
+      "why": "consent_scope null has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "consent_scope": null
+      }
+    },
+    {
+      "name": "label.type-consent_scope-number",
+      "error": "invalid",
+      "why": "consent_scope 9 has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "consent_scope": 9
+      }
+    },
+    {
+      "name": "label.type-retention-deadline-number",
+      "error": "invalid",
+      "why": "retention.deadline 20270101 has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none",
+          "deadline": 20270101
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-provenance-author-mission-null",
+      "error": "invalid",
+      "why": "provenance.author.mission null has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude",
+            "mission": null
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-provenance-sources-array",
+      "error": "invalid",
+      "why": "provenance.sources [{\"ref\":\"email:msg_01\",\"quote\":5}] has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "email:msg_01",
+              "quote": 5
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.type-provenance-human_principal-null",
+      "error": "invalid",
+      "why": "provenance.human_principal null has the wrong JSON type",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": null
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.unknown-key-labels",
+      "error": "invalid",
+      "why": "an unknown key is refused, not dropped (labels)",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "labels": [
+          "x"
+        ]
+      }
+    },
+    {
+      "name": "label.unknown-key-retention-verbs",
+      "error": "invalid",
+      "why": "an unknown key is refused, not dropped (retention.verbs)",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none",
+          "verbs": [
+            "erase"
+          ]
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.unknown-key-provenance-envelope",
+      "error": "invalid",
+      "why": "an unknown key is refused, not dropped (provenance.envelope)",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "envelope": {}
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.unknown-key-provenance-author-model",
+      "error": "invalid",
+      "why": "an unknown key is refused, not dropped (provenance.author.model)",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude",
+            "model": "opus"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.unknown-key-confidence",
+      "error": "invalid",
+      "why": "an unknown key is refused, not dropped (confidence)",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E1",
+          "grade": "replicated"
+        }
+      }
+    },
+    {
+      "name": "label.unknown-key-provenance-human_principal",
+      "error": "invalid",
+      "why": "an unknown key is refused, not dropped (provenance.human_principal)",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "p",
+            "role": "customer",
+            "name": "Ana"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    }
+  ]
+}

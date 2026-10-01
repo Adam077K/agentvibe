@@ -1,0 +1,472 @@
+{
+  "rows": [
+    {
+      "field": "data_class",
+      "value": "public",
+      "wire": {
+        "dclass": "D0"
+      },
+      "cite": "09a-ENGINEERING.md:628"
+    },
+    {
+      "field": "data_class",
+      "value": "internal",
+      "wire": {
+        "dclass": "D1"
+      },
+      "cite": "09a-ENGINEERING.md:629"
+    },
+    {
+      "field": "data_class",
+      "value": "personal",
+      "wire": {
+        "dclass": "D2"
+      },
+      "cite": "09a-ENGINEERING.md:630"
+    },
+    {
+      "field": "data_class",
+      "value": "confidential",
+      "wire": {
+        "dclass": "D3"
+      },
+      "cite": "09a-ENGINEERING.md:631 (boundary unchanged, set by the Charter)"
+    },
+    {
+      "field": "data_class",
+      "value": "sealed",
+      "wire": {
+        "dclass": "D3",
+        "boundary": "sealed"
+      },
+      "cite": "09a-ENGINEERING.md:632 (a classification plus a boundary, never one field)"
+    },
+    {
+      "field": "origin",
+      "value": "founder",
+      "wire": {
+        "origin": "founder"
+      },
+      "cite": "09a-ENGINEERING.md:633 (same name)"
+    },
+    {
+      "field": "origin",
+      "value": "system_of_record",
+      "wire": {
+        "origin": "system_of_record"
+      },
+      "cite": "09a-ENGINEERING.md:633 (same name)"
+    },
+    {
+      "field": "origin",
+      "value": "internal",
+      "wire": {
+        "origin": "internal"
+      },
+      "cite": "09a-ENGINEERING.md:633 (same name)"
+    },
+    {
+      "field": "origin",
+      "value": "public_web",
+      "wire": {
+        "origin": "public_web"
+      },
+      "cite": "09a-ENGINEERING.md:633 (same name)"
+    },
+    {
+      "field": "origin",
+      "value": "customer",
+      "wire": {
+        "origin": "customer"
+      },
+      "cite": "09a-ENGINEERING.md:633 (same name)"
+    },
+    {
+      "field": "origin",
+      "value": "counterparty",
+      "wire": {
+        "origin": "counterparty"
+      },
+      "cite": "09a-ENGINEERING.md:633 (same name)"
+    },
+    {
+      "field": "origin",
+      "value": "synthetic",
+      "wire": {
+        "origin": "synthetic"
+      },
+      "cite": "09a-ENGINEERING.md:633 (same name)"
+    },
+    {
+      "field": "origin",
+      "value": "system",
+      "wire": {
+        "origin": "system_of_record"
+      },
+      "cite": "09a-ENGINEERING.md:650"
+    },
+    {
+      "field": "origin",
+      "value": "web",
+      "wire": {
+        "origin": "public_web"
+      },
+      "cite": "09a-ENGINEERING.md:651"
+    },
+    {
+      "field": "origin",
+      "value": "worker",
+      "wire": {
+        "origin": "internal"
+      },
+      "cite": "09a-ENGINEERING.md:652; DR-LABEL-RECONCILE:38 (decision 1)"
+    },
+    {
+      "field": "origin",
+      "value": "collaborator",
+      "error": "not_an_origin",
+      "cite": "09a-ENGINEERING.md:653 (not an origin: the channel row plus provenance.human_principal)"
+    },
+    {
+      "field": "consent_scope",
+      "value": "cs_panel_3",
+      "wire": {
+        "consent_scope": "cs_panel_3"
+      },
+      "cite": "09a-ENGINEERING.md:635 (same name)"
+    },
+    {
+      "field": "taint",
+      "value": "clean",
+      "wire": {
+        "taint": "clean"
+      },
+      "cite": "09a-ENGINEERING.md:636 (same name)"
+    },
+    {
+      "field": "taint",
+      "value": "untrusted",
+      "wire": {
+        "taint": "untrusted"
+      },
+      "cite": "09a-ENGINEERING.md:636 (same name)"
+    },
+    {
+      "field": "taint",
+      "value": "quarantined",
+      "wire": {
+        "taint": "quarantined"
+      },
+      "cite": "09a-ENGINEERING.md:636 (same name)"
+    },
+    {
+      "field": "authority",
+      "value": "none",
+      "wire": {
+        "permission": "none"
+      },
+      "cite": "09a-ENGINEERING.md:637 (permission, same values)"
+    },
+    {
+      "field": "authority",
+      "value": "informs",
+      "wire": {
+        "permission": "informs"
+      },
+      "cite": "09a-ENGINEERING.md:637 (permission, same values)"
+    },
+    {
+      "field": "authority",
+      "value": "may_authorise",
+      "wire": {
+        "permission": "may_authorise"
+      },
+      "cite": "09a-ENGINEERING.md:637 (permission, same values)"
+    },
+    {
+      "field": "exportable",
+      "value": true,
+      "wire": {
+        "exportable": true
+      },
+      "cite": "09a-ENGINEERING.md:638 (same)"
+    },
+    {
+      "field": "exportable",
+      "value": false,
+      "wire": {
+        "exportable": false
+      },
+      "cite": "09a-ENGINEERING.md:638 (same)"
+    },
+    {
+      "field": "retention",
+      "value": "ordinary",
+      "wire": {
+        "retention.hold": "none"
+      },
+      "cite": "09a-ENGINEERING.md:639"
+    },
+    {
+      "field": "retention",
+      "value": "obligation",
+      "wire": {
+        "retention.hold": "obligation"
+      },
+      "cite": "09a-ENGINEERING.md:640 (retention.hold, same value)"
+    },
+    {
+      "field": "retention",
+      "value": "legal",
+      "wire": {
+        "retention.hold": "legal"
+      },
+      "cite": "09a-ENGINEERING.md:640 (retention.hold, same value)"
+    },
+    {
+      "field": "retention",
+      "value": "safety",
+      "wire": {
+        "retention.hold": "safety"
+      },
+      "cite": "09a-ENGINEERING.md:640 (retention.hold, same value)"
+    },
+    {
+      "field": "retention",
+      "value": "pinned",
+      "wire": {
+        "retention.hold": "pinned"
+      },
+      "cite": "09a-ENGINEERING.md:640 (retention.hold, same value)"
+    },
+    {
+      "field": "retention",
+      "value": "synthetic",
+      "wire": {
+        "retention.class": "synthetic",
+        "retention.hold": "none",
+        "exportable": false
+      },
+      "cite": "09a-ENGINEERING.md:641"
+    },
+    {
+      "field": "data_class",
+      "value": "secret",
+      "error": "unknown_name",
+      "cite": "09a-ENGINEERING.md:642 (D4 secrets: no 06 value)"
+    },
+    {
+      "field": "data_class",
+      "value": "D4",
+      "error": "unknown_name",
+      "cite": "09a-ENGINEERING.md:642 (D4 secrets: no 06 value)"
+    },
+    {
+      "field": "tainted",
+      "value": true,
+      "wire": {
+        "taint": "untrusted"
+      },
+      "cite": "09a-ENGINEERING.md:654"
+    },
+    {
+      "field": "tainted",
+      "value": false,
+      "wire": {
+        "taint": "clean"
+      },
+      "cite": "09a-ENGINEERING.md:654"
+    },
+    {
+      "field": "permission",
+      "value": "data_only",
+      "wire": {
+        "permission": "informs"
+      },
+      "cite": "09a-ENGINEERING.md:656; DR-LABEL-RECONCILE:39 (decision 2)"
+    },
+    {
+      "field": "permission",
+      "value": "non_exportable",
+      "wire": {
+        "exportable": false
+      },
+      "cite": "09a-ENGINEERING.md:657 (a separate field; permission is not implied)"
+    },
+    {
+      "field": "retention_deadline",
+      "value": "2027-03-31T00:00:00Z",
+      "wire": {
+        "retention.deadline": "2027-03-31T00:00:00Z"
+      },
+      "cite": "09a-ENGINEERING.md:659"
+    },
+    {
+      "field": "venture",
+      "value": "v_keel",
+      "wire": {
+        "venture": "v_keel"
+      },
+      "cite": "09a-ENGINEERING.md:660"
+    },
+    {
+      "field": "venture",
+      "value": "portfolio",
+      "wire": {
+        "venture": "portfolio"
+      },
+      "cite": "09a-ENGINEERING.md:660"
+    },
+    {
+      "field": "venture",
+      "value": "founder",
+      "wire": {
+        "venture": "founder"
+      },
+      "cite": "09a-ENGINEERING.md:660 (venture: 'founder' allowed, founder 2026-10-01); DR-LABEL-RECONCILE:107 (decision G)"
+    },
+    {
+      "field": "subjects",
+      "value": [
+        "subj_ana"
+      ],
+      "wire": {
+        "subjects": [
+          "subj_ana"
+        ]
+      },
+      "cite": "09a-ENGINEERING.md:660"
+    },
+    {
+      "field": "envelope.confidence",
+      "value": {
+        "rung": "E2",
+        "p": 0.4
+      },
+      "wire": {
+        "confidence": {
+          "rung": "E2",
+          "p": 0.4
+        }
+      },
+      "cite": "09a-ENGINEERING.md:661 (label.confidence, the only copy)"
+    },
+    {
+      "field": "envelope.provenance",
+      "value": {
+        "sources": [
+          {
+            "ref": "crm:acct_77"
+          }
+        ],
+        "derived_from": [
+          "rec_01"
+        ],
+        "author": {
+          "title": "Sleep",
+          "family": "system"
+        }
+      },
+      "wire": {
+        "provenance": {
+          "sources": [
+            {
+              "ref": "crm:acct_77"
+            }
+          ],
+          "derived_from": [
+            "rec_01"
+          ],
+          "author": {
+            "title": "Sleep",
+            "family": "system"
+          }
+        }
+      },
+      "cite": "09a-ENGINEERING.md:661 (label.provenance, the only copy)"
+    },
+    {
+      "field": "provenance.human_principal",
+      "value": {
+        "id": "person_founder",
+        "role": "founder"
+      },
+      "wire": {
+        "provenance.human_principal": {
+          "id": "person_founder",
+          "role": "founder"
+        }
+      },
+      "cite": "09a-ENGINEERING.md:662 (PrincipalRef)"
+    },
+    {
+      "field": "provenance.human_principal",
+      "value": {
+        "id": "person_collaborator",
+        "role": "collaborator"
+      },
+      "wire": {
+        "provenance.human_principal": {
+          "id": "person_collaborator",
+          "role": "collaborator"
+        }
+      },
+      "cite": "09a-ENGINEERING.md:662 (PrincipalRef)"
+    },
+    {
+      "field": "provenance.human_principal",
+      "value": {
+        "id": "person_contractor",
+        "role": "contractor"
+      },
+      "wire": {
+        "provenance.human_principal": {
+          "id": "person_contractor",
+          "role": "contractor"
+        }
+      },
+      "cite": "09a-ENGINEERING.md:662 (PrincipalRef)"
+    },
+    {
+      "field": "provenance.human_principal",
+      "value": {
+        "id": "person_customer",
+        "role": "customer"
+      },
+      "wire": {
+        "provenance.human_principal": {
+          "id": "person_customer",
+          "role": "customer"
+        }
+      },
+      "cite": "09a-ENGINEERING.md:662 (PrincipalRef)"
+    },
+    {
+      "field": "provenance.human_principal",
+      "value": {
+        "id": "person_x",
+        "role": "friend"
+      },
+      "error": "unknown_name",
+      "cite": "09a-ENGINEERING.md:662 (role one of founder, collaborator, contractor, customer)"
+    },
+    {
+      "field": "retention",
+      "value": "forever",
+      "error": "unknown_name",
+      "cite": "09a-ENGINEERING.md:639-641,658 (06 §8 names only)"
+    },
+    {
+      "field": "authority",
+      "value": "data_only",
+      "error": "unknown_name",
+      "cite": "09a-ENGINEERING.md:637 (authority values: none, informs, may_authorise)"
+    },
+    {
+      "field": "trust",
+      "value": "high",
+      "error": "unknown_name",
+      "cite": "09a-ENGINEERING.md:644-646 (exactly one wire value for each 06 name; this is none)"
+    }
+  ]
+}
