@@ -4,11 +4,13 @@
 //
 // B1-03 freezes this surface and its done-tests (socket_donetest_test.go, build tag donetest,
 // registered in build/done-tests/B1-03.yml). This file is NOT registered: it is the interface the
-// job implements. Until B1-03 lands, Serve returns ErrNotImplemented and the done-tests fail red.
+// job implements. B1-03 implements it in server.go (transport, dispatch), command.go (validation)
+// and files.go (modes).
 //
 // TRANSPORT. A Unix stream socket at Config.SocketPath. A request is one JSON object on one line,
 // terminated by '\n'; the Kernel answers each request with exactly one Response on one line, in
-// order. A connection may carry any number of requests; a refused request does not end it.
+// order. A connection may carry any number of requests; a refused request does not end it. A line
+// longer than MaxLine is not judged: the connection is closed without an answer.
 //
 // FILE MODES (the OS, not this code, is what stops Userland appending directly):
 //   - the socket: owner the Kernel's uid, group Config.UserlandGID, mode exactly 0660 (09a §2).
@@ -30,12 +32,24 @@
 // (kernel/internal/nouns); a Label must pass nouns.Decode[nouns.Label]. Types 09a names but does
 // not define (Target, TokenSet, JobSpec, ProposedAction, Rationale, data) are carried as raw JSON:
 // required where 09a requires them, otherwise unchecked. A required key present as null is
-// refused (missing_field).
+// refused (missing_field); an optional key present as null is refused (invalid_field), because
+// under B1-02's wire rules an optional key is absent when unset. A key that appears twice in the
+// line is refused (bad_json): which copy wins would be the parser's choice, not the bytes'.
+//
+// B1-03 narrows four places the table above leaves open, each refused as invalid_field: `stream`,
+// `type`, `verb` and `business_ref` are non-empty; `resources` holds at least one id; and `stream`
+// may not be RefusalStream, which only the Kernel appends to (Userland may not forge the record
+// of what was refused).
 //
 // propose_event is the Kernel's own: it appends one event to `stream` with ExpectSeq expect_seq
 // and Type `type`, whose Data is a JSON object holding at least "label" (the command's label) and
-// "data" (the command's data). Every other verb is validated here and then handed to Backend,
-// once; its result is returned to the caller.
+// "data" (the command's data), plus "rationale" when the command carries one. Its Result is
+// {"stream","seq","hash"} of the appended event. Every other verb is validated here and then
+// handed to Backend, once; its result is returned to the caller.
+//
+// FAILURE IS NOT REFUSAL. A well-formed command that cannot be carried out is answered
+// {"ok":false,"reason":…} with ReasonSeqConflict or ReasonFailed and journals no refusal: the
+// command was valid, and socket:refusals records only malformed input.
 //
 // REFUSAL. A request that is not one JSON object, names no known cmd, lacks a required key, or
 // carries an invalid value is refused: the Response is {"ok":false,"reason":<Reason…>}, nothing
@@ -50,7 +64,8 @@ import (
 	"errors"
 )
 
-// ErrNotImplemented is returned by Serve until B1-03 lands.
+// ErrNotImplemented was returned by Serve before B1-03 implemented it. Nothing returns it now; it
+// stays exported because the frozen contract named it.
 var ErrNotImplemented = errors.New("socket: not implemented")
 
 // Refusal reasons: Response.Reason and RefusalData.Reason. A line is judged in this order and the
@@ -68,6 +83,14 @@ const (
 	// ReasonInvalidField: a key is unknown, or a value has the wrong JSON type, is outside its
 	// enum, or is refused by B1-02's decoder (nouns.ErrInvalid, nouns.ErrUnknownSchema).
 	ReasonInvalidField = "invalid_field"
+)
+
+// Failure reasons: a well-formed command that was not carried out. Never journaled as refusals.
+const (
+	// ReasonSeqConflict: propose_event's expect_seq is not the stream's head (journal.ErrSeqConflict).
+	ReasonSeqConflict = "seq_conflict"
+	// ReasonFailed: the Journal or the Backend failed the command, or the Backend's result is not JSON.
+	ReasonFailed = "failed"
 )
 
 // RefusalStream is the Journal stream refusals are appended to; RefusalType is their event type.
@@ -151,6 +174,8 @@ type Server interface {
 // once the socket accepts connections. A Journal file the Kernel owns at a wider mode is narrowed
 // to 0600, not refused; Serve refuses only a Journal it cannot hold at mode 0600. Modes do not
 // depend on the umask Serve inherits (the done-tests run it under umask 0).
+//
+// Serve's ctx bounds the server: when it ends, the server closes as Close does.
 func Serve(ctx context.Context, cfg Config) (Server, error) {
-	return nil, ErrNotImplemented
+	return serve(ctx, cfg)
 }
