@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+
+	"golang.org/x/sys/unix" // fchmodat(AT_SYMLINK_NOFOLLOW); already in the build and in ALLOWED_MODULES
 )
 
 // The OS is what stops Userland appending to the Journal directly, so the modes here are set
@@ -104,6 +106,27 @@ func narrowJournal(path string) error {
 // that vanished between the directory listing and the open is reported gone.
 func narrowFile(name string, euid int) (gone bool, err error) {
 	f, err := os.OpenFile(name, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
+	if errors.Is(err, fs.ErrPermission) {
+		// The Kernel's own file at a mode that denies its owner reading (0o066, say) cannot be
+		// opened, but it is still the Kernel's to narrow. fchmodat with AT_SYMLINK_NOFOLLOW changes
+		// the name itself and never a link's target: if the name became a symlink after the Lstat,
+		// the link's own mode changes and the reopen below refuses it (ELOOP). A file the Kernel
+		// does not own fails here with EPERM, or is refused below by owner.
+		fi, lerr := os.Lstat(name)
+		if lerr != nil {
+			return errors.Is(lerr, fs.ErrNotExist), nil
+		}
+		if !fi.Mode().IsRegular() {
+			return false, fmt.Errorf("%s is %v, not a regular file", name, fi.Mode().Type())
+		}
+		if uid, _ := ownerOf(fi); uid != euid {
+			return false, fmt.Errorf("%s is owned by uid %d, not the Kernel's %d", name, uid, euid)
+		}
+		if err := unix.Fchmodat(unix.AT_FDCWD, name, journalMode, unix.AT_SYMLINK_NOFOLLOW); err != nil {
+			return false, fmt.Errorf("narrowing %s: %w", name, err)
+		}
+		f, err = os.OpenFile(name, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
+	}
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
 		return true, nil // a sidecar SQLite removed between the listing and here
@@ -183,7 +206,9 @@ func listen(path string, gid int) (*net.UnixListener, fs.FileInfo, error) {
 	}
 	uid, g := ownerOf(fi)
 	if fi.Mode().Type() != fs.ModeSocket || permOf(fi.Mode()) != socketMode || uid != os.Geteuid() || g != gid {
-		os.Remove(path)
+		if ours, err := os.Lstat(tmp); err == nil && os.SameFile(fi, ours) { // same device and inode
+			os.Remove(path)
+		}
 		return fail(fmt.Errorf("%s is %v uid %d gid %d; want a socket at %#o, uid %d, gid %d",
 			path, fi.Mode(), uid, g, socketMode, os.Geteuid(), gid))
 	}
