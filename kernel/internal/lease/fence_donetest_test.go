@@ -655,8 +655,8 @@ func TestB1_04_SP2B0Greedy(t *testing.T) {
 // refuse it too. discount then re-acquires with higher tokens and lands.
 //
 // Kills: a verifier that trusts the presented token (accepts the zombie); one that accepts any token
-// at least the current one (the forged push); one that checks the token but not its holder (the
-// borrowed push); one that reads a Coordinator's memory rather than storage (the reopened Journal);
+// at least the current one (tax presenting its own tokens + 1; SP2's hook demands equality); one
+// that checks the token but not its holder (the borrowed push); one that reads a Coordinator's memory rather than storage (the reopened Journal);
 // a Coordinator whose re-grant token does not exceed the expired one.
 func TestB1_04_SP2DrillStaleHolderRejectedByStorage(t *testing.T) {
 	f := b104Load(t, "b0-drill.json")
@@ -701,6 +701,11 @@ func TestB1_04_SP2DrillStaleHolderRejectedByStorage(t *testing.T) {
 	stale := f.uris(f.ZombieRefused["stale"])
 	refuse(t, b104Verifier(t, j), lease.Push{Job: disc, Tokens: forged, Touched: stale}, []error{lease.ErrStaleToken}, stale)
 	refuse(t, b104Verifier(t, j), lease.Push{Job: disc, Tokens: gTax.Tokens, Touched: stale}, []error{lease.ErrStaleToken}, stale)
+	inflated := map[string]uint64{} // the current holder, one above its own tokens: not current either
+	for r, tok := range gTax.Tokens {
+		inflated[r] = tok + 1
+	}
+	refuse(t, b104Verifier(t, j), lease.Push{Job: tax, Tokens: inflated, Touched: stale}, []error{lease.ErrStaleToken}, stale)
 
 	if err := cTax.Release(context.Background(), tax); err != nil {
 		t.Fatalf("Release(%s): %v", tax, err)
