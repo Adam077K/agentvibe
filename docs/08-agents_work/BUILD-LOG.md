@@ -153,3 +153,11 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   done-tests on the shared fixtures, 99/99 subtests red; Go-half low fixes re-hashed. Six mutants killed against a
   throwaway implementation. Open, under review: `userland/` location chosen (none existed); npm lockfile vs the
   canon's pnpm; JSON Schema check validates via `z.fromJSONSchema`, not an independent validator.
+- **B1-02-ts — reviewer PASS at cbd1787.** TS tests read the Go fixtures; reviewer's own implementation 99/99;
+  every mutant red (incl. 4 emitted-schema mutants), so the `z.fromJSONSchema` check is not circular in practice.
+  `userland/` accepted (canon names no folder).
+- **DECISION — pnpm, per canon** (09a:59, :657). The npm lockfile from B1-02-ts is replaced by a pnpm lockfile in
+  the Userland implementation job; `packageManager: pnpm@9.12.3`.
+- **B1-02 implementation started** — two Opus builders in parallel off `build/b1-02-ts`: `build/b1-02-go` (kernel
+  nouns + upcasters, plus a unit test that Upcast does not alias `Data`) and `build/b1-02-userland` (Zod schemas +
+  pnpm). Each gets its own reviewer; they merge into one PR.
