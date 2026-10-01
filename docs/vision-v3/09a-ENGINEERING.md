@@ -607,6 +607,12 @@ type LabelV1 = {
   confidence?: number;                               // neither provenance nor confidence ever raises permission
   subjects?: SubjectId[]; revocation_epoch: number;  // lineage inventory (§11.7); bumped on source/Room revocation
 };
+
+type SourceRef = {                                   // one provenance entry; the shape of 06 §3 provenance.sources[]
+  ref: string; quote?: string; accessed?: string; system_of_record?: string;
+  human_principal?: PrincipalRef;                    // set when a human supplied it (DR-68)
+};
+type PrincipalRef = { id: string; role: string };    // the shape of 06 §3 provenance.human_principal
 ```
 
 **Mapping from 06's semantic names (published with the schema; `label/1`).**
@@ -619,7 +625,7 @@ type LabelV1 = {
 | `data_class: confidential` | `dclass: D3` (client / NDA material) — boundary unchanged, set by the Charter |
 | `data_class: sealed` | `dclass: D3` **and** `boundary: sealed` — a classification plus a boundary, never one field |
 | `origin: founder · system_of_record · internal · public_web · customer · counterparty · synthetic` | same name |
-| a collaborator's or contractor's contribution | origin of the channel (`counterparty` or `internal`) + `provenance[].human_principal` |
+| a collaborator's or contractor's contribution | origin by channel, plus `provenance[].human_principal`. A HumanTask delivered through the Human Task Market ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)) → `counterparty` (the broker corrections in [13](13-WORKED-SCENARIOS.md)). Any other channel is **OPEN**: no canon text names the channel that yields `internal` ([DR-LABEL-RECONCILE](_process/DR-LABEL-RECONCILE-2026-10-01.md)) |
 | `consent_scope` | same name (participant and panel data only) |
 | `taint: clean · untrusted · quarantined` | same name |
 | `authority: none · informs · may_authorise` | `permission`, same values |
@@ -628,6 +634,24 @@ type LabelV1 = {
 | `retention: obligation · legal · safety · pinned` | `retention.hold`, same value |
 | `retention: synthetic` | `retention.class: synthetic`, `hold: none`, `exportable: false` |
 | D4 secrets | no 06 value: secrets never enter memory (§11.8) |
+
+**06 → wire: names 06's `Label` used before 2026-10-01.** 06 now writes the wire names. These rows map the older ones,
+so a reader of an older record or document has exactly one wire value for each. Line-level citations are in
+[DR-LABEL-RECONCILE-2026-10-01](_process/DR-LABEL-RECONCILE-2026-10-01.md).
+
+| Former 06 name | Wire | Basis |
+|---|---|---|
+| `origin: system` | `origin: system_of_record` | 06 §4 defined it as "a system of record" (L5: "`system` (system of record)") |
+| `origin: web` | `origin: public_web` | 06 §11 labels public competitor and Pain Index evidence `web`. 13 labels the same kind of public-source findings `public_web` |
+| `origin: worker` | `origin: internal` | 13's Backlot: assets the venture's own workers produced carry `origin: internal`, with provenance to repo and sha |
+| `origin: collaborator` | not an origin: the channel row above, plus `provenance[].human_principal` | DR-68; 06 §3 ("there is no separate human origin") |
+| `tainted: true` · `tainted: false` | `taint: untrusted` · `taint: clean` | `LabelV1.taint` is "non-clean if ANY data or control ancestor is untrusted". 06 defined `tainted` with the same predicate |
+| — | `taint: quarantined` | **OPEN**: 06 §3 calls quarantine "a record state (§8), not a label value" |
+| `permission: data_only` | `permission: none` in 06's Scenario A (13 records that same Front Desk step as `authority: none`). In general, **OPEN** between `none` and `informs` (13 also labels a customer email `informs`) | 13, the counterparty refund-account scenario |
+| `permission: non_exportable` | `exportable: false`, a separate field. `permission` is not implied | §11.9; DR-50 |
+| `retention` (06 §8 names `ordinary` … `synthetic`) | `retention.hold`, per the rows above. `synthetic` → `retention.class: synthetic` | the rows above. 06 had also said "wire values per 09a §11.6", which are `retention.class` values: that comment was wrong |
+| `retention_deadline` | `retention.deadline` | `LabelV1`: "retention deadline, computed; never a class" |
+| `venture: string` · `subjects: string[]` | `venture: VentureId \| 'portfolio'` · `subjects?: SubjectId[]` | `LabelV1` |
 
 - **Join.** A job's label is the join of every Launch Pack input; outputs inherit it; derivation from a tainted fact
   taints — over **control** dependencies too (a plan chosen because of an email is tainted even with clean
