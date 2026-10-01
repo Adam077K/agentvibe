@@ -247,3 +247,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   fail on its mutant). **Final PASS at a102a98.** Probe 5 asserts that a wounded job keeps leases the older job did
   not request — added to the lease follow-ups. Process note: reviewers need probe files written for them.
 | 2026-10-01 | B1-04 | #155 (stacked on #154) | leases + storage fencing; frozen tests 8/8, adversarial 50/50; final PASS at a102a98 | founder: verdict + merge after #154; Codex re-review owed |
+- **B1-26 BLOCKED on canon.** 06 §4 `type Label` uses names the 09a §12 wire table never maps (origin values, boolean
+  `tainted`, permission values, top-level `retention_deadline`); one 09a row maps "by channel" to two values;
+  `SourceRef`/`PrincipalRef` are undefined. No tests frozen.
+- **DECISION — 09a §12 wire table is authoritative** (DR-68: "06 uses the wire names"). A docs job rewrites 06 §4
+  and its examples to the wire names, adds an explicit 06 → wire note with citations, and lists anything the canon
+  does not settle as OPEN rather than inventing it. B1-26's tests follow once that lands.
+- **Critical path state:** B1-06/07/08/09/12/14/18/19 all depend on B1-03, which is blocked on socket binding.
