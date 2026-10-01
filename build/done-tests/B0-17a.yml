@@ -17,6 +17,21 @@
 # tamper test always called Verify before Read/Append). Added SelfConsistentRewriteRefused, and
 # fresh-Open Append and Read(from seq 7) checks with no Verify in TamperedRowRefused. Each mutant
 # now fails; the old file passes both. Edited by a builder that is not the B1-01b implementer.
+#
+# Re-frozen 2026-10-01: lease_donetest_test.go 8c397b8f... -> 79a77e01... Two reviewer findings on
+# B1-05: M6, a Check that ignores expiry, passed all four tests (an expired token was only ever
+# checked after a reclaim); and a Claimer that counted an ExpectSeq conflict as a win was caught
+# only when the scheduler interleaved (~80% of runs). Added: Check of an expired, unreclaimed
+# token must be ErrStaleToken; and one forced conflict (cutIn wrapper, another claim commits
+# between the read and the Append) whose loser must get ErrHeld. M6 now fails; the forced conflict
+# alone fails the win-mutant 20 of 20 runs. Edited by a builder that is not the B1-05 implementer.
+#
+# Re-frozen 2026-10-01 (round 3): lease_donetest_test.go 79a77e01... -> 5170fe93... Reviewer
+# finding on B1-05: M1, a Claimer that decides on one Head read and appends at a second, fresh Head
+# read, was caught only ~7 of 20 runs, because cutIn fired just before Append, i.e. after M1's
+# second read. cutIn now wraps Head and fires after the FIRST Head read returns. Measured -race
+# -count=20: correct code passes 20/20; M1 fails 20/20; the win-mutant (M2) fails 20/20. Edited by
+# a builder that is not the B1-05 implementer.
 register: B0-17a
 jobs:
   - id: B1-01a
@@ -32,4 +47,4 @@ jobs:
   - id: B1-05
     files:
       - path: kernel/internal/lease/lease_donetest_test.go
-        sha256: 8c397b8f3c3ab2c23423aecf06939d12aa8ab05eaaeb70af9646ebac8e9e70b3
+        sha256: 5170fe93124115b656ec28318b3ea0123bd148bece938b062bba40ff93858abd
