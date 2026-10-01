@@ -194,3 +194,6 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   over-refusal, mutants killed except one judged equivalent by reasoning, not run).
 - **DECISION — unsafe integers are judged by exact value, not notation.** `9007199254740993.0`, `9.007199254740993e15`
   and `1e300` are refused like `9007199254740993`; 1.5 stays accepted. Small follow-up on both halves.
+- **B1-02 Go — PASS at 18a9d4d.** Unsafe integers refused by exact value from decimal digits (not math/big: a huge
+  exponent would be a memory DoS). 23 probes correct; 1 MB literals decide in ≤6.4 ms; the "exponent ignored" mutant
+  is killed. Waiting on the Userland half for one B1-02 PR.
