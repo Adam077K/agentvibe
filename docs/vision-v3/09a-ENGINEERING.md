@@ -602,17 +602,23 @@ type LabelV1 = {
   permission: 'none'|'informs'|'may_authorise';      // permission to drive an effect — NOT confidence; only a declassifier widens it
   exportable: boolean;                               // false for synthetic and canary records (DR-50)
   taint: 'clean'|'untrusted'|'quarantined';          // non-clean if ANY data or control ancestor is untrusted
-  provenance: SourceRef[];                           // incl. {human_principal?: PrincipalRef} — human provenance is a field, never an origin
+  provenance: Provenance;                            // the ONLY copy; a record envelope references it (founder, 2026-10-01). Human provenance is a field, never an origin
   consent_scope?: ConsentScopeRef;                   // participant/panel data (06 §11, 16 ParticipantProtocol); never widens
-  confidence?: number;                               // neither provenance nor confidence ever raises permission
+  confidence?: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };  // the ONLY copy (founder, 2026-10-01); required on a Brain record (06 §3); never raises permission
   subjects?: SubjectId[]; revocation_epoch: number;  // lineage inventory (§11.7); bumped on source/Room revocation
 };
 
-type SourceRef = {                                   // one provenance entry; the shape of 06 §3 provenance.sources[]
-  ref: string; quote?: string; accessed?: string; system_of_record?: string;
-  human_principal?: PrincipalRef;                    // set when a human supplied it (DR-68)
+type Provenance = {                                  // moved whole from 06 §3's record envelope (founder, 2026-10-01)
+  sources: SourceRef[];
+  derived_from: string[];                            // record ids → transitive labels
+  author: { title: string; family: 'claude'|'codex'|'founder'|'human'|'system'; mission?: string };
+  human_principal?: PrincipalRef;                    // who supplied it, when a human did; one per record, not per source (founder, 2026-10-01)
 };
-type PrincipalRef = { id: string; role: string };    // the shape of 06 §3 provenance.human_principal
+type SourceRef = { ref: string; quote?: string; accessed?: string; system_of_record?: string };  // 06 §3 sources[]
+type PrincipalRef = {
+  id: string;                                        // a stable person id (founder, 2026-10-01)
+  role: 'founder'|'collaborator'|'contractor'|'customer';   // relationship to the founder (founder, 2026-10-01)
+};
 ```
 
 **Mapping from 06's semantic names (published with the schema; `label/1`).**
@@ -625,7 +631,7 @@ type PrincipalRef = { id: string; role: string };    // the shape of 06 §3 prov
 | `data_class: confidential` | `dclass: D3` (client / NDA material) — boundary unchanged, set by the Charter |
 | `data_class: sealed` | `dclass: D3` **and** `boundary: sealed` — a classification plus a boundary, never one field |
 | `origin: founder · system_of_record · internal · public_web · customer · counterparty · synthetic` | same name |
-| a collaborator's or contractor's contribution | origin by channel, plus `provenance[].human_principal`. The one case the canon decides: a licensed customs broker's corrections, contracted through the Human Task Market ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), are `counterparty` ([13](13-WORKED-SCENARIOS.md), Laytime field map). Every other channel and every other HumanTask kind is **OPEN**. No canon text names the channel that yields `internal`, and 13 also writes a participant HumanTask as `origin: participant`, which is not a wire origin ([DR-LABEL-RECONCILE](_process/DR-LABEL-RECONCILE-2026-10-01.md)) |
+| a collaborator's or contractor's contribution | origin is set by the channel and its author, and `provenance.human_principal` records the person (founder, 2026-10-01). A HumanTask of any kind ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), `participant` included, is `counterparty`, as the broker's corrections in [13](13-WORKED-SCENARIOS.md) already are. On any other channel (email, a form) the author decides: an outside person is `counterparty`, and the founder or the founder's agents are `internal` |
 | `consent_scope` | same name (participant and panel data only) |
 | `taint: clean · untrusted · quarantined` | same name |
 | `authority: none · informs · may_authorise` | `permission`, same values |
@@ -643,15 +649,17 @@ so a reader of an older record or document has exactly one wire value for each. 
 |---|---|---|
 | `origin: system` | `origin: system_of_record` | 06 §4 defined it as "a system of record" (L5: "`system` (system of record)") |
 | `origin: web` | `origin: public_web` | 06 §11 labels public competitor and Pain Index evidence `web`. 13 labels the same kind of public-source findings `public_web` |
-| `origin: worker` | **OPEN** | No canon text says which wire origin output from the venture's own workers takes |
-| `origin: collaborator` | not an origin: the channel row above, plus `provenance[].human_principal` | DR-68; 06 §3 ("there is no separate human origin") |
+| `origin: worker` | `origin: internal` | founder, 2026-10-01 |
+| `origin: collaborator` | not an origin: the channel row above, plus `provenance.human_principal` | DR-68; 06 §3 ("there is no separate human origin") |
 | `tainted: true` · `tainted: false` | `taint: untrusted` · `taint: clean` | `LabelV1.taint` is "non-clean if ANY data or control ancestor is untrusted". 06 defined `tainted` with the same predicate |
-| — | `taint: quarantined` | **OPEN**: 06 §3 calls quarantine "a record state (§8), not a label value" |
-| `permission: data_only` | **OPEN** between `none` and `informs` | 13 has both: a customer email is `informs` and an untrusted counterparty statement is `none`. Neither is 06's Scenario A, and neither value is defined |
+| — | `taint: quarantined` | A label value. 06 §3's `quarantined_at` records when it was set (founder, 2026-10-01) |
+| `permission: data_only` | `permission: informs`: it may shape a decision and never authorises an action | founder, 2026-10-01 |
 | `permission: non_exportable` | `exportable: false`, a separate field. `permission` is not implied | §11.9; DR-50 |
 | `retention` (06 §8 names `ordinary` … `synthetic`) | `retention.hold`, per the rows above. `synthetic` → `retention.class: synthetic` | the rows above. 06 had also said "wire values per 09a §11.6", which are `retention.class` values: that comment was wrong |
 | `retention_deadline` | `retention.deadline` | `LabelV1`: "retention deadline, computed; never a class" |
 | `venture: string` · `subjects: string[]` | `venture: VentureId \| 'portfolio'` · `subjects?: SubjectId[]` | `LabelV1` |
+| envelope `confidence` · `provenance` (06 §3) | `label.confidence` · `label.provenance`, the only copies | founder, 2026-10-01 |
+| `provenance.human_principal: {id, role: string}` | `PrincipalRef`, with `role` one of `founder` · `collaborator` · `contractor` · `customer` | founder, 2026-10-01 |
 
 - **Join.** A job's label is the join of every Launch Pack input; outputs inherit it; derivation from a tainted fact
   taints — over **control** dependencies too (a plan chosen because of an email is tainted even with clean

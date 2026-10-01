@@ -1,4 +1,4 @@
-# DR-LABEL-RECONCILE — 06 label names reconciled to the 09a wire schema (2026-10-01)
+# DR-LABEL-RECONCILE: 06 label names reconciled to the 09a wire schema (2026-10-01)
 
 **Basis.** DR-68 says: "One versioned wire schema for labels, owned by 09a, with a published mapping. 06 owns semantics
 and uses the wire names … Human provenance is a provenance field, not a new origin." That text is at `00-CANON.md:515`.
@@ -9,56 +9,72 @@ All line citations are at `origin/main` `59dbe01`, before this change.
 
 ## What changed
 
-- **09a §12**: adds `SourceRef` and `PrincipalRef`, adds a "06 → wire" table and makes the collaborator/contractor row
-  a function wherever the canon supports one.
+- **09a §12** adds `Provenance`, `SourceRef` and `PrincipalRef`. It adds a "06 → wire" table and turns the
+  collaborator/contractor row into a function.
 - **06 §4**: `type Label` is now field for field `LabelV1`. The examples are rewritten to the wire names: §3 (l.129),
   L2/L3/L5, Scenario A steps 1 and 3, §8 (l.327), §11 (l.472, 479, 501) and §13 (l.545).
+- **06 §3**: the record envelope no longer holds `confidence` or `provenance`. Both now live only in `label`
+  (founder decision 8). The `quarantined_at` comment and the §8 Quarantine row now agree with `taint: quarantined`.
 - **09b**: the `twin_run` example (l.745) changes from `labels: [synthetic, non_exportable]` to a `label/1` record.
 
-## Mappings decided
+## Mappings decided from the canon
 
 | Former 06 | Wire | Cited basis |
 |---|---|---|
 | `origin: system` | `system_of_record` | `06:159` "'system' = a system of record"; `06:179` "`system` (system of record)" |
 | `origin: web` | `public_web` | `06:479` "origin: web … like any public evidence"; `13-WORKED-SCENARIOS.md:94,586` label public-source findings `origin: public_web` |
-| `origin: collaborator` | no origin. Channel origin + `provenance[].human_principal` | `00-CANON.md:515`; `06:130-131` "keeps an existing origin … no separate human origin"; `09a:622` |
-| a licensed customs broker's corrections, contracted through the Human Task Market (the Laytime field map) | `counterparty` | `13:587`: "`origin: counterparty` + provenance {… contract: Human Task Market ref}". This decides only this case, not every HumanTask kind (`16:556`) |
+| `origin: collaborator` | no origin. Channel origin + `provenance.human_principal` | `00-CANON.md:515`; `06:130-131` "keeps an existing origin … no separate human origin"; `09a:622` |
 | `tainted: true` / `false` | `taint: untrusted` / `clean` | `09a:604` "non-clean if ANY data or control ancestor is untrusted"; `06:163` uses the same predicate |
 | `permission: non_exportable` | `exportable: false` (separate field) | `09a:575` "twin records carry `origin: synthetic, exportable: false`"; `09a:603`; DR-50 |
 | `retention` (06 §8 names) | `retention.hold`; `synthetic` → `retention.class` | `09a:627-629`. The comment at `06:165` ("wire values per 09a §11.6") contradicted those rows and is gone |
 | `retention_deadline` | `retention.deadline` | `09a:601` "retention deadline, computed; never a class" |
-| `SourceRef` | `{ref; quote?; accessed?; system_of_record?; human_principal?: PrincipalRef}` | `06:102` (sources shape) + `09a:605` (human_principal on the entry) |
-| `PrincipalRef` | `{id: string; role: string}` | `06:105` |
+| `SourceRef` | `{ref; quote?; accessed?; system_of_record?}` | `06:102` (the sources shape) |
 
-## OPEN — not chosen, because the canon does not support a choice
+## Founder decisions (founder, 2026-10-01)
 
-1. **`data_only`: `none` or `informs`?** It is wholly open.
-   - `13:1312` uses `none` for an untrusted counterparty statement. That is 13's Beacon procurement scenario, not
-     06's Scenario A (R3-red, `06:184-192`).
-   - `13:927` uses `informs` for a customer email.
-   - Neither value is defined anywhere.
-   - Scenario A step 1 (`06:188`) now states only "below `may_authorise`", which L5 supports.
-   - The Pain Index example (`06:501`) carries an OPEN comment.
-2. **`origin: worker`.** No canon text gives the wire origin of output from the venture's own workers.
-   - An earlier draft mapped it to `internal` on the strength of `13:1404`. Review rejected that: `13:1404` is
-     Scenario 14's import of the founder's donor repos into Backlot assets (`13:1395`), not worker output.
-3. **Channels and HumanTask kinds other than the broker case.** No canon text names the channel that yields
-   `internal` (`09a:622`). This includes a contribution made in a Room by a co-founder or contractor (`16:520-528`).
-   The other HumanTask kinds (`16:556`) are also undecided. `13:1202,1553` label participant work
-   `origin: participant`, which is not a wire origin and contradicts DR-68.
-4. **`taint: quarantined` against `06:99`.** That line reads "`quarantined_at` … a record state (§8), not a label
-   value". The wire carries quarantine as a taint value.
-5. **`PrincipalRef` semantics.** It is unsettled whether `id` refers to a 16 §12 Principal record, and whether `role`
-   takes 16's Principal kinds.
-6. **Placement of `human_principal`.** The 06 envelope holds one per record (`06:105`). The wire holds one per source
-   entry (`09a:605,622`).
-7. **Envelope vs label.** The 06 RecordEnvelope carries `provenance` and `confidence` outside `label` (`06:102-105`),
-   and `LabelV1` carries them inside. The canon does not say whether these are one value or two.
+The orchestrator relayed these decisions; it reports collecting them from the founder through AskUserQuestion. The
+builder did not see the exchange itself. Each one replaces an item that was OPEN at `44f3136`.
+
+1. **`origin: worker` → `internal`** (founder, 2026-10-01).
+2. **`permission: data_only` → `informs`.** The data may shape a decision and never authorises an action (founder,
+   2026-10-01). Scenario A step 1 and the Pain Index example now carry `permission: informs`.
+3. **Every HumanTask kind, `participant` included, → `counterparty`**, the same as every outside person (founder,
+   2026-10-01). The broker case at `13:587` already agreed.
+4. **On other channels (email, forms), origin follows the author.** An outside person is `counterparty`. The founder
+   and the founder's agents are `internal` (founder, 2026-10-01).
+5. **`taint` keeps `clean` · `untrusted` · `quarantined`** (founder, 2026-10-01). The contradicting comment at `06:99`
+   now says `quarantined_at` records when quarantine was set. The §8 Quarantine row also sets `taint: quarantined`.
+6. **`PrincipalRef = {id, role}`** (founder, 2026-10-01).
+   - `id` is a stable person id.
+   - `role` is the relationship to the founder, one of `founder` · `collaborator` · `contractor` · `customer`.
+7. **`human_principal` is one per record, not per source** (founder, 2026-10-01). It sits at
+   `provenance.human_principal` and is no longer on `SourceRef`.
+8. **The label holds the only copy of provenance and confidence** (founder, 2026-10-01). The 06 §3 envelope drops its
+   copy and references `label.provenance` and `label.confidence`.
+
+**What decision 8 changed in the wire, flagged for review.** Moving the envelope's copy into the label without losing
+data changed two `LabelV1` field types:
+- `provenance` goes from `SourceRef[]` to `Provenance {sources, derived_from, author, human_principal?}`. L6's cascade
+  walks `derived_from`.
+- `confidence` goes from `number` to `{rung: E0–E5; p?}`. Evidence rungs are 06's.
+
+The schema stays `label/1`, because no `label/1` reader has shipped yet. B1-26 is that reader.
+
+## OPEN
+
+None of the seven items from `44f3136` remain open. These new questions came out of applying the decisions:
+
+1. **How far decision 4 reaches.** It is applied only inside 09a's collaborator/contractor row. The `founder` and
+   `customer` origins elsewhere are unchanged. If it is meant generally, two cases change: a founder-authored email
+   would become `internal` and could no longer reach L5's `may_authorise`, and a customer email (`13:927`) would
+   become `counterparty`.
+2. **Panels against decision 3.** `06:457` labels panel transcripts `origin: customer`, while 16 lists `taste_panel`
+   as a HumanTask kind (`16:556`). Under decision 3 they would be `counterparty`. Not changed here.
 
 ## Not done (out of scope, mapping already decided)
 
 - 06 §8 prose still calls `ordinary` … `pinned` "retention classes" (`06:319,325`).
-- 06 §3 still writes `provenance.human_principal` (`06:131`).
 - Stragglers elsewhere still use pre-wire names:
-  - 13 uses `authority:` and `data_class:` (`13:185,812,927,1281,1312`) and `origin: participant` (`13:1202,1553`), which contradicts DR-68.
+  - 13 uses `authority:` and `data_class:` (`13:185,812,927,1281,1312`).
+  - 13 uses `origin: participant` (`13:1202,1553`), which should be `counterparty` under decision 3.
   - 02 uses `origin: external, class: D2` (`02:519`).

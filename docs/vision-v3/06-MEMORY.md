@@ -96,14 +96,10 @@ type RecordEnvelope = {
   valid_from: string;  valid_to: string | null;         // world time
   recorded_at: string; invalidated_at: string | null;   // system time  (bi-temporal, natively in files)
   supersedes?: string[]; superseded_by?: string;
-  quarantined_at: string | null;                        // a record state (§8), not a label value
-  // three SEPARATE fields (DR-40) — none may stand in for another
-  confidence: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };
-  provenance: { sources: { ref: string; quote?: string; accessed?: string; system_of_record?: string }[];
-                derived_from: string[];                 // record ids → transitive labels
-                author: { title: string; family: 'claude'|'codex'|'founder'|'human'|'system'; mission?: string };
-                human_principal?: { id: string; role: string } };  // who supplied it, when a human did [DR-68, B16]
-  label: Label;                                         // §4: permission, not belief; carries retention class + deadline
+  quarantined_at: string | null;                        // when quarantine was set (§8); the label then carries taint: quarantined
+  label: Label;                                         // §4. The ONLY copy of confidence and provenance: label.confidence,
+                                                        // label.provenance (founder, 2026-10-01). Confidence, provenance and
+                                                        // permission stay three SEPARATE fields (DR-40); none stands in for another
   use: { reads: number; cites: number; settled_cites: number; counterfactual_wins: number;
          utility: number };                             // computed from the Use Ledger, never agent-written
   valid_until?: string;                                 // priors, mirrors
@@ -128,7 +124,7 @@ from the founder's existing repos starts at **E1**; a settled mission's citation
 permission. **Citation raises confidence in our use of a source — never the source's taint or authority.** Public or
 untrusted evidence keeps `taint: untrusted` however often, and however decisively, it is cited [DR-40, B16]. Material a human
 supplies (a contractor's notes, a participant's answers) keeps an existing origin and records the human in
-`provenance.human_principal`; there is no separate human origin [DR-68].
+`label.provenance.human_principal`; there is no separate human origin [DR-68].
 
 > **NEW DECISION:** memory uses the canon's E0–E5 unchanged; S04's separate "replicated" grade becomes the
 > `support_bucket` on priors and lessons, not a seventh rung. One ladder, one meaning.
@@ -157,7 +153,7 @@ permission, taint and origin.
 type Label = {                                      // field for field 09a §12 LabelV1; where they differ, 09a wins [DR-68]
   schema: 'label/1';
   origin: 'founder'|'system_of_record'|'internal'|'public_web'|'customer'|'counterparty'|'synthetic';
-                                                    // a human supplier → provenance[].human_principal, never an origin
+                                                    // a human supplier → provenance.human_principal, never an origin
   dclass: 'D0'|'D1'|'D2'|'D3'|'D4';                 // classification: what the datum is (09a §11)
   boundary: 'open'|'guarded'|'sealed';              // what may leave the venture (§10); set by the Charter, rides the datum
   venture: VentureId | 'portfolio';
@@ -167,9 +163,9 @@ type Label = {                                      // field for field 09a §12 
   permission: 'none'|'informs'|'may_authorise';     // may it drive an effect — NOT confidence
   exportable: boolean;                              // may it leave; false for synthetic and canary records (DR-50, L7)
   taint: 'clean'|'untrusted'|'quarantined';         // non-clean if any data or control ancestor is untrusted; citation never clears it
-  provenance: SourceRef[];                          // 09a §12
+  provenance: Provenance;                           // 09a §12: sources, derived_from, author, human_principal (one per record)
   consent_scope?: ConsentScopeRef;                  // participants and panels (§11); never widens (§11 pivot rule)
-  confidence?: number;                              // never raises permission (L2)
+  confidence?: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };   // required on a record (§3); never raises permission (L2)
   subjects?: SubjectId[];                           // data subjects → lineage inventory (§8)
   revocation_epoch: number;                         // bumped when a source or Room is revoked
 };
@@ -194,7 +190,7 @@ in [09a §12](09a-ENGINEERING.md#12-labels--the-mechanics).
 
 | Step | What happens | Label effect |
 |---|---|---|
-| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `origin: counterparty, taint: untrusted`; permission below `may_authorise` (L5) |
+| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `origin: counterparty, taint: untrusted, permission: informs` |
 | 2 | A support mission (Codex) extracts amount, customer, bank reference into a deposit; Sleep promotes; a later accepted mission (Claude Code) cites it | Label inherited (L1), unchanged by settlement (L3) |
 | 3 | The Skill Foundry proposes a "supplier reconciliation" skill from the success | Candidate inherits `taint: untrusted`; cannot become policy |
 | 4 | An envoy proposes a refund to the new account, inside the cap | Decision Contract blocker `label.untrusted_destination` (L5), owner Record, remedy "broker reads original payment record" |
@@ -329,7 +325,7 @@ a consolidation mission; it never deletes — only Record does (DR-04 applied to
 | **Invalidate** | `valid_to` set; answers `as_of` | Contradicting settled evidence | Yes | Record + opposite-family check |
 | **Redact** | Field-level removal of personal/sealed data | Reclassification, data policy | No, for the field | Record |
 | **Forget** | Governed erasure across files, history, index, blobs, caches, backups, projections | ForgetRequest: founder, customer (privacy law), contract end | **No, by design** | Record proposes; **Custody executes as an effect** (DR-41) |
-| **Quarantine** | Sets `quarantined_at`; out of packs; cascade per L6 | Poison suspicion, canary hit, disclosure failure, revocation | Yes | Record |
+| **Quarantine** | Sets `quarantined_at` and `taint: quarantined`; out of packs; cascade per L6 | Poison suspicion, canary hit, disclosure failure, revocation | Yes | Record |
 
 Retention classes decide which verbs apply: `ordinary` (all), `obligation` (never decay/invalidate without settled
 release), `legal` (held until the retention authority releases), `safety` (never decays), `pinned`, `synthetic`. The
@@ -507,7 +503,7 @@ pain:
   size: {buyers_est, wtp_proxy, confidence}; trend_90d: "+34%"
   why_unsolved: "too small for incumbents, too technical for bookkeepers"
   status: indexed | probed | ventured | nulled
-  label: {origin: public_web, taint: untrusted}   # permission: none vs informs is OPEN (09a §12, 06 → wire)
+  label: {origin: public_web, taint: untrusted, permission: informs}
 ```
 
 Nightly sweep by small models of both families under per-source `terms_profile` (unpermitted sources are fog); weekly
