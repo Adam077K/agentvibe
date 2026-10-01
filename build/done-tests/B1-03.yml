@@ -44,6 +44,21 @@
 #   StalledConnectionsAreClosedRatify - silent / mid-line / non-reading client closed within 30s
 #   JournalSidecarSymlinkNotFollowedRatify - narrowing never chmods a symlink target (files.go
 #                                       Lstat-then-Chmod race; the victim was narrowed at a395043)
+#
+# RE-FREEZE r3 2026-10-01: 2026-10-01 re-freeze r3 after Opus review found 4 surviving mutants.
+# Added kernel/internal/socket/socket_r3_donetest_test.go; rounds 1-2 unchanged (hashes identical).
+# Base b3ffff3 (ratified bounds). Mutants applied in $TMPDIR copies only, each killed, each green on
+# every other done-test (so it survived before):
+#   R3-M1 sidecar symlink reported gone, Serve starts  -> SidecarSymlinkRefusesToStart
+#   R3-M2 StallTimeout = 34s                          -> StallTimeoutIsThirtySecondsPerLine (<= 31.5s)
+#   R3-M3 read deadline set once per connection       -> StallTimeoutIsThirtySecondsPerLine (active
+#                                                        client cut off at 30.0s)
+#   R3-M4 oversized refusal: wrong reason / digest    -> OversizedRefusalReasonAndDigest (both variants)
+# The 30s bound is a literal (founder, 2026-10-01), not socket.StallTimeout, so a mutant cannot move it.
+# NEEDS RATIFICATION (review lows): KernelOwnedSidecarNarrowedRatify FAILS at b3ffff3 - a Kernel-owned
+# 0o066 Journal or sidecar is refused (O_RDONLY open, EACCES) where socket.go says narrowed. Untested,
+# recorded only: files.go removes the socket path on a failed post-link check without proving it is
+# ours; MaxConns x MaxLine lets clients make the Kernel buffer ~1-2 GiB.
 register: B1-03
 jobs:
   - id: B1-03
@@ -54,3 +69,5 @@ jobs:
         sha256: 640162015965f8c68131451ce5cbca53c95056bce78d2d7a9b1cb096d8f28767
       - path: kernel/internal/socket/socket_r2_donetest_test.go
         sha256: e117dd8558415481c3913cd9413f7951bd88bcf63120dae81fab26d0e53e64aa
+      - path: kernel/internal/socket/socket_r3_donetest_test.go
+        sha256: 3e0307e2cc2d0d286c832b7185cfb104ea32e8d138800accf0d031aaf6a1e05a
