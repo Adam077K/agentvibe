@@ -28,6 +28,10 @@
 //     not a refinement, so the emitted JSON Schema refuses exactly what decode refuses.
 //   - Every other integer is a JSON number held to the JavaScript safe range (z.int()). A uint64 in Go
 //     (Event.seq, Label.revocation_epoch) is >= 0 here; nothing else gets a bound nouns.go does not state.
+//     An integer above 2^53-1 is refused here by decision (orchestrator, review round 1); Go aligns.
+//     ACCEPTED MISMATCH: the integer texts 1.0, 1e0 and -0 are value-equal to 1, 1 and 0 once
+//     JSON.parse has read them, so Userland cannot see the spelling and accepts them where Go's int
+//     decoding may refuse; encode writes the canonical form (1, 1, 0). No code addresses this.
 //   - A type the canon names but does not define (Actor, Rationale, Target, Budget, TokenSet,
 //     SourceRef, Event.data) is any JSON value, passed through uncopied (see Raw): required where
 //     09a §3 requires it, and otherwise unchecked, as nouns.go says.
