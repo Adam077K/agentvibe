@@ -9,7 +9,8 @@
     "node": ">=24"
   },
   "scripts": {
-    "test:donetest": "node --test test/*.donetest.test.ts"
+    "test:donetest": "node --test test/*.donetest.test.ts",
+    "test:unit": "node --test test/nouns.test.ts"
   },
   "dependencies": {
     "zod": "4.6.5"
