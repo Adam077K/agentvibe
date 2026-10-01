@@ -84,6 +84,12 @@ const Hex = z.string().regex(/^[0-9a-f]{64}$/);
 // Every *Id and *Ref type is a non-empty string.
 const Id = z.string().min(1);
 
+// Every OPTIONAL string field is absent when unset, never null or "" (nouns.go wire rules). Audited
+// against every `omitempty` tag in nouns.go: the Id/Hex-typed ones (consent_scope, causation_id,
+// snapshot_ref, parent_job, responsibility_ref, reservation, provider_response_digest) already refuse
+// "" by their type; the two plain strings, Label.retention.deadline and Receipt.provider_ref, use this.
+const OptionalString = z.string().min(1).optional();
+
 // isJsonValue reports whether v is a value JSON.parse could have produced: null, a boolean, a string,
 // a finite number, an array of JSON values, or a plain object (prototype Object.prototype or null)
 // whose own string keys hold JSON values. It reads and never copies, so it cannot lose a key.
@@ -144,7 +150,7 @@ export const Label = z.strictObject({
   retention: z.strictObject({
     class: z.enum(['journal_metadata', 'operational', 'personal', 'client', 'synthetic']),
     hold: z.enum(['none', 'obligation', 'legal', 'safety', 'pinned']),
-    deadline: z.string().optional(),
+    deadline: OptionalString,
   }),
   permission: z.enum(['none', 'informs', 'may_authorise']),
   exportable: z.boolean(),
@@ -152,7 +158,7 @@ export const Label = z.strictObject({
   provenance: z.array(Raw),
   consent_scope: Id.optional(),
   confidence: z.number().optional(),
-  subjects: z.array(Id).optional(),
+  subjects: z.array(Id).min(1).optional(), // omitempty in Go: an empty list is written by omitting it
   revocation_epoch: Uint,
 });
 
@@ -227,7 +233,7 @@ export const Receipt = z.strictObject({
   operation_id: Id,
   attempt: z.int(),
   request_digest: Hex,
-  provider_ref: z.string().optional(),
+  provider_ref: OptionalString,
   provider_response_digest: Hex.optional(),
   observed_at: z.string(),
   issuer: z.enum(['gateway', 'treasury', 'runner', 'merge_queue']),
