@@ -291,3 +291,23 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 | 2026-10-01 | B1-01b | #152 → main (afbb2de) | chain + blobs; founder recorded the verdict. The script first pushed before retargeting the PR, so CI never started. An empty commit triggered CI without changing the diff, and the orchestrator merged on green. Script fixed: retarget first, then push. | — |
 | 2026-10-01 | B1-05 | #153 → main (b3ad147) | job:// lease; the founder recorded the verdict through the merge-train script | — |
 | 2026-10-01 | B1-02 | #154 → main (d9a5d0a) | nouns, Go and Userland. The founder recorded the verdict. GitHub's API timed out mid-train; the orchestrator merged on green after it recovered. Retries added to the script. | — |
+
+## Session build-2, continued (2026-10-02, orchestrator ceo-4)
+
+| Date | Job | PR | Landed | Next |
+|---|---|---|---|---|
+| 2026-10-01 | B1-04 | #155 → main (b01716d) | leases + storage fencing; the founder recorded the verdict through the merge-train script | remainder: hot-resource auto-add, nightly drill scheduling |
+| 2026-10-01 | B1-03 | #157 → main (6fdd38a) | command socket; the founder recorded the verdict | — |
+| 2026-10-01 | Label canon | #156 → main (d6e9de8) | 06 §4 matches 09a LabelV1; every founder decision recorded | B1-26 tests |
+| 2026-10-01 | session log | #148 → main (c8f6974) | BUILD-LOG and HANDOFF-NEXT; Opus reviewer FAIL, then PASS at 70a0991 | — |
+
+- **Main health at c8f6974.**
+  - check-done-tests: 19 hashes in 5 registers match.
+  - Kernel untagged tests: pass. One run in six hit a flaky `secretscan` failure on a cold build cache; it did not reproduce in 4 further full runs. **Follow-up:** find the flake.
+  - Kernel tagged tests: everything passes except `launcher` (B1-08) and `outbox` (B1-12), which are still not implemented.
+  - avk-boundary: ok, 5905 of 8000 lines.
+- **Founder direction (2026-10-02):** Claude-only reviews for this round. No Codex second opinion. Every B1 PR still owes the cross-family review the plan requires; this round's reviews do not satisfy it.
+- **Next stage, dispatched on Opus from c8f6974:**
+  - B1-12 outbox implementer, against the frozen B0-17b tests;
+  - B1-26 Label wire-schema test freezer;
+  - B1-06 claude WorkerAdapter test freezer.
