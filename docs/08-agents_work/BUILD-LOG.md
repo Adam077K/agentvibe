@@ -116,3 +116,11 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   the stream forever. Low: ttl overflow. Builder fixing; a re-freeze of the frozen B1-05 tests is owed.
 - **FOLLOW-UP — unowned lease scope.** Renew/heartbeat, shared mode and max_wait are assigned to B1-04 in code, but
   B1-04's plan row (14 §6) does not name them. They need an owner row in the plan.
+- **B1-05 fix round 1** — `build/b1-05` @ 25f849c: Release requires holder runner + token (`ErrNotHolder`), invalid
+  UTF-8 and ttl overflow refused, deterministic conflict test; each new test kills its mutant. Release's runner check
+  stops a confused runner, not a hostile one; caller identity is B1-03's. B1-05 re-freeze running.
+- **B1-01b re-freeze** — `build/b1-01b` @ 690d6a2 (different builder): B1-01a merged forward; frozen done-test gains
+  `SelfConsistentRewriteRefused` and first-call-after-Open refusal; register 6401d663 → 7ecf4866, dated reason.
+| 2026-10-01 | B1-01b | #152 (stacked on #151) | hash chain + blobs; review round 2 PASS at 690d6a2 | founder: verdict + merge after #151; Codex re-review owed |
+- **FINDING — git authorship cannot prove builder separation.** Every agent commits as one author, so "a different
+  builder re-froze the tests" rests on the register comment only. Per-agent commit identity is a follow-up.
