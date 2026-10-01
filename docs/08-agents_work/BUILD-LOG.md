@@ -209,3 +209,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   (`1E2` → `100`). Fix direction: carry raw fields as original text.
 | 2026-10-01 | B1-02 | #154 (stacked on #153) | six nouns + Operation, Go + Userland (pnpm, zod 4.6.5), upcasters, shared wire rules; Go PASS at 18a9d4d, Userland PASS at 0531c37 | founder: verdict + merge after #153; Codex re-review owed |
 - **`.pnpm-store/` fix found:** `--store-dir $TMPDIR/pnpm-store` keeps it out of the repo. Briefs use it from now on.
+- **B1-03 tests written, NOT proven** — `build/b1-03-tests` @ 2b64920: stub `kernel/internal/socket`, 4 red done-tests,
+  fixtures (7 valid / 34 invalid commands), `build/done-tests/B1-03.yml`. **BLOCKED:** every test binds a Unix socket;
+  the Bash sandbox denies the bind and the classifier refused the unsandboxed run. Not re-encoded, not delegated.
+  No mutant has been run, so non-vacuity is unproven and B1-03 cannot be built or verified locally. Founder: allow
+  local socket binding for this repo (the `/sandbox` settings), or accept CI-only verification. The cross-uid open
+  test only runs as root. To review: the Backend interface and the `{label,data}` wrapper for propose_event.
