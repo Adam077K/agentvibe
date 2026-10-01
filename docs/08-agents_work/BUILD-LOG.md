@@ -183,3 +183,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **DECISION — the Kernel is the strict gate.** Go decodes exact-case keys and refuses duplicate and case-variant
   keys. JSON.parse cannot see either, so Userland stays laxer there; that mismatch fails closed at the Kernel and is
   accepted. Open risk for the Userland re-review: numbers above 2^53 inside raw `data` re-encoded with changed bytes.
+- **B1-02 Userland review round 2 — FAIL at b0adb6b.** Round-1 items fixed and byte-identical to Go. New p1: a big
+  integer inside raw `data` is rounded by JSON.parse before the schema sees it, so re-encoded bytes differ from what
+  the Kernel hashes. Low: decode returns its input, not a copy.
+- **DECISION — I-JSON integers everywhere.** Integers outside ±(2^53−1) are refused anywhere on the wire, raw fields
+  included, in both languages. Userland gains a text entry point whose JSON.parse reviver reads `context.source`;
+  Go scans raw fields with UseNumber. Both builders fixing.
