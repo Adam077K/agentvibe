@@ -148,8 +148,9 @@ type Server interface {
 }
 
 // Serve opens the Journal, creates the socket with its final owner, group and mode, and returns
-// once the socket accepts connections. It refuses to serve with a Journal it cannot hold at mode
-// 0600.
+// once the socket accepts connections. A Journal file the Kernel owns at a wider mode is narrowed
+// to 0600, not refused; Serve refuses only a Journal it cannot hold at mode 0600. Modes do not
+// depend on the umask Serve inherits (the done-tests run it under umask 0).
 func Serve(ctx context.Context, cfg Config) (Server, error) {
 	return nil, ErrNotImplemented
 }

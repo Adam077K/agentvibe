@@ -19,7 +19,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"io/fs"
 	"net"
 	"os"
@@ -624,7 +623,8 @@ func assertKernelOnly(t *testing.T, when string, names []string) {
 
 // TestB103JournalIsKernelOnly0600: Userland's direct append must fail at the OS. The Journal and
 // its -wal/-shm/.lock files are owned by the Kernel's uid at exactly 0600 (09a §4.1), while the
-// Kernel runs, after it stops, and when the file already existed with a wider mode. Kills: a
+// Kernel runs, after it stops, and when the file already existed at 0644 (narrowed, not refused:
+// the Kernel owns it). Kills: a
 // Journal left at 0644 or 0660 (the umask is 0 here, so a Kernel that sets no mode leaves 0644 for
 // the database and lets the WAL follow it).
 //
@@ -666,12 +666,10 @@ func TestB103JournalIsKernelOnly0600(t *testing.T) {
 		srv, err := socket.Serve(context.Background(), socket.Config{
 			SocketPath: k.sock, JournalPath: jp, UserlandGID: k.gid, Backend: k.backend,
 		})
-		if errors.Is(err, socket.ErrNotImplemented) {
-			t.Fatalf("Serve: %v", err)
-		}
+		// The Kernel owns this file and can narrow it, so refusing would be the wrong answer: a
+		// Serve that errored here would pass a "refuse or fix" check without serving anything.
 		if err != nil {
-			t.Logf("Serve refused a Journal found at 0644: %v (allowed: refusing is a valid answer)", err)
-			return
+			t.Fatalf("Serve with a Journal the Kernel owns at 0644: %v; want it narrowed to 0600 and served", err)
 		}
 		k.srv = srv
 		defer k.close(t)
