@@ -82,6 +82,7 @@ merge `origin/main` in → flip its session file to `qa_verdict: PASS` → run
 | 6 | #152 → #151 | B1-01b chain + blobs | review round 2 PASS at 690d6a2 |
 | 7 | #153 → #152 | B1-05 `job://` lease | review round 3 PASS at 28c3a09 |
 | 8 | #154 → #153 | B1-02 nouns, Go + Userland | Go PASS 18a9d4d, Userland PASS 0531c37 |
+| 9 | #155 → #154 | B1-04 leases + storage fencing | final PASS a102a98 |
 
 **Full/irreversible, still waiting on Codex + founder:** #139 (MissionsView now excluded from the design-probe
 census, reviewer PASS at 9614c35, `npm run check` 48/48), #145, #149, #150, #144.

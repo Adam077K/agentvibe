@@ -242,3 +242,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **FOLLOW-UPS (lease scope, owner rows needed in 14 §6):** verifier has no clock, so an expired un-reacquired token
   is accepted (09a:287); no hot-resource auto-add API; glob-vs-symbol overlap; non-`repo://` verifiers (currently
   refused); lease-side renew and `max_wait`.
+- **B1-04 review** — correctness/evidence PASS at 68f4e79, adversarial lens unexecuted (reviewer shell cannot write
+  Go files). A non-implementer added `fence_adversarial_test.go` (a102a98, 50/50 under -race, each probe proven to
+  fail on its mutant). **Final PASS at a102a98.** Probe 5 asserts that a wounded job keeps leases the older job did
+  not request — added to the lease follow-ups. Process note: reviewers need probe files written for them.
+| 2026-10-01 | B1-04 | #155 (stacked on #154) | leases + storage fencing; frozen tests 8/8, adversarial 50/50; final PASS at a102a98 | founder: verdict + merge after #154; Codex re-review owed |
