@@ -33,3 +33,28 @@ is owned by `avk` with mode 600. Userland reaches the Kernel only through the co
 
 `-count=1` is required, because a cached pass would not rescan the repository. For readable
 findings, run `go -C kernel run ./cmd/avk-boundary` (exit 0 clean · 1 finding · 2 could not check).
+
+## Done-tests (B0-17)
+
+Acceptance tests for P1 jobs are frozen before the jobs are built (14-BUILD-PLAN.md §6, B0-17).
+They sit behind the **`donetest` build tag**, so the default `go test ./...` above does not compile
+them and stays green while they are red:
+
+```sh
+go -C kernel test -tags donetest -count=1 ./...
+```
+
+Against today's empty implementations every one of them FAILS, it does not skip. A job is done
+when its tests pass unmodified. Each test file's sha256 is registered in `build/done-tests/*.yml`
+and checked by `node build/check-done-tests.mjs`; editing a done-test changes the job's acceptance
+and must be re-registered as a reviewed decision.
+
+| Job | Test file | Contract it runs against |
+|---|---|---|
+| B1-01a | `internal/journal/core_donetest_test.go` | `journal.Journal`, `journal.Open` |
+| B1-01b | `internal/journal/chain_donetest_test.go` | same |
+| B1-05 | `internal/lease/lease_donetest_test.go` | `lease.Claimer`, `lease.New(journal.Journal)` |
+
+The B1-01a crash test re-executes the test binary as a child (`AVK_DONETEST_CRASH_CHILD`) and
+SIGKILLs it. The B1-01b tamper test rewrites a row's bytes in `journal.db`/`-wal` after `Close`, so
+event data must be stored verbatim.
