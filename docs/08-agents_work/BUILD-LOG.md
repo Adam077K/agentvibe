@@ -89,3 +89,11 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   code). Under review. **B1-05** builder started on `build/b1-05` off B1-01b, building only the lease surface its
   frozen tests need; B1-04 still owes wound-wait, deadlock detection and hot resources.
 - **Rebased lite PRs:** #146, #147, #140 now carry a clean merge of `origin/main`; GitHub's "conflicting" on #147 was stale.
+- **B0-01 census (#139) — MissionsView excluded, reviewer PASS at 9614c35** (Opus, not the builder). `CENSUS_EXCLUDED`
+  in scripts/design-probe.test.mjs names only MissionsView with the founder's reason; a stale entry fails; a second
+  exclusion or a new view breaks the per-size counts. `npm run check` 48/48. Low, non-blocking: the 114 = 93 + 21
+  check is true by construction, and the comment says "seven views" while App.tsx and ui.tsx are also counted.
+  #139 stays open: full tier, Codex review + founder.
+- **B1-05 built** — `build/b1-05` @ 284fc7e: `job://` lease on Journal streams, fencing token = claim seq, races
+  decided by ExpectSeq appends; done-tests B1-05 4/4. The builder's own mutation check was classifier-refused; the
+  reviewer owns it.
