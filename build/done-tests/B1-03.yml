@@ -23,6 +23,27 @@
 # ("bind: operation not permitted", measured 2026-10-01). These tests run green only unsandboxed,
 # the check:mc situation. The mutant proof against a throwaway implementation was NOT run: the
 # unsandboxed run was refused by the session's permission classifier. Still owed.
+#
+# RE-FREEZE 2026-10-01: 2026-10-01 re-freeze after Opus review found 7 surviving mutants.
+# Added kernel/internal/socket/socket_r2_donetest_test.go; the round-1 file and fixture are unchanged
+# (hashes identical). Each mutant was applied in a $TMPDIR copy only and killed, sandboxed, while all
+# four round-1 tests stayed green on it:
+#   M1 bind at the public path then chown/chmod   -> SocketNeverVisibleWiderThanFinal (5/5 runs)
+#   M2 ExpectSeq taken from the stream head        -> ExpectSeqIsTheCommands
+#   M3 readLine replaced by ReadBytes (no MaxLine) -> OversizedLineClosedUnanswered
+#   M4 refuseMu removed                            -> ConcurrentRefusalsAllJournaled (5/5 runs)
+#   M5 Userland may write socket:refusals          -> RefusalStreamIsKernelOnly
+#   M6 duplicate-key check removed                 -> DuplicateKeyRefused
+#   M7 Backend errors journaled as refusals        -> BackendFailureIsNotRefusal
+# M1 is a race the test must win (300 Serve rounds, 6 Lstat pollers); it cannot fail a correct Kernel.
+# SAFE-BEHAVIOUR tests (suffix Ratify) need founder ratification; the contract is silent or partial.
+# All four FAIL against a395043, by design:
+#   OversizedLineJournaledRatify      - an oversized line leaves one refusal (socket.go: closed unanswered;
+#                                       server.go comment: nothing journaled; build plan: journaled)
+#   ConnectionsAreBoundedRatify       - at most 1024 concurrent connections served (number chosen here)
+#   StalledConnectionsAreClosedRatify - silent / mid-line / non-reading client closed within 30s
+#   JournalSidecarSymlinkNotFollowedRatify - narrowing never chmods a symlink target (files.go
+#                                       Lstat-then-Chmod race; the victim was narrowed at a395043)
 register: B1-03
 jobs:
   - id: B1-03
@@ -31,3 +52,5 @@ jobs:
         sha256: 074c89a1fc7315732dd7ecc0c9a2167e617f16dfd64f64be6b290b3aacadf1f5
       - path: kernel/internal/socket/testdata/socket/commands.json
         sha256: 640162015965f8c68131451ce5cbca53c95056bce78d2d7a9b1cb096d8f28767
+      - path: kernel/internal/socket/socket_r2_donetest_test.go
+        sha256: e117dd8558415481c3913cd9413f7951bd88bcf63120dae81fab26d0e53e64aa
