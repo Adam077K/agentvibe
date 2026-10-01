@@ -3,7 +3,7 @@
 # Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
 # Verify: node build/check-done-tests.mjs
 # Run (Go):       go -C kernel test -count=1 -tags donetest ./internal/nouns/
-# Run (Userland): npm --prefix userland ci --ignore-scripts && node --test userland/test/nouns.donetest.test.ts
+# Run (Userland): pnpm --dir userland install --frozen-lockfile --ignore-scripts && pnpm --dir userland run test:donetest
 # Frozen red against ErrNotImplemented on 2026-10-01: 6 of 6 tests fail. kernel/internal/nouns/nouns.go
 # is NOT registered: it is the interface the job implements (the B0-17 pattern).
 #
@@ -20,6 +20,10 @@
 # NotImplementedError: 3 of 3 top-level tests fail, 99 of 99 with subtests. userland/src/nouns.ts is
 # NOT registered: it is the interface the job implements. The emitted-JSON-Schema check validates
 # with z.fromJSONSchema because the repository holds no other validator; it is not independent of Zod.
+#
+# Run line changed 2026-10-01 (package manager per canon): the Userland Run line read
+# `npm --prefix userland ci`, which fails since the npm lockfile was replaced by userland/pnpm-lock.yaml.
+# Canon names pnpm (09a §2, §13). The test command is userland/package.json's test:donetest. No hash changes.
 register: B1-02
 jobs:
   - id: B1-02
