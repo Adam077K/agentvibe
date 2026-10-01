@@ -1,0 +1,918 @@
+{
+  "cases": [
+    {
+      "name": "label.schema-label2",
+      "kind": "label",
+      "error": "unknown_schema",
+      "why": "readers refuse unknown label versions (09a §12.0)",
+      "value": {
+        "schema": "label/2",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "none",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": [],
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.permission-not-enum",
+      "kind": "label",
+      "error": "invalid",
+      "why": "permission is none|informs|may_authorise",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "full",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": [],
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.taint-missing",
+      "kind": "label",
+      "error": "invalid",
+      "why": "taint is required",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "none",
+        "exportable": false,
+        "provenance": [],
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.exportable-missing",
+      "kind": "label",
+      "error": "invalid",
+      "why": "required even though false is its zero value",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "none",
+        "taint": "clean",
+        "provenance": [],
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.exportable-string",
+      "kind": "label",
+      "error": "invalid",
+      "why": "exportable is a JSON boolean",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "none",
+        "exportable": "false",
+        "taint": "clean",
+        "provenance": [],
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.unknown-key",
+      "kind": "label",
+      "error": "invalid",
+      "why": "an unknown key is refused, not dropped",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "none",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": [],
+        "revocation_epoch": 0,
+        "trust": "high"
+      }
+    },
+    {
+      "name": "label.retention-hold-not-enum",
+      "kind": "label",
+      "error": "invalid",
+      "why": "nested enum: hold is none|obligation|legal|safety|pinned",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "forever"
+        },
+        "permission": "none",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": [],
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.confidence-null",
+      "kind": "label",
+      "error": "invalid",
+      "why": "an optional field is absent, never null",
+      "value": {
+        "schema": "label/1",
+        "origin": "customer",
+        "dclass": "D2",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "client",
+          "hold": "obligation",
+          "deadline": "2027-10-02T00:00:00Z"
+        },
+        "permission": "informs",
+        "exportable": true,
+        "taint": "untrusted",
+        "provenance": [
+          {
+            "source": "crm:cust_812",
+            "human_principal": "founder"
+          }
+        ],
+        "consent_scope": "cs_panel_3",
+        "confidence": null,
+        "subjects": [
+          "subj_812"
+        ],
+        "revocation_epoch": 3
+      }
+    },
+    {
+      "name": "event.seq-zero",
+      "kind": "event",
+      "error": "invalid",
+      "why": "seq starts at 1",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 0,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {},
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      }
+    },
+    {
+      "name": "event.schema-zero",
+      "kind": "event",
+      "error": "invalid",
+      "why": "schema starts at 1",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 1,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "schema": 0,
+        "data": {},
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      }
+    },
+    {
+      "name": "event.hash-missing",
+      "kind": "event",
+      "error": "invalid",
+      "why": "hash is required",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 1,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {},
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "name": "event.hash-uppercase",
+      "kind": "event",
+      "error": "invalid",
+      "why": "Hex is lowercase",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 1,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {},
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "FCDE2B2EDBA56BF408601FB721FE9B5C338D10EE429EA04FAE5511B68FBF8FB9"
+      }
+    },
+    {
+      "name": "event.data-missing",
+      "kind": "event",
+      "error": "invalid",
+      "why": "data is required",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 1,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      }
+    },
+    {
+      "name": "event.label-dclass",
+      "kind": "event",
+      "error": "invalid",
+      "why": "a nested label is validated",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 1,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D9",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {},
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      }
+    },
+    {
+      "name": "event.label-schema",
+      "kind": "event",
+      "error": "unknown_schema",
+      "why": "a nested label of unknown version is refused",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 1,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/0",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {},
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      }
+    },
+    {
+      "name": "job.isolation-I5",
+      "kind": "job",
+      "error": "invalid",
+      "why": "isolation is I1|I2|I3|I4",
+      "value": {
+        "id": "j_10",
+        "venture": "v_keel",
+        "record_ref": "id:brand:keel",
+        "model_id": "gpt-6-astra",
+        "family": "codex",
+        "headless": false,
+        "provider_mode": "api",
+        "isolation": "I5",
+        "context_profile": "prof_read",
+        "tool_lease": {
+          "allowed": [],
+          "forbidden": []
+        },
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "budget": {},
+        "lease_ids": [],
+        "state": "queued"
+      }
+    },
+    {
+      "name": "job.provider-mode-key",
+      "kind": "job",
+      "error": "invalid",
+      "why": "provider_mode is sub|api",
+      "value": {
+        "id": "j_10",
+        "venture": "v_keel",
+        "record_ref": "id:brand:keel",
+        "model_id": "gpt-6-astra",
+        "family": "codex",
+        "headless": false,
+        "provider_mode": "key",
+        "isolation": "I1",
+        "context_profile": "prof_read",
+        "tool_lease": {
+          "allowed": [],
+          "forbidden": []
+        },
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "budget": {},
+        "lease_ids": [],
+        "state": "queued"
+      }
+    },
+    {
+      "name": "job.headless-missing",
+      "kind": "job",
+      "error": "invalid",
+      "why": "required even though false is its zero value",
+      "value": {
+        "id": "j_10",
+        "venture": "v_keel",
+        "record_ref": "id:brand:keel",
+        "model_id": "gpt-6-astra",
+        "family": "codex",
+        "provider_mode": "api",
+        "isolation": "I1",
+        "context_profile": "prof_read",
+        "tool_lease": {
+          "allowed": [],
+          "forbidden": []
+        },
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "budget": {},
+        "lease_ids": [],
+        "state": "queued"
+      }
+    },
+    {
+      "name": "job.tool-lease-forbidden-missing",
+      "kind": "job",
+      "error": "invalid",
+      "why": "nested required: tool_lease.forbidden",
+      "value": {
+        "id": "j_10",
+        "venture": "v_keel",
+        "record_ref": "id:brand:keel",
+        "model_id": "gpt-6-astra",
+        "family": "codex",
+        "headless": false,
+        "provider_mode": "api",
+        "isolation": "I1",
+        "context_profile": "prof_read",
+        "tool_lease": {
+          "allowed": []
+        },
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "budget": {},
+        "lease_ids": [],
+        "state": "queued"
+      }
+    },
+    {
+      "name": "lease.fencing-token-number",
+      "kind": "lease",
+      "error": "invalid",
+      "why": "a bigint is a decimal string; this number is not exact in JavaScript",
+      "value": {
+        "id": "l_3",
+        "resource": "job://j_9",
+        "holder": "j_9",
+        "responsibility_ref": "resp_2",
+        "fencing_token": 9007199254740993,
+        "epoch": "18446744073709551615",
+        "mode": "excl",
+        "kind": "pessimistic",
+        "expires_at": "2026-10-01T09:15:00Z"
+      }
+    },
+    {
+      "name": "lease.fencing-token-negative",
+      "kind": "lease",
+      "error": "invalid",
+      "why": "a fencing token is not negative",
+      "value": {
+        "id": "l_4",
+        "resource": "repo://keel/src/",
+        "holder": "j_9",
+        "fencing_token": "-1",
+        "epoch": "0",
+        "mode": "shared",
+        "kind": "optimistic",
+        "expires_at": "2026-10-01T09:15:00Z"
+      }
+    },
+    {
+      "name": "lease.epoch-missing",
+      "kind": "lease",
+      "error": "invalid",
+      "why": "epoch is required even though 0 is its zero value",
+      "value": {
+        "id": "l_4",
+        "resource": "repo://keel/src/",
+        "holder": "j_9",
+        "fencing_token": "1",
+        "mode": "shared",
+        "kind": "optimistic",
+        "expires_at": "2026-10-01T09:15:00Z"
+      }
+    },
+    {
+      "name": "lease.mode-exclusive",
+      "kind": "lease",
+      "error": "invalid",
+      "why": "mode is excl|shared",
+      "value": {
+        "id": "l_4",
+        "resource": "repo://keel/src/",
+        "holder": "j_9",
+        "fencing_token": "1",
+        "epoch": "0",
+        "mode": "exclusive",
+        "kind": "optimistic",
+        "expires_at": "2026-10-01T09:15:00Z"
+      }
+    },
+    {
+      "name": "operation.state-closed",
+      "kind": "operation",
+      "error": "invalid",
+      "why": "state is open|settled|failed|compensated|human",
+      "value": {
+        "id": "op_8a1",
+        "venture": "v_keel",
+        "verb": "publish",
+        "target": "blog:post_12",
+        "business_key": "publish:post_12",
+        "payload_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "amendments": [],
+        "state": "closed"
+      }
+    },
+    {
+      "name": "operation.business-key-missing",
+      "kind": "operation",
+      "error": "invalid",
+      "why": "at most one open Operation per business key: the key is required",
+      "value": {
+        "id": "op_8a1",
+        "venture": "v_keel",
+        "verb": "publish",
+        "target": "blog:post_12",
+        "payload_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "amendments": [],
+        "state": "human"
+      }
+    },
+    {
+      "name": "operation.payload-digest-short",
+      "kind": "operation",
+      "error": "invalid",
+      "why": "Hex is 64 characters",
+      "value": {
+        "id": "op_8a1",
+        "venture": "v_keel",
+        "verb": "publish",
+        "target": "blog:post_12",
+        "business_key": "publish:post_12",
+        "payload_digest": "abc123",
+        "amendments": [],
+        "state": "human"
+      }
+    },
+    {
+      "name": "operation.not-object",
+      "kind": "operation",
+      "error": "invalid",
+      "why": "a noun is a JSON object",
+      "value": []
+    },
+    {
+      "name": "effect.class-R5",
+      "kind": "effect",
+      "error": "invalid",
+      "why": "effect_class is R0..R4",
+      "value": {
+        "id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "contract_ref": "dc_89",
+        "snapshot_ref": "snap_14",
+        "effect_class": "R5",
+        "idem_class": "natural",
+        "authorising_label": {
+          "schema": "label/1",
+          "origin": "founder",
+          "dclass": "D1",
+          "boundary": "open",
+          "venture": "v_keel",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "may_authorise",
+          "exportable": true,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "approvals": [],
+        "fencing_tokens": {},
+        "gateway_epoch": "1",
+        "state": "settled"
+      }
+    },
+    {
+      "name": "effect.idem-exactly-once",
+      "kind": "effect",
+      "error": "invalid",
+      "why": "idem_class is native_key|check_before|natural|at_most_once",
+      "value": {
+        "id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "contract_ref": "dc_89",
+        "snapshot_ref": "snap_14",
+        "effect_class": "R0",
+        "idem_class": "exactly_once",
+        "authorising_label": {
+          "schema": "label/1",
+          "origin": "founder",
+          "dclass": "D1",
+          "boundary": "open",
+          "venture": "v_keel",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "may_authorise",
+          "exportable": true,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "approvals": [],
+        "fencing_tokens": {},
+        "gateway_epoch": "1",
+        "state": "settled"
+      }
+    },
+    {
+      "name": "effect.gateway-epoch-number",
+      "kind": "effect",
+      "error": "invalid",
+      "why": "a bigint is a decimal string",
+      "value": {
+        "id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "contract_ref": "dc_89",
+        "snapshot_ref": "snap_14",
+        "effect_class": "R0",
+        "idem_class": "natural",
+        "authorising_label": {
+          "schema": "label/1",
+          "origin": "founder",
+          "dclass": "D1",
+          "boundary": "open",
+          "venture": "v_keel",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "may_authorise",
+          "exportable": true,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "approvals": [],
+        "fencing_tokens": {},
+        "gateway_epoch": 1,
+        "state": "settled"
+      }
+    },
+    {
+      "name": "effect.label-permission",
+      "kind": "effect",
+      "error": "invalid",
+      "why": "the authorising label is validated: may_authorise, not may_authorize",
+      "value": {
+        "id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "contract_ref": "dc_89",
+        "snapshot_ref": "snap_14",
+        "effect_class": "R0",
+        "idem_class": "natural",
+        "authorising_label": {
+          "schema": "label/1",
+          "origin": "founder",
+          "dclass": "D1",
+          "boundary": "open",
+          "venture": "v_keel",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "may_authorize",
+          "exportable": true,
+          "taint": "clean",
+          "provenance": [],
+          "revocation_epoch": 0
+        },
+        "approvals": [],
+        "fencing_tokens": {},
+        "gateway_epoch": "1",
+        "state": "settled"
+      }
+    },
+    {
+      "name": "receipt.issuer-worker",
+      "kind": "receipt",
+      "error": "invalid",
+      "why": "issuer is gateway|treasury|runner|merge_queue",
+      "value": {
+        "effect_id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "request_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "observed_at": "2026-10-01T09:02:00Z",
+        "issuer": "worker",
+        "sig": "ed25519:77aa01",
+        "chain_prev": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+      }
+    },
+    {
+      "name": "receipt.sig-missing",
+      "kind": "receipt",
+      "error": "invalid",
+      "why": "sig is required",
+      "value": {
+        "effect_id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "request_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "observed_at": "2026-10-01T09:02:00Z",
+        "issuer": "merge_queue",
+        "chain_prev": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+      }
+    },
+    {
+      "name": "receipt.provider-ref-null",
+      "kind": "receipt",
+      "error": "invalid",
+      "why": "an optional field is absent, never null",
+      "value": {
+        "effect_id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "request_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "observed_at": "2026-10-01T09:02:00Z",
+        "issuer": "merge_queue",
+        "sig": "ed25519:77aa01",
+        "chain_prev": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "provider_ref": null
+      }
+    }
+  ]
+}

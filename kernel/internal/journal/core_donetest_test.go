@@ -148,6 +148,35 @@ func digest(t *testing.T, j journal.Journal) (string, int) {
 
 type acked struct{ typ, hash, data string }
 
+// readFrom checks Read's fromSeq lower bound on a stream already read in full: from mid-stream,
+// from head, and from past head, Read must return exactly the matching suffix (empty past head).
+// Re-frozen 2026-10-01 on a B1-01a review finding: every other Read here starts at seq 1, so a
+// Read that ignored fromSeq passed this file. full must be the stream's verified Read(stream, 1).
+func readFrom(t *testing.T, j journal.Journal, stream string, full []journal.Event) {
+	t.Helper()
+	ctx := context.Background()
+	head, _, err := j.Head(ctx, stream)
+	if err != nil || head != uint64(len(full)) || head < 3 {
+		t.Fatalf("stream %s: Head = %d (err %v), %d events read; want equal and at least 3", stream, head, err, len(full))
+	}
+	for _, from := range []uint64{head/2 + 1, head, head + 1} {
+		got, err := j.Read(ctx, stream, from)
+		if err != nil {
+			t.Fatalf("Read(%s, %d): %v", stream, from, err)
+		}
+		want := full[from-1:]
+		if len(got) != len(want) {
+			t.Fatalf("Read(%s, %d) returned %d events, want %d (head %d)", stream, from, len(got), len(want), head)
+		}
+		for i, w := range want {
+			g := got[i]
+			if g.Stream != w.Stream || g.Seq != w.Seq || g.Type != w.Type || string(g.Data) != string(w.Data) || g.PrevHash != w.PrevHash || g.Hash != w.Hash {
+				t.Fatalf("Read(%s, %d) event %d is seq %d, want seq %d unchanged", stream, from, i, g.Seq, w.Seq)
+			}
+		}
+	}
+}
+
 func TestB1_01a_SingleWriter(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "journal.db")
 	j := openOrFail(t, path)
@@ -225,6 +254,11 @@ func TestB1_01a_OptimisticSeq(t *testing.T) {
 		t.Fatalf("stream a head = %d after writes to b, want 1", a)
 	}
 	digest(t, j)
+	full, err := j.Read(ctx, "b", 1)
+	if err != nil {
+		t.Fatalf("Read(b, 1): %v", err)
+	}
+	readFrom(t, j, "b", full)
 }
 
 // LIMIT: SIGKILL kills the process, not the machine. The OS page cache survives it, so this test
@@ -341,6 +375,14 @@ func TestB1_01a_RandomAppendsCrashRebuild(t *testing.T) {
 		}
 		if got != wantDigest {
 			t.Fatalf("rebuild %d: digest %s, model %s", r, got, wantDigest)
+		}
+		for s := 0; s < crashStreams; s++ {
+			stream := fmt.Sprintf("s%02d", s)
+			full, err := j.Read(ctx, stream, 1)
+			if err != nil {
+				t.Fatalf("rebuild %d: Read(%s, 1): %v", r, stream, err)
+			}
+			readFrom(t, j, stream, full)
 		}
 		st, err := j.StateHash(ctx)
 		if err != nil {

@@ -1,0 +1,91 @@
+# Done-test register, B1-03 (docs/vision-v3/14-BUILD-PLAN.md §6: "Userland's direct append fails at
+# the OS (mode 660); a malformed command is refused and journaled"). Canon: 09a §2 (socket `avk:avd`,
+# mode 660; the KernelCommand verbs) and §4.1 (Journal owner avk, mode 600).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest ./internal/socket/
+# Frozen red against ErrNotImplemented on 2026-10-01: 4 of 4 tests fail, 6 of 6 with subtests.
+# kernel/internal/socket/socket.go is NOT registered: it is the interface the job implements.
+#
+# What each test kills: MalformedRefusedAndJournaled (34 fixture lines + 2 on one connection) a
+# socket that refuses but does not journal, journals but accepts, or journals the wrong line
+# (per-line sha256); EachVerbAcceptsWellFormed one that refuses a valid verb, swaps routes
+# (renew/release), drops a field, or journals a refusal for an accepted command;
+# SocketIsAvkAvd0660 a socket left 0666, at the umask default, or never chowned to the avd gid;
+# JournalIsKernelOnly0600 a Journal (or -wal/-shm/.lock) left 0644/0660, fresh or pre-existing.
+# Tests run under umask 0, so a mode the Kernel does not set explicitly shows.
+#
+# GAP 1, cross-uid: "fails at the OS" is exercised directly only as root (a uid-65534 child with
+# Userland's gid must get "permission denied" appending to each Journal file, after a 0666 control
+# file proves the child can write at all). As an ordinary user no second uid exists; the test then
+# asserts mode exactly 0600 and owner == the Kernel's euid, and logs GAP.
+# GAP 2, sandbox: every test binds a Unix socket, and the armed Claude Code sandbox denies bind()
+# ("bind: operation not permitted", measured 2026-10-01). These tests run green only unsandboxed,
+# the check:mc situation. The mutant proof against a throwaway implementation was NOT run: the
+# unsandboxed run was refused by the session's permission classifier. Still owed.
+#
+# RE-FREEZE 2026-10-01: 2026-10-01 re-freeze after Opus review found 7 surviving mutants.
+# Added kernel/internal/socket/socket_r2_donetest_test.go; the round-1 file and fixture are unchanged
+# (hashes identical). Each mutant was applied in a $TMPDIR copy only and killed, sandboxed, while all
+# four round-1 tests stayed green on it:
+#   M1 bind at the public path then chown/chmod   -> SocketNeverVisibleWiderThanFinal (5/5 runs)
+#   M2 ExpectSeq taken from the stream head        -> ExpectSeqIsTheCommands
+#   M3 readLine replaced by ReadBytes (no MaxLine) -> OversizedLineClosedUnanswered
+#   M4 refuseMu removed                            -> ConcurrentRefusalsAllJournaled (5/5 runs)
+#   M5 Userland may write socket:refusals          -> RefusalStreamIsKernelOnly
+#   M6 duplicate-key check removed                 -> DuplicateKeyRefused
+#   M7 Backend errors journaled as refusals        -> BackendFailureIsNotRefusal
+# M1 is a race the test must win (300 Serve rounds, 6 Lstat pollers); it cannot fail a correct Kernel.
+# SAFE-BEHAVIOUR tests (suffix Ratify) need founder ratification; the contract is silent or partial.
+# All four FAIL against a395043, by design:
+#   OversizedLineJournaledRatify      - an oversized line leaves one refusal (socket.go: closed unanswered;
+#                                       server.go comment: nothing journaled; build plan: journaled)
+#   ConnectionsAreBoundedRatify       - at most 1024 concurrent connections served (number chosen here)
+#   StalledConnectionsAreClosedRatify - silent / mid-line / non-reading client closed within 30s
+#   JournalSidecarSymlinkNotFollowedRatify - narrowing never chmods a symlink target (files.go
+#                                       Lstat-then-Chmod race; the victim was narrowed at a395043)
+#
+# RE-FREEZE r3 2026-10-01: 2026-10-01 re-freeze r3 after Opus review found 4 surviving mutants.
+# Added kernel/internal/socket/socket_r3_donetest_test.go; rounds 1-2 unchanged (hashes identical).
+# Base b3ffff3 (ratified bounds). Mutants applied in $TMPDIR copies only, each killed, each green on
+# every other done-test (so it survived before):
+#   R3-M1 sidecar symlink reported gone, Serve starts  -> SidecarSymlinkRefusesToStart
+#   R3-M2 StallTimeout = 34s                          -> StallTimeoutIsThirtySecondsPerLine (<= 31.5s)
+#   R3-M3 read deadline set once per connection       -> StallTimeoutIsThirtySecondsPerLine (active
+#                                                        client cut off at 30.0s)
+#   R3-M4 oversized refusal: wrong reason / digest    -> OversizedRefusalReasonAndDigest (both variants)
+# The 30s bound is a literal (founder, 2026-10-01), not socket.StallTimeout, so a mutant cannot move it.
+# NEEDS RATIFICATION (review lows): KernelOwnedSidecarNarrowedRatify FAILS at b3ffff3 - a Kernel-owned
+# 0o066 Journal or sidecar is refused (O_RDONLY open, EACCES) where socket.go says narrowed. Untested,
+# recorded only: files.go removes the socket path on a failed post-link check without proving it is
+# ours; MaxConns x MaxLine lets clients make the Kernel buffer ~1-2 GiB.
+#
+# RE-FREEZE r4 2026-10-01: 2026-10-01 re-freeze r4. Added kernel/internal/socket/socket_r4_donetest_test.go;
+# rounds 1-3 unchanged (hashes identical). Base ec1a2a0. Mutants run in $TMPDIR copies; every
+# pre-existing test let all four through. Killed:
+#   R4-M1 Fchmodat flags 0 (follows symlinks)      -> OwnerUnreadableSidecarRaceNotFollowed (5/5)
+#   R4-M2 removal check forced false              -> RefusedSocketLeavesNothingBehind (UserlandGID -1)
+#   R4-M4 owner-unreadable path narrows to 0o644  -> OwnerUnreadableNeverExposed (5/5)
+# NOT killed, with reasons:
+#   R4-M2 removal check forced true: needs an intruder swapped in between link(2) and the removal,
+#     a window of a few syscalls; no deterministic hook through Serve.
+#   R4-M3 owner check deleted: equivalent for a non-root Kernel (fchmodat on a file it does not
+#     own fails EPERM, so Serve refuses either way); as root, open never returns EACCES, so the
+#     branch is unreachable. Not observable through Serve.
+# NEEDS RATIFICATION (review low, files.go:117): an Lstat error other than not-exist is treated as
+# success. Not reachable through Serve: the only way to make open fail EACCES and Lstat fail for the
+# same name is an unsearchable directory, and createJournal fails there first. No test added.
+register: B1-03
+jobs:
+  - id: B1-03
+    files:
+      - path: kernel/internal/socket/socket_donetest_test.go
+        sha256: 074c89a1fc7315732dd7ecc0c9a2167e617f16dfd64f64be6b290b3aacadf1f5
+      - path: kernel/internal/socket/testdata/socket/commands.json
+        sha256: 640162015965f8c68131451ce5cbca53c95056bce78d2d7a9b1cb096d8f28767
+      - path: kernel/internal/socket/socket_r2_donetest_test.go
+        sha256: e117dd8558415481c3913cd9413f7951bd88bcf63120dae81fab26d0e53e64aa
+      - path: kernel/internal/socket/socket_r3_donetest_test.go
+        sha256: 3e0307e2cc2d0d286c832b7185cfb104ea32e8d138800accf0d031aaf6a1e05a
+      - path: kernel/internal/socket/socket_r4_donetest_test.go
+        sha256: 0e85d8663f3fbd26d53aaf89d795e8c4f3ace92d71aca0dee3059442970b3344
