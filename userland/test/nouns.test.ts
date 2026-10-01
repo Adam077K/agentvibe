@@ -224,3 +224,77 @@ test('p1 r2: parseWire keeps an own __proto__ key and refuses text that is not J
   assert.equal(({} as any).polluted, undefined);
   assert.throws(() => (nouns as any).parseWire('{"a":'), SyntaxError);
 });
+
+// Review round 2, finding low: decode returned (parts of) its input itself, and a value that is not
+// a plain JSON tree passed. Decode now returns a fresh value and refuses the rest.
+
+test('low r2: decode returns a fresh value that shares nothing with its input', () => {
+  for (const [s, base] of [[nouns.Event, 'event.full'], [nouns.Operation, 'operation.full'],
+    [nouns.Job, 'job.full'], [nouns.Effect, 'effect.full'], [nouns.Label, 'label.full']] as const) {
+    const input = fixture(base);
+    const before = JSON.stringify(input);
+    const out: any = (s as any).decode(input);
+    const seen = new Set<object>();
+    (function walk(x: any) { if (x && typeof x === 'object') { seen.add(x); Object.values(x).forEach(walk); } })(input);
+    (function walk(x: any, path: string) {
+      if (x && typeof x === 'object') {
+        assert.ok(!seen.has(x), `${base}: decode returned the input's own object at ${path || '(root)'}`);
+        for (const [k, y] of Object.entries(x)) walk(y, `${path}.${k}`);
+      }
+    })(out, '');
+    // Mutating the decoded value cannot reach the input.
+    if (out.data) out.data.injected = 1;
+    if (out.target && typeof out.target === 'object') out.target.injected = 1;
+    if (out.budget) out.budget.injected = 1;
+    out.provenance?.push?.({ injected: 1 });
+    assert.equal(JSON.stringify(input), before, `${base}: the input changed`);
+  }
+});
+
+function nonPlain(): { name: string; make: () => unknown }[] {
+  return [
+    { name: 'a sparse array', make: () => { const a: unknown[] = [1]; a[2] = 3; return a; } },
+    { name: 'an array with a named property', make: () => Object.assign([1], { x: 1 }) },
+    { name: 'a getter', make: () => Object.defineProperty({}, 'x', { get: () => 1, enumerable: true }) },
+    { name: 'a non-enumerable key', make: () => Object.defineProperty({}, 'x', { value: 1, enumerable: false }) },
+    { name: 'a Proxy of an object', make: () => new Proxy({ a: 1 }, {}) },
+    { name: 'a Proxy of an array', make: () => new Proxy([1], {}) },
+    { name: 'a symbol key', make: () => ({ [Symbol('s')]: 1 }) },
+    { name: 'a class instance', make: () => new (class X { a = 1; })() },
+    { name: 'a cycle', make: () => { const o: any = {}; o.self = o; return o; } },
+  ];
+}
+
+test('low r2: the object path refuses a value that is not a plain JSON tree', async (t) => {
+  for (const c of nonPlain()) {
+    await t.test(`inside Event.data: ${c.name}`, () => {
+      const v = fixture('event.min');
+      v.data = { inner: c.make() };
+      assert.equal(nouns.Event.safeDecode(v).success, false, `${c.name} was accepted`);
+    });
+  }
+  await t.test('a Proxy as the noun itself', () => {
+    let reads = 0;
+    const p = new Proxy(fixture('lease.min'), { get(o, k) { reads++; return (o as any)[k]; } });
+    assert.equal(nouns.Lease.safeDecode(p).success, false, 'a Proxy noun was accepted');
+    assert.equal(reads, 0, 'the Proxy trap ran');
+  });
+  await t.test('a getter on a noun key', () => {
+    const v = fixture('lease.min');
+    let n = 0;
+    Object.defineProperty(v, 'holder', { get: () => (n++ === 0 ? 'j_9' : ''), enumerable: true });
+    assert.equal(nouns.Lease.safeDecode(v).success, false, 'a getter noun key was accepted');
+  });
+  await t.test('a sparse array in Label.provenance', () => {
+    const v = fixture('label.full');
+    v.provenance = [{ a: 1 }, , { b: 2 }];
+    assert.equal(nouns.Label.safeDecode(v).success, false);
+  });
+});
+
+test('low r2: encode refuses a non-plain raw value too', () => {
+  const ok: any = nouns.Event.decode(fixture('event.min'));
+  for (const c of nonPlain()) {
+    assert.equal(nouns.Event.safeEncode({ ...ok, data: { inner: c.make() } }).success, false, `encode accepted ${c.name}`);
+  }
+});

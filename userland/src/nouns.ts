@@ -34,10 +34,13 @@
 //     JSON.parse has read them, so Userland cannot see the spelling and accepts them where Go's int
 //     decoding may refuse; encode writes the canonical form (1, 1, 0). No code addresses this.
 //   - A type the canon names but does not define (Actor, Rationale, Target, Budget, TokenSet,
-//     SourceRef, Event.data) is any JSON value, passed through uncopied (see Raw): required where
+//     SourceRef, Event.data) is any JSON value, copied key for key (see plainCopy): required where
 //     09a §3 requires it, and otherwise unchecked, as nouns.go says.
+//   - Decode accepts only a plain JSON tree and returns a fresh value (see wire). It refuses a Proxy,
+//     a getter, a sparse array, and the rest that plainCopy lists.
 //   - A ULID (Event.id, Event.causation_id) is held to the *Id rule, non-empty, and no further: the
 //     wire rules state no ULID syntax check.
+import { types } from 'node:util';
 import { z } from 'zod';
 import type { ZodType } from 'zod';
 
@@ -151,34 +154,68 @@ export function decodeText<S extends ZodType>(schema: S, text: string): z.output
   return schema.decode(parseWire(text)) as z.output<S>;
 }
 
-// isJsonValue reports whether v is a value JSON.parse could have produced: null, a boolean, a string,
-// a number within the safe-integer rule, an array of JSON values, or a plain object (prototype Object.prototype or null)
-// whose own string keys hold JSON values. It reads and never copies, so it cannot lose a key.
-function isJsonValue(v: unknown, path: Set<object> = new Set()): boolean {
-  if (v === null || typeof v === 'boolean' || typeof v === 'string') return true;
-  if (typeof v === 'number') return isSafeWireNumber(v);
-  if (typeof v !== 'object') return false; // undefined, bigint, function, symbol
-  if (path.has(v)) return false; // a cycle has no JSON text
-  path.add(v);
+type PlainResult = { ok: true; value: unknown } | { ok: false; path: PropertyKey[]; message: string };
+
+// plainCopy checks that v is a PLAIN JSON tree, the shape JSON.parse builds, and returns a fresh copy
+// of it. Plain means: null, a boolean, a string, a number within the safe-integer rule, a dense
+// Array whose only own keys are its indices and "length", or an object with prototype
+// Object.prototype or null whose own keys are all enumerable data properties holding plain values.
+// Refused, without running any of their code: a Proxy (its traps could answer differently on every
+// read), a getter or setter, a sparse array (JSON.stringify writes its holes as null), a symbol key,
+// a non-enumerable key (JSON.stringify skips it), a cycle, and anything else (undefined, bigint,
+// function, Date, Map, class instances).
+// The copy is built with defineProperty, never assignment, so an own "__proto__" key stays a key.
+// Assignment is how z.json() lost it: assigning "__proto__" sets a prototype, not a key.
+function plainCopy(v: unknown, at: PropertyKey[] = [], open: Set<object> = new Set()): PlainResult {
+  const fail = (message: string): PlainResult => ({ ok: false, path: at, message });
+  if (v === null || typeof v === 'boolean' || typeof v === 'string') return { ok: true, value: v };
+  if (typeof v === 'number') {
+    return isSafeWireNumber(v) ? { ok: true, value: v } : fail('a number outside ±(2^53-1) is refused on the wire');
+  }
+  if (typeof v !== 'object') return fail(`a ${typeof v} is not JSON`);
+  if (types.isProxy(v)) return fail('a Proxy is not a plain JSON value');
+  if (open.has(v)) return fail('a cycle has no JSON text');
+  const keys = Reflect.ownKeys(v);
+  if (keys.some((k) => typeof k === 'symbol')) return fail('a symbol key is not JSON');
+  open.add(v);
   try {
-    if (Array.isArray(v)) return v.every((x) => isJsonValue(x, path));
+    const isArray = Array.isArray(v);
     const proto = Object.getPrototypeOf(v);
-    if (proto !== Object.prototype && proto !== null) return false; // Date, Map, class instances
-    if (Object.getOwnPropertySymbols(v).length > 0) return false;
-    // An own "__proto__" key (JSON.parse creates one) is a plain data property here: indexing reads
-    // the own value, which shadows the Object.prototype accessor.
-    return Object.keys(v).every((k) => isJsonValue((v as Record<string, unknown>)[k], path));
+    if (isArray ? proto !== Array.prototype : proto !== Object.prototype && proto !== null) {
+      return fail('not a plain object or array');
+    }
+    const out: Record<string, unknown> | unknown[] = isArray ? [] : {};
+    if (isArray) {
+      const n = (v as unknown[]).length;
+      if (keys.length !== n + 1) return fail('an array holds a hole or a named property');
+      for (let i = 0; i < n; i++) {
+        if (!Object.hasOwn(v, i)) return fail(`an array has a hole at ${i}`);
+      }
+    }
+    for (const k of keys as string[]) {
+      if (isArray && k === 'length') continue;
+      const d = Object.getOwnPropertyDescriptor(v, k)!;
+      if (!('value' in d)) return fail(`key ${JSON.stringify(k)} is a getter or setter`);
+      if (!d.enumerable) return fail(`key ${JSON.stringify(k)} is not enumerable`);
+      const r = plainCopy(d.value, [...at, isArray ? Number(k) : k], open);
+      if (!r.ok) return r;
+      Object.defineProperty(out, k, { value: r.value, writable: true, enumerable: true, configurable: true });
+    }
+    return { ok: true, value: out };
   } finally {
-    path.delete(v);
+    open.delete(v);
   }
 }
 
-// A type the canon names but does not define: any JSON value, carried unchecked, and carried AS IS.
-// Decode returns the very value it was given, not a rebuilt copy. A rebuilt copy is how a key is
-// lost: z.json() reconstructs each object by assignment, and assigning "__proto__" sets a prototype
-// rather than a key, so {"__proto__":{…}} decoded to {} where Go's json.RawMessage keeps the bytes.
-// The JSON Schema of a required raw field is {}: any JSON value.
-const Raw = z.unknown().refine((v) => isJsonValue(v), { message: 'not a JSON value' });
+function plainIssue(v: unknown, ctx: z.core.$RefinementCtx<unknown>) {
+  const r = plainCopy(v);
+  if (!r.ok) ctx.addIssue({ code: 'custom', message: r.message, path: r.path, input: v });
+}
+
+// A type the canon names but does not define: any JSON value, carried unchecked. Inside a noun, the
+// value is already a fresh copy (see wire below); the field's own check is what refuses a non-JSON
+// value handed to encode. The JSON Schema of a required raw field is {}: any JSON value.
+const Raw = z.unknown().superRefine(plainIssue);
 
 // An OPTIONAL raw field (Event.rationale) obeys the optional-field rule as well: absent when unset,
 // never null or "". The refinement is invisible to z.toJSONSchema, so the same rule is stated for
@@ -186,7 +223,8 @@ const Raw = z.unknown().refine((v) => isJsonValue(v), { message: 'not a JSON val
 // test checks the two agree.
 const OptionalRaw = z
   .unknown()
-  .refine((v) => isJsonValue(v) && v !== null && v !== '', {
+  .superRefine(plainIssue)
+  .refine((v) => v !== null && v !== '', {
     message: 'an optional field is absent when unset, never null or ""',
   })
   .meta({
@@ -202,7 +240,7 @@ const OptionalRaw = z
 
 const Uint = z.int().min(0);
 
-export const Label = z.strictObject({
+const LabelShape = z.strictObject({
   schema: z.literal('label/1'),
   origin: z.enum(['founder', 'system_of_record', 'internal', 'public_web', 'customer', 'counterparty', 'synthetic']),
   dclass: z.enum(['D0', 'D1', 'D2', 'D3', 'D4']),
@@ -225,7 +263,7 @@ export const Label = z.strictObject({
   revocation_epoch: Uint,
 });
 
-export const Event = z.strictObject({
+const EventShape = z.strictObject({
   id: Id,
   stream: z.string(),
   seq: z.int().min(1),
@@ -234,7 +272,7 @@ export const Event = z.strictObject({
   actor: Raw,
   correlation_id: Id,
   causation_id: Id.optional(),
-  label: Label,
+  label: LabelShape,
   rationale: OptionalRaw,
   snapshot_ref: Id.optional(),
   schema: z.int().min(1),
@@ -243,7 +281,7 @@ export const Event = z.strictObject({
   hash: Hex,
 });
 
-export const Job = z.strictObject({
+const JobShape = z.strictObject({
   id: Id,
   venture: Id,
   record_ref: Id,
@@ -258,13 +296,13 @@ export const Job = z.strictObject({
     allowed: z.array(z.string()),
     forbidden: z.array(z.string()),
   }),
-  label: Label,
+  label: LabelShape,
   budget: Raw,
   lease_ids: z.array(Id),
   state: z.string(), // JobState: named by 09a §3, not enumerated there
 });
 
-export const Lease = z.strictObject({
+const LeaseShape = z.strictObject({
   id: Id,
   resource: z.string(),
   holder: Id,
@@ -276,7 +314,7 @@ export const Lease = z.strictObject({
   expires_at: z.string(),
 });
 
-export const Effect = z.strictObject({
+const EffectShape = z.strictObject({
   id: Id,
   operation_id: Id,
   attempt: z.int(),
@@ -284,14 +322,14 @@ export const Effect = z.strictObject({
   snapshot_ref: Id,
   effect_class: z.enum(['R0', 'R1', 'R2', 'R3', 'R4']),
   idem_class: z.enum(['native_key', 'check_before', 'natural', 'at_most_once']),
-  authorising_label: Label,
+  authorising_label: LabelShape,
   approvals: z.array(Id),
   fencing_tokens: Raw,
   gateway_epoch: Uint64String,
   state: z.string(), // EffectState: named by 09a §3, not enumerated there
 });
 
-export const Receipt = z.strictObject({
+const ReceiptShape = z.strictObject({
   effect_id: Id,
   operation_id: Id,
   attempt: z.int(),
@@ -304,7 +342,7 @@ export const Receipt = z.strictObject({
   chain_prev: Hex,
 });
 
-export const Operation = z.strictObject({
+const OperationShape = z.strictObject({
   id: Id,
   venture: Id,
   verb: z.string(),
@@ -316,9 +354,37 @@ export const Operation = z.strictObject({
   state: z.enum(['open', 'settled', 'failed', 'compensated', 'human']),
 });
 
-// toJSONSchema emits the JSON Schema (draft 2020-12) of the wire form: the codec's input side, so a
-// bigint is the decimal-string pattern, not a bigint. A schema that cannot be represented throws
-// rather than emitting a looser document.
+// Each exported noun is its shape behind a plain-copy codec. Decode first refuses a value that is not
+// a plain JSON tree (plainCopy), then validates a FRESH copy: the result shares no object with the
+// caller's input, so a later mutation of either cannot reach the other, and a getter or Proxy cannot
+// answer one way to the check and another way to the read. Encode validates the typed value, then
+// copies the wire form the same way and checks it again.
+// The object path cannot see a number's original text: prefer decodeText, which reads it.
+const shapes = new WeakMap<ZodType, ZodType>();
+
+function wire<S extends ZodType>(shape: S) {
+  const copy = (v: unknown) => {
+    const r = plainCopy(v);
+    return r.ok ? r.value : v; // a refused value never gets here on decode; on encode, the input check refuses it
+  };
+  const noun = z.codec(z.unknown().superRefine(plainIssue), shape as any, { decode: copy, encode: copy });
+  shapes.set(noun, shape);
+  return noun as unknown as z.ZodCodec<z.ZodUnknown, S>;
+}
+
+export const Label = wire(LabelShape);
+export const Event = wire(EventShape);
+export const Job = wire(JobShape);
+export const Lease = wire(LeaseShape);
+export const Effect = wire(EffectShape);
+export const Receipt = wire(ReceiptShape);
+export const Operation = wire(OperationShape);
+
+// toJSONSchema emits the JSON Schema (draft 2020-12) of the wire form: for an exported noun, its
+// shape (the plain-copy step has no JSON Schema of its own; every JSON document is a plain tree), and
+// within it each codec's input side, so a bigint is the decimal-string pattern, not a bigint. A
+// schema that cannot be represented throws rather than emitting a looser document.
 export function toJSONSchema(schema: ZodType): Record<string, unknown> {
-  return z.toJSONSchema(schema, { io: 'input', target: 'draft-2020-12', unrepresentable: 'throw' }) as Record<string, unknown>;
+  const target = shapes.get(schema) ?? schema;
+  return z.toJSONSchema(target, { io: 'input', target: 'draft-2020-12', unrepresentable: 'throw' }) as Record<string, unknown>;
 }
