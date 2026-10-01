@@ -215,3 +215,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   No mutant has been run, so non-vacuity is unproven and B1-03 cannot be built or verified locally. Founder: allow
   local socket binding for this repo (the `/sandbox` settings), or accept CI-only verification. The cross-uid open
   test only runs as root. To review: the Backend interface and the `{label,data}` wrapper for propose_event.
+- **B1-04 tests frozen** — `build/b1-04-tests` @ 30471a9: stub `kernel/internal/lease/fence.go`, 7 red done-tests
+  (all-or-nothing, wound-wait, deadlock, storage-side stale-token rejection, touched ≠ declared, SP2 B0-greedy and
+  drill as JSON data from spike commit 2162926), `build/done-tests/B1-04.yml`. A throwaway implementation goes 7/7
+  under -race; 10/10 mutants killed. Not tested: hot-resource auto-add, nightly scheduling, glob-vs-symbol overlap,
+  non-`repo://` verifiers. Under review.
