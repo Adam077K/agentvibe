@@ -220,3 +220,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   drill as JSON data from spike commit 2162926), `build/done-tests/B1-04.yml`. A throwaway implementation goes 7/7
   under -race; 10/10 mutants killed. Not tested: hot-resource auto-add, nightly scheduling, glob-vs-symbol overlap,
   non-`repo://` verifiers. Under review.
+- **Founder approved the lite merges; verdict recording refused again ("Self-Approval").** Not retried. #146's session
+  file is flipped to PASS and pushed (dcf95f5); its verdict must be recorded by the founder.
+- **CORRECTION** — the verdict command written into HANDOFF-NEXT earlier this session passed `--ref origin/main`,
+  which diffs main against itself and records an empty-diff subject (`e3b0c442…`, the sha256 of nothing). The
+  default `--ref` is HEAD, which is correct; the flag is removed from the handoff. A wrong file was created once and
+  deleted before any commit.

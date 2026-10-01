@@ -71,7 +71,7 @@ Launcher grant (D1/F1) + Build Charter signature · Kernel host siting · data-t
 **Nothing merged this session.** `scripts/verdict.mjs record` was refused by the auto-mode classifier ("Self-Approval")
 even with a reviewer's PASS in hand. Every lite PR below is ready except that one step. Founder, per PR in order:
 merge `origin/main` in → flip its session file to `qa_verdict: PASS` → run
-`GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.abbrev GIT_CONFIG_VALUE_0=8 node scripts/verdict.mjs record --ref origin/main --verdict PASS --by reviewer-opus --evidence "<from the PR body>"`
+`GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.abbrev GIT_CONFIG_VALUE_0=8 node scripts/verdict.mjs record --verdict PASS --by reviewer-opus --evidence "<from the PR body>"`
 → commit → push → merge on green. Or grant a rule letting the orchestrator record a named reviewer's verdict.
 
 | Order | PR | Job | State |
