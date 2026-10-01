@@ -3,6 +3,11 @@
 // B1-05 done-test, frozen by B0-17a (docs/vision-v3/14-BUILD-PLAN.md §6): "1,000 two-runner races
 // → 0 double claims". Hash-registered in build/done-tests/B0-17a.yml.
 //
+// Re-frozen 2026-10-01 on two B1-05 review findings, by a builder that is not the implementer: a
+// Check that ignored expiry (M6) passed, and a Claimer that counted an ExpectSeq conflict as a win
+// was caught only when the scheduler interleaved (~80% of runs). Added: Check of an expired token
+// with nobody reclaiming, and one forced conflict (cutIn) at the end of the race test.
+//
 // Run: go -C kernel test -tags donetest -count=1 ./internal/lease/
 package lease_test
 
@@ -149,6 +154,49 @@ func TestB1_05_TwoRunnerRace(t *testing.T) {
 	if double != 0 || none != 0 {
 		t.Fatalf("%d races: %d double claims, %d with no winner; want 0 and 0", races, double, none)
 	}
+
+	// One forced conflict, so the loser's path runs on every run and not only when the scheduler
+	// interleaves: runner-b's claim commits after runner-c has read the free head and before its
+	// Append lands. runner-c's Append is then refused with ErrSeqConflict, and the claim must go
+	// to runner-b alone.
+	cut := &cutIn{Journal: j}
+	cC, err := lease.New(cut)
+	if err != nil {
+		t.Fatalf("lease.New over the cut-in Journal: %v", err)
+	}
+	var b lease.Claim
+	var errB error
+	cut.before = func() { b, errB = cB.ClaimJob(ctx, "job_forced", "runner-b", 90*time.Second) }
+	c, errC := cC.ClaimJob(ctx, "job_forced", "runner-c", 90*time.Second)
+	if cut.before != nil {
+		t.Fatalf("ClaimJob never appended through the Journal it was given; the conflict was not forced")
+	}
+	if errB != nil {
+		t.Fatalf("forced conflict: runner-b's claim: %v", errB)
+	}
+	if !errors.Is(errC, lease.ErrHeld) {
+		t.Fatalf("forced conflict: runner-c got token %d, err=%v; want ErrHeld (a seq conflict is not a win)", c.Token, errC)
+	}
+	for _, cl := range claimers {
+		if err := cl.Check(ctx, "job_forced", b.Token); err != nil {
+			t.Fatalf("forced conflict: runner-b's token fails Check: %v", err)
+		}
+	}
+}
+
+// cutIn is a Journal whose next Append first runs before: a competing transition that commits
+// between the caller's read of the head and its own Append.
+type cutIn struct {
+	journal.Journal
+	before func()
+}
+
+func (c *cutIn) Append(ctx context.Context, p journal.Proposal) (journal.Event, error) {
+	if f := c.before; f != nil {
+		c.before = nil
+		f()
+	}
+	return c.Journal.Append(ctx, p)
 }
 
 func TestB1_05_FencedAfterRelease(t *testing.T) {
@@ -191,6 +239,10 @@ func TestB1_05_ExpiredClaimIsReclaimable(t *testing.T) {
 		t.Fatalf("claim a: %v", err)
 	}
 	time.Sleep(200 * time.Millisecond) // the runner paused and woke
+	// Expired with nobody reclaiming: the token is dead by its ttl alone, not by a newer claim.
+	if err := c.Check(ctx, "job_ttl", a.Token); !errors.Is(err, lease.ErrStaleToken) {
+		t.Fatalf("Check(token a, expired, not reclaimed): %v, want ErrStaleToken", err)
+	}
 	b, err := c.ClaimJob(ctx, "job_ttl", "runner-b", 90*time.Second)
 	if err != nil {
 		t.Fatalf("claim b after a expired: %v", err)
