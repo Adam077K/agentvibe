@@ -236,3 +236,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 | 2026-10-01 | B0-07 | #140 → main (59dbe01) | Seatbelt nesting spike write-up, still `unresolved` | founder runs the nested rerun (12 §10) |
 - **B1-04 tests — re-check PASS at a5e242d** (8 red; reviewer's 3 surviving mutants now fail). **B1-04 implementation
   started** on `build/b1-04` off the frozen tests.
+- **B1-04 built** — `build/b1-04` @ 68f4e79: fence.go implemented; done-tests B1-04 8/8, B1-05 4/4, B1-01 8/8 under
+  -race -count=3; 13 unit tests, 5/5 targeted mutants killed. Contract choices for review: re-request gets a new
+  token; one Born per job; equal Born waits; Born tie → larger job id is the victim. Under review.
+- **FOLLOW-UPS (lease scope, owner rows needed in 14 §6):** verifier has no clock, so an expired un-reacquired token
+  is accepted (09a:287); no hot-resource auto-add API; glob-vs-symbol overlap; non-`repo://` verifiers (currently
+  refused); lease-side renew and `max_wait`.
