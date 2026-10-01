@@ -79,3 +79,13 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   founder ordered B1-01b then B1-05, so B1-05 starts after B1-01b and its builder reports what B1-04 surface it needs.
 - **DECISION — single-family for Cx→Cl jobs.** The register routes B1-01a/b and B1-05 to Codex builders with a Claude
   referee. Codex is unavailable, so Claude builds and a separate Claude reviewer referees. Codex re-review owed.
+- **B1-01a review — FAIL at 5c2b483** (Opus reviewer, not the builder). Five of six wrong implementations went red; one
+  whose Read ignores `fromSeq` passes all frozen B1-01a done-tests. Also: a symlink to the DB bypasses the writer lock;
+  `ALLOWED_MODULES` states 23 modules but lists 24. Crash injection confirmed real (SIGKILL of a separate process).
+- **DECISION — frozen tests are not edited by an implementer.** The `fromSeq` gap is closed on `build/b1-01a` by a
+  plain unit test that kills that mutant; re-freezing the done-test (and re-hashing the register) is a separate
+  follow-up job for a different builder, owed before B1-01a merges to `main`.
+- **B1-01b built** — `build/b1-01b` @ aa33429, done-tests 5/5, B1-01a 3/3; also lets Append take empty data (B1-01a
+  code). Under review. **B1-05** builder started on `build/b1-05` off B1-01b, building only the lease surface its
+  frozen tests need; B1-04 still owes wound-wait, deadlock detection and hot resources.
+- **Rebased lite PRs:** #146, #147, #140 now carry a clean merge of `origin/main`; GitHub's "conflicting" on #147 was stale.
