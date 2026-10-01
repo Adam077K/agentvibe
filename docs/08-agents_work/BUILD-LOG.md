@@ -143,3 +143,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   canon names it for Userland schemas, so DR-84 is met. B1-02-ts adds `zod` plus a JSON-Schema emitter, then freezes
   the TS round-trip done-tests against the same `testdata/nouns` fixtures. B1-02's implementation waits for both halves.
 | 2026-10-01 | B1-05 | #153 (stacked on #152) | `job://` lease; review round 3 PASS at 28c3a09; race mutants 20/20 caught | founder: verdict + merge after #152; Codex re-review owed |
+- **B1-02 Go done-tests — reviewer PASS at 4090ea4.** Fields match 09a §3 and §12.0; `decision.compiled` keys
+  match canon §3; bigint carried as a decimal string contradicts nothing. 25 of 26 mutants killed; the survivor
+  (Upcast aliasing `Data`) is outside the acceptance sentence. Low: an empty `business_key` is refused against
+  the canon type; a comment omits the `held` disposition. Both fixed in B1-02-ts, now running (adds Zod and freezes
+  the TS half on the same fixtures).
