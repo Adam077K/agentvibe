@@ -275,7 +275,7 @@ func (s *store) Append(ctx context.Context, p Proposal) (Event, error) {
 	if data == nil {
 		data = []byte{}
 	}
-	ev := Event{Stream: p.Stream, Seq: hd.seq + 1, Type: p.Type, Data: append([]byte(nil), data...), PrevHash: prev}
+	ev := Event{Stream: p.Stream, Seq: hd.seq + 1, Type: p.Type, Data: append([]byte{}, data...), PrevHash: prev} // never nil: nil binds as NULL
 	if ev.Hash, err = eventHash(ev.Stream, ev.Seq, ev.Type, ev.Data, ev.PrevHash); err != nil {
 		return Event{}, err
 	}
