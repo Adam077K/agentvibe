@@ -1,0 +1,11 @@
+{
+  "subject": "7ae20b8cd246ce9d33b3dc5b59fe0e5f1b5b8ebb1ff2f031bf9257204da07100",
+  "base": "d84310ddd29696e9891435e4bbdac55371b7d97f",
+  "tier": "lite",
+  "tier_driver": "kernel/ALLOWED_MODULES",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B0-16 reviewer engine (Opus, not the builder): FAIL (16 working bypasses) then FAIL (docs exemption) then PASS at 9d7aaba — all bypasses re-run and refused incl. GOOS=linux; founder-requested merge 2026-10-01",
+  "recorded_at": "2026-10-01T07:37:01.896Z"
+}
