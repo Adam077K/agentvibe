@@ -76,9 +76,7 @@ merge `origin/main` in → flip its session file to `qa_verdict: PASS` → run
 
 | Order | PR | Job | State |
 |---|---|---|---|
-| 1 | #146 | B0-19 secret scanner | `main` merged in (6d21065); reviewer PASS |
-| 2 | #147 | B0-17 frozen done-tests | `main` merged in (cc5934a); "conflicting" flag was stale |
-| 3 | #140 | B0-07 Seatbelt spike | `main` merged in (b0862bd); founder rerun still owed |
+| — | #146, #147, #140 | B0-19, B0-17, B0-07 | **MERGED 2026-10-01** (founder recorded the verdicts) |
 | 4 | #148 | session docs | carries this update |
 | 5 | #151 → #147 | B1-01a Journal core | review round 2 PASS at 204ffaa; merge `main` in first |
 | 6 | #152 → #151 | B1-01b chain + blobs | review round 2 PASS at 690d6a2 |

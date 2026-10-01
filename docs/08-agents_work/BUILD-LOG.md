@@ -232,3 +232,7 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   release/replace of a wait, and exact SP2 drill refusals. Test author strengthening. Follow-ups (not in this job):
   verifier has no clock, so an expired unre-acquired token is still accepted (09a:287); hot-resource auto-add API;
   glob-vs-symbol overlap; nightly wiring; non-`repo://` verifiers; `max_wait` placement (09a:270).
+| 2026-10-01 | B0-17 | #147 → main (3174d6c) | frozen P1 done-tests + hash register; verdict by the founder; CI + QA green | B1 jobs build on it; Codex re-review owed |
+| 2026-10-01 | B0-07 | #140 → main (59dbe01) | Seatbelt nesting spike write-up, still `unresolved` | founder runs the nested rerun (12 §10) |
+- **B1-04 tests — re-check PASS at a5e242d** (8 red; reviewer's 3 surviving mutants now fail). **B1-04 implementation
+  started** on `build/b1-04` off the frozen tests.
