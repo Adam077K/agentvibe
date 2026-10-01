@@ -4,7 +4,7 @@
 # declared → refused"). Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
 # Verify: node build/check-done-tests.mjs
 # Run: go -C kernel test -count=1 -tags donetest -run B1_04 ./internal/lease/
-# Frozen red against ErrNotImplemented on 2026-10-01: 7 of 7 tests fail. kernel/internal/lease/fence.go
+# Frozen red against ErrNotImplemented on 2026-10-01: 7 of 7 tests fail (8 of 8 after the re-freeze below). kernel/internal/lease/fence.go
 # is NOT registered: it is the interface the job implements (the B0-17 pattern). The job:// claim is
 # B1-05's (B0-17a.yml) and is not re-tested here.
 #
@@ -22,12 +22,26 @@
 #
 # Not frozen here: hot-resource auto-addition, "nightly" scheduling, renew/max_wait, and verifiers
 # other than repo:// (see fence.go).
+#
+# Re-frozen 2026-10-01: fence_donetest_test.go a5f321f0... -> 2bec39ee... Reviewer findings at
+# 30471a9, edited by the test author, before any implementation existed. (1) A mixed wound-wait
+# request (an older AND a younger holder) must wait and wound nobody: WoundWait gains step 3.
+# (2) A new wait replaces the old one, and Release drops it: TestB1_04_WaitReplacedAndDropped,
+# asserted through Detect and through Coordinator.Waiting. Waiting was added to fence.go
+# (unregistered) as a read-only query, because the Release case is otherwise unobservable: a released
+# job holds nothing, so no cycle can pass through it, and its next grant clears the wait anyway.
+# (3) The drill's zombie refusal names exactly SP2's 7 resources (refuseExactly). discount's 2 private
+# leases are held with the long TTL so they are live at the push; otherwise exactness would freeze
+# "the verifier ignores expiry", which is an open follow-up (09a §6). The SP2 fixtures are unchanged.
+# The reference passes 8 of 8 tests (-race -count=3). Mutants: 15 of 15 killed. The 5 added this
+# round (wound younger then wait, Release keeps the wait, waits accumulate, refusal echoes the push,
+# refuse every touched resource) all survived the old file.
 register: B1-04
 jobs:
   - id: B1-04
     files:
       - path: kernel/internal/lease/fence_donetest_test.go
-        sha256: a5f321f0b52266cb774d9a8d8ceb1d224435a06f991a140faf0a8d07763362f4
+        sha256: 2bec39eebd9c0581e650028e88a56d335d19101fb8226c5e49da5d989a6f983a
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
       - path: kernel/internal/lease/testdata/sp2/b0-drill.json
