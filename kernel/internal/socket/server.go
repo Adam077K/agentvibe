@@ -17,9 +17,20 @@ import (
 	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
 
-// MaxLine bounds one request line, without its '\n'. A longer line is not a command the Kernel can
-// judge: the connection is closed without an answer, and nothing is journaled for it.
-const MaxLine = 1 << 20
+// Bounds on what one client can hold in the process that holds the Journal. All three were
+// ratified by the founder on 2026-10-01.
+const (
+	// MaxLine bounds one request line, without its '\n'. A longer line is not judged: it is refused
+	// and journaled (ReasonLineTooLong, over its first MaxLine+1 bytes), never answered, and its
+	// connection is closed.
+	MaxLine = 1 << 20
+	// MaxConns is the most connections served at once. A connection accepted beyond it is closed
+	// at once, unanswered and unjournaled: it sent nothing yet.
+	MaxConns = 1024
+	// StallTimeout is how long a connection may take to deliver one line or to accept one answer.
+	// A connection that sends nothing, stops mid-line, or never reads its answers is closed.
+	StallTimeout = 30 * time.Second
+)
 
 type server struct {
 	journal journal.Journal
@@ -105,6 +116,11 @@ func (s *server) accept() {
 			c.Close()
 			return
 		}
+		if len(s.conns) >= MaxConns {
+			s.mu.Unlock()
+			c.Close()
+			continue
+		}
 		s.conns[c] = struct{}{}
 		s.wg.Add(1)
 		s.mu.Unlock()
@@ -118,8 +134,8 @@ func (s *server) isClosing() bool {
 	return s.closing
 }
 
-// handleConn answers each line with one Response, in order, until the client goes away, a line is
-// too long, or a refusal cannot be journaled.
+// handleConn answers each line with one Response, in order, until the client goes away, stalls
+// past StallTimeout, sends a line longer than MaxLine, or a refusal cannot be journaled.
 func (s *server) handleConn(c net.Conn) {
 	defer s.wg.Done()
 	defer func() {
@@ -130,7 +146,13 @@ func (s *server) handleConn(c net.Conn) {
 	}()
 	r := bufio.NewReader(c)
 	for {
+		c.SetReadDeadline(time.Now().Add(StallTimeout)) // the whole line must arrive within it
 		line, err := readLine(r)
+		if errors.Is(err, errLineTooLong) {
+			// Refused unjudged and journaled; never answered. The connection closes either way.
+			s.journalRefusal(line, refuse(ReasonLineTooLong, "", "line exceeds MaxLine"))
+			return
+		}
 		if err != nil {
 			return
 		}
@@ -142,6 +164,7 @@ func (s *server) handleConn(c net.Conn) {
 		if err != nil {
 			return
 		}
+		c.SetWriteDeadline(time.Now().Add(StallTimeout)) // a client that never reads is let go
 		if _, err := c.Write(append(out, '\n')); err != nil {
 			return
 		}
@@ -151,12 +174,14 @@ func (s *server) handleConn(c net.Conn) {
 var errLineTooLong = errors.New("socket: line exceeds MaxLine")
 
 // readLine returns the next line without its '\n'. A final line with no '\n' is not a request.
+// A line longer than MaxLine returns errLineTooLong with its first MaxLine+1 bytes, the most it
+// reads of it.
 func readLine(r *bufio.Reader) ([]byte, error) {
 	var line []byte
 	for {
 		chunk, err := r.ReadSlice('\n')
 		if len(line)+len(chunk) > MaxLine+1 {
-			return nil, errLineTooLong
+			return append(line, chunk...)[:MaxLine+1], errLineTooLong
 		}
 		line = append(line, chunk...)
 		if err == nil {

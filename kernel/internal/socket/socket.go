@@ -9,8 +9,14 @@
 //
 // TRANSPORT. A Unix stream socket at Config.SocketPath. A request is one JSON object on one line,
 // terminated by '\n'; the Kernel answers each request with exactly one Response on one line, in
-// order. A connection may carry any number of requests; a refused request does not end it. A line
-// longer than MaxLine is not judged: the connection is closed without an answer.
+// order. A connection may carry any number of requests; a refused request does not end it.
+//
+// BOUNDS (ratified by the founder 2026-10-01; server.go holds the numbers). A line longer than
+// MaxLine is not judged: it is refused and journaled (ReasonLineTooLong, its digest and length
+// taken over the first MaxLine+1 bytes, the most the Kernel reads of it), it is never answered,
+// and the connection is closed. At most MaxConns connections are served at once; one accepted
+// beyond that is closed unanswered. A connection that takes longer than StallTimeout to deliver a
+// line or to accept an answer is closed.
 //
 // FILE MODES (the OS, not this code, is what stops Userland appending directly):
 //   - the socket: owner the Kernel's uid, group Config.UserlandGID, mode exactly 0660 (09a §2).
@@ -83,6 +89,10 @@ const (
 	// ReasonInvalidField: a key is unknown, or a value has the wrong JSON type, is outside its
 	// enum, or is refused by B1-02's decoder (nouns.ErrInvalid, nouns.ErrUnknownSchema).
 	ReasonInvalidField = "invalid_field"
+	// ReasonLineTooLong: the line exceeds MaxLine and was not judged. It appears only in
+	// RefusalData, never in a Response: such a line is not answered. Its SHA256 and Bytes cover
+	// the line's first MaxLine+1 bytes, not the whole line.
+	ReasonLineTooLong = "line_too_long"
 )
 
 // Failure reasons: a well-formed command that was not carried out. Never journaled as refusals.
