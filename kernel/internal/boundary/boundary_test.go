@@ -262,6 +262,10 @@ func TestBypassJournalInAnyFile(t *testing.T) {
 		"other/.git":                "gitdir: elsewhere\n",
 		"other/x.js":                "open('.agentvibe/kernel/journal.db')\n",
 		"docs/design.md":            "The Journal lives at ~/.agentvibe/kernel/journal.db.\n",
+		"docs/tap.sh":               "sqlite3 ~/.agentvibe/kernel/journal.db\n",
+		"docs/lib/j.mjs":            "export const j = '.agentvibe/kernel/journal.db'\n",
+		"assets/blob.bin":           "\x00\x01\x02\nsqlite3 ~/.agentvibe/kernel/journal.db\x00\n",
+		"notes-utf16.txt":           "j\x00o\x00u\x00r\x00n\x00a\x00l\x00.\x00d\x00b\x00\n\x00",
 	})
 	if err := os.Symlink("/home/avk/.agentvibe/kernel/journal.db", filepath.Join(root, "j")); err != nil {
 		t.Fatal(err)
@@ -271,7 +275,8 @@ func TestBypassJournalInAnyFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []string{".github/workflows/w.yml:2", "package.json:2", "Makefile:2", "node_modules/pkg/index.js:1",
-		".claude/commands/tap.md:1", "j"}
+		".claude/commands/tap.md:1", "j", "docs/tap.sh:1", "docs/lib/j.mjs:1", "assets/blob.bin:2",
+		"notes-utf16.txt:1"}
 	if len(fs) != len(want) {
 		t.Fatalf("got %v, want exactly %v", fs, want)
 	}

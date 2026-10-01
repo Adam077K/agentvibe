@@ -1,0 +1,11 @@
+{
+  "subject": "1ea6688cb2503a39aab7fdc004815aa8ea80ffdb6d98f01a5c9370db0cddf135",
+  "base": "92c58a714c67db686049dd50d79581fb20fb8754",
+  "tier": "lite",
+  "tier_driver": "build/capabilities.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B0-13 reviewer engine (Opus, not the builder): FAIL x3 then PASS at 515fb6c — 143 rows verified field-by-field, hashes recompute; founder-requested merge 2026-10-01",
+  "recorded_at": "2026-10-01T07:29:26.674Z"
+}

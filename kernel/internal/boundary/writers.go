@@ -14,10 +14,14 @@ import (
 	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
 
-// ProseDirs are the only directories outside kernel/ that may name the Journal: the design
-// documents that specify it. Everything else is scanned whatever its extension, because a Makefile,
-// a workflow, a package.json script or an agent command file each runs as surely as a .mjs does.
-var ProseDirs = []string{"docs"}
+// The only files outside kernel/ that may name the Journal are the design documents that specify
+// it: regular Markdown files under docs/ (docs/**/*.md). A script or module under docs/ is scanned
+// like any other, and so is everything else whatever its extension, because a Makefile, a workflow,
+// a package.json script or an agent command file each runs as surely as a .mjs does.
+const (
+	ProseRoot = "docs"
+	ProseExt  = ".md"
+)
 
 // journalSegments are journal.Path's components, lowercased: the scan is case-insensitive because
 // the file systems the Kernel runs on are.
@@ -96,9 +100,10 @@ func literals(seg string) int {
 	return n
 }
 
-// CheckJournalWriters walks repoRoot and reports every line, in every non-binary file outside the
-// kernel directory kernelRel and the ProseDirs, that names the Journal, whatever the file's name or
-// extension: node_modules, workflows, Makefiles, package.json and extensionless scripts included.
+// CheckJournalWriters walks repoRoot and reports every line, in every file outside the kernel
+// directory kernelRel except regular docs/**/*.md files, that names the Journal, whatever the file's
+// name, extension or encoding: node_modules, workflows, Makefiles, package.json, extensionless
+// scripts and binaries included.
 // Only the Kernel writes the Journal and Userland reaches it through the command socket (09a §2),
 // so outside kernel/ there is no reason to name it; any reference is a finding. A symlink is
 // resolved: its target text is checked, and a file behind it is read.
@@ -112,9 +117,9 @@ func CheckJournalWriters(repoRoot, kernelRel string) ([]Finding, error) {
 	kernelRel = filepath.ToSlash(filepath.Clean(kernelRel))
 	var findings []Finding
 	scan := func(rel string, src []byte) error {
-		if bytes.IndexByte(src[:min(len(src), 8000)], 0) >= 0 {
-			return nil // binary, by git's own test
-		}
+		// Every file's raw bytes, binary or not. NUL bytes are dropped first, so UTF-16 text
+		// ("j\x00o\x00…") reads as the ASCII it spells; newlines survive, so line numbers hold.
+		src = bytes.ReplaceAll(src, []byte{0}, nil)
 		sc := bufio.NewScanner(bytes.NewReader(src))
 		sc.Buffer(nil, len(src)+1)
 		for n := 1; sc.Scan(); n++ {
@@ -143,7 +148,7 @@ func CheckJournalWriters(repoRoot, kernelRel string) ([]Finding, error) {
 			if p == repoRoot {
 				return nil
 			}
-			if rel == kernelRel || isProse(rel) {
+			if rel == kernelRel {
 				return filepath.SkipDir
 			}
 			if _, err := os.Lstat(filepath.Join(p, ".git")); err == nil {
@@ -179,6 +184,8 @@ func CheckJournalWriters(repoRoot, kernelRel string) ([]Finding, error) {
 			}
 		} else if !d.Type().IsRegular() {
 			return nil
+		} else if isProse(rel) {
+			return nil // a regular docs/**/*.md file; a symlink named .md is never exempt
 		}
 		src, err := os.ReadFile(p)
 		if err != nil {
@@ -203,11 +210,7 @@ func leavesRoot(root, p string) (bool, error) {
 	return err != nil || !filepath.IsLocal(rel), nil
 }
 
+// isProse reports whether rel (slash-separated) matches docs/**/*.md.
 func isProse(rel string) bool {
-	for _, d := range ProseDirs {
-		if rel == d {
-			return true
-		}
-	}
-	return false
+	return strings.HasPrefix(rel, ProseRoot+"/") && strings.HasSuffix(rel, ProseExt)
 }

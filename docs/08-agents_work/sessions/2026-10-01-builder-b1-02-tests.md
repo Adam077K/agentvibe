@@ -3,7 +3,7 @@ role: builder
 task: b1-02-tests
 branch: build/b1-02-tests
 tier: lite
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 B1-02 done-tests frozen for the Go half only: kernel/internal/nouns/nouns.go is the unregistered stub contract; nouns_donetest_test.go plus testdata/nouns/{valid,invalid,decisions}.json are registered in build/done-tests/B1-02.yml. `node build/check-done-tests.mjs` gives 10 hashes in 3 registers, exit 0; avk-boundary exit 0.
 Red: `go -C kernel test -count=1 -tags donetest ./internal/nouns/` gives 6 of 6 top-level FAIL, every one on ErrNotImplemented and none on a fixture error.
