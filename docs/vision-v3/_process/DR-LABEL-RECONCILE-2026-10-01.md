@@ -39,9 +39,9 @@ builder did not see the exchange itself. Each one replaces an item that was OPEN
 2. **`permission: data_only` → `informs`.** The data may shape a decision and never authorises an action (founder,
    2026-10-01). Scenario A step 1 and the Pain Index example now carry `permission: informs`.
 3. **Every HumanTask kind, `participant` included, → `counterparty`**, the same as every outside person (founder,
-   2026-10-01). The broker case at `13:587` already agreed.
+   2026-10-01). The broker case at `13:587` already agreed. *Narrowed by C below.*
 4. **On other channels (email, forms), origin follows the author.** An outside person is `counterparty`. The founder
-   and the founder's agents are `internal` (founder, 2026-10-01).
+   and the founder's agents are `internal` (founder, 2026-10-01). *Amended by A below.*
 5. **`taint` keeps `clean` · `untrusted` · `quarantined`** (founder, 2026-10-01). The contradicting comment at `06:99`
    now says `quarantined_at` records when quarantine was set. The §8 Quarantine row also sets `taint: quarantined`.
 6. **`PrincipalRef = {id, role}`** (founder, 2026-10-01).
@@ -60,16 +60,43 @@ data changed two `LabelV1` field types:
 
 The schema stays `label/1`, because no `label/1` reader has shipped yet. B1-26 is that reader.
 
+## Founder decisions, round 2 (founder, 2026-10-01)
+
+The orchestrator relayed these after the round-3 review passed at `a1eeed7`. They answer the two OPEN items raised at
+`a1eeed7` and one more.
+
+- **A. The founder's own messages, email included, keep `origin: founder`** (founder, 2026-10-01). They therefore keep
+  `may_authorise` under L5 (`06:179`). Decision 4 now reads as follows, on every channel and not only in 09a's
+  collaborator row:
+  - an outside person is `counterparty`;
+  - the founder is `founder`;
+  - the founder's agents and collaborators are `internal`.
+- **B. Taste-panel transcripts are `counterparty`** (founder, 2026-10-01). 16 makes taste panels `participant`
+  HumanTasks (16 §13, "Participant protocol"). `06:457`, which said `origin: customer`, is changed.
+- **C. A HumanTask the founder does himself is `founder`** (founder, 2026-10-01). An example is the key rotation in
+  `13:1391`. Only an outside person's HumanTask is `counterparty`.
+
+## Decided from the canon: the join (review p2)
+
+- **Provenance is not joined.** `author` and `human_principal` describe the output itself: the job that produced it,
+  and a human only when one supplied it. The inputs stay reachable through `provenance.derived_from`.
+  - Basis: `06:103` defines `derived_from` as "record ids → transitive labels".
+  - Basis: `06:105` defines `human_principal` as "who supplied it, when a human did".
+  - Basis: L6 already walks `derived_from` for the quarantine cascade (`06:180`).
+- This is written into 09a §12's Join bullet and 06's L1.
+
 ## OPEN
 
-None of the seven items from `44f3136` remain open. These new questions came out of applying the decisions:
+All seven items from `44f3136` and both items from `a1eeed7` are closed. Two remain:
 
-1. **How far decision 4 reaches.** It is applied only inside 09a's collaborator/contractor row. The `founder` and
-   `customer` origins elsewhere are unchanged. If it is meant generally, two cases change: a founder-authored email
-   would become `internal` and could no longer reach L5's `may_authorise`, and a customer email (`13:927`) would
-   become `counterparty`.
-2. **Panels against decision 3.** `06:457` labels panel transcripts `origin: customer`, while 16 lists `taste_panel`
-   as a HumanTask kind (`16:556`). Under decision 3 they would be `counterparty`. Not changed here.
+1. **A customer's own messages: `customer` or `counterparty`?** The `customer` origin exists in the wire, and `13:927`
+   uses it for a customer email. Decision A's "outsiders are `counterparty`" could also cover customers. Decision B
+   settles panels only.
+2. **How `confidence` combines in a join.** The canon gives no rule.
+   - `06:126` caps twin output at E2, for one origin only.
+   - `06:127` says a settled citation "may raise its rung". That suggests the rung is assessed on each record rather
+     than inherited.
+   - A minimum-rung join was suggested in review. It is not adopted, because nothing in the canon supports it.
 
 ## Not done (out of scope, mapping already decided)
 

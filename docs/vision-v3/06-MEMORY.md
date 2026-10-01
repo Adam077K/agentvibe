@@ -177,7 +177,7 @@ in [09a §12](09a-ENGINEERING.md#12-labels--the-mechanics).
 
 | # | Label law | Stops |
 |---|---|---|
-| L1 | **Transitive over data *and* control dependencies** — output label = join of every input read, including inputs that only chose which branch ran | A clean-looking summary of a tainted email |
+| L1 | **Transitive over data *and* control dependencies** — output label = join of every input read, including inputs that only chose which branch ran. Provenance is the output's own, and inputs are reached through `derived_from` (09a §12). How confidence combines is OPEN | A clean-looking summary of a tainted email |
 | L2 | **Confidence, provenance and permission are three fields**; an E4 fact may still carry a `permission` below `may_authorise` | "Well evidenced, so it may act" |
 | L3 | **Citation never declassifies** — settling, citing or repeating raises `utility` and may raise the rung of *our use*; it never changes `taint`, `permission` or the source's authority [DR-40, B16] | X01's quiet authority growth |
 | L4 | **Declassify only by independent re-derivation** from an independently authorised source through Acceptance's observation broker — never a paraphrase | Laundering by rewording |
@@ -459,8 +459,8 @@ only view the Portfolio Mind reads — and that Mind reads are use-tracked like 
 **The portfolio store** holds only what may cross venture lines: priors, lessons, escrow, board summaries, Portfolio Mind,
 the Pain Index, the **portfolio uncertainty map** (open Questions across ventures ranked by value of information — one bet
 answers two ventures' shared unknown, and the Airlock carries the answer), and each venture's **customer panel** data
-behind its own boundary [R3-X U7]. Panel transcripts are `origin: customer, dclass: D2`, carry consent scope on the
-label, calibrate the twin, and cross the Airlock only as grammar lessons.
+behind its own boundary [R3-X U7]. Panel transcripts are `origin: counterparty, dclass: D2` (taste panels are `participant` HumanTasks,
+[16 §13](16-EXTERNAL-WORLD-HUMANS.md); founder, 2026-10-01), carry consent scope on the label, calibrate the twin, and cross the Airlock only as grammar lessons.
 
 **Human-subject data — participant labels** [G-B3]. Data from a study's participants carries, on every record and
 derivative: a `subjects` entry typed `participant` (linked to the participant's protocol record), `dclass: D2`,

@@ -631,7 +631,7 @@ type PrincipalRef = {
 | `data_class: confidential` | `dclass: D3` (client / NDA material) — boundary unchanged, set by the Charter |
 | `data_class: sealed` | `dclass: D3` **and** `boundary: sealed` — a classification plus a boundary, never one field |
 | `origin: founder · system_of_record · internal · public_web · customer · counterparty · synthetic` | same name |
-| a collaborator's or contractor's contribution | origin is set by the channel and its author, and `provenance.human_principal` records the person (founder, 2026-10-01). A HumanTask of any kind ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), `participant` included, is `counterparty`, as the broker's corrections in [13](13-WORKED-SCENARIOS.md) already are. On any other channel (email, a form) the author decides: an outside person is `counterparty`, and the founder or the founder's agents are `internal` |
+| a person's contribution, on any channel (HumanTask, email, form, Room) | origin follows the author, and `provenance.human_principal` records the person (founder, 2026-10-01). The founder → `founder`, so the founder's own messages, email included, keep `may_authorise` under 06's L5. A HumanTask the founder does himself is also `founder`. The founder's agents and collaborators → `internal`. An outside person → `counterparty`, which covers every HumanTask an outside person does. That includes `participant` tasks and taste panels ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), and the broker's corrections in [13](13-WORKED-SCENARIOS.md) already follow it. **OPEN**: whether a customer's own messages are `customer` or `counterparty` ([DR-LABEL-RECONCILE](_process/DR-LABEL-RECONCILE-2026-10-01.md)) |
 | `consent_scope` | same name (participant and panel data only) |
 | `taint: clean · untrusted · quarantined` | same name |
 | `authority: none · informs · may_authorise` | `permission`, same values |
@@ -664,6 +664,9 @@ so a reader of an older record or document has exactly one wire value for each. 
 - **Join.** A job's label is the join of every Launch Pack input; outputs inherit it; derivation from a tainted fact
   taints — over **control** dependencies too (a plan chosen because of an email is tainted even with clean
   parameters) [R3-red X01].
+  **Provenance is not joined.** `author` and `human_principal` describe the output itself: its producing job, and a
+  human only when one supplied it. The inputs stay reachable through `provenance.derived_from`, which 06 §3 defines as
+  "record ids → transitive labels". How `confidence` combines across inputs is **OPEN** ([DR-LABEL-RECONCILE](_process/DR-LABEL-RECONCILE-2026-10-01.md)).
 - **Quarantined reader.** Untrusted content is read by an I3 job with no effect grants that returns typed fields
   (amounts, dates, intents, quoted spans); the planner acts on fields, never on raw text in an authorising position
   [S12 §2.10; S13 §2.10].
