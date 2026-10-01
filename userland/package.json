@@ -4,11 +4,13 @@
   "private": true,
   "description": "Userland (avd): TypeScript on Node 24 (docs/vision-v3/09a-ENGINEERING.md §2)",
   "type": "module",
+  "packageManager": "pnpm@9.12.3",
   "engines": {
     "node": ">=24"
   },
   "scripts": {
-    "test:donetest": "node --test test/*.donetest.test.ts"
+    "test:donetest": "node --test test/*.donetest.test.ts",
+    "test:unit": "node --test test/nouns.test.ts"
   },
   "dependencies": {
     "zod": "4.6.5"
