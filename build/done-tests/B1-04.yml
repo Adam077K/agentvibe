@@ -1,0 +1,34 @@
+# Done-test register, B1-04 (docs/vision-v3/14-BUILD-PLAN.md §6 row B1-04, "Leases + storage
+# fencing: all-or-nothing, wound-wait, deadlock detector, hot resources, pre-receive verifier";
+# acceptance "SP2 B0-greedy + drill fixtures nightly; stale holder rejected by storage; touched ≠
+# declared → refused"). Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run: go -C kernel test -count=1 -tags donetest -run B1_04 ./internal/lease/
+# Frozen red against ErrNotImplemented on 2026-10-01: 7 of 7 tests fail. kernel/internal/lease/fence.go
+# is NOT registered: it is the interface the job implements (the B0-17 pattern). The job:// claim is
+# B1-05's (B0-17a.yml) and is not re-tested here.
+#
+# The two SP2 fixtures are registered because they are the acceptance data: they are ported from
+# spikes/collision at commit 2162926 (branch vision/v3-sp2-collision; not on this base) — the
+# declared footprints of armB.mjs, the B0-greedy grant trace, the B0 and B0-drill receipts' touched
+# sets, and the drill's 7 refused resources. The Go port replays them against the Coordinator and
+# Verifier; it does not run git or the canned workers.
+#
+# Reachability: a throwaway reference implementation (in $TMPDIR, not committed) passes 7 of 7,
+# -race -count=3. Ten mutants, each killed by at least one test: keep free resources while waiting,
+# wait-die, oldest victim, detector that does not revoke, verifier trusting the token, verifier
+# ignoring the holder, token >= current, undeclared ignored, glob as bare prefix, wound-wait as
+# plain all-or-nothing.
+#
+# Not frozen here: hot-resource auto-addition, "nightly" scheduling, renew/max_wait, and verifiers
+# other than repo:// (see fence.go).
+register: B1-04
+jobs:
+  - id: B1-04
+    files:
+      - path: kernel/internal/lease/fence_donetest_test.go
+        sha256: a5f321f0b52266cb774d9a8d8ceb1d224435a06f991a140faf0a8d07763362f4
+      - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
+        sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
+      - path: kernel/internal/lease/testdata/sp2/b0-drill.json
+        sha256: 935a435335994e10af5ceca588999de6c69cd9ef12a5bb4d65252be27e9dd19c
