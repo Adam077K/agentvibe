@@ -21,8 +21,10 @@ The principle is default-deny on what the checker cannot see:
 - **Size:** at most 8,000 lines (`-max-lines`) of `.go` outside `_test.go` files. That covers every
   directory, including `testdata`, `_` and `.` directories and anything behind a link.
 - **Journal:** no file outside `kernel/` names the Journal (`internal/journal.Path`). The scan
-  covers every non-binary file whatever its name, case-insensitively. It matches the file name, the
-  directory as separate tokens, and globs aimed at it. Only `docs/` is exempt, as prose.
+  covers every file whatever its name or encoding: raw bytes, with NULs dropped so UTF-16 reads.
+  It is case-insensitive and matches the file name, the directory as separate tokens, and globs
+  aimed at it. Only regular `docs/**/*.md` files are exempt, as prose; a script under `docs/` is
+  scanned.
 
 **The Journal scan is a tripwire, not the boundary.** A path assembled at run time from pieces that
 never spell a token defeats any static scan. What actually keeps Userland out is the OS: the Journal
