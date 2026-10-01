@@ -189,3 +189,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **DECISION — I-JSON integers everywhere.** Integers outside ±(2^53−1) are refused anywhere on the wire, raw fields
   included, in both languages. Userland gains a text entry point whose JSON.parse reviver reads `context.source`;
   Go scans raw fields with UseNumber. Both builders fixing.
+- **B1-02 Go fix round 1** — `build/b1-02-go` @ a4bb380: exact-case keys, duplicate/case-variant keys refused at any
+  depth, I-JSON integers refused everywhere incl. raw data. **Review round 2 PASS** (probes refused, no
+  over-refusal, mutants killed except one judged equivalent by reasoning, not run).
+- **DECISION — unsafe integers are judged by exact value, not notation.** `9007199254740993.0`, `9.007199254740993e15`
+  and `1e300` are refused like `9007199254740993`; 1.5 stays accepted. Small follow-up on both halves.
