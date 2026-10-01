@@ -92,7 +92,7 @@ Nine kinds, one envelope. Free text exists only as staging material inside depos
 type RecordEnvelope = {
   id: string;                                   // ULID, stable across versions
   kind: 'entity'|'fact'|'explanation'|'question'|'decision'|'obligation'|'prior'|'null'|'lesson';
-  venture: string | 'portfolio' | 'founder';           // 'founder' = founder memory (§12); LabelV1.venture has no 'founder' value: OPEN, see 09a §12 06 → wire
+  venture: string | 'portfolio' | 'founder';           // 'founder' = founder memory (§12); the label carries the same value
   valid_from: string;  valid_to: string | null;         // world time
   recorded_at: string; invalidated_at: string | null;   // system time  (bi-temporal, natively in files)
   supersedes?: string[]; superseded_by?: string;
@@ -156,7 +156,7 @@ type Label = {                                      // field for field 09a §12 
                                                     // a human supplier → provenance.human_principal, never an origin
   dclass: 'D0'|'D1'|'D2'|'D3'|'D4';                 // classification: what the datum is (09a §11)
   boundary: 'open'|'guarded'|'sealed';              // what may leave the venture (§10); set by the Charter, rides the datum
-  venture: VentureId | 'portfolio';
+  venture: VentureId | 'portfolio' | 'founder';    // 'founder' = the founder's own data, not one venture's (§12)
   retention: { class: 'journal_metadata'|'operational'|'personal'|'client'|'synthetic';  // storage lifetime (09a §11.6)
                hold: 'none'|'obligation'|'legal'|'safety'|'pinned';                       // which forgetting verbs may touch it (§8)
                deadline?: string };                 // when one is due; never implied by class or hold (§8)

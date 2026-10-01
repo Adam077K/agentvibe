@@ -100,19 +100,22 @@ The orchestrator relayed these. They answer the two items that were OPEN at `277
   `06:127` already allows a settled citation to raise a rung.
   - This is written into 09a §12's Join bullet and 06's L1.
 
+## Founder decisions, round 4 (founder, 2026-10-01)
+
+The orchestrator relayed these. They answer the three items that the final review at `0b372b0` left OPEN.
+
+- **G. `LabelV1.venture` also allows `'founder'`** (founder, 2026-10-01). It covers data that belongs to the
+  founder rather than to one venture, such as founder memory (06 §12). This is a wire change inside `label/1`, which
+  is safe because no reader has shipped yet.
+- **H. The human co-founder, advisor and investor take `role: collaborator`** (founder, 2026-10-01). Those are
+  16 §12's other Principals (`16:518-531`). No new role is added.
+- **I. Anyone writing on a customer's behalf gets `origin: customer`** (founder, 2026-10-01). An example is the
+  customer's accountant in `13:927`, identified at `13:866`.
+
 ## OPEN
 
-Every item raised at `44f3136`, `a1eeed7` and `2777a0d` is closed. The final review at `0b372b0` surfaced three that
-the canon cannot settle:
-
-1. **`venture: 'founder'`.** The 06 §3 envelope allows `venture: 'founder'` for founder memory (06 §12), but
-   `LabelV1.venture` is `VentureId | 'portfolio'`. So a founder-memory record's label has no valid venture. Fixing it
-   means adding `'founder'` to the wire or choosing another value, and that is a wire decision.
-2. **Which other 16 §12 Principals are collaborators.** The rule names `role: collaborator` as `internal` and treats
-   contractors and customers as outside people. 16 §12 also lists a human co-founder, an advisor and an investor
-   (`16:518-531`), and their `role` is not decided.
-3. **A customer's agent or adviser.** `13:927` labels an email from a customer's accountant (`13:866`)
-   `origin: customer`. E does not say whether someone acting for a customer is `customer` or `counterparty`.
+None. Every item raised at `44f3136`, `a1eeed7`, `2777a0d` and `0b372b0` is closed, either by the canon or by a
+founder decision recorded above.
 
 **06 §8 retention wording: resolved, not open.** §8 now says the hold picks the verbs, which matches §4 and 09a §12's
 mapping rows. The canon did not truly conflict; §8 still had the pre-DR-68 names.
