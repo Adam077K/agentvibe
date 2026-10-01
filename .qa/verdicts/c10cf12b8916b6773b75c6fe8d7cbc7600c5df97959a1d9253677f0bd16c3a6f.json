@@ -1,0 +1,11 @@
+{
+  "subject": "c10cf12b8916b6773b75c6fe8d7cbc7600c5df97959a1d9253677f0bd16c3a6f",
+  "base": "afbb2de43e5b87fb7e7093938fef20eaa898c2cb",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B0-17a.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B1-05 Opus reviewer round 3 PASS at 28c3a09; founder ordered the merge 2026-10-01",
+  "recorded_at": "2026-10-01T14:53:31.752Z"
+}
