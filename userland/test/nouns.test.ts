@@ -225,6 +225,63 @@ test('p1 r2: parseWire keeps an own __proto__ key and refuses text that is not J
   assert.throws(() => (nouns as any).parseWire('{"a":'), SyntaxError);
 });
 
+// Review round 2 extension: the rule is by exact VALUE of the source literal, not its notation.
+test('p1 r2 ext: an integer-valued literal past 2^53-1 is refused in any notation', async (t) => {
+  for (const lit of ['9007199254740993.0', '9.007199254740993e15', '1e300', '-9.007199254740993E+15', '90071992547409930e-1']) {
+    await t.test(lit, () => {
+      const text = withLiteral('event.full', ['data'], `{"n":${lit}}`);
+      assert.throws(() => (nouns as any).decodeText(nouns.Event, text),
+        (e: Error) => e.name === 'WireError' && e.message.includes(`${lit} at key "n" is an integer outside`),
+        'want a WireError that classifies the literal, by its exact value, as an unsafe integer');
+    });
+  }
+});
+
+test('p1 r2 ext: a non-integer literal, and a safe integer in any notation, is accepted', async (t) => {
+  for (const lit of ['1.5', '1.5e-3', '9007199254740991.0', '9.007199254740991e15', '0.0', '-0e5', '1e-300']) {
+    await t.test(lit, () => {
+      const text = withLiteral('event.full', ['data'], `{"n":${lit}}`);
+      const out: any = (nouns as any).decodeText(nouns.Event, text);
+      assert.equal(out.data.n, Number(lit));
+    });
+  }
+});
+
+test('p1 r2 ext: the exact decision never materialises a huge number', async (t) => {
+  const cases: [string, boolean][] = [
+    ['1e99999999999999999999', false],
+    ['1e-99999999999999999999', true],
+    ['9007199254740992e0', false],
+    ['90071992547409910e-1', true],
+    ['9007199254740991e0', true],
+    ['900719925474099.2e1', false], // 9007199254740992
+    ['900719925474099.10e1', true], // 9007199254740991
+    ['9007199254740991000e-3', true],
+    ['9007199254740991001e-3', true], // 9007199254740991.001: not an integer, and its double is safe
+    ['1e15', true],
+    ['1e16', false],
+    ['-1e' + '9'.repeat(100000), false],
+    ['1e-' + '9'.repeat(100000), true],
+  ];
+  for (const [lit, accepted] of cases) {
+    await t.test(`${lit.length > 40 ? lit.slice(0, 20) + '…(' + lit.length + ' chars)' : lit} ${accepted ? 'accepted' : 'refused'}`, () => {
+      const text = withLiteral('event.full', ['data'], `{"n":${lit}}`);
+      const t0 = performance.now();
+      const r = (() => { try { (nouns as any).decodeText(nouns.Event, text); return true; } catch (e) { if ((e as Error).name !== 'WireError') throw e; return false; } })();
+      const ms = performance.now() - t0;
+      assert.equal(r, accepted);
+      assert.ok(ms < 200, `took ${ms.toFixed(1)}ms`);
+    });
+  }
+});
+
+test('p1 r2 ext: a non-integer that reads past 2^53-1 is refused by the value rule', () => {
+  // 9007199254740993.5 is not an integer, but JSON.parse reads it as 9007199254740994, which would
+  // re-encode as different bytes. Stricter than the integer rule alone; recorded in the session file.
+  const text = withLiteral('event.full', ['data'], '{"n":9007199254740993.5}');
+  assert.throws(() => (nouns as any).decodeText(nouns.Event, text), (e: Error) => e.name === 'WireError');
+});
+
 // Review round 2, finding low: decode returned (parts of) its input itself, and a value that is not
 // a plain JSON tree passed. Decode now returns a fresh value and refuses the rest.
 

@@ -109,8 +109,41 @@ function isSafeWireNumber(v: number): boolean {
   return Number.isFinite(v) && (!Number.isInteger(v) || Number.isSafeInteger(v));
 }
 
-const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
-const INTEGER_TEXT = /^-?(?:0|[1-9][0-9]*)$/;
+const NUMBER_TEXT = /^-?(0|[1-9][0-9]*)(?:\.([0-9]+))?(?:[eE]([+-]?[0-9]+))?$/;
+
+const MAX_SAFE_DIGITS = String(Number.MAX_SAFE_INTEGER); // "9007199254740991", 16 digits
+
+// isUnsafeIntegerLiteral decides from a JSON number's SOURCE TEXT, by exact value and not notation,
+// whether it is an integer of magnitude > 2^53-1. It never materialises the value: the literal is
+// normalised to core digits (no leading or trailing zero) x 10^exp, which is an integer exactly when
+// exp >= 0, and then compared with 9007199254740991 by digit count and, at equal count, as digit
+// strings. Only safe Numbers and strings no longer than 16 digits are built, so
+// 1e99999999999999999999 costs what 1e9 costs (a BigInt of mantissa x 10^exp would not).
+// Unsafe integers: 9007199254740993.0, 9.007199254740993e15, 9007199254740992e0, 1e300.
+// Not: 1.5, 1.5e-3, 9007199254740991.0, 90071992547409910e-1, 1e-99999999999999999999.
+function isUnsafeIntegerLiteral(source: string): boolean {
+  const m = NUMBER_TEXT.exec(source);
+  if (m === null) return true; // not a JSON number literal: JSON.parse never hands us one
+  const frac = m[2] ?? '';
+  const digits = (m[1] + frac).replace(/^0+/, '');
+  if (digits === '') return false; // zero, in any spelling
+  const core = digits.replace(/0+$/, '');
+  // exp = written exponent - fraction length + trailing zeros. The last two are bounded by the source
+  // length; the written exponent is not, so read it as text first.
+  const written = m[3] ?? '0';
+  const negative = written.startsWith('-');
+  const magnitude = written.replace(/^[+-]/, '').replace(/^0+/, '') || '0';
+  const shift = digits.length - core.length - frac.length; // |shift| <= source length
+  if (magnitude.length > 15) {
+    // |written exponent| >= 10^15 dwarfs any shift a real source can carry: the sign decides.
+    return !negative; // hugely positive: an integer with far more than 16 digits; negative: a fraction
+  }
+  const exp = (negative ? -Number(magnitude) : Number(magnitude)) + shift; // a safe integer
+  if (exp < 0) return false; // a last digit that is not 0 sits after the point: not an integer
+  const count = core.length + exp; // the integer's digit count
+  if (count !== MAX_SAFE_DIGITS.length) return count > MAX_SAFE_DIGITS.length;
+  return core + '0'.repeat(exp) > MAX_SAFE_DIGITS; // equal length: digit strings compare as values
+}
 
 // WireError: the JSON text breaks a wire rule that JSON.parse's result could no longer show.
 export class WireError extends Error {
@@ -134,13 +167,15 @@ export function parseWire(text: string): unknown {
       // Without the source text the rounding is invisible; refuse to pretend otherwise.
       throw new WireError('JSON.parse reviver context.source is unavailable in this runtime (Node >= 21)');
     }
-    if (INTEGER_TEXT.test(source)) {
-      const n = BigInt(source);
-      if (n > MAX_SAFE || n < -MAX_SAFE) {
-        throw new WireError(`integer ${source} at key ${JSON.stringify(key)} is outside ±(2^53-1)`);
-      }
-    } else if (!isSafeWireNumber(value)) {
-      throw new WireError(`number ${source} at key ${JSON.stringify(key)} is outside ±(2^53-1)`);
+    if (isUnsafeIntegerLiteral(source)) {
+      throw new WireError(`${source} at key ${JSON.stringify(key)} is an integer outside ±(2^53-1)`);
+    }
+    // A NON-integer literal can still parse to a double past 2^53-1 (9007199254740993.5 reads as
+    // 9007199254740994; every double that large is an integer), and its re-encoded text would then
+    // differ from the bytes read. The value rule (isSafeWireNumber) refuses it here, as the object
+    // path would. This is stricter than "refuse unsafe integers" alone; see the session file.
+    if (!isSafeWireNumber(value)) {
+      throw new WireError(`${source} at key ${JSON.stringify(key)} reads as ${value}, outside ±(2^53-1)`);
     }
     return value;
   });
