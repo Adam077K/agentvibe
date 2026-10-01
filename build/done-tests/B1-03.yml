@@ -59,6 +59,22 @@
 # 0o066 Journal or sidecar is refused (O_RDONLY open, EACCES) where socket.go says narrowed. Untested,
 # recorded only: files.go removes the socket path on a failed post-link check without proving it is
 # ours; MaxConns x MaxLine lets clients make the Kernel buffer ~1-2 GiB.
+#
+# RE-FREEZE r4 2026-10-01: 2026-10-01 re-freeze r4. Added kernel/internal/socket/socket_r4_donetest_test.go;
+# rounds 1-3 unchanged (hashes identical). Base ec1a2a0. Mutants run in $TMPDIR copies; every
+# pre-existing test let all four through. Killed:
+#   R4-M1 Fchmodat flags 0 (follows symlinks)      -> OwnerUnreadableSidecarRaceNotFollowed (5/5)
+#   R4-M2 removal check forced false              -> RefusedSocketLeavesNothingBehind (UserlandGID -1)
+#   R4-M4 owner-unreadable path narrows to 0o644  -> OwnerUnreadableNeverExposed (5/5)
+# NOT killed, with reasons:
+#   R4-M2 removal check forced true: needs an intruder swapped in between link(2) and the removal,
+#     a window of a few syscalls; no deterministic hook through Serve.
+#   R4-M3 owner check deleted: equivalent for a non-root Kernel (fchmodat on a file it does not
+#     own fails EPERM, so Serve refuses either way); as root, open never returns EACCES, so the
+#     branch is unreachable. Not observable through Serve.
+# NEEDS RATIFICATION (review low, files.go:117): an Lstat error other than not-exist is treated as
+# success. Not reachable through Serve: the only way to make open fail EACCES and Lstat fail for the
+# same name is an unsearchable directory, and createJournal fails there first. No test added.
 register: B1-03
 jobs:
   - id: B1-03
@@ -71,3 +87,5 @@ jobs:
         sha256: e117dd8558415481c3913cd9413f7951bd88bcf63120dae81fab26d0e53e64aa
       - path: kernel/internal/socket/socket_r3_donetest_test.go
         sha256: 3e0307e2cc2d0d286c832b7185cfb104ea32e8d138800accf0d031aaf6a1e05a
+      - path: kernel/internal/socket/socket_r4_donetest_test.go
+        sha256: 0e85d8663f3fbd26d53aaf89d795e8c4f3ace92d71aca0dee3059442970b3344
