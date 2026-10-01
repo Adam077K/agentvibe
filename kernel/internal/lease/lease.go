@@ -33,8 +33,8 @@ import (
 	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
 
-// ErrNotImplemented was returned by New before B1-05 landed. Nothing returns it now; it stays so
-// the frozen contract's exported surface does not shrink.
+// ErrNotImplemented was returned by New before B1-05 landed. Until B1-04 lands, NewCoordinator and
+// NewRepoVerifier (fence.go) return it.
 var ErrNotImplemented = errors.New("lease: not implemented")
 
 // ErrHeld: the job is claimed by a live lease another runner holds. Nothing is written.
