@@ -29,8 +29,8 @@
 //   - Every other integer is a JSON number held to the JavaScript safe range (z.int()). A uint64 in Go
 //     (Event.seq, Label.revocation_epoch) is >= 0 here; nothing else gets a bound nouns.go does not state.
 //   - A type the canon names but does not define (Actor, Rationale, Target, Budget, TokenSet,
-//     SourceRef, Event.data) is any JSON value (z.json()): required where 09a §3 requires it, and
-//     otherwise unchecked, as nouns.go says.
+//     SourceRef, Event.data) is any JSON value, passed through uncopied (see Raw): required where
+//     09a §3 requires it, and otherwise unchecked, as nouns.go says.
 //   - A ULID (Event.id, Event.causation_id) is held to the *Id rule, non-empty, and no further: the
 //     wire rules state no ULID syntax check.
 import { z } from 'zod';
@@ -84,8 +84,54 @@ const Hex = z.string().regex(/^[0-9a-f]{64}$/);
 // Every *Id and *Ref type is a non-empty string.
 const Id = z.string().min(1);
 
-// A type the canon names but does not define: any JSON value, carried unchecked.
-const Raw = z.json();
+// isJsonValue reports whether v is a value JSON.parse could have produced: null, a boolean, a string,
+// a finite number, an array of JSON values, or a plain object (prototype Object.prototype or null)
+// whose own string keys hold JSON values. It reads and never copies, so it cannot lose a key.
+function isJsonValue(v: unknown, path: Set<object> = new Set()): boolean {
+  if (v === null || typeof v === 'boolean' || typeof v === 'string') return true;
+  if (typeof v === 'number') return Number.isFinite(v);
+  if (typeof v !== 'object') return false; // undefined, bigint, function, symbol
+  if (path.has(v)) return false; // a cycle has no JSON text
+  path.add(v);
+  try {
+    if (Array.isArray(v)) return v.every((x) => isJsonValue(x, path));
+    const proto = Object.getPrototypeOf(v);
+    if (proto !== Object.prototype && proto !== null) return false; // Date, Map, class instances
+    if (Object.getOwnPropertySymbols(v).length > 0) return false;
+    // An own "__proto__" key (JSON.parse creates one) is a plain data property here: indexing reads
+    // the own value, which shadows the Object.prototype accessor.
+    return Object.keys(v).every((k) => isJsonValue((v as Record<string, unknown>)[k], path));
+  } finally {
+    path.delete(v);
+  }
+}
+
+// A type the canon names but does not define: any JSON value, carried unchecked, and carried AS IS.
+// Decode returns the very value it was given, not a rebuilt copy. A rebuilt copy is how a key is
+// lost: z.json() reconstructs each object by assignment, and assigning "__proto__" sets a prototype
+// rather than a key, so {"__proto__":{…}} decoded to {} where Go's json.RawMessage keeps the bytes.
+// The JSON Schema of a required raw field is {}: any JSON value.
+const Raw = z.unknown().refine((v) => isJsonValue(v), { message: 'not a JSON value' });
+
+// An OPTIONAL raw field (Event.rationale) obeys the optional-field rule as well: absent when unset,
+// never null or "". The refinement is invisible to z.toJSONSchema, so the same rule is stated for
+// the emitted schema in .meta(), whose keys z.toJSONSchema merges into the field's schema; the unit
+// test checks the two agree.
+const OptionalRaw = z
+  .unknown()
+  .refine((v) => isJsonValue(v) && v !== null && v !== '', {
+    message: 'an optional field is absent when unset, never null or ""',
+  })
+  .meta({
+    anyOf: [
+      { type: 'string', minLength: 1 },
+      { type: 'number' },
+      { type: 'boolean' },
+      { type: 'array' },
+      { type: 'object' },
+    ],
+  })
+  .optional();
 
 const Uint = z.int().min(0);
 
@@ -120,7 +166,7 @@ export const Event = z.strictObject({
   correlation_id: Id,
   causation_id: Id.optional(),
   label: Label,
-  rationale: Raw.optional(),
+  rationale: OptionalRaw,
   snapshot_ref: Id.optional(),
   schema: z.int().min(1),
   data: Raw,
