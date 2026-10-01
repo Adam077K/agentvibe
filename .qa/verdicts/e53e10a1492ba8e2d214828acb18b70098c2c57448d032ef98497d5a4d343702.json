@@ -1,0 +1,11 @@
+{
+  "subject": "e53e10a1492ba8e2d214828acb18b70098c2c57448d032ef98497d5a4d343702",
+  "base": "2d89879965c2f0884234ee251be58561e78622ce",
+  "tier": "lite",
+  "tier_driver": "build/check-done-tests.mjs",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B0-17 reviewers (Opus, not the builders): B0-17a FAIL then PASS at 00df1bd; B0-17b FAIL then PASS at ac872ea; founder approved 2026-10-01",
+  "recorded_at": "2026-10-01T10:15:54.317Z"
+}
