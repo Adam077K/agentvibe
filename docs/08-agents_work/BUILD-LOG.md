@@ -226,3 +226,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   which diffs main against itself and records an empty-diff subject (`e3b0c442…`, the sha256 of nothing). The
   default `--ref` is HEAD, which is correct; the flag is removed from the handoff. A wrong file was created once and
   deleted before any commit.
+| 2026-10-01 | B0-19 | #146 → main (2d89879) | secret scanner + RequireScanned; verdict recorded by the founder, CI + QA green | B1-08 wires the gate; Codex re-review owed |
+- **#147 brought up to `main` after #146** (23da862); session file flipped. Waiting on the founder's verdict command.
+- **B1-04 tests — reviewer PASS at 30471a9**, with gaps to close before implementation: the mixed wound-wait case,
+  release/replace of a wait, and exact SP2 drill refusals. Test author strengthening. Follow-ups (not in this job):
+  verifier has no clock, so an expired unre-acquired token is still accepted (09a:287); hot-resource auto-add API;
+  glob-vs-symbol overlap; nightly wiring; non-`repo://` verifiers; `max_wait` placement (09a:270).
