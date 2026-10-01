@@ -126,7 +126,7 @@ External content enters at **E0–E1 as quoted sources**, never as a Standing Or
 output is capped at **E2** with `origin: synthetic` and the synthetic retention class for life [S09 §2.3]. Memory imported
 from the founder's existing repos starts at **E1**; a settled mission's citation may raise its rung, never its taint or
 permission. **Citation raises confidence in our use of a source — never the source's taint or authority.** Public or
-untrusted evidence stays `tainted` however often, and however decisively, it is cited [DR-40, B16]. Material a human
+untrusted evidence keeps `taint: untrusted` however often, and however decisively, it is cited [DR-40, B16]. Material a human
 supplies (a contractor's notes, a participant's answers) keeps an existing origin and records the human in
 `provenance.human_principal`; there is no separate human origin [DR-68].
 
@@ -154,29 +154,38 @@ become a D-class plus `boundary`) is published in [09a §12](09a-ENGINEERING.md#
 permission, taint and origin.
 
 ```ts
-type Label = {                                      // wire names per 09a §12; meanings below
-  origin: 'founder'|'system'|'worker'|'web'|'customer'|'counterparty'|'collaborator'|'synthetic';
-                                                    // 'system' = a system of record; humans → provenance.human_principal
+type Label = {                                      // field for field 09a §12 LabelV1; where they differ, 09a wins [DR-68]
+  schema: 'label/1';
+  origin: 'founder'|'system_of_record'|'internal'|'public_web'|'customer'|'counterparty'|'synthetic';
+                                                    // a human supplier → provenance[].human_principal, never an origin
   dclass: 'D0'|'D1'|'D2'|'D3'|'D4';                 // classification: what the datum is (09a §11)
-  boundary: 'sealed'|'guarded'|'open';              // what may leave the venture (§10); set by the Charter, rides the datum
-  venture: string;
-  tainted: boolean;                                 // any untrusted data or control ancestor; citation never clears it
-  permission: 'may_authorise'|'data_only'|'non_exportable';   // may it drive an effect / leave — NOT confidence
-  retention: RetentionClass;                        // §8 classes; wire values per 09a §11.6
-  retention_deadline: string | null;                // when the class says it must go; separate from the class
-  subjects: string[];                               // data subjects → lineage inventory (§8)
+  boundary: 'open'|'guarded'|'sealed';              // what may leave the venture (§10); set by the Charter, rides the datum
+  venture: VentureId | 'portfolio';
+  retention: { class: 'journal_metadata'|'operational'|'personal'|'client'|'synthetic';  // storage lifetime (09a §11.6)
+               hold: 'none'|'obligation'|'legal'|'safety'|'pinned';                       // which forgetting verbs may touch it (§8)
+               deadline?: string };                 // when one is due; never implied by class or hold (§8)
+  permission: 'none'|'informs'|'may_authorise';     // may it drive an effect — NOT confidence
+  exportable: boolean;                              // may it leave; false for synthetic and canary records (DR-50, L7)
+  taint: 'clean'|'untrusted'|'quarantined';         // non-clean if any data or control ancestor is untrusted; citation never clears it
+  provenance: SourceRef[];                          // 09a §12
   consent_scope?: ConsentScopeRef;                  // participants and panels (§11); never widens (§11 pivot rule)
+  confidence?: number;                              // never raises permission (L2)
+  subjects?: SubjectId[];                           // data subjects → lineage inventory (§8)
   revocation_epoch: number;                         // bumped when a source or Room is revoked
 };
 ```
 
+The names this file's `Label` used before 2026-10-01 (`system`, `web`, `worker` and `collaborator` origins, `tainted`,
+`data_only`, `non_exportable`, a single `retention` and `retention_deadline`) map to the wire through the "06 → wire" note
+in [09a §12](09a-ENGINEERING.md#12-labels--the-mechanics).
+
 | # | Label law | Stops |
 |---|---|---|
 | L1 | **Transitive over data *and* control dependencies** — output label = join of every input read, including inputs that only chose which branch ran | A clean-looking summary of a tainted email |
-| L2 | **Confidence, provenance and permission are three fields**; an E4 fact may still carry `permission: data_only` | "Well evidenced, so it may act" |
-| L3 | **Citation never declassifies** — settling, citing or repeating raises `utility` and may raise the rung of *our use*; it never changes `tainted`, `permission` or the source's authority [DR-40, B16] | X01's quiet authority growth |
+| L2 | **Confidence, provenance and permission are three fields**; an E4 fact may still carry a `permission` below `may_authorise` | "Well evidenced, so it may act" |
+| L3 | **Citation never declassifies** — settling, citing or repeating raises `utility` and may raise the rung of *our use*; it never changes `taint`, `permission` or the source's authority [DR-40, B16] | X01's quiet authority growth |
 | L4 | **Declassify only by independent re-derivation** from an independently authorised source through Acceptance's observation broker — never a paraphrase | Laundering by rewording |
-| L5 | **Only `system` (system of record) or `founder` origin reaches `may_authorise`** for payee, destination, amount, identity, entitlement, obligation terms | A counterparty setting its own refund route |
+| L5 | **Only `system_of_record` or `founder` origin reaches `may_authorise`** for payee, destination, amount, identity, entitlement, obligation terms | A counterparty setting its own refund route |
 | L6 | **Quarantine cascades** through `derived_from` + Use Ledger to every pack, pending effect proposal, Standing-Order and skill candidate, and lesson in the lineage | Poison surviving in derivatives |
 | L7 | **Synthetic is permanent** — twin output, canaries, fixtures never enter customer outputs, Books or metrics | Canaries contaminating business [R3-red H06] |
 | L8 | **Sealed derivatives stay local** — lessons, priors and datasets derived from `boundary: sealed` inherit it; only a **Release** effect (§10) moves one out; de-identification alone changes nothing [DR-79, B30] | Sealed study data published as "de-identified" |
@@ -185,9 +194,9 @@ type Label = {                                      // wire names per 09a §12; 
 
 | Step | What happens | Label effect |
 |---|---|---|
-| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `origin: counterparty, tainted: true, permission: data_only` |
+| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `origin: counterparty, taint: untrusted, permission: none` |
 | 2 | A support mission (Codex) extracts amount, customer, bank reference into a deposit; Sleep promotes; a later accepted mission (Claude Code) cites it | Label inherited (L1), unchanged by settlement (L3) |
-| 3 | The Skill Foundry proposes a "supplier reconciliation" skill from the success | Candidate inherits `tainted`; cannot become policy |
+| 3 | The Skill Foundry proposes a "supplier reconciliation" skill from the success | Candidate inherits `taint: untrusted`; cannot become policy |
 | 4 | An envoy proposes a refund to the new account, inside the cap | Decision Contract blocker `label.untrusted_destination` (L5), owner Record, remedy "broker reads original payment record" |
 | 5 | The observation broker reads the processor: the original payment went elsewhere | Re-derivation disagrees → quarantine → cascade freezes the skill candidate (L6); published outputs listed for the founder (**Know · Tap**) |
 
@@ -324,7 +333,7 @@ a consolidation mission; it never deletes — only Record does (DR-04 applied to
 
 Retention classes decide which verbs apply: `ordinary` (all), `obligation` (never decay/invalidate without settled
 release), `legal` (held until the retention authority releases), `safety` (never decays), `pinned`, `synthetic`. The
-class says *which* verbs apply; the label's separate `retention_deadline` says *when* one is due — a class never implies a
+class says *which* verbs apply; the label's separate `retention.deadline` says *when* one is due — a class never implies a
 date and a date never implies a class [DR-68].
 
 **Immutable audit versus true forgetting** [R3-red §3.5, H03] is resolved by DR-41. The Journal keeps *that* an action
@@ -469,14 +478,14 @@ lineage. Protocol, consent, pay and approved sample are [16](16-EXTERNAL-WORLD-H
 competitor:
   entity: ent_chargeflow
   watchlist_owner: "Competitive Analyst"          # the identity that keeps it fresh
-  sources: [{ref: "https://…/pricing", terms_profile: public_ok}, {ref: "changelog feed"}]   # origin: web, tainted
+  sources: [{ref: "https://…/pricing", terms_profile: public_ok}, {ref: "changelog feed"}]   # origin: public_web, taint: untrusted
   freshness: {checked_at: 2026-09-28, max_age_days: 7}    # parameter; stale → a Question, never a silent old value
   emits: competitor.changed {entity, field, old, new, source_ref, observed_at}
 ```
 
 A detected change (price, plan, feature, launch) is written as a quoted Fact and emitted as a **`competitor.changed`
 event**; the Mission Engine's Option Pool trigger ([03 §12.5](03-MISSION-ENGINE.md)) and the Minds' thesis checks
-([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)) consume it. Competitor facts keep `origin: web, tainted: true` like any public
+([05](05-AUTONOMY-INITIATIVE-FOUNDER.md)) consume it. Competitor facts keep `origin: public_web, taint: untrusted` like any public
 evidence; the Pain Index is a different store and is not the competitor feed.
 
 **Across a pivot** [G5, G6]. A pivot, shelve or sale changes the venture's intent, not its memory's history. Lineage
@@ -498,7 +507,7 @@ pain:
   size: {buyers_est, wtp_proxy, confidence}; trend_90d: "+34%"
   why_unsolved: "too small for incumbents, too technical for bookkeepers"
   status: indexed | probed | ventured | nulled
-  label: {origin: web, tainted: true, permission: data_only}
+  label: {origin: public_web, taint: untrusted}   # permission: none vs informs is OPEN (09a §12, 06 → wire)
 ```
 
 Nightly sweep by small models of both families under per-source `terms_profile` (unpermitted sources are fog); weekly
@@ -542,7 +551,7 @@ interface BrainForTwin {
 | Crossing | Rule |
 |---|---|
 | Brain → twin | Pinned `as_of` snapshot with watermarks and redaction manifest; per-run copies; credentials absent [S09 §2.2] |
-| Twin → Brain | **Only forecasts and residuals**, via Acceptance, at `E2`, `origin: synthetic`, `permission: non_exportable` (DR-50) |
+| Twin → Brain | **Only forecasts and residuals**, via Acceptance, at `E2`, `origin: synthetic`, `exportable: false`, `retention.class: synthetic` (DR-50) |
 | Synthetic stakeholders | Synthetic enthusiasm stays attached to the rehearsal as an assumption, never a fact [S09 §5.1] |
 | Poisoned-model defence | The Brain can supply both policy and environment [R3-red D07]; sensitivity runs vary rival explanations jointly, and if the preferred action flips the result returns the deciding assumption and the cheapest real observation, which the Allocator funds |
 | Sealed material | Answer keys and holdouts never enter ordinary memory [S09 §2.10] |
