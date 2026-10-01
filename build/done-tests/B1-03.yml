@@ -1,0 +1,33 @@
+# Done-test register, B1-03 (docs/vision-v3/14-BUILD-PLAN.md §6: "Userland's direct append fails at
+# the OS (mode 660); a malformed command is refused and journaled"). Canon: 09a §2 (socket `avk:avd`,
+# mode 660; the KernelCommand verbs) and §4.1 (Journal owner avk, mode 600).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest ./internal/socket/
+# Frozen red against ErrNotImplemented on 2026-10-01: 4 of 4 tests fail, 6 of 6 with subtests.
+# kernel/internal/socket/socket.go is NOT registered: it is the interface the job implements.
+#
+# What each test kills: MalformedRefusedAndJournaled (34 fixture lines + 2 on one connection) a
+# socket that refuses but does not journal, journals but accepts, or journals the wrong line
+# (per-line sha256); EachVerbAcceptsWellFormed one that refuses a valid verb, swaps routes
+# (renew/release), drops a field, or journals a refusal for an accepted command;
+# SocketIsAvkAvd0660 a socket left 0666, at the umask default, or never chowned to the avd gid;
+# JournalIsKernelOnly0600 a Journal (or -wal/-shm/.lock) left 0644/0660, fresh or pre-existing.
+# Tests run under umask 0, so a mode the Kernel does not set explicitly shows.
+#
+# GAP 1, cross-uid: "fails at the OS" is exercised directly only as root (a uid-65534 child with
+# Userland's gid must get "permission denied" appending to each Journal file, after a 0666 control
+# file proves the child can write at all). As an ordinary user no second uid exists; the test then
+# asserts mode exactly 0600 and owner == the Kernel's euid, and logs GAP.
+# GAP 2, sandbox: every test binds a Unix socket, and the armed Claude Code sandbox denies bind()
+# ("bind: operation not permitted", measured 2026-10-01). These tests run green only unsandboxed,
+# the check:mc situation. The mutant proof against a throwaway implementation was NOT run: the
+# unsandboxed run was refused by the session's permission classifier. Still owed.
+register: B1-03
+jobs:
+  - id: B1-03
+    files:
+      - path: kernel/internal/socket/socket_donetest_test.go
+        sha256: 074c89a1fc7315732dd7ecc0c9a2167e617f16dfd64f64be6b290b3aacadf1f5
+      - path: kernel/internal/socket/testdata/socket/commands.json
+        sha256: 640162015965f8c68131451ce5cbca53c95056bce78d2d7a9b1cb096d8f28767
