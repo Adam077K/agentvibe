@@ -651,6 +651,17 @@ func TestB1_06_SubtypeMap(t *testing.T) {
 		if !slices.Equal(o.Denied, []string{"WebFetch"}) {
 			t.Errorf("Denied = %q, want [WebFetch]", o.Denied)
 		}
+		// 09a §8.7 again: the assistant messages name another model; the init's id still wins.
+		other := slices.Clone(success)
+		for i, l := range other {
+			if m := decode(t, l); m["type"] == "assistant" {
+				m["message"].(map[string]any)["model"] = "claude-haiku-4-5"
+				other[i] = encode(t, m)
+			}
+		}
+		if o := c.Classify(watch(c, join(other), expect).tr, ExitInfo{}); o.ModelID != "claude-opus-5" {
+			t.Errorf("ModelID = %q with assistant messages naming claude-haiku-4-5, want the init's claude-opus-5", o.ModelID)
+		}
 	})
 }
 
