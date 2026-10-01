@@ -84,6 +84,7 @@ merge `origin/main` in → flip its session file to `qa_verdict: PASS` → run
 | 8 | #154 → #153 | B1-02 nouns, Go + Userland | Go PASS 18a9d4d, Userland PASS 0531c37 |
 | 9 | #155 → #154 | B1-04 leases + storage fencing | final PASS a102a98 |
 | 10 | #156 → main | Label canon reconcile (docs) | PASS 44f3136; 7 OPEN items for the founder |
+| 11 | #157 → #154 | B1-03 command socket | PASS ec1a2a0 + r4 tests 2b77cea; founder records verdict |
 
 **Full/irreversible, still waiting on Codex + founder:** #139 (MissionsView now excluded from the design-probe
 census, reviewer PASS at 9614c35, `npm run check` 48/48), #145, #149, #150, #144.

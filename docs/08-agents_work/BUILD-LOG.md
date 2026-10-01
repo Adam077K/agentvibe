@@ -275,3 +275,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
     - human_principal per record
     - label is the sole copy of provenance and confidence
     The builder is applying them.
+- **B1-03 command socket: PR #157** (base build/b1-02, head 2b77cea).
+  - **Reviews:** an Opus reviewer passed it 3 times (a395043, b3ffff3, ec1a2a0). Each time, the surviving mutants went to a separate test builder, who re-froze the tests (r2, r3, r4); 15 mutants are now killed.
+  - **Equivalent mutants left:** 2, documented in the PR.
+  - **Founder ratified:** an oversized line is refused and journaled; at most 1024 connections; a 30 s idle timeout; symlinks are refused.
+  - **Lows:** documented, not fixed.
+  - **Network:** a GitHub proxy 502 blocked pushes for about 30 min; the commits stayed local until it cleared.
+- **Label reconcile #156:** the founder answered 6 more items (A–C, E–I) through AskUserQuestion, and the OPEN list is empty. An Opus reviewer passed it at 4dce49b. The p3 nits are deferred to a follow-up so the verdict stays valid.
