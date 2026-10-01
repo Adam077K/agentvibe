@@ -3,7 +3,7 @@ role: builder
 task: b1-04-tests
 branch: build/b1-04-tests
 tier: lite
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 B1-04 done-tests frozen: kernel/internal/lease/fence.go is the unregistered stub (Coordinator, Verifier); fence_donetest_test.go plus testdata/sp2/{b0-greedy,b0-drill}.json (ported from spikes/collision @2162926) are registered in build/done-tests/B1-04.yml. check-done-tests 14 hashes/4 registers exit 0; avk-boundary exit 0.
 Red: `go -C kernel test -count=1 -tags donetest -run B1_04 ./internal/lease/` gives 8 of 8 FAIL, all on ErrNotImplemented. Re-frozen after the review at 30471a9 (dated reason in the register).
