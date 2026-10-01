@@ -8,9 +8,16 @@
 // refuses the other with ErrSeqConflict, so the claim is decided in storage and never in a
 // Claimer's memory. Nothing here caches state between calls.
 //
-// Out of scope here and owed by B1-04: multi-resource all-or-nothing acquisition, shared mode,
-// wound-wait, the wait-for-graph deadlock detector and max_wait/lease.starved, hot resources,
-// renew/heartbeat, and the storage verifiers for repo://, db://, effect://, budget:// and brain://.
+// Out of scope here. B1-04's plan row ("leases + storage fencing": all-or-nothing, wound-wait,
+// deadlock detector, hot resources, storage verifiers) owns multi-resource all-or-nothing
+// acquisition, wound-wait, the wait-for-graph deadlock detector, hot resources, and the storage
+// verifiers for repo://, db://, effect://, budget:// and brain://. Renew/heartbeat, shared mode and
+// max_wait/lease.starved are named in 09a §6 but owned by NO plan row; they are listed as a
+// follow-up in BUILD-LOG. Until renew exists a claim simply expires at its ttl.
+//
+// Release authenticates the holder by runner name plus token. That is a guard against a confused
+// runner, not against a hostile one: runner names are not secrets. Caller identity is the command
+// socket's job (09a §4.1, B1-03).
 package lease
 
 import (
@@ -18,7 +25,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
@@ -37,6 +46,10 @@ var ErrStaleToken = errors.New("lease: stale fencing token")
 // ErrCorrupt: a lease stream's head event is not a claim row this package wrote. Every operation
 // on that job fails closed rather than guessing who holds it.
 var ErrCorrupt = errors.New("lease: unreadable claim row")
+
+// ErrNotHolder: a Release presented the live token but a runner other than the claim's holder.
+// Nothing is written.
+var ErrNotHolder = errors.New("lease: runner does not hold the claim")
 
 // Claim is a fenced, exclusive lease on job://<JobID>.
 type Claim struct {
@@ -102,9 +115,22 @@ func resource(jobID string) string { return "job://" + jobID }
 // Stream returns the Journal stream holding job://jobID's claim rows.
 func Stream(jobID string) string { return "lease:" + resource(jobID) }
 
+// validText refuses a string that is not valid UTF-8. json.Marshal would silently rewrite its
+// invalid bytes to U+FFFD, so the stored row would no longer match the id it was written for and
+// every later load of that job would fail ErrCorrupt.
+func validText(what, s string) error {
+	if s == "" {
+		return fmt.Errorf("lease: empty %s", what)
+	}
+	if !utf8.ValidString(s) {
+		return fmt.Errorf("lease: %s %q is not valid UTF-8", what, s)
+	}
+	return nil
+}
+
 func validJobID(jobID string) error {
-	if jobID == "" {
-		return errors.New("lease: empty job id")
+	if err := validText("job id", jobID); err != nil {
+		return err
 	}
 	for _, r := range jobID {
 		if r < 0x21 || r == 0x7f || r == '/' {
@@ -162,11 +188,16 @@ func (c *claimer) ClaimJob(ctx context.Context, jobID, runner string, ttl time.D
 	if err := validJobID(jobID); err != nil {
 		return Claim{}, err
 	}
-	if runner == "" {
-		return Claim{}, errors.New("lease: empty runner")
+	if err := validText("runner", runner); err != nil {
+		return Claim{}, err
 	}
 	if ttl <= 0 {
 		return Claim{}, fmt.Errorf("lease: ttl %v must be positive", ttl)
+	}
+	// The expiry is stored as int64 Unix nanoseconds; a ttl past that range would wrap negative
+	// and the claim would be born expired.
+	if now := c.now().UnixNano(); now < 0 || int64(ttl) > math.MaxInt64-now {
+		return Claim{}, fmt.Errorf("lease: ttl %v overflows the expiry", ttl)
 	}
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		if err := ctx.Err(); err != nil {
@@ -247,6 +278,10 @@ func (c *claimer) Release(ctx context.Context, cl Claim) error {
 		}
 		if !st.live(c.now()) || st.row.Token != cl.Token {
 			return stale(cl.JobID, cl.Token, st)
+		}
+		if cl.Runner != st.row.Runner {
+			return fmt.Errorf("%w: %s token %d is held by %q, release presented by %q", ErrNotHolder,
+				resource(cl.JobID), cl.Token, st.row.Runner, cl.Runner)
 		}
 		data, err := json.Marshal(row{Resource: resource(cl.JobID), Runner: st.row.Runner, Token: cl.Token})
 		if err != nil {
