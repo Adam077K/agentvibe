@@ -4,18 +4,24 @@
 # a reviewed decision, never to make a build green. B1-01b's tests share TestMain and helpers with
 # the B1-01a file, so both files are registered for it. api.go and lease.go are NOT registered:
 # they are the interfaces the jobs implement.
+#
+# Re-frozen 2026-10-01: core_donetest_test.go 156d74c0... -> 80292037... (both entries; one file).
+# Reviewer finding on B1-01a: every Read in the file started at seq 1, so a Read that ignored
+# fromSeq (query without `seq >= ?`) passed all three tests. Added readFrom: Read from mid-stream,
+# from head and past head must return exactly the matching suffix. The mutant now fails 2 of 3;
+# the old file passes it 3/3. Edited by a builder that is not the B1-01a implementer.
 register: B0-17a
 jobs:
   - id: B1-01a
     files:
       - path: kernel/internal/journal/core_donetest_test.go
-        sha256: 156d74c0940fd2c2c42a363d7adfa526828507bce35aa224eaa4fcd8fe704977
+        sha256: 80292037a5ee6be9850c878ee57a85aebcfa84813a3a8228d59d2e03043ce1c2
   - id: B1-01b
     files:
       - path: kernel/internal/journal/chain_donetest_test.go
         sha256: 6401d6637d24ef4aa703d3d04cf76585a9d9d15dd825f84226602e7082fd907a
       - path: kernel/internal/journal/core_donetest_test.go
-        sha256: 156d74c0940fd2c2c42a363d7adfa526828507bce35aa224eaa4fcd8fe704977
+        sha256: 80292037a5ee6be9850c878ee57a85aebcfa84813a3a8228d59d2e03043ce1c2
   - id: B1-05
     files:
       - path: kernel/internal/lease/lease_donetest_test.go
