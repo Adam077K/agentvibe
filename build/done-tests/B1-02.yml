@@ -2,7 +2,8 @@
 # languages; an upcaster cannot change a past decision's meaning (replay test)").
 # Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
 # Verify: node build/check-done-tests.mjs
-# Run: go -C kernel test -count=1 -tags donetest ./internal/nouns/
+# Run (Go):       go -C kernel test -count=1 -tags donetest ./internal/nouns/
+# Run (Userland): npm --prefix userland ci --ignore-scripts && node --test userland/test/nouns.donetest.test.ts
 # Frozen red against ErrNotImplemented on 2026-10-01: 6 of 6 tests fail. kernel/internal/nouns/nouns.go
 # is NOT registered: it is the interface the job implements (the B0-17 pattern).
 #
@@ -14,10 +15,11 @@
 # The three fixture files are registered because they are the wire contract: the Go test and the
 # Userland test read the same bytes, so a fixture edit changes both languages' acceptance at once.
 #
-# HALF FROZEN. The Userland half (Zod schemas -> JSON Schema accept valid.json and reject
-# invalid.json) is NOT here: Zod is in no package.json and no node_modules in this repository, and
-# this freeze was told to add no dependency. Adding the TypeScript test file to this register is a
-# register change, made once Zod and the Userland package location are decided.
+# Userland half added 2026-10-01 (B1-02-ts): userland/ holds Userland (avd, 09a §2) with zod 4.6.5
+# pinned exactly; JSON Schema comes from Zod 4's built-in z.toJSONSchema. Frozen red against
+# NotImplementedError: 3 of 3 top-level tests fail, 99 of 99 with subtests. userland/src/nouns.ts is
+# NOT registered: it is the interface the job implements. The emitted-JSON-Schema check validates
+# with z.fromJSONSchema because the repository holds no other validator; it is not independent of Zod.
 register: B1-02
 jobs:
   - id: B1-02
@@ -30,3 +32,5 @@ jobs:
         sha256: ceeaa112e2e1ccc952746497054ff7699199c057be55535751a0d2946c671f1b
       - path: kernel/internal/nouns/testdata/nouns/decisions.json
         sha256: 2798f0067546141b40296cdd733e55604ffc99ea10a413cc6c942121ac29f86a
+      - path: userland/test/nouns.donetest.test.ts
+        sha256: 0551c924eed88c4b255b481d6e3d7d0ec23fb69bf1a48bda29d0394d6e44a03b
