@@ -82,7 +82,7 @@ merge `origin/main` in → flip its session file to `qa_verdict: PASS` → run
 | 4 | #148 | session docs | carries this update |
 | 5 | #151 → #147 | B1-01a Journal core | review round 2 PASS at 204ffaa; merge `main` in first |
 | 6 | #152 → #151 | B1-01b chain + blobs | review round 2 PASS at 690d6a2 |
-| 7 | (B1-05, see below) | `job://` lease | `build/b1-05` @ 183320e, round-2 review was running at session end |
+| 7 | #153 → #152 | B1-05 `job://` lease | review round 3 PASS at 28c3a09 |
 
 **Full/irreversible, still waiting on Codex + founder:** #139 (MissionsView now excluded from the design-probe
 census, reviewer PASS at 9614c35, `npm run check` 48/48), #145, #149, #150, #144.
@@ -91,7 +91,7 @@ census, reviewer PASS at 9614c35, `npm run check` 48/48), #145, #149, #150, #144
 B1-05 expiry + forced conflict). Each time a reviewer's wrong implementation passed them; a builder who did not write
 the job re-froze them, with a dated reason in the register. Rule now: implementers never edit frozen tests.
 
-**Next jobs:** finish B1-05 (PR on #152 if its round 2 passed) → B1-02 nouns → B1-03 → B1-04 remainder (wound-wait,
+**Next jobs:** B1-02: Go done-tests frozen on `build/b1-02-tests` (under review); B1-02-ts adds Zod and freezes the TS half; then implement B1-02 → B1-03 → B1-04 remainder (wound-wait,
 deadlock detector, hot resources, pre-receive verifier). Give renew/heartbeat, shared mode and max_wait an owner row
 in 14 §6 — nothing owns them today. Follow-ups: hard link bypasses the Journal writer lock (refuse link count > 1);
 per-agent git author so builder separation is provable; `--full-index` in `verdict.mjs` (irreversible).

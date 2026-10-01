@@ -142,3 +142,4 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **DECISION — Zod gets added in a follow-up job, B1-02-ts.** It is in no package.json. It is free and MIT, and the
   canon names it for Userland schemas, so DR-84 is met. B1-02-ts adds `zod` plus a JSON-Schema emitter, then freezes
   the TS round-trip done-tests against the same `testdata/nouns` fixtures. B1-02's implementation waits for both halves.
+| 2026-10-01 | B1-05 | #153 (stacked on #152) | `job://` lease; review round 3 PASS at 28c3a09; race mutants 20/20 caught | founder: verdict + merge after #152; Codex re-review owed |
