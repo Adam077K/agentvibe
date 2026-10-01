@@ -70,8 +70,9 @@ func createJournal(path string) error {
 
 // narrowJournal holds the Journal and every file beside it whose name begins with the Journal's
 // name (-wal, -shm, .lock) at exactly 0600, owned by the Kernel's euid. A file the Kernel owns at
-// another mode is narrowed. A file it does not own, or that is not a regular file, is refused: the
-// Kernel cannot hold it at 0600, and chmod-ing it as root would not make it the Kernel's.
+// another mode is narrowed. A file it does not own, a symlink, or anything that is not a regular
+// file is refused: the Kernel cannot hold it at 0600, and chmod-ing it as root would not make it
+// the Kernel's. (Ratified 2026-10-01: never follow a symlink there; refuse to start instead.)
 func narrowJournal(path string) error {
 	dir, base := filepath.Dir(path), filepath.Base(path)
 	entries, err := os.ReadDir(dir)
@@ -85,31 +86,11 @@ func narrowJournal(path string) error {
 			continue
 		}
 		name := filepath.Join(dir, e.Name())
-		found = found || e.Name() == base
-		fi, err := os.Lstat(name)
-		if errors.Is(err, fs.ErrNotExist) {
-			continue // a sidecar SQLite removed between the listing and here
-		}
+		gone, err := narrowFile(name, euid)
 		if err != nil {
 			return err
 		}
-		if !fi.Mode().IsRegular() {
-			return fmt.Errorf("%s is %v, not a regular file", name, fi.Mode().Type())
-		}
-		if uid, _ := ownerOf(fi); uid != euid {
-			return fmt.Errorf("%s is owned by uid %d, not the Kernel's %d", name, uid, euid)
-		}
-		if permOf(fi.Mode()) != journalMode {
-			if err := os.Chmod(name, journalMode); err != nil {
-				return err
-			}
-			if fi, err = os.Lstat(name); err != nil {
-				return err
-			}
-			if !fi.Mode().IsRegular() || permOf(fi.Mode()) != journalMode {
-				return fmt.Errorf("%s is %v after narrowing to %#o", name, fi.Mode(), journalMode)
-			}
-		}
+		found = found || (e.Name() == base && !gone)
 	}
 	if !found {
 		return fmt.Errorf("%s does not exist", path)
@@ -117,10 +98,52 @@ func narrowJournal(path string) error {
 	return nil
 }
 
+// narrowFile holds one file at journalMode through a descriptor opened with O_NOFOLLOW, so the mode
+// it checks and the mode it changes belong to the same inode, and a symlink is never followed: a
+// name that is a symlink, or becomes one, is refused (ELOOP), and Serve does not start. A name
+// that vanished between the directory listing and the open is reported gone.
+func narrowFile(name string, euid int) (gone bool, err error) {
+	f, err := os.OpenFile(name, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		return true, nil // a sidecar SQLite removed between the listing and here
+	case errors.Is(err, syscall.ELOOP):
+		return false, fmt.Errorf("%s is a symlink; the Kernel never follows one beside its Journal", name)
+	case err != nil:
+		return false, err
+	}
+	defer f.Close()
+	fi, err := f.Stat()
+	if err != nil {
+		return false, err
+	}
+	if !fi.Mode().IsRegular() {
+		return false, fmt.Errorf("%s is %v, not a regular file", name, fi.Mode().Type())
+	}
+	if uid, _ := ownerOf(fi); uid != euid {
+		return false, fmt.Errorf("%s is owned by uid %d, not the Kernel's %d", name, uid, euid)
+	}
+	if permOf(fi.Mode()) == journalMode {
+		return false, nil
+	}
+	if err := f.Chmod(journalMode); err != nil { // fchmod(2): the inode just checked, never a link target
+		return false, err
+	}
+	if fi, err = f.Stat(); err != nil {
+		return false, err
+	}
+	if permOf(fi.Mode()) != journalMode {
+		return false, fmt.Errorf("%s is %v after narrowing to %#o", name, fi.Mode(), journalMode)
+	}
+	return false, nil
+}
+
 // listen creates the socket at path already owned by the Kernel, grouped to gid and at 0660, so
 // no client ever sees it wider. It binds inside a fresh 0700 directory beside path, sets owner and
 // mode there, and only then gives it its public name with link(2), which refuses an existing file
-// atomically. An existing file at path is refused, never removed.
+// atomically. An existing file at path is refused, never removed. link, not rename: rename(2)
+// moves the socket into place just as privately but silently replaces a file created at path after
+// the Lstat check, which the contract forbids.
 func listen(path string, gid int) (*net.UnixListener, fs.FileInfo, error) {
 	if _, err := os.Lstat(path); err == nil {
 		return nil, nil, fmt.Errorf("%s already exists; refusing to replace it", path)
