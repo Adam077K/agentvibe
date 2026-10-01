@@ -3,13 +3,14 @@ package nouns
 // The wire rules of nouns.go's package comment, as checks over the JSON before it reaches a
 // struct. encoding/json alone cannot hold them: it drops unknown keys, matches keys without regard
 // to case, leaves a missing key at its zero value, and accepts null for a string as "no change".
-// So Decode validates the bytes first and only then lets encoding/json fill the struct.
+// So Decode validates the bytes first and only then lets encoding/json fill the struct. Keys are
+// matched exactly: a duplicate key, or a key that differs from a known key only by case, is refused
+// rather than resolved.
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -49,6 +50,89 @@ func join(path, key string) string {
 	return path + "." + key
 }
 
+// members parses raw as one JSON object, keys matched exactly. It refuses a key that appears twice,
+// and a key that equals one of known only when case is ignored: encoding/json would match
+// "Disposition" to the field "disposition" and keep whichever came last, so a second spelling
+// could overrule the first while every reader saw only one.
+func members(raw json.RawMessage, known ...string) (map[string]json.RawMessage, error) {
+	if k := kindOf(raw); k != "object" {
+		return nil, fmt.Errorf("is a JSON %s; want an object", k)
+	}
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	if _, err := dec.Token(); err != nil {
+		return nil, err
+	}
+	m := map[string]json.RawMessage{}
+	for dec.More() {
+		t, err := dec.Token()
+		if err != nil {
+			return nil, err
+		}
+		key, ok := t.(string)
+		if !ok {
+			return nil, fmt.Errorf("has a non-string key %v", t)
+		}
+		if _, dup := m[key]; dup {
+			return nil, fmt.Errorf("has the key %q twice", key)
+		}
+		for _, kn := range known {
+			if key != kn && strings.EqualFold(key, kn) {
+				return nil, fmt.Errorf("has the key %q; the key is %q, matched exactly", key, kn)
+			}
+		}
+		var v json.RawMessage
+		if err := dec.Decode(&v); err != nil {
+			return nil, err
+		}
+		m[key] = v
+	}
+	if _, err := dec.Token(); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// scanWire walks every value of raw at any depth, including inside the fields the canon leaves
+// undefined (actor, data, budget, …), and refuses two things there:
+//   - a key that appears twice in one object: a reader of those values decodes them too, and which
+//     copy wins is a property of the parser, not of the bytes;
+//   - an integer literal outside ±(2^53-1): Userland's JSON.parse rounds it, so it could not carry
+//     the value without changing the bytes the Kernel hashes. A number with a fraction or an
+//     exponent is not an integer literal and is left alone.
+func scanWire(raw json.RawMessage) error {
+	switch kindOf(raw) {
+	case "number":
+		s := string(bytes.TrimSpace(raw))
+		if strings.ContainsAny(s, ".eE") {
+			return nil
+		}
+		if n, err := strconv.ParseInt(s, 10, 64); err != nil || n > maxSafe || n < -maxSafe {
+			return fmt.Errorf("holds the integer %s, outside ±(2^53-1)", s)
+		}
+	case "object":
+		m, err := members(raw)
+		if err != nil {
+			return err
+		}
+		for k, v := range m {
+			if err := scanWire(v); err != nil {
+				return fmt.Errorf("under %q: %w", k, err)
+			}
+		}
+	case "array":
+		var items []json.RawMessage
+		if err := json.Unmarshal(raw, &items); err != nil {
+			return err
+		}
+		for i, it := range items {
+			if err := scanWire(it); err != nil {
+				return fmt.Errorf("at [%d]: %w", i, err)
+			}
+		}
+	}
+	return nil
+}
+
 // kindOf names the JSON type of raw by its first byte.
 func kindOf(raw json.RawMessage) string {
 	b := bytes.TrimLeft(raw, " \t\r\n")
@@ -72,15 +156,17 @@ func kindOf(raw json.RawMessage) string {
 
 func object(fields ...field) check {
 	known := make(map[string]bool, len(fields))
-	for _, f := range fields {
+	names := make([]string, len(fields))
+	for i, f := range fields {
 		known[f.name] = true
+		names[i] = f.name
 	}
 	return func(path string, raw json.RawMessage) error {
 		if k := kindOf(raw); k != "object" {
 			return wrapInvalid(path, "is a JSON %s; want an object", k)
 		}
-		var m map[string]json.RawMessage
-		if err := json.Unmarshal(raw, &m); err != nil {
+		m, err := members(raw, names...)
+		if err != nil {
 			return wrapInvalid(path, "%v", err)
 		}
 		var unknown []string
@@ -228,36 +314,23 @@ func integerText(path string, raw json.RawMessage) (string, error) {
 	return s, nil
 }
 
-// unsigned accepts a JSON integer that fits a uint64 and is at least min.
-func unsigned(min uint64) check {
+// maxSafe is 2^53-1, JavaScript's Number.MAX_SAFE_INTEGER. 09a §3 types these fields `number`;
+// above it JSON.parse rounds, so Userland would read a different value from the same bytes. A value
+// that needs more range is a bigint, written as a decimal string.
+const maxSafe = 1<<53 - 1
+
+// integer accepts a JSON integer in min..2^53-1 (min is never below -(2^53-1)).
+func integer(min int64) check {
 	return func(path string, raw json.RawMessage) error {
 		s, err := integerText(path, raw)
 		if err != nil {
 			return err
 		}
-		n, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return wrapInvalid(path, "is %s; want an integer in 0..2^64-1", s)
+		n, err := strconv.ParseInt(s, 10, 64)
+		if err != nil || n > maxSafe || n < -maxSafe {
+			return wrapInvalid(path, "is %s; a number is an integer within ±(2^53-1), or JavaScript rounds it", s)
 		}
 		if n < min {
-			return wrapInvalid(path, "is %s; want at least %d", s, min)
-		}
-		return nil
-	}
-}
-
-// signed accepts a JSON integer that fits a Go int and is at least min.
-func signed(min int) check {
-	return func(path string, raw json.RawMessage) error {
-		s, err := integerText(path, raw)
-		if err != nil {
-			return err
-		}
-		n, err := strconv.ParseInt(s, 10, strconv.IntSize)
-		if err != nil {
-			return wrapInvalid(path, "is %s; it does not fit a %d-bit integer", s, strconv.IntSize)
-		}
-		if n < int64(min) {
 			return wrapInvalid(path, "is %s; want at least %d", s, min)
 		}
 		return nil
@@ -297,14 +370,14 @@ var labelFields = object(
 	opt("consent_scope", id),
 	opt("confidence", number),
 	optList("subjects", arrayOf(id)),
-	req("revocation_epoch", unsigned(0)),
+	req("revocation_epoch", integer(0)),
 )
 
 // label refuses an unknown schema version before anything else: a reader that does not know the
 // version cannot judge the rest of the record, so "unknown key" would be the wrong refusal.
 func label(path string, raw json.RawMessage) error {
-	var m map[string]json.RawMessage
-	if kindOf(raw) == "object" && json.Unmarshal(raw, &m) == nil && kindOf(m["schema"]) == "string" {
+	m, err := members(raw)
+	if err == nil && kindOf(m["schema"]) == "string" {
 		var s string
 		if json.Unmarshal(m["schema"], &s) == nil && s != labelSchema {
 			return fmt.Errorf("%w: %s.schema is %q; this reader knows %q", ErrUnknownSchema, pathOr(path), s, labelSchema)
@@ -323,7 +396,7 @@ func pathOr(path string) string {
 var eventCheck = object(
 	req("id", id),
 	req("stream", str),
-	req("seq", unsigned(1)),
+	req("seq", integer(1)),
 	req("type", str),
 	req("ts", str),
 	req("actor", anyJSON),
@@ -332,7 +405,7 @@ var eventCheck = object(
 	req("label", label),
 	opt("rationale", anyJSON),
 	opt("snapshot_ref", id),
-	req("schema", signed(1)),
+	req("schema", integer(1)),
 	req("data", anyJSON),
 	req("prev_hash", hex),
 	req("hash", hex),
@@ -386,7 +459,7 @@ var operationCheck = object(
 var effectCheck = object(
 	req("id", id),
 	req("operation_id", id),
-	req("attempt", signed(math.MinInt)),
+	req("attempt", integer(-maxSafe)),
 	req("contract_ref", id),
 	req("snapshot_ref", id),
 	req("effect_class", enum("R0", "R1", "R2", "R3", "R4")),
@@ -401,7 +474,7 @@ var effectCheck = object(
 var receiptCheck = object(
 	req("effect_id", id),
 	req("operation_id", id),
-	req("attempt", signed(math.MinInt)),
+	req("attempt", integer(-maxSafe)),
 	req("request_digest", hex),
 	opt("provider_ref", str),
 	opt("provider_response_digest", hex),
@@ -439,6 +512,9 @@ func validate(v any, data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := json.Compact(&buf, data); err != nil {
 		return nil, wrapInvalid("", "is not one JSON value: %v", err)
+	}
+	if err := scanWire(buf.Bytes()); err != nil {
+		return nil, wrapInvalid("", "%v", err)
 	}
 	if err := c("", buf.Bytes()); err != nil {
 		return nil, err

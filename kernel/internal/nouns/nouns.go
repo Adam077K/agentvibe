@@ -190,7 +190,9 @@ func Decode[T Noun](data []byte) (T, error) {
 		return v, err
 	}
 	if err := json.Unmarshal(wire, &v); err != nil {
-		// Unreachable for bytes validate accepted; kept so a gap between the two is a refusal.
+		// validate refuses what would make this parse fail or disagree with it (a duplicate key such
+		// as "seq":"x","seq":7, a key matched only by case, a number out of range), so reaching
+		// here means the two have drifted apart; it is still a refusal, never a zero value.
 		var zero T
 		return zero, wrapInvalid("", "%v", err)
 	}

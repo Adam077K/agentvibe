@@ -171,7 +171,8 @@ func (r *Registry) read(typ string, schema int, data json.RawMessage) (Outcome, 
 	return read(clone(data))
 }
 
-// apply runs one step on a copy of data and requires one JSON value back, compacted.
+// apply runs one step on a copy of data and requires one JSON value back, compacted, that scanWire
+// accepts.
 func apply(f step, data json.RawMessage) (json.RawMessage, error) {
 	out, err := f(clone(data))
 	if err != nil {
@@ -180,6 +181,9 @@ func apply(f step, data json.RawMessage) (json.RawMessage, error) {
 	var buf bytes.Buffer
 	if err := json.Compact(&buf, out); err != nil {
 		return nil, fmt.Errorf("upcaster returned data that is not one JSON value: %v", err)
+	}
+	if err := scanWire(buf.Bytes()); err != nil {
+		return nil, fmt.Errorf("upcaster returned data the wire refuses: %v", err)
 	}
 	return buf.Bytes(), nil
 }
@@ -250,46 +254,58 @@ func cloneEvent(e Event) Event {
 // action.operation_id, and disposition, effect_class and door at the top level. Every value must be
 // in its closed set; a reader that let an unknown value through would make "the meaning did not
 // change" uncheckable.
+//
+// Keys are matched exactly. An integer outside ±(2^53-1) anywhere in the data, a duplicate key
+// anywhere in it, or a key that differs from one
+// this reader reads only by case ("Disposition", "DISPOSITION"), is refused: encoding/json's
+// case-insensitive, last-one-wins matching would let a second spelling overrule the decision, and
+// would let an upcaster that renames a key's case pass the meaning check.
 func readDecisionCompiledV1(data json.RawMessage) (Outcome, error) {
-	var d struct {
-		Action *struct {
-			OperationID *string `json:"operation_id"`
-		} `json:"action"`
-		Disposition *string `json:"disposition"`
-		EffectClass *string `json:"effect_class"`
-		Door        *string `json:"door"`
+	fail := func(format string, args ...any) (Outcome, error) {
+		return Outcome{}, fmt.Errorf("%s data: %s", DecisionCompiled, fmt.Sprintf(format, args...))
 	}
-	if kindOf(data) != "object" {
-		return Outcome{}, fmt.Errorf("%s data is a JSON %s; want an object", DecisionCompiled, kindOf(data))
+	if err := scanWire(data); err != nil {
+		return fail("%v", err)
 	}
-	if err := json.Unmarshal(data, &d); err != nil {
-		return Outcome{}, fmt.Errorf("%s data: %v", DecisionCompiled, err)
+	top, err := members(data, "action", "disposition", "effect_class", "door")
+	if err != nil {
+		return fail("%v", err)
 	}
 	var o Outcome
 	var errs []error
-	if d.Action == nil || d.Action.OperationID == nil || *d.Action.OperationID == "" {
-		errs = append(errs, errors.New("action.operation_id is missing or empty"))
+	if raw, ok := top["action"]; !ok {
+		errs = append(errs, errors.New("action is missing"))
+	} else if action, err := members(raw, "operation_id"); err != nil {
+		errs = append(errs, fmt.Errorf("action %v", err))
+	} else if id, err := stringOf("action.operation_id", action["operation_id"]); err != nil || id == "" {
+		errs = append(errs, errors.New("action.operation_id is missing, empty or not a string"))
 	} else {
-		o.OperationID = *d.Action.OperationID
+		o.OperationID = id
 	}
-	pick := func(name string, p *string, into *string, allowed ...string) {
-		if p == nil {
+	pick := func(name string, into *string, allowed ...string) {
+		raw, ok := top[name]
+		if !ok {
 			errs = append(errs, fmt.Errorf("%s is missing", name))
 			return
 		}
+		v, err := stringOf(name, raw)
+		if err != nil {
+			errs = append(errs, err)
+			return
+		}
 		for _, a := range allowed {
-			if *p == a {
+			if v == a {
 				*into = a
 				return
 			}
 		}
-		errs = append(errs, fmt.Errorf("%s is %q; want one of %v", name, *p, allowed))
+		errs = append(errs, fmt.Errorf("%s is %q; want one of %v", name, v, allowed))
 	}
-	pick("disposition", d.Disposition, &o.Disposition, "auto", "notify", "ask", "co_sign", "never", "held")
-	pick("effect_class", d.EffectClass, &o.EffectClass, "R0", "R1", "R2", "R3", "R4")
-	pick("door", d.Door, &o.Door, "two_way", "costly_reversible", "one_way")
+	pick("disposition", &o.Disposition, "auto", "notify", "ask", "co_sign", "never", "held")
+	pick("effect_class", &o.EffectClass, "R0", "R1", "R2", "R3", "R4")
+	pick("door", &o.Door, "two_way", "costly_reversible", "one_way")
 	if err := errors.Join(errs...); err != nil {
-		return Outcome{}, fmt.Errorf("%s data: %w", DecisionCompiled, err)
+		return fail("%v", err)
 	}
 	return o, nil
 }

@@ -230,3 +230,161 @@ func TestKernelReaderRefusesUnknownValues(t *testing.T) {
 		t.Errorf("replacing the shipped reader = %v; want ErrDuplicate", err)
 	}
 }
+
+// ---- review round 1: exact-case keys, no duplicates, JS-safe integers --------------------------
+
+const decisionData = `{"action":{"operation_id":"op_1"},"effect_class":"R4","door":"one_way","disposition":"never"}`
+
+func encodedDecision(t *testing.T) string {
+	t.Helper()
+	b, err := nouns.Encode(decision(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+func decodeEvent(b []byte) error { _, err := nouns.Decode[nouns.Event](b); return err }
+
+// mustRefuse decodes edit(base) and wants ErrInvalid; it fails loudly if the edit did not apply,
+// so a fixture typo cannot pass as a refusal.
+func mustRefuse(t *testing.T, base, edited string, dec func([]byte) error) {
+	t.Helper()
+	if edited == base {
+		t.Fatal("the fixture edit did not apply")
+	}
+	if err := dec([]byte(edited)); !errors.Is(err, nouns.ErrInvalid) {
+		t.Errorf("Decode(%s) = %v; want an error wrapping ErrInvalid", edited, err)
+	}
+}
+
+// TestDecodeRefusesDuplicateAndCaseVariantKeys: Decode matches keys exactly. A key twice, at any
+// depth, or a key that differs from a known one only by case, is refused rather than resolved.
+func TestDecodeRefusesDuplicateAndCaseVariantKeys(t *testing.T) {
+	ev := encodedDecision(t)
+	if err := decodeEvent([]byte(ev)); err != nil {
+		t.Fatalf("control: the unedited event is refused: %v", err)
+	}
+	for _, c := range []struct{ name, old, repl string }{
+		{"seq twice, string then number", `"seq":1`, `"seq":"x","seq":7`},
+		{"seq twice, both valid", `"seq":1`, `"seq":1,"seq":2`},
+		{"case variant beside the key", `"seq":1`, `"seq":1,"SEQ":2`},
+		{"case variant instead of the key", `"seq":1`, `"Seq":1`},
+		{"duplicate inside the label", `"taint":"clean"`, `"taint":"clean","taint":"untrusted"`},
+		{"case variant inside the label", `"taint":"clean"`, `"taint":"clean","Taint":"untrusted"`},
+		{"duplicate inside data", `"disposition":"ask"`, `"disposition":"ask","disposition":"auto"`},
+		{"duplicate inside actor", `"id":"avd"`, `"id":"avd","id":"evil"`},
+		{"duplicate inside a provenance entry", `{"source":"s"}`, `{"source":"s","source":"t"}`},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			mustRefuse(t, ev, strings.Replace(ev, c.old, c.repl, 1), decodeEvent)
+		})
+	}
+}
+
+// TestKernelReaderMatchesKeysExactly: the shipped decision reader cannot be talked out of a past
+// decision by a second spelling of a key.
+func TestKernelReaderMatchesKeysExactly(t *testing.T) {
+	r := nouns.Kernel()
+	read := func(data string) (nouns.Outcome, error) {
+		return r.Outcome(nouns.Event{Type: nouns.DecisionCompiled, Schema: 1, Data: json.RawMessage(data)})
+	}
+	if o, err := read(decisionData); err != nil || o.Disposition != "never" {
+		t.Fatalf("control: %s reads %+v (err %v)", decisionData, o, err)
+	}
+	for _, c := range []struct{ old, repl string }{
+		{`"disposition":"never"`, `"disposition":"never","Disposition":"auto"`},
+		{`"disposition":"never"`, `"DISPOSITION":"auto"`},
+		{`"disposition":"never"`, `"disposition":"never","disposition":"auto"`},
+		{`"operation_id":"op_1"`, `"operation_id":"op_1","Operation_ID":"op_2"`},
+		{`"action"`, `"Action"`},
+		{`"door":"one_way"`, `"door":"one_way","note":{"a":1,"a":2}`},
+		{`"door":"one_way"`, `"door":"one_way","n":9007199254740993`},
+	} {
+		data := strings.Replace(decisionData, c.old, c.repl, 1)
+		if data == decisionData {
+			t.Fatalf("the edit %q did not apply", c.repl)
+		}
+		if o, err := read(data); err == nil {
+			t.Errorf("Outcome(%s) = %+v; want a refusal", data, o)
+		}
+	}
+}
+
+// TestUpcasterRenamingKeyCaseIsRefused: an upcaster that only changes a key's case changes what
+// the exact-case reader sees, so the meaning check refuses it.
+func TestUpcasterRenamingKeyCaseIsRefused(t *testing.T) {
+	e := decision(t)
+	shipped := func(data json.RawMessage) (nouns.Outcome, error) {
+		return nouns.Kernel().Outcome(nouns.Event{Type: nouns.DecisionCompiled, Schema: 1, Data: data})
+	}
+	r := nouns.Kernel()
+	if err := r.AddReader(nouns.DecisionCompiled, 2, shipped); err != nil {
+		t.Fatal(err)
+	}
+	rename := nouns.Upcaster{Type: nouns.DecisionCompiled, From: 1, Up: func(data json.RawMessage) (json.RawMessage, error) {
+		return json.RawMessage(strings.Replace(string(data), `"disposition"`, `"Disposition"`, 1)), nil
+	}}
+	if err := r.AddUpcaster(rename, []nouns.Event{e}); !errors.Is(err, nouns.ErrMeaningChanged) {
+		t.Errorf("AddUpcaster(case rename) = %v; want an error wrapping ErrMeaningChanged", err)
+	}
+	identity := nouns.Upcaster{Type: nouns.DecisionCompiled, From: 1, Up: func(data json.RawMessage) (json.RawMessage, error) {
+		return data, nil
+	}}
+	if err := r.AddUpcaster(identity, []nouns.Event{e}); err != nil {
+		t.Errorf("control: the identity upcaster is refused: %v", err)
+	}
+}
+
+// TestIntegersAreJavaScriptSafe: an integer literal holds at most 2^53-1 in magnitude, in the
+// typed number fields and inside raw ones; above it JavaScript's JSON.parse rounds, so Userland
+// could not carry the value without changing the bytes the Kernel hashes.
+func TestIntegersAreJavaScriptSafe(t *testing.T) {
+	ev := encodedDecision(t)
+	const safe, unsafe = "9007199254740991", "9007199254740992"
+	receipt := `{"effect_id":"ef_1","operation_id":"op_1","attempt":ATTEMPT,"request_digest":"` + zeroHex +
+		`","observed_at":"t","issuer":"gateway","sig":"s","chain_prev":"` + zeroHex + `"}`
+	effect := `{"id":"ef_1","operation_id":"op_1","attempt":ATTEMPT,"contract_ref":"dc","snapshot_ref":"snap",` +
+		`"effect_class":"R0","idem_class":"natural","authorising_label":` + labelMin +
+		`,"approvals":[],"fencing_tokens":{"t":ATTEMPT},"gateway_epoch":"1","state":"s"}`
+	decLabel := func(b []byte) error { _, err := nouns.Decode[nouns.Label](b); return err }
+	decEffect := func(b []byte) error { _, err := nouns.Decode[nouns.Effect](b); return err }
+	decReceipt := func(b []byte) error { _, err := nouns.Decode[nouns.Receipt](b); return err }
+	for _, c := range []struct {
+		name string
+		at   func(n string) string
+		dec  func([]byte) error
+	}{
+		{"event.seq", func(n string) string { return strings.Replace(ev, `"seq":1`, `"seq":`+n, 1) }, decodeEvent},
+		{"event.schema", func(n string) string { return strings.Replace(ev, `"schema":1,`, `"schema":`+n+`,`, 1) }, decodeEvent},
+		{"event.data", func(n string) string { return strings.Replace(ev, `"data":{`, `"data":{"n":`+n+`,`, 1) }, decodeEvent},
+		{"event.data nested negative", func(n string) string {
+			return strings.Replace(ev, `"data":{`, `"data":{"deep":[{"n":-`+n+`}],`, 1)
+		}, decodeEvent},
+		{"event.actor", func(n string) string { return strings.Replace(ev, `"id":"avd"`, `"id":"avd","n":`+n, 1) }, decodeEvent},
+		{"label.revocation_epoch", func(n string) string {
+			return strings.Replace(labelMin, `"revocation_epoch":0`, `"revocation_epoch":`+n, 1)
+		}, decLabel},
+		{"effect.attempt and fencing_tokens", func(n string) string { return strings.ReplaceAll(effect, "ATTEMPT", n) }, decEffect},
+		{"receipt.attempt", func(n string) string { return strings.Replace(receipt, "ATTEMPT", n, 1) }, decReceipt},
+		{"receipt.attempt negative", func(n string) string { return strings.Replace(receipt, "ATTEMPT", "-"+n, 1) }, decReceipt},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			if err := c.dec([]byte(c.at(safe))); err != nil {
+				t.Errorf("2^53-1 refused: %v", err)
+			}
+			mustRefuse(t, c.at(safe), c.at(unsafe), c.dec)
+		})
+	}
+
+	t.Run("the reviewer's case: 2^53+1 inside data", func(t *testing.T) {
+		mustRefuse(t, ev, strings.Replace(ev, `"data":{`, `"data":{"n":9007199254740993,`, 1), decodeEvent)
+	})
+	t.Run("non-integer numbers are unaffected", func(t *testing.T) {
+		for _, n := range []string{"9007199254740993.5", "1e300", "-9.1e15"} {
+			if err := decodeEvent([]byte(strings.Replace(ev, `"data":{`, `"data":{"n":`+n+`,`, 1))); err != nil {
+				t.Errorf("data holding %s refused: %v", n, err)
+			}
+		}
+	})
+}
