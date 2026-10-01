@@ -3,10 +3,9 @@
 // and the upcaster registry that keeps a past decision's meaning fixed (09a §4.1: "an upcaster can
 // change what a past decision meant").
 //
-// Frozen by B1-02's done-test (build/done-tests/B1-02.yml) so the test exists before the job does
-// (docs/vision-v3/14-BUILD-PLAN.md §6). This file is the contract the job implements and is NOT
-// registered; the test file and its three fixture files are. Every function returns
-// ErrNotImplemented until B1-02 lands; nothing here holds logic.
+// The contract below was frozen by B1-02's done-test (build/done-tests/B1-02.yml) before the job
+// was built (docs/vision-v3/14-BUILD-PLAN.md §6). This file is NOT registered; the test file and its
+// three fixture files are. The wire rules live in wire.go and the registry in registry.go.
 //
 // WIRE RULES (pinned by testdata/nouns/*.json, which both languages read):
 //   - Keys are 09a §3's snake_case names. An optional field is ABSENT when unset, never null or "".
@@ -30,7 +29,8 @@ import (
 	"errors"
 )
 
-// ErrNotImplemented is returned by every entry point until B1-02 implements it.
+// ErrNotImplemented was returned by every entry point before B1-02 implemented them. Nothing in
+// this package returns it now; it stays exported because the frozen contract named it.
 var ErrNotImplemented = errors.New("nouns: not implemented")
 
 // ErrInvalid: the bytes are not a valid noun under the wire rules above.
@@ -184,14 +184,34 @@ type Noun interface {
 
 // Decode parses one noun from its wire JSON, refusing per the wire rules above.
 func Decode[T Noun](data []byte) (T, error) {
-	var zero T
-	return zero, ErrNotImplemented
+	var v T
+	wire, err := validate(any(v), data)
+	if err != nil {
+		return v, err
+	}
+	if err := json.Unmarshal(wire, &v); err != nil {
+		// Unreachable for bytes validate accepted; kept so a gap between the two is a refusal.
+		var zero T
+		return zero, wrapInvalid("", "%v", err)
+	}
+	return v, nil
 }
 
 // Encode writes v as wire JSON. Decode(Encode(v)) == v, and Encode(Decode(b)) is b up to key order
 // and whitespace.
+//
+// A value Decode would refuse (an empty required id, an out-of-enum value, a nil required slice
+// that would encode as null) is refused here too, with the same sentinel, rather than written as
+// bytes no reader accepts.
 func Encode[T Noun](v T) ([]byte, error) {
-	return nil, ErrNotImplemented
+	out, err := marshal(v)
+	if err != nil {
+		return nil, wrapInvalid("", "%v", err)
+	}
+	if _, err := validate(any(v), out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // DecisionCompiled is the event type recording a compiled Decision Contract (00-CANON §3). Its
@@ -219,45 +239,4 @@ type Upcaster struct {
 	Type string
 	From int
 	Up   func(data json.RawMessage) (json.RawMessage, error)
-}
-
-// Registry holds the readers and upcasters for event types that record decisions. Its zero value
-// is not usable; call NewRegistry or Kernel.
-type Registry struct {
-	impl any // B1-02 replaces this with its own state
-}
-
-// NewRegistry returns an empty Registry.
-func NewRegistry() *Registry { return &Registry{} }
-
-// Kernel returns a new Registry holding every Reader and Upcaster the Kernel ships: at least the
-// schema-1 Reader of DecisionCompiled, reading the canon §3 layout.
-func Kernel() *Registry { return &Registry{} }
-
-// AddReader registers read for eventType at schema. A second reader for the same pair is refused
-// wrapping ErrDuplicate and the first stays in force.
-func (r *Registry) AddReader(eventType string, schema int, read Reader) error {
-	return ErrNotImplemented
-}
-
-// AddUpcaster installs u only if it keeps every past decision's meaning. For every event in history
-// of type u.Type, the Outcome read from the event as written (at its own schema) must equal the
-// Outcome read after upcasting it through the installed chain and then u. Any difference, or any
-// read that fails, refuses u wrapping ErrMeaningChanged. Missing readers at u.From or u.From+1, or
-// no history event of u.Type, refuse u wrapping ErrUnverifiable. A refused upcaster is not
-// installed; the registry is unchanged.
-func (r *Registry) AddUpcaster(u Upcaster, history []Event) error {
-	return ErrNotImplemented
-}
-
-// Upcast returns a copy of e with its data upcast through every installed upcaster for e.Type,
-// from e.Schema to the latest version. Every envelope field but Schema and Data is unchanged, and
-// e itself is not modified (its Data is not aliased).
-func (r *Registry) Upcast(e Event) (Event, error) {
-	return Event{}, ErrNotImplemented
-}
-
-// Outcome reads e's decision with the Reader registered for (e.Type, e.Schema).
-func (r *Registry) Outcome(e Event) (Outcome, error) {
-	return Outcome{}, ErrNotImplemented
 }
