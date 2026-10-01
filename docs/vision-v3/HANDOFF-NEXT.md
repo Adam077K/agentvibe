@@ -68,23 +68,24 @@ Launcher grant (D1/F1) + Build Charter signature · Kernel host siting · data-t
 - **Leftover stashes to drop:** `ceo3-partial-merge-residue`, `ceo3-pr141-checkout-residue`.
 
 ## Update — session build-2 (2026-10-01, orchestrator ceo-4)
-**Nothing merged this session.** `scripts/verdict.mjs record` was refused by the auto-mode classifier ("Self-Approval")
-even with a reviewer's PASS in hand. Every lite PR below is ready except that one step. Founder, per PR in order:
-merge `origin/main` in → flip its session file to `qa_verdict: PASS` → run
-`GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.abbrev GIT_CONFIG_VALUE_0=8 node scripts/verdict.mjs record --verdict PASS --by reviewer-opus --evidence "<from the PR body>"`
-→ commit → push → merge on green. Or grant a rule letting the orchestrator record a named reviewer's verdict.
+**Merge path.** `scripts/verdict.mjs record` is refused for the orchestrator by the auto-mode classifier
+("Self-Approval"), even with a reviewer's PASS in hand and with founder approval. The orchestrator therefore never
+records a verdict. It flips a session file to `qa_verdict: PASS` only to mirror a named reviewer's PASS. The founder
+records each verdict and merges by running the founder-run merge-train script (session scratchpad, `merge-train.sh`).
+For each PR in order, the script merges `origin/main` in, records the verdict, pushes, retargets the PR to main,
+waits for CI, and merges.
 
-| Order | PR | Job | State |
+| Order | PR (base) | Job | State |
 |---|---|---|---|
-| — | #146, #147, #140 | B0-19, B0-17, B0-07 | **MERGED 2026-10-01** (founder recorded the verdicts) |
-| 4 | #148 | session docs | carries this update |
-| 5 | #151 → #147 | B1-01a Journal core | review round 2 PASS at 204ffaa; merge `main` in first |
-| 6 | #152 → #151 | B1-01b chain + blobs | review round 2 PASS at 690d6a2 |
-| 7 | #153 → #152 | B1-05 `job://` lease | review round 3 PASS at 28c3a09 |
-| 8 | #154 → #153 | B1-02 nouns, Go + Userland | Go PASS 18a9d4d, Userland PASS 0531c37 |
-| 9 | #155 → #154 | B1-04 leases + storage fencing | final PASS a102a98 |
-| 10 | #156 → main | Label canon reconcile (docs) | PASS 44f3136; 7 OPEN items for the founder |
-| 11 | #157 → #154 | B1-03 command socket | PASS ec1a2a0 + r4 tests 2b77cea; founder records verdict |
+| — | #141, #142, #143, #146, #147, #140 | B0-02, B0-13, B0-16, B0-19, B0-17, B0-07 | **MERGED** (see `git log --first-parent origin/main`) |
+| 1 | #151 (main) | B1-01a Journal core | review PASS 204ffaa; session file PASS 7855408 |
+| 2 | #152 (#151) | B1-01b chain + blobs | review PASS 690d6a2; session file PASS 0d71381 |
+| 3 | #153 (#152) | B1-05 `job://` lease | review PASS 28c3a09; session file PASS 2c20cb6 |
+| 4 | #154 (#153) | B1-02 nouns, Go + Userland | review PASS 18a9d4d / 0531c37; session file PASS 358b148 |
+| 5 | #155 (#154) | B1-04 leases + storage fencing | review PASS a102a98; session file PASS 2353bf1 |
+| 6 | #157 (#154) | B1-03 command socket | review PASS ec1a2a0 + r4 tests; session file PASS e2984f8 |
+| 7 | #156 (main) | Label canon reconcile (docs) | review PASS 4dce49b; OPEN list empty |
+| 8 | #148 (main) | session docs | last; carries this update |
 
 **Full/irreversible, still waiting on Codex + founder:** #139 (MissionsView now excluded from the design-probe
 census, reviewer PASS at 9614c35, `npm run check` 48/48), #145, #149, #150, #144.
@@ -93,8 +94,9 @@ census, reviewer PASS at 9614c35, `npm run check` 48/48), #145, #149, #150, #144
 B1-05 expiry + forced conflict). Each time a reviewer's wrong implementation passed them; a builder who did not write
 the job re-froze them, with a dated reason in the register. Rule now: implementers never edit frozen tests.
 
-**Next jobs:** B1-02 done (#154) → freeze done-tests for B1-03 and the B1-04 remainder (none exist yet) → B1-03 → B1-04 remainder (wound-wait,
-deadlock detector, hot resources, pre-receive verifier). Give renew/heartbeat, shared mode and max_wait an owner row
+**Next jobs (unblocked once the train lands):** B1-12 outbox (frozen tests exist, red) · B1-08 launcher (frozen tests exist, red;
+needs B1-06/07) · B1-26 Label wire schema (freeze tests from #156) · B1-06 / B1-07 WorkerAdapters (freeze tests) ·
+B1-14a policy compiler. B1-04 remainder not covered by its tests: hot-resource auto-add, nightly drill scheduling. Give renew/heartbeat, shared mode and max_wait an owner row
 in 14 §6 — nothing owns them today. Follow-ups: hard link bypasses the Journal writer lock (refuse link count > 1);
 per-agent git author so builder separation is provable; `--full-index` in `verdict.mjs` (irreversible).
 **Every merged or open B1 PR owes a Codex re-review** (single-family this session).

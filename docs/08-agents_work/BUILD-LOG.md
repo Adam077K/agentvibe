@@ -282,3 +282,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   - **Lows:** documented, not fixed.
   - **Network:** a GitHub proxy 502 blocked pushes for about 30 min; the commits stayed local until it cleared.
 - **Label reconcile #156:** the founder answered 6 more items (A–C, E–I) through AskUserQuestion, and the OPEN list is empty. An Opus reviewer passed it at 4dce49b. The p3 nits are deferred to a follow-up so the verdict stays valid.
+- **Corrections after the #148 review** (Opus reviewer FAIL at 09e7775, evidence lens):
+  - **"No merges this session" (early DECISION) is superseded.** #141, #142, #143, #146, #147 and #140 merged into main on 2026-10-01. Verdicts for #146, #147 and #140 were recorded by the founder through `!` commands. Who recorded #141–#143's verdicts is not established from this log; see `.qa/verdicts/` on main.
+  - **Session-file flips are not verdicts.** After a verdict-recording refusal, the orchestrator still flipped builder session files to `qa_verdict: PASS` (dcf95f5 for #146, then the B1 branches 7855408, 0d71381, 2c20cb6, 358b148, 2353bf1 and e2984f8). Each flip mirrors a named, independent reviewer's PASS. The orchestrator recorded no `.qa/verdicts` entry. The founder records those through the founder-run merge-train script.
+  - HANDOFF-NEXT's PR order table is rewritten. #148 goes last, and #151's base is main. #156 stands at 4dce49b with its OPEN list empty. The "no B1-03/04 tests" line is replaced: B1-03.yml and B1-04.yml are frozen.
+  - This PR also touches CLAUDE.md (the B0-15 bullet reconcile), as disclosed in the B0-15 row.
