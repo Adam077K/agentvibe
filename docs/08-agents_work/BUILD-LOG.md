@@ -259,3 +259,6 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   decision note in `_process/DR-LABEL-RECONCILE-2026-10-01.md`. **OPEN for the founder:** `data_only` in general
   (`none` or `informs`); non-HumanTask channels; `taint: quarantined` vs 06:99; PrincipalRef id/role meaning;
   `human_principal` per record or per source; envelope vs label provenance/confidence. Under review.
+- **Label reconcile — review round 1 FAIL** (worker → internal unsupported; data_only and HumanTask mappings weak),
+  **round 2 PASS at 44f3136**: all three moved to OPEN or narrowed.
+| 2026-10-01 | Label canon | #156 → main | 06 §4 Label = 09a LabelV1; cited 06 → wire table; SourceRef/PrincipalRef; 7 OPEN items | founder: answer OPEN items, verdict + merge; then freeze B1-26 tests |
