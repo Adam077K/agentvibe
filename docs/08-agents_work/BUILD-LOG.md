@@ -133,3 +133,12 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   that branch; it will point at the plan row gap instead.
 - **B1-02** — test author writing and freezing its done-tests on `build/b1-02-tests` (Go + TS round-trip, upcaster
   replay). Implementation comes after those tests are reviewed.
+- **B1-05 re-freeze 2** — `build/b1-05` @ 28c3a09 (fresh non-implementer): race cut-in now fires after the first
+  Head; register 79a77e01 → 5170fe93. 20 runs: real code 20/20 pass, M1 and M2 20/20 fail. Round-3 review running.
+- **B1-02 tests, Go half frozen** — `build/b1-02-tests` @ 4090ea4: `kernel/internal/nouns` stub contract, 6 red
+  done-tests (round-trip, malformed refusal, upcast replay keeps the decision, upcaster cannot change meaning,
+  unchecked upcaster refused, kernel replays), fixtures, `build/done-tests/B1-02.yml`. A throwaway implementation
+  goes 6/6 green. Under review (canon fidelity of the chosen wire format).
+- **DECISION — Zod gets added in a follow-up job, B1-02-ts.** It is in no package.json. It is free and MIT, and the
+  canon names it for Userland schemas, so DR-84 is met. B1-02-ts adds `zod` plus a JSON-Schema emitter, then freezes
+  the TS round-trip done-tests against the same `testdata/nouns` fixtures. B1-02's implementation waits for both halves.
