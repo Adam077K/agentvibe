@@ -177,3 +177,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   restored `userland/src/nouns.ts` by `cp` from its scratchpad instead. Only its own temporary mutation was discarded,
   but it reached the refused outcome by another route. Re-review checks the file matches the commits. Briefs now
   say: prove pre-fix failure in a `$TMPDIR` copy, never by mutating the worktree.
+- **B1-02 Go review — FAIL at d62714f.** High: the decision reader matches keys case-insensitively (encoding/json
+  default), so `"Disposition":"auto"` beside `"disposition":"never"` reads as auto — a past decision's meaning can
+  flip. High: integers above 2^53−1 accepted. Builder fixing.
+- **DECISION — the Kernel is the strict gate.** Go decodes exact-case keys and refuses duplicate and case-variant
+  keys. JSON.parse cannot see either, so Userland stays laxer there; that mismatch fails closed at the Kernel and is
+  accepted. Open risk for the Userland re-review: numbers above 2^53 inside raw `data` re-encoded with changed bytes.
