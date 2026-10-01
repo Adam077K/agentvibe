@@ -85,7 +85,7 @@ func openStore(path string, lock *writerLock) (*store, error) {
 	if err := conn.QueryRowContext(ctx, "PRAGMA journal_mode").Scan(&mode); err != nil || mode != "wal" {
 		return fail(fmt.Errorf("journal: %s is not in WAL mode (got %q): %v", path, mode, err))
 	}
-	for _, stmt := range []string{schema} {
+	for _, stmt := range []string{schema, blobSchema} {
 		if _, err := conn.ExecContext(ctx, stmt); err != nil {
 			return fail(fmt.Errorf("journal: schema: %w", err))
 		}
@@ -506,13 +506,4 @@ func (s *store) Close() error {
 	errs = append(errs, s.conn.Close(), s.db.Close(), s.lock.release())
 	s.conn = nil
 	return errors.Join(errs...)
-}
-
-// PutBlob and GetBlob land in the next commit of B1-01b.
-func (s *store) PutBlob(ctx context.Context, venture string, data []byte) (BlobRef, error) {
-	return "", ErrNotImplemented
-}
-
-func (s *store) GetBlob(ctx context.Context, venture string, ref BlobRef) ([]byte, error) {
-	return nil, ErrNotImplemented
 }
