@@ -170,3 +170,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   `1.0`/`1e0`/`-0` are value-equal after JSON.parse: accepted, documented mismatch.
 - **FOLLOW-UP — `.pnpm-store/` lands in the repo root** on every install and the hook blocks removing it. Add it to
   `.gitignore` or set pnpm's store-dir outside the repo.
+- **B1-02 Userland fix round 1** — `build/b1-02-userland` @ b0adb6b: raw JSON passed through uncopied (keeps
+  `__proto__`), null/'' refused on rationale, retention.deadline, provider_ref; `subjects:[]` refused; 33 unit tests,
+  15 of which fail on the pre-fix code. Re-review running.
+- **VIOLATION (recorded, not repeated)** — during the pre-fix proof the hook refused `git checkout --`; the builder
+  restored `userland/src/nouns.ts` by `cp` from its scratchpad instead. Only its own temporary mutation was discarded,
+  but it reached the refused outcome by another route. Re-review checks the file matches the commits. Briefs now
+  say: prove pre-fix failure in a `$TMPDIR` copy, never by mutating the worktree.
