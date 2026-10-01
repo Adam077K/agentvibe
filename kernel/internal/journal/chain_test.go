@@ -2,6 +2,7 @@ package journal
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -170,5 +171,129 @@ func TestBlobIntegrity(t *testing.T) {
 	}
 	if _, err := s.PutBlob(ctx, "v", []byte("payload")); !errors.Is(err, ErrBlobCorrupt) {
 		t.Fatalf("PutBlob over altered bytes: %v, want ErrBlobCorrupt", err)
+	}
+}
+
+// editFile changes the closed Journal's SQLite file directly, the way a second hand on the file
+// would, and closes its connection (checkpointing) before returning.
+func editFile(t *testing.T, path string, edit func(db *sql.DB)) {
+	t.Helper()
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	edit(db)
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func reopen(t *testing.T, path string) *store {
+	t.Helper()
+	j, err := Open(path)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	t.Cleanup(func() { j.Close() })
+	return j.(*store)
+}
+
+// A middle row rewritten together with its own hash recomputes cleanly; only the next row's
+// prev_hash link exposes it. Kills a mutant that drops the prev_hash link check.
+func TestReopenRefusesSelfConsistentMiddleRewrite(t *testing.T) {
+	ctx := context.Background()
+	s, path := openTestStore(t)
+	fill(t, s, "a", 6)
+	fill(t, s, "b", 2)
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	editFile(t, path, func(db *sql.DB) {
+		var prev string
+		if err := db.QueryRow(`SELECT prev_hash FROM events WHERE stream = 'a' AND seq = 3`).Scan(&prev); err != nil {
+			t.Fatal(err)
+		}
+		h, err := eventHash("a", 3, "t", []byte("forged"), prev)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.Exec(`UPDATE events SET data = ?, hash = ? WHERE stream = 'a' AND seq = 3`, []byte("forged"), h); err != nil {
+			t.Fatal(err)
+		}
+	})
+	r := reopen(t, path)
+	if _, err := r.Read(ctx, "a", 1); !errors.Is(err, ErrChainBroken) {
+		t.Fatalf("Read after a self-consistent middle rewrite: %v, want ErrChainBroken", err)
+	}
+	if err := r.Verify(ctx); !errors.Is(err, ErrChainBroken) {
+		t.Fatalf("Verify after a self-consistent middle rewrite: %v, want ErrChainBroken", err)
+	}
+	if _, err := r.Read(ctx, "b", 1); err != nil {
+		t.Fatalf("bystander Read: %v", err)
+	}
+}
+
+// Open must verify before anything is served or extended: no Verify call here. A middle row's
+// data is edited (hash left alone) behind the closed Journal while the head row is untouched, so
+// only the open-time walk can know. Kills a mutant that skips that walk or trusts stored heads.
+func TestOpenRefusesTamperWithoutVerify(t *testing.T) {
+	ctx := context.Background()
+	s, path := openTestStore(t)
+	fill(t, s, "a", 6)
+	fill(t, s, "b", 2)
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	editFile(t, path, func(db *sql.DB) {
+		if _, err := db.Exec(`UPDATE events SET data = ? WHERE stream = 'a' AND seq = 2`, []byte("edited")); err != nil {
+			t.Fatal(err)
+		}
+	})
+	r := reopen(t, path)
+	if _, err := r.Append(ctx, Proposal{Stream: "a", ExpectSeq: 6, Type: "t", Data: []byte("more")}); !errors.Is(err, ErrChainBroken) {
+		t.Fatalf("Append to a tampered stream, first call after Open: %v, want ErrChainBroken", err)
+	}
+	if _, err := r.Read(ctx, "a", 5); !errors.Is(err, ErrChainBroken) {
+		t.Fatalf("Read past the tampered row: %v, want ErrChainBroken", err)
+	}
+	// Positive control: an intact stream is served and extended, so refusal is not blanket.
+	if evs, err := r.Read(ctx, "b", 1); err != nil || len(evs) != 2 {
+		t.Fatalf("bystander Read: %d events, %v", len(evs), err)
+	}
+	if _, err := r.Append(ctx, Proposal{Stream: "b", ExpectSeq: 2, Type: "t"}); err != nil {
+		t.Fatalf("bystander Append: %v", err)
+	}
+}
+
+func TestAppendEmptyAndNilData(t *testing.T) {
+	ctx := context.Background()
+	s, path := openTestStore(t)
+	for i, d := range [][]byte{nil, {}} {
+		ev, err := s.Append(ctx, Proposal{Stream: "e", ExpectSeq: uint64(i), Type: "t", Data: d})
+		if err != nil {
+			t.Fatalf("Append(Data=%#v): %v", d, err)
+		}
+		if ev.Data == nil || len(ev.Data) != 0 {
+			t.Fatalf("Append(Data=%#v) returned Data %#v, want empty non-nil", d, ev.Data)
+		}
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	r := reopen(t, path)
+	evs, err := r.Read(ctx, "e", 1)
+	if err != nil || len(evs) != 2 {
+		t.Fatalf("Read: %d events, %v", len(evs), err)
+	}
+	for _, e := range evs {
+		if e.Data == nil || len(e.Data) != 0 {
+			t.Fatalf("seq %d read back Data %#v, want empty non-nil", e.Seq, e.Data)
+		}
+		if want, _ := eventHash("e", e.Seq, "t", []byte{}, e.PrevHash); e.Hash != want {
+			t.Fatalf("seq %d hash %s, want %s", e.Seq, e.Hash, want)
+		}
+	}
+	if err := r.Verify(ctx); err != nil {
+		t.Fatalf("Verify: %v", err)
 	}
 }
