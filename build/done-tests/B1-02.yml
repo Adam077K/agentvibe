@@ -1,0 +1,27 @@
+# Done-test register, B1-02 (docs/vision-v3/14-BUILD-PLAN.md §6: "Round-trip fixtures in both
+# languages; an upcaster cannot change a past decision's meaning (replay test)").
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run: go -C kernel test -count=1 -tags donetest ./internal/nouns/
+# Frozen red against ErrNotImplemented on 2026-10-01: 6 of 6 tests fail. kernel/internal/nouns/nouns.go
+# is NOT registered: it is the interface the job implements (the B0-17 pattern).
+#
+# The three fixture files are registered because they are the wire contract: the Go test and the
+# Userland test read the same bytes, so a fixture edit changes both languages' acceptance at once.
+#
+# HALF FROZEN. The Userland half (Zod schemas -> JSON Schema accept valid.json and reject
+# invalid.json) is NOT here: Zod is in no package.json and no node_modules in this repository, and
+# this freeze was told to add no dependency. Adding the TypeScript test file to this register is a
+# register change, made once Zod and the Userland package location are decided.
+register: B1-02
+jobs:
+  - id: B1-02
+    files:
+      - path: kernel/internal/nouns/nouns_donetest_test.go
+        sha256: d8c9bd7cbde846432dcdabacaf08203b3a20c77e89b496615afa07c4201cbf64
+      - path: kernel/internal/nouns/testdata/nouns/valid.json
+        sha256: 68b404bce74728a855cdd2c116e97b627be52cd3c72647ed0bd0280fb98fae51
+      - path: kernel/internal/nouns/testdata/nouns/invalid.json
+        sha256: 96edbabf07f6daa263182b389cabcec6d0af8476e1fe39d41ac86353cdb3a19a
+      - path: kernel/internal/nouns/testdata/nouns/decisions.json
+        sha256: 2798f0067546141b40296cdd733e55604ffc99ea10a413cc6c942121ac29f86a
