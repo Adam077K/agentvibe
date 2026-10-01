@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
+	osexec "os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -35,7 +35,7 @@ func TestLockChildProcess(t *testing.T) {
 
 func openInChild(t *testing.T, path string) string {
 	t.Helper()
-	cmd := exec.Command(os.Args[0], "-test.run=^TestLockChildProcess$", "-test.count=1")
+	cmd := osexec.Command(os.Args[0], "-test.run=^TestLockChildProcess$", "-test.count=1")
 	cmd.Env = append(os.Environ(), lockChildEnv+"="+path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
