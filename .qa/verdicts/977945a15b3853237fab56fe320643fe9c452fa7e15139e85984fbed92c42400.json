@@ -1,5 +1,5 @@
 {
-  "subject": "d2a8be9acb8bb4d1767286e24db673381255b02cf873239981ade440bb96a99d",
+  "subject": "977945a15b3853237fab56fe320643fe9c452fa7e15139e85984fbed92c42400",
   "base": "02dc743a7c1d3570baf67c680e30073cbebc61ba",
   "tier": "lite",
   "tier_driver": "build/providers/registry.yml",
@@ -7,5 +7,5 @@
   "by": "reviewer-opus",
   "run_id": null,
   "evidence": "B0-02 reviewer engine (Opus, not the builder): FAIL (fabricated hashes) then PASS at 499d982 — 15/15 hashes recomputed independently; founder-requested merge 2026-10-01",
-  "recorded_at": "2026-10-01T07:12:56.415Z"
+  "recorded_at": "2026-10-01T07:21:31.901Z"
 }
