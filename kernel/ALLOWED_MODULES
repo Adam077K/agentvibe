@@ -6,9 +6,42 @@
 # here, and on any `replace` directive, because a replace swaps the code behind an allowed name.
 #
 # Adding a line is a protected-base change (09a §14). A listed module does not admit its own
-# dependencies; each needs its own line. modernc.org/sqlite's transitive modules are NOT listed yet,
-# because they have not been measured against a pinned version. The change that first imports it
-# must name its whole closure here, and is reviewed as the dependency decision it is.
+# dependencies; each needs its own line. B1-01a pinned modernc.org/sqlite v1.60.1 and lists 24
+# modules besides sqlite below. 9 of them compile into the Kernel's build (`go list -deps -test ./...`,
+# run offline); the other 15 are SQLite's code-generation and test tooling, in the module graph only.
+#
+# How the 24 were measured, honestly: NOT by `go list -m all`, which fails offline (GOPROXY=off:
+# "module lookup disabled") because it needs go.mod files the cache does not hold. The list is the
+# union of the `require` lines of the 12 go.mod files in the offline module cache (sqlite v1.60.1
+# and the 9 compiled-in modules, go-humanize and go-strftime at two versions each), and it
+# reproduces exactly: diff against this file is empty. The 15 tooling modules' go.mod files are not
+# cached, so anything only THEY require is unmeasured. That cannot widen the build unnoticed:
+# avk-boundary checks every compiled package against this file and fails on an unlisted module.
 
 # Pure-Go SQLite, no cgo: the Journal's storage engine (09a §4.1).
 modernc.org/sqlite
+
+github.com/dustin/go-humanize # transitive of modernc.org/sqlite@v1.60.1
+github.com/google/pprof # transitive of modernc.org/sqlite@v1.60.1
+github.com/google/uuid # transitive of modernc.org/sqlite@v1.60.1
+github.com/hashicorp/golang-lru/v2 # transitive of modernc.org/sqlite@v1.60.1
+github.com/mattn/go-isatty # transitive of modernc.org/sqlite@v1.60.1
+github.com/ncruces/go-strftime # transitive of modernc.org/sqlite@v1.60.1
+github.com/remyoudompheng/bigfft # transitive of modernc.org/sqlite@v1.60.1
+golang.org/x/mod # transitive of modernc.org/sqlite@v1.60.1
+golang.org/x/sync # transitive of modernc.org/sqlite@v1.60.1
+golang.org/x/sys # transitive of modernc.org/sqlite@v1.60.1
+golang.org/x/tools # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/cc/v4 # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/ccgo/v4 # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/fileutil # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/gc/v2 # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/gc/v3 # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/goabi0 # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/libc # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/mathutil # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/memory # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/opt # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/sortutil # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/strutil # transitive of modernc.org/sqlite@v1.60.1
+modernc.org/token # transitive of modernc.org/sqlite@v1.60.1

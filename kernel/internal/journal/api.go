@@ -101,5 +101,5 @@ type Journal interface {
 // wrapping ErrLocked if another writer holds it. Opening a file whose chain does not verify either
 // fails wrapping ErrChainBroken or returns a Journal that refuses that chain on every call.
 func Open(path string) (Journal, error) {
-	return nil, ErrNotImplemented
+	return open(path)
 }
