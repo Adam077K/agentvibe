@@ -49,6 +49,14 @@ func open(path string) (Journal, error) {
 	if strings.ContainsAny(path, "?#") {
 		return nil, fmt.Errorf("journal: path %q may not contain '?' or '#'", path)
 	}
+	// Lock and open the resolved path, so every spelling of one file contends for one lock.
+	path, err := realPath(path)
+	if err != nil {
+		return nil, err
+	}
+	if strings.ContainsAny(path, "?#") {
+		return nil, fmt.Errorf("journal: resolved path %q may not contain '?' or '#'", path)
+	}
 	lock, err := acquireWriterLock(path)
 	if err != nil {
 		return nil, err
