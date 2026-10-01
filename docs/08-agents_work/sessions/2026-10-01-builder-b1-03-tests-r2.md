@@ -3,7 +3,7 @@ role: builder
 task: b1-03-tests-r2
 branch: build/b1-03-tests-r2
 tier: lite
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 Added kernel/internal/socket/socket_r2_donetest_test.go (11 tests) and registered it in build/done-tests/B1-03.yml with a dated re-freeze reason. Round-1 file and fixture unchanged. No implementation code touched.
 Mutants M1-M7 applied in /tmp/claude-501 copies only: all 7 killed (M1, M4 5/5 runs); round-1 tests stayed green on every mutant, confirming they survived before.

@@ -3,7 +3,7 @@ role: builder
 task: b1-03-tests-r3
 branch: build/b1-03-tests-r3
 tier: lite
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 Base b3ffff3. Added kernel/internal/socket/socket_r3_donetest_test.go (4 tests) and registered it in build/done-tests/B1-03.yml with the dated r3 re-freeze reason. Rounds 1-2 and the fixture are unchanged; no implementation code was touched.
 Mutants R3-M1 to M4 (M4 in two variants, wrong reason and wrong digest) were applied in /tmp/claude-501 copies only. All were killed, and M1, M2, M3 and M4a stayed green on every other done-test.

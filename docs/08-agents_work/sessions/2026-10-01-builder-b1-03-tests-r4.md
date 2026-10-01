@@ -3,7 +3,7 @@ role: builder
 task: b1-03-tests-r4
 branch: build/b1-03-tests-r4
 tier: lite
-qa_verdict: PENDING
+qa_verdict: PASS
 ---
 Base ec1a2a0 (local only). Added kernel/internal/socket/socket_r4_donetest_test.go (3 tests, each kept only because it killed a mutant when run) and registered it with the dated r4 re-freeze reason. Rounds 1-3 unchanged; no implementation code touched.
 Mutants were run in /tmp/claude-501 copies, and every pre-existing test let all four through. Killed: M1 (Fchmodat flags 0, 5/5 runs), M2 forced-false (UserlandGID -1 leaves the socket behind), M4 (0o644 intermediate, 5/5 runs).
