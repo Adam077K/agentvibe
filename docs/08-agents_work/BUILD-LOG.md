@@ -104,3 +104,15 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   seq, prev_hash) all refused. Mutants caught: skipped re-hash, hash without type, venture-blind blob lookup. Not
   caught by the frozen done-tests: dropping the prev_hash link check (also missed by the builder's tests) and Open
   skipping verification. Builder adding plain tests that kill both; frozen B1-01b re-freeze owed to a different builder.
+- **B1-01b fix round 1** — `build/b1-01b` @ 776b72d: plain tests kill the prev_hash-link mutant (self-consistent
+  middle-row rewrite), Open-skips-verify (two variants) and nil/empty Append data. A hook refused one compound shell
+  command; the builder wrote the file via scratchpad + cp (the sanctioned path), not a re-encoding.
+  Re-freeze of the B1-01b done-tests (+ forward merge of B1-01a) running — different builder.
+- **B1-01a re-freeze** — `build/b1-01a` @ 204ffaa: frozen done-test gains `readFrom` checks; `B0-17a.yml` hash
+  156d74c0 → 80292037 with a dated reason. The `fromSeq` mutant now fails it 2/3.
+| 2026-10-01 | B1-01a | #151 (stacked on #147) | Journal core, review round 2 PASS at 204ffaa; hard link bypasses the lock (medium, non-blocking) | founder: verdict + merge after #147; Codex re-review owed |
+- **B1-05 review — FAIL at 284fc7e** (Opus, not the builder). Seven of eight mutants caught; "Check ignores expiry"
+  passes every test (p1). Medium: Release ignores the runner and tokens are guessable seqs; invalid UTF-8 ids break
+  the stream forever. Low: ttl overflow. Builder fixing; a re-freeze of the frozen B1-05 tests is owed.
+- **FOLLOW-UP — unowned lease scope.** Renew/heartbeat, shared mode and max_wait are assigned to B1-04 in code, but
+  B1-04's plan row (14 §6) does not name them. They need an owner row in the plan.
