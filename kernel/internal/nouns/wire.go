@@ -96,18 +96,16 @@ func members(raw json.RawMessage, known ...string) (map[string]json.RawMessage, 
 // undefined (actor, data, budget, …), and refuses two things there:
 //   - a key that appears twice in one object: a reader of those values decodes them too, and which
 //     copy wins is a property of the parser, not of the bytes;
-//   - an integer literal outside ±(2^53-1): Userland's JSON.parse rounds it, so it could not carry
-//     the value without changing the bytes the Kernel hashes. A number with a fraction or an
-//     exponent is not an integer literal and is left alone.
+//   - a number whose exact value is an integer outside ±(2^53-1), in any notation (1e300,
+//     9007199254740993.0, 9.007199254740993e15): Userland's JSON.parse rounds it, so it could not
+//     carry the value without changing the bytes the Kernel hashes. A value that is not an integer
+//     (1.5, 1.5e-3, 9007199254740993.5) is left alone.
 func scanWire(raw json.RawMessage) error {
 	switch kindOf(raw) {
 	case "number":
 		s := string(bytes.TrimSpace(raw))
-		if strings.ContainsAny(s, ".eE") {
-			return nil
-		}
-		if n, err := strconv.ParseInt(s, 10, 64); err != nil || n > maxSafe || n < -maxSafe {
-			return fmt.Errorf("holds the integer %s, outside ±(2^53-1)", s)
+		if unsafeInteger(s) {
+			return fmt.Errorf("holds %s, an integer outside ±(2^53-1)", s)
 		}
 	case "object":
 		m, err := members(raw)
@@ -312,6 +310,42 @@ func integerText(path string, raw json.RawMessage) (string, error) {
 		return "", wrapInvalid(path, "is %s; want an integer", s)
 	}
 	return s, nil
+}
+
+// unsafeInteger reports whether the JSON number literal lit has an exact value that is an integer
+// of magnitude above 2^53-1. It decides on the decimal digits rather than through math/big: the
+// value is D × 10^E with D's digits, and building 10^E for an exponent like 1e999999999 would cost
+// memory the size of the exponent. lit has already passed JSON's number grammar.
+func unsafeInteger(lit string) bool {
+	s := strings.TrimPrefix(lit, "-")
+	mant, exp := s, "0"
+	if i := strings.IndexAny(s, "eE"); i >= 0 {
+		mant, exp = s[:i], s[i+1:]
+	}
+	whole, frac, _ := strings.Cut(mant, ".")
+	digits := strings.TrimLeft(whole+frac, "0")
+	trimmed := strings.TrimRight(digits, "0")
+	if trimmed == "" {
+		return false // zero
+	}
+	// value = trimmed × 10^(e + shift), and trimmed ends in a non-zero digit.
+	shift := int64(len(digits)-len(trimmed)) - int64(len(frac))
+	e, err := strconv.ParseInt(exp, 10, 64)
+	switch {
+	case err != nil || e > 1<<40 || e < -(1<<40):
+		// An exponent this large in magnitude: positive makes an integer far above 2^53, negative
+		// leaves a fraction, whatever the (input-bounded) digits are.
+		return !strings.HasPrefix(exp, "-")
+	}
+	pow := e + shift
+	if pow < 0 {
+		return false // a non-zero last digit below the units place: not an integer
+	}
+	if int64(len(trimmed))+pow > 16 {
+		return true // 17 or more digits; 2^53-1 has 16
+	}
+	n, err := strconv.ParseInt(trimmed+strings.Repeat("0", int(pow)), 10, 64)
+	return err != nil || n > maxSafe
 }
 
 // maxSafe is 2^53-1, JavaScript's Number.MAX_SAFE_INTEGER. 09a §3 types these fields `number`;

@@ -380,9 +380,24 @@ func TestIntegersAreJavaScriptSafe(t *testing.T) {
 	t.Run("the reviewer's case: 2^53+1 inside data", func(t *testing.T) {
 		mustRefuse(t, ev, strings.Replace(ev, `"data":{`, `"data":{"n":9007199254740993,`, 1), decodeEvent)
 	})
-	t.Run("non-integer numbers are unaffected", func(t *testing.T) {
-		for _, n := range []string{"9007199254740993.5", "1e300", "-9.1e15"} {
-			if err := decodeEvent([]byte(strings.Replace(ev, `"data":{`, `"data":{"n":`+n+`,`, 1))); err != nil {
+	// The rule is about value, not notation: an integer-valued number above the range is refused
+	// however it is written, and a non-integer is accepted however large.
+	inData := func(n string) string { return strings.Replace(ev, `"data":{`, `"data":{"n":`+n+`,`, 1) }
+	t.Run("integer values above the range, any notation", func(t *testing.T) {
+		for _, n := range []string{
+			"9007199254740993.0", "9.007199254740993e15", "1e300", "-9.1e15", "9007199254740992e0",
+			"90071992547409920e-1", "0.9007199254740992E16", "1e99999999999999999999", "-1E+17",
+		} {
+			mustRefuse(t, ev, inData(n), decodeEvent)
+		}
+	})
+	t.Run("values that are not integers, or are within the range", func(t *testing.T) {
+		for _, n := range []string{
+			"1.5", "1.5e-3", "9007199254740991.0", "9.007199254740991e15", "-9007199254740991.000",
+			"9007199254740993.5", "1e-300", "0e999999999999999999999", "0.0", "12345678901234567890e-30",
+			"1e-99999999999999999999",
+		} {
+			if err := decodeEvent([]byte(inData(n))); err != nil {
 				t.Errorf("data holding %s refused: %v", n, err)
 			}
 		}
