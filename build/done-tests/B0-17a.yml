@@ -25,6 +25,13 @@
 # token must be ErrStaleToken; and one forced conflict (cutIn wrapper, another claim commits
 # between the read and the Append) whose loser must get ErrHeld. M6 now fails; the forced conflict
 # alone fails the win-mutant 20 of 20 runs. Edited by a builder that is not the B1-05 implementer.
+#
+# Re-frozen 2026-10-01 (round 3): lease_donetest_test.go 79a77e01... -> 5170fe93... Reviewer
+# finding on B1-05: M1, a Claimer that decides on one Head read and appends at a second, fresh Head
+# read, was caught only ~7 of 20 runs, because cutIn fired just before Append, i.e. after M1's
+# second read. cutIn now wraps Head and fires after the FIRST Head read returns. Measured -race
+# -count=20: correct code passes 20/20; M1 fails 20/20; the win-mutant (M2) fails 20/20. Edited by
+# a builder that is not the B1-05 implementer.
 register: B0-17a
 jobs:
   - id: B1-01a
@@ -40,4 +47,4 @@ jobs:
   - id: B1-05
     files:
       - path: kernel/internal/lease/lease_donetest_test.go
-        sha256: 79a77e011d4d542baf26d02fceb1b5c6afed0def6f9e058414e30f517a390ce4
+        sha256: 5170fe93124115b656ec28318b3ea0123bd148bece938b062bba40ff93858abd

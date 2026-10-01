@@ -8,6 +8,11 @@
 // was caught only when the scheduler interleaved (~80% of runs). Added: Check of an expired token
 // with nobody reclaiming, and one forced conflict (cutIn) at the end of the race test.
 //
+// Re-frozen again 2026-10-01 (round 3), same rule: a Claimer that decided on one Head read and
+// appended at a second, fresh Head read (M1) slipped the forced conflict, which fired just before
+// Append and so after M1's second read; the race caught M1 only ~7 of 20 runs. cutIn now fires
+// right after the FIRST Head read returns, so every read after it sees runner-b's claim.
+//
 // Run: go -C kernel test -tags donetest -count=1 ./internal/lease/
 package lease_test
 
@@ -156,9 +161,10 @@ func TestB1_05_TwoRunnerRace(t *testing.T) {
 	}
 
 	// One forced conflict, so the loser's path runs on every run and not only when the scheduler
-	// interleaves: runner-b's claim commits after runner-c has read the free head and before its
-	// Append lands. runner-c's Append is then refused with ErrSeqConflict, and the claim must go
-	// to runner-b alone.
+	// interleaves: runner-b's claim commits the moment runner-c's first Head read returns the free
+	// head, before anything else runner-c does. If runner-c decides on that read, its Append is
+	// refused with ErrSeqConflict; if it re-reads the head and appends there without deciding
+	// again, it appends over a live claim. Either way the claim must go to runner-b alone.
 	cut := &cutIn{Journal: j}
 	cC, err := lease.New(cut)
 	if err != nil {
@@ -169,7 +175,7 @@ func TestB1_05_TwoRunnerRace(t *testing.T) {
 	cut.before = func() { b, errB = cB.ClaimJob(ctx, "job_forced", "runner-b", 90*time.Second) }
 	c, errC := cC.ClaimJob(ctx, "job_forced", "runner-c", 90*time.Second)
 	if cut.before != nil {
-		t.Fatalf("ClaimJob never appended through the Journal it was given; the conflict was not forced")
+		t.Fatalf("ClaimJob never read the head through the Journal it was given; the conflict was not forced")
 	}
 	if errB != nil {
 		t.Fatalf("forced conflict: runner-b's claim: %v", errB)
@@ -184,19 +190,21 @@ func TestB1_05_TwoRunnerRace(t *testing.T) {
 	}
 }
 
-// cutIn is a Journal whose next Append first runs before: a competing transition that commits
-// between the caller's read of the head and its own Append.
+// cutIn is a Journal that runs before once, after its first Head read and before returning it: a
+// competing transition that commits between the caller's first read of the head and everything
+// it does next, a second Head read included.
 type cutIn struct {
 	journal.Journal
 	before func()
 }
 
-func (c *cutIn) Append(ctx context.Context, p journal.Proposal) (journal.Event, error) {
+func (c *cutIn) Head(ctx context.Context, stream string) (uint64, string, error) {
+	seq, hash, err := c.Journal.Head(ctx, stream)
 	if f := c.before; f != nil {
 		c.before = nil
 		f()
 	}
-	return c.Journal.Append(ctx, p)
+	return seq, hash, err
 }
 
 func TestB1_05_FencedAfterRelease(t *testing.T) {
