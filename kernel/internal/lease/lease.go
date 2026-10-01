@@ -12,8 +12,9 @@
 // deadlock detector, hot resources, storage verifiers) owns multi-resource all-or-nothing
 // acquisition, wound-wait, the wait-for-graph deadlock detector, hot resources, and the storage
 // verifiers for repo://, db://, effect://, budget:// and brain://. Renew/heartbeat, shared mode and
-// max_wait/lease.starved are named in 09a §6 but owned by NO plan row; they are listed as a
-// follow-up in BUILD-LOG. Until renew exists a claim simply expires at its ttl.
+// max_wait/lease.starved are named in 09a §6 but owned by NO row of the register in
+// docs/vision-v3/14-BUILD-PLAN.md §6, and need one. Until renew exists a claim simply expires at
+// its ttl.
 //
 // Release authenticates the holder by runner name plus token. That is a guard against a confused
 // runner, not against a hostile one: runner names are not secrets. Caller identity is the command
