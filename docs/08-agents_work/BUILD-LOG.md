@@ -97,3 +97,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **B1-05 built** — `build/b1-05` @ 284fc7e: `job://` lease on Journal streams, fencing token = claim seq, races
   decided by ExpectSeq appends; done-tests B1-05 4/4. The builder's own mutation check was classifier-refused; the
   reviewer owns it.
+- **B1-01a fix round 1** — `build/b1-01a` @ f34edf5: `read_test.go` kills the `fromSeq` mutant; lock keys on the
+  symlink-resolved path (two-process test); ALLOWED_MODULES says 24, sourced from cached go.mod `require` lines.
+  Open: a hard link to the DB still bypasses the lock. Re-freeze of the B1-01a done-test running (different builder).
+- **B1-01b review — FAIL at aa33429** (Opus, not the builder), on tests, not code. Three real-row tampers (payload,
+  seq, prev_hash) all refused. Mutants caught: skipped re-hash, hash without type, venture-blind blob lookup. Not
+  caught by the frozen done-tests: dropping the prev_hash link check (also missed by the builder's tests) and Open
+  skipping verification. Builder adding plain tests that kill both; frozen B1-01b re-freeze owed to a different builder.
