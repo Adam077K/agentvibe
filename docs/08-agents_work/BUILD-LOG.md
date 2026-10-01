@@ -289,3 +289,5 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   - This PR also touches CLAUDE.md (the B0-15 bullet reconcile), as disclosed in the B0-15 row.
 | 2026-10-01 | B1-01a | #151 → main (cd31dc7) | Journal core; founder recorded the verdict via the merge-train script | — |
 | 2026-10-01 | B1-01b | #152 → main (afbb2de) | chain + blobs; founder recorded the verdict. The script first pushed before retargeting the PR, so CI never started. An empty commit triggered CI without changing the diff, and the orchestrator merged on green. Script fixed: retarget first, then push. | — |
+| 2026-10-01 | B1-05 | #153 → main (b3ad147) | job:// lease; the founder recorded the verdict through the merge-train script | — |
+| 2026-10-01 | B1-02 | #154 → main (d9a5d0a) | nouns, Go and Userland. The founder recorded the verdict. GitHub's API timed out mid-train; the orchestrator merged on green after it recovered. Retries added to the script. | — |
