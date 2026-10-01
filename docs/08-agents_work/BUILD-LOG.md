@@ -197,3 +197,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **B1-02 Go — PASS at 18a9d4d.** Unsafe integers refused by exact value from decimal digits (not math/big: a huge
   exponent would be a memory DoS). 23 probes correct; 1 MB literals decide in ≤6.4 ms; the "exponent ignored" mutant
   is killed. Waiting on the Userland half for one B1-02 PR.
+- **B1-02 Userland fix round 2** — `build/b1-02-userland` @ 0531c37: text entry point reads number source via the
+  JSON.parse reviver; unsafe integers refused by value from digits (200k-literal fuzz, 0 mismatches); decode returns
+  a fresh object and refuses Proxy/getter/sparse. Unit 116/116, done 99/99. Round-3 review running.
+- **FOLLOW-UP — float round-trip.** Non-integers that exceed double precision (9007199254740993.5) or underflow
+  (1e-99999999999999999999) re-encode with different bytes in Userland. The Kernel hashes what it receives, so the
+  chain stays consistent; Userland's re-encode promise does not. Proposed rule for both languages: refuse any number
+  whose decimal value does not round-trip exactly through float64. New job, not blocking B1-02.
