@@ -1,0 +1,14 @@
+# The Kernel's allowed third-party modules (docs/vision-v3/09a-ENGINEERING.md §2: "Go 1.25+, pure-Go
+# SQLite, stdlib Ed25519"). One module path per line, no versions: go.sum pins those. The standard
+# library is always allowed and never listed, which is why Ed25519 (crypto/ed25519) has no line.
+#
+# avk-boundary fails on any package in the Kernel's build, tests included, whose module is not named
+# here, and on any `replace` directive, because a replace swaps the code behind an allowed name.
+#
+# Adding a line is a protected-base change (09a §14). A listed module does not admit its own
+# dependencies; each needs its own line. modernc.org/sqlite's transitive modules are NOT listed yet,
+# because they have not been measured against a pinned version. The change that first imports it
+# must name its whole closure here, and is reviewed as the dependency decision it is.
+
+# Pure-Go SQLite, no cgo: the Journal's storage engine (09a §4.1).
+modernc.org/sqlite

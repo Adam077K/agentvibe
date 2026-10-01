@@ -1,0 +1,3 @@
+#!/bin/sh
+# Fixture: an extensionless executable, recognised by its shebang. Must fail.
+exec sqlite3 ~/.agentvibe/kernel/journal.db
