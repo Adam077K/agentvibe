@@ -148,3 +148,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   (Upcast aliasing `Data`) is outside the acceptance sentence. Low: an empty `business_key` is refused against
   the canon type; a comment omits the `held` disposition. Both fixed in B1-02-ts, now running (adds Zod and freezes
   the TS half on the same fixtures).
+- **B1-02-ts frozen** — `build/b1-02-ts` @ cbd1787 (test author, not the implementer): `userland/` package with zod
+  4.6.5 pinned exactly (built-in `z.toJSONSchema`, no second dep; classifier: lite); stub `src/nouns.ts`; TS
+  done-tests on the shared fixtures, 99/99 subtests red; Go-half low fixes re-hashed. Six mutants killed against a
+  throwaway implementation. Open, under review: `userland/` location chosen (none existed); npm lockfile vs the
+  canon's pnpm; JSON Schema check validates via `z.fromJSONSchema`, not an independent validator.
