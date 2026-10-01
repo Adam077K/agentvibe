@@ -1,0 +1,11 @@
+{
+  "subject": "d78108f031759521afdcd87f99bda1d5b8d7d688767e93cdce33c30a828470b6",
+  "base": "59dbe012a22aa61b59d7aab072e76da2b16a8472",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B0-17a.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B1-01a Opus reviewer FAIL at 5c2b483, PASS at 204ffaa after fixes and a re-freeze by a different builder; founder ordered the merge 2026-10-01",
+  "recorded_at": "2026-10-01T14:25:37.097Z"
+}

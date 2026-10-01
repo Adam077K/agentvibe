@@ -1,0 +1,11 @@
+{
+  "subject": "9cfc7786d8dbcd4c01fbbe111f5ae96793769fb54707455c09f18d82a3f81a49",
+  "base": "3174d6cda5a99f93c810ce5f790c796d52bc8878",
+  "tier": "lite",
+  "tier_driver": "spikes/b0-07/profiles/inner-permissive.sb",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B0-07 reviewer (Opus, not the builder): FAIL, FAIL, then PASS at 7477822 on the spike write-up; outcome stays unresolved until the founder's nested rerun; founder approved 2026-10-01",
+  "recorded_at": "2026-10-01T10:23:58.596Z"
+}
