@@ -13,6 +13,7 @@
 //     Effect.gateway_epoch) are decimal strings on the wire, and a JSON number there is refused;
 //     Hex is 64 lowercase hex characters; a Label whose schema is not "label/1" is refused, wherever
 //     it sits; Event.seq and Event.schema are >= 1; every *Id and *Ref is a non-empty string.
+//   - decodeText(schema, text) reads wire JSON TEXT and is the preferred entry point; see parseWire.
 //   - schema.decode(wire) returns the typed value or throws; schema.encode(value) returns wire JSON.
 //     encode(decode(wire)), serialised with JSON.stringify, is the same JSON as wire. Whether a
 //     bigint decodes to a bigint or stays a decimal string is the job's choice; its value is exact.
@@ -94,12 +95,68 @@ const Id = z.string().min(1);
 // "" by their type; the two plain strings, Label.retention.deadline and Receipt.provider_ref, use this.
 const OptionalString = z.string().min(1).optional();
 
+// THE SAFE-INTEGER WIRE RULE (orchestrator decision, review round 2; I-JSON, RFC 7493 §2.2): a JSON
+// number whose value is an integer outside ±(2^53-1) is refused EVERYWHERE on the wire, including
+// inside raw fields. JSON.parse rounds such a number silently (9007199254740993 reads as
+// 9007199254740992), so accepting it would re-encode different bytes from those the Kernel hashed.
+// Every finite double of magnitude >= 2^53 is an integer, so on a parsed value the rule reduces to
+// |v| <= 2^53-1 for integers. A non-finite value (1e400 parses to Infinity) has no JSON text and is
+// refused as well.
+function isSafeWireNumber(v: number): boolean {
+  return Number.isFinite(v) && (!Number.isInteger(v) || Number.isSafeInteger(v));
+}
+
+const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
+const INTEGER_TEXT = /^-?(?:0|[1-9][0-9]*)$/;
+
+// WireError: the JSON text breaks a wire rule that JSON.parse's result could no longer show.
+export class WireError extends Error {
+  constructor(message: string) {
+    super(`nouns: ${message}`);
+    this.name = 'WireError';
+  }
+}
+
+// parseWire is THE way to read wire JSON text in Userland. It is JSON.parse with a reviver that reads
+// each number's source text (context.source, Node >= 21) and refuses an integer outside ±(2^53-1)
+// BEFORE JSON.parse's rounding can hide it, so the refusal names the number as written. It throws
+// SyntaxError for text that is not JSON and WireError for an unsafe number. The value it returns is
+// freshly built by JSON.parse: plain objects and arrays, nobody else's references, and an own
+// "__proto__" key kept as a key.
+export function parseWire(text: string): unknown {
+  return JSON.parse(text, (key: string, value: unknown, context?: { source?: string }) => {
+    if (typeof value !== 'number') return value;
+    const source = context?.source;
+    if (source === undefined) {
+      // Without the source text the rounding is invisible; refuse to pretend otherwise.
+      throw new WireError('JSON.parse reviver context.source is unavailable in this runtime (Node >= 21)');
+    }
+    if (INTEGER_TEXT.test(source)) {
+      const n = BigInt(source);
+      if (n > MAX_SAFE || n < -MAX_SAFE) {
+        throw new WireError(`integer ${source} at key ${JSON.stringify(key)} is outside ±(2^53-1)`);
+      }
+    } else if (!isSafeWireNumber(value)) {
+      throw new WireError(`number ${source} at key ${JSON.stringify(key)} is outside ±(2^53-1)`);
+    }
+    return value;
+  });
+}
+
+// decodeText(schema, text) = schema.decode(parseWire(text)). PREFER IT over schema.decode(object):
+// an object that came from a plain JSON.parse has already been rounded. The object path still refuses
+// every unsafe integer it can see (the rounded value is itself unsafe), but it cannot tell the
+// number's original spelling, and it trusts its caller to have parsed the right bytes.
+export function decodeText<S extends ZodType>(schema: S, text: string): z.output<S> {
+  return schema.decode(parseWire(text)) as z.output<S>;
+}
+
 // isJsonValue reports whether v is a value JSON.parse could have produced: null, a boolean, a string,
-// a finite number, an array of JSON values, or a plain object (prototype Object.prototype or null)
+// a number within the safe-integer rule, an array of JSON values, or a plain object (prototype Object.prototype or null)
 // whose own string keys hold JSON values. It reads and never copies, so it cannot lose a key.
 function isJsonValue(v: unknown, path: Set<object> = new Set()): boolean {
   if (v === null || typeof v === 'boolean' || typeof v === 'string') return true;
-  if (typeof v === 'number') return Number.isFinite(v);
+  if (typeof v === 'number') return isSafeWireNumber(v);
   if (typeof v !== 'object') return false; // undefined, bigint, function, symbol
   if (path.has(v)) return false; // a cycle has no JSON text
   path.add(v);
@@ -161,7 +218,9 @@ export const Label = z.strictObject({
   taint: z.enum(['clean', 'untrusted', 'quarantined']),
   provenance: z.array(Raw),
   consent_scope: Id.optional(),
-  confidence: z.number().optional(),
+  // The safe-integer wire rule as bounds: past ±(2^53-1) every double is an integer, so the bounds
+  // are the whole rule and the emitted JSON Schema carries them.
+  confidence: z.number().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER).optional(),
   subjects: z.array(Id).min(1).optional(), // omitempty in Go: an empty list is written by omitting it
   revocation_epoch: Uint,
 });

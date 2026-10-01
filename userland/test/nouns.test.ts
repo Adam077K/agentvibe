@@ -141,3 +141,86 @@ test('raw JSON fields are still required where required, and still JSON', () => 
   assert.equal(nouns.Event.safeEncode({ ...ok, data: { f: () => 1 } }).success, false, 'a function is not JSON');
   assert.equal(nouns.Event.safeEncode({ ...ok, data: new Date(0) }).success, false, 'a Date is not plain JSON');
 });
+
+// Review round 2, finding p1: an integer outside ±(2^53-1) is refused everywhere on the wire,
+// including inside raw fields (orchestrator decision; I-JSON). JSON.parse would round it, and the
+// re-encoded bytes would differ from those the Kernel hashed.
+
+// withLiteral returns the fixture's wire TEXT with the JSON literal `lit` written at `path`.
+function withLiteral(base: string, path: string[], lit: string): string {
+  const v = fixture(base);
+  setPath(v, path, '__LITERAL__');
+  return JSON.stringify(v).replace('"__LITERAL__"', lit);
+}
+
+const unsafeSpots: { kind: string; base: string; path: string[] }[] = [
+  { kind: 'Event', base: 'event.full', path: ['data'] },
+  { kind: 'Event', base: 'event.full', path: ['rationale'] },
+  { kind: 'Job', base: 'job.full', path: ['budget'] },
+  { kind: 'Effect', base: 'effect.full', path: ['fencing_tokens'] },
+  { kind: 'Operation', base: 'operation.full', path: ['target'] },
+  { kind: 'Label', base: 'label.full', path: ['confidence'] },
+];
+
+const unsafeLiterals = [
+  '{"n":9007199254740993}',
+  '{"n":-9007199254740993}',
+  '[1,[9007199254740992]]',
+  '{"n":1e16}',
+  '{"n":1e400}',
+];
+
+test('p1 r2: decodeText refuses an unsafe integer inside a raw field, before rounding', async (t) => {
+  for (const s of unsafeSpots) {
+    const lits = s.path[0] === 'confidence' ? ['9007199254740993', '1e16', '-1e16'] : unsafeLiterals;
+    for (const lit of lits) {
+      await t.test(`${s.kind}.${s.path.join('.')} = ${lit}`, () => {
+        const text = withLiteral(s.base, s.path, lit);
+        assert.throws(() => (nouns as any).decodeText((nouns as any)[s.kind], text),
+          (e: Error) => e.name === 'WireError', 'want a WireError naming the number as written');
+      });
+    }
+  }
+});
+
+test('p1 r2: the object path refuses the rounded value too', async (t) => {
+  for (const s of unsafeSpots) {
+    await t.test(`${s.kind}.${s.path.join('.')}`, () => {
+      const lit = s.path[0] === 'confidence' ? '9007199254740993' : '{"n":9007199254740993}';
+      const value = JSON.parse(withLiteral(s.base, s.path, lit));
+      assert.equal((nouns as any)[s.kind].safeDecode(value).success, false,
+        'a rounded integer was accepted, and would re-encode as different bytes');
+    });
+  }
+});
+
+test('p1 r2 control: the safe boundary is accepted and round-trips byte for byte', () => {
+  for (const lit of ['{"n":9007199254740991}', '{"n":-9007199254740991}', '{"x":0.1,"y":-2.5e-7}']) {
+    const text = withLiteral('event.full', ['data'], lit);
+    const decoded = (nouns as any).decodeText(nouns.Event, text);
+    assert.equal(JSON.stringify(nouns.Event.encode(decoded)), text, `${lit} did not round-trip`);
+  }
+  const text = withLiteral('label.full', ['confidence'], '9007199254740991');
+  assert.equal(JSON.stringify(nouns.Label.encode((nouns as any).decodeText(nouns.Label, text))), text);
+});
+
+test('p1 r2: decodeText reads every valid fixture as text and round-trips it exactly', () => {
+  const kinds: Record<string, any> = {
+    event: nouns.Event, job: nouns.Job, lease: nouns.Lease, effect: nouns.Effect,
+    receipt: nouns.Receipt, label: nouns.Label, operation: nouns.Operation,
+  };
+  const cases: { name: string; kind: string; value: unknown }[] =
+    JSON.parse(readFileSync(new URL('valid.json', FIXTURES), 'utf8')).cases;
+  for (const c of cases) {
+    const text = JSON.stringify(c.value);
+    const s = kinds[c.kind];
+    assert.equal(JSON.stringify(s.encode((nouns as any).decodeText(s, text))), text, c.name);
+  }
+});
+
+test('p1 r2: parseWire keeps an own __proto__ key and refuses text that is not JSON', () => {
+  const v: any = (nouns as any).parseWire('{"__proto__":{"polluted":1}}');
+  assert.ok(Object.hasOwn(v, '__proto__'));
+  assert.equal(({} as any).polluted, undefined);
+  assert.throws(() => (nouns as any).parseWire('{"a":'), SyntaxError);
+});
