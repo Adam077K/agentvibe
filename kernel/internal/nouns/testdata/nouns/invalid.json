@@ -704,22 +704,6 @@
       }
     },
     {
-      "name": "operation.business-key-empty",
-      "kind": "operation",
-      "error": "invalid",
-      "why": "an Id or key is non-empty",
-      "value": {
-        "id": "op_8a1",
-        "venture": "v_keel",
-        "verb": "publish",
-        "target": "blog:post_12",
-        "business_key": "",
-        "payload_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
-        "amendments": [],
-        "state": "human"
-      }
-    },
-    {
       "name": "operation.payload-digest-short",
       "kind": "operation",
       "error": "invalid",

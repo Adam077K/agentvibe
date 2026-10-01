@@ -6,6 +6,11 @@
 # Frozen red against ErrNotImplemented on 2026-10-01: 6 of 6 tests fail. kernel/internal/nouns/nouns.go
 # is NOT registered: it is the interface the job implements (the B0-17 pattern).
 #
+# Re-hashed 2026-10-01 (B1-02-ts, reviewer low finding): invalid.json drops the case
+# operation.business-key-empty. Canon types business_key `string` (09a §3) and the wire rules in
+# nouns.go require non-empty only for *Id and *Ref types, so refusing "" asserted a rule nothing
+# states. 34 invalid cases remain. nouns.go (unregistered) gains `held` in Outcome.disposition (09a §5).
+#
 # The three fixture files are registered because they are the wire contract: the Go test and the
 # Userland test read the same bytes, so a fixture edit changes both languages' acceptance at once.
 #
@@ -22,6 +27,6 @@ jobs:
       - path: kernel/internal/nouns/testdata/nouns/valid.json
         sha256: 68b404bce74728a855cdd2c116e97b627be52cd3c72647ed0bd0280fb98fae51
       - path: kernel/internal/nouns/testdata/nouns/invalid.json
-        sha256: 96edbabf07f6daa263182b389cabcec6d0af8476e1fe39d41ac86353cdb3a19a
+        sha256: ceeaa112e2e1ccc952746497054ff7699199c057be55535751a0d2946c671f1b
       - path: kernel/internal/nouns/testdata/nouns/decisions.json
         sha256: 2798f0067546141b40296cdd733e55604ffc99ea10a413cc6c942121ac29f86a

@@ -204,7 +204,7 @@ const DecisionCompiled = "decision.compiled"
 // computed consequence. An upcaster may change how a decision is stored, never this.
 type Outcome struct {
 	OperationID string `json:"operation_id"` // action.operation_id
-	Disposition string `json:"disposition"`  // auto|notify|ask|co_sign|never
+	Disposition string `json:"disposition"`  // auto|notify|ask|co_sign|never|held (09a §5)
 	EffectClass string `json:"effect_class"` // R0..R4
 	Door        string `json:"door"`         // two_way|costly_reversible|one_way
 }
