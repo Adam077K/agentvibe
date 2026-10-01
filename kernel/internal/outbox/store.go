@@ -111,6 +111,15 @@ func open(dir string, d Deps) (Outbox, error) {
 		return nil, fmt.Errorf("outbox: %w", err)
 	}
 	o := &outbox{path: filepath.Join(dir, journalFile), d: d}
+	// Create the database file before the Journal first sees it. journal.realPath reads "absent"
+	// and then "present" as a dangling symlink when a concurrent first Open creates the file in
+	// between; an empty file is a valid empty SQLite database. O_EXCL does not follow a symlink, so
+	// a dangling one is left in place for the Journal to refuse.
+	if f, err := os.OpenFile(o.path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600); err == nil {
+		f.Close()
+	} else if !errors.Is(err, os.ErrExist) {
+		return nil, fmt.Errorf("outbox: %w", err)
+	}
 	// Open and close once, so a directory the Journal cannot use fails here and not mid-effect.
 	if err := o.withJournal(context.Background(), func(journal.Journal) error { return nil }); err != nil {
 		return nil, err
