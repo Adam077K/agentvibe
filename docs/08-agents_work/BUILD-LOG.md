@@ -262,3 +262,16 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **Label reconcile — review round 1 FAIL** (worker → internal unsupported; data_only and HumanTask mappings weak),
   **round 2 PASS at 44f3136**: all three moved to OPEN or narrowed.
 | 2026-10-01 | Label canon | #156 → main | 06 §4 Label = 09a LabelV1; cited 06 → wire table; SourceRef/PrincipalRef; 7 OPEN items | founder: answer OPEN items, verdict + merge; then freeze B1-26 tests |
+- **2026-10-01 founder decisions.**
+  - **Sandbox:** Unix socket binding is allowed under $TMPDIR (`/private/tmp/claude-501`). It lives in the local, gitignored `.claude/settings.local.json`, not in the committed settings. A python bind+connect passed after the change; `allowLocalBinding` alone did not allow Unix sockets. B1-03 is unblocked, and its builder has been dispatched.
+  - **Codex:** `Bash(codex exec *)` was already in the allow list and in `sandbox.excludedCommands` (05c26c4). No change was needed. codex-cli 0.154.0 is installed.
+  - **Label (#156):** all 7 OPEN items were decided, using the recommended options:
+    - worker→internal
+    - data_only→informs
+    - non-broker HumanTask→counterparty
+    - channels by author
+    - keep quarantined
+    - PrincipalRef = stable id + relationship role
+    - human_principal per record
+    - label is the sole copy of provenance and confidence
+    The builder is applying them.
