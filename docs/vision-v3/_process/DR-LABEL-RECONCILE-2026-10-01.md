@@ -21,11 +21,9 @@ All line citations are at `origin/main` `59dbe01`, before this change.
 |---|---|---|
 | `origin: system` | `system_of_record` | `06:159` "'system' = a system of record"; `06:179` "`system` (system of record)" |
 | `origin: web` | `public_web` | `06:479` "origin: web … like any public evidence"; `13-WORKED-SCENARIOS.md:94,586` label public-source findings `origin: public_web` |
-| `origin: worker` | `internal` | `13:1404` "Backlot: 41 assets, each `origin: internal`, provenance to repo and sha". **This is the weakest mapping**: it rests on one worked example, not on a definition |
 | `origin: collaborator` | no origin. Channel origin + `provenance[].human_principal` | `00-CANON.md:515`; `06:130-131` "keeps an existing origin … no separate human origin"; `09a:622` |
-| collaborator via the Human Task Market | `counterparty` | `13:587` broker corrections: "`origin: counterparty` + provenance {… contract: Human Task Market ref}"; HumanTask is defined at `16:548-556` |
+| a licensed customs broker's corrections, contracted through the Human Task Market (the Laytime field map) | `counterparty` | `13:587`: "`origin: counterparty` + provenance {… contract: Human Task Market ref}". This decides only this case, not every HumanTask kind (`16:556`) |
 | `tainted: true` / `false` | `taint: untrusted` / `clean` | `09a:604` "non-clean if ANY data or control ancestor is untrusted"; `06:163` uses the same predicate |
-| `permission: data_only` (Scenario A only) | `permission: none` | `13:1281,1311-1312` record the same Front Desk step of the same scenario as `taint: untrusted, authority: none`; `09a:625` maps `authority` to `permission` with the same values |
 | `permission: non_exportable` | `exportable: false` (separate field) | `09a:575` "twin records carry `origin: synthetic, exportable: false`"; `09a:603`; DR-50 |
 | `retention` (06 §8 names) | `retention.hold`; `synthetic` → `retention.class` | `09a:627-629`. The comment at `06:165` ("wire values per 09a §11.6") contradicted those rows and is gone |
 | `retention_deadline` | `retention.deadline` | `09a:601` "retention deadline, computed; never a class" |
@@ -34,18 +32,27 @@ All line citations are at `origin/main` `59dbe01`, before this change.
 
 ## OPEN — not chosen, because the canon does not support a choice
 
-1. **`data_only` in general: `none` or `informs`?** `13:1312` uses `none` for an untrusted counterparty email, and
-   `13:927` uses `informs` for a customer email. Neither value is defined anywhere. `06:501` (Pain Index) is left
-   without a permission, with an OPEN comment.
-2. **Channels other than the Human Task Market.** No canon text names the channel that yields `internal` (`09a:622`).
-   This includes a contribution made in a Room by a co-founder or contractor (`16:520-528`).
-3. **`taint: quarantined` against `06:99`.** That line reads "`quarantined_at` … a record state (§8), not a label
+1. **`data_only`: `none` or `informs`?** It is wholly open.
+   - `13:1312` uses `none` for an untrusted counterparty statement. That is 13's Beacon procurement scenario, not
+     06's Scenario A (R3-red, `06:184-192`).
+   - `13:927` uses `informs` for a customer email.
+   - Neither value is defined anywhere.
+   - Scenario A step 1 (`06:188`) now states only "below `may_authorise`", which L5 supports.
+   - The Pain Index example (`06:501`) carries an OPEN comment.
+2. **`origin: worker`.** No canon text gives the wire origin of output from the venture's own workers.
+   - An earlier draft mapped it to `internal` on the strength of `13:1404`. Review rejected that: `13:1404` is
+     Scenario 14's import of the founder's donor repos into Backlot assets (`13:1395`), not worker output.
+3. **Channels and HumanTask kinds other than the broker case.** No canon text names the channel that yields
+   `internal` (`09a:622`). This includes a contribution made in a Room by a co-founder or contractor (`16:520-528`).
+   The other HumanTask kinds (`16:556`) are also undecided. `13:1202,1553` label participant work
+   `origin: participant`, which is not a wire origin and contradicts DR-68.
+4. **`taint: quarantined` against `06:99`.** That line reads "`quarantined_at` … a record state (§8), not a label
    value". The wire carries quarantine as a taint value.
-4. **`PrincipalRef` semantics.** It is unsettled whether `id` refers to a 16 §12 Principal record, and whether `role`
+5. **`PrincipalRef` semantics.** It is unsettled whether `id` refers to a 16 §12 Principal record, and whether `role`
    takes 16's Principal kinds.
-5. **Placement of `human_principal`.** The 06 envelope holds one per record (`06:105`). The wire holds one per source
+6. **Placement of `human_principal`.** The 06 envelope holds one per record (`06:105`). The wire holds one per source
    entry (`09a:605,622`).
-6. **Envelope vs label.** The 06 RecordEnvelope carries `provenance` and `confidence` outside `label` (`06:102-105`),
+7. **Envelope vs label.** The 06 RecordEnvelope carries `provenance` and `confidence` outside `label` (`06:102-105`),
    and `LabelV1` carries them inside. The canon does not say whether these are one value or two.
 
 ## Not done (out of scope, mapping already decided)

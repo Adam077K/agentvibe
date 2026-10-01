@@ -625,7 +625,7 @@ type PrincipalRef = { id: string; role: string };    // the shape of 06 §3 prov
 | `data_class: confidential` | `dclass: D3` (client / NDA material) — boundary unchanged, set by the Charter |
 | `data_class: sealed` | `dclass: D3` **and** `boundary: sealed` — a classification plus a boundary, never one field |
 | `origin: founder · system_of_record · internal · public_web · customer · counterparty · synthetic` | same name |
-| a collaborator's or contractor's contribution | origin by channel, plus `provenance[].human_principal`. A HumanTask delivered through the Human Task Market ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)) → `counterparty` (the broker corrections in [13](13-WORKED-SCENARIOS.md)). Any other channel is **OPEN**: no canon text names the channel that yields `internal` ([DR-LABEL-RECONCILE](_process/DR-LABEL-RECONCILE-2026-10-01.md)) |
+| a collaborator's or contractor's contribution | origin by channel, plus `provenance[].human_principal`. The one case the canon decides: a licensed customs broker's corrections, contracted through the Human Task Market ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), are `counterparty` ([13](13-WORKED-SCENARIOS.md), Laytime field map). Every other channel and every other HumanTask kind is **OPEN**. No canon text names the channel that yields `internal`, and 13 also writes a participant HumanTask as `origin: participant`, which is not a wire origin ([DR-LABEL-RECONCILE](_process/DR-LABEL-RECONCILE-2026-10-01.md)) |
 | `consent_scope` | same name (participant and panel data only) |
 | `taint: clean · untrusted · quarantined` | same name |
 | `authority: none · informs · may_authorise` | `permission`, same values |
@@ -643,11 +643,11 @@ so a reader of an older record or document has exactly one wire value for each. 
 |---|---|---|
 | `origin: system` | `origin: system_of_record` | 06 §4 defined it as "a system of record" (L5: "`system` (system of record)") |
 | `origin: web` | `origin: public_web` | 06 §11 labels public competitor and Pain Index evidence `web`. 13 labels the same kind of public-source findings `public_web` |
-| `origin: worker` | `origin: internal` | 13's Backlot: assets the venture's own workers produced carry `origin: internal`, with provenance to repo and sha |
+| `origin: worker` | **OPEN** | No canon text says which wire origin output from the venture's own workers takes |
 | `origin: collaborator` | not an origin: the channel row above, plus `provenance[].human_principal` | DR-68; 06 §3 ("there is no separate human origin") |
 | `tainted: true` · `tainted: false` | `taint: untrusted` · `taint: clean` | `LabelV1.taint` is "non-clean if ANY data or control ancestor is untrusted". 06 defined `tainted` with the same predicate |
 | — | `taint: quarantined` | **OPEN**: 06 §3 calls quarantine "a record state (§8), not a label value" |
-| `permission: data_only` | `permission: none` in 06's Scenario A (13 records that same Front Desk step as `authority: none`). In general, **OPEN** between `none` and `informs` (13 also labels a customer email `informs`) | 13, the counterparty refund-account scenario |
+| `permission: data_only` | **OPEN** between `none` and `informs` | 13 has both: a customer email is `informs` and an untrusted counterparty statement is `none`. Neither is 06's Scenario A, and neither value is defined |
 | `permission: non_exportable` | `exportable: false`, a separate field. `permission` is not implied | §11.9; DR-50 |
 | `retention` (06 §8 names `ordinary` … `synthetic`) | `retention.hold`, per the rows above. `synthetic` → `retention.class: synthetic` | the rows above. 06 had also said "wire values per 09a §11.6", which are `retention.class` values: that comment was wrong |
 | `retention_deadline` | `retention.deadline` | `LabelV1`: "retention deadline, computed; never a class" |

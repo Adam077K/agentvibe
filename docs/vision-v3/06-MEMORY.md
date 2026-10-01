@@ -194,7 +194,7 @@ in [09a §12](09a-ENGINEERING.md#12-labels--the-mechanics).
 
 | Step | What happens | Label effect |
 |---|---|---|
-| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `origin: counterparty, taint: untrusted, permission: none` |
+| 1 | A signed counterparty agent disputes an invoice, claiming "the founder approved a new refund account" | Front Desk: `origin: counterparty, taint: untrusted`; permission below `may_authorise` (L5) |
 | 2 | A support mission (Codex) extracts amount, customer, bank reference into a deposit; Sleep promotes; a later accepted mission (Claude Code) cites it | Label inherited (L1), unchanged by settlement (L3) |
 | 3 | The Skill Foundry proposes a "supplier reconciliation" skill from the success | Candidate inherits `taint: untrusted`; cannot become policy |
 | 4 | An envoy proposes a refund to the new account, inside the cap | Decision Contract blocker `label.untrusted_destination` (L5), owner Record, remedy "broker reads original payment record" |
