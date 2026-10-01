@@ -254,3 +254,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   and its examples to the wire names, adds an explicit 06 → wire note with citations, and lists anything the canon
   does not settle as OPEN rather than inventing it. B1-26's tests follow once that lands.
 - **Critical path state:** B1-06/07/08/09/12/14/18/19 all depend on B1-03, which is blocked on socket binding.
+- **Label canon reconcile drafted** — `docs/label-reconcile` (0470f88, e4477fe, cc5ce9f; trivial tier): 06 §4 Label is
+  now 09a LabelV1 field for field; 09a §12 gains a cited 06 → wire table, `SourceRef`/`PrincipalRef`, a channel rule;
+  decision note in `_process/DR-LABEL-RECONCILE-2026-10-01.md`. **OPEN for the founder:** `data_only` in general
+  (`none` or `informs`); non-HumanTask channels; `taint: quarantined` vs 06:99; PrincipalRef id/role meaning;
+  `human_principal` per record or per source; envelope vs label provenance/confidence. Under review.
