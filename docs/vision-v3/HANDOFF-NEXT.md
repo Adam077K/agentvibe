@@ -66,3 +66,33 @@ Launcher grant (D1/F1) + Build Charter signature · Kernel host siting · data-t
 - **#139 census:** founder chose **exclude MissionsView from the design-probe corpus**. Not done yet; it's a small builder job on `build/b0-01`.
 - **B1-01a:** `build/b1-01a` @ 5c2b483. SQLite v1.60.1 pinned (fetched into `~/.agentvibe/gomod`; build offline with `GOMODCACHE=~/.agentvibe/gomod GOPROXY=off`). B1-01a done-tests 3/3 green, B1-01b 3/5, B1-05 0/4. The go directive rose 1.25 → 1.26, so #144's setup-go must be 1.26. Needs a review, then a PR.
 - **Leftover stashes to drop:** `ceo3-partial-merge-residue`, `ceo3-pr141-checkout-residue`.
+
+## Update — session build-2 (2026-10-01, orchestrator ceo-4)
+**Nothing merged this session.** `scripts/verdict.mjs record` was refused by the auto-mode classifier ("Self-Approval")
+even with a reviewer's PASS in hand. Every lite PR below is ready except that one step. Founder, per PR in order:
+merge `origin/main` in → flip its session file to `qa_verdict: PASS` → run
+`GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.abbrev GIT_CONFIG_VALUE_0=8 node scripts/verdict.mjs record --ref origin/main --verdict PASS --by reviewer-opus --evidence "<from the PR body>"`
+→ commit → push → merge on green. Or grant a rule letting the orchestrator record a named reviewer's verdict.
+
+| Order | PR | Job | State |
+|---|---|---|---|
+| 1 | #146 | B0-19 secret scanner | `main` merged in (6d21065); reviewer PASS |
+| 2 | #147 | B0-17 frozen done-tests | `main` merged in (cc5934a); "conflicting" flag was stale |
+| 3 | #140 | B0-07 Seatbelt spike | `main` merged in (b0862bd); founder rerun still owed |
+| 4 | #148 | session docs | carries this update |
+| 5 | #151 → #147 | B1-01a Journal core | review round 2 PASS at 204ffaa; merge `main` in first |
+| 6 | #152 → #151 | B1-01b chain + blobs | review round 2 PASS at 690d6a2 |
+| 7 | (B1-05, see below) | `job://` lease | `build/b1-05` @ 183320e, round-2 review was running at session end |
+
+**Full/irreversible, still waiting on Codex + founder:** #139 (MissionsView now excluded from the design-probe
+census, reviewer PASS at 9614c35, `npm run check` 48/48), #145, #149, #150, #144.
+
+**Frozen done-tests were strengthened three times** (B1-01a `fromSeq`, B1-01b prev-hash link + Open-skips-verify,
+B1-05 expiry + forced conflict). Each time a reviewer's wrong implementation passed them; a builder who did not write
+the job re-froze them, with a dated reason in the register. Rule now: implementers never edit frozen tests.
+
+**Next jobs:** finish B1-05 (PR on #152 if its round 2 passed) → B1-02 nouns → B1-03 → B1-04 remainder (wound-wait,
+deadlock detector, hot resources, pre-receive verifier). Give renew/heartbeat, shared mode and max_wait an owner row
+in 14 §6 — nothing owns them today. Follow-ups: hard link bypasses the Journal writer lock (refuse link count > 1);
+per-agent git author so builder separation is provable; `--full-index` in `verdict.mjs` (irreversible).
+**Every merged or open B1 PR owes a Codex re-review** (single-family this session).
