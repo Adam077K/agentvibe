@@ -1,0 +1,11 @@
+{
+  "subject": "7d509a055207d50100bb8bcb6a42daa907e286e1d10354f74faf91a9d5b2617c",
+  "base": "d6e9de821080b64973c5f833ee0e4c27ee4e5586",
+  "tier": "trivial",
+  "tier_driver": null,
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "Session log reviewed by an Opus reviewer (not the author); founder ordered the merge 2026-10-01",
+  "recorded_at": "2026-10-01T22:06:42.532Z"
+}
