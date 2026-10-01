@@ -161,3 +161,12 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **B1-02 implementation started** — two Opus builders in parallel off `build/b1-02-ts`: `build/b1-02-go` (kernel
   nouns + upcasters, plus a unit test that Upcast does not alias `Data`) and `build/b1-02-userland` (Zod schemas +
   pnpm). Each gets its own reviewer; they merge into one PR.
+- **B1-02 Userland built** — `build/b1-02-userland` @ e6af4d4: Zod schemas 99/99; npm lock → pnpm lock (zod 4.6.5, same
+  sha512), register Run line moved to pnpm by a non-implementer. **Review round 1 FAIL**: Userland accepts null/''
+  where the contract forbids it (rationale, retention.deadline, provider_ref), accepts `subjects:[]`, and drops a
+  `__proto__` key inside raw JSON. Builder fixing.
+- **B1-02 Go built** — `build/b1-02-go` @ d62714f: 6/6 done-tests, no-alias unit test kills 4 mutants. Under review.
+- **DECISION — JSON integers capped at 2^53−1 in both languages** (I-JSON safe range); Go aligns after its review.
+  `1.0`/`1e0`/`-0` are value-equal after JSON.parse: accepted, documented mismatch.
+- **FOLLOW-UP — `.pnpm-store/` lands in the repo root** on every install and the hook blocks removing it. Add it to
+  `.gitignore` or set pnpm's store-dir outside the repo.
