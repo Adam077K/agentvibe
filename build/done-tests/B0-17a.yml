@@ -10,6 +10,13 @@
 # fromSeq (query without `seq >= ?`) passed all three tests. Added readFrom: Read from mid-stream,
 # from head and past head must return exactly the matching suffix. The mutant now fails 2 of 3;
 # the old file passes it 3/3. Edited by a builder that is not the B1-01a implementer.
+#
+# Re-frozen 2026-10-01: chain_donetest_test.go 6401d663... -> 7ecf4866... Two reviewer findings on
+# B1-01b, each a wrong store that passed all five tests: M10, no prev_hash link check (a middle row
+# rewritten with its own hash recomputed was accepted); M1, Open skipping chain verification (the
+# tamper test always called Verify before Read/Append). Added SelfConsistentRewriteRefused, and
+# fresh-Open Append and Read(from seq 7) checks with no Verify in TamperedRowRefused. Each mutant
+# now fails; the old file passes both. Edited by a builder that is not the B1-01b implementer.
 register: B0-17a
 jobs:
   - id: B1-01a
@@ -19,7 +26,7 @@ jobs:
   - id: B1-01b
     files:
       - path: kernel/internal/journal/chain_donetest_test.go
-        sha256: 6401d6637d24ef4aa703d3d04cf76585a9d9d15dd825f84226602e7082fd907a
+        sha256: 7ecf48669b1397bf4fd0a164f01cea381f50fdee6b4c269958a16000bb648ed6
       - path: kernel/internal/journal/core_donetest_test.go
         sha256: 80292037a5ee6be9850c878ee57a85aebcfa84813a3a8228d59d2e03043ce1c2
   - id: B1-05
