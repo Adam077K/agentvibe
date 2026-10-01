@@ -604,7 +604,7 @@ type LabelV1 = {
   taint: 'clean'|'untrusted'|'quarantined';          // non-clean if ANY data or control ancestor is untrusted
   provenance: Provenance;                            // the ONLY copy; a record envelope references it (founder, 2026-10-01). Human provenance is a field, never an origin
   consent_scope?: ConsentScopeRef;                   // participant/panel data (06 §11, 16 ParticipantProtocol); never widens
-  confidence?: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };  // the ONLY copy (founder, 2026-10-01); required on a Brain record (06 §3); never raises permission
+  confidence?: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };  // the ONLY copy (founder, 2026-10-01); a record keeps no other (06 §3); never raises permission
   subjects?: SubjectId[]; revocation_epoch: number;  // lineage inventory (§11.7); bumped on source/Room revocation
 };
 
@@ -631,7 +631,7 @@ type PrincipalRef = {
 | `data_class: confidential` | `dclass: D3` (client / NDA material) — boundary unchanged, set by the Charter |
 | `data_class: sealed` | `dclass: D3` **and** `boundary: sealed` — a classification plus a boundary, never one field |
 | `origin: founder · system_of_record · internal · public_web · customer · counterparty · synthetic` | same name |
-| a person's contribution, on any channel (HumanTask, email, form, Room) | origin follows the author, and `provenance.human_principal` records the person (founder, 2026-10-01). The founder → `founder`, so the founder's own messages, email included, keep `may_authorise` under 06's L5. A HumanTask the founder does himself is also `founder`. The founder's agents and collaborators → `internal`. A customer's own messages → `customer`. Any other outside person → `counterparty` (founder, 2026-10-01). That includes every HumanTask an outside person does, with `participant` tasks and taste panels among them ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), and the broker's corrections in [13](13-WORKED-SCENARIOS.md) already follow it |
+| a person's contribution, on any channel (HumanTask, email, form, Room) | origin follows the author, and `provenance.human_principal` records the person (founder, 2026-10-01). The founder → `founder`, so the founder's own messages, email included, keep `may_authorise` under 06's L5. A HumanTask the founder does himself is also `founder`. The founder's agents and collaborators → `internal`. A collaborator is a Principal with `PrincipalRef.role: collaborator`. 16 §12 ("Human collaborators") also lists contractors and customers, and this rule treats both as outside people. A customer's own messages → `customer`, except that a taste-panel transcript is a `participant` HumanTask and stays `counterparty` (decision B). Any other outside person → `counterparty` (founder, 2026-10-01). That includes every HumanTask an outside person does, with `participant` tasks and taste panels among them ([16 §13](16-EXTERNAL-WORLD-HUMANS.md)), and the broker's corrections in [13](13-WORKED-SCENARIOS.md) already follow it |
 | `consent_scope` | same name (participant and panel data only) |
 | `taint: clean · untrusted · quarantined` | same name |
 | `authority: none · informs · may_authorise` | `permission`, same values |
@@ -657,7 +657,7 @@ so a reader of an older record or document has exactly one wire value for each. 
 | `permission: non_exportable` | `exportable: false`, a separate field. `permission` is not implied | §11.9; DR-50 |
 | `retention` (06 §8 names `ordinary` … `synthetic`) | `retention.hold`, per the rows above. `synthetic` → `retention.class: synthetic` | the rows above. 06 had also said "wire values per 09a §11.6", which are `retention.class` values: that comment was wrong |
 | `retention_deadline` | `retention.deadline` | `LabelV1`: "retention deadline, computed; never a class" |
-| `venture: string` · `subjects: string[]` | `venture: VentureId \| 'portfolio'` · `subjects?: SubjectId[]` | `LabelV1` |
+| `venture: string` · `subjects: string[]` | `venture: VentureId \| 'portfolio'` · `subjects?: SubjectId[]` | `LabelV1`. **OPEN**: 06 §3's envelope also allows `venture: 'founder'` (founder memory, 06 §12), and `LabelV1` has no such value ([DR-LABEL-RECONCILE](_process/DR-LABEL-RECONCILE-2026-10-01.md)) |
 | envelope `confidence` · `provenance` (06 §3) | `label.confidence` · `label.provenance`, the only copies | founder, 2026-10-01 |
 | `provenance.human_principal: {id, role: string}` | `PrincipalRef`, with `role` one of `founder` · `collaborator` · `contractor` · `customer` | founder, 2026-10-01 |
 

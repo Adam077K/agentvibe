@@ -92,7 +92,7 @@ Nine kinds, one envelope. Free text exists only as staging material inside depos
 type RecordEnvelope = {
   id: string;                                   // ULID, stable across versions
   kind: 'entity'|'fact'|'explanation'|'question'|'decision'|'obligation'|'prior'|'null'|'lesson';
-  venture: string | 'portfolio' | 'founder';
+  venture: string | 'portfolio' | 'founder';           // 'founder' = founder memory (§12); LabelV1.venture has no 'founder' value: OPEN, see 09a §12 06 → wire
   valid_from: string;  valid_to: string | null;         // world time
   recorded_at: string; invalidated_at: string | null;   // system time  (bi-temporal, natively in files)
   supersedes?: string[]; superseded_by?: string;
@@ -165,7 +165,7 @@ type Label = {                                      // field for field 09a §12 
   taint: 'clean'|'untrusted'|'quarantined';         // non-clean if any data or control ancestor is untrusted; citation never clears it
   provenance: Provenance;                           // 09a §12: sources, derived_from, author, human_principal (one per record)
   consent_scope?: ConsentScopeRef;                  // participants and panels (§11); never widens (§11 pivot rule)
-  confidence?: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };   // required on a record (§3); never raises permission (L2)
+  confidence?: { rung: 'E0'|'E1'|'E2'|'E3'|'E4'|'E5'; p?: number };   // a record's only copy (§3); never raises permission (L2)
   subjects?: SubjectId[];                           // data subjects → lineage inventory (§8)
   revocation_epoch: number;                         // bumped when a source or Room is revoked
 };
@@ -321,16 +321,22 @@ a consolidation mission; it never deletes — only Record does (DR-04 applied to
 
 | Verb | Effect | Trigger | Reversible | Authority |
 |---|---|---|---|---|
-| **Decay** | Out of default index; stub remains | Utility < θ, no settled cite 90 d, `ordinary` only | Yes | Record (Sleep) |
+| **Decay** | Out of default index; stub remains | Utility < θ, no settled cite 90 d, `retention.hold: none` only | Yes | Record (Sleep) |
 | **Invalidate** | `valid_to` set; answers `as_of` | Contradicting settled evidence | Yes | Record + opposite-family check |
 | **Redact** | Field-level removal of personal/sealed data | Reclassification, data policy | No, for the field | Record |
 | **Forget** | Governed erasure across files, history, index, blobs, caches, backups, projections | ForgetRequest: founder, customer (privacy law), contract end | **No, by design** | Record proposes; **Custody executes as an effect** (DR-41) |
 | **Quarantine** | Sets `quarantined_at` and `taint: quarantined`; out of packs; cascade per L6 | Poison suspicion, canary hit, disclosure failure, revocation | Yes | Record |
 
-Retention classes decide which verbs apply: `ordinary` (all), `obligation` (never decay/invalidate without settled
-release), `legal` (held until the retention authority releases), `safety` (never decays), `pinned`, `synthetic`. The
-class says *which* verbs apply; the label's separate `retention.deadline` says *when* one is due — a class never implies a
-date and a date never implies a class [DR-68].
+The retention **hold** (`retention.hold`) decides which verbs apply:
+- `none` allows all of them (written `ordinary` before DR-68).
+- `obligation` never decays or invalidates without a settled release.
+- `legal` is held until the retention authority releases it.
+- `safety` never decays.
+- `pinned` has no verb rule in the canon.
+
+`synthetic` is a `retention.class` (storage lifetime, 09a §11.6), not a hold. The hold says *which* verbs apply, and the
+label's separate `retention.deadline` says *when* one is due. Neither class nor hold implies a date, and a date never
+implies either [DR-68].
 
 **Immutable audit versus true forgetting** [R3-red §3.5, H03] is resolved by DR-41. The Journal keeps *that* an action
 happened, not its sensitive payload; payloads are encrypted **per subject** so destroying one key never destroys unrelated
