@@ -177,7 +177,7 @@ in [09a §12](09a-ENGINEERING.md#12-labels--the-mechanics).
 
 | # | Label law | Stops |
 |---|---|---|
-| L1 | **Transitive over data *and* control dependencies** — output label = join of every input read, including inputs that only chose which branch ran. Provenance is the output's own, and inputs are reached through `derived_from` (09a §12). How confidence combines is OPEN | A clean-looking summary of a tainted email |
+| L1 | **Transitive over data *and* control dependencies** — output label = join of every input read, including inputs that only chose which branch ran. Provenance is the output's own, and inputs are reached through `derived_from` (09a §12). Confidence starts at the lowest input rung, and later evidence may raise it (founder, 2026-10-01) | A clean-looking summary of a tainted email |
 | L2 | **Confidence, provenance and permission are three fields**; an E4 fact may still carry a `permission` below `may_authorise` | "Well evidenced, so it may act" |
 | L3 | **Citation never declassifies** — settling, citing or repeating raises `utility` and may raise the rung of *our use*; it never changes `taint`, `permission` or the source's authority [DR-40, B16] | X01's quiet authority growth |
 | L4 | **Declassify only by independent re-derivation** from an independently authorised source through Acceptance's observation broker — never a paraphrase | Laundering by rewording |

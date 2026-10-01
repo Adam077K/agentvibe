@@ -85,18 +85,24 @@ The orchestrator relayed these after the round-3 review passed at `a1eeed7`. The
   - Basis: L6 already walks `derived_from` for the quarantine cascade (`06:180`).
 - This is written into 09a §12's Join bullet and 06's L1.
 
+## Founder decisions, round 3 (founder, 2026-10-01)
+
+The orchestrator relayed these. They answer the two items that were OPEN at `2777a0d`.
+
+- **E. A message a customer writes gets `origin: customer`**, which is a separate origin from `counterparty`
+  (founder, 2026-10-01). The origin rule now reads: an outsider is `counterparty` unless they are a customer, who is
+  `customer`. `13:927` already follows it.
+  - Decision B still governs panels. A taste-panel transcript is a `participant` HumanTask (16 §13), so it is
+    `counterparty`.
+  - E covers what a customer writes in their own right.
+- **F. A join's confidence starts at the lowest input rung, and later evidence may raise it** (founder, 2026-10-01).
+  `06:127` already allows a settled citation to raise a rung.
+  - This is written into 09a §12's Join bullet and 06's L1.
+
 ## OPEN
 
-All seven items from `44f3136` and both items from `a1eeed7` are closed. Two remain:
-
-1. **A customer's own messages: `customer` or `counterparty`?** The `customer` origin exists in the wire, and `13:927`
-   uses it for a customer email. Decision A's "outsiders are `counterparty`" could also cover customers. Decision B
-   settles panels only.
-2. **How `confidence` combines in a join.** The canon gives no rule.
-   - `06:126` caps twin output at E2, for one origin only.
-   - `06:127` says a settled citation "may raise its rung". That suggests the rung is assessed on each record rather
-     than inherited.
-   - A minimum-rung join was suggested in review. It is not adopted, because nothing in the canon supports it.
+None. Every item raised at `44f3136`, `a1eeed7` and `2777a0d` is closed, either by the canon or by a founder decision
+recorded above.
 
 ## Not done (out of scope, mapping already decided)
 
