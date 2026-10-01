@@ -124,7 +124,7 @@ func (r *Registry) AddUpcaster(u Upcaster, history []Event) error {
 		if err != nil {
 			return fmt.Errorf("%w: %s as written cannot be read: %v", ErrMeaningChanged, where, err)
 		}
-		data, schema := clone(e.Data), e.Schema
+		data, schema := e.Data, e.Schema // apply copies before an Up sees it
 		for {
 			f, ok := candidate(schema)
 			if !ok {
