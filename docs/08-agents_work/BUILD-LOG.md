@@ -204,3 +204,8 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   (1e-99999999999999999999) re-encode with different bytes in Userland. The Kernel hashes what it receives, so the
   chain stays consistent; Userland's re-encode promise does not. Proposed rule for both languages: refuse any number
   whose decimal value does not round-trip exactly through float64. New job, not blocking B1-02.
+- **B1-02 Userland — round 3 PASS at 0531c37.** Go agreement 46/49 on number probes. The 3 differences fall under
+  accepted rules or the float follow-up, which now also covers Userland normalising spellings inside raw data
+  (`1E2` → `100`). Fix direction: carry raw fields as original text.
+| 2026-10-01 | B1-02 | #154 (stacked on #153) | six nouns + Operation, Go + Userland (pnpm, zod 4.6.5), upcasters, shared wire rules; Go PASS at 18a9d4d, Userland PASS at 0531c37 | founder: verdict + merge after #153; Codex re-review owed |
+- **`.pnpm-store/` fix found:** `--store-dir $TMPDIR/pnpm-store` keeps it out of the repo. Briefs use it from now on.
