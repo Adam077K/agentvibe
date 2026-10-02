@@ -389,6 +389,16 @@ so a changed MCP description aborts before the first tool call); budget, wall-cl
 `unresolved` never `pass`; ≤2 runner-built continuations; **the runner commits**, test inputs hash-locked; done-tests in
 a clean I3 VM with no network and no secrets.
 
+**Founder rulings, 2026-10-02 (B1-06)**, recorded in
+[DR-B1-06-ADAPTER-RULINGS-2026-10-02](_process/DR-B1-06-ADAPTER-RULINGS-2026-10-02.md), refine the paragraph above.
+
+- **(A)** `system/init` carries no tool descriptions. The Kernel instead pins and hashes the exact MCP server
+  config, and `init_expect` covers exactly `tools`, `mcp_servers`, `agents` and `plugins`. A changed MCP
+  server therefore shows up as a changed tool list, and the run aborts before the first tool call.
+- **(B)** `Agent` and `Task` stay forbidden unless the job is explicitly a funded team.
+- **(C)** `--setting-sources` comes from a pinned table keyed by context profile, and an unknown profile is
+  refused.
+
 **8.3 Context profiles.** SLICE's Builder, launched inside this repo, loaded `CLAUDE.md`, the agents and the review
 lenses; a 173-word summary cost **$1.08 and 152.9 s** against the Codex Referee's 23.7 s (measured [SLICE §3]). A
 context profile is a named, hashed bundle — settings sources, instruction file, agent definitions, MCP set — chosen by
