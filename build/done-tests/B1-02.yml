@@ -24,17 +24,26 @@
 # Run line changed 2026-10-01 (package manager per canon): the Userland Run line read
 # `npm --prefix userland ci`, which fails since the npm lockfile was replaced by userland/pnpm-lock.yaml.
 # Canon names pnpm (09a §2, §13). The test command is userland/package.json's test:donetest. No hash changes.
+#
+# Re-frozen 2026-10-02 B1-26: single Label reader. nouns.Label becomes label.V1 (DR-LABEL-RECONCILE:61:
+# "no label/1 reader has shipped yet. B1-26 is that reader"), so the label values inside valid.json,
+# invalid.json and decisions.json move to the LabelV1 shape (provenance a Provenance record, confidence
+# {rung, p}), and the label pins in both test files follow; the Go pins read the struct through its
+# JSON tags so they compile against either type. RED against the nouns on main until B1-26 lands;
+# green (66 Go subtests, Userland all) against a $TMPDIR reference where nouns.Label = label.V1.
+# The unregistered unit tests (nouns_test.go, nouns.test.ts) still assume the old shape; B1-26's
+# implementer moves them with nouns.Label.
 register: B1-02
 jobs:
   - id: B1-02
     files:
       - path: kernel/internal/nouns/nouns_donetest_test.go
-        sha256: d8c9bd7cbde846432dcdabacaf08203b3a20c77e89b496615afa07c4201cbf64
+        sha256: eb5d90193b674e5f29eb2260ddad3522c6f618493fe458b649fbd4473ae8fe48
       - path: kernel/internal/nouns/testdata/nouns/valid.json
-        sha256: 68b404bce74728a855cdd2c116e97b627be52cd3c72647ed0bd0280fb98fae51
+        sha256: e906e500f47b8ad98b03b56829d842f25a77bf8503114458583a9fd13b0660bc
       - path: kernel/internal/nouns/testdata/nouns/invalid.json
-        sha256: ceeaa112e2e1ccc952746497054ff7699199c057be55535751a0d2946c671f1b
+        sha256: 166aa2a392c62574cd3d151a84bed4f7e7ac39256957c8c6d695d6843e7b288d
       - path: kernel/internal/nouns/testdata/nouns/decisions.json
-        sha256: 2798f0067546141b40296cdd733e55604ffc99ea10a413cc6c942121ac29f86a
+        sha256: 36f3714e307817e4c47bd280d831473ce2f7dc2214cdb42233801a2ee6777625
       - path: userland/test/nouns.donetest.test.ts
-        sha256: 0551c924eed88c4b255b481d6e3d7d0ec23fb69bf1a48bda29d0394d6e44a03b
+        sha256: b22bc4a2c796747aaa49f0d60512863dc1e85d6ec5c35dcc0f7f74bd70364389
