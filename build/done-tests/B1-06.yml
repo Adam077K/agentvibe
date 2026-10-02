@@ -58,6 +58,14 @@
 # only, any space refused, inner space ignored). Survivor unchanged and equivalent: empty
 # forbidden slot (the slot rule refuses it).
 #
+# RE-FREEZE r4 2026-10-02: 2026-10-02 final review nits. The final review PASSED 4d4bc92 and
+# left two gaps. (1) MED: the golden init now pins one plugin (lint-hooks); a same-count swap,
+# a changed path, and an emptied list each abort. (2) LOW: Agent(reviewer) and Task(tester) are
+# refused without FundedTeam; with it, Agent(reviewer) is allowed and Agent is not forbidden.
+# Every fixture init changed (the plugin), so all fixture hashes changed. Reference passes 9 of 9
+# (-race -count=3); red 9 of 9. Mutants: 53 of 54 killed. New and killed: plugins hashed by count
+# only; nested-agent check on exact names only. Survivor unchanged and equivalent.
+#
 # OPEN (canon gaps, not decided here):
 # 1. Exact rate-limit shape: measure on a real run, then re-freeze (ruling E). Until then
 #    blocked(capacity) vs unresolved is not pinned for a rate limit.
@@ -75,32 +83,32 @@ jobs:
   - id: B1-06
     files:
       - path: kernel/internal/adapter/claude_donetest_test.go
-        sha256: 1119f75df884cac68aea26ef772440cd83460d26c7d6144bf13f7bca9791d8c0
+        sha256: 5b1387a3334f7b4beecf343b310d8229332b31a678e1bbea21e2da2a5830cacb
       - path: kernel/internal/adapter/testdata/claude/children.jsonl
-        sha256: e80c8c7ceb33ebd824760a6e552280ade90c1cb200277196c0f955429426bdc7
+        sha256: 4255aca3345580577700335b17198f4b2ea6f17b03376fe50749738d76a3bf3f
       - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl
-        sha256: a528c1f994059577d37c5b02a58c54d00e91e6418833e8b41f23f4f1fec51dc5
+        sha256: daf044db3897b2a44484464e6b52452d16c7bb16fe683d11ed338776d4fbdb77
       - path: kernel/internal/adapter/testdata/claude/error-during-execution.jsonl
-        sha256: df9ad107ac94c4113d68626b1ea69b9ef2a59d9bba7d045eadec94ea81625bee
+        sha256: 0affeb3dbfe996220149085cfef33d19e20397845eec28405e93482c3e9dbcad
       - path: kernel/internal/adapter/testdata/claude/error-max-budget-usd.jsonl
-        sha256: ba5b8a28c4143e0a19d50c8975f3c4916d287e603a2a46cf59beb05ec5bc1055
+        sha256: 938510d71653371c8dd102125d383811a50bda046655bfbca1269e8e7791c8b6
       - path: kernel/internal/adapter/testdata/claude/error-max-structured-output-retries.jsonl
-        sha256: 73358555746b372e658eeb6ab4ebf96c6528488c6058fee27eb0dc621539051a
+        sha256: 3d4667f8e8d6169cf9756d3eb6c504f57422b75a2445e50fe162675885a960e8
       - path: kernel/internal/adapter/testdata/claude/error-max-turns.jsonl
-        sha256: d3e4ea826683195ebbfc0bb98d89fa79afb30bf2e3c2ae6d51c93a169501c6dc
+        sha256: fad6bfd696478c284eaae9ec22ebe5515d33e8168e2e8a05b10ef523f04fa7ab
       - path: kernel/internal/adapter/testdata/claude/long-line.jsonl
-        sha256: c3b4798a957a060fe8f64a3602e111e9a251a29c7e434dc1f2963918dec70df9
+        sha256: 159a5f18bd2ec1031a4471a883aa08065257e59f84a682c35defd75d239119b6
       - path: kernel/internal/adapter/testdata/claude/mcp-tools-changed.jsonl
-        sha256: 7ab213f0f144a084e157703dd21402fc28362b59ce78c248ea97440a13492fda
+        sha256: 5425e44e4fb36d7f8c25c21b28960c4f52942e743bdf3cca19ff7cdf4d7333ff
       - path: kernel/internal/adapter/testdata/claude/no-init-result.jsonl
         sha256: 0317c0c25095e66d536e3b5da9702014732a3acd7b58e2a7148d90d39616a324
       - path: kernel/internal/adapter/testdata/claude/no-init.jsonl
-        sha256: 5702e27958f9dab65449bdacec2d0e54bd2b22f91de349bc93e034d9ab3d3816
+        sha256: 0c759ddbed6f27ed6a14b0b3c2b2dcff7883b128383eede266127916e5af2008
       - path: kernel/internal/adapter/testdata/claude/success.jsonl
-        sha256: c83c4c9824e527c1861ba88a8cf8a5f4dad94cf0bad58ec746feebab79edff60
+        sha256: 1e00c6c20736649d9b2628dc1ef81b9aa75788086ab6e9f6dd16362dcae7e65a
       - path: kernel/internal/adapter/testdata/claude/truncated.jsonl
-        sha256: ddfabfa46ba11e797cc6f1f473b0b40dd013b146cba6ee57794f55f5ce29834b
+        sha256: d16005324f405ffab8cec2c0dcac8d6cabafdf71b8cf74de9dcac72202bd6162
       - path: kernel/internal/adapter/testdata/claude/unrecognised-signal-allowed.jsonl
-        sha256: d3dd899d31a7144b21a80a213d6dee0857ef054ab01a9105aaa3b9a06bc146a7
+        sha256: ca26060799363ebcead769678a39a3857bc00692f1f78917910e7c8bd5dee40d
       - path: kernel/internal/adapter/testdata/claude/unrecognised-signal-rejected.jsonl
-        sha256: 3d289e337a39e7b722b50e4a4869b855c5363808db57b70d2d2b07bb160d3300
+        sha256: c5f808a749280ca44f6aa8dc2675ff2a84e05f8f0901697390b8ecc157f2cac4

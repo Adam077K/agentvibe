@@ -27,7 +27,8 @@ func (c *Claude) ContractHash() string { return "" }
 //   - --setting-sources comes from a pinned table keyed by ContextProfile. Its one row is
 //     launch-pack → project; any other profile is ErrSpec.
 //   - Allowed and Forbidden are lists of single tool names, comma-joined into their slots.
-//   - Agent and Task are added to the forbidden slot unless FundedTeam is set and the tool is
+//   - Agent and Task, bare or as a rule such as Agent(x), are added to the forbidden slot unless
+//     FundedTeam is set and the tool is
 //     on the allowed list; allowing either without FundedTeam is ErrSpec.
 //
 // It returns ErrSpec (see its doc) rather than an argv the launcher would refuse.

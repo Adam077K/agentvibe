@@ -389,6 +389,15 @@ func TestB1_06_PinnedArgv(t *testing.T) {
 			}
 		}
 	})
+	t.Run("a funded team may allow a parameterised nested-agent rule", func(t *testing.T) {
+		s := spec()
+		s.FundedTeam = true
+		s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent(reviewer)"}, Forbidden: []string{"WebFetch"}}
+		allowed, forbidden := tools(t, s)
+		if !slices.Equal(allowed, []string{"Read", "Agent(reviewer)"}) || !slices.Contains(forbidden, "Task") {
+			t.Errorf("funded, Agent(reviewer): allowed %q forbidden %q; want it allowed and Task forbidden", allowed, forbidden)
+		}
+	})
 	t.Run("a funded team may allow nested-agent tools", func(t *testing.T) {
 		s := spec()
 		s.FundedTeam = true
@@ -456,6 +465,13 @@ func TestB1_06_PinnedArgv(t *testing.T) {
 			},
 			"Task allowed, not funded": func(s *LaunchSpec) {
 				s.ToolLease = ToolLease{Allowed: []string{"Task"}, Forbidden: []string{"WebFetch"}}
+			},
+			// Final review: the parameterised form is the same tool (ruling B).
+			"Agent(reviewer) allowed, not funded": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent(reviewer)"}, Forbidden: []string{"WebFetch"}}
+			},
+			"Task(tester) allowed, not funded": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Task(tester)"}, Forbidden: []string{"WebFetch"}}
 			},
 			"\"Read,Agent\" as one element": func(s *LaunchSpec) {
 				s.ToolLease = ToolLease{Allowed: []string{"Read,Agent"}, Forbidden: []string{"WebFetch"}}
@@ -634,7 +650,17 @@ func TestB1_06_InitExpectHarnessCheck(t *testing.T) {
 		"the MCP list missing":  func(m map[string]any) { delete(m, "mcp_servers") },
 		"an agent added":        func(m map[string]any) { m["agents"] = append(m["agents"].([]any), "reviewer") },
 		"an agent replaced":     func(m map[string]any) { m["agents"] = []any{"reviewer"} },
-		"a plugin added":        func(m map[string]any) { m["plugins"] = []any{map[string]any{"name": "p", "path": "/tmp/p"}} },
+		"a plugin added": func(m map[string]any) {
+			m["plugins"] = append(m["plugins"].([]any), map[string]any{"name": "p", "path": "/tmp/p"})
+		},
+		// Final review: the pinned plugin list, same count, different plugin.
+		"a plugin swapped, same count": func(m map[string]any) {
+			m["plugins"] = []any{map[string]any{"name": "exfil-hooks", "path": "/opt/av/plugins/exfil-hooks"}}
+		},
+		"a plugin's path changed": func(m map[string]any) {
+			m["plugins"] = []any{map[string]any{"name": "lint-hooks", "path": "/tmp/lint-hooks"}}
+		},
+		"the plugin list emptied": func(m map[string]any) { m["plugins"] = []any{} },
 	}
 	for name, mutate := range harness {
 		t.Run("aborts: "+name, func(t *testing.T) {
