@@ -135,7 +135,27 @@
 # killed: no alias (a90071b), no alias-aware conflict check, no backslash check, empty argument
 # accepted, control check dropped in the argument, denial entries unchecked.
 #
+# RE-FREEZE r7 2026-10-02: 2026-10-02 re-freeze r7 after re-review. The Opus re-review PASSED
+# b3cc99d (a39c1ef on cca0666 + ceb9e2b) and found one MED gap. Added claude_r7_donetest_test.go;
+# r1-r6 files and the 14 fixtures are unchanged; r7 adds no fixture. CLI evidence (strings of the
+# installed 2.1.284 and 2.1.287 binaries, no process run): an argument "" or "*" is the bare
+# tool; names match case-sensitively (exact-key alias table, ===, glob RegExp flags s/su).
+#   R7_StarArgumentIsTheBareTool (MED): funded Agent/Task rule + forbid Task(*) or Agent(*) is
+#     ErrSpec; unfunded Agent(*)/Task(*) refused; for every tool a lease with X(*) has the same
+#     outcome as with X (Bash, Read, WebFetch, Agent, Task pairs). Control: Bash(git diff:*)
+#     allowed with Bash(rm:*) forbidden still passes.
+#   R7_CaseVariantNestedForbidRefused: a case-variant Agent/Task forbid meeting an allowed
+#     nested-agent rule is ErrSpec (void in the CLI; r6: never silently void). Kills the
+#     exact-name mutant at claude.go:150 - not equivalent.
+# On b3cc99d unchanged: both r7 tests FAIL (the second only on its TASK(*) row, the star gap);
+# everything else passes.
+# Proof, $TMPDIR only: b3cc99d plus "X(*) is X" passes 24 of 24 (-race -count=3). Mutants, each
+# killed: no star handling (b3cc99d); star only in the nested check; star only in the
+# both-lists check; exact names at :150.
+#
 # OPEN (canon gaps, not decided here):
+# 9. Case-variant forbids of non-nested tools ("bash") are also void in the CLI; r7 does not
+#    refuse them (DR note r7 OPEN).
 # 0. (resolved 2026-10-02, ruling F clarified by the founder: a funded team may allow bare Agent
 #    or a named Agent(x), and Task follows the same rule. No test changed; the frozen tests
 #    already accept bare Agent and Task for a funded team.)
@@ -162,6 +182,8 @@ jobs:
         sha256: da38ab2b79d155021106692f913473f0ce7102945105ac9e447d16e05c55dcf5
       - path: kernel/internal/adapter/claude_r6_donetest_test.go
         sha256: d89d4a92f74292a8e6d9a4d0aa8919523918c9815bf02eafe174283db0cf3f18
+      - path: kernel/internal/adapter/claude_r7_donetest_test.go
+        sha256: a5247169d24852da074ffdb8feaf2d1bab4050d5e0dbd1f0a6bdabcfd4349c61
       - path: kernel/internal/adapter/testdata/claude/children.jsonl
         sha256: 4255aca3345580577700335b17198f4b2ea6f17b03376fe50749738d76a3bf3f
       - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl

@@ -136,3 +136,26 @@ team.
 - **No control character inside an argument**, including the ones the whitespace checks do not catch.
 - **Every `permission_denials` entry must be an object with a string `tool_name`.** Anything else leaves the result
   mistyped: `unresolved(unparsed)`.
+
+## Also frozen by r7 (after the re-review of `b3cc99d`)
+
+The CLI evidence was read on 2026-10-02 from the source embedded in the installed binaries
+(`~/.local/share/claude/versions/2.1.284` and `2.1.287`). No CLI process was run.
+- The rule parser treats an argument of `""` or `"*"` as the bare tool:
+  `if(n.rawContent===""||n.rawContent==="*")return{toolName:…}`.
+- Tool names match case-sensitively:
+  - the alias table `{Task:"Agent",…}` is looked up by exact key;
+  - the matcher compares names with `===`;
+  - the glob fallback builds its RegExp with the flags `s` or `su`, never `i`.
+
+From that evidence:
+- **`X(*)` is the bare `X`, for every tool.** Wherever the adapter compares rules, a lease holding `X(*)` has the same
+  outcome as the same lease holding `X`. Under ruling F, a funded team allowed an `Agent` or `Task` rule while
+  `Task(*)` or `Agent(*)` is forbidden is `ErrSpec`. Unfunded, `Agent(*)` and `Task(*)` are refused like any other
+  `Agent` or `Task` form.
+- **A case-variant `Agent`/`Task` forbid is refused when it meets an allowed nested-agent rule.** The CLI matches
+  case-sensitively, so `agent` or `TASK(*)` denies nothing. Passing one through would be a silently void forbid,
+  which r6 rules out. This is why the exact-name variant of that check is not equivalent.
+
+*OPEN.* Case-variant forbids of other tools (`bash`, `webfetch`) are just as void in the CLI. r7 does not refuse them.
+Doing so would extend the r6 principle beyond the nested-agent check, and that needs a decision.
