@@ -58,13 +58,7 @@ const (
 	ReasonSchema   Reason = "schema"   // unresolved(schema)
 	ReasonTimeout  Reason = "timeout"  // unresolved(timeout)
 	ReasonHarness  Reason = "harness"  // init mismatch: aborted before the first tool call
-	ReasonUnparsed Reason = "unparsed" // UNPARSED (09a §8.8), a kind of unresolved
-	// ReasonUnrecognised: the stream carried a top-level event the adapter does not recognise,
-	// a rate-limit signal among them (founder ruling E). Canon maps a rate limit to
-	// blocked(capacity), but its wire shape is unmeasured, so the adapter says unresolved and
-	// names why. It is kept apart from unparsed so it does not count toward the per-family
-	// UNPARSED rate (09a §8.8).
-	ReasonUnrecognised Reason = "unrecognised"
+	ReasonUnparsed Reason = "unparsed" // UNPARSED (09a §8.8), a kind of unresolved; also an unrecognised event (DR r4)
 )
 
 // WorkerOutcome is what classify returns. It never carries the worker's own verdict as a

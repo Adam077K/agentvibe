@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // Claude is the WorkerAdapter for the `claude` CLI (09a §8.1: 2.1.284, no --max-turns).
@@ -187,6 +188,13 @@ func toolList(which string, list []string) ([]string, error) {
 func toolRule(t string) bool {
 	if !slotValue(t) || strings.ContainsRune(t, ',') {
 		return false
+	}
+	// r4: ASCII only. The CLI splits with JavaScript's \s, which matches Unicode separators
+	// (U+00A0, U+2028, U+3000, U+FEFF, ...) that unicode.IsSpace partly misses.
+	for i := 0; i < len(t); i++ {
+		if t[i] >= utf8.RuneSelf {
+			return false
+		}
 	}
 	base, spec, hasSpec := strings.Cut(t, "(")
 	if base == "" || strings.ContainsRune(base, ')') {
@@ -392,6 +400,8 @@ func spawnsOf(line []byte) []spawn {
 //   - a stream that ends, or fails, before a verified system/init aborts too: the harness was
 //     never verified, and a worker that closed its stdout may still be running;
 //   - a later system/init is checked against initExpect like the first one.
+//
+// Every system/init must also report permissionMode "dontAsk", the pinned mode (DR r4).
 func (c *Claude) Watch(r io.Reader, initExpect string, abort func(Reason)) (Transcript, error) {
 	var t Transcript
 	refuse := func() (Transcript, error) {
@@ -409,7 +419,7 @@ func (c *Claude) Watch(r io.Reader, initExpect string, abort func(Reason)) (Tran
 			switch {
 			case isInit:
 				h, err := c.InitHash(line)
-				if err != nil || initExpect == "" || h != initExpect {
+				if err != nil || initExpect == "" || h != initExpect || !pinnedPermissionMode(line) {
 					return refuse()
 				}
 				if t.init == nil {
@@ -439,6 +449,15 @@ func (c *Claude) Watch(r io.Reader, initExpect string, abort func(Reason)) (Tran
 		return refuse()
 	}
 	return t, nil
+}
+
+// pinnedPermissionMode: the init reports the pinned `--permission-mode dontAsk` (09a §8.2;
+// DR-B1-06 r4). A separate check from init_expect, which keeps ruling A's four fields.
+func pinnedPermissionMode(line []byte) bool {
+	var m struct {
+		PermissionMode *string `json:"permissionMode"`
+	}
+	return json.Unmarshal(line, &m) == nil && m.PermissionMode != nil && *m.PermissionMode == "dontAsk"
 }
 
 func initOf(line []byte) *initInfo {
@@ -480,7 +499,8 @@ func (t *Transcript) record(ev event) {
 // Precedence, first match wins:
 //  1. harness not verified (aborted, no init) or killed by abort → unresolved(harness);
 //  2. wall-clock or idle kill → unresolved(timeout); any other kill → unresolved;
-//  3. an unrecognised top-level event → unresolved(unrecognised) (ruling E);
+//  3. an unrecognised top-level event → unresolved(unparsed) (ruling E; the r4 assumption in
+//     the DR note: such a run has no typed outcome, so it counts toward the UNPARSED rate);
 //  4. no typed outcome: a read error, an unparsed line, zero or several top-level results,
 //     events after the result, or a result whose fields are mistyped → unresolved(unparsed);
 //  5. the subtype map. success adjudicates only with exit 0, is_error exactly false and a
@@ -506,8 +526,8 @@ func (c *Claude) Classify(t Transcript, exit ExitInfo) WorkerOutcome {
 		return set(Unresolved, ReasonTimeout)
 	case exit.Killed != NotKilled:
 		return set(Unresolved, "")
-	case t.unknown > 0:
-		return set(Unresolved, ReasonUnrecognised)
+	case t.unknown > 0: // ruling E; r4 assumption: no typed outcome, so UNPARSED
+		return set(Unresolved, ReasonUnparsed)
 	case t.readErr || t.unparsed > 0 || t.results != 1 || t.trailing > 0 || res == nil ||
 		res.malformed || !res.subtypeOK:
 		return set(Unresolved, ReasonUnparsed)
