@@ -85,8 +85,10 @@ const (
 
 // ExitInfo is how the worker process ended.
 type ExitInfo struct {
-	Code   int
-	Killed Kill
+	Code           int
+	Killed         Kill
+	ResultFile     string // codex: the -o file's bytes, read by the runner after exit (DR-B1-07 5)
+	ResultFileRead bool   // codex: false when the -o file was missing or unreadable
 }
 
 // ToolLease is the job's tool lease (09a §8.4: tool leases carry a forbidden list).
@@ -117,6 +119,8 @@ type LaunchSpec struct {
 	SessionID        string            // --session-id <uuid>
 	CodexProfile     string            // codex -p <generated profile>: a profile name, never a path (B1-07)
 	ResultPath       string            // codex -o <result.json> (B1-07)
+	BinaryDigest     string            // codex: the binary's measured sha256; must equal the grant digest (DR-B1-07 1+3)
+	ProfileDigest    string            // codex: the generated profile's measured sha256; must equal InitExpect (DR-B1-07 1+3)
 }
 
 // ChildJob is one nested agent, keyed by the tool_use id that spawned it; its events carry that

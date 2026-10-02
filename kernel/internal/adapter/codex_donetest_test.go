@@ -19,8 +19,12 @@
 // item.completed.item.text). The usage-limit and unknown-event fixtures are illustrative: their
 // shape is unmeasured (ruling E), so the tests pin only that they never adjudicate.
 //
-// Where canon and the CLI are silent the tests require ErrUndecided, never a guess:
-// a tool lease, a funded team and an init_expect have no codex argv to carry them.
+// Founder rulings B1-07, 2026-10-02 (docs/vision-v3/_process/DR-B1-07-CODEX-RULINGS-2026-10-02.md):
+// (1+3) tool limits live in the generated Codex profile; the launch pins the sha256 of that
+// profile (init_expect) and of the codex binary (the grant digest), and a mismatch is ErrSpec;
+// (2) nested agents are never allowed for codex, funded or not; (4) --ignore-user-config is
+// always passed; (5) the -o file must equal the stream's answer, else UNPARSED; (6) rate limits
+// are measured before they are frozen, and until then no such signal is ever a pass.
 // Every file here and every fixture under testdata/codex/ is hashed in build/done-tests/B1-07.yml.
 // Run: go -C kernel test -count=1 -tags donetest -run B1_07 ./internal/adapter/
 package adapter
@@ -50,13 +54,18 @@ var (
 		"--json", "--output-schema", "<f>", "-o", "<result.json>", "--ephemeral"}
 	cxSlotValues = map[string]string{"<worktree>": "/w/job-1", "<profile>": "project",
 		"<f>": "/run/av/job-1/schema.json", "<result.json>": "/run/av/job-1/result.json"}
-	cxHash = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+	// Ruling 4: the adapter's template is the canon line plus --ignore-user-config. The frozen
+	// B1-08 launcher test still pins cxTokens without it; that test must follow (DR-B1-07).
+	cxTemplate = append(slices.Clone(cxTokens), "--ignore-user-config")
+	cxHash     = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 )
 
 const (
-	cxThreadID = "0199a3c1-7e2f-7b40-9c1d-2f6e8a4b5c01"
-	cxOutput   = `{"verdict":"PASS","summary":"ok"}`
-	cxForged   = `{"verdict":"FORGED"}`
+	// cxProfileDigest is the pinned sha256 of the generated profile file (ruling 1+3).
+	cxProfileDigest = "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+	cxThreadID      = "0199a3c1-7e2f-7b40-9c1d-2f6e8a4b5c01"
+	cxOutput        = `{"verdict":"PASS","summary":"ok"}`
+	cxForged        = `{"verdict":"FORGED"}`
 )
 
 // The fixtures, every one of them. Only the first two may adjudicate.
@@ -65,8 +74,8 @@ var cxFixtures = []string{"success.jsonl", "two-messages.jsonl", "empty.jsonl", 
 	"trailing.jsonl", "unknown-event.jsonl", "collab-spawn.jsonl", "no-message.jsonl"}
 
 func cxRender() []string {
-	out := make([]string, len(cxTokens))
-	for i, tok := range cxTokens {
+	out := make([]string, len(cxTemplate))
+	for i, tok := range cxTemplate {
 		if v, ok := cxSlotValues[tok]; ok {
 			out[i] = v
 		} else {
@@ -76,10 +85,14 @@ func cxRender() []string {
 	return out
 }
 
-// cxSpec fills exactly the launcher done-test's codex slot values. It carries no tool lease, no
-// funded team and no init_expect (each is ErrUndecided), and none of the claude-only fields.
+// cxSpec fills exactly the launcher done-test's codex slot values and the two pinned digests,
+// measured equal to their pins. It carries no tool lease (ruling 1+3: the profile holds it), no
+// funded team (ruling 2) and none of the claude-only fields.
 func cxSpec() LaunchSpec {
 	return LaunchSpec{
+		BinaryDigest:   cxDigest,
+		ProfileDigest:  cxProfileDigest,
+		InitExpect:     cxProfileDigest,
 		Cwd:            "/w/job-1",
 		ContextProfile: "launch-pack",
 		SchemaPath:     "/run/av/job-1/schema.json",
@@ -107,9 +120,6 @@ func cxRefused(t *testing.T, name string, s LaunchSpec, want error) {
 	argv, err := NewCodex(cxDigest).Argv(s)
 	if !errors.Is(err, want) || argv != nil {
 		t.Errorf("%s: Argv = %q, %v; want nil, %v", name, argv, err, want)
-	}
-	if want == ErrUndecided && errors.Is(err, ErrSpec) {
-		t.Errorf("%s: an undecided refusal must not read as ErrSpec: %v", name, err)
 	}
 }
 
@@ -175,7 +185,8 @@ type cxResult struct {
 	aborts []Reason
 }
 
-func cxRunReader(r io.Reader, initExpect string, exit ExitInfo) cxResult {
+// cxRunRaw watches r with initExpect and classifies with exit exactly as given.
+func cxRunRaw(r io.Reader, initExpect string, exit ExitInfo) cxResult {
 	c := NewCodex(cxDigest)
 	var res cxResult
 	res.tr, res.err = c.Watch(r, initExpect, func(why Reason) { res.aborts = append(res.aborts, why) })
@@ -183,9 +194,45 @@ func cxRunReader(r io.Reader, initExpect string, exit ExitInfo) cxResult {
 	return res
 }
 
-func cxRun(stream []byte, exit ExitInfo) WorkerOutcome {
-	return cxRunReader(bytes.NewReader(stream), "", exit).o
+// cxLenientText is the last agent message as a lenient reader would take it: encoding/json
+// folds key case and lets the last duplicate win, and every Unicode line break splits a line.
+func cxLenientText(stream []byte) (string, bool) {
+	var last string
+	found := false
+	split := func(r rune) bool { return strings.ContainsRune("\n\r\v\f\u0085\u2028\u2029", r) }
+	for _, line := range strings.FieldsFunc(string(stream), split) {
+		var ev struct {
+			Type string
+			Item struct{ Type, Text string }
+		}
+		if json.Unmarshal([]byte(strings.TrimPrefix(line, "\ufeff")), &ev) == nil &&
+			strings.EqualFold(strings.TrimSpace(ev.Type), "item.completed") && strings.EqualFold(ev.Item.Type, "agent_message") {
+			last, found = ev.Item.Text, true
+		}
+	}
+	return last, found
 }
+
+// cxWithFile supplies the -o file (ruling 5) unless exit already carries one: the answer a
+// lenient reader would find, else the success answer. A stream the adapter must refuse is then
+// never refused merely because the file is missing, and a lenient adapter would find it matching.
+func cxWithFile(stream []byte, exit ExitInfo) ExitInfo {
+	if exit.ResultFileRead {
+		return exit
+	}
+	text, ok := cxLenientText(stream)
+	if !ok {
+		text = cxOutput
+	}
+	exit.ResultFile, exit.ResultFileRead = text, true
+	return exit
+}
+
+func cxRunReader(stream []byte, exit ExitInfo) cxResult {
+	return cxRunRaw(bytes.NewReader(stream), cxProfileDigest, cxWithFile(stream, exit))
+}
+
+func cxRun(stream []byte, exit ExitInfo) WorkerOutcome { return cxRunReader(stream, exit).o }
 
 func cxJSONEqual(a, b []byte) bool {
 	var x, y any
@@ -235,16 +282,16 @@ func TestB1_07_TemplateAndContract(t *testing.T) {
 	if c.Family() != "codex" {
 		t.Errorf("Family = %q, want codex", c.Family())
 	}
-	if got := c.Template(); !reflect.DeepEqual(got, cxTokens) {
-		t.Fatalf("Template = %q\nwant the B1-08 pinned codex line %q", got, cxTokens)
+	if got := c.Template(); !reflect.DeepEqual(got, cxTemplate) {
+		t.Fatalf("Template = %q\nwant the canon codex line plus --ignore-user-config (ruling 4) %q", got, cxTemplate)
 	}
 	tmpl := c.Template()
 	tmpl[0], tmpl[4] = "review", "danger-full-access"
 	if got := c.Template(); got[0] != "exec" || got[4] != "workspace-write" {
 		t.Errorf("Template returned shared storage: a caller's write changed it to %q", got)
 	}
-	if h := c.ContractHash(); h != ContractHashOf(cxDigest, cxTokens) || !cxHash.MatchString(h) {
-		t.Errorf("ContractHash = %q, want ContractHashOf(digest, Template()) = %q", h, ContractHashOf(cxDigest, cxTokens))
+	if h := c.ContractHash(); h != ContractHashOf(cxDigest, cxTemplate) || !cxHash.MatchString(h) {
+		t.Errorf("ContractHash = %q, want ContractHashOf(digest, Template()) = %q", h, ContractHashOf(cxDigest, cxTemplate))
 	}
 	other := "sha256:" + strings.Repeat("3", 64)
 	if NewCodex(other).ContractHash() == c.ContractHash() {
@@ -255,7 +302,10 @@ func TestB1_07_TemplateAndContract(t *testing.T) {
 func TestB1_07_PinnedArgv(t *testing.T) {
 	argv := cxArgv(t, cxSpec())
 	if want := cxRender(); !reflect.DeepEqual(argv, want) {
-		t.Fatalf("Argv(spec) = %q\nwant the B1-08 launcher's rendered codex line %q", argv, want)
+		t.Fatalf("Argv(spec) = %q\nwant the B1-08 launcher's rendered codex line plus --ignore-user-config %q", argv, want)
+	}
+	if n := slices.Index(argv, "--ignore-user-config"); n < 0 || slices.Contains(argv[n+1:], "--ignore-user-config") {
+		t.Errorf("argv must carry --ignore-user-config exactly once (ruling 4): %q", argv)
 	}
 	// Each slot comes from its own field.
 	for _, c := range []struct {
@@ -378,37 +428,109 @@ func TestB1_07_SpecRefusals(t *testing.T) {
 	}
 }
 
-// The pinned codex line has no tool-list, nested-agent or harness-check flag, and canon names no
-// other carrier. Each is refused as undecided until a founder ruling says how codex carries it.
-func TestB1_07_UndecidedRefused(t *testing.T) {
-	if ErrUndecided == nil || errors.Is(ErrUndecided, ErrSpec) || errors.Is(ErrSpec, ErrUndecided) {
-		t.Fatal("ErrUndecided must be its own non-nil error, distinct from ErrSpec")
-	}
+// Ruling 1+3: the launch pins two sha256 values. The codex binary's measured digest
+// (BinaryDigest) must equal the grant digest the adapter was built with; the generated
+// profile's measured digest (ProfileDigest) must equal init_expect, which for codex is the
+// pinned profile hash. Either missing, malformed or different is ErrSpec, before exec.
+func TestB1_07_PinnedHashes(t *testing.T) {
+	other := "sha256:" + strings.Repeat("5", 64)
+	upper := "sha256:" + strings.Repeat("A", 64)
 	for name, set := range map[string]func(*LaunchSpec){
-		"allowed":   func(s *LaunchSpec) { s.ToolLease.Allowed = []string{"Read"} },
-		"forbidden": func(s *LaunchSpec) { s.ToolLease.Forbidden = []string{"Agent"} },
-		"both": func(s *LaunchSpec) {
-			s.ToolLease = ToolLease{Allowed: []string{"Read"}, Forbidden: []string{"Agent", "Task"}}
-		},
-		"funded team": func(s *LaunchSpec) { s.FundedTeam = true },
-		"init_expect": func(s *LaunchSpec) { s.InitExpect = "sha256:" + strings.Repeat("ab", 32) },
+		"binary digest differs":    func(s *LaunchSpec) { s.BinaryDigest = other },
+		"binary digest missing":    func(s *LaunchSpec) { s.BinaryDigest = "" },
+		"binary digest upper hex":  func(s *LaunchSpec) { s.BinaryDigest = strings.ToUpper(cxDigest) },
+		"binary digest bare hex":   func(s *LaunchSpec) { s.BinaryDigest = strings.TrimPrefix(cxDigest, "sha256:") },
+		"profile digest differs":   func(s *LaunchSpec) { s.ProfileDigest = other },
+		"profile digest missing":   func(s *LaunchSpec) { s.ProfileDigest = "" },
+		"pin missing":              func(s *LaunchSpec) { s.InitExpect = "" },
+		"pin differs":              func(s *LaunchSpec) { s.InitExpect = other },
+		"both missing, equal":      func(s *LaunchSpec) { s.ProfileDigest, s.InitExpect = "", "" },
+		"both malformed, equal":    func(s *LaunchSpec) { s.ProfileDigest, s.InitExpect = "x", "x" },
+		"both upper hex, equal":    func(s *LaunchSpec) { s.ProfileDigest, s.InitExpect = upper, upper },
+		"profile is binary digest": func(s *LaunchSpec) { s.ProfileDigest, s.InitExpect = cxDigest, cxDigest; s.BinaryDigest = other },
 	} {
 		s := cxSpec()
 		set(&s)
-		cxRefused(t, name, s, ErrUndecided)
+		cxRefused(t, name, s, ErrSpec)
 	}
-	// Watch cannot check a harness hash against a stream that reports none.
-	r := cxRunReader(bytes.NewReader(cxFixture(t, "success.jsonl")), "sha256:"+strings.Repeat("ab", 32), ExitInfo{})
-	if !errors.Is(r.err, ErrUndecided) {
-		t.Errorf("Watch with an init_expect: err = %v, want ErrUndecided", r.err)
+	// Another pinned pair that matches is accepted: the pin is the comparison, not one constant.
+	s := cxSpec()
+	s.ProfileDigest, s.InitExpect = other, other
+	cxArgv(t, s)
+	if got := NewCodex(other).ContractHash(); got == NewCodex(cxDigest).ContractHash() {
+		t.Error("ContractHash ignores the binary digest")
 	}
-	cxNot(t, "Watch with an init_expect", r.o)
+	b := cxSpec()
+	b.BinaryDigest = other
+	if _, err := NewCodex(other).Argv(b); err != nil {
+		t.Errorf("an adapter pinned to %s refused a binary measured as %s: %v", other, other, err)
+	}
+	// A pin that is not a sha256 is no pin, even when the measurement equals it.
+	for _, d := range []string{"", "x", strings.ToUpper(cxDigest)} {
+		b := cxSpec()
+		b.BinaryDigest = d
+		if argv, err := NewCodex(d).Argv(b); !errors.Is(err, ErrSpec) || argv != nil {
+			t.Errorf("adapter pinned to binary %q: Argv = %q, %v; want ErrSpec", d, argv, err)
+		}
+	}
+	// Watch is handed the pin; a run with no well-formed pin was never pinned, so it never passes.
+	ok := cxFixture(t, "success.jsonl")
+	for _, pin := range []string{"", "x", upper, strings.TrimPrefix(cxProfileDigest, "sha256:")} {
+		r := cxRunRaw(bytes.NewReader(ok), pin, cxWithFile(ok, ExitInfo{}))
+		cxNot(t, "Watch with pin "+pin, r.o)
+	}
+}
+
+// Ruling 2: nested agents are never allowed for codex, funded or not. Ruling 1+3: tool limits
+// live in the pinned profile, so a lease in the spec is a rule the argv would drop: refused.
+func TestB1_07_NestedAgentsAndLeaseRefused(t *testing.T) {
+	for name, set := range map[string]func(*LaunchSpec){
+		"funded team":            func(s *LaunchSpec) { s.FundedTeam = true },
+		"funded team with Agent": func(s *LaunchSpec) { s.FundedTeam = true; s.ToolLease.Allowed = []string{"Agent"} },
+		"allowed":                func(s *LaunchSpec) { s.ToolLease.Allowed = []string{"Read"} },
+		"forbidden":              func(s *LaunchSpec) { s.ToolLease.Forbidden = []string{"Agent"} },
+		"both": func(s *LaunchSpec) {
+			s.ToolLease = ToolLease{Allowed: []string{"Read"}, Forbidden: []string{"Agent", "Task"}}
+		},
+	} {
+		s := cxSpec()
+		set(&s)
+		cxRefused(t, name, s, ErrSpec)
+	}
+	s := cxSpec()
+	s.ToolLease = ToolLease{Allowed: []string{}, Forbidden: []string{}}
+	cxArgv(t, s) // empty lists carry no rule
+}
+
+// Ruling 5: the -o file must equal the stream's answer byte for byte. Missing on either side, or
+// different, is UNPARSED, never a pass.
+func TestB1_07_ResultFileMustMatch(t *testing.T) {
+	ok := cxFixture(t, "success.jsonl")
+	file := func(b string) ExitInfo { return ExitInfo{ResultFile: b, ResultFileRead: true} }
+	cxAdjudicated(t, "matching file", cxRunRaw(bytes.NewReader(ok), cxProfileDigest, file(cxOutput)).o, cxOutput)
+	for name, exit := range map[string]ExitInfo{
+		"file missing":                  {},
+		"file missing, bytes present":   {ResultFile: cxOutput},
+		"file empty":                    file(""),
+		"file differs":                  file(cxForged),
+		"file is JSON-equal, reordered": file(`{"summary":"ok","verdict":"PASS"}`),
+		"file is JSON-equal, spaced":    file(`{"verdict": "PASS", "summary": "ok"}`),
+		"file has a prefix":             file(" " + cxOutput),
+	} {
+		cxUnparsed(t, name, cxRunRaw(bytes.NewReader(ok), cxProfileDigest, exit).o)
+	}
+	for _, f := range []string{"no-message.jsonl", "truncated.jsonl"} {
+		cxUnparsed(t, f+" with a file", cxRunRaw(bytes.NewReader(cxFixture(t, f)), cxProfileDigest, file(cxOutput)).o)
+	}
+	two := cxFixture(t, "two-messages.jsonl")
+	cxUnparsed(t, "file holds the first message", cxRunRaw(bytes.NewReader(two), cxProfileDigest,
+		file(`{"verdict":"FAIL","summary":"first"}`)).o)
 }
 
 // ---- the stream ----
 
 func TestB1_07_Success(t *testing.T) {
-	r := cxRunReader(bytes.NewReader(cxFixture(t, "success.jsonl")), "", ExitInfo{})
+	r := cxRunReader(cxFixture(t, "success.jsonl"), ExitInfo{})
 	if r.err != nil || len(r.aborts) != 0 {
 		t.Errorf("Watch(success) = %v, aborts %v; want nil, none", r.err, r.aborts)
 	}
@@ -542,7 +664,8 @@ func TestB1_07_UnparsedStreams(t *testing.T) {
 	} {
 		cxNot(t, name, cxRun(cxSuccessWith(t, cxLThread, line), ExitInfo{}))
 	}
-	r := cxRunReader(io.MultiReader(bytes.NewReader(cxFixture(t, "success.jsonl")), cxFailingReader{}), "", ExitInfo{})
+	ok := cxFixture(t, "success.jsonl")
+	r := cxRunRaw(io.MultiReader(bytes.NewReader(ok), cxFailingReader{}), cxProfileDigest, cxWithFile(ok, ExitInfo{}))
 	cxUnparsed(t, "read error after a full stream", r.o)
 }
 
@@ -638,10 +761,9 @@ func TestB1_07_UnicodeNeverMatches(t *testing.T) {
 	}
 }
 
-// 09a §8.4: a nested agent is visible, and ruling B forbids one unless the job is a funded team.
-// The codex line cannot express a funded team (TestB1_07_UndecidedRefused), so a spawn never passes.
+// 09a §8.4: a nested agent is visible, and ruling B07-2 forbids one for codex, funded or not.
 func TestB1_07_NestedAgentVisibleNeverPasses(t *testing.T) {
-	r := cxRunReader(bytes.NewReader(cxFixture(t, "collab-spawn.jsonl")), "", ExitInfo{})
+	r := cxRunReader(cxFixture(t, "collab-spawn.jsonl"), ExitInfo{})
 	cxNot(t, "collab-spawn.jsonl", r.o)
 	ch := NewCodex(cxDigest).Children(r.tr)
 	if !slices.ContainsFunc(ch, func(c ChildJob) bool { return c.ToolUseID == "item_3" }) {
@@ -649,7 +771,7 @@ func TestB1_07_NestedAgentVisibleNeverPasses(t *testing.T) {
 	}
 	l := cxLines(t, "collab-spawn.jsonl")
 	only := cxJoin(slices.Delete(slices.Clone(l), 4, 5)...) // the item.started alone
-	r = cxRunReader(bytes.NewReader(only), "", ExitInfo{})
+	r = cxRunReader(only, ExitInfo{})
 	cxNot(t, "collab spawn started, never completed", r.o)
 	if len(NewCodex(cxDigest).Children(r.tr)) == 0 {
 		t.Error("a spawn seen only in item.started is not reported as a child")

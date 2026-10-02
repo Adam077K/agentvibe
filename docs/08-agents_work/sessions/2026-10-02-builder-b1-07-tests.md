@@ -12,3 +12,5 @@ tier: irreversible
 - codex-cli 0.154.0 is installed. Flags come from `codex exec --help`; event names come from the binary strings and recorded runs. No model turn was run.
 - OPEN 1-9 are in the register: lease, funded team, harness check, approval mode, -p, -o, rate limits, budget, pty.
 - `node build/check-done-tests.mjs` exits 0. `npm run check:citations-exist` exits 0.
+- RE-FREEZE r2 (2026-10-02 founder rulings B1-07): DR-B1-07-CODEX-RULINGS-2026-10-02.md. 18 tests, all red on the stub; 55 of 56 mutants killed, including all 14 new ones. The 1 survivor is equivalent. Both checks exit 0.
+- Follow-up: 09a §8.2 and the frozen B1-08 codexTokens still lack --ignore-user-config.
