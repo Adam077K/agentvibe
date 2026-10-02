@@ -3,10 +3,9 @@
 // its first tool call, and classifying its stream into a WorkerOutcome
 // (docs/vision-v3/09a-ENGINEERING.md §8, "The runner and the WorkerAdapter").
 //
-// B1-06 freezes the `claude` adapter's done-tests (claude_donetest_test.go, build tag donetest,
+// B1-06 froze the `claude` adapter's done-tests (claude_donetest_test.go, build tag donetest,
 // fixtures under testdata/claude/). This file is NOT registered: it is the interface the job
-// implements. Until B1-06 lands every entry point returns ErrNotImplemented or a zero value and
-// the done-tests fail red.
+// implements, and claude.go implements it.
 //
 // The adapter never spawns. 09a §8.5 makes kernel.launcher the only principal that may spawn a
 // worker, and the launcher execs only argv matching a pinned template. So canon's
@@ -15,13 +14,13 @@
 package adapter
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
 )
-
-// ErrNotImplemented is returned by every entry point until B1-06 lands.
-var ErrNotImplemented = errors.New("adapter: not implemented")
 
 var (
 	// ErrSpec: the LaunchSpec cannot fill the pinned argv: an empty slot or tool name; a slot
@@ -60,6 +59,12 @@ const (
 	ReasonTimeout  Reason = "timeout"  // unresolved(timeout)
 	ReasonHarness  Reason = "harness"  // init mismatch: aborted before the first tool call
 	ReasonUnparsed Reason = "unparsed" // UNPARSED (09a §8.8), a kind of unresolved
+	// ReasonUnrecognised: the stream carried a top-level event the adapter does not recognise,
+	// a rate-limit signal among them (founder ruling E). Canon maps a rate limit to
+	// blocked(capacity), but its wire shape is unmeasured, so the adapter says unresolved and
+	// names why. It is kept apart from unparsed so it does not count toward the per-family
+	// UNPARSED rate (09a §8.8).
+	ReasonUnrecognised Reason = "unrecognised"
 )
 
 // WorkerOutcome is what classify returns. It never carries the worker's own verdict as a
@@ -127,8 +132,19 @@ type ChildJob struct {
 	Events    int    // stream events whose parent_tool_use_id is ToolUseID
 }
 
-// Transcript is what Watch read. Its fields are the implementation's.
-type Transcript struct{}
+// Transcript is what Watch read. Its fields are the implementation's; the zero Transcript is a
+// run whose harness was never verified, and classifies as unresolved(harness).
+type Transcript struct {
+	events   []event   // every event Watch parsed, in stream order, up to where it stopped
+	init     *initInfo // the verified system/init; nil when none was verified
+	aborted  bool      // Watch refused the harness (and called abort, unless the stream had ended)
+	readErr  bool      // the stream failed before EOF after system/init
+	unparsed int       // lines after system/init that are not a JSON event with a string type
+	unknown  int       // top-level events whose type is not system, assistant, user or result
+	results  int       // top-level result events (more than one is not a typed outcome)
+	trailing int       // events after the first top-level result
+	result   *event    // the first top-level result event
+}
 
 // WorkerAdapter is 09a §8.2's contract with launch split into Argv (adapter) + exec (launcher)
 // + Watch (adapter). resume is not here: no resume line is pinned in 09a §8.2 or on the grant.
@@ -146,6 +162,27 @@ type WorkerAdapter interface {
 // surface (argv template tokens). It returns "sha256:" + 64 lowercase hex, and it is injective
 // in practice: every change to the digest, to any token, to token order or to token boundaries
 // changes it.
+//
+// Encoding: sha256 over a domain tag, the digest, the token count and each token, every string
+// prefixed by its byte length as a big-endian uint64. The prefixes make the encoding
+// prefix-free, so moving a boundary (between two tokens, or between the digest and the first
+// token) changes the bytes hashed.
 func ContractHashOf(binaryDigest string, template []string) string {
-	return ""
+	h := sha256.New()
+	var n [8]byte
+	putLen := func(l int) {
+		binary.BigEndian.PutUint64(n[:], uint64(l))
+		h.Write(n[:])
+	}
+	put := func(s string) {
+		putLen(len(s))
+		h.Write([]byte(s))
+	}
+	put("agentvibe.adapter.contract_hash.v1")
+	put(binaryDigest)
+	putLen(len(template))
+	for _, tok := range template {
+		put(tok)
+	}
+	return "sha256:" + hex.EncodeToString(h.Sum(nil))
 }
