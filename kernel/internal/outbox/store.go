@@ -36,8 +36,8 @@ const (
 	lockPoll    = 5 * time.Millisecond
 )
 
-// UncertainDeadline: an attempt whose provider call ENDED without proof (timeout, ambiguous error,
-// dead worker) and is still unproven this long after it was journaled as dispatching goes to Human
+// UncertainDeadline: an attempt whose provider call ANSWERED without proof (timeout, ambiguous
+// error) and is still unproven this long after it was journaled as dispatching goes to Human
 // (§7 diagram, "uncertain -> human: deadline before proof"). Parameter. The frozen r2 done-test
 // LookupErrorIsNotProofOfAbsence keeps such an attempt Uncertain for 18 h, which fixes this above
 // the 15 minutes of founder ruling B; see HungDeadline and docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md.
@@ -107,6 +107,7 @@ type record struct {
 	Idem       string `json:"idem,omitempty"`
 	At         int64  `json:"at,omitempty"` // Deps.Clock, unix nanoseconds
 	Reason     string `json:"reason,omitempty"`
+	Answered   bool   `json:"answered,omitempty"` // the outcome came from a provider call that returned
 	Stream     string `json:"stream,omitempty"` // evIndexed: the Operation's key stream
 }
 
@@ -120,6 +121,7 @@ type opState struct {
 	began      time.Time // when the current attempt was journaled as dispatching
 	sent       bool      // the current attempt may have reached the provider
 	lagFrom    time.Time // its visibility-lag window runs from here: the later of sent and uncertain
+	answered   bool      // the current attempt's provider call returned (any answer, even ambiguous)
 }
 
 var ulidPattern = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
@@ -259,11 +261,12 @@ func fold(stream string, evs []journal.Event) (opState, error) {
 			s.stream, s.payloadRef = stream, journal.BlobRef(r.PayloadRef)
 		case evDispatching:
 			s.Attempt, s.idem, s.began = r.Attempt, r.Idem, time.Unix(0, r.At)
-			s.sent, s.lagFrom = false, time.Time{}
+			s.sent, s.lagFrom, s.answered = false, time.Time{}, false
 		default:
 			if r.Attempt != s.Attempt {
 				return s, fmt.Errorf("outbox: %s seq %d: outcome for attempt %d during attempt %d", stream, ev.Seq, r.Attempt, s.Attempt)
 			}
+			s.answered = s.answered || r.Answered
 			if at := time.Unix(0, r.At); ev.Type == evUncertain && s.sent && at.After(s.lagFrom) {
 				s.lagFrom = at
 			}
@@ -394,11 +397,12 @@ func (o *outbox) Dispatch(ctx context.Context, id string) (Operation, error) {
 		// The provider key is the Operation ID for every attempt: no provider here declares a
 		// per-attempt key scope, which is the only case §7.1 allows a suffix in.
 		n := s.Attempt + 1
+		began := o.d.Clock.Now()
 		if err := appendRecord(ctx, j, s.stream, s.seq, evDispatching, record{Attempt: n, Worker: o.d.WorkerID,
-			Idem: s.ID, At: o.d.Clock.Now().UnixNano()}); err != nil {
+			Idem: s.ID, At: began.UnixNano()}); err != nil {
 			return err
 		}
-		s.Attempt, s.State, s.idem = n, Dispatching, s.ID
+		s.Attempt, s.State, s.idem, s.began = n, Dispatching, s.ID, began
 		return nil
 	})
 	if err != nil || s.State == Confirmed {
@@ -414,16 +418,21 @@ func (o *outbox) Dispatch(ctx context.Context, id string) (Operation, error) {
 	switch {
 	case perr == nil:
 		o.crash(BeforeReceiptPersisted)
-		return o.record(ctx, id, s.Attempt, Confirmed, "provider ok")
+		return o.recordOutcome(ctx, id, s.Attempt, Confirmed, "provider ok", true)
 	case errors.Is(perr, ErrRejected):
-		op, err := o.record(ctx, id, s.Attempt, Failed, perr.Error())
+		op, err := o.recordOutcome(ctx, id, s.Attempt, Failed, perr.Error(), true)
 		return op, errors.Join(fmt.Errorf("outbox: Operation %s attempt %d: %w", id, s.Attempt, perr), err)
 	default:
-		to := Uncertain
+		to, why := Uncertain, perr.Error()
 		if s.Class == AtMostOnce {
 			to = Human
 		}
-		op, err := o.record(ctx, id, s.Attempt, to, perr.Error())
+		// Founder ruling B: a call silent past HungDeadline is never retried, even when it then
+		// ends in an ambiguous timeout; the lag window must not later turn it into a re-send.
+		if !o.d.Clock.Now().Before(s.began.Add(HungDeadline)) {
+			to, why = Human, "no answer for HungDeadline, then: "+why
+		}
+		op, err := o.recordOutcome(ctx, id, s.Attempt, to, why, true)
 		return op, errors.Join(fmt.Errorf("%w: Operation %s attempt %d: %v", ErrUncertain, id, s.Attempt, perr), err)
 	}
 }
@@ -443,7 +452,7 @@ func (o *outbox) markSent(ctx context.Context, id string, n int) error {
 }
 
 func (o *outbox) visibilityLag() time.Duration {
-	if l, ok := o.d.Provider.(VisibilityLagger); ok && l.VisibilityLag() >= 0 {
+	if l, ok := o.d.Provider.(VisibilityLagger); ok && l.VisibilityLag() > 0 { // <= 0 is invalid: fail safe
 		return l.VisibilityLag()
 	}
 	return DefaultVisibilityLag
@@ -452,6 +461,11 @@ func (o *outbox) visibilityLag() time.Duration {
 // record journals attempt n's outcome. Recording the state already held is a no-op; an outcome
 // for another attempt, or from a state that may not reach it, is refused and nothing is written.
 func (o *outbox) record(ctx context.Context, id string, n int, to State, reason string) (Operation, error) {
+	return o.recordOutcome(ctx, id, n, to, reason, false)
+}
+
+// recordOutcome is record; answered marks an outcome taken from a provider call that returned.
+func (o *outbox) recordOutcome(ctx context.Context, id string, n int, to State, reason string, answered bool) (Operation, error) {
 	var s opState
 	err := o.withJournal(ctx, func(j journal.Journal) error {
 		var err error
@@ -469,7 +483,7 @@ func (o *outbox) record(ctx context.Context, id string, n int, to State, reason 
 			return fmt.Errorf("outbox: Operation %s is %s at attempt %d; refusing %s for attempt %d", id, s.State, s.Attempt, to, n)
 		}
 		if err := appendRecord(ctx, j, s.stream, s.seq, eventOf[to], record{Attempt: n, Worker: o.d.WorkerID,
-			At: o.d.Clock.Now().UnixNano(), Reason: reason}); err != nil {
+			At: o.d.Clock.Now().UnixNano(), Reason: reason, Answered: answered}); err != nil {
 			return err
 		}
 		s.State = to
@@ -550,11 +564,17 @@ func (o *outbox) resolve(ctx context.Context, s opState) (State, string) {
 	}
 	p, err := o.d.Provider.Lookup(ctx, s.idem)
 	o.crash(DuringReconcile)
+	if err == nil && p == Present {
+		return Confirmed, "lookup: present"
+	}
+	// Founder ruling B: the request may have left and no call ever answered it (its worker died,
+	// or it is still silent) for HungDeadline: a human decides, and no Absent read re-sends it.
+	if s.sent && !s.answered && !o.d.Clock.Now().Before(s.began.Add(HungDeadline)) {
+		return Human, "no answer from the provider by HungDeadline; never retried"
+	}
 	switch {
 	case err != nil:
 		p = Unknown
-	case p == Present:
-		return Confirmed, "lookup: present"
 	case p == Absent && s.sent && o.d.Clock.Now().Before(s.lagFrom.Add(o.visibilityLag())):
 		// 09a §7.2: "a query inside [visibility_lag_s] returns `unknown`, not `absent`". The
 		// request may still be in transit, so this read proves nothing (founder ruling A).
