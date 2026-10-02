@@ -10,7 +10,7 @@
 //
 // Canon: 09a-ENGINEERING.md §12 (LabelV1 :592-609, Provenance/SourceRef/PrincipalRef :611-621, the
 // mapping tables :624-663, Join :665-670); 06-MEMORY.md §4 (:146-187); the founder decisions in
-// _process/DR-LABEL-RECONCILE-2026-10-01.md (rounds 1-5). One reader: nouns.Label IS label.V1
+// _process/DR-LABEL-RECONCILE-2026-10-01.md (rounds 1-7). One reader: nouns.Label IS label.V1
 // (DR-LABEL-RECONCILE:61, "no label/1 reader has shipped yet. B1-26 is that reader").
 //
 // Run: go -C kernel test -tags donetest -count=1 ./internal/label/
@@ -270,8 +270,8 @@ func TestB126LabelV1Refuses(t *testing.T) {
 		Cases []invalidCase `json:"cases"`
 	}
 	load(t, "invalid.json", &f)
-	if len(f.Cases) < 97 {
-		t.Fatalf("invalid.json holds %d cases; the register froze 97", len(f.Cases))
+	if len(f.Cases) < 104 {
+		t.Fatalf("invalid.json holds %d cases; the register froze 104", len(f.Cases))
 	}
 	legacy := 0
 	for _, c := range f.Cases {

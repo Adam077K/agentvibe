@@ -45,6 +45,13 @@
 # Red against stubs: Go 9/9, Userland 408/408. Green with B1-02 against a $TMPDIR reference (965 Userland
 # subtests). Mutants: Go 39 killed of 42 (the same 3 equivalent survivors); Userland 24 of 24.
 #
+# Re-frozen 2026-10-02 final review nits (review PASS at 80223e5, one MED and two LOW): invalid.json adds
+# null for SourceRef quote/accessed/system_of_record/ref, venture, author.title and PrincipalRef.id
+# (104 cases), so null is refused in both languages as label.go's wire rules state; join.json's
+# taint-untrusted-control pins `untrusted` exactly; a stale "rounds 1-5" comment reads "rounds 1-7".
+# Red against stubs: Go 9/9, Userland all; green with B1-02 against the $TMPDIR reference (993 Userland
+# subtests); a Go mutant whose string check accepts null is killed.
+#
 # Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
 # B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
 # carry the LabelV1 shape that the nouns on main does not read yet.
@@ -56,16 +63,16 @@ jobs:
   - id: B1-26
     files:
       - path: kernel/internal/label/label_donetest_test.go
-        sha256: db9cd4f357362326e7262941bb55dc13539e15b543928397293888807b3a5f15
+        sha256: e7bd0fd32e9c1743ca0dc6829208d53ab5ad092ab05fc58cad07fcdfaaa6ba79
       - path: kernel/internal/label/testdata/label/valid.json
         sha256: dccc7ef0dc57b3d43c0187dc1be25aa91f2086901cd15c8e1e1934b5f90ab2c8
       - path: kernel/internal/label/testdata/label/invalid.json
-        sha256: 47cc8785068f51d07f16a41c4998a2e1a95725e810b5ae10f1b66527ca60b685
+        sha256: bcff355e22e5867f530142a7982b111acd1958f35dcf37f0d699370ca0fed3d2
       - path: kernel/internal/label/testdata/label/mapping.json
         sha256: 415d50e2bcb6910cc04e4621fd4319e4d194e5313ffe200199416d03bc46ec0d
       - path: kernel/internal/label/testdata/label/origin.json
         sha256: d6c278f9e98bb875c827924d509e9ae6a70a2d2c4c977eea29f6ed2e61c23637
       - path: kernel/internal/label/testdata/label/join.json
-        sha256: 6a7a0cb7337748decb38eb83fde5b070e7b1535c3be5049f22b7d49578af8f4d
+        sha256: 7dd6ae31694d4b23298d706cb5e25a274a009ea92762c844350d984ce821f4c8
       - path: userland/test/label.donetest.test.ts
-        sha256: 8d28cd8d25b223a84f9814fea303c97c620512926953c48e95c8f9cc8fa126a2
+        sha256: f1fa969129248e56eca727e1659ef4123c08ebe62bbe4760171f767f6ef650cb

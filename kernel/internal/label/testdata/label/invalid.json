@@ -2587,6 +2587,232 @@
       }
     },
     {
+      "name": "label.null-sourceref-quote",
+      "error": "invalid",
+      "why": "SourceRef.quote null is refused",
+      "cite": "09a-ENGINEERING.md:617 (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "crm:acct_77",
+              "quote": null
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-sourceref-accessed",
+      "error": "invalid",
+      "why": "SourceRef.accessed null is refused",
+      "cite": "09a-ENGINEERING.md:617 (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "crm:acct_77",
+              "accessed": null
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-sourceref-system_of_record",
+      "error": "invalid",
+      "why": "SourceRef.system_of_record null is refused",
+      "cite": "09a-ENGINEERING.md:617 (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "crm:acct_77",
+              "system_of_record": null
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-sourceref-ref",
+      "error": "invalid",
+      "why": "SourceRef.ref null is refused",
+      "cite": "09a-ENGINEERING.md:617 (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "ref": null
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-venture",
+      "error": "invalid",
+      "why": "venture null is refused",
+      "cite": "09a-ENGINEERING.md:598 (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": null,
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-author-title",
+      "error": "invalid",
+      "why": "author.title null is refused",
+      "cite": "09a-ENGINEERING.md:614 (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": null,
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-principal-id",
+      "error": "invalid",
+      "why": "PrincipalRef.id null is refused",
+      "cite": "09a-ENGINEERING.md:619 (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": null,
+            "role": "customer"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
       "name": "label.empty-subjects",
       "error": "invalid",
       "why": "an optional list is absent when empty; [] would not round-trip through Go omitempty",

@@ -593,7 +593,7 @@
         }
       ],
       "expect": {
-        "taint_not": "clean"
+        "taint": "untrusted"
       }
     },
     {

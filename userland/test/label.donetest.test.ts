@@ -55,7 +55,7 @@ test('B1-26 Userland: every valid LabelV1 decodes field for field and round-trip
 });
 
 test('B1-26 Userland: unknown versions, values, keys, wrong types, nulls, empties and removed 06 names are refused (09a:588,594,644-663)', async (t) => {
-  assert.ok(invalid.length >= 97, `invalid.json holds ${invalid.length} cases; the register froze 97`);
+  assert.ok(invalid.length >= 104, `invalid.json holds ${invalid.length} cases; the register froze 104`);
   assert.ok(invalid.filter((c) => c.name.startsWith('label.legacy-')).length >= 20, 'fewer than 20 removed-06-name cases');
   for (const c of invalid) {
     await t.test(c.name, () => {
