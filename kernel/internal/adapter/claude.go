@@ -196,7 +196,9 @@ func toolRule(t string) bool {
 			return false
 		}
 	}
-	base, spec, hasSpec := strings.Cut(t, "(")
+	// r5: at most one parenthesised argument, ending the rule, holding no parenthesis. The CLI
+	// tracks parentheses with a boolean, not a depth, so a nested group would end the rule early.
+	base, arg, hasArg := strings.Cut(t, "(")
 	if base == "" || strings.ContainsRune(base, ')') {
 		return false
 	}
@@ -205,25 +207,24 @@ func toolRule(t string) bool {
 			return false
 		}
 	}
-	if !hasSpec {
+	if !hasArg {
 		return true
 	}
-	depth := 1
-	for i, r := range spec {
-		if unicode.IsControl(r) {
+	arg, closed := strings.CutSuffix(arg, ")")
+	if !closed || arg == "" || strings.ContainsAny(arg, "()") {
+		return false
+	}
+	// Whitespace inside the argument: single ASCII spaces between non-space characters only
+	// (r3's "Bash(git diff:*)"); no leading, trailing or doubled space, no other whitespace.
+	if arg[0] == ' ' || arg[len(arg)-1] == ' ' || strings.Contains(arg, "  ") {
+		return false
+	}
+	for _, r := range arg {
+		if unicode.IsControl(r) || (r != ' ' && unicode.IsSpace(r)) {
 			return false
 		}
-		switch r {
-		case '(':
-			depth++
-		case ')':
-			depth--
-			if depth == 0 && i != len(spec)-1 {
-				return false // text after the rule's closing parenthesis
-			}
-		}
 	}
-	return depth == 0
+	return true
 }
 
 // errNotInit: InitHash was given a line that is not a system/init event.
@@ -314,77 +315,96 @@ type event struct {
 // parseEvent parses one stream line. ok is false when the line is not a JSON object with a
 // string type.
 func parseEvent(line []byte) (ev event, ok bool) {
-	var env struct {
-		Type    *string         `json:"type"`
-		Subtype json.RawMessage `json:"subtype"`
-		Parent  *string         `json:"parent_tool_use_id"`
-	}
-	if json.Unmarshal(line, &env) != nil || env.Type == nil {
+	o, ok := objectOf(line)
+	if !ok {
 		return event{}, false
 	}
-	ev.typ = *env.Type
-	if env.Parent != nil {
-		ev.parent = *env.Parent
+	if ev.typ, ok = o.str("type"); !ok {
+		return event{}, false
 	}
-	if env.Subtype != nil {
-		ev.subtypeOK = json.Unmarshal(env.Subtype, &ev.subtype) == nil
+	ev.parent, _ = o.str("parent_tool_use_id") // null or absent: top level
+	if _, present := o["subtype"]; present {
+		ev.subtype, ev.subtypeOK = o.str("subtype")
 	}
 	switch ev.typ {
 	case "assistant":
-		ev.spawns = spawnsOf(line)
+		ev.spawns = spawnsOf(o)
 	case "result":
-		var res struct {
-			IsError json.RawMessage `json:"is_error"`
-			Output  json.RawMessage `json:"structured_output"`
-			Denials []struct {
-				ToolName string `json:"tool_name"`
-			} `json:"permission_denials"`
-		}
-		if json.Unmarshal(line, &res) != nil {
-			ev.malformed = true
-			return ev, true
-		}
-		ev.isErrorFalse = string(bytes.TrimSpace(res.IsError)) == "false"
-		ev.output = res.Output
-		for _, d := range res.Denials {
-			ev.denied = append(ev.denied, d.ToolName)
+		ev.isErrorFalse = string(bytes.TrimSpace(o["is_error"])) == "false"
+		ev.output = o["structured_output"]
+		if raw, present := o["permission_denials"]; present {
+			var ds []json.RawMessage
+			if json.Unmarshal(raw, &ds) != nil {
+				ev.malformed = true
+				return ev, true
+			}
+			for _, d := range ds {
+				do, ok := objectOf(d)
+				name, okName := do.str("tool_name")
+				if !ok || !okName {
+					ev.malformed = true
+					return ev, true
+				}
+				ev.denied = append(ev.denied, name)
+			}
 		}
 	}
 	return ev, true
 }
 
+// obj is one JSON object, keyed exactly. Go's struct decoding matches keys case-insensitively
+// and lets a later variant win; the CLI writes JSON from JavaScript, where keys are exact, so
+// the adapter reads every field it decides on through obj (DR r5).
+type obj map[string]json.RawMessage
+
+func objectOf(b []byte) (obj, bool) {
+	var o obj
+	if json.Unmarshal(b, &o) != nil || o == nil {
+		return nil, false
+	}
+	return o, true
+}
+
+// str is the exact key k as a JSON string; ok is false when k is absent, null or not a string.
+func (o obj) str(k string) (string, bool) {
+	raw, present := o[k]
+	if !present || string(bytes.TrimSpace(raw)) == "null" {
+		return "", false
+	}
+	var s string
+	if json.Unmarshal(raw, &s) != nil {
+		return "", false
+	}
+	return s, true
+}
+
 // spawnsOf returns the nested-agent tool_use blocks of an assistant event. It is lenient about
 // everything else in the message: a spawn it misses still shows up as a child through its
 // events' parent_tool_use_id.
-func spawnsOf(line []byte) []spawn {
-	var a struct {
-		Message struct {
-			Content json.RawMessage `json:"content"`
-		} `json:"message"`
-	}
-	if json.Unmarshal(line, &a) != nil {
+func spawnsOf(ev obj) []spawn {
+	msg, ok := objectOf(ev["message"])
+	if !ok {
 		return nil
 	}
-	var blocks []struct {
-		Type  string          `json:"type"`
-		ID    string          `json:"id"`
-		Name  string          `json:"name"`
-		Input json.RawMessage `json:"input"`
-	}
-	if json.Unmarshal(a.Message.Content, &blocks) != nil {
+	var blocks []json.RawMessage
+	if json.Unmarshal(msg["content"], &blocks) != nil {
 		return nil
 	}
 	var out []spawn
-	for _, b := range blocks {
-		if b.Type != "tool_use" || b.ID == "" || !slices.Contains(nestedAgentTools[:], b.Name) {
+	for _, raw := range blocks {
+		b, ok := objectOf(raw)
+		if !ok {
 			continue
 		}
-		var in struct {
-			SubagentType any `json:"subagent_type"`
+		typ, _ := b.str("type")
+		id, _ := b.str("id")
+		name, _ := b.str("name")
+		if typ != "tool_use" || id == "" || !slices.Contains(nestedAgentTools[:], name) {
+			continue
 		}
-		_ = json.Unmarshal(b.Input, &in)
-		at, _ := in.SubagentType.(string)
-		out = append(out, spawn{id: b.ID, name: b.Name, agentType: at})
+		in, _ := objectOf(b["input"])
+		at, _ := in.str("subagent_type")
+		out = append(out, spawn{id: id, name: name, agentType: at})
 	}
 	return out
 }
@@ -454,19 +474,16 @@ func (c *Claude) Watch(r io.Reader, initExpect string, abort func(Reason)) (Tran
 // pinnedPermissionMode: the init reports the pinned `--permission-mode dontAsk` (09a §8.2;
 // DR-B1-06 r4). A separate check from init_expect, which keeps ruling A's four fields.
 func pinnedPermissionMode(line []byte) bool {
-	var m struct {
-		PermissionMode *string `json:"permissionMode"`
-	}
-	return json.Unmarshal(line, &m) == nil && m.PermissionMode != nil && *m.PermissionMode == "dontAsk"
+	o, ok := objectOf(line)
+	mode, okMode := o.str("permissionMode")
+	return ok && okMode && mode == "dontAsk"
 }
 
 func initOf(line []byte) *initInfo {
-	var m struct {
-		SessionID string `json:"session_id"`
-		Model     string `json:"model"`
-	}
-	_ = json.Unmarshal(line, &m) // InitHash has already parsed the line as an object
-	return &initInfo{sessionID: m.SessionID, model: m.Model}
+	o, _ := objectOf(line) // InitHash has already parsed the line as an object
+	sid, _ := o.str("session_id")
+	model, _ := o.str("model")
+	return &initInfo{sessionID: sid, model: model}
 }
 
 // record keeps one parsed event and counts what Classify needs.
