@@ -311,3 +311,15 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   - B1-12 outbox implementer, against the frozen B0-17b tests;
   - B1-26 Label wire-schema test freezer;
   - B1-06 claude WorkerAdapter test freezer.
+- **Founder decisions on labels, 2026-10-02** (given through AskUserQuestion):
+  - When records are joined, the strictest value wins for dclass, retention, exportable and consent_scope.
+  - A customer's non-panel HumanTask has origin `customer`.
+  - The legacy origins `participant` and `external` map to `counterparty`.
+  The B1-26 test builder is adding these to canon and to the tests.
+- **B1-26 tests:** an Opus reviewer FAILED 0268a8b. The join fixtures always put the strict input last. invalid.json lacks the case-variant key, duplicate-key and unsafe-integer cases. There was only one identity fixture. `nouns.Label` is a second Label type. All of this went back to the same test builder to fix and re-freeze.
+- **B1-12 outbox (78d5ac2):** an Opus reviewer FAILED it. HIGH: a late receipt after an Absent resolve can cause a second send. 3 mutants survive. A separate test builder is writing r2 tests; the implementer fixes after that.
+  - **DECISION (orchestrator), scope split:**
+    - B1-12a is the outbox core: Operation IDs, the store and the reconciler, against the frozen B0-17b tests.
+    - B1-12b is new: socket `propose_effect` wiring, dispatch fencing and the local effectors (git PR, preview deploy, founder-mailbox email). It needs its own frozen tests.
+    - Reason: the plan row (jobs.yml:654) covers both, but the frozen tests cover only the core.
+- **B1-06 tests (8ec0bd4):** frozen, 8 tests on 10 recorded fixtures, 29/29 mutants killed. An Opus review is in progress. The builder flagged canon gaps that need the founder: the pinned line forbids Agent/Task while §8.4 allows them for funded teams; WorkerOutcome is undefined.
