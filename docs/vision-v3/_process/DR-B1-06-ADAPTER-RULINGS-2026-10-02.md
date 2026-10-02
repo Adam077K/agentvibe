@@ -72,3 +72,17 @@ as opposed to `unresolved`, gets pinned.
 - **Tool-list elements.** The CLI splits tool lists on commas and on whitespace. So whitespace outside parentheses
   makes two names: `"Read Agent"` is refused. A rule with an inner space, `Bash(git diff:*)`, is one name.
 - **A result with no `system/init` before it** aborts or is `unresolved`. It is never adjudicated.
+
+## Also frozen by r4 (after the implementation review of `22ab9a4`)
+
+- **Tool rules are ASCII.** The CLI splits tool lists with JavaScript's `\s`, which matches Unicode separators
+  (U+00A0, U+2028, U+3000, U+FEFF and others) that a byte-level check does not see. Any non-ASCII rune in a tool
+  rule is therefore refused. This applies in both lists and whether or not the team is funded. Without it, a funded
+  `Agent(x<U+00A0>Bash)` would reach the CLI as two rules. This applies ruling B, which says one element is one rule.
+- **The permission mode is checked.** `system/init` must report `permissionMode: dontAsk`, the pinned value
+  (09a §8.2). Any other value, or none, aborts before the first tool call. It is a separate check: `init_expect`
+  keeps ruling A's four fields.
+- **Assumption: an unrecognised event is UNPARSED.** 09a §8.8 counts runs with no typed outcome toward the
+  per-family UNPARSED rate, but canon is silent on unrecognised events. Ruling E says they never pass. The safe
+  reading, frozen as an assumption by the test builder, is that such a run is UNPARSED. It reports `Reason` unparsed
+  and so counts toward the rate. Revisit once the rate-limit shape is measured (ruling E's OPEN).

@@ -58,13 +58,37 @@
 # only, any space refused, inner space ignored). Survivor unchanged and equivalent: empty
 # forbidden slot (the slot rule refuses it).
 #
-# RE-FREEZE r4 2026-10-02: 2026-10-02 final review nits. The final review PASSED 4d4bc92 and
+# RE-FREEZE r3-nits 2026-10-02: 2026-10-02 final review nits. The final review PASSED 4d4bc92 and
 # left two gaps. (1) MED: the golden init now pins one plugin (lint-hooks); a same-count swap,
 # a changed path, and an emptied list each abort. (2) LOW: Agent(reviewer) and Task(tester) are
 # refused without FundedTeam; with it, Agent(reviewer) is allowed and Agent is not forbidden.
 # Every fixture init changed (the plugin), so all fixture hashes changed. Reference passes 9 of 9
 # (-race -count=3); red 9 of 9. Mutants: 53 of 54 killed. New and killed: plugins hashed by count
 # only; nested-agent check on exact names only. Survivor unchanged and equivalent.
+#
+# RE-FREEZE r4 2026-10-02: 2026-10-02 re-freeze r4 after impl review. The implementation,
+# origin/build/b1-06 @ 22ab9a4, PASSED Opus review; the review found gaps the tests did not pin.
+# Added kernel/internal/adapter/claude_r4_donetest_test.go. claude_donetest_test.go and the 14
+# fixtures are unchanged (hashes identical); r4 adds no fixture, because NothingElseAdjudicates
+# pins the count, so every r4 stream is derived in-test. Four tests:
+#   R4_ToolListsAreASCII (MED, security): any non-ASCII rune in a tool rule is ErrSpec, in
+#     allowed and forbidden, funded or not (U+FEFF/200B/00A0/2028/3000/FF0C, inside parentheses
+#     too). The CLI splits on JS \s, so a funded Agent(x<U+00A0>Bash) would become two rules.
+#   R4_UnrecognisedCountsAsUnparsed (MED): ASSUMPTION, canon silent - an unrecognised event
+#     makes the run UNPARSED (09a §8.8), i.e. Reason == unparsed, so it counts toward the rate.
+#   R4_PermissionModeIsThePinnedOne (LOW): system/init's permissionMode must be "dontAsk"
+#     (09a §8.2 pinned line), else abort before the first tool call; not part of init_expect.
+#   R4_NoTypedOutcomeNeverAdjudicates: is_error missing/null/"false"; an event after the result;
+#     a non-JSON or typeless line; two results; a mistyped result; an unknown kill; and a later
+#     system/init with another harness (aborts).
+# On 22ab9a4 unchanged: R4_ToolListsAreASCII, R4_UnrecognisedCountsAsUnparsed and
+# R4_PermissionModeIsThePinnedOne FAIL; R4_NoTypedOutcomeNeverAdjudicates and all r1-r3 tests pass.
+# Proof, $TMPDIR copies only: 22ab9a4 plus the three fixes passes 13 of 13 (-race -count=3). Ten
+# mutants, each killed: m1 22ab9a4's toolRule; m2 ReasonUnrecognised; m3 mode unchecked; is_error
+# missing taken as false; trailing ignored; unparsed lines ignored; a second result neither
+# counted nor trailing; a later init unchecked; an unknown kill ignored; a malformed result
+# trusted. A mutant runner bug was caught: a build failure was reported as SURVIVED; it now
+# says BUILD-FAIL, and none remain.
 #
 # OPEN (canon gaps, not decided here):
 # 1. Exact rate-limit shape: measure on a real run, then re-freeze (ruling E). Until then
@@ -84,6 +108,8 @@ jobs:
     files:
       - path: kernel/internal/adapter/claude_donetest_test.go
         sha256: 5b1387a3334f7b4beecf343b310d8229332b31a678e1bbea21e2da2a5830cacb
+      - path: kernel/internal/adapter/claude_r4_donetest_test.go
+        sha256: 86fc34e6f93d5134a88e1cd1512ecb17c18bb55daacce5c988058894b5f062ca
       - path: kernel/internal/adapter/testdata/claude/children.jsonl
         sha256: 4255aca3345580577700335b17198f4b2ea6f17b03376fe50749738d76a3bf3f
       - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl
