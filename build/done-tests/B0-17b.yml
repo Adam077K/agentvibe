@@ -10,6 +10,91 @@
 #   from disk; uncertain never auto-retries, at_most_once never re-sends even on a lookup of Absent.
 # B1-12 out of scope: the two-launcher race of gate G1(b) is the job:// lease (09a §19, two runners
 #   claim one job): B1-05, frozen by B0-17a, not here.
+#
+# RE-FREEZE r2 2026-10-02 (B1-12): 2026-10-02 re-freeze r2 after Opus review (late-receipt double
+# effect, 3 mutants). Added kernel/internal/outbox/outbox_r2_donetest_test.go; the round-1 file is
+# unchanged (hash identical). Base 78d5ac2. Mutants applied to store.go in $TMPDIR copies only; the
+# two round-1 tests stayed green on every one, so each survived before. Killed:
+#   F1  late Receipt refused after an Absent resolve (78d5ac2 itself: legalFrom[Confirmed] lacks
+#       Failed; 2 effects)                               -> LateReceiptAfterAbsentIsOneEffect
+#   M2a Dispatch re-sends a Confirmed Operation          -> ConfirmedIsNeverDispatchedAgain
+#   M2b lookup error resolved to Failed                  -> LookupErrorIsNotProofOfAbsence
+#   M2c keyStream drops Target                           -> TargetIsPartOfTheBusinessKey
+# Positive control: adding Failed to legalFrom[Confirmed] in a copy turns all ten package tests
+# green, so the F1 test is satisfiable. LateReceiptAfterAbsentIsOneEffect FAILS against 78d5ac2,
+# by design. NOT asserted (a design decision, not this brief's): a next Dispatch that runs BEFORE
+# the late Receipt lands still double-sends unless the in-flight attempt is fenced (a lease, or
+# Absent not accepted as proof while an attempt may be in flight).
+#
+# RE-FREEZE r3 2026-10-02 (B1-12): 2026-10-02 re-freeze r3 after Opus review of f38dc0d (timeout-
+# before-landing double effect, hung call never escalates, r2 late-receipt test survives lock
+# removal, global-lock mutant). Added kernel/internal/outbox/outbox_r3_donetest_test.go; rounds 1-2
+# unchanged (hashes identical). Base f38dc0d. All edits to store.go in $TMPDIR copies only.
+#   T1 TimeoutBeforeLandingIsOneEffect   FAILS on f38dc0d (2 effects)  green under control C-lag
+#   T2 KilledBeforeLandingIsOneEffect    FAILS on f38dc0d (2 effects)  green under control C-lag
+#   T3 HungCallReachesHumanByTheDeadline FAILS on f38dc0d (dispatching) green under control C-hung
+#   T4 OperationsDoNotBlockEachOther     kills M-global-lock (one lock file for every Operation),
+#                                        alone on base C-lag+C-hung
+#   T5 NoSecondSendWhileInFlight        kills M-no-lock (flock skipped) on f38dc0d; on base
+#                                        C-lag+C-hung the lag window is an equivalent guard and T5
+#                                        passes, while T3 and T4 still kill M-no-lock there
+# Controls (not proposals): C-lag treats Absent less than 30s after the attempt began as Unknown;
+# C-hung records Human for a locked Dispatching attempt past UncertainDeadline. With both, all 18
+# package tests pass (rounds 1-3 and store_test.go), so T1-T5 are satisfiable together.
+# OPEN: (1) canon gives no number for visibility_lag_s and does not say whether the Provider
+# (outbox.go Presence doc) or the outbox applies it; T1/T2 read at zero elapsed time, so any positive
+# outbox-side window passes, and round 1 caps it below 70s at a 30s lag. (2) canon gives no number
+# for the deadline (§7 "deadline before proof"); T3 uses the implementation's UncertainDeadline.
+# Observed, not ours: with the lock removed, store_test.go's TestRedispatchBeforeLateReceiptIsRefused
+# hangs until the package timeout rather than failing.
+#
+# RE-FREEZE r4 2026-10-02 (B1-12): 2026-10-02 re-freeze r4 after Opus review of ee19236 (founder
+# ruling B unenforced, lag <= 0 re-sends at once, six surviving mutants). Added
+# kernel/internal/outbox/outbox_r4_donetest_test.go; rounds 1-3 unchanged (hashes identical). Base
+# ee19236. Rulings A and B: docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md (section B's
+# quote corrected in this change: the founder's ruling covers hung calls only; 24h UncertainDeadline
+# stays for answered-but-unclear). 15 min and 2 min are literals in the test, not the store.go constants.
+# All store.go edits in $TMPDIR copies only. FAIL on ee19236, by design:
+#   SilentPastFifteenMinutesIsNeverResent/times_out_after_20_minutes (2 calls), /worker_dies (2 sends)
+#   NonPositiveLagUsesTheDefault/declared_0s (2 effects)
+# Controls (not proposals), all three together turn all package tests green, twice:
+#   C-TO   a call answering ambiguously >= HungDeadline after the attempt began is recorded Human
+#   C-DEAD resolve: a Dispatching, sent, unanswered attempt >= HungDeadline old goes Human, not Failed
+#   C-LAG0 declared lag must be > 0, else DefaultVisibilityLag
+# Mutants on base C-TO+C-DEAD+C-LAG0; each killed by exactly the named test, all others green:
+#   zero lag accepted (>= 0)         -> NonPositiveLagUsesTheDefault/declared_0s
+#   negative lag accepted            -> NonPositiveLagUsesTheDefault/declared_{0s,-1ns,-1h}
+#   uncertain-extends-window removed -> LagWindowRunsFromTheTimeout
+#   lagFrom = began                  -> LagWindowRunsFromTheSend (killed worker, 10 min slow to send)
+#   hung branch state guard removed  -> AnsweredAttemptIsNotTreatedAsHung
+#   markSent guard removed           -> NoSendAfterHandedToHuman (0 provider calls)
+#   HungDeadline 20m (bonus)         -> SilentPastFifteenMinutesIsNeverResent/still_hung
+#   C-TO dropped / C-DEAD dropped    -> .../times_out_after_20_minutes / .../worker_dies
+# NOT killed: fold's sent guard removed alone. Unreachable through the API: markSent checks the same
+# condition (Dispatching, same attempt, not yet sent) under the journal lock before it appends, so no
+# such record can be written; killing it needs a forged journal. With markSent's guard also removed
+# it is killed by NoSendAfterHandedToHuman. Not addressed (not in the brief): review LOW, the lag on
+# the wall clock (store.go:558).
+#
+# RE-FREEZE r5 2026-10-02 (B1-12): 2026-10-02 re-freeze r5 founder ruling dead-worker. Added
+# kernel/internal/outbox/outbox_r5_donetest_test.go; rounds 1-4 unchanged (hashes identical). Base
+# 87059ac (Opus re-review PASS; local ref, GitHub 502). Ruling C recorded in
+# docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md. All store.go edits in $TMPDIR copies.
+# FAILS on 87059ac, by design: DeadWorkerRetriesOnce/second_death_on_the_re-send (3 sends; ruling C
+# allows one retry). Control (not a proposal): count Failed outcomes of sent, unanswered attempts and
+# refuse a second Absent->Failed for them (Human). With it all package tests pass, twice.
+# Mutants on that control, each killed by exactly the named test, all others green:
+#   answered not reset per attempt (store.go:264)  -> AnswerBelongsToItsAttempt
+#   hung gate ignores sent (store.go:572)          -> UnsentAttemptIsNotHung
+#   Dispatch boundary > instead of >= (433)        -> FifteenMinuteBoundary/call_times_out_at_15m0s
+#   Dispatch boundary at 15m-1ns (433)             -> FifteenMinuteBoundary/call_times_out_at_14m59.999999999s
+#   reconcile boundary > instead of >= (572)       -> FifteenMinuteBoundary/dead_worker_reconciled_at_15m0s
+#   reconcile boundary at 15m-1ns (572)            -> FifteenMinuteBoundary/dead_worker_reconciled_at_14m59.999999999s
+# EQUIVALENT, not killed, with reasons:
+#   markSent's `|| s.sent` (store.go:447): only the Dispatch that journaled attempt n calls markSent for
+#     it, under the attempt lock and before any other writer can append sent for n (expect_seq CAS), so
+#     s.sent is never true there. Survived on the control base as predicted.
+#   fold's sent guard (store.go:247): unreachable from the API (round 4); confirmed by the reviewer.
 register: B0-17b
 jobs:
   - id: B1-08
@@ -20,3 +105,11 @@ jobs:
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go
         sha256: 55b7b239cec0793b2a44cb66bea374a98de66f6bbade1dda6b621bd2a804b9d1
+      - path: kernel/internal/outbox/outbox_r2_donetest_test.go
+        sha256: d3e65a0424acab1036ab671897d059bde56f5fa20761fcea66f759f61bae136c
+      - path: kernel/internal/outbox/outbox_r3_donetest_test.go
+        sha256: 6f956dec5fe6d568f87f851b9a2554b8adb083222b04b4a72707241fdc7b2c18
+      - path: kernel/internal/outbox/outbox_r4_donetest_test.go
+        sha256: 0a2a6937e73582a09ee40536b51ebc8fc8c0d0a5c486568ecbd38f3ea669eb92
+      - path: kernel/internal/outbox/outbox_r5_donetest_test.go
+        sha256: a48b2f07064d794ac940309f7b3ac12b7db7aab96d7d81ebd231d1a93ff49ab6
