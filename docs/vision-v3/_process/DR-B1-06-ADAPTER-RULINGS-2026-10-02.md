@@ -65,6 +65,25 @@ or `blocked`. In the tests, "recognised" means the four top-level event types `s
 **OPEN.** Exact rate-limit shape: measure on a real run, then re-freeze. That re-freeze is where `blocked(capacity)`,
 as opposed to `unresolved`, gets pinned.
 
+## F. `Task` is an alias of `Agent`
+
+The CLI maps `Task` to `Agent`. Until r6 the adapter auto-forbade `Task` for a funded team that allowed `Agent(x)`.
+With that forbid in place, the CLI denied the very `Agent(reviewer)` the team was funded for (re-review of `a90071b`).
+
+**Ruling (founder, 2026-10-02).** `Task` and `Agent` are one tool, and one rule covers both names. For an unfunded
+team, both are forbidden. A funded team is allowed the approved `Agent(x)` form, and `Task(x)` is the same rule as
+`Agent(x)`.
+
+Frozen in r6:
+- When a funded team is allowed `Agent(x)` or `Task(x)`, no disallow that denies it appears in the argv, under either
+  name. A disallow denies the rule if it is bare `Agent` or bare `Task`, or if it carries the same argument.
+- An explicit forbid that would deny the allowed rule makes the lease `ErrSpec`.
+- For an unfunded team, both bare names are in `--disallowedTools`.
+
+*OPEN.* "Only the approved `Agent(x)` form" could mean a funded team may no longer allow bare `Agent` or `Task`. The
+tests frozen since r2 still accept a bare `Agent` for a funded team. r6 changes only their claim that `Task` is
+forbidden beside it. Narrowing to `Agent(x)` only is a re-freeze for the founder to order.
+
 ## Also frozen, from canon or from review (r2, r3)
 
 - **Stream lines.** They may be of any length; the tests use lines over 1 MiB and over 4 MiB. A tool result can be
@@ -107,3 +126,13 @@ as opposed to `unresolved`, gets pinned.
   exact one, in `system/init` or in a result. A run that carries one aborts or stays `unresolved`.
 - **Every `system/init` is checked for the pinned mode**, not only the first, and a nested-agent tool's spelling
   (`agent`, `AGENT(x)`) does not get it past the funded-team rule.
+
+## Also frozen by r6 (after the re-review of `a90071b`)
+
+- **Ruling F**, above.
+- **No backslash in a tool rule.** The CLI ignores a rule such as `Bash(x\)` that it cannot read. Written as a forbid,
+  that rule would be silently void, so a backslash anywhere in a rule is `ErrSpec`.
+- **No empty argument.** `Bash()` is refused, and it is never read as all of `Bash`.
+- **No control character inside an argument**, including the ones the whitespace checks do not catch.
+- **Every `permission_denials` entry must be an object with a string `tool_name`.** Anything else leaves the result
+  mistyped: `unresolved(unparsed)`.

@@ -116,7 +116,28 @@
 # case-insensitive keys; m3a mode on the first init only; m3b EqualFold -> ==. Mutants the
 # re-review called equivalent were skipped, as instructed.
 #
+# RE-FREEZE r6 2026-10-02: 2026-10-02 re-freeze r6 founder ruling F. The Opus re-review PASSED
+# a90071b and found one contract gap, decided by founder ruling F (DR note): Task is an alias of
+# Agent. claude_donetest_test.go IS RE-FROZEN, two assertions only, in TestB1_06_PinnedArgv: a
+# funded team allowed Agent(reviewer), or bare Agent, must have neither Agent nor Task in
+# --disallowedTools. Both asserted Task forbidden until r6, which is what made the CLI deny the
+# funded Agent(reviewer). The r4/r5 files and the 14 fixtures are unchanged; r6 adds no fixture.
+# Added claude_r6_donetest_test.go:
+#   R6_TaskIsAnAliasOfAgent: funded Agent(x)/Task(x) never meets a disallow that denies it (bare
+#     name, or same argument, either name); an explicit such forbid is ErrSpec; unfunded both bare
+#     names are forbidden and no Agent/Task form may be allowed.
+#   R6_BackslashRefused (LOW): a backslash anywhere in a rule, either list, is ErrSpec.
+#   R6_EmptyArgumentRefused, R6_ControlCharacterInArgumentRefused,
+#   R6_PermissionDenialEntryChecked: re-review mutants on code that was right.
+# On a90071b unchanged: TestB1_06_PinnedArgv (the re-frozen assertions), R6_TaskIsAnAliasOfAgent
+# and R6_BackslashRefused FAIL; everything else passes.
+# Proof, $TMPDIR only: a90071b plus the r6 fixes passes 22 of 22 (-race -count=3). Mutants, each
+# killed: no alias (a90071b), no alias-aware conflict check, no backslash check, empty argument
+# accepted, control check dropped in the argument, denial entries unchecked.
+#
 # OPEN (canon gaps, not decided here):
+# 0. Ruling F: whether a funded team may still allow BARE Agent/Task ("only the approved Agent(x)
+#    form") - frozen since r2 as allowed; narrowing it is a re-freeze for the founder to order.
 # 1. Exact rate-limit shape: measure on a real run, then re-freeze (ruling E). Until then
 #    blocked(capacity) vs unresolved is not pinned for a rate limit.
 # 2. (resolved by ruling D: the profile row is ratified.)
@@ -133,11 +154,13 @@ jobs:
   - id: B1-06
     files:
       - path: kernel/internal/adapter/claude_donetest_test.go
-        sha256: 5b1387a3334f7b4beecf343b310d8229332b31a678e1bbea21e2da2a5830cacb
+        sha256: e7e24ed6a917bb540d3bfa4d6a946b581d094a48a5cd0379de2a4cf6db96e189
       - path: kernel/internal/adapter/claude_r4_donetest_test.go
         sha256: 86fc34e6f93d5134a88e1cd1512ecb17c18bb55daacce5c988058894b5f062ca
       - path: kernel/internal/adapter/claude_r5_donetest_test.go
         sha256: da38ab2b79d155021106692f913473f0ce7102945105ac9e447d16e05c55dcf5
+      - path: kernel/internal/adapter/claude_r6_donetest_test.go
+        sha256: d89d4a92f74292a8e6d9a4d0aa8919523918c9815bf02eafe174283db0cf3f18
       - path: kernel/internal/adapter/testdata/claude/children.jsonl
         sha256: 4255aca3345580577700335b17198f4b2ea6f17b03376fe50749738d76a3bf3f
       - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl

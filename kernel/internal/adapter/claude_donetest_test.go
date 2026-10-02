@@ -394,8 +394,10 @@ func TestB1_06_PinnedArgv(t *testing.T) {
 		s.FundedTeam = true
 		s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent(reviewer)"}, Forbidden: []string{"WebFetch"}}
 		allowed, forbidden := tools(t, s)
-		if !slices.Equal(allowed, []string{"Read", "Agent(reviewer)"}) || !slices.Contains(forbidden, "Task") {
-			t.Errorf("funded, Agent(reviewer): allowed %q forbidden %q; want it allowed and Task forbidden", allowed, forbidden)
+		// Re-frozen r6 (founder ruling F, 2026-10-02): Task is an alias of Agent, so a forbidden
+		// Task would deny this Agent(reviewer). Until r6 this asserted Task forbidden.
+		if !slices.Equal(allowed, []string{"Read", "Agent(reviewer)"}) || slices.Contains(forbidden, "Task") || slices.Contains(forbidden, "Agent") {
+			t.Errorf("funded, Agent(reviewer): allowed %q forbidden %q; want it allowed, neither Agent nor Task forbidden", allowed, forbidden)
 		}
 	})
 	t.Run("a funded team may allow nested-agent tools", func(t *testing.T) {
@@ -403,9 +405,11 @@ func TestB1_06_PinnedArgv(t *testing.T) {
 		s.FundedTeam = true
 		s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent"}, Forbidden: []string{"WebFetch"}}
 		allowed, forbidden := tools(t, s)
+		// Re-frozen r6 (founder ruling F): Task is an alias of Agent, so it is not forbidden next
+		// to an allowed Agent. Until r6 this asserted Task forbidden.
 		if !slices.Equal(allowed, []string{"Read", "Agent"}) || slices.Contains(forbidden, "Agent") ||
-			!slices.Contains(forbidden, "Task") || !slices.Contains(forbidden, "WebFetch") {
-			t.Errorf("funded, Agent allowed: allowed %q forbidden %q; want Agent allowed only, Task and WebFetch forbidden", allowed, forbidden)
+			slices.Contains(forbidden, "Task") || !slices.Contains(forbidden, "WebFetch") {
+			t.Errorf("funded, Agent allowed: allowed %q forbidden %q; want Agent allowed, Task not forbidden (alias), WebFetch forbidden", allowed, forbidden)
 		}
 		s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent", "Task"}, Forbidden: []string{"WebFetch"}}
 		allowed, forbidden = tools(t, s)
