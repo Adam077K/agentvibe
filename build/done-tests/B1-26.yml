@@ -52,6 +52,25 @@
 # Red against stubs: Go 9/9, Userland all; green with B1-02 against the $TMPDIR reference (993 Userland
 # subtests); a Go mutant whose string check accepts null is killed.
 #
+# RE-FREEZE 2026-10-02 re-freeze r2 after impl review (Opus FAIL at build/b1-26 @ 4a5094e). Rounds 1-5
+# unchanged (hashes identical). Added, one shared vector set for both languages:
+#   label_r2_donetest_test.go + label.r2.donetest.test.ts over testdata/label/r2_deadlines.json (31),
+#   r2_wire_text.json (17) and r2_order.json (3).
+#   - HIGH deadlines: one grammar orders a join's retention.deadline (RFC 3339 with 'T', 'Z' or +-hh:mm,
+#     uppercase, valid calendar date, hour and offset hour < 24; orchestrator ruling 2026-10-02);
+#     anything else, and a deadline against an absent one, is ErrUndecided / 'undecided'.
+#   - MED revocation_epoch -0, 1.0, 3e0, 0.0, 03 and duplicate or case-variant keys at any depth are
+#     refused on Userland's text path (nouns.decodeText, for nouns.Label and label.LabelV1) as in Go.
+#   - Mutants: the encoded join is byte-identical over every input order, and p is some input's p.
+# Fails on 4a5094e: Go TestB126R2DeadlineGrammar (single-digit hour, comma fraction, offset hour 24,
+# offset minute 60); Userland the deadline test (feb-30, feb-29 non-leap, hour 24, lowercase t/z, ...)
+# and the wire-text test (every duplicate and non-canonical integer case). JoinIsOrderFree passes there.
+# Proved in $TMPDIR: green against a strict reference with every round-1 and B1-02 done-test (1095
+# Userland subtests); 10 of 10 mutants killed, each green on the round-1 tests: partial-deadline refusal
+# deleted, p from the first input, derived_from unsorted, the loose deadline grammar (each in Go and
+# TS), and in TS duplicate keys or non-canonical integers allowed.
+# Run (r2): go -C kernel test -tags donetest -count=1 -run R2 ./internal/label/ && node --test userland/test/label.r2.donetest.test.ts
+#
 # Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
 # B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
 # carry the LabelV1 shape that the nouns on main does not read yet.
@@ -76,3 +95,13 @@ jobs:
         sha256: 7dd6ae31694d4b23298d706cb5e25a274a009ea92762c844350d984ce821f4c8
       - path: userland/test/label.donetest.test.ts
         sha256: f1fa969129248e56eca727e1659ef4123c08ebe62bbe4760171f767f6ef650cb
+      - path: kernel/internal/label/label_r2_donetest_test.go
+        sha256: 9c82627d9fa20d8e2210161c47678f76a09dc89dff4e7f8b69cb351ccc8fbf2e
+      - path: kernel/internal/label/testdata/label/r2_deadlines.json
+        sha256: b657c0e7b2a684516b5d6a4806faa285e16df9ef259c65546adc7457c04ece89
+      - path: kernel/internal/label/testdata/label/r2_wire_text.json
+        sha256: 41172f8e9e6f98b19988f6861100608b780ec56424c0b683adc1bd731437f09d
+      - path: kernel/internal/label/testdata/label/r2_order.json
+        sha256: a2af28398b82a36bba8bba943ab09b076f35ca0222dcd036f0df7ad83e62ffc8
+      - path: userland/test/label.r2.donetest.test.ts
+        sha256: c56ebab4d497b02b10ab556d67d10496479336fd081ee416682fc433b27571a4
