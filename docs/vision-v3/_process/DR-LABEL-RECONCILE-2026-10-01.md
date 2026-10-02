@@ -128,26 +128,41 @@ orchestrator called them A–C; they are lettered J–L here so they do not coll
   are the stragglers listed under "Not done" below (`13:1202,1553`; `02:519`). Written as a row of 09a §12's
   "06 → wire" table.
 
+## Founder decisions, round 6 (founder, 2026-10-02)
+
+The orchestrator relayed these from the main session, where the founder answered the round-5 OPEN items through
+AskUserQuestion. The builder did not see the exchange itself.
+
+- **M. A join across ventures is refused** unless the founder approves it (founder, 2026-10-02). Inputs whose
+  `venture` values differ do not join.
+- **N. The least trusted value wins, field by field** (founder, 2026-10-02): `taint` quarantined > untrusted >
+  clean; `boundary` guarded beats open (sealed beats both, 06 L8); `origin` the least-trusted author; `subjects` the
+  union of the inputs'; `revocation_epoch` the newer.
+- **O. Retention and consent** (founder, 2026-10-02). Retention classes order by how long the data is kept, a
+  `legal` hold highest, and a join takes the longest. `consent_scope` is the intersection of the inputs' scopes; an
+  empty intersection refuses the join.
+- **P. A HumanTask done on a customer's behalf gets `origin: customer`** (founder, 2026-10-02), as decision I
+  already gives other material written on a customer's behalf.
+
 ## OPEN
 
-Raised by the B1-26 done-test builder on 2026-10-02 and NOT decided. The done-tests pin none of them.
+Raised by the B1-26 done-test builder on 2026-10-02 and NOT decided.
 
-- **Retention order.** Decision J says the longest retention wins. 09a §11.6 orders only `journal_metadata` (life
-  of the organisation) above `operational` (90 days). `personal` ("shorter of contract and legal need"), `client`
-  ("per contract") and `synthetic` ("twin lifetime") have no stated order, and neither do two different non-`none`
-  holds, nor a deadline against an absent one. The tests pin `journal_metadata` over `operational`, a hold over
-  `none`, and the later of two deadlines.
-- **Two different consent scopes.** Decision J says the narrowest consent wins, but a `ConsentScopeRef` is an opaque
-  reference and the canon defines no intersection. The tests pin only that a scope survives a join with inputs that
-  carry none.
-- **The rest of the join.** No rule covers `origin`, `venture`, `subjects` or `revocation_epoch` across inputs that
-  differ. None says whether `quarantined` outranks `untrusted`, nor how `open` and `guarded` combine. The canon
-  states only that any non-clean input taints the output, and that `sealed` is inherited (06 L8).
-- **A HumanTask done on a customer's behalf.** Decision K covers the customer's own HumanTask. It does not cover the
-  HumanTask of someone acting for a customer (decision I).
-
-**06 §8 retention wording: resolved, not open.** §8 now says the hold picks the verbs, which matches §4 and 09a §12's
-mapping rows. The canon did not truly conflict; §8 still had the pre-DR-68 names.
+- **The origin trust order (N).** The canon states no order of origins by trust; L5 says only that `founder` and
+  `system_of_record` alone reach `may_authorise`. The orchestrator PROPOSED founder > system_of_record > internal >
+  customer > counterparty, and the done-tests pin that proposal, marked PROVISIONAL, until the founder confirms or
+  replaces it. `public_web` and `synthetic` have no place in it and are not tested.
+- **Retention order beyond the clear cases (O).** By 09a §11.6, `journal_metadata` (life of the organisation)
+  outlasts every other class, and a `legal` hold outranks every other hold. `operational` (90 days), `personal`
+  ("shorter of contract and legal need"), `client` ("per contract") and `synthetic` ("twin lifetime") have no fixed
+  order, nor do `obligation`, `safety` and `pinned`, nor a deadline against an absent one. The tests pin
+  `journal_metadata` over the rest, `legal` over the rest, any hold over `none`, and the later of two deadlines.
+- **Consent intersection (O).** A `ConsentScopeRef` is an opaque reference, and the canon defines no scope contents,
+  so no code can compute an intersection of two different refs or tell that it is empty. The tests pin only that a
+  scope survives a join with itself and with inputs that carry none.
+- **Which values are ventures (M).** Whether `portfolio` or `founder` joined with a venture's data counts as
+  "different ventures", and what form the founder's approval takes on the wire, are not stated. The tests pin only
+  that two different VentureIds refuse to join.
 
 ## Not done (out of scope, mapping already decided)
 
