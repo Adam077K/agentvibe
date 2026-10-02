@@ -345,3 +345,10 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
     - LOW follow-up: MCP-name case variants are not checked.
   - **#161 B1-26:** Opus PASS at 8f42429, after the r1–r4 tests.
   - **Merge train:** 158, 159, 160, 161. Every PR's session files still read `qa_verdict: PENDING`; the founder must flip them, because the orchestrator was refused.
+- **2026-10-02, merged:** #158 (B1-12a outbox), #159 (secretscan), #160 (B1-06 adapter), #161 (B1-26 Label), via the founder-run merge train. Main is at 76ca095. CI was green on all four.
+  - **Correction:** "Verify QA Lead PASS" was green even though the session files read `qa_verdict: PENDING`. My earlier statement that CI needed those flipped was wrong; the diff-bound `.qa` verdict is what CI checks.
+- **Main is RED locally:**
+  - `avk-boundary` reports **8,318 Kernel lines against the 8,000 budget**. Each PR passed alone; together they don't.
+  - CI missed it because the Kernel check is not wired into CI until #144, which is founder-held.
+  - Founder decision (AskUserQuestion): exclude the boundary checker from the count and raise the budget to **10,000**. A builder is on `fix/kernel-budget`.
+- **Tagged donetests on main:** 3 launcher failures (B1-08 not built), as expected. check-done-tests: 64 hashes across 7 registers.

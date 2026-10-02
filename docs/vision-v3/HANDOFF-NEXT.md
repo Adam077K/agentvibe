@@ -156,3 +156,28 @@ If an agent's report was lost with the session, check its branch head and re-dis
 - The owner row for lease renew/max_wait.
 
 **Co-founder blurb:** the founder asked for a Hebrew explanation of the system. The last accepted direction was the Fable 5.1 "vs open-source frameworks" version, which compares against LangGraph, CrewAI, AutoGen and OpenHands, has no timeline, and says plainly the system is not built yet. It is in the session transcript, not in the repo.
+
+
+## Update — session build-2c (2026-10-02, ceo-4) — READ THIS FIRST
+
+**Main = 76ca095.** These merged after the build-2b section above: #158 B1-12a outbox, #159 secretscan, #160 B1-06 claude adapter, #161 B1-26 Label v1. Every review was Claude-only, so each still owes a cross-family review.
+
+**Main is red locally.** `avk-boundary` reports 8,318 Kernel lines against an 8,000 budget. The founder ruled to exclude the checker packages and set the budget to 10,000. The fix lives on `fix/kernel-budget`. Land it before any other Kernel PR.
+
+**Founder rulings this session**
+- B1-06 F: Task is an alias of Agent. Unfunded: both forbidden. Funded: bare Agent or Agent(x).
+- B1-12 C: if a worker dies before 15 min and the call is Absent after the lag, retry once. A second death, or a death after 15 min, goes to Human.
+- secretscan: tighten. The length-scaled floor is never above the old one.
+
+**Follow-ups, all LOW**
+- B1-06: the known-tool list (claude.go:71) is missing about 14 CLI tools (WebSearch, NotebookEdit, TaskStop, KillShell alias), so `websearch` is a void rule. MCP-name case variants are not checked.
+- B1-26: the escape-skip mutant in wire.go survives. Noun raw fields keep `<`. Userland has no UTF-8 byte reader.
+- B1-12a: 5 fail-safe qualifier mutants. The frozen r5 test is not gofmt-clean, and running `go fmt` breaks its hash, so CI needs a gofmt-exclusion or the test should be re-frozen formatted.
+- secretscan: digit-only values miss 4–7 per 5M.
+- A builder restored a gofmt'd frozen file through `git stash` after the hook blocked `git checkout --`. The result was correct, but it was a workaround of a refusal. Stash `b112-r5-gofmt-of-frozen-test-a6fbceab` is still in the shared stack.
+
+**Next jobs**
+- B1-07 codex adapter: needs frozen tests.
+- B1-08 launcher: frozen tests exist and are red; it needs B1-06 (done) and B1-07.
+- B1-12b: socket wiring, fencing, local effectors.
+- B1-14a policy compiler.
