@@ -2,60 +2,82 @@
 # pinned argv, `contract_hash`, subtype map, children, `init_expect`"; acceptance "Contract fixtures;
 # a changed MCP description aborts before the first tool call; empty result → `unresolved`").
 # Canon: 09a §8.2 (contract, pinned line, init_expect), §8.4 (children), §8.5 (grant argv), §8.7
-# (model_id from system/init), §8.8 (UNPARSED); ENGINE-SPEC §8.1-8.3 (harness check, subtype map).
+# (model_id from system/init), §8.8 (UNPARSED); ENGINE-SPEC §8.1-8.3 (harness check, subtype map);
+# docs/vision-v3/_process/DR-B1-06-ADAPTER-RULINGS-2026-10-02.md (founder rulings A-C).
 # Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
 # Verify: node build/check-done-tests.mjs
 # Run:    go -C kernel test -count=1 -tags donetest -run B1_06 ./internal/adapter/
-# Frozen red on 2026-10-02: 8 of 8 tests fail against the stub. kernel/internal/adapter/adapter.go
-# and claude.go are NOT registered: they are the interface the job implements (the B0-17 pattern).
-# No test runs `claude`: the ten fixtures are canned stream-json transcripts.
+# kernel/internal/adapter/adapter.go and claude.go are NOT registered: they are the interface the
+# job implements (the B0-17 pattern). No test runs `claude`: the fixtures are canned stream-json.
+# B1-08 fit: Template() equals the frozen launcher test's claude tokens, and Argv(spec) for that
+# test's slot values (profile launch-pack) equals the argv it launches. The adapter never spawns.
 #
-# B1-08 fit: Template() must equal the frozen launcher test's claude tokens, and Argv(spec) for that
-# test's slot values must equal the argv it launches. The adapter never spawns (09a §8.5).
+# Round 1, 2026-10-02 (8ec0bd4): 8 tests, 10 fixtures, 29 of 29 mutants killed. FAILED by Opus review.
 #
-# Reachability: a throwaway reference in $TMPDIR (not committed) passes 8 of 8, -race -count=3.
-# 29 of 29 mutants killed: empty result as pass; result text as pass; descriptions not hashed;
-# mismatch ignored; read ahead before aborting (the gate blocks the tool-call line until abort);
-# --add-dir appended; --flag=value spelling; Agent/Task not forced forbidden; Agent allowed; slot
-# not checked; empty init_expect accepted by Argv; max_turns/budget/during-execution/unknown subtype
-# mis-mapped; children only when spawn seen / top-level only / Agent only; child result counted;
-# session_id hashed; tools-only hash; contract ignores digest / plain join; kill, is_error, exit
-# ignored; model from assistant messages; no init accepted; empty init_expect skips the check.
+# RE-FREEZE r2 2026-10-02: 2026-10-02 re-freeze r2 after Opus review + founder rulings.
+# Founder rulings (2026-10-02, recorded in the DR note above and in 09a §8.2):
+#   A. no tool-description field: init_expect covers exactly tools, mcp_servers, agents, plugins;
+#      the Kernel pins and hashes the MCP config. mcp-description-changed.jsonl is removed and
+#      replaced by mcp-tools-changed.jsonl (one extra MCP tool in system/init).
+#   B. Agent/Task forbidden by default, allowed only with LaunchSpec.FundedTeam (both cases tested).
+#   C. --setting-sources from a pinned profile table (one row: launch-pack -> project); unknown
+#      profiles refused, no verbatim pass-through.
+# Review findings fixed: NaN/+Inf/-Inf budgets refused; per-run fields pinned (session_id, uuid, cwd,
+# model do not abort; each of the four harness fields does); a fixture line of 110,737 bytes
+# (long-line.jsonl) must be read; MCP server rename / removal / same-count tool rename abort;
+# a forbidden flag tested in every string slot and in first and later list positions; tool lists
+# parsed per element ("Read,Agent", "Agent,Read", " Agent", a comma in a forbidden name refused);
+# rate-limit.jsonl -> blocked(capacity), a rate-limit warning does not block.
+# Proof: throwaway reference in $TMPDIR passes 8 of 8 (-race -count=3); 12 fixtures; red 8 of 8 in
+# the repo against the stub. Mutants: 44 of 45 killed. The new ones: budget <= 0 only (NaN/Inf),
+# hash all but session_id/uuid, 64 KiB bufio.Scanner, MCP servers hashed by count only, slot check
+# on three slots only, tool lists not parsed, rate limit ignored, any rate-limit status blocks,
+# FundedTeam ignored, Agent forbidden even when funded-allowed, Agent allowed without FundedTeam,
+# profile passed through, profile case-folded, a tool both allowed and forbidden, mcp_servers /
+# agents / plugins left out of the hash. NOT killed, equivalent: "empty forbidden slot accepted",
+# because the slot rule already refuses an empty slot.
+# Caught while proving r2: the base spec forbids Agent and Task, which masked "Agent allowed, not
+# funded" (it was refused as both-allowed-and-forbidden). Those cases now carry their own list.
 #
 # OPEN (canon gaps, not decided here):
-# 1. Wire field for tool-description hashes: canon says system/init carries them; the measured CLI
-#    surface (09a §8.1) does not show where. Fixtures assume `tool_description_sha256` {tool: hash}.
-# 2. WorkerOutcome is named (09a §8.2, 14 §row 94) but never defined; adapter.go defines it.
-# 3. LaunchSpec lacks --agents/--agent/--session-id values; added AgentsPath, Record, SessionID.
-# 4. --setting-sources <profile>: the CLI takes user|project|local; profile-to-sources unmapped.
-# 5. "incl. Agent,Task" (pinned line) vs §8.4 "unless the funded team shape includes them": frozen
-#    as always forbidden; the pinned line has no way to allow them.
-# 6. Status of a harness abort is unspecified: tests require not adjudicate/partial, Reason harness.
-# 7. Not frozen: rate-limit wire signal → blocked(capacity); canUseTool (SDK route); resume (no
-#    pinned resume line); nightly contract check scheduling; continuation building.
+# 1. The profile table's row launch-pack -> project was chosen by the test builder; awaits
+#    ratification (DR note, ruling C).
+# 2. The rate-limit wire shape (rate_limit_event status rejected) is unmeasured; re-record it.
+# 3. WorkerOutcome is named in canon but never defined; adapter.go defines it.
+# 4. LaunchSpec lacks --agents/--agent/--session-id values; added AgentsPath, Record and SessionID.
+# 5. Status of a harness abort is unspecified: tests require not adjudicate/partial, Reason harness.
+# 6. Unpinned system/init fields: permissionMode, claude_code_version, skills, slash_commands and
+#    output_style neither abort nor are proven not to; tool-list order is not pinned.
+# 7. A description change that keeps the tool names is invisible to system/init; the pinned MCP
+#    config hash (Kernel side) is the control, and it is not B1-06's.
+# 8. Not frozen: canUseTool (SDK route), resume (no pinned resume line), nightly contract check.
 register: B1-06
 jobs:
   - id: B1-06
     files:
       - path: kernel/internal/adapter/claude_donetest_test.go
-        sha256: bd1f6c169ae5ebf390738a6111e30374514612e001ee7fc39b460b91665f4796
+        sha256: 769c2445c0342158515df9ee4c340cab69e1e9a68a0c53a68a353ae792cd0635
       - path: kernel/internal/adapter/testdata/claude/children.jsonl
-        sha256: fb962796c5df4bfa9873c7e31d9e7a81adc3d47356b52861aec3140dca9e8ec1
+        sha256: e80c8c7ceb33ebd824760a6e552280ade90c1cb200277196c0f955429426bdc7
       - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl
-        sha256: 0a2d6c4524a1d4f3684847fc64164f5a2c1a18836efaf02c67277fefd8188bed
+        sha256: a528c1f994059577d37c5b02a58c54d00e91e6418833e8b41f23f4f1fec51dc5
       - path: kernel/internal/adapter/testdata/claude/error-during-execution.jsonl
-        sha256: c325413041980727a1a06f83ac1cbb7a1905c963e8f76db95ff93c1182c72519
+        sha256: df9ad107ac94c4113d68626b1ea69b9ef2a59d9bba7d045eadec94ea81625bee
       - path: kernel/internal/adapter/testdata/claude/error-max-budget-usd.jsonl
-        sha256: 77b443c546c7cd99c666a042ae2f543d8c190df7dff473e708a79406c3b49af5
+        sha256: ba5b8a28c4143e0a19d50c8975f3c4916d287e603a2a46cf59beb05ec5bc1055
       - path: kernel/internal/adapter/testdata/claude/error-max-structured-output-retries.jsonl
-        sha256: 01a8d04afdfa2adb7156027bb3c9c7b5c8d91d72bb215d9e32c37b4634b29e73
+        sha256: 73358555746b372e658eeb6ab4ebf96c6528488c6058fee27eb0dc621539051a
       - path: kernel/internal/adapter/testdata/claude/error-max-turns.jsonl
-        sha256: 4c58476f773839cbee26fee5103d8330e2fdf2b8b3a64c666785950632fec126
-      - path: kernel/internal/adapter/testdata/claude/mcp-description-changed.jsonl
-        sha256: e8c174da2730917a508c89f50b7a1933089b116bdaf11b2a4e9f96a6a22dd10a
+        sha256: d3e4ea826683195ebbfc0bb98d89fa79afb30bf2e3c2ae6d51c93a169501c6dc
+      - path: kernel/internal/adapter/testdata/claude/long-line.jsonl
+        sha256: 7d7f84e4f1073f40a9c3dd552eed0ff4295eaccfd75831567ce235f438b38dc7
+      - path: kernel/internal/adapter/testdata/claude/mcp-tools-changed.jsonl
+        sha256: 7ab213f0f144a084e157703dd21402fc28362b59ce78c248ea97440a13492fda
       - path: kernel/internal/adapter/testdata/claude/no-init.jsonl
-        sha256: 3d16dcf32d51fca7d7644400f326eb31c07e02f568a375c366e0b0d55bebebf1
+        sha256: 5702e27958f9dab65449bdacec2d0e54bd2b22f91de349bc93e034d9ab3d3816
+      - path: kernel/internal/adapter/testdata/claude/rate-limit.jsonl
+        sha256: 0309d6270d2de5b431f0df158b18105be9f9e897665b346294e46c8882547422
       - path: kernel/internal/adapter/testdata/claude/success.jsonl
-        sha256: a9e9baf35d46e526f037f3a05d9da3bee362c8ebe121d5c2a87d07e416132208
+        sha256: c83c4c9824e527c1861ba88a8cf8a5f4dad94cf0bad58ec746feebab79edff60
       - path: kernel/internal/adapter/testdata/claude/truncated.jsonl
-        sha256: 9fac3f46c3ce2da94be9fefa83d46b1d3d71add6a5e58751f123311b68f3f607
+        sha256: ddfabfa46ba11e797cc6f1f473b0b40dd013b146cba6ee57794f55f5ce29834b

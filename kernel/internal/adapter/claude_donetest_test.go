@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -86,7 +87,7 @@ func matchesTemplate(tokens, argv []string) bool {
 func spec() LaunchSpec {
 	return LaunchSpec{
 		Cwd:            "/w/job-1",
-		ContextProfile: "project",
+		ContextProfile: "launch-pack",
 		ToolLease:      ToolLease{Allowed: []string{"Read", "Edit", "Bash"}, Forbidden: []string{"Agent", "Task"}},
 		SchemaPath:     "/run/av/job-1/schema.json",
 		BudgetUSD:      5,
@@ -355,51 +356,130 @@ func TestB1_06_PinnedArgv(t *testing.T) {
 			t.Errorf("--max-budget-usd %q, want 2.5", slot(t, argv, "--max-budget-usd"))
 		}
 		for flag, want := range map[string]string{"--session-id": s.SessionID, "--agent": "reviewer",
-			"--settings": s.SettingsPath, "--json-schema": s.SchemaPath, "--agents": s.AgentsPath, "--setting-sources": s.ContextProfile} {
+			"--settings": s.SettingsPath, "--json-schema": s.SchemaPath, "--agents": s.AgentsPath, "--setting-sources": "project"} {
 			if got := slot(t, argv, flag); got != want {
 				t.Errorf("%s %q, want %q", flag, got, want)
 			}
 		}
 	})
 
-	// "--disallowedTools <forbidden, incl. Agent,Task>" (09a §8.2; DR-24, §8.4).
-	t.Run("nested-agent tools are always forbidden", func(t *testing.T) {
-		s := spec()
-		s.ToolLease = ToolLease{Allowed: []string{"Read", "Grep"}, Forbidden: []string{"WebFetch"}}
+	// Founder ruling B (2026-10-02, DR-B1-06-ADAPTER-RULINGS): Agent and Task are forbidden by
+	// default and allowed only for an explicitly funded team (09a §8.4). Lists are parsed per tool.
+	tools := func(t *testing.T, s LaunchSpec) (allowed, forbidden []string) {
+		t.Helper()
 		argv, err := c.Argv(s)
 		if err != nil {
-			t.Fatalf("Argv: %v", err)
+			t.Fatalf("Argv(%+v): %v", s.ToolLease, err)
 		}
-		forbidden := strings.Split(slot(t, argv, "--disallowedTools"), ",")
-		allowed := strings.Split(slot(t, argv, "--allowedTools"), ",")
-		for _, want := range []string{"WebFetch", "Agent", "Task"} {
-			if !slices.Contains(forbidden, want) {
-				t.Errorf("--disallowedTools %q lacks %s", forbidden, want)
+		return strings.Split(slot(t, argv, "--allowedTools"), ","), strings.Split(slot(t, argv, "--disallowedTools"), ",")
+	}
+	t.Run("nested-agent tools are forbidden by default", func(t *testing.T) {
+		for _, funded := range []bool{false, true} {
+			s := spec()
+			s.FundedTeam = funded
+			s.ToolLease = ToolLease{Allowed: []string{"Read", "Grep"}, Forbidden: []string{"WebFetch"}}
+			allowed, forbidden := tools(t, s)
+			for _, want := range []string{"WebFetch", "Agent", "Task"} {
+				if !slices.Contains(forbidden, want) {
+					t.Errorf("funded=%v: --disallowedTools %q lacks %s", funded, forbidden, want)
+				}
+			}
+			if !slices.Equal(allowed, []string{"Read", "Grep"}) {
+				t.Errorf("funded=%v: --allowedTools %q, want [Read Grep]", funded, allowed)
 			}
 		}
-		if !slices.Equal(allowed, []string{"Read", "Grep"}) {
-			t.Errorf("--allowedTools %q, want [Read Grep]", allowed)
+	})
+	t.Run("a funded team may allow nested-agent tools", func(t *testing.T) {
+		s := spec()
+		s.FundedTeam = true
+		s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent"}, Forbidden: []string{"WebFetch"}}
+		allowed, forbidden := tools(t, s)
+		if !slices.Equal(allowed, []string{"Read", "Agent"}) || slices.Contains(forbidden, "Agent") ||
+			!slices.Contains(forbidden, "Task") || !slices.Contains(forbidden, "WebFetch") {
+			t.Errorf("funded, Agent allowed: allowed %q forbidden %q; want Agent allowed only, Task and WebFetch forbidden", allowed, forbidden)
+		}
+		s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent", "Task"}, Forbidden: []string{"WebFetch"}}
+		allowed, forbidden = tools(t, s)
+		if !slices.Equal(allowed, []string{"Read", "Agent", "Task"}) || !slices.Equal(forbidden, []string{"WebFetch"}) {
+			t.Errorf("funded, both allowed: allowed %q forbidden %q; want [Read Agent Task] and [WebFetch]", allowed, forbidden)
+		}
+	})
+
+	// Founder ruling C (2026-10-02): a pinned profile table, unknown profiles refused.
+	t.Run("the context profile maps through the pinned table", func(t *testing.T) {
+		argv, err := c.Argv(spec())
+		if err != nil || slot(t, argv, "--setting-sources") != "project" {
+			t.Errorf("launch-pack: %q, %v; want --setting-sources project", argv, err)
 		}
 	})
 
 	t.Run("a spec that cannot fill the pinned line is refused", func(t *testing.T) {
+		const flag = "--dangerously-skip-permissions"
 		cases := map[string]func(*LaunchSpec){
-			"no init_expect":               func(s *LaunchSpec) { s.InitExpect = "" },
-			"zero budget":                  func(s *LaunchSpec) { s.BudgetUSD = 0 },
-			"negative budget":              func(s *LaunchSpec) { s.BudgetUSD = -1 },
-			"flag in the session-id slot":  func(s *LaunchSpec) { s.SessionID = "--dangerously-skip-permissions" },
-			"flag in the record slot":      func(s *LaunchSpec) { s.Record = "--bare" },
-			"flag in the settings slot":    func(s *LaunchSpec) { s.SettingsPath = "-s" },
-			"empty record":                 func(s *LaunchSpec) { s.Record = "" },
-			"empty settings":               func(s *LaunchSpec) { s.SettingsPath = "" },
-			"empty schema":                 func(s *LaunchSpec) { s.SchemaPath = "" },
-			"empty agents":                 func(s *LaunchSpec) { s.AgentsPath = "" },
-			"empty profile":                func(s *LaunchSpec) { s.ContextProfile = "" },
-			"empty session id":             func(s *LaunchSpec) { s.SessionID = "" },
-			"nothing allowed":              func(s *LaunchSpec) { s.ToolLease.Allowed = nil },
-			"Agent allowed":                func(s *LaunchSpec) { s.ToolLease.Allowed = []string{"Read", "Agent"} },
-			"Task allowed":                 func(s *LaunchSpec) { s.ToolLease.Allowed = []string{"Task"} },
+			"no init_expect":     func(s *LaunchSpec) { s.InitExpect = "" },
+			"zero budget":        func(s *LaunchSpec) { s.BudgetUSD = 0 },
+			"negative budget":    func(s *LaunchSpec) { s.BudgetUSD = -1 },
+			"NaN budget":         func(s *LaunchSpec) { s.BudgetUSD = math.NaN() },
+			"+Inf budget":        func(s *LaunchSpec) { s.BudgetUSD = math.Inf(1) },
+			"-Inf budget":        func(s *LaunchSpec) { s.BudgetUSD = math.Inf(-1) },
+			"empty record":       func(s *LaunchSpec) { s.Record = "" },
+			"empty settings":     func(s *LaunchSpec) { s.SettingsPath = "" },
+			"empty schema":       func(s *LaunchSpec) { s.SchemaPath = "" },
+			"empty agents":       func(s *LaunchSpec) { s.AgentsPath = "" },
+			"empty session id":   func(s *LaunchSpec) { s.SessionID = "" },
+			"nothing allowed":    func(s *LaunchSpec) { s.ToolLease.Allowed = nil },
+			"an empty tool name": func(s *LaunchSpec) { s.ToolLease.Allowed = []string{"Read", ""} },
+			// Every slot that takes a string, with a forbidden flag in it (§8.5 forbidden_flags).
+			"flag in --setting-sources":    func(s *LaunchSpec) { s.ContextProfile = flag },
+			"flag in --settings":           func(s *LaunchSpec) { s.SettingsPath = flag },
+			"flag in --agents":             func(s *LaunchSpec) { s.AgentsPath = flag },
+			"flag in --agent":              func(s *LaunchSpec) { s.Record = flag },
+			"flag in --json-schema":        func(s *LaunchSpec) { s.SchemaPath = flag },
+			"flag in --session-id":         func(s *LaunchSpec) { s.SessionID = flag },
+			"flag as the first allowed":    func(s *LaunchSpec) { s.ToolLease.Allowed = []string{flag, "Read"} },
+			"flag as a later allowed":      func(s *LaunchSpec) { s.ToolLease.Allowed = []string{"Read", flag} },
+			"flag as the first forbidden":  func(s *LaunchSpec) { s.ToolLease.Forbidden = []string{flag} },
+			"flag as a later forbidden":    func(s *LaunchSpec) { s.ToolLease.Forbidden = []string{"WebFetch", "--bare"} },
 			"flag smuggled as a tool name": func(s *LaunchSpec) { s.ToolLease.Allowed = []string{"--add-dir", "/"} },
+			"Agent allowed, not funded": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent"}, Forbidden: []string{"WebFetch"}}
+			},
+			"Task allowed, not funded": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Task"}, Forbidden: []string{"WebFetch"}}
+			},
+			"\"Read,Agent\" as one element": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Read,Agent"}, Forbidden: []string{"WebFetch"}}
+			},
+			"\"Agent,Read\" as one element": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Agent,Read"}, Forbidden: []string{"WebFetch"}}
+			},
+			"\"Read,Agent\", funded": func(s *LaunchSpec) {
+				s.FundedTeam = true
+				s.ToolLease = ToolLease{Allowed: []string{"Read,Agent"}, Forbidden: []string{"WebFetch"}}
+			},
+			"\" Agent\" padded": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Read", " Agent"}, Forbidden: []string{"WebFetch"}}
+			},
+			"a comma in a forbidden name": func(s *LaunchSpec) { s.ToolLease.Forbidden = []string{"WebFetch,Bash"} },
+			"a tool both allowed and forbidden": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Read", "Bash"}, Forbidden: []string{"Bash"}}
+			},
+			"funded, Agent allowed and forbidden": func(s *LaunchSpec) {
+				s.FundedTeam = true
+				s.ToolLease = ToolLease{Allowed: []string{"Agent"}, Forbidden: []string{"Agent"}}
+			},
+			"funded, nothing left to forbid": func(s *LaunchSpec) {
+				s.FundedTeam = true
+				s.ToolLease = ToolLease{Allowed: []string{"Read", "Agent", "Task"}}
+			},
+			// Unknown profiles (ruling C): no verbatim pass-through, no case folding, no lists.
+			"profile empty":          func(s *LaunchSpec) { s.ContextProfile = "" },
+			"profile \"project\"":    func(s *LaunchSpec) { s.ContextProfile = "project" },
+			"profile \"user\"":       func(s *LaunchSpec) { s.ContextProfile = "user" },
+			"profile Launch-Pack":    func(s *LaunchSpec) { s.ContextProfile = "Launch-Pack" },
+			"profile with a list":    func(s *LaunchSpec) { s.ContextProfile = "launch-pack,user" },
+			"profile with a space":   func(s *LaunchSpec) { s.ContextProfile = "launch-pack " },
+			"profile never declared": func(s *LaunchSpec) { s.ContextProfile = "research" },
 		}
 		for name, mutate := range cases {
 			t.Run(name, func(t *testing.T) {
@@ -460,32 +540,28 @@ func TestB1_06_ContractHash(t *testing.T) {
 	add("digest/token boundary moved", claudeDigest+claudeTokens[0], claudeTokens[1:])
 }
 
-// ---- init_expect: 09a §8.2 "the system/init harness check against init_expect
-// (tool-description hashes included, so a changed MCP description aborts before the first tool
-// call)"; ENGINE-SPEC §8.2 "Harness check: Parse system/init (tools, agents, MCP servers,
-// plugins) against the compiled record's expected hash; mismatch aborts before any tool use";
-// ENGINE-SPEC §8.1 "running: adapter launched, system/init verified" ----
+// ---- init_expect: 09a §8.2 "the system/init harness check against init_expect ... a changed MCP
+// description aborts before the first tool call", as refined by founder ruling A (2026-10-02,
+// DR-B1-06-ADAPTER-RULINGS): the Kernel pins and hashes the MCP config, and init_expect covers
+// exactly tools, mcp_servers, agents and plugins; ENGINE-SPEC §8.2 "Harness check: Parse
+// system/init (tools, agents, MCP servers, plugins) against the compiled record's expected hash;
+// mismatch aborts before any tool use"; ENGINE-SPEC §8.1 "running: adapter launched, system/init
+// verified" ----
 
-func TestB1_06_ChangedMCPDescriptionAbortsBeforeFirstToolCall(t *testing.T) {
+func TestB1_06_ChangedMCPToolListAbortsBeforeFirstToolCall(t *testing.T) {
 	c := NewClaude(claudeDigest)
 	expect := golden(t, c)
-	ls := lines(fixture(t, "mcp-description-changed.jsonl"))
+	ls := lines(fixture(t, "mcp-tools-changed.jsonl"))
 	ii := initIndex(t, ls)
 
-	// The fixture's init differs from the golden one in exactly one MCP tool's description.
+	// The fixture's init differs from the golden one only by one extra MCP tool.
 	gl := lines(fixture(t, "success.jsonl"))
 	want, got := decode(t, gl[initIndex(t, gl)]), decode(t, ls[ii])
-	wd, gd := want["tool_description_sha256"].(map[string]any), got["tool_description_sha256"].(map[string]any)
-	diff := []string{}
-	for k := range wd {
-		if wd[k] != gd[k] {
-			diff = append(diff, k)
-		}
-	}
-	delete(want, "tool_description_sha256")
-	delete(got, "tool_description_sha256")
-	if !reflect.DeepEqual(want, got) || len(wd) != len(gd) || !slices.Equal(diff, []string{"mcp__tracker__create_issue"}) {
-		t.Fatalf("fixture drift: the inits must differ only in mcp__tracker__create_issue's description (diff %v)", diff)
+	wt, gt := want["tools"].([]any), got["tools"].([]any)
+	delete(want, "tools")
+	delete(got, "tools")
+	if !reflect.DeepEqual(want, got) || len(gt) != len(wt)+1 || !reflect.DeepEqual(gt[:len(wt)], wt) || gt[len(wt)] != "mcp__tracker__read_file" {
+		t.Fatalf("fixture drift: the inits must differ only by mcp__tracker__read_file in tools")
 	}
 	if h, err := c.InitHash(ls[ii]); err != nil || h == expect {
 		t.Errorf("InitHash(changed init) = %s, %v; want a hash other than init_expect", h, err)
@@ -524,15 +600,20 @@ func TestB1_06_InitExpectHarnessCheck(t *testing.T) {
 		"an MCP server added": func(m map[string]any) {
 			m["mcp_servers"] = append(m["mcp_servers"].([]any), map[string]any{"name": "evil", "status": "connected"})
 		},
-		"an agent added": func(m map[string]any) { m["agents"] = append(m["agents"].([]any), "reviewer") },
-		"a plugin added": func(m map[string]any) { m["plugins"] = []any{map[string]any{"name": "p", "path": "/tmp/p"}} },
-		"a built-in description": func(m map[string]any) {
-			m["tool_description_sha256"].(map[string]any)["Bash"] = "sha256:" + strings.Repeat("9", 64)
+		"an MCP server renamed": func(m map[string]any) {
+			m["mcp_servers"] = []any{map[string]any{"name": "tracker", "status": "connected"}, map[string]any{"name": "docz", "status": "connected"}}
 		},
-		"a description dropped": func(m map[string]any) {
-			delete(m["tool_description_sha256"].(map[string]any), "mcp__tracker__list_issues")
+		"an MCP server removed": func(m map[string]any) { m["mcp_servers"] = m["mcp_servers"].([]any)[:1] },
+		"an MCP tool renamed, same count": func(m map[string]any) {
+			ts := slices.Clone(m["tools"].([]any))
+			ts[len(ts)-1] = "mcp__docs__fetch"
+			m["tools"] = ts
 		},
-		"the description map gone": func(m map[string]any) { delete(m, "tool_description_sha256") },
+		"the tool list missing": func(m map[string]any) { delete(m, "tools") },
+		"the MCP list missing":  func(m map[string]any) { delete(m, "mcp_servers") },
+		"an agent added":        func(m map[string]any) { m["agents"] = append(m["agents"].([]any), "reviewer") },
+		"an agent replaced":     func(m map[string]any) { m["agents"] = []any{"reviewer"} },
+		"a plugin added":        func(m map[string]any) { m["plugins"] = []any{map[string]any{"name": "p", "path": "/tmp/p"}} },
 	}
 	for name, mutate := range harness {
 		t.Run("aborts: "+name, func(t *testing.T) {
@@ -547,6 +628,8 @@ func TestB1_06_InitExpectHarnessCheck(t *testing.T) {
 		"re-encoded":         func(map[string]any) {},
 		"another session_id": func(m map[string]any) { m["session_id"] = "0192f7a7-0000-7000-8000-000000000000" },
 		"another uuid":       func(m map[string]any) { m["uuid"] = "b0c1d2e3-ffff-4fff-8fff-ffffffffffff" },
+		"another cwd":        func(m map[string]any) { m["cwd"] = "/w/job-77" },         // one worktree per job
+		"another model":      func(m map[string]any) { m["model"] = "claude-sonnet-5" }, // recorded (§8.7), not checked
 	}
 	for name, mutate := range perRun {
 		t.Run("does not abort: "+name, func(t *testing.T) {
@@ -595,6 +678,10 @@ func TestB1_06_SubtypeMap(t *testing.T) {
 		return join(replaced(success, last, encode(t, m)))
 	}
 
+	// A rate-limit warning is not a block: the run went on and succeeded.
+	warning := []byte(`{"type":"rate_limit_event","rate_limit_info":{"status":"allowed_warning","resetsAt":1759424400,"rateLimitType":"five_hour"},"session_id":"0192f7a4-6f1e-7c3a-9b1d-3c5e7a9b1d3c","uuid":"rl-w"}`)
+	warned := join(append(append(slices.Clone(success[:last]), warning), success[last]))
+
 	cases := []struct {
 		name    string
 		stream  []byte
@@ -618,6 +705,13 @@ func TestB1_06_SubtypeMap(t *testing.T) {
 		{"unknown subtype, exit 0", withResult(func(m map[string]any) { m["subtype"] = "ok" }), ExitInfo{}, Unresolved, ReasonUnparsed, "ok"},
 		{"no result event, exit 0", join(success[:last]), ExitInfo{}, Unresolved, ReasonUnparsed, ""},
 		{"truncated result, exit 0", fixture(t, "truncated.jsonl"), ExitInfo{}, Unresolved, ReasonUnparsed, ""},
+		// ENGINE-SPEC §8.3 "Usage/rate limit, either provider → blocked(capacity)". Wire shape
+		// unmeasured (DR-B1-06-ADAPTER-RULINGS, "Also frozen by r2").
+		{"rate limit rejected", fixture(t, "rate-limit.jsonl"), ExitInfo{Code: 1}, Blocked, ReasonCapacity, "success"},
+		{"rate limit rejected, exit 0", fixture(t, "rate-limit.jsonl"), ExitInfo{}, Blocked, ReasonCapacity, "success"},
+		{"rate-limit warning, then success", warned, ExitInfo{}, Adjudicate, "", "success"},
+		// A stream line over 64 KiB is read, not dropped or fatal (review r2).
+		{"a line over 64 KiB, then success", fixture(t, "long-line.jsonl"), ExitInfo{}, Adjudicate, "", "success"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -707,9 +801,10 @@ func TestB1_06_NothingElseAdjudicates(t *testing.T) {
 	c := NewClaude(claudeDigest)
 	expect := golden(t, c)
 	names, err := filepath.Glob(filepath.Join("testdata", "claude", "*.jsonl"))
-	if err != nil || len(names) < 10 {
-		t.Fatalf("fixtures: %v, %d files; want the 10 registered", err, len(names))
+	if err != nil || len(names) != 12 {
+		t.Fatalf("fixtures: %v, %d files; want the 12 registered", err, len(names))
 	}
+	mayAdjudicate := map[string]bool{"success.jsonl": true, "long-line.jsonl": true}
 	exits := []ExitInfo{{}, {Code: 1}, {Code: -1, Killed: KilledWall}, {Code: -1, Killed: KilledIdle}}
 	adjudicated := 0
 	for _, path := range names {
@@ -727,8 +822,8 @@ func TestB1_06_NothingElseAdjudicates(t *testing.T) {
 			switch o.Status {
 			case Adjudicate:
 				adjudicated++
-				if name != "success.jsonl" || exit != (ExitInfo{}) {
-					t.Errorf("%s with %+v adjudicates; only success.jsonl at exit 0 may", name, exit)
+				if !mayAdjudicate[name] || exit != (ExitInfo{}) {
+					t.Errorf("%s with %+v adjudicates; only success.jsonl and long-line.jsonl at exit 0 may", name, exit)
 				}
 			case Partial, Blocked, Unresolved:
 			default:
@@ -736,8 +831,8 @@ func TestB1_06_NothingElseAdjudicates(t *testing.T) {
 			}
 		}
 	}
-	if adjudicated != 1 {
-		t.Errorf("%d runs adjudicated, want exactly 1", adjudicated)
+	if adjudicated != 2 {
+		t.Errorf("%d runs adjudicated, want exactly 2", adjudicated)
 	}
 }
 

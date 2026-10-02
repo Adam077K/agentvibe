@@ -5,9 +5,9 @@ branch: build/b1-06-tests
 tier: lite
 qa_verdict: PENDING
 ---
-B1-06 done-tests frozen: kernel/internal/adapter/{adapter.go,claude.go} are the unregistered stub (WorkerAdapter, LaunchSpec, WorkerOutcome, Claude); claude_donetest_test.go plus 10 stream-json fixtures under testdata/claude/ are registered in build/done-tests/B1-06.yml.
-Red: `go -C kernel test -count=1 -tags donetest -run B1_06 ./internal/adapter/` gives 8 of 8 FAIL. avk-boundary ok (6100/8000 lines). check-done-tests exit 0.
-Reachable: a throwaway reference in $TMPDIR passes 8/8 under -race -count=3; 29 of 29 mutants killed (list in the register). Two survived round one and were fixed: an equivalent empty-expect mutant, and ModelID-from-assistant (test strengthened).
-B1-08 fit: Template() equals the frozen launcher test's tokens; Argv(spec) equals its rendered argv. The adapter returns argv; only the launcher execs.
-OPEN canon gaps (register header): tool-description wire field, WorkerOutcome undefined, LaunchSpec missing agents/record/session, profile→setting-sources, Agent/Task always-forbidden vs §8.4, harness-abort status, rate-limit signal, resume line.
-`git fetch` got 403/502 from the proxy; branched from local origin/main = c8f6974.
+B1-06 done-tests, re-frozen r2 (2026-10-02) after the Opus review FAIL at 8ec0bd4 and founder rulings A-C, recorded in docs/vision-v3/_process/DR-B1-06-ADAPTER-RULINGS-2026-10-02.md with a pointer in 09a §8.2. check:citations-exist exits 0.
+Stub kernel/internal/adapter/{adapter.go,claude.go} (unregistered). The registered files are claude_donetest_test.go and 12 stream-json fixtures, including mcp-tools-changed, rate-limit and long-line (110,737-byte line); mcp-description-changed was dropped per ruling A.
+Red: 8 of 8 FAIL against the stub. avk-boundary ok (6111/8000). check-done-tests exit 0.
+Proof: throwaway reference in $TMPDIR passes 8/8 under -race -count=3. Mutants: 44 of 45 killed; the one survivor is equivalent (empty forbidden slot, already refused by the slot rule).
+OPEN: the profile table row launch-pack→project awaits ratification; the rate-limit wire shape is unmeasured; WorkerOutcome is undefined in canon; LaunchSpec lacked the agents/record/session fields; the status of a harness abort is unspecified; five init fields are unpinned; a description change that keeps the tool names is the Kernel's control.
+Refusal: a direct Write into the worktree was blocked by pre-tool-use.sh as outside the project root. Files were written in the scratchpad and copied in, per the brief.

@@ -24,9 +24,12 @@ import (
 var ErrNotImplemented = errors.New("adapter: not implemented")
 
 var (
-	// ErrSpec: the LaunchSpec cannot fill the pinned argv: an empty slot, a slot value that
-	// begins with '-' (the launcher's slot rule, so a flag cannot ride in a slot), a budget
-	// that is not positive, an empty InitExpect, or a nested-agent tool on the allowed list.
+	// ErrSpec: the LaunchSpec cannot fill the pinned argv: an empty slot or tool name; a slot
+	// value or tool name that begins with '-' (the launcher's slot rule, so a flag cannot ride
+	// in a slot); a tool name holding a comma or surrounding space; a tool both allowed and
+	// forbidden; a budget that is not finite and positive; an empty InitExpect; a context
+	// profile not in the pinned table; Agent or Task allowed without FundedTeam; or nothing
+	// left to forbid (DR-B1-06-ADAPTER-RULINGS-2026-10-02, rulings B and C).
 	ErrSpec = errors.New("adapter: launch spec cannot fill the pinned argv")
 	// ErrHarness: the worker's system/init does not match init_expect, or a non-system event
 	// came before system/init. Watch has already called abort.
@@ -96,7 +99,8 @@ type ToolLease struct {
 // but the pinned launch line needs them (--agents, --agent, --session-id).
 type LaunchSpec struct {
 	Cwd              string
-	ContextProfile   string // --setting-sources <profile>
+	ContextProfile   string // key into the pinned profile table; its row fills --setting-sources (ruling C)
+	FundedTeam       bool   // the job is explicitly a funded team: Agent/Task may be allowed (ruling B)
 	ToolLease        ToolLease
 	SchemaPath       string  // --json-schema <f>
 	BudgetUSD        float64 // --max-budget-usd <B>
