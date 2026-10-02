@@ -323,3 +323,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
     - B1-12b is new: socket `propose_effect` wiring, dispatch fencing and the local effectors (git PR, preview deploy, founder-mailbox email). It needs its own frozen tests.
     - Reason: the plan row (jobs.yml:654) covers both, but the frozen tests cover only the core.
 - **B1-06 tests (8ec0bd4):** frozen, 8 tests on 10 recorded fixtures, 29/29 mutants killed. An Opus review is in progress. The builder flagged canon gaps that need the founder: the pinned line forbids Agent/Task while §8.4 allows them for funded teams; WorkerOutcome is undefined.
+- **2026-10-02, end of session build-2b.** The handoff is written in HANDOFF-NEXT ("session build-2b").
+  - B1-26: implementation under review.
+  - B1-06: implementer fixing the r4 tests, including a Unicode tool-list bypass (MED security).
+  - B1-12a: review r3 FAILED (ruling B not enforced); r4 tests in progress.
+  - secretscan: map-order RNG flake fixed; the founder chose to tighten the scanner, work in progress.
+  - Founder rulings this session: B1-06 A–E; outbox lag 2 min per provider; hung call → Human at 15 min; scanner tightened. Label Q–T are recorded in DR files.
