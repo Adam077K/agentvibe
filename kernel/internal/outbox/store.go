@@ -36,6 +36,10 @@ const (
 	lockPoll    = 5 * time.Millisecond
 )
 
+// Founder ruling C, 2026-10-02 (same note): a worker that dies before HungDeadline on a call that
+// never answered is retried once, after an Absent read past the visibility lag; a second such
+// death goes to Human (resolve, opState.deadRetries).
+
 // UncertainDeadline: an attempt whose provider call ANSWERED without proof (timeout, ambiguous
 // error) and is still unproven this long after it was journaled as dispatching goes to Human
 // (§7 diagram, "uncertain -> human: deadline before proof"). Parameter. The frozen r2 done-test
@@ -108,20 +112,21 @@ type record struct {
 	At         int64  `json:"at,omitempty"` // Deps.Clock, unix nanoseconds
 	Reason     string `json:"reason,omitempty"`
 	Answered   bool   `json:"answered,omitempty"` // the outcome came from a provider call that returned
-	Stream     string `json:"stream,omitempty"` // evIndexed: the Operation's key stream
+	Stream     string `json:"stream,omitempty"`   // evIndexed: the Operation's key stream
 }
 
 // opState is an Operation folded from its stream, with what the next append and attempt need.
 type opState struct {
 	Operation
-	stream     string
-	seq        uint64
-	payloadRef journal.BlobRef
-	idem       string    // the current attempt's provider idempotency key
-	began      time.Time // when the current attempt was journaled as dispatching
-	sent       bool      // the current attempt may have reached the provider
-	lagFrom    time.Time // its visibility-lag window runs from here: the later of sent and uncertain
-	answered   bool      // the current attempt's provider call returned (any answer, even ambiguous)
+	stream      string
+	seq         uint64
+	payloadRef  journal.BlobRef
+	idem        string    // the current attempt's provider idempotency key
+	began       time.Time // when the current attempt was journaled as dispatching
+	sent        bool      // the current attempt may have reached the provider
+	lagFrom     time.Time // its visibility-lag window runs from here: the later of sent and uncertain
+	answered    bool      // the current attempt's provider call returned (any answer, even ambiguous)
+	deadRetries int       // earlier attempts sent, never answered, then proven absent: retries ruling C used
 }
 
 var ulidPattern = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
@@ -265,6 +270,9 @@ func fold(stream string, evs []journal.Event) (opState, error) {
 		default:
 			if r.Attempt != s.Attempt {
 				return s, fmt.Errorf("outbox: %s seq %d: outcome for attempt %d during attempt %d", stream, ev.Seq, r.Attempt, s.Attempt)
+			}
+			if ev.Type == evFailed && s.sent && !s.answered && !r.Answered {
+				s.deadRetries++ // a dead worker's attempt proven absent: ruling C's one retry is spent
 			}
 			s.answered = s.answered || r.Answered
 			if at := time.Unix(0, r.At); ev.Type == evUncertain && s.sent && at.After(s.lagFrom) {
@@ -579,6 +587,10 @@ func (o *outbox) resolve(ctx context.Context, s opState) (State, string) {
 		// 09a §7.2: "a query inside [visibility_lag_s] returns `unknown`, not `absent`". The
 		// request may still be in transit, so this read proves nothing (founder ruling A).
 		p = Unknown
+	case p == Absent && s.sent && !s.answered && s.deadRetries > 0:
+		// Founder ruling C: a dead worker's unanswered call proven absent is retried ONCE; a
+		// second such death goes to a human, and there is no third send.
+		return Human, "second unanswered death, proven absent: ruling C allows one retry"
 	case p == Absent:
 		return Failed, "lookup: proven absent"
 	}
