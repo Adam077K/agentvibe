@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -375,12 +376,27 @@ func Integer(min int64) Check {
 	}
 }
 
+// Number accepts a JSON number written in its canonical spelling, within ±(2^53-1) and not -0
+// (orchestrator ruling 2026-10-02, B1-26 impl re-review r3). Canonical is the spelling Marshal writes
+// for the float64 it reads (Userland's JSON.stringify writes the same shortest form), so Encode(Decode(b))
+// is b: 0.50, 5e-1 and -0.0 are refused, and so is 9007199254740993.5, which reads as an integer
+// past 2^53-1. -0 is refused because Userland cannot write it back (JSON.stringify(-0) is "0").
 func Number(path string, raw json.RawMessage) error {
 	if k := KindOf(raw); k != "number" {
 		return Invalid(path, "is a JSON %s; want a number", k)
 	}
-	if _, err := strconv.ParseFloat(string(raw), 64); err != nil {
+	f, err := strconv.ParseFloat(string(raw), 64)
+	if err != nil {
 		return Invalid(path, "is %s; it does not fit a float64", raw)
+	}
+	if f == 0 && math.Signbit(f) {
+		return Invalid(path, "is %s; a number is never -0 on the wire", raw)
+	}
+	if math.Abs(f) > MaxSafe {
+		return Invalid(path, "is %s; a number is within ±(2^53-1), or JavaScript rounds it", raw)
+	}
+	if b, err := json.Marshal(f); err != nil || !bytes.Equal(b, raw) {
+		return Invalid(path, "is %s; the number is written %s on the wire", raw, b)
 	}
 	return nil
 }
@@ -400,7 +416,8 @@ func Marshal(v any) ([]byte, error) {
 	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
 }
 
-// Compact checks that data is one valid UTF-8 JSON value that ScanWire accepts, and returns it
+// Compact checks that data is one valid UTF-8 JSON value, with no lone surrogate escaped in a string,
+// that ScanWire accepts, and returns it
 // compacted, so every raw JSON field a reader fills holds no insignificant whitespace and an
 // encoder reproduces it byte for byte.
 func Compact(data []byte) ([]byte, error) {
@@ -411,8 +428,48 @@ func Compact(data []byte) ([]byte, error) {
 	if err := json.Compact(&buf, data); err != nil {
 		return nil, Invalid("", "is not one JSON value: %v", err)
 	}
+	if err := loneSurrogate(buf.Bytes()); err != nil {
+		return nil, Invalid("", "%v", err)
+	}
 	if err := ScanWire(buf.Bytes()); err != nil {
 		return nil, Invalid("", "%v", err)
 	}
 	return buf.Bytes(), nil
+}
+
+// loneSurrogate refuses a \uXXXX escape of a surrogate that is not half of a high-low pair, in any
+// string, key or value (orchestrator ruling 2026-10-02, B1-26 impl re-review r3). encoding/json would
+// read it as U+FFFD and Userland's JSON.parse as the lone code unit, so the two languages would hold
+// different strings from the same bytes. A raw lone surrogate is invalid UTF-8 and Compact refuses it
+// before this runs. data is valid JSON, so a backslash occurs only inside a string, as an escape.
+func loneSurrogate(data []byte) error {
+	hex4 := func(i int) (rune, bool) {
+		if i+6 > len(data) || data[i] != '\\' || data[i+1] != 'u' {
+			return 0, false
+		}
+		v, err := strconv.ParseUint(string(data[i+2:i+6]), 16, 16)
+		return rune(v), err == nil
+	}
+	for i := 0; i < len(data); i++ {
+		if data[i] != '\\' {
+			continue
+		}
+		r, ok := hex4(i)
+		if !ok {
+			i++ // a two-byte escape such as \" or \\
+			continue
+		}
+		switch {
+		case r >= 0xDC00 && r <= 0xDFFF:
+			return fmt.Errorf("holds the lone surrogate \\u%04X", r)
+		case r >= 0xD800 && r <= 0xDBFF:
+			lo, ok := hex4(i + 6)
+			if !ok || lo < 0xDC00 || lo > 0xDFFF {
+				return fmt.Errorf("holds the lone surrogate \\u%04X", r)
+			}
+			i += 6
+		}
+		i += 5
+	}
+	return nil
 }
