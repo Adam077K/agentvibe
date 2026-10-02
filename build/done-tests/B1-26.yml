@@ -8,7 +8,7 @@
 #
 # Canon: 09a-ENGINEERING.md §12 (LabelV1, Provenance, SourceRef, PrincipalRef, both mapping tables,
 # Join); 06-MEMORY.md §4 (L1, L3, L8); _process/DR-LABEL-RECONCILE-2026-10-01.md (founder decisions
-# 1-8, A-C, E-I). Every fixture case carries a `cite` naming the canon line it enforces.
+# 1-8, A-C, E-I, J-L). Every fixture case carries a `cite` naming the canon line it enforces.
 #
 # First frozen 2026-10-02 at 0268a8b (Go 7 tests, Userland 380 subtests). kernel/internal/label/label.go and
 # userland/src/label.ts are NOT registered: they are the interface the job implements (the B1-02
@@ -29,7 +29,8 @@
 # are among the 26); Userland 13 of 13.
 #
 # Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
-# B1-26 lands; the Go run line for B1-02 (./internal/nouns/) is unaffected.
+# B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
+# carry the LabelV1 shape that the nouns on main does not read yet.
 #
 # The five fixture files are registered because they are the wire contract: the Go and Userland tests
 # read the same bytes, so a fixture edit changes both languages' acceptance at once.
