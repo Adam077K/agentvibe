@@ -405,7 +405,9 @@ func Number(path string, raw json.RawMessage) error {
 func AnyJSON(string, json.RawMessage) error { return nil }
 
 // Marshal is json.Marshal without HTML escaping, so a raw field holding "<" is written as "<" and
-// Decode(Encode(v)) returns the same bytes in it that v held.
+// Decode(Encode(v)) returns the same bytes in it that v held. U+2028 and U+2029, which encoding/json
+// escapes in every string whatever SetEscapeHTML says, are written back as raw UTF-8 (B1-26 r4): that
+// is what Userland's JSON.stringify writes, so both languages encode one label to the same bytes.
 func Marshal(v any) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
@@ -413,7 +415,38 @@ func Marshal(v any) ([]byte, error) {
 	if err := enc.Encode(v); err != nil {
 		return nil, err
 	}
-	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
+	return rawLineSeparators(bytes.TrimSuffix(buf.Bytes(), []byte("\n"))), nil
+}
+
+// rawLineSeparators rewrites each \u2028 and \u2029 escape in data, valid JSON, as the raw character.
+// A backslash occurs only inside a string, as an escape, so stepping over every two-byte escape keeps
+// an escaped backslash followed by "u2028" (the six characters, written \\u2028) as it is.
+func rawLineSeparators(data []byte) []byte {
+	if !bytes.Contains(data, []byte(`\u202`)) {
+		return data
+	}
+	out := make([]byte, 0, len(data))
+	for i := 0; i < len(data); i++ {
+		if data[i] != '\\' {
+			out = append(out, data[i])
+			continue
+		}
+		if i+6 <= len(data) && data[i+1] == 'u' {
+			switch string(data[i+2 : i+6]) {
+			case "2028":
+				out = append(out, "\u2028"...)
+				i += 5
+				continue
+			case "2029":
+				out = append(out, "\u2029"...)
+				i += 5
+				continue
+			}
+		}
+		out = append(out, data[i], data[i+1])
+		i++
+	}
+	return out
 }
 
 // Compact checks that data is one valid UTF-8 JSON value, with no lone surrogate escaped in a string,
