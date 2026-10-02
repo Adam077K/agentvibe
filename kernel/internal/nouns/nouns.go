@@ -27,6 +27,8 @@ package nouns
 import (
 	"encoding/json"
 	"errors"
+
+	"github.com/Adam077K/agentvibe/kernel/internal/label"
 )
 
 // ErrNotImplemented was returned by every entry point before B1-02 implemented them. Nothing in
@@ -52,30 +54,13 @@ var ErrUnverifiable = errors.New("nouns: upcaster cannot be checked against hist
 // registered. Replacing a reader would change a past decision's meaning as surely as an upcaster.
 var ErrDuplicate = errors.New("nouns: already registered")
 
-// Label is LabelV1, 09a §12.0. Seven distinct fields; none is inferred from another.
-type Label struct {
-	Schema          string            `json:"schema"`     // "label/1"
-	Origin          string            `json:"origin"`     // founder|system_of_record|internal|public_web|customer|counterparty|synthetic
-	DClass          string            `json:"dclass"`     // D0|D1|D2|D3|D4
-	Boundary        string            `json:"boundary"`   // open|guarded|sealed
-	Venture         string            `json:"venture"`    // a VentureId or "portfolio"
-	Retention       Retention         `json:"retention"`  //
-	Permission      string            `json:"permission"` // none|informs|may_authorise
-	Exportable      bool              `json:"exportable"`
-	Taint           string            `json:"taint"` // clean|untrusted|quarantined
-	Provenance      []json.RawMessage `json:"provenance"`
-	ConsentScope    string            `json:"consent_scope,omitempty"`
-	Confidence      *float64          `json:"confidence,omitempty"`
-	Subjects        []string          `json:"subjects,omitempty"`
-	RevocationEpoch uint64            `json:"revocation_epoch"`
-}
+// Label is LabelV1, 09a §12.0: kernel/internal/label's V1 itself, not a copy (DR-LABEL-RECONCILE:61,
+// "no label/1 reader has shipped yet. B1-26 is that reader"). Decode and Encode below accept and
+// refuse exactly what label.Decode and label.Encode do, because both run label.Check.
+type Label = label.V1
 
 // Retention is LabelV1.retention.
-type Retention struct {
-	Class    string `json:"class"`              // journal_metadata|operational|personal|client|synthetic
-	Hold     string `json:"hold"`               // none|obligation|legal|safety|pinned
-	Deadline string `json:"deadline,omitempty"` // computed; never a class
-}
+type Retention = label.Retention
 
 // Event is 09a §3's Event. Only the Kernel writes Events.
 type Event struct {
