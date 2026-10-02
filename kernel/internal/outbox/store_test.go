@@ -138,7 +138,8 @@ func TestDeadlineAndLateReceipt(t *testing.T) {
 	}
 }
 
-// heldProv holds every Do open until release closes; Lookup says Absent, honestly, until a Do returns.
+// heldProv holds its FIRST Do open until release closes; any later Do lands at once, so a missing
+// guard shows as a second call rather than a hang. Lookup says Absent, honestly, until one lands.
 type heldProv struct {
 	mu      sync.Mutex
 	calls   int
@@ -151,9 +152,12 @@ type heldProv struct {
 func (p *heldProv) Do(context.Context, string, []byte) error {
 	p.mu.Lock()
 	p.calls++
+	first := p.calls == 1
 	p.mu.Unlock()
-	p.entered <- struct{}{}
-	<-p.release
+	if first {
+		p.entered <- struct{}{}
+		<-p.release
+	}
 	p.mu.Lock()
 	p.landed = true
 	p.mu.Unlock()
@@ -179,7 +183,7 @@ func TestRedispatchBeforeLateReceiptIsRefused(t *testing.T) {
 	op, _ := ob1.Propose(ctx, e)
 	done := make(chan error, 1)
 	go func() { _, err := ob1.Dispatch(ctx, op.ID); done <- err }()
-	<-p.entered
+	wait(t, p.entered, "attempt 1 to reach the provider")
 	for i := 0; i < 3; i++ {
 		c.add(UncertainDeadline)
 		ob := mustOpen(t, dir, c, p)
@@ -191,7 +195,7 @@ func TestRedispatchBeforeLateReceiptIsRefused(t *testing.T) {
 		}
 	}
 	close(p.release)
-	if err := <-done; err != nil {
+	if err := wait(t, done, "attempt 1 to return"); err != nil {
 		t.Fatalf("attempt 1: %v", err)
 	}
 	if got, _ := mustOpen(t, dir, c, p).Get(ctx, op.ID); got.State != Confirmed || got.Attempt != 1 || p.calls != 1 {
@@ -209,10 +213,10 @@ func TestReconcileDuringFlightThenAmbiguousStaysUncertain(t *testing.T) {
 	op, _ := ob1.Propose(ctx, e)
 	done := make(chan error, 1)
 	go func() { _, err := ob1.Dispatch(ctx, op.ID); done <- err }()
-	<-p.entered
+	wait(t, p.entered, "attempt 1 to reach the provider")
 	_ = mustOpen(t, dir, c, p).Reconcile(ctx)
 	close(p.release)
-	if err := <-done; !errors.Is(err, ErrUncertain) {
+	if err := wait(t, done, "attempt 1 to return"); !errors.Is(err, ErrUncertain) {
 		t.Fatalf("attempt 1 after an ambiguous answer: %v, want ErrUncertain", err)
 	}
 	ob := mustOpen(t, dir, c, p)
@@ -237,4 +241,17 @@ func TestReceiptAfterFailedConfirms(t *testing.T) {
 	if got, err := in.record(ctx, op.ID, 1, Confirmed, "receipt"); err != nil || got.State != Confirmed {
 		t.Fatalf("Receipt after failed: %+v, %v; want %q", got, err, Confirmed)
 	}
+}
+
+// wait receives from c or fails the test after 10s, so a broken guard fails instead of hanging.
+func wait[T any](t *testing.T, c <-chan T, what string) T {
+	t.Helper()
+	select {
+	case v := <-c:
+		return v
+	case <-time.After(10 * time.Second):
+		t.Fatalf("timed out waiting for %s", what)
+	}
+	var zero T
+	return zero
 }

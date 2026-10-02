@@ -36,9 +36,26 @@ const (
 	lockPoll    = 5 * time.Millisecond
 )
 
-// UncertainDeadline: an attempt still unproven this long after it was journaled as dispatching
-// goes to Human (§7 diagram, "uncertain -> human: deadline before proof"). Parameter.
+// UncertainDeadline: an attempt whose provider call ENDED without proof (timeout, ambiguous error,
+// dead worker) and is still unproven this long after it was journaled as dispatching goes to Human
+// (§7 diagram, "uncertain -> human: deadline before proof"). Parameter. The frozen r2 done-test
+// LookupErrorIsNotProofOfAbsence keeps such an attempt Uncertain for 18 h, which fixes this above
+// the 15 minutes of founder ruling B; see HungDeadline and docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md.
 const UncertainDeadline = 24 * time.Hour
+
+// HungDeadline: a provider call that has not answered at all this long after its attempt was
+// journaled as dispatching is marked for a human (a Decide card) and is never retried. Founder
+// ruling B, 2026-10-02 (docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md).
+const HungDeadline = 15 * time.Minute
+
+// DefaultVisibilityLag is the visibility lag of a Provider that does not declare its own
+// (VisibilityLagger). Founder ruling A, 2026-10-02 (docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md); 09a §7.2.
+const DefaultVisibilityLag = 2 * time.Minute
+
+// VisibilityLagger is implemented by a Provider that declares its measured visibility lag (09a
+// §7.2, "A measured visibility_lag_s"). Founder ruling A: the OUTBOX enforces it, so a Provider
+// whose Lookup reports only what has landed is still safe.
+type VisibilityLagger interface{ VisibilityLag() time.Duration }
 
 // ErrUnknownOperation: no Operation with that ID was ever proposed here.
 var ErrUnknownOperation = errors.New("outbox: unknown operation")
@@ -56,6 +73,7 @@ const (
 	evFailed      = "outbox.failed"
 	evUncertain   = "outbox.uncertain"
 	evHuman       = "outbox.human"
+	evSent        = "outbox.sent" // journaled immediately before the provider call; state unchanged
 	evIndexed     = "outbox.indexed"
 )
 
@@ -100,6 +118,8 @@ type opState struct {
 	payloadRef journal.BlobRef
 	idem       string    // the current attempt's provider idempotency key
 	began      time.Time // when the current attempt was journaled as dispatching
+	sent       bool      // the current attempt may have reached the provider
+	lagFrom    time.Time // its visibility-lag window runs from here: the later of sent and uncertain
 }
 
 var ulidPattern = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
@@ -221,6 +241,13 @@ func fold(stream string, evs []journal.Event) (opState, error) {
 		if err := json.Unmarshal(ev.Data, &r); err != nil {
 			return s, fmt.Errorf("outbox: %s seq %d: %w", stream, ev.Seq, err)
 		}
+		if ev.Type == evSent && i > 0 {
+			if r.Attempt != s.Attempt || s.State != Dispatching {
+				return s, fmt.Errorf("outbox: %s seq %d: sent for attempt %d at %s attempt %d", stream, ev.Seq, r.Attempt, s.State, s.Attempt)
+			}
+			s.sent, s.lagFrom, s.seq = true, time.Unix(0, r.At), ev.Seq
+			continue
+		}
 		st, ok := stateOf[ev.Type]
 		if !ok || (i == 0) != (ev.Type == evProposed) {
 			return s, fmt.Errorf("outbox: %s seq %d: unexpected event %q", stream, ev.Seq, ev.Type)
@@ -232,9 +259,13 @@ func fold(stream string, evs []journal.Event) (opState, error) {
 			s.stream, s.payloadRef = stream, journal.BlobRef(r.PayloadRef)
 		case evDispatching:
 			s.Attempt, s.idem, s.began = r.Attempt, r.Idem, time.Unix(0, r.At)
+			s.sent, s.lagFrom = false, time.Time{}
 		default:
 			if r.Attempt != s.Attempt {
 				return s, fmt.Errorf("outbox: %s seq %d: outcome for attempt %d during attempt %d", stream, ev.Seq, r.Attempt, s.Attempt)
+			}
+			if at := time.Unix(0, r.At); ev.Type == evUncertain && s.sent && at.After(s.lagFrom) {
+				s.lagFrom = at
 			}
 		}
 		s.State, s.seq = st, ev.Seq
@@ -374,6 +405,11 @@ func (o *outbox) Dispatch(ctx context.Context, id string) (Operation, error) {
 		return s.Operation, err
 	}
 	o.crash(AfterDispatchingJournaled)
+	// Journal that the request is about to leave. An attempt with no sent record provably never
+	// reached the provider; one with it may have, so its Absent reads wait out the visibility lag.
+	if err := o.markSent(ctx, id, s.Attempt); err != nil {
+		return s.Operation, err
+	}
 	perr := o.d.Provider.Do(ctx, s.idem, payload)
 	switch {
 	case perr == nil:
@@ -390,6 +426,27 @@ func (o *outbox) Dispatch(ctx context.Context, id string) (Operation, error) {
 		op, err := o.record(ctx, id, s.Attempt, to, perr.Error())
 		return op, errors.Join(fmt.Errorf("%w: Operation %s attempt %d: %v", ErrUncertain, id, s.Attempt, perr), err)
 	}
+}
+
+// markSent journals attempt n's sent record. If it cannot, the provider is not called.
+func (o *outbox) markSent(ctx context.Context, id string, n int) error {
+	return o.withJournal(ctx, func(j journal.Journal) error {
+		s, err := load(ctx, j, id)
+		if err != nil {
+			return err
+		}
+		if s.State != Dispatching || s.Attempt != n || s.sent {
+			return fmt.Errorf("%w: Operation %s moved to %s at attempt %d before attempt %d was sent", ErrUncertain, id, s.State, s.Attempt, n)
+		}
+		return appendRecord(ctx, j, s.stream, s.seq, evSent, record{Attempt: n, Worker: o.d.WorkerID, At: o.d.Clock.Now().UnixNano()})
+	})
+}
+
+func (o *outbox) visibilityLag() time.Duration {
+	if l, ok := o.d.Provider.(VisibilityLagger); ok && l.VisibilityLag() >= 0 {
+		return l.VisibilityLag()
+	}
+	return DefaultVisibilityLag
 }
 
 // record journals attempt n's outcome. Recording the state already held is a no-op; an outcome
@@ -457,7 +514,16 @@ func (o *outbox) Reconcile(ctx context.Context) error {
 // make it eligible for a second send while it may still land.
 func (o *outbox) reconcileOne(ctx context.Context, s opState) error {
 	lock, ok, err := o.tryLock(s.ID)
-	if err != nil || !ok {
+	if err != nil {
+		return err
+	}
+	if !ok {
+		// A live call holds the attempt: never resolved by a lookup racing it. If it has not
+		// answered at all by HungDeadline it goes to a human (founder ruling B); a Receipt that
+		// arrives later still confirms it (legalFrom).
+		if s.State == Dispatching && !o.d.Clock.Now().Before(s.began.Add(HungDeadline)) {
+			_, err = o.record(ctx, s.ID, s.Attempt, Human, "provider call has not answered by HungDeadline")
+		}
 		return err
 	}
 	defer lock.Close()
@@ -489,6 +555,10 @@ func (o *outbox) resolve(ctx context.Context, s opState) (State, string) {
 		p = Unknown
 	case p == Present:
 		return Confirmed, "lookup: present"
+	case p == Absent && s.sent && o.d.Clock.Now().Before(s.lagFrom.Add(o.visibilityLag())):
+		// 09a §7.2: "a query inside [visibility_lag_s] returns `unknown`, not `absent`". The
+		// request may still be in transit, so this read proves nothing (founder ruling A).
+		p = Unknown
 	case p == Absent:
 		return Failed, "lookup: proven absent"
 	}
@@ -496,6 +566,9 @@ func (o *outbox) resolve(ctx context.Context, s opState) (State, string) {
 		return Human, "no proof before the deadline"
 	}
 	why := "lookup: unknown"
+	if p == Unknown && err == nil {
+		why = "lookup: unknown, or absent inside the visibility lag"
+	}
 	if err != nil {
 		why = "lookup failed: " + err.Error()
 	}
