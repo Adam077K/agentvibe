@@ -616,7 +616,7 @@ This table covers the failures of *the build itself*.
 |---|---|---|
 | An owed isolation spike fails (I2 or nested Seatbelt) | Named fallback: I3 for all headless work, its capacity cost measured into B1-11; the destination is unchanged | G0 cannot pass without a filed result or a named fallback |
 | The founder's attention is the pre-Handover bottleneck | ≤8 attended sessions; PCB landings batched into two slots a day; everything else is Know · Shelf | Founder decision minutes stay within F4 supply on the scorecard |
-| The Kernel sprawls past its trust budget | Size lint + allowed modules; overflow moves to Userland or is refused | CI fails at 8,001 lines (parameter) |
+| The Kernel sprawls past its trust budget | Size lint + allowed modules; overflow moves to Userland or is refused | `avk-boundary` fails at 11,001 lines (parameter; DR-KERNEL-BUDGET-2026-10-02); not yet run by CI (wired by #144) |
 | The Handover produces self-referential churn (red team D04) | The Build Charter's grant ends at the Handover; then charging by purpose with the 30-day check (DR-60); every job traces to a capability or gate | A job with no capability reference, or a post-Handover Build Charter draw, is refused |
 | Acceptance saturates when self-build fans out (T01) | Admission needs a reserved Referee window at 70%; Verifier Foundry pulled forward if load >0.8 for 2 weeks | Q4 on the build lane itself |
 | One family is unavailable for days | The other family builds and reviews; verdicts flagged single-family, re-reviewed on return; PCB landings wait | B2-16 with a simulated outage during a crit job |

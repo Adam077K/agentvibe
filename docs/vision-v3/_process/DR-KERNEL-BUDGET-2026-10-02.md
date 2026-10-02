@@ -9,7 +9,7 @@ to `origin/main`'s.
 budget with the checker packages excluded by directory. The review of that change found a loophole and passed
 it with a MED finding: Kernel code planted in `package boundary` and imported by a Kernel package would run
 while its lines went uncounted. The 2026-10-03 clarification removes the exclusion, so the loophole does not
-exist. 11,000 keeps the headroom approved on 2026-10-02, about 2,550 lines over the measured 8,318.
+exist. 11,000 keeps the headroom approved on 2026-10-02, 2,682 lines over the measured 8,318.
 
 **Basis.** 09a §2 marks the cap as a parameter ("~8,000 lines (parameter)" at `09a-ENGINEERING.md:65` before
 this change). `R6-REVIEW-opus.md:165` asked for it to be re-set from measured size.
@@ -27,7 +27,8 @@ still to come.
 - Canon: `14-BUILD-PLAN.md` G1 (d), the B0-16 row and the "Kernel stays small" row; `09a-ENGINEERING.md` §2;
   the B0-16 title in `build/jobs.yml`; `kernel/README.md`.
 - The "Kernel stays small" row said "CI fails the 8,001st line". No workflow runs `avk-boundary` yet; #144
-  wires that. The row now says `avk-boundary` fails the 11,001st line and is not yet run by CI.
+  wires that. The row now says `avk-boundary` fails the 11,001st line and is not yet run by CI. The risk row
+  "The Kernel sprawls past its trust budget" said "CI fails at 8,001 lines" and is corrected the same way.
 
 **Measured after the change:** `go run ./cmd/avk-boundary` → `8318 of 11000 lines`.
 
