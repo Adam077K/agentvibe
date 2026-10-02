@@ -70,9 +70,8 @@ as opposed to `unresolved`, gets pinned.
 The CLI maps `Task` to `Agent`. Until r6 the adapter auto-forbade `Task` for a funded team that allowed `Agent(x)`.
 With that forbid in place, the CLI denied the very `Agent(reviewer)` the team was funded for (re-review of `a90071b`).
 
-**Ruling (founder, 2026-10-02).** `Task` and `Agent` are one tool, and one rule covers both names. For an unfunded
-team, both are forbidden. A funded team is allowed the approved `Agent(x)` form, and `Task(x)` is the same rule as
-`Agent(x)`.
+**Ruling (founder, 2026-10-02).** Task is an alias of Agent. Unfunded: both are forbidden. Funded: bare Agent or a
+named Agent(x) is allowed, and Task follows the same rule.
 
 Frozen in r6:
 - When a funded team is allowed `Agent(x)` or `Task(x)`, no disallow that denies it appears in the argv, under either
@@ -80,9 +79,10 @@ Frozen in r6:
 - An explicit forbid that would deny the allowed rule makes the lease `ErrSpec`.
 - For an unfunded team, both bare names are in `--disallowedTools`.
 
-*OPEN.* "Only the approved `Agent(x)` form" could mean a funded team may no longer allow bare `Agent` or `Task`. The
-tests frozen since r2 still accept a bare `Agent` for a funded team. r6 changes only their claim that `Task` is
-forbidden beside it. Narrowing to `Agent(x)` only is a re-freeze for the founder to order.
+*Clarified (founder, 2026-10-02, AskUserQuestion).* r6 left one question open: does "only the approved `Agent(x)`
+form" bar a funded team from bare `Agent`? It does not. Bare `Agent` remains allowed for a funded team. No test
+changed for the clarification, because the tests frozen since r2 already accept bare `Agent` and `Task` for a funded
+team.
 
 ## Also frozen, from canon or from review (r2, r3)
 

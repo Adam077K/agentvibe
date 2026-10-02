@@ -136,8 +136,9 @@
 # accepted, control check dropped in the argument, denial entries unchecked.
 #
 # OPEN (canon gaps, not decided here):
-# 0. Ruling F: whether a funded team may still allow BARE Agent/Task ("only the approved Agent(x)
-#    form") - frozen since r2 as allowed; narrowing it is a re-freeze for the founder to order.
+# 0. (resolved 2026-10-02, ruling F clarified by the founder: a funded team may allow bare Agent
+#    or a named Agent(x), and Task follows the same rule. No test changed; the frozen tests
+#    already accept bare Agent and Task for a funded team.)
 # 1. Exact rate-limit shape: measure on a real run, then re-freeze (ruling E). Until then
 #    blocked(capacity) vs unresolved is not pinned for a rate limit.
 # 2. (resolved by ruling D: the profile row is ratified.)
