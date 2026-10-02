@@ -24,7 +24,17 @@ Canon: 09a §7.2, `check_before`: "A measured `visibility_lag_s`; a query inside
 ## B. Hung effect
 
 > If an effect gets no answer at all, mark it uncertain, never retry it, and escalate to Human (a Decide card) after
-> 15 minutes. Make that the `UncertainDeadline` default.
+> 15 minutes.
+
+**Correction, 2026-10-02 (coordinator, round 4).** This quote previously ended "Make that the `UncertainDeadline`
+default." That sentence came from the orchestrator's brief, not from the founder. The founder's ruling covers **hung
+calls only**: an effect with no answer at all. `UncertainDeadline` stays at 24 hours for answered-but-unclear outcomes
+(a timeout that returned at once, an ambiguous error). The "deviation, flagged for decision" below is therefore not a
+deviation; it is the ruling.
+
+A call silent for more than 15 minutes is hung **however the silence ends**: if it later times out, or its worker dies,
+it is still never re-sent and goes to Human. Pinned by the round-4 done-test
+`TestB112R4SilentPastFifteenMinutesIsNeverResent` (`kernel/internal/outbox/outbox_r4_donetest_test.go`).
 
 Canon: 09a §7 diagram, "uncertain --> human: at_most_once, or deadline before proof".
 
