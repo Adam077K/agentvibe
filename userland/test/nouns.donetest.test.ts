@@ -54,13 +54,15 @@ const pins: Record<string, (v: any) => void> = {
     assert.equal(BigInt(v.gateway_epoch), 9007199254740995n, 'gateway_epoch');
     assert.equal(v.authorising_label.permission, 'may_authorise');
   },
+  // Re-frozen 2026-10-02 B1-26: single Label reader. nouns.Label is LabelV1 (09a §12.0).
   'label.full': (v) => {
-    assert.equal(v.confidence, 0, 'confidence 0 is a value, not an absence');
+    assert.deepEqual(v.confidence, { rung: 'E1', p: 0 }, 'confidence p 0 is a value, not an absence');
     assert.equal(v.exportable, true);
+    assert.deepEqual(v.provenance.human_principal, { id: 'person_founder', role: 'founder' });
   },
   'label.min': (v) => {
     assert.equal(v.exportable, false);
-    assert.deepEqual(v.provenance, []);
+    assert.deepEqual(v.provenance, { sources: [], derived_from: [], author: { title: 'Kernel', family: 'system' } });
   },
 };
 
