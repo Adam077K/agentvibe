@@ -639,7 +639,7 @@ func TestB103JournalIsKernelOnly0600(t *testing.T) {
 		if resp := dial(t, k).send(t, `{"cmd":"propose_event","stream":"s","expect_seq":0,"type":"t","label":`+
 			`{"schema":"label/1","origin":"internal","dclass":"D0","boundary":"open","venture":"v_keel",`+
 			`"retention":{"class":"operational","hold":"none"},"permission":"none","exportable":false,`+
-			`"taint":"clean","provenance":[],"revocation_epoch":0},"data":1}`); !resp.OK {
+			`"taint":"clean","provenance":{"sources":[],"derived_from":[],"author":{"title":"Kernel","family":"system"}},"revocation_epoch":0},"data":1}`); !resp.OK {
 			t.Fatalf("propose_event: %+v; want ok:true", resp)
 		}
 		running := journalFiles(t, k)

@@ -21,7 +21,7 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {"sources":[],"derived_from":[],"author":{"title":"Kernel","family":"system"}},
           "revocation_epoch": 0
         },
         "data": {
@@ -102,7 +102,7 @@
       "name": "bad-json.truncated",
       "reason": "bad_json",
       "why": "not parseable",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}"
     },
     {
       "name": "bad-json.not-json",
@@ -138,13 +138,13 @@
       "name": "unknown-cmd.append",
       "reason": "unknown_cmd",
       "why": "no such verb: Userland may only propose",
-      "line": "{\"cmd\":\"append_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"append_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "unknown-cmd.case",
       "reason": "unknown_cmd",
       "why": "cmd is matched exactly, case included",
-      "line": "{\"cmd\":\"Propose_Event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"Propose_Event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "invalid.cmd-number",
@@ -162,13 +162,13 @@
       "name": "missing.propose_event.data",
       "reason": "missing_field",
       "why": "data is required (unknown, not optional)",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "missing.propose_event.expect_seq",
       "reason": "missing_field",
       "why": "expect_seq is required",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "missing.request_leases.mode",
@@ -216,43 +216,43 @@
       "name": "invalid.unknown-key",
       "reason": "invalid_field",
       "why": "keys are exactly the command's; an extra key is refused",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"},\"force\":true}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"},\"force\":true}"
     },
     {
       "name": "invalid.propose_event.label-unknown-schema",
       "reason": "invalid_field",
       "why": "B1-02 refuses label/2 (ErrUnknownSchema)",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/2\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/2\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "invalid.propose_event.label-missing-dclass",
       "reason": "invalid_field",
       "why": "B1-02 refuses a label without dclass",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "invalid.propose_event.label-bad-enum",
       "reason": "invalid_field",
       "why": "B1-02 refuses dclass D9",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D9\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D9\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "invalid.propose_event.expect_seq-negative",
       "reason": "invalid_field",
       "why": "expect_seq is an integer >= 0",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":-1,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":-1,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "invalid.propose_event.expect_seq-fraction",
       "reason": "invalid_field",
       "why": "expect_seq is an integer",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":1.5,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":1.5,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "invalid.propose_event.stream-number",
       "reason": "invalid_field",
       "why": "stream is a string",
-      "line": "{\"cmd\":\"propose_event\",\"stream\":7,\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":[],\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+      "line": "{\"cmd\":\"propose_event\",\"stream\":7,\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
     },
     {
       "name": "invalid.request_leases.mode",

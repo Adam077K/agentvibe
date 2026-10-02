@@ -74,17 +74,25 @@
 #     branch is unreachable. Not observable through Serve.
 # NEEDS RATIFICATION (review low, files.go:117): an Lstat error other than not-exist is treated as
 # success. Not reachable through Serve: the only way to make open fail EACCES and Lstat fail for the
-# same name is an unsearchable directory, and createJournal fails there first. No test added.
+# same name is an unsearchable directory, and createJournal fails there first. No test added.#
+# RE-FREEZE 2026-10-02 B1-26: fixtures to LabelV1 (single Label reader). nouns.Label is label.V1 as of
+# B1-26 (942691b), so the label inside every propose_event/append_event line now carries
+# "provenance":{"sources":[],"derived_from":[],"author":{"title":"Kernel","family":"system"}} where it
+# carried "provenance":[]. Label encoding only: reverting that one substitution restores each file
+# byte for byte, and no assertion changed. Files: socket_donetest_test.go (1 literal),
+# socket_r2_donetest_test.go (1 literal), testdata/socket/commands.json (13 labels); r3 and r4 unchanged.
+# Against 942691b all 22 B1-03 done-tests pass (4 failed before). Every documented mutant re-run in
+# $TMPDIR copies and killed: M1-M7, R3-M1..M4 (both variants), R4-M1, R4-M2 (forced false), R4-M4.
 register: B1-03
 jobs:
   - id: B1-03
     files:
       - path: kernel/internal/socket/socket_donetest_test.go
-        sha256: 074c89a1fc7315732dd7ecc0c9a2167e617f16dfd64f64be6b290b3aacadf1f5
+        sha256: c84c587655dc44532ca6f83ffe83843898f4cc2b507d47575100e1a68bcd994f
       - path: kernel/internal/socket/testdata/socket/commands.json
-        sha256: 640162015965f8c68131451ce5cbca53c95056bce78d2d7a9b1cb096d8f28767
+        sha256: 3344b2baaf80472622606292dfe538e62c598153bafe823fd72880e5f40448f5
       - path: kernel/internal/socket/socket_r2_donetest_test.go
-        sha256: e117dd8558415481c3913cd9413f7951bd88bcf63120dae81fab26d0e53e64aa
+        sha256: d658a09b6e9160dd76ef14726f2a18de8e8bedbe5a15a11fa724043777698030
       - path: kernel/internal/socket/socket_r3_donetest_test.go
         sha256: 3e0307e2cc2d0d286c832b7185cfb104ea32e8d138800accf0d031aaf6a1e05a
       - path: kernel/internal/socket/socket_r4_donetest_test.go
