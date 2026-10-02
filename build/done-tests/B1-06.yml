@@ -153,9 +153,24 @@
 # killed: no star handling (b3cc99d); star only in the nested check; star only in the
 # both-lists check; exact names at :150.
 #
+# RE-FREEZE r7-case 2026-10-02: 2026-10-02 r7 case-variant tool names. Closes r7's OPEN 9 by
+# the orchestrator's call (fail-safe): any allow or forbid rule whose tool name equals a known
+# tool case-insensitively but not exactly is ErrSpec. Added claude_r7_case_donetest_test.go; every
+# earlier file, claude_r7_donetest_test.go included, is unchanged (hashes identical).
+#   R7_CaseVariantToolNamesRefused: bash/BASH/bAsh, read, edit, write, webfetch variants, bare
+#     and with arguments, plus MCP__/Mcp__/mCp__ prefixes - in both lists, funded or not.
+#   R7_ExactToolNamesStillPass: exact names, exact mcp__ names, and longer or unknown names
+#     (Bashful, bashful, readme, webfetcher, SomeNewTool, mcpx__tool) still pass.
+# On b3cc99d unchanged: R7_CaseVariantToolNamesRefused FAILS (with the two r7 tests); the
+# exact-names control passes.
+# Proof, $TMPDIR only: b3cc99d + r7 star fix + the case rule passes 26 of 26 (-race -count=3).
+# Mutants, each killed: no case rule; allow list only; forbid list only; no mcp__ prefix; fold
+# that refuses exact names too; whole rule compared instead of the tool name; prefix match
+# (killed only after "bashful/readme/webfetcher" were added as controls).
+#
 # OPEN (canon gaps, not decided here):
-# 9. Case-variant forbids of non-nested tools ("bash") are also void in the CLI; r7 does not
-#    refuse them (DR note r7 OPEN).
+# 9. (closed 2026-10-02 by r7-case: case-variant tool names refused. Remaining limit: case
+#    variants inside an MCP server or tool name are not caught at Argv time.)
 # 0. (resolved 2026-10-02, ruling F clarified by the founder: a funded team may allow bare Agent
 #    or a named Agent(x), and Task follows the same rule. No test changed; the frozen tests
 #    already accept bare Agent and Task for a funded team.)
@@ -182,6 +197,8 @@ jobs:
         sha256: da38ab2b79d155021106692f913473f0ce7102945105ac9e447d16e05c55dcf5
       - path: kernel/internal/adapter/claude_r6_donetest_test.go
         sha256: d89d4a92f74292a8e6d9a4d0aa8919523918c9815bf02eafe174283db0cf3f18
+      - path: kernel/internal/adapter/claude_r7_case_donetest_test.go
+        sha256: 1ac7a040506c23210498c105cc02740cb6995b8be03b4f764c151898800ecd52
       - path: kernel/internal/adapter/claude_r7_donetest_test.go
         sha256: a5247169d24852da074ffdb8feaf2d1bab4050d5e0dbd1f0a6bdabcfd4349c61
       - path: kernel/internal/adapter/testdata/claude/children.jsonl

@@ -157,5 +157,13 @@ From that evidence:
   case-sensitively, so `agent` or `TASK(*)` denies nothing. Passing one through would be a silently void forbid,
   which r6 rules out. This is why the exact-name variant of that check is not equivalent.
 
-*OPEN.* Case-variant forbids of other tools (`bash`, `webfetch`) are just as void in the CLI. r7 does not refuse them.
-Doing so would extend the r6 principle beyond the nested-agent check, and that needs a decision.
+- **Any case-variant tool name is refused** (orchestrator's call, fail-safe, 2026-10-02; closes the r7 OPEN). A rule
+  is `ErrSpec`, in either list, funded or not, bare or with an argument, if its tool name equals a known tool
+  case-insensitively but not exactly. The pinned tools are `Bash`, `Read`, `Edit`, `Write` and `WebFetch`, plus the
+  `mcp__` prefix: `bash`, `BASH(*)`, `webfetch`, `MCP__x__y` are all refused.
+
+  As a forbid, such a rule is a deny the founder believes is in force but is not. As an allow, it grants nothing.
+  Exact names pass. So do names that are only longer (`Bashful`, `bashful`, `webfetcher`) and unknown tools.
+
+  *Limit:* case variants inside an MCP server or tool name (`mcp__Tracker__x`) are not caught. The adapter does not
+  know the pinned MCP tool list at `Argv` time.
