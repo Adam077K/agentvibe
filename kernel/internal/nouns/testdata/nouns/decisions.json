@@ -25,7 +25,14 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "schema": 1,
@@ -90,7 +97,14 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "schema": 1,
@@ -155,7 +169,14 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "schema": 1,
@@ -227,7 +248,14 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "schema": 1,
@@ -292,7 +320,14 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "schema": 1,

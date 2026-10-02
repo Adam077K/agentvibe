@@ -128,6 +128,21 @@ func mustSameJSON(t *testing.T, what string, got, want []byte) {
 	}
 }
 
+// structJSON is v's fields as encoding/json writes them from the struct tags: a direct read of the
+// decoded value, whatever Go type nouns.Label is.
+func structJSON(t *testing.T, v any) map[string]any {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	return m
+}
+
 // pins check decoded values directly, so a Decode that stashes the input bytes for Encode to replay
 // cannot pass: the value has to be in the struct.
 var pins = map[string]func(t *testing.T, v any){
@@ -137,15 +152,24 @@ var pins = map[string]func(t *testing.T, v any){
 			t.Errorf("bigints decoded as fencing_token=%d epoch=%d", l.FencingToken, l.Epoch)
 		}
 	},
+	// The label pins read the struct through its own JSON tags, not through Encode, so they hold for
+	// nouns.Label as label.V1 (re-frozen 2026-10-02 B1-26: single Label reader).
 	"label.full": func(t *testing.T, v any) {
 		l := v.(nouns.Label)
-		if l.Confidence == nil || *l.Confidence != 0 || !l.Exportable || l.Permission != "informs" || l.Retention.Hold != "obligation" {
+		m := structJSON(t, l)
+		conf, _ := m["confidence"].(map[string]any)
+		prov, _ := m["provenance"].(map[string]any)
+		hp, _ := prov["human_principal"].(map[string]any)
+		if conf == nil || conf["rung"] != "E1" || conf["p"] != 0.0 || !l.Exportable || l.Permission != "informs" ||
+			l.Retention.Hold != "obligation" || hp["role"] != "founder" {
 			t.Errorf("label decoded as %+v", l)
 		}
 	},
 	"label.min": func(t *testing.T, v any) {
 		l := v.(nouns.Label)
-		if l.Confidence != nil || l.Exportable || l.Provenance == nil {
+		m := structJSON(t, l)
+		prov, _ := m["provenance"].(map[string]any)
+		if _, has := m["confidence"]; has || l.Exportable || prov == nil || prov["sources"] == nil {
 			t.Errorf("label decoded as %+v", l)
 		}
 	},

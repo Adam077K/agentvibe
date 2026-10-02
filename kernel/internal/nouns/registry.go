@@ -10,6 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/Adam077K/agentvibe/kernel/internal/label"
 )
 
 type version struct {
@@ -234,19 +236,7 @@ func clone(b json.RawMessage) json.RawMessage {
 func cloneEvent(e Event) Event {
 	c := e
 	c.Actor, c.Rationale, c.Data = clone(e.Actor), clone(e.Rationale), clone(e.Data)
-	if e.Label.Provenance != nil {
-		c.Label.Provenance = make([]json.RawMessage, len(e.Label.Provenance))
-		for i, p := range e.Label.Provenance {
-			c.Label.Provenance[i] = clone(p)
-		}
-	}
-	if e.Label.Subjects != nil {
-		c.Label.Subjects = append(make([]string, 0, len(e.Label.Subjects)), e.Label.Subjects...)
-	}
-	if e.Label.Confidence != nil {
-		v := *e.Label.Confidence
-		c.Label.Confidence = &v
-	}
+	c.Label = label.Clone(e.Label)
 	return c
 }
 

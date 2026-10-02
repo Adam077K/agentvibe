@@ -123,12 +123,13 @@ test('high: a __proto__ key inside a raw JSON field is kept, not dropped', async
       assert.equal(({} as any).polluted, undefined, 'Object.prototype was polluted');
     });
   }
-  await t.test('Label.provenance[0]', () => {
+  // B1-26: Label.provenance is the LabelV1 Provenance record, no longer raw JSON, so a __proto__
+  // key there is an unknown key and refused, and refusing it pollutes nothing.
+  await t.test('Label.provenance.sources[0] (a record, not raw)', () => {
     const v = fixture('label.full');
-    v.provenance = [JSON.parse(payload)];
-    const wire = JSON.stringify(v);
-    const out = JSON.stringify(nouns.Label.encode(nouns.Label.decode(JSON.parse(wire))));
-    assert.equal(out, wire, 'round trip lost bytes');
+    v.provenance.sources = [JSON.parse('{"ref":"crm:1","__proto__":{"polluted":1}}')];
+    assert.equal(nouns.Label.safeDecode(JSON.parse(JSON.stringify(v))).success, false, 'an unknown key was accepted');
+    assert.equal(({} as any).polluted, undefined, 'Object.prototype was polluted');
   });
 });
 
@@ -159,7 +160,7 @@ const unsafeSpots: { kind: string; base: string; path: string[] }[] = [
   { kind: 'Job', base: 'job.full', path: ['budget'] },
   { kind: 'Effect', base: 'effect.full', path: ['fencing_tokens'] },
   { kind: 'Operation', base: 'operation.full', path: ['target'] },
-  { kind: 'Label', base: 'label.full', path: ['confidence'] },
+  { kind: 'Label', base: 'label.full', path: ['confidence', 'p'] },
 ];
 
 const unsafeLiterals = [
@@ -200,7 +201,7 @@ test('p1 r2 control: the safe boundary is accepted and round-trips byte for byte
     const decoded = (nouns as any).decodeText(nouns.Event, text);
     assert.equal(JSON.stringify(nouns.Event.encode(decoded)), text, `${lit} did not round-trip`);
   }
-  const text = withLiteral('label.full', ['confidence'], '9007199254740991');
+  const text = withLiteral('label.full', ['confidence', 'p'], '9007199254740991');
   assert.equal(JSON.stringify(nouns.Label.encode((nouns as any).decodeText(nouns.Label, text))), text);
 });
 
@@ -303,7 +304,7 @@ test('low r2: decode returns a fresh value that shares nothing with its input', 
     if (out.data) out.data.injected = 1;
     if (out.target && typeof out.target === 'object') out.target.injected = 1;
     if (out.budget) out.budget.injected = 1;
-    out.provenance?.push?.({ injected: 1 });
+    out.provenance?.sources?.push?.({ injected: 1 });
     assert.equal(JSON.stringify(input), before, `${base}: the input changed`);
   }
 });
@@ -342,9 +343,9 @@ test('low r2: the object path refuses a value that is not a plain JSON tree', as
     Object.defineProperty(v, 'holder', { get: () => (n++ === 0 ? 'j_9' : ''), enumerable: true });
     assert.equal(nouns.Lease.safeDecode(v).success, false, 'a getter noun key was accepted');
   });
-  await t.test('a sparse array in Label.provenance', () => {
+  await t.test('a sparse array in Label.provenance.sources', () => {
     const v = fixture('label.full');
-    v.provenance = [{ a: 1 }, , { b: 2 }];
+    v.provenance.sources = [{ ref: 'a' }, , { ref: 'b' }];
     assert.equal(nouns.Label.safeDecode(v).success, false);
   });
 });

@@ -43,7 +43,7 @@ import (
 // labelJSON is a Label B1-02 accepts (the same one TestB103JournalIsKernelOnly0600 sends).
 const labelJSON = `{"schema":"label/1","origin":"internal","dclass":"D0","boundary":"open","venture":"v_keel",` +
 	`"retention":{"class":"operational","hold":"none"},"permission":"none","exportable":false,` +
-	`"taint":"clean","provenance":[],"revocation_epoch":0}`
+	`"taint":"clean","provenance":{"sources":[],"derived_from":[],"author":{"title":"Kernel","family":"system"}},"revocation_epoch":0}`
 
 func proposeLine(stream string, expect uint64) string {
 	return fmt.Sprintf(`{"cmd":"propose_event","stream":%q,"expect_seq":%d,"type":"note.recorded","label":%s,"data":{"n":%d}}`,
