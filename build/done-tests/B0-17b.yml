@@ -95,12 +95,18 @@
 #     it, under the attempt lock and before any other writer can append sent for n (expect_seq CAS), so
 #     s.sent is never true there. Survived on the control base as predicted.
 #   fold's sent guard (store.go:247): unreachable from the API (round 4); confirmed by the reviewer.
+# RE-FREEZE r6 2026-10-03 (B1-08): 2026-10-03 founder ruling B1-07 ignore-user-config. One line in
+#   launcher_donetest_test.go: codexTokens gains a trailing "--ignore-user-config"
+#   (docs/vision-v3/_process/DR-B1-07-CODEX-RULINGS-2026-10-02.md ruling 4; 09a §8.2 updated with it).
+#   Every codex assertion renders codexTokens, so each now expects the flag; the -s index rows (3, 4)
+#   are unchanged. Nothing else in B1-08 changed. The launcher is still the stub on this base, so
+#   the file is red as before ("launcher: not implemented"); it compiles and vets.
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: 1221b0d4a37753c9ae3fad3a7eeb3e204cc9276a9cad69f3d28da313301877d2
+        sha256: b91a735fee30334087716d42d4020082b4f4be107a8a1f5f47643b14a018c036
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go

@@ -31,7 +31,7 @@ var (
 		"--output-format", "stream-json", "--verbose", "--json-schema", "<f>",
 		"--max-budget-usd", "<B>", "--session-id", "<uuid>"}
 	codexTokens = []string{"exec", "-C", "<worktree>", "-s", "workspace-write", "-p", "<profile>",
-		"--json", "--output-schema", "<f>", "-o", "<result.json>", "--ephemeral"}
+		"--json", "--output-schema", "<f>", "-o", "<result.json>", "--ephemeral", "--ignore-user-config"}
 	slotValues = map[string]string{
 		"<profile>": "project", "<job.json>": "/run/av/job-1/job.json", "<compiled.json>": "/run/av/job-1/agents.json",
 		"<record>": "builder", "<allowed>": "Read,Edit,Bash", "<forbidden>": "Agent,Task",
