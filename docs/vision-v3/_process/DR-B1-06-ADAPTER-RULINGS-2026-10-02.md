@@ -86,3 +86,24 @@ as opposed to `unresolved`, gets pinned.
   per-family UNPARSED rate, but canon is silent on unrecognised events. Ruling E says they never pass. The safe
   reading, frozen as an assumption by the test builder, is that such a run is UNPARSED. It reports `Reason` unparsed
   and so counts toward the rate. Revisit once the rate-limit shape is measured (ruling E's OPEN).
+
+## Also frozen by r5 (after the re-review of `a8ea780`)
+
+- **No nested parentheses in a tool rule.** The installed CLI, 2.1.287 as measured by the re-review, splits tool lists
+  with a boolean in-parentheses flag rather than a depth counter. So a nested parenthesis ends the rule early:
+  - `Read(a(b) Bash c)` grants a bare `Bash`, with or without a funded team;
+  - `Bash(echo (x) Agent y)` grants a bare `Agent` to a funded team.
+
+  The fail-safe rule:
+  - A rule has at most one parenthesised argument.
+  - That argument holds no parenthesis and no comma.
+  - Its whitespace is only what r3 already permits (`Bash(git diff:*)`), read as single ASCII spaces between
+    non-space characters.
+
+  This applies ruling B, which says one element is one rule. It holds in both lists, whether or not the team is
+  funded.
+- **JSON keys are matched exactly.** The CLI writes JSON from JavaScript, where keys are case-sensitive. Go's decoder
+  is not. A case-variant key (`permissionmode`, `Is_Error`, `Type`, …) is never the field and never overrides the
+  exact one, in `system/init` or in a result. A run that carries one aborts or stays `unresolved`.
+- **Every `system/init` is checked for the pinned mode**, not only the first, and a nested-agent tool's spelling
+  (`agent`, `AGENT(x)`) does not get it past the funded-team rule.

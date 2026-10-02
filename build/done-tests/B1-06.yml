@@ -90,6 +90,32 @@
 # trusted. A mutant runner bug was caught: a build failure was reported as SURVIVED; it now
 # says BUILD-FAIL, and none remain.
 #
+# RE-FREEZE r5 2026-10-02: 2026-10-02 re-freeze r5 after re-review. The Opus re-review FAILED the
+# implementation at a8ea780 (build/b1-06 on the r4 tests at 631ead4). Added
+# kernel/internal/adapter/claude_r5_donetest_test.go; the r1-r4 test files and the 14 fixtures are
+# unchanged (hashes identical), and r5 adds no fixture. Four tests:
+#   R5_NestedParenthesesRefused (HIGH, security): CLI 2.1.287 splits tool lists with a boolean
+#     in-parentheses flag, so "Read(a(b) Bash c)" (unfunded) and "Bash(echo (x) Agent y)" (funded)
+#     grant a bare Bash / Agent. Pinned fail-safe: one parenthesised argument with no parenthesis
+#     and no comma, in either list, funded or not; its whitespace only what frozen canon permits
+#     ("Bash(git diff:*)", r3), read as single interior ASCII spaces - leading, trailing, doubled
+#     spaces and tabs are refused. Controls: Bash(git diff:*), Bash(npm run test:*),
+#     Agent(reviewer), Bash(echo x Agent y) still pass.
+#   R5_KeysAreMatchedExactly (LOW): JSON keys are case-sensitive on the CLI side; a case-variant
+#     key never is the field and never overrides the exact one - permissionmode alone, exact mode
+#     overridden by a variant either side, a variant Model, and is_error / structured_output /
+#     subtype / type variants in a result. Each aborts or stays unresolved; none adjudicates.
+#   R5_LaterInitModeChecked: a later system/init matching init_expect but reporting another mode
+#     aborts (re-review mutant: mode checked on the first init only).
+#   R5_NestedAgentSpellingRefused: agent / AGENT / task / AGENT(x) refused unfunded; funded, a
+#     variant never lifts the Agent forbid (re-review mutant: EqualFold -> ==).
+# On a8ea780 unchanged: R5_NestedParenthesesRefused and R5_KeysAreMatchedExactly FAIL; the other
+# two r5 tests and all r1-r4 tests pass.
+# Proof, $TMPDIR only: a8ea780 plus the r5 fixes passes 17 of 17 (-race -count=3). Mutants, each
+# killed: m1 a8ea780's toolRule (nesting); m1' nesting refused, spaces unchecked; m2 Go's
+# case-insensitive keys; m3a mode on the first init only; m3b EqualFold -> ==. Mutants the
+# re-review called equivalent were skipped, as instructed.
+#
 # OPEN (canon gaps, not decided here):
 # 1. Exact rate-limit shape: measure on a real run, then re-freeze (ruling E). Until then
 #    blocked(capacity) vs unresolved is not pinned for a rate limit.
@@ -110,6 +136,8 @@ jobs:
         sha256: 5b1387a3334f7b4beecf343b310d8229332b31a678e1bbea21e2da2a5830cacb
       - path: kernel/internal/adapter/claude_r4_donetest_test.go
         sha256: 86fc34e6f93d5134a88e1cd1512ecb17c18bb55daacce5c988058894b5f062ca
+      - path: kernel/internal/adapter/claude_r5_donetest_test.go
+        sha256: da38ab2b79d155021106692f913473f0ce7102945105ac9e447d16e05c55dcf5
       - path: kernel/internal/adapter/testdata/claude/children.jsonl
         sha256: 4255aca3345580577700335b17198f4b2ea6f17b03376fe50749738d76a3bf3f
       - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl
