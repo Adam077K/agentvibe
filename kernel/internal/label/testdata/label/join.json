@@ -317,7 +317,7 @@
     },
     {
       "name": "taint-untrusted-first",
-      "cite": "09a-ENGINEERING.md:604 (non-clean if ANY data or control ancestor is untrusted)",
+      "cite": "09a-ENGINEERING.md:604 (non-clean if ANY data or control ancestor is untrusted); 09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02)",
       "own": {
         "sources": [
           {
@@ -414,12 +414,12 @@
         }
       ],
       "expect": {
-        "taint_not": "clean"
+        "taint": "untrusted"
       }
     },
     {
       "name": "taint-untrusted-middle",
-      "cite": "09a-ENGINEERING.md:604 (non-clean if ANY data or control ancestor is untrusted)",
+      "cite": "09a-ENGINEERING.md:604 (non-clean if ANY data or control ancestor is untrusted); 09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02)",
       "own": {
         "sources": [
           {
@@ -516,7 +516,7 @@
         }
       ],
       "expect": {
-        "taint_not": "clean"
+        "taint": "untrusted"
       }
     },
     {
@@ -669,7 +669,109 @@
         }
       ],
       "expect": {
-        "taint_not": "clean"
+        "taint": "quarantined"
+      }
+    },
+    {
+      "name": "taint-quarantined-over-untrusted",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_u",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "untrusted",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_q",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "quarantined",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_c",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "taint": "quarantined"
       }
     },
     {
@@ -1973,6 +2075,1390 @@
       ],
       "expect": {
         "consent_scope": "cs_panel_3"
+      }
+    },
+    {
+      "name": "boundary-guarded-over-open",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_o1",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "open",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_g",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_o2",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "open",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "boundary": "guarded"
+      }
+    },
+    {
+      "name": "subjects-union",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0,
+            "subjects": [
+              "subj_ana"
+            ]
+          }
+        },
+        {
+          "id": "rec_b",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0,
+            "subjects": [
+              "subj_ben",
+              "subj_ana"
+            ]
+          }
+        },
+        {
+          "id": "rec_c",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "subjects": [
+          "subj_ana",
+          "subj_ben"
+        ]
+      }
+    },
+    {
+      "name": "epoch-newer",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 3
+          }
+        },
+        {
+          "id": "rec_b",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 7
+          }
+        },
+        {
+          "id": "rec_c",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 5
+          }
+        }
+      ],
+      "expect": {
+        "revocation_epoch": 7
+      }
+    },
+    {
+      "name": "origin-least-trusted-counterparty",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02); PROVISIONAL: origin order founder > system_of_record > internal > customer > counterparty is the orchestrator's proposal, not canon; DR-LABEL-RECONCILE:151 (OPEN)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_b",
+          "label": {
+            "schema": "label/1",
+            "origin": "counterparty",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_c",
+          "label": {
+            "schema": "label/1",
+            "origin": "founder",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "origin": "counterparty"
+      }
+    },
+    {
+      "name": "origin-least-trusted-customer",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02); PROVISIONAL: origin order founder > system_of_record > internal > customer > counterparty is the orchestrator's proposal, not canon; DR-LABEL-RECONCILE:151 (OPEN)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "founder",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_b",
+          "label": {
+            "schema": "label/1",
+            "origin": "customer",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_c",
+          "label": {
+            "schema": "label/1",
+            "origin": "system_of_record",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "origin": "customer"
+      }
+    },
+    {
+      "name": "origin-least-trusted-internal",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02); PROVISIONAL: origin order founder > system_of_record > internal > customer > counterparty is the orchestrator's proposal, not canon; DR-LABEL-RECONCILE:151 (OPEN)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "system_of_record",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_b",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "origin": "internal"
+      }
+    },
+    {
+      "name": "origin-least-trusted-system",
+      "cite": "09a-ENGINEERING.md:670 (least trusted wins, field by field); DR-LABEL-RECONCILE:138 (decision N, founder 2026-10-02); PROVISIONAL: origin order founder > system_of_record > internal > customer > counterparty is the orchestrator's proposal, not canon; DR-LABEL-RECONCILE:151 (OPEN)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "founder",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_b",
+          "label": {
+            "schema": "label/1",
+            "origin": "system_of_record",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "origin": "system_of_record"
+      }
+    },
+    {
+      "name": "retention-journal-over-personal",
+      "cite": "09a-ENGINEERING.md:670 (retention by how long kept, legal hold highest); DR-LABEL-RECONCILE:141 (decision O, founder 2026-10-02); 09a-ENGINEERING.md:557 (journal_metadata: life of the organisation)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "personal",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_j",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "journal_metadata",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "retention_class": "journal_metadata"
+      }
+    },
+    {
+      "name": "retention-journal-over-client",
+      "cite": "09a-ENGINEERING.md:670 (retention by how long kept, legal hold highest); DR-LABEL-RECONCILE:141 (decision O, founder 2026-10-02); 09a-ENGINEERING.md:557 (journal_metadata: life of the organisation)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "client",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_j",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "journal_metadata",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "retention_class": "journal_metadata"
+      }
+    },
+    {
+      "name": "retention-journal-over-synthetic",
+      "cite": "09a-ENGINEERING.md:670 (retention by how long kept, legal hold highest); DR-LABEL-RECONCILE:141 (decision O, founder 2026-10-02); 09a-ENGINEERING.md:557 (journal_metadata: life of the organisation)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "synthetic",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_j",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "journal_metadata",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "retention_class": "journal_metadata"
+      }
+    },
+    {
+      "name": "hold-legal-over-obligation",
+      "cite": "09a-ENGINEERING.md:670 (retention by how long kept, legal hold highest); DR-LABEL-RECONCILE:141 (decision O, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "obligation"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_l",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "legal"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_n",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "retention_hold": "legal"
+      }
+    },
+    {
+      "name": "hold-legal-over-safety",
+      "cite": "09a-ENGINEERING.md:670 (retention by how long kept, legal hold highest); DR-LABEL-RECONCILE:141 (decision O, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "safety"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_l",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "legal"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_n",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "retention_hold": "legal"
+      }
+    },
+    {
+      "name": "hold-legal-over-pinned",
+      "cite": "09a-ENGINEERING.md:670 (retention by how long kept, legal hold highest); DR-LABEL-RECONCILE:141 (decision O, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "pinned"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_l",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "legal"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_n",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "retention_hold": "legal"
+      }
+    },
+    {
+      "name": "cross-venture-refused",
+      "cite": "09a-ENGINEERING.md:670 (a join across ventures is refused unless the founder approves); DR-LABEL-RECONCILE:136 (decision M, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_keel",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_atlas",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_atlas",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "error": "cross_venture"
+      }
+    },
+    {
+      "name": "cross-venture-refused-among-three",
+      "cite": "09a-ENGINEERING.md:670 (a join across ventures is refused unless the founder approves); DR-LABEL-RECONCILE:136 (decision M, founder 2026-10-02)",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex",
+          "mission": "m_support_7"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_k1",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_k2",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "untrusted",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        },
+        {
+          "id": "rec_atlas",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_atlas",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [],
+              "derived_from": [],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "revocation_epoch": 0
+          }
+        }
+      ],
+      "expect": {
+        "error": "cross_venture"
       }
     },
     {

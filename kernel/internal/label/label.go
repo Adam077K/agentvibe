@@ -44,6 +44,10 @@ var ErrNotAnOrigin = errors.New("label: not an origin")
 // ErrUnknownName: a 06 field or value with no row in 09a §12's mapping.
 var ErrUnknownName = errors.New("label: no wire name for this 06 name")
 
+// ErrCrossVenture: Join's inputs come from different ventures (founder, 2026-10-02, decision M). Only
+// the founder's approval lets such a join run; the form of that approval is OPEN.
+var ErrCrossVenture = errors.New("label: join across ventures")
+
 // V1 is LabelV1, 09a §12.0.
 type V1 struct {
 	Schema          string      `json:"schema"`     // "label/1"
@@ -152,7 +156,9 @@ type Input struct {
 // Join returns the label of a job's output: the join of every input, data and control (09a §12 Join;
 // 06 §4 L1), independent of input order. Provenance is not joined: the result's provenance is own, and
 // every input's ID is reachable through its derived_from. For dclass, retention, exportable and
-// consent_scope the strictest input wins (founder, 2026-10-02).
+// consent_scope the strictest input wins, and otherwise the least trusted value (founder, 2026-10-02;
+// DR-LABEL-RECONCILE decisions J, M, N, O). Inputs from different ventures are refused with
+// ErrCrossVenture.
 func Join(own Provenance, inputs []Input) (V1, error) {
 	return V1{}, ErrNotImplemented
 }

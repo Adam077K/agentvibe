@@ -233,6 +233,16 @@
       "cite": "09a-ENGINEERING.md:634 (a customer's own messages -> customer); DR-LABEL-RECONCILE:92 (E)"
     },
     {
+      "name": "customer-proxy-human-task/human_task",
+      "author": {
+        "kind": "customer_proxy",
+        "channel": "human_task",
+        "task": "contribution"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (a HumanTask done on a customer's behalf -> customer); DR-LABEL-RECONCILE:144 (decision P, founder 2026-10-02)"
+    },
+    {
       "name": "customer-proxy/email",
       "author": {
         "kind": "customer_proxy",

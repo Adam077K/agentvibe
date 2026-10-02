@@ -137,8 +137,8 @@ test('B1-26 Userland: every 06 name maps to exactly one wire value (09a:628-663,
   }
 });
 
-test('B1-26 Userland: origin follows the author on every channel (09a:634; DR-LABEL-RECONCILE decisions 1,3,A,B,C,E,H,I,K)', async (t) => {
-  assert.ok(origins.length >= 30, `origin.json holds ${origins.length} cases; the register froze 30`);
+test('B1-26 Userland: origin follows the author on every channel (09a:634; DR-LABEL-RECONCILE decisions 1,3,A,B,C,E,H,I,K,P)', async (t) => {
+  assert.ok(origins.length >= 31, `origin.json holds ${origins.length} cases; the register froze 31`);
   for (const c of origins) {
     await t.test(c.name, () => assert.equal(label.originFor({ ...c.author }), c.origin, c.cite));
   }
@@ -152,6 +152,11 @@ function permutations<T>(xs: T[]): T[][] {
 }
 
 function checkJoin(c: (typeof joins)[number], inputs: { id: string; label: any; control: boolean }[]) {
+  if (c.expect.error) {
+    // Decision M (DR-LABEL-RECONCILE:136): inputs from different ventures do not join.
+    assert.throws(() => label.join(clone(c.own), inputs), (e: any) => e instanceof label.LabelJoinError && e.code === c.expect.error, c.cite);
+    return;
+  }
   const o = JSON.parse(JSON.stringify(label.join(clone(c.own), inputs)));
   assert.equal(label.LabelV1.safeDecode(clone(o)).success, true, `the join is not a valid LabelV1: ${JSON.stringify(o)}`);
   const p = o.provenance;
@@ -181,14 +186,17 @@ function checkJoin(c: (typeof joins)[number], inputs: { id: string; label: any; 
   if (e.retention_hold) assert.equal(o.retention.hold, e.retention_hold, c.cite);
   if (e.retention_deadline) assert.equal(o.retention.deadline, e.retention_deadline, c.cite);
   if (e.consent_scope) assert.equal(o.consent_scope, e.consent_scope, c.cite);
+  if (e.origin) assert.equal(o.origin, e.origin, c.cite);
+  if (e.subjects) assert.deepEqual([...(o.subjects ?? [])].sort(), [...e.subjects].sort(), `subjects are the union (${c.cite})`);
+  if (e.revocation_epoch !== undefined) assert.equal(o.revocation_epoch, e.revocation_epoch, `the newer epoch (${c.cite})`);
   if (e.permission_at_most) {
     assert.ok(o.permission in RANK && RANK[o.permission] <= RANK[e.permission_at_most],
       `permission ${o.permission} widens past ${e.permission_at_most} (${c.cite})`);
   }
 }
 
-test('B1-26 Userland: the join, over every order of its inputs (09a:665-670; 06:180 L1, 06:187 L8; 09a:602; decisions F, J)', async (t) => {
-  assert.ok(joins.length >= 25, `join.json holds ${joins.length} cases; the register froze 25`);
+test('B1-26 Userland: the join, over every order of its inputs (09a:665-670; 06:180 L1, 06:187 L8; 09a:602; decisions F, J, M, N, O; origin order PROVISIONAL, DR-LABEL-RECONCILE:151)', async (t) => {
+  assert.ok(joins.length >= 41, `join.json holds ${joins.length} cases; the register froze 41`);
   for (const c of joins) {
     const decoded = c.inputs.map((i) => ({ id: i.id, label: label.LabelV1.decode(clone(i.label)), control: i.control ?? false }));
     for (const order of permutations(decoded)) {

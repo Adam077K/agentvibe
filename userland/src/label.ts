@@ -68,6 +68,16 @@ export function originFor(c: Contributor): string {
 
 export type JoinInput = { id: string; label: unknown; control?: boolean };
 
+// LabelJoinError: join refused. code 'cross_venture': inputs from different ventures (decision M).
+export class LabelJoinError extends Error {
+  code: 'cross_venture';
+  constructor(code: 'cross_venture', message: string) {
+    super(message);
+    this.name = 'LabelJoinError';
+    this.code = code;
+  }
+}
+
 export function join(own: unknown, inputs: JoinInput[]): Record<string, any> {
   throw new NotImplementedError('join');
 }

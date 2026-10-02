@@ -78,18 +78,22 @@ type joinCase struct {
 	Own    label.Provenance `json:"own"`
 	Inputs []joinInput      `json:"inputs"`
 	Expect struct {
-		IdentityExceptProvenance bool   `json:"identity_except_provenance"`
-		Taint                    string `json:"taint"`
-		TaintNot                 string `json:"taint_not"`
-		ConfidenceRung           string `json:"confidence_rung"`
-		Boundary                 string `json:"boundary"`
-		PermissionAtMost         string `json:"permission_at_most"`
-		DClass                   string `json:"dclass"`
-		Exportable               *bool  `json:"exportable"`
-		RetentionClass           string `json:"retention_class"`
-		RetentionHold            string `json:"retention_hold"`
-		RetentionDeadline        string `json:"retention_deadline"`
-		ConsentScope             string `json:"consent_scope"`
+		IdentityExceptProvenance bool     `json:"identity_except_provenance"`
+		Taint                    string   `json:"taint"`
+		TaintNot                 string   `json:"taint_not"`
+		ConfidenceRung           string   `json:"confidence_rung"`
+		Boundary                 string   `json:"boundary"`
+		PermissionAtMost         string   `json:"permission_at_most"`
+		DClass                   string   `json:"dclass"`
+		Exportable               *bool    `json:"exportable"`
+		RetentionClass           string   `json:"retention_class"`
+		RetentionHold            string   `json:"retention_hold"`
+		RetentionDeadline        string   `json:"retention_deadline"`
+		ConsentScope             string   `json:"consent_scope"`
+		Origin                   string   `json:"origin"`
+		Subjects                 []string `json:"subjects"`
+		RevocationEpoch          *uint64  `json:"revocation_epoch"`
+		Error                    string   `json:"error"`
 	} `json:"expect"`
 }
 
@@ -477,14 +481,14 @@ func TestB126MappingTable(t *testing.T) {
 }
 
 // 09a:634, the "a person's contribution, on any channel" row: origin follows the author, with the
-// founder decisions of DR-LABEL-RECONCILE (1, 3, A, B, C, E, H, I, K).
+// founder decisions of DR-LABEL-RECONCILE (1, 3, A, B, C, E, H, I, K, P).
 func TestB126OriginByAuthor(t *testing.T) {
 	var f struct {
 		Cases []originCase `json:"cases"`
 	}
 	load(t, "origin.json", &f)
-	if len(f.Cases) < 30 {
-		t.Fatalf("origin.json holds %d cases; the register froze 30", len(f.Cases))
+	if len(f.Cases) < 31 {
+		t.Fatalf("origin.json holds %d cases; the register froze 31", len(f.Cases))
 	}
 	for _, c := range f.Cases {
 		t.Run(c.Name, func(t *testing.T) {
@@ -513,16 +517,16 @@ func permutations(n int) [][]int {
 	return out
 }
 
-// 09a:665-670 (Join), 06:180 (L1), 06:187 (L8), 09a:602; decisions F and J (DR-LABEL-RECONCILE:99,
-// :121). The join is a function of the SET of inputs: every case runs over every order of its inputs,
+// 09a:665-670 (Join), 06:180 (L1), 06:187 (L8), 09a:602; decisions F, J, M, N, O (DR-LABEL-RECONCILE:99,
+// :121, :136-143). Origin cases marked PROVISIONAL pin the orchestrator's proposed trust order (OPEN, :151). The join is a function of the SET of inputs: every case runs over every order of its inputs,
 // so "copy the first label" and "copy the last label" both fail.
 func TestB126Join(t *testing.T) {
 	var f struct {
 		Cases []joinCase `json:"cases"`
 	}
 	load(t, "join.json", &f)
-	if len(f.Cases) < 25 {
-		t.Fatalf("join.json holds %d cases; the register froze 25", len(f.Cases))
+	if len(f.Cases) < 41 {
+		t.Fatalf("join.json holds %d cases; the register froze 41", len(f.Cases))
 	}
 	for _, c := range f.Cases {
 		var decoded []label.Input
@@ -550,6 +554,16 @@ func TestB126Join(t *testing.T) {
 func checkJoin(t *testing.T, c joinCase, inputs []label.Input) {
 	t.Helper()
 	out, err := label.Join(c.Own, inputs)
+	if c.Expect.Error != "" {
+		// Decision M (DR-LABEL-RECONCILE:136): inputs from different ventures do not join.
+		if c.Expect.Error != "cross_venture" {
+			t.Fatalf("fixture names unknown error %q", c.Expect.Error)
+		}
+		if !errors.Is(err, label.ErrCrossVenture) || errors.Is(err, label.ErrInvalid) {
+			t.Fatalf("Join = %+v, %v; want ErrCrossVenture alone (%s)", out, err, c.Cite)
+		}
+		return
+	}
 	if err != nil {
 		t.Fatalf("Join: %v (%s)", err, c.Cite)
 	}
@@ -616,6 +630,17 @@ func checkJoin(t *testing.T, c joinCase, inputs []label.Input) {
 	str("retention.hold", out.Retention.Hold, e.RetentionHold)
 	str("retention.deadline", out.Retention.Deadline, e.RetentionDeadline)
 	str("consent_scope", out.ConsentScope, e.ConsentScope)
+	str("origin", out.Origin, e.Origin)
+	if e.Subjects != nil {
+		got := slices.Sorted(slices.Values(out.Subjects))
+		want := slices.Sorted(slices.Values(e.Subjects))
+		if !slices.Equal(slices.Compact(got), want) || len(got) != len(want) {
+			t.Fatalf("subjects %v, want the union %v (%s)", out.Subjects, e.Subjects, c.Cite)
+		}
+	}
+	if e.RevocationEpoch != nil && out.RevocationEpoch != *e.RevocationEpoch {
+		t.Fatalf("revocation_epoch %d, want the newer %d (%s)", out.RevocationEpoch, *e.RevocationEpoch, c.Cite)
+	}
 	if e.Exportable != nil && out.Exportable != *e.Exportable {
 		t.Fatalf("exportable %v, want %v (%s)", out.Exportable, *e.Exportable, c.Cite)
 	}
