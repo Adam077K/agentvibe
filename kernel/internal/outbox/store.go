@@ -11,7 +11,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/journal"
@@ -62,10 +64,12 @@ var stateOf = map[string]State{evProposed: Proposed, evDispatching: Dispatching,
 
 var eventOf = map[State]string{Confirmed: evConfirmed, Failed: evFailed, Uncertain: evUncertain, Human: evHuman}
 
-// legalFrom lists, for each state a recorded outcome moves to, the states it may leave. A receipt
-// confirms even an attempt already handed to a human: it is the evidence the human was waiting for.
+// legalFrom lists, for each state a recorded outcome moves to, the states it may leave. A Receipt
+// for the attempt ("dispatching --> confirmed: provider ok → Receipt", §7) is the strongest evidence
+// there is: it confirms even an attempt a reconciler already moved to failed or handed to a human.
+// record admits it only for the CURRENT attempt, so it can never confirm over a later one.
 var legalFrom = map[State][]State{
-	Confirmed: {Dispatching, Uncertain, Human},
+	Confirmed: {Dispatching, Uncertain, Human, Failed},
 	Failed:    {Dispatching, Uncertain},
 	Uncertain: {Dispatching},
 	Human:     {Dispatching, Uncertain},
@@ -96,6 +100,37 @@ type opState struct {
 	payloadRef journal.BlobRef
 	idem       string    // the current attempt's provider idempotency key
 	began      time.Time // when the current attempt was journaled as dispatching
+}
+
+var ulidPattern = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
+
+// tryLock takes Operation id's attempt lock without waiting; ok is false while another Dispatch or
+// Reconcile of it is live on this host. Dispatch holds it from journaling dispatching until the
+// outcome is recorded, so a reconciler that gets it knows no attempt is in flight here: the holder
+// recorded an outcome, or died (the kernel drops a flock on SIGKILL, as for the Journal's writer
+// lock, §4.1). That is how the §7 edge "dispatching --> uncertain: crash · timeout · ambiguous" is
+// observed — never by a lookup racing the attempt. Across hosts it is not enough: there the gateway
+// epoch is the fence (§15.2), which is not this package's.
+func (o *outbox) tryLock(id string) (lock *os.File, ok bool, err error) {
+	if !ulidPattern.MatchString(id) {
+		return nil, false, fmt.Errorf("%w: %q", ErrUnknownOperation, id)
+	}
+	dir := filepath.Join(filepath.Dir(o.path), "inflight")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, false, fmt.Errorf("outbox: %w", err)
+	}
+	f, err := os.OpenFile(filepath.Join(dir, id+".lock"), os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0o600)
+	if err != nil {
+		return nil, false, fmt.Errorf("outbox: attempt lock: %w", err)
+	}
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		f.Close()
+		if errors.Is(err, syscall.EWOULDBLOCK) {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("outbox: attempt lock: %w", err)
+	}
+	return f, true, nil // closing f releases the lock
 }
 
 type outbox struct {
@@ -293,9 +328,24 @@ func payloadRef(p []byte) journal.BlobRef {
 }
 
 func (o *outbox) Dispatch(ctx context.Context, id string) (Operation, error) {
+	op, err := o.Get(ctx, id)
+	if err != nil || op.State == Confirmed {
+		return op, err
+	}
+	if op.State != Proposed && op.State != Failed {
+		return op, fmt.Errorf("%w: Operation %s attempt %d is %s", ErrUncertain, id, op.Attempt, op.State)
+	}
+	lock, ok, err := o.tryLock(id)
+	if err != nil {
+		return op, err
+	}
+	if !ok {
+		return op, fmt.Errorf("%w: Operation %s has an attempt in progress on this host", ErrUncertain, id)
+	}
+	defer lock.Close()
 	var s opState
 	var payload []byte
-	err := o.withJournal(ctx, func(j journal.Journal) error {
+	err = o.withJournal(ctx, func(j journal.Journal) error {
 		var err error
 		if s, err = load(ctx, j, id); err != nil {
 			return err
@@ -397,15 +447,34 @@ func (o *outbox) Reconcile(ctx context.Context) error {
 	}
 	var errs []error
 	for _, s := range open {
-		to, why := o.resolve(ctx, s)
-		if to == s.State {
-			continue
-		}
-		if _, err := o.record(ctx, s.ID, s.Attempt, to, why); err != nil {
-			errs = append(errs, err)
-		}
+		errs = append(errs, o.reconcileOne(ctx, s))
 	}
 	return errors.Join(errs...)
+}
+
+// reconcileOne resolves one in-doubt Operation under its attempt lock. A lock held by a live
+// Dispatch means the attempt is in flight: it is left alone, so no lookup can call it absent and
+// make it eligible for a second send while it may still land.
+func (o *outbox) reconcileOne(ctx context.Context, s opState) error {
+	lock, ok, err := o.tryLock(s.ID)
+	if err != nil || !ok {
+		return err
+	}
+	defer lock.Close()
+	// Re-read under the lock: what was listed may have been resolved since.
+	if err := o.withJournal(ctx, func(j journal.Journal) error {
+		var err error
+		s, err = load(ctx, j, s.ID)
+		return err
+	}); err != nil || (s.State != Dispatching && s.State != Uncertain) {
+		return err
+	}
+	to, why := o.resolve(ctx, s)
+	if to == s.State {
+		return nil
+	}
+	_, err = o.record(ctx, s.ID, s.Attempt, to, why)
+	return err
 }
 
 // resolve decides, by class, what an in-doubt attempt became. It never dispatches.

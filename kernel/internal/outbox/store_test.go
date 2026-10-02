@@ -137,3 +137,104 @@ func TestDeadlineAndLateReceipt(t *testing.T) {
 		t.Fatal("a confirmed attempt was moved to failed")
 	}
 }
+
+// heldProv holds every Do open until release closes; Lookup says Absent, honestly, until a Do returns.
+type heldProv struct {
+	mu      sync.Mutex
+	calls   int
+	landed  bool
+	entered chan struct{}
+	release chan struct{}
+	fail    error // returned after the effect lands: an ambiguous answer
+}
+
+func (p *heldProv) Do(context.Context, string, []byte) error {
+	p.mu.Lock()
+	p.calls++
+	p.mu.Unlock()
+	p.entered <- struct{}{}
+	<-p.release
+	p.mu.Lock()
+	p.landed = true
+	p.mu.Unlock()
+	return p.fail
+}
+
+func (p *heldProv) Lookup(context.Context, string) (Presence, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.landed {
+		return Present, nil
+	}
+	return Absent, nil
+}
+
+// A next Dispatch that runs BEFORE an in-flight attempt's Receipt lands is refused on this host:
+// reconcilers leave a locked attempt alone, so Absent never makes it eligible for a second send.
+func TestRedispatchBeforeLateReceiptIsRefused(t *testing.T) {
+	ctx := context.Background()
+	dir, c, _, e := fixture(t)
+	p := &heldProv{entered: make(chan struct{}, 1), release: make(chan struct{})}
+	ob1 := mustOpen(t, dir, c, p)
+	op, _ := ob1.Propose(ctx, e)
+	done := make(chan error, 1)
+	go func() { _, err := ob1.Dispatch(ctx, op.ID); done <- err }()
+	<-p.entered
+	for i := 0; i < 3; i++ {
+		c.add(UncertainDeadline)
+		ob := mustOpen(t, dir, c, p)
+		if err := ob.Reconcile(ctx); err != nil {
+			t.Fatalf("Reconcile with an attempt in flight: %v", err)
+		}
+		if _, err := ob.Dispatch(ctx, op.ID); !errors.Is(err, ErrUncertain) {
+			t.Fatalf("re-Dispatch while attempt 1 is in flight: %v, want ErrUncertain", err)
+		}
+	}
+	close(p.release)
+	if err := <-done; err != nil {
+		t.Fatalf("attempt 1: %v", err)
+	}
+	if got, _ := mustOpen(t, dir, c, p).Get(ctx, op.ID); got.State != Confirmed || got.Attempt != 1 || p.calls != 1 {
+		t.Fatalf("after the Receipt: %+v, %d calls; want %q at attempt 1 and 1 call", got, p.calls, Confirmed)
+	}
+}
+
+// The in-flight attempt ends ambiguously after a reconciler ran during it. Had the reconciler
+// believed its Absent, the attempt would sit at failed and the next Dispatch would send again.
+func TestReconcileDuringFlightThenAmbiguousStaysUncertain(t *testing.T) {
+	ctx := context.Background()
+	dir, c, _, e := fixture(t)
+	p := &heldProv{entered: make(chan struct{}, 1), release: make(chan struct{}), fail: context.DeadlineExceeded}
+	ob1 := mustOpen(t, dir, c, p)
+	op, _ := ob1.Propose(ctx, e)
+	done := make(chan error, 1)
+	go func() { _, err := ob1.Dispatch(ctx, op.ID); done <- err }()
+	<-p.entered
+	_ = mustOpen(t, dir, c, p).Reconcile(ctx)
+	close(p.release)
+	if err := <-done; !errors.Is(err, ErrUncertain) {
+		t.Fatalf("attempt 1 after an ambiguous answer: %v, want ErrUncertain", err)
+	}
+	ob := mustOpen(t, dir, c, p)
+	if _, err := ob.Dispatch(ctx, op.ID); !errors.Is(err, ErrUncertain) || p.calls != 1 {
+		t.Fatalf("next Dispatch: %v after %d calls; want ErrUncertain and 1 call", err, p.calls)
+	}
+}
+
+// A Receipt for the current attempt confirms it even after a reconciler (on a host that could not
+// see the attempt lock) recorded it failed.
+func TestReceiptAfterFailedConfirms(t *testing.T) {
+	ctx := context.Background()
+	dir, c, p, e := fixture(t)
+	p.err = context.DeadlineExceeded
+	ob := mustOpen(t, dir, c, p)
+	op, _ := ob.Propose(ctx, e)
+	_, _ = ob.Dispatch(ctx, op.ID)
+	in := ob.(*outbox)
+	if got, err := in.record(ctx, op.ID, 1, Failed, "lookup: absent"); err != nil || got.State != Failed {
+		t.Fatalf("setup: %+v, %v", got, err)
+	}
+	if got, err := in.record(ctx, op.ID, 1, Confirmed, "receipt"); err != nil || got.State != Confirmed {
+		t.Fatalf("Receipt after failed: %+v, %v; want %q", got, err, Confirmed)
+	}
+}
