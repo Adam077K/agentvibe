@@ -300,11 +300,12 @@ export function join(own: unknown, inputs: JoinInput[]): Record<string, any> {
   if (deadlines.length !== 0) {
     if (deadlines.length !== ls.length) throw new LabelJoinError('undecided', 'label: a retention.deadline against an absent one is unordered (OPEN)');
     let best = '';
-    let bestT = -Infinity;
+    let bestT: Deadline | undefined;
     for (const d of deadlines) {
-      const t = rfc3339(d);
-      if (t === undefined) throw new LabelJoinError('undecided', `label: retention.deadline ${JSON.stringify(d)} is not RFC 3339 (OPEN)`);
-      if (t > bestT || (t === bestT && d > best)) [best, bestT] = [d, t];
+      const t = parseDeadline(d);
+      if (t === undefined) throw new LabelJoinError('undecided', `label: retention.deadline ${JSON.stringify(d)} is outside the deadline grammar and cannot be ordered (OPEN)`);
+      const c = bestT === undefined ? 1 : cmpDeadline(t, bestT);
+      if (c > 0 || (c === 0 && d > best)) [best, bestT] = [d, t];
     }
     out.retention.deadline = best;
   }
@@ -341,10 +342,50 @@ function provenanceOf(own: unknown, inputs: JoinInput[]): Record<string, unknown
   return p;
 }
 
-const RFC3339 = /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})$/;
+// THE DEADLINE GRAMMAR (orchestrator ruling 2026-10-02, B1-26 impl review r2), one grammar in both
+// languages: this is label.go's parseDeadline step for step, and both run the vectors in
+// kernel/internal/label/testdata/label/r2_deadlines.json. RFC 3339's date-time with an uppercase 'T',
+// two-digit fields, an optional '.' fraction of one or more digits, and an uppercase 'Z' or a
+// +hh:mm / -hh:mm offset; a real calendar date, hour < 24, minute and second < 60 (no leap second),
+// offset hour < 24 and offset minute < 60. Anything else is outside it. Date.parse is not used: it
+// accepts far more, and its millisecond instant would tie fractions that Go orders.
+const DEADLINE = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.([0-9]+))?(?:Z|([+-])([0-9]{2}):([0-9]{2}))$/;
 
-function rfc3339(s: string): number | undefined {
-  if (!RFC3339.test(s)) return undefined;
-  const t = Date.parse(s);
-  return Number.isNaN(t) ? undefined : t;
+// Deadline is an instant: whole seconds since 1970-01-01T00:00:00Z (an exact integer: |sec| < 2^38
+// for years 0..9999), and the fraction's digits with trailing zeros removed, which compare as
+// strings exactly as they compare as numbers.
+type Deadline = { sec: number; frac: string };
+
+const cmpDeadline = (a: Deadline, b: Deadline): number =>
+  a.sec !== b.sec ? (a.sec < b.sec ? -1 : 1) : a.frac < b.frac ? -1 : a.frac > b.frac ? 1 : 0;
+
+function parseDeadline(s: string): Deadline | undefined {
+  const m = DEADLINE.exec(s);
+  if (m === null) return undefined;
+  const n = (i: number) => Number(m[i]);
+  const [y, mo, d, h, mi, sec] = [n(1), n(2), n(3), n(4), n(5), n(6)];
+  if (mo < 1 || mo > 12 || d < 1 || d > daysIn(y, mo) || h > 23 || mi > 59 || sec > 59) return undefined;
+  let off = 0;
+  if (m[8] !== undefined) {
+    const [oh, om] = [n(9), n(10)];
+    if (oh > 23 || om > 59) return undefined;
+    off = (m[8] === '-' ? -1 : 1) * (oh * 3600 + om * 60);
+  }
+  return { sec: daysFromCivil(y, mo, d) * 86400 + h * 3600 + mi * 60 + sec - off, frac: (m[7] ?? '').replace(/0+$/, '') };
+}
+
+function daysIn(y: number, m: number): number {
+  if (m === 2) return y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0) ? 29 : 28;
+  return [4, 6, 9, 11].includes(m) ? 30 : 31;
+}
+
+// daysFromCivil: days from 1970-01-01 to y-m-d, proleptic Gregorian (H. Hinnant's days_from_civil).
+function daysFromCivil(y: number, m: number, d: number): number {
+  if (m <= 2) y--;
+  const era = Math.floor(y / 400);
+  const yoe = y - era * 400;
+  const mp = (m + 9) % 12; // March is 0
+  const doy = Math.floor((153 * mp + 2) / 5) + d - 1;
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
 }
