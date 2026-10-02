@@ -62,8 +62,19 @@ func settingSources(profile string) (string, bool) {
 	return "", false
 }
 
-// nestedAgentTools are the tools that spawn a nested agent (09a §8.4, founder ruling B).
+// nestedAgentTools are the tools that spawn a nested agent (09a §8.4, founder ruling B). Task is
+// an alias of Agent (founder ruling F): one tool under two names.
 var nestedAgentTools = [...]string{"Agent", "Task"}
+
+// nestedAgentBase: a rule's base names a nested-agent tool, in any spelling.
+func nestedAgentBase(base string) bool {
+	for _, n := range nestedAgentTools {
+		if strings.EqualFold(base, n) {
+			return true
+		}
+	}
+	return false
+}
 
 var harnessHash = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
@@ -76,8 +87,9 @@ func specErr(format string, a ...any) error {
 //     launch-pack → project; any other profile is ErrSpec.
 //   - Allowed and Forbidden are lists of single tool names, comma-joined into their slots.
 //   - Agent and Task, bare or as a rule such as Agent(x), are added to the forbidden slot unless
-//     FundedTeam is set and the tool is
-//     on the allowed list; allowing either without FundedTeam is ErrSpec.
+//     FundedTeam is set and either is on the allowed list (ruling F: Task is an alias of Agent,
+//     so allowing one lifts the forbid of both); allowing either without FundedTeam is ErrSpec,
+//     and so is a lease forbid that would deny an allowed nested-agent rule.
 //   - InitExpect must be a harness hash in InitHash's form ("sha256:" + 64 lowercase hex): any
 //     other value could never match, so the run would only abort later.
 //
@@ -118,23 +130,33 @@ func (c *Claude) Argv(spec LaunchSpec) ([]string, error) {
 	// Ruling B: a nested-agent tool may be allowed only for a funded team. The check folds case
 	// so a variant spelling cannot pass unfunded; only an exact base name lifts the default
 	// forbid, so a variant spelling never unforbids the real tool.
-	allowedNested := map[string]bool{}
+	// Ruling F: Task is an alias of Agent (the CLI maps one to the other), so they are one tool:
+	// an exact Agent or Task rule on a funded allow list lifts the default forbid of both, and a
+	// lease forbid that would deny an allowed nested-agent rule is refused, not passed through.
+	nestedLifted := false
 	for _, t := range allowed {
-		base, _, _ := strings.Cut(t, "(")
-		for _, n := range nestedAgentTools {
-			if strings.EqualFold(base, n) {
-				if !spec.FundedTeam {
-					return nil, specErr("%q spawns a nested agent and the job is not a funded team", t)
-				}
-				if base == n {
-					allowedNested[n] = true
-				}
+		base, arg, _ := strings.Cut(t, "(")
+		if !nestedAgentBase(base) {
+			continue
+		}
+		if !spec.FundedTeam {
+			return nil, specErr("%q spawns a nested agent and the job is not a funded team", t)
+		}
+		if slices.Contains(nestedAgentTools[:], base) {
+			nestedLifted = true
+		}
+		for _, f := range forbidden {
+			fbase, farg, _ := strings.Cut(f, "(")
+			if nestedAgentBase(fbase) && (farg == "" || farg == arg) {
+				return nil, specErr("forbidden %q would deny allowed %q (Task is an alias of Agent)", f, t)
 			}
 		}
 	}
-	for _, n := range nestedAgentTools {
-		if !allowedNested[n] && !slices.Contains(forbidden, n) {
-			forbidden = append(forbidden, n)
+	if !nestedLifted {
+		for _, n := range nestedAgentTools {
+			if !slices.Contains(forbidden, n) {
+				forbidden = append(forbidden, n)
+			}
 		}
 	}
 	if len(forbidden) == 0 {
@@ -186,7 +208,9 @@ func toolList(which string, list []string) ([]string, error) {
 }
 
 func toolRule(t string) bool {
-	if !slotValue(t) || strings.ContainsRune(t, ',') {
+	// r6: no backslash anywhere: the CLI ignores a rule whose argument it cannot read, so a
+	// forbidden Bash(x\) would be silently void.
+	if !slotValue(t) || strings.ContainsAny(t, ",\\") {
 		return false
 	}
 	// r4: ASCII only. The CLI splits with JavaScript's \s, which matches Unicode separators
