@@ -71,6 +71,27 @@
 # TS), and in TS duplicate keys or non-canonical integers allowed.
 # Run (r2): go -C kernel test -tags donetest -count=1 -run R2 ./internal/label/ && node --test userland/test/label.r2.donetest.test.ts
 #
+# RE-FREEZE 2026-10-02 re-freeze r3 after re-review (Opus FAIL at build/b1-26 @ 9096164). Earlier rounds
+# unchanged (hashes identical). Added, one shared vector set for both languages:
+#   label_r3_donetest_test.go + label.r3.donetest.test.ts over testdata/label/r3_deadlines.json (10),
+#   r3_wire_text.json (37) and r3_order.json (1).
+#   - HIGH/MED lone surrogates: refused escaped or raw ("raw" = WTF-8 bytes in Go, the code unit in a
+#     JS string), in values and keys, in label.Decode/nouns.Decode[Label] and nouns.decodeText; a valid
+#     pair and U+FFFD are accepted.
+#   - MED p: -0, -0.0, 0.50, 5e-1, .5, 1e400 and 9007199254740993.5 refused on read in both; the join over
+#     p of zero is byte-identical in every order and never writes -0.
+#   - MED symmetry: every valid text in r2/r3 wire text and valid.json re-encodes with the same values and
+#     number spellings (Go label.Encode and nouns.Encode; Userland LabelV1.encode).
+#   - Deadline vectors: tie-break, fraction trailing zeros, leap second, 1900 vs 2000, year-0 era floor,
+#     month 00, year 9999.
+# Fails on 9096164: Go TestB126R3WireText (escaped lone surrogates; p -0, -0.0, 0.50, 5e-1, unsafe
+# fraction); Userland the wire-text test (lone surrogates escaped and raw; p -0, -0.0, 0.50, 5e-1). The
+# deadline, symmetry and order tests pass there; their mutants prove them.
+# Proved in $TMPDIR against a strict reference (all label and B1-02 done-tests green, 1265 Userland
+# subtests); 18 of 18 mutants killed, each green on rounds 1-r2: Go and TS tie-break, leap second,
+# 1900-leap, no-400-rule, fraction trim, era floor, month 00, lone surrogates allowed, any p spelling.
+# Run (r3): go -C kernel test -tags donetest -count=1 -run R3 ./internal/label/ && node --test userland/test/label.r3.donetest.test.ts
+#
 # Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
 # B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
 # carry the LabelV1 shape that the nouns on main does not read yet.
@@ -105,3 +126,13 @@ jobs:
         sha256: a2af28398b82a36bba8bba943ab09b076f35ca0222dcd036f0df7ad83e62ffc8
       - path: userland/test/label.r2.donetest.test.ts
         sha256: c56ebab4d497b02b10ab556d67d10496479336fd081ee416682fc433b27571a4
+      - path: kernel/internal/label/label_r3_donetest_test.go
+        sha256: 8b8832ea7303cae89221968955b0720a2846edc77a8e0f33fd556df778ad51f2
+      - path: kernel/internal/label/testdata/label/r3_deadlines.json
+        sha256: 0f545e56b07a4a7b5fd674763d47bb2ef15953f26dfa3e01e69bc272ed2fed3c
+      - path: kernel/internal/label/testdata/label/r3_wire_text.json
+        sha256: 3c7295c01a43892af8713b34278e7105df06d50ac7ed341e18f6b275f802294a
+      - path: kernel/internal/label/testdata/label/r3_order.json
+        sha256: 38d662b91aff94c78f222361e470d0eaaeccfa0e5b0af8d99c3eeca941582833
+      - path: userland/test/label.r3.donetest.test.ts
+        sha256: 74cecd708a98f3e521d715e9fc66fb4fdd38857440d8ac4989305d8b09ba39d9
