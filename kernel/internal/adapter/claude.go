@@ -66,6 +66,31 @@ func settingSources(profile string) (string, bool) {
 // an alias of Agent (founder ruling F): one tool under two names.
 var nestedAgentTools = [...]string{"Agent", "Task"}
 
+// knownTools are tool names whose case variants are refused (DR r7): the built-in tools of the
+// pinned harness plus the nested-agent tools. A name outside this set is not judged by case.
+var knownTools = [...]string{"Agent", "Bash", "Edit", "Glob", "Grep", "Read", "Task", "WebFetch", "Write"}
+
+// caseVariantOfKnownTool: base equals a known tool, or carries the mcp__ prefix, case-
+// insensitively but not exactly.
+func caseVariantOfKnownTool(base string) bool {
+	for _, k := range knownTools {
+		if base != k && strings.EqualFold(base, k) {
+			return true
+		}
+	}
+	const mcp = "mcp__"
+	return len(base) >= len(mcp) && base[:len(mcp)] != mcp && strings.EqualFold(base[:len(mcp)], mcp)
+}
+
+// bareStar is the rule with an argument of exactly "*" dropped: the CLI reads X(*) as the bare X
+// (DR r7). Every other rule is returned unchanged.
+func bareStar(rule string) string {
+	if base, ok := strings.CutSuffix(rule, "(*)"); ok {
+		return base
+	}
+	return rule
+}
+
 // nestedAgentBase: a rule's base names a nested-agent tool, in any spelling.
 func nestedAgentBase(base string) bool {
 	for _, n := range nestedAgentTools {
@@ -123,8 +148,10 @@ func (c *Claude) Argv(spec LaunchSpec) ([]string, error) {
 		return nil, err
 	}
 	for _, t := range allowed {
-		if slices.Contains(forbidden, t) {
-			return nil, specErr("tool %q is both allowed and forbidden", t)
+		for _, f := range forbidden {
+			if bareStar(t) == bareStar(f) { // r7: X(*) is X
+				return nil, specErr("tool %q is both allowed and forbidden (as %q)", t, f)
+			}
 		}
 	}
 	// Ruling B: a nested-agent tool may be allowed only for a funded team. The check folds case
@@ -135,7 +162,7 @@ func (c *Claude) Argv(spec LaunchSpec) ([]string, error) {
 	// lease forbid that would deny an allowed nested-agent rule is refused, not passed through.
 	nestedLifted := false
 	for _, t := range allowed {
-		base, arg, _ := strings.Cut(t, "(")
+		base, arg, _ := strings.Cut(bareStar(t), "(")
 		if !nestedAgentBase(base) {
 			continue
 		}
@@ -146,7 +173,7 @@ func (c *Claude) Argv(spec LaunchSpec) ([]string, error) {
 			nestedLifted = true
 		}
 		for _, f := range forbidden {
-			fbase, farg, _ := strings.Cut(f, "(")
+			fbase, farg, _ := strings.Cut(bareStar(f), "(")
 			if nestedAgentBase(fbase) && (farg == "" || farg == arg) {
 				return nil, specErr("forbidden %q would deny allowed %q (Task is an alias of Agent)", f, t)
 			}
@@ -230,6 +257,11 @@ func toolRule(t string) bool {
 		if unicode.IsSpace(r) || unicode.IsControl(r) {
 			return false
 		}
+	}
+	// r7: the CLI matches tool names case-sensitively, so a case variant of a known tool names
+	// no tool: as a forbid it is void, as an allow it grants nothing. Refused either way.
+	if caseVariantOfKnownTool(base) {
+		return false
 	}
 	if !hasArg {
 		return true
