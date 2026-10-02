@@ -16,7 +16,8 @@ import (
 
 const labelMin = `{"schema":"label/1","origin":"internal","dclass":"D0","boundary":"open","venture":"portfolio",` +
 	`"retention":{"class":"journal_metadata","hold":"none"},"permission":"none","exportable":false,` +
-	`"taint":"clean","provenance":[{"source":"s"}],"revocation_epoch":0}`
+	`"taint":"clean","provenance":{"sources":[{"ref":"s"}],"derived_from":["rec_0"],` +
+	`"author":{"title":"Kernel","family":"system"}},"revocation_epoch":0}`
 
 const zeroHex = "0000000000000000000000000000000000000000000000000000000000000000"
 
@@ -66,7 +67,8 @@ func TestUpcastDoesNotAliasData(t *testing.T) {
 		scribble(up.Data)
 		scribble(up.Actor)
 		scribble(up.Rationale)
-		scribble(up.Label.Provenance[0])
+		up.Label.Provenance.Sources[0].Ref = "scribbled"
+		up.Label.Provenance.DerivedFrom[0] = "scribbled"
 		if got := snapshot(e); !bytes.Equal(got, before) {
 			t.Errorf("writing to Upcast's result reached the stored event\n got: %s\nwant: %s", got, before)
 		}
@@ -187,7 +189,7 @@ func TestWireEdges(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		l.Provenance = nil
+		l.Provenance.Sources = nil
 		if _, err := nouns.Encode(l); !errors.Is(err, nouns.ErrInvalid) {
 			t.Errorf("Encode with nil provenance = %v; want ErrInvalid (it would be written as null)", err)
 		}
@@ -274,7 +276,7 @@ func TestDecodeRefusesDuplicateAndCaseVariantKeys(t *testing.T) {
 		{"case variant inside the label", `"taint":"clean"`, `"taint":"clean","Taint":"untrusted"`},
 		{"duplicate inside data", `"disposition":"ask"`, `"disposition":"ask","disposition":"auto"`},
 		{"duplicate inside actor", `"id":"avd"`, `"id":"avd","id":"evil"`},
-		{"duplicate inside a provenance entry", `{"source":"s"}`, `{"source":"s","source":"t"}`},
+		{"duplicate inside a provenance entry", `{"ref":"s"}`, `{"ref":"s","ref":"t"}`},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			mustRefuse(t, ev, strings.Replace(ev, c.old, c.repl, 1), decodeEvent)

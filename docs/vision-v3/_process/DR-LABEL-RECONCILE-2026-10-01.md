@@ -112,17 +112,71 @@ The orchestrator relayed these. They answer the three items that the final revie
 - **I. Anyone writing on a customer's behalf gets `origin: customer`** (founder, 2026-10-01). An example is the
   customer's accountant in `13:927`, identified at `13:866`.
 
+## Founder decisions, round 5 (founder, 2026-10-02)
+
+The orchestrator relayed these from the main session, where the founder answered through AskUserQuestion. They
+answer gaps the B1-26 done-test builder found at `0268a8b`. The builder did not see the exchange itself. The
+orchestrator called them A–C; they are lettered J–L here so they do not collide with round 2's A–C.
+
+- **J. In a join, the strictest value wins for `dclass`, `retention`, `exportable` and `consent_scope`** (founder,
+  2026-10-02): the highest D-class, the longest retention, `exportable` only if every input is exportable, and the
+  narrowest consent. Written into 09a §12's Join bullet.
+- **K. A customer's HumanTask that is not a panel gets `origin: customer`** (founder, 2026-10-02). A `participant`
+  task is a panel, so it gets `counterparty`, as round 2's decision B already said for taste panels. Written into
+  09a §12's channel row.
+- **L. The legacy origins `participant` and `external` both map to `counterparty`** (founder, 2026-10-02). They
+  are the stragglers listed under "Not done" below (`13:1202,1553`; `02:519`). Written as a row of 09a §12's
+  "06 → wire" table.
+
+## Founder decisions, round 6 (founder, 2026-10-02)
+
+The orchestrator relayed these from the main session, where the founder answered the round-5 OPEN items through
+AskUserQuestion. The builder did not see the exchange itself.
+
+- **M. A join across ventures is refused** unless the founder approves it (founder, 2026-10-02). Inputs whose
+  `venture` values differ do not join.
+- **N. The least trusted value wins, field by field** (founder, 2026-10-02): `taint` quarantined > untrusted >
+  clean; `boundary` guarded beats open (sealed beats both, 06 L8); `origin` the least-trusted author; `subjects` the
+  union of the inputs'; `revocation_epoch` the newer.
+- **O. Retention and consent** (founder, 2026-10-02). Retention classes order by how long the data is kept, a
+  `legal` hold highest, and a join takes the longest. `consent_scope` is the intersection of the inputs' scopes; an
+  empty intersection refuses the join.
+- **P. A HumanTask done on a customer's behalf gets `origin: customer`** (founder, 2026-10-02), as decision I
+  already gives other material written on a customer's behalf.
+
+## Founder decisions, round 7 (founder, 2026-10-02)
+
+The orchestrator relayed these from the main session, where the founder answered the round-6 OPEN items through
+AskUserQuestion. The builder did not see the exchange itself.
+
+- **Q. The origin trust order is founder > system_of_record > internal > customer > counterparty** (founder,
+  2026-10-02). It was the orchestrator's proposal under N; it is now confirmed, and a join takes the last of these.
+- **R. Retention-class strictness is personal > client > operational > synthetic** (founder, 2026-10-02), and a
+  join takes the strictest. Among the holds other than `legal`, the longer-lasting hold is the stricter.
+- **S. Two different consent refs refuse the join** (founder, 2026-10-02). Only identical refs join. This replaces
+  O's "intersection" for opaque refs.
+- **T. Founder and portfolio data may join a venture's data, and the result belongs to that venture** (founder,
+  2026-10-02). Venture data never flows up to `founder` or `portfolio` without the founder's approval.
+
 ## OPEN
 
-None. Every item raised at `44f3136`, `a1eeed7`, `2777a0d` and `0b372b0` is closed, either by the canon or by a
-founder decision recorded above.
+Raised by the B1-26 done-test builder on 2026-10-02 and NOT decided.
 
-**06 §8 retention wording: resolved, not open.** §8 now says the hold picks the verbs, which matches §4 and 09a §12's
-mapping rows. The canon did not truly conflict; §8 still had the pre-DR-68 names.
+- **`public_web` and `synthetic` in the origin order.** Q orders five origins; these two have no place in it and
+  are not tested in a join.
+- **Where `journal_metadata` sits.** R orders four retention classes by strictness. O ordered by how long data is
+  kept, which put `journal_metadata` (life of the organisation, 09a §11.6) first; whether strictness keeps it there
+  is not stated, so the tests no longer pin it.
+- **Which non-legal hold lasts longer.** R makes the longer hold the stricter, but `obligation`, `safety` and
+  `pinned` carry no duration on the wire. A deadline against an absent one is likewise unordered.
+- **The wire form of a founder approval.** M and T let the founder approve a cross-venture join, or venture data
+  flowing up to `founder` or `portfolio`. The canon names no approval record for this (it does not reference one by
+  Decision id), so the approved path is untested.
+- **`founder` joined with `portfolio`** with no venture input: T does not say which owns the result.
 
 ## Not done (out of scope, mapping already decided)
 
 - Stragglers elsewhere still use pre-wire names:
   - 13 uses `authority:` and `data_class:` (`13:185,812,927,1281,1312`).
-  - 13 uses `origin: participant` (`13:1202,1553`), which should be `counterparty` under decision 3.
-  - 02 uses `origin: external, class: D2` (`02:519`).
+  - 13 uses `origin: participant` (`13:1202,1553`), which maps to `counterparty` (decisions 3 and L).
+  - 02 uses `origin: external, class: D2` (`02:519`); `external` maps to `counterparty` (decision L).

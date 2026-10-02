@@ -1,9 +1,8 @@
 // Package outbox is the write-ahead effect outbox: Operation IDs, attempts, and the reconciler
 // (docs/vision-v3/09a-ENGINEERING.md §7, DR-26).
 //
-// B0-17b freezes this surface and its done-tests (outbox_donetest_test.go, build tag
-// donetest). The implementation is B1-12's; until it lands every entry point returns
-// ErrNotImplemented and the done-tests fail red.
+// B0-17b froze this surface and its done-tests (outbox_donetest_test.go, build tag donetest);
+// B1-12 implements it over the Journal (store.go).
 //
 // The outbox persists under a directory handed to Open. The done-tests crash it for real: a
 // worker process is SIGKILLed at a named Point and the next life is another process opening
@@ -19,9 +18,6 @@ import (
 	"errors"
 	"time"
 )
-
-// ErrNotImplemented is returned by every entry point until B1-12 lands.
-var ErrNotImplemented = errors.New("outbox: not implemented")
 
 // ErrUncertain: the Operation's last attempt is uncertain (or handed to a human) and is not
 // re-dispatched. Recovery reconciles first, by class; it never re-dispatches blindly (§7).
@@ -127,8 +123,9 @@ type Outbox interface {
 	// ErrUncertain with no provider call.
 	Dispatch(ctx context.Context, id string) (Operation, error)
 	// Reconcile resolves every Dispatching or Uncertain Operation by class: Present ->
-	// Confirmed, Absent -> Failed (eligible for a next attempt), Unknown -> stays Uncertain;
-	// at_most_once never resolves by itself and moves to Human.
+	// Confirmed, Absent -> Failed (eligible for a next attempt), Unknown -> stays Uncertain until
+	// UncertainDeadline after the attempt began, then Human; at_most_once never resolves by itself
+	// and moves to Human. It never dispatches.
 	Reconcile(ctx context.Context) error
 	// Get reads an Operation by ID.
 	Get(ctx context.Context, id string) (Operation, error)
@@ -136,5 +133,5 @@ type Outbox interface {
 
 // Open opens (creating if needed) the outbox persisted under dir.
 func Open(dir string, d Deps) (Outbox, error) {
-	return nil, ErrNotImplemented
+	return open(dir, d)
 }

@@ -17,14 +17,27 @@
         "permission": "informs",
         "exportable": true,
         "taint": "untrusted",
-        "provenance": [
-          {
-            "source": "crm:cust_812",
-            "human_principal": "founder"
+        "provenance": {
+          "sources": [
+            {
+              "ref": "crm:cust_812"
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Support Agent",
+            "family": "codex"
+          },
+          "human_principal": {
+            "id": "person_founder",
+            "role": "founder"
           }
-        ],
+        },
         "consent_scope": "cs_panel_3",
-        "confidence": 0,
+        "confidence": {
+          "rung": "E1",
+          "p": 0
+        },
         "subjects": [
           "subj_812"
         ],
@@ -47,7 +60,14 @@
         "permission": "none",
         "exportable": false,
         "taint": "clean",
-        "provenance": [],
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel",
+            "family": "system"
+          }
+        },
         "revocation_epoch": 0
       }
     },
@@ -80,14 +100,27 @@
           "permission": "informs",
           "exportable": true,
           "taint": "untrusted",
-          "provenance": [
-            {
-              "source": "crm:cust_812",
-              "human_principal": "founder"
+          "provenance": {
+            "sources": [
+              {
+                "ref": "crm:cust_812"
+              }
+            ],
+            "derived_from": [],
+            "author": {
+              "title": "Support Agent",
+              "family": "codex"
+            },
+            "human_principal": {
+              "id": "person_founder",
+              "role": "founder"
             }
-          ],
+          },
           "consent_scope": "cs_panel_3",
-          "confidence": 0,
+          "confidence": {
+            "rung": "E1",
+            "p": 0
+          },
           "subjects": [
             "subj_812"
           ],
@@ -136,7 +169,14 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "schema": 1,
@@ -182,14 +222,27 @@
           "permission": "informs",
           "exportable": true,
           "taint": "untrusted",
-          "provenance": [
-            {
-              "source": "crm:cust_812",
-              "human_principal": "founder"
+          "provenance": {
+            "sources": [
+              {
+                "ref": "crm:cust_812"
+              }
+            ],
+            "derived_from": [],
+            "author": {
+              "title": "Support Agent",
+              "family": "codex"
+            },
+            "human_principal": {
+              "id": "person_founder",
+              "role": "founder"
             }
-          ],
+          },
           "consent_scope": "cs_panel_3",
-          "confidence": 0,
+          "confidence": {
+            "rung": "E1",
+            "p": 0
+          },
           "subjects": [
             "subj_812"
           ],
@@ -236,7 +289,14 @@
           "permission": "none",
           "exportable": false,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "budget": {},
@@ -331,7 +391,14 @@
           "permission": "may_authorise",
           "exportable": true,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "approvals": [
@@ -369,7 +436,14 @@
           "permission": "may_authorise",
           "exportable": true,
           "taint": "clean",
-          "provenance": [],
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
           "revocation_epoch": 0
         },
         "approvals": [],

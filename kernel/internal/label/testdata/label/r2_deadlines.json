@@ -1,0 +1,283 @@
+{
+  "cases": [
+    {
+      "name": "later-date",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2028-06-30T00:00:00Z"
+      ],
+      "want": "2028-06-30T00:00:00Z",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention); 09a-ENGINEERING.md:670 (a join takes the longest retention)"
+    },
+    {
+      "name": "instant-not-text",
+      "deadlines": [
+        "2027-01-01T00:00:00+02:00",
+        "2026-12-31T23:30:00Z"
+      ],
+      "want": "2026-12-31T23:30:00Z",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention); 09a-ENGINEERING.md:670 (a join takes the longest retention)"
+    },
+    {
+      "name": "negative-offset",
+      "deadlines": [
+        "2027-01-01T00:00:00-05:00",
+        "2027-01-01T04:00:00Z"
+      ],
+      "want": "2027-01-01T00:00:00-05:00",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention); 09a-ENGINEERING.md:670 (a join takes the longest retention)"
+    },
+    {
+      "name": "fraction",
+      "deadlines": [
+        "2027-01-01T00:00:00.5Z",
+        "2027-01-01T00:00:00Z"
+      ],
+      "want": "2027-01-01T00:00:00.5Z",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention); 09a-ENGINEERING.md:670 (a join takes the longest retention)"
+    },
+    {
+      "name": "leap-day",
+      "deadlines": [
+        "2028-02-29T00:00:00Z",
+        "2027-01-01T00:00:00Z"
+      ],
+      "want": "2028-02-29T00:00:00Z",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention); 09a-ENGINEERING.md:670 (a join takes the longest retention)"
+    },
+    {
+      "name": "offset-23-59",
+      "deadlines": [
+        "2027-01-02T00:00:00+23:59",
+        "2027-01-01T00:00:00Z"
+      ],
+      "want": "2027-01-02T00:00:00+23:59",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention); 09a-ENGINEERING.md:670 (a join takes the longest retention)"
+    },
+    {
+      "name": "single-digit-hour",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T1:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "comma-fraction",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00,5Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "offset-hour-24",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00+24:00"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "feb-30",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2026-02-30T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "feb-29-non-leap",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-02-29T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "month-13",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-13-01T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "day-00",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-00T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "lowercase-t",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01t00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "lowercase-z",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "space-separator",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01 00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "hour-24",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T24:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "minute-60",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:60:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "second-61",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:61Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "date-only",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "no-offset",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "single-digit-month",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-1-01T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "offset-no-colon",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00+0200"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "empty-fraction",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00.Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "signed-year",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "+2027-01-01T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "no-seconds",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "trailing-space",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00Z "
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "offset-minute-60",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T00:00:00+01:60"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "word",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "never"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: a retention.deadline orders only as RFC 3339 with 'T', and 'Z' or ±hh:mm, uppercase, a valid calendar date, hour and offset hour < 24; anything else is undecided; 09a-ENGINEERING.md:601 (deadline, computed); DR-LABEL-RECONCILE:141 (O, the longest retention)"
+    },
+    {
+      "name": "partial-deadline",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        null
+      ],
+      "want": "undecided",
+      "cite": "DR-LABEL-RECONCILE:171 (a deadline against an absent one is unordered, OPEN); orchestrator ruling 2026-10-02, B1-26 impl review r2"
+    },
+    {
+      "name": "no-deadline",
+      "deadlines": [
+        null,
+        null
+      ],
+      "want": "",
+      "cite": "09a-ENGINEERING.md:601 (deadline optional, never implied)"
+    }
+  ]
+}

@@ -30,9 +30,8 @@
 //   - Every other integer is a JSON number held to the JavaScript safe range (z.int()). A uint64 in Go
 //     (Event.seq, Label.revocation_epoch) is >= 0 here; nothing else gets a bound nouns.go does not state.
 //     An integer above 2^53-1 is refused here by decision (orchestrator, review round 1); Go aligns.
-//     ACCEPTED MISMATCH: the integer texts 1.0, 1e0 and -0 are value-equal to 1, 1 and 0 once
-//     JSON.parse has read them, so Userland cannot see the spelling and accepts them where Go's int
-//     decoding may refuse; encode writes the canonical form (1, 1, 0). No code addresses this.
+//     On the TEXT path (decodeText) a number field refuses 1.0, 1e0, -0, 0.0 and 0.50 as Go's
+//     wire.Integer and wire.Number do (B1-26 r2, r3); the object path cannot see the spelling.
 //   - A type the canon names but does not define (Actor, Rationale, Target, Budget, TokenSet,
 //     SourceRef, Event.data) is any JSON value, copied key for key (see plainCopy): required where
 //     09a §3 requires it, and otherwise unchecked, as nouns.go says.
@@ -40,7 +39,6 @@
 //     a getter, a sparse array, and the rest that plainCopy lists.
 //   - A ULID (Event.id, Event.causation_id) is held to the *Id rule, non-empty, and no further: the
 //     wire rules state no ULID syntax check.
-import { types } from 'node:util';
 import { z } from 'zod';
 import type { ZodType } from 'zod';
 
@@ -98,16 +96,11 @@ const Id = z.string().min(1);
 // "" by their type; the two plain strings, Label.retention.deadline and Receipt.provider_ref, use this.
 const OptionalString = z.string().min(1).optional();
 
-// THE SAFE-INTEGER WIRE RULE (orchestrator decision, review round 2; I-JSON, RFC 7493 §2.2): a JSON
-// number whose value is an integer outside ±(2^53-1) is refused EVERYWHERE on the wire, including
-// inside raw fields. JSON.parse rounds such a number silently (9007199254740993 reads as
-// 9007199254740992), so accepting it would re-encode different bytes from those the Kernel hashed.
-// Every finite double of magnitude >= 2^53 is an integer, so on a parsed value the rule reduces to
-// |v| <= 2^53-1 for integers. A non-finite value (1e400 parses to Infinity) has no JSON text and is
-// refused as well.
-function isSafeWireNumber(v: number): boolean {
-  return Number.isFinite(v) && (!Number.isInteger(v) || Number.isSafeInteger(v));
-}
+
+// The plain-JSON helpers are wire.ts's, shared with label.ts; the label is label.ts's LabelV1 itself
+// (DR-LABEL-RECONCILE:61: one label/1 reader), not a second copy of its schema.
+import { isSafeWireNumber, plainIssue, wire, wireJSONSchema } from './wire.ts';
+import { LabelShape, LabelV1 } from './label.ts';
 
 const NUMBER_TEXT = /^-?(0|[1-9][0-9]*)(?:\.([0-9]+))?(?:[eE]([+-]?[0-9]+))?$/;
 
@@ -155,12 +148,22 @@ export class WireError extends Error {
 
 // parseWire is THE way to read wire JSON text in Userland. It is JSON.parse with a reviver that reads
 // each number's source text (context.source, Node >= 21) and refuses an integer outside ±(2^53-1)
-// BEFORE JSON.parse's rounding can hide it, so the refusal names the number as written. It throws
-// SyntaxError for text that is not JSON and WireError for an unsafe number. The value it returns is
-// freshly built by JSON.parse: plain objects and arrays, nobody else's references, and an own
-// "__proto__" key kept as a key.
+// BEFORE JSON.parse's rounding can hide it, so the refusal names the number as written. It then
+// scans the text once more and refuses a key that appears twice in one object, at any depth and
+// inside raw fields too (Go's wire.ScanWire): JSON.parse keeps the last copy silently, so which copy
+// wins would be a property of the parser, not of the bytes. The same scan refuses a lone surrogate,
+// escaped or raw, in any key or string (Go's wire.Compact; B1-26 r3). It throws SyntaxError for text
+// that is not JSON and WireError for an unsafe number, a duplicate key or a lone surrogate. The value it returns is freshly
+// built by JSON.parse: plain objects and arrays, nobody else's references, and an own "__proto__"
+// key kept as a key.
 export function parseWire(text: string): unknown {
-  return JSON.parse(text, (key: string, value: unknown, context?: { source?: string }) => {
+  return readWire(text).value;
+}
+
+type Path = (string | number)[];
+
+function readWire(text: string): { value: unknown; spelled: { path: Path; source: string }[] } {
+  const value = JSON.parse(text, (key: string, value: unknown, context?: { source?: string }) => {
     if (typeof value !== 'number') return value;
     const source = context?.source;
     if (source === undefined) {
@@ -179,72 +182,124 @@ export function parseWire(text: string): unknown {
     }
     return value;
   });
+  return { value, spelled: scanText(text) };
 }
 
-// decodeText(schema, text) = schema.decode(parseWire(text)). PREFER IT over schema.decode(object):
-// an object that came from a plain JSON.parse has already been rounded. The object path still refuses
-// every unsafe integer it can see (the rounded value is itself unsafe), but it cannot tell the
-// number's original spelling, and it trusts its caller to have parsed the right bytes.
-export function decodeText<S extends ZodType>(schema: S, text: string): z.output<S> {
-  return schema.decode(parseWire(text)) as z.output<S>;
-}
+const NUMBER_AT = /-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/y;
 
-type PlainResult = { ok: true; value: unknown } | { ok: false; path: PropertyKey[]; message: string };
-
-// plainCopy checks that v is a PLAIN JSON tree, the shape JSON.parse builds, and returns a fresh copy
-// of it. Plain means: null, a boolean, a string, a number within the safe-integer rule, a dense
-// Array whose only own keys are its indices and "length", or an object with prototype
-// Object.prototype or null whose own keys are all enumerable data properties holding plain values.
-// Refused, without running any of their code: a Proxy (its traps could answer differently on every
-// read), a getter or setter, a sparse array (JSON.stringify writes its holes as null), a symbol key,
-// a non-enumerable key (JSON.stringify skips it), a cycle, and anything else (undefined, bigint,
-// function, Date, Map, class instances).
-// The copy is built with defineProperty, never assignment, so an own "__proto__" key stays a key.
-// Assignment is how z.json() lost it: assigning "__proto__" sets a prototype, not a key.
-function plainCopy(v: unknown, at: PropertyKey[] = [], open: Set<object> = new Set()): PlainResult {
-  const fail = (message: string): PlainResult => ({ ok: false, path: at, message });
-  if (v === null || typeof v === 'boolean' || typeof v === 'string') return { ok: true, value: v };
-  if (typeof v === 'number') {
-    return isSafeWireNumber(v) ? { ok: true, value: v } : fail('a number outside ±(2^53-1) is refused on the wire');
-  }
-  if (typeof v !== 'object') return fail(`a ${typeof v} is not JSON`);
-  if (types.isProxy(v)) return fail('a Proxy is not a plain JSON value');
-  if (open.has(v)) return fail('a cycle has no JSON text');
-  const keys = Reflect.ownKeys(v);
-  if (keys.some((k) => typeof k === 'symbol')) return fail('a symbol key is not JSON');
-  open.add(v);
-  try {
-    const isArray = Array.isArray(v);
-    const proto = Object.getPrototypeOf(v);
-    if (isArray ? proto !== Array.prototype : proto !== Object.prototype && proto !== null) {
-      return fail('not a plain object or array');
+// scanText walks text that JSON.parse has already accepted. It throws WireError on a key that
+// appears twice in one object (keys compared after unescaping, as Go's decoder compares them) and on
+// a string or key that is not well-formed UTF-16 (a lone surrogate, written raw or as an escape). It
+// returns every number literal whose spelling is not the one JSON.stringify writes for its value
+// (1.0, 0.50, 5e-1, -0), with its path. Iterative, so nesting depth costs no stack; linear in the
+// text.
+function scanText(text: string): { path: Path; source: string }[] {
+  const spelled: { path: Path; source: string }[] = [];
+  const path: Path = [];
+  const frames: ({ keys: Set<string> } | { index: number })[] = [];
+  let i = 0;
+  const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
+  const readString = (): string => {
+    const start = i++;
+    while (text[i] !== '"') i += text[i] === '\\' ? 2 : 1;
+    i++;
+    const v: string = JSON.parse(text.slice(start, i));
+    if (!v.isWellFormed()) {
+      throw new WireError(`a string holds a lone surrogate${path.length ? ` under ${path.join('.')}` : ''}`);
     }
-    const out: Record<string, unknown> | unknown[] = isArray ? [] : {};
-    if (isArray) {
-      const n = (v as unknown[]).length;
-      if (keys.length !== n + 1) return fail('an array holds a hole or a named property');
-      for (let i = 0; i < n; i++) {
-        if (!Object.hasOwn(v, i)) return fail(`an array has a hole at ${i}`);
+    return v;
+  };
+  const readKey = (frame: { keys: Set<string> }) => {
+    ws();
+    const key = readString();
+    if (frame.keys.has(key)) {
+      throw new WireError(`the key ${JSON.stringify(key)} appears twice in one object${path.length ? ` under ${path.join('.')}` : ''}`);
+    }
+    frame.keys.add(key);
+    ws();
+    i++; // ':'
+    path.push(key);
+  };
+  for (;;) {
+    // A value starts here.
+    ws();
+    const c = text[i];
+    if (c === '{' || c === '[') {
+      i++;
+      ws();
+      if (text[i] === (c === '{' ? '}' : ']')) {
+        i++;
+      } else if (c === '{') {
+        const frame = { keys: new Set<string>() };
+        frames.push(frame);
+        readKey(frame);
+        continue;
+      } else {
+        frames.push({ index: 0 });
+        path.push(0);
+        continue;
+      }
+    } else if (c === '"') {
+      readString();
+    } else if (c === 't' || c === 'n') {
+      i += 4;
+    } else if (c === 'f') {
+      i += 5;
+    } else {
+      NUMBER_AT.lastIndex = i;
+      const source = NUMBER_AT.exec(text)![0];
+      i += source.length;
+      if (JSON.stringify(Number(source)) !== source) spelled.push({ path: path.slice(), source });
+    }
+    // The value has ended: close every container it ends, then move to the next member.
+    for (;;) {
+      const frame = frames.at(-1);
+      if (frame === undefined) return spelled;
+      path.pop();
+      ws();
+      if (text[i++] === ',') {
+        if ('keys' in frame) readKey(frame);
+        else path.push(++frame.index);
+        break;
+      }
+      frames.pop(); // '}' or ']'
+    }
+  }
+}
+
+// decodeText(schema, text) = schema.decode(parseWire(text)), and one rule more. PREFER IT over
+// schema.decode(object): an object that came from a plain JSON.parse has already been rounded and has
+// lost a duplicate key and the spelling of each number. The object path still refuses every unsafe
+// integer it can see (the rounded value is itself unsafe), but it trusts its caller to have parsed
+// the right bytes.
+//
+// THE NUMBER-SPELLING RULE (orchestrator rulings 2026-10-02, B1-26 impl reviews r2 and r3), Go's
+// wire.IntegerText and wire.Number: a typed number field (an integer, or confidence.p) reads only the
+// spelling encode writes back, so 1.0, 3e0, -0, 0.50 and 5e-1 are refused there, and encode(decode(t))
+// is t. A raw field accepts any spelling, as Go's wire.AnyJSON does. Userland's schema says which
+// fields are typed numbers, so the rule asks it: each such literal is read again as a string, and if
+// the schema then refuses the value at exactly that path, the field is a number field and the
+// literal is refused.
+export function decodeText<S extends ZodType>(schema: S, text: string): z.output<S> {
+  const { value, spelled } = readWire(text);
+  const out = schema.decode(value) as z.output<S>;
+  if (spelled.length === 0) return out;
+  const probe: any = JSON.parse(text);
+  for (const { path } of spelled) {
+    let holder = probe;
+    for (const k of path.slice(0, -1)) holder = holder[k];
+    Object.defineProperty(holder, path.at(-1)!, { value: 'not a number', writable: true, enumerable: true, configurable: true });
+  }
+  const r = schema.safeDecode(probe);
+  if (!r.success) {
+    const same = (a: readonly PropertyKey[], b: Path) => a.length === b.length && a.every((k, j) => String(k) === String(b[j]));
+    for (const { path, source } of spelled) {
+      if (r.error.issues.some((iss) => same(iss.path, path))) {
+        throw new WireError(`${source} at ${path.join('.')} is not written as encode writes it; a number field reads only the canonical spelling`);
       }
     }
-    for (const k of keys as string[]) {
-      if (isArray && k === 'length') continue;
-      const d = Object.getOwnPropertyDescriptor(v, k)!;
-      if (!('value' in d)) return fail(`key ${JSON.stringify(k)} is a getter or setter`);
-      if (!d.enumerable) return fail(`key ${JSON.stringify(k)} is not enumerable`);
-      const r = plainCopy(d.value, [...at, isArray ? Number(k) : k], open);
-      if (!r.ok) return r;
-      Object.defineProperty(out, k, { value: r.value, writable: true, enumerable: true, configurable: true });
-    }
-    return { ok: true, value: out };
-  } finally {
-    open.delete(v);
   }
-}
-
-function plainIssue(v: unknown, ctx: z.core.$RefinementCtx<unknown>) {
-  const r = plainCopy(v);
-  if (!r.ok) ctx.addIssue({ code: 'custom', message: r.message, path: r.path, input: v });
+  return out;
 }
 
 // A type the canon names but does not define: any JSON value, carried unchecked. Inside a noun, the
@@ -274,29 +329,6 @@ const OptionalRaw = z
   .optional();
 
 const Uint = z.int().min(0);
-
-const LabelShape = z.strictObject({
-  schema: z.literal('label/1'),
-  origin: z.enum(['founder', 'system_of_record', 'internal', 'public_web', 'customer', 'counterparty', 'synthetic']),
-  dclass: z.enum(['D0', 'D1', 'D2', 'D3', 'D4']),
-  boundary: z.enum(['open', 'guarded', 'sealed']),
-  venture: Id, // a VentureId or "portfolio"; both are non-empty strings
-  retention: z.strictObject({
-    class: z.enum(['journal_metadata', 'operational', 'personal', 'client', 'synthetic']),
-    hold: z.enum(['none', 'obligation', 'legal', 'safety', 'pinned']),
-    deadline: OptionalString,
-  }),
-  permission: z.enum(['none', 'informs', 'may_authorise']),
-  exportable: z.boolean(),
-  taint: z.enum(['clean', 'untrusted', 'quarantined']),
-  provenance: z.array(Raw),
-  consent_scope: Id.optional(),
-  // The safe-integer wire rule as bounds: past ±(2^53-1) every double is an integer, so the bounds
-  // are the whole rule and the emitted JSON Schema carries them.
-  confidence: z.number().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER).optional(),
-  subjects: z.array(Id).min(1).optional(), // omitempty in Go: an empty list is written by omitting it
-  revocation_epoch: Uint,
-});
 
 const EventShape = z.strictObject({
   id: Id,
@@ -389,25 +421,9 @@ const OperationShape = z.strictObject({
   state: z.enum(['open', 'settled', 'failed', 'compensated', 'human']),
 });
 
-// Each exported noun is its shape behind a plain-copy codec. Decode first refuses a value that is not
-// a plain JSON tree (plainCopy), then validates a FRESH copy: the result shares no object with the
-// caller's input, so a later mutation of either cannot reach the other, and a getter or Proxy cannot
-// answer one way to the check and another way to the read. Encode validates the typed value, then
-// copies the wire form the same way and checks it again.
-// The object path cannot see a number's original text: prefer decodeText, which reads it.
-const shapes = new WeakMap<ZodType, ZodType>();
 
-function wire<S extends ZodType>(shape: S) {
-  const copy = (v: unknown) => {
-    const r = plainCopy(v);
-    return r.ok ? r.value : v; // a refused value never gets here on decode; on encode, the input check refuses it
-  };
-  const noun = z.codec(z.unknown().superRefine(plainIssue), shape as any, { decode: copy, encode: copy });
-  shapes.set(noun, shape);
-  return noun as unknown as z.ZodCodec<z.ZodUnknown, S>;
-}
-
-export const Label = wire(LabelShape);
+// Label is LabelV1 (label.ts), the same object: it accepts and refuses exactly what LabelV1 does.
+export const Label = LabelV1;
 export const Event = wire(EventShape);
 export const Job = wire(JobShape);
 export const Lease = wire(LeaseShape);
@@ -420,6 +436,5 @@ export const Operation = wire(OperationShape);
 // within it each codec's input side, so a bigint is the decimal-string pattern, not a bigint. A
 // schema that cannot be represented throws rather than emitting a looser document.
 export function toJSONSchema(schema: ZodType): Record<string, unknown> {
-  const target = shapes.get(schema) ?? schema;
-  return z.toJSONSchema(target, { io: 'input', target: 'draft-2020-12', unrepresentable: 'throw' }) as Record<string, unknown>;
+  return wireJSONSchema(schema);
 }
