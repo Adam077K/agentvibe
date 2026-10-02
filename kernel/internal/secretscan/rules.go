@@ -74,8 +74,14 @@ var hexRE = regexp.MustCompile(`^[0-9a-fA-F]+$`)
 // failed whenever its sample drew one. Each short knot sits 0.25-0.5 bits below the measured minimum;
 // the curves end at the old flat floors, so no value reported before is unreported now.
 // TestAssignedSecretRandomMissRate asserts 0 misses over 3 seeds x all 6 set orders x 3000 values
-// per set (hex, alphanumeric, base64; 54,000 per set, lengths 16-64); a 10M-value sweep per
-// alphabet also missed none.
+// per set (hex, alphanumeric, base64, lengths 16-64). That is 54,000 draws per set but 27,000
+// distinct values: pick takes one generator draw per character whatever the alphabet, so a set
+// drawn in the same position under the same seed repeats its values (3 seeds x 3 positions x 3000).
+// A 10M-value sweep per alphabet also missed none. Informational, not asserted: other alphabets
+// are not at 0. Measured 2026-10-02, 5M values per seed, lengths 16-64, 3 seeds: base32 missed
+// 2, 3 and 1; decimal (which is all hex digits, so it gets the hex floor) missed 4, 5 and 7.
+// TestFloor* in floor_test.go pin the floors themselves: never above the old flat floors, the
+// value at each length, and detect versus miss on either side of each.
 // The cost, stated: more non-secret values assigned to secret names are reported — short, mildly
 // repetitive ones such as "deadbeefdeadbeef" or "changeme-changeme". Measured over this repository's
 // 1,979 tracked text files (704,630 lines): the same 32 lines are flagged under both the old floors
