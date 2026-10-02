@@ -112,10 +112,39 @@ The orchestrator relayed these. They answer the three items that the final revie
 - **I. Anyone writing on a customer's behalf gets `origin: customer`** (founder, 2026-10-01). An example is the
   customer's accountant in `13:927`, identified at `13:866`.
 
+## Founder decisions, round 5 (founder, 2026-10-02)
+
+The orchestrator relayed these from the main session, where the founder answered through AskUserQuestion. They
+answer gaps the B1-26 done-test builder found at `0268a8b`. The builder did not see the exchange itself. The
+orchestrator called them A–C; they are lettered J–L here so they do not collide with round 2's A–C.
+
+- **J. In a join, the strictest value wins for `dclass`, `retention`, `exportable` and `consent_scope`** (founder,
+  2026-10-02): the highest D-class, the longest retention, `exportable` only if every input is exportable, and the
+  narrowest consent. Written into 09a §12's Join bullet.
+- **K. A customer's HumanTask that is not a panel gets `origin: customer`** (founder, 2026-10-02). A `participant`
+  task is a panel, so it gets `counterparty`, as round 2's decision B already said for taste panels. Written into
+  09a §12's channel row.
+- **L. The legacy origins `participant` and `external` both map to `counterparty`** (founder, 2026-10-02). They
+  are the stragglers listed under "Not done" below (`13:1202,1553`; `02:519`). Written as a row of 09a §12's
+  "06 → wire" table.
+
 ## OPEN
 
-None. Every item raised at `44f3136`, `a1eeed7`, `2777a0d` and `0b372b0` is closed, either by the canon or by a
-founder decision recorded above.
+Raised by the B1-26 done-test builder on 2026-10-02 and NOT decided. The done-tests pin none of them.
+
+- **Retention order.** Decision J says the longest retention wins. 09a §11.6 orders only `journal_metadata` (life
+  of the organisation) above `operational` (90 days). `personal` ("shorter of contract and legal need"), `client`
+  ("per contract") and `synthetic` ("twin lifetime") have no stated order, and neither do two different non-`none`
+  holds, nor a deadline against an absent one. The tests pin `journal_metadata` over `operational`, a hold over
+  `none`, and the later of two deadlines.
+- **Two different consent scopes.** Decision J says the narrowest consent wins, but a `ConsentScopeRef` is an opaque
+  reference and the canon defines no intersection. The tests pin only that a scope survives a join with inputs that
+  carry none.
+- **The rest of the join.** No rule covers `origin`, `venture`, `subjects` or `revocation_epoch` across inputs that
+  differ. None says whether `quarantined` outranks `untrusted`, nor how `open` and `guarded` combine. The canon
+  states only that any non-clean input taints the output, and that `sealed` is inherited (06 L8).
+- **A HumanTask done on a customer's behalf.** Decision K covers the customer's own HumanTask. It does not cover the
+  HumanTask of someone acting for a customer (decision I).
 
 **06 §8 retention wording: resolved, not open.** §8 now says the hold picks the verbs, which matches §4 and 09a §12's
 mapping rows. The canon did not truly conflict; §8 still had the pre-DR-68 names.
@@ -124,5 +153,5 @@ mapping rows. The canon did not truly conflict; §8 still had the pre-DR-68 name
 
 - Stragglers elsewhere still use pre-wire names:
   - 13 uses `authority:` and `data_class:` (`13:185,812,927,1281,1312`).
-  - 13 uses `origin: participant` (`13:1202,1553`), which should be `counterparty` under decision 3.
-  - 02 uses `origin: external, class: D2` (`02:519`).
+  - 13 uses `origin: participant` (`13:1202,1553`), which maps to `counterparty` (decisions 3 and L).
+  - 02 uses `origin: external, class: D2` (`02:519`); `external` maps to `counterparty` (decision L).
