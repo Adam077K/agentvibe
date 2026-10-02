@@ -144,25 +144,35 @@ AskUserQuestion. The builder did not see the exchange itself.
 - **P. A HumanTask done on a customer's behalf gets `origin: customer`** (founder, 2026-10-02), as decision I
   already gives other material written on a customer's behalf.
 
+## Founder decisions, round 7 (founder, 2026-10-02)
+
+The orchestrator relayed these from the main session, where the founder answered the round-6 OPEN items through
+AskUserQuestion. The builder did not see the exchange itself.
+
+- **Q. The origin trust order is founder > system_of_record > internal > customer > counterparty** (founder,
+  2026-10-02). It was the orchestrator's proposal under N; it is now confirmed, and a join takes the last of these.
+- **R. Retention-class strictness is personal > client > operational > synthetic** (founder, 2026-10-02), and a
+  join takes the strictest. Among the holds other than `legal`, the longer-lasting hold is the stricter.
+- **S. Two different consent refs refuse the join** (founder, 2026-10-02). Only identical refs join. This replaces
+  O's "intersection" for opaque refs.
+- **T. Founder and portfolio data may join a venture's data, and the result belongs to that venture** (founder,
+  2026-10-02). Venture data never flows up to `founder` or `portfolio` without the founder's approval.
+
 ## OPEN
 
 Raised by the B1-26 done-test builder on 2026-10-02 and NOT decided.
 
-- **The origin trust order (N).** The canon states no order of origins by trust; L5 says only that `founder` and
-  `system_of_record` alone reach `may_authorise`. The orchestrator PROPOSED founder > system_of_record > internal >
-  customer > counterparty, and the done-tests pin that proposal, marked PROVISIONAL, until the founder confirms or
-  replaces it. `public_web` and `synthetic` have no place in it and are not tested.
-- **Retention order beyond the clear cases (O).** By 09a §11.6, `journal_metadata` (life of the organisation)
-  outlasts every other class, and a `legal` hold outranks every other hold. `operational` (90 days), `personal`
-  ("shorter of contract and legal need"), `client` ("per contract") and `synthetic` ("twin lifetime") have no fixed
-  order, nor do `obligation`, `safety` and `pinned`, nor a deadline against an absent one. The tests pin
-  `journal_metadata` over the rest, `legal` over the rest, any hold over `none`, and the later of two deadlines.
-- **Consent intersection (O).** A `ConsentScopeRef` is an opaque reference, and the canon defines no scope contents,
-  so no code can compute an intersection of two different refs or tell that it is empty. The tests pin only that a
-  scope survives a join with itself and with inputs that carry none.
-- **Which values are ventures (M).** Whether `portfolio` or `founder` joined with a venture's data counts as
-  "different ventures", and what form the founder's approval takes on the wire, are not stated. The tests pin only
-  that two different VentureIds refuse to join.
+- **`public_web` and `synthetic` in the origin order.** Q orders five origins; these two have no place in it and
+  are not tested in a join.
+- **Where `journal_metadata` sits.** R orders four retention classes by strictness. O ordered by how long data is
+  kept, which put `journal_metadata` (life of the organisation, 09a §11.6) first; whether strictness keeps it there
+  is not stated, so the tests no longer pin it.
+- **Which non-legal hold lasts longer.** R makes the longer hold the stricter, but `obligation`, `safety` and
+  `pinned` carry no duration on the wire. A deadline against an absent one is likewise unordered.
+- **The wire form of a founder approval.** M and T let the founder approve a cross-venture join, or venture data
+  flowing up to `founder` or `portfolio`. The canon names no approval record for this (it does not reference one by
+  Decision id), so the approved path is untested.
+- **`founder` joined with `portfolio`** with no venture input: T does not say which owns the result.
 
 ## Not done (out of scope, mapping already decided)
 
