@@ -339,3 +339,9 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   - **Founder rulings:**
     - B1-06 F: Task is an alias of Agent. When funded, bare Agent or Agent(x) is allowed.
     - B1-12 C: a dead worker under 15 min whose call is Absent after the lag is retried once.
+- **2026-10-02:** opened #160 and #161.
+  - **#160 B1-06:** Opus PASS at aa830cd, after the r1–r7 tests and rulings A–F.
+    - LOW follow-up: the known-tool list misses about 14 CLI tools (WebSearch, NotebookEdit, TaskStop, KillShell alias).
+    - LOW follow-up: MCP-name case variants are not checked.
+  - **#161 B1-26:** Opus PASS at 8f42429, after the r1–r4 tests.
+  - **Merge train:** 158, 159, 160, 161. Every PR's session files still read `qa_verdict: PENDING`; the founder must flip them, because the orchestrator was refused.
