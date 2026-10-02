@@ -25,6 +25,28 @@
 # by design. NOT asserted (a design decision, not this brief's): a next Dispatch that runs BEFORE
 # the late Receipt lands still double-sends unless the in-flight attempt is fenced (a lease, or
 # Absent not accepted as proof while an attempt may be in flight).
+#
+# RE-FREEZE r3 2026-10-02 (B1-12): 2026-10-02 re-freeze r3 after Opus review of f38dc0d (timeout-
+# before-landing double effect, hung call never escalates, r2 late-receipt test survives lock
+# removal, global-lock mutant). Added kernel/internal/outbox/outbox_r3_donetest_test.go; rounds 1-2
+# unchanged (hashes identical). Base f38dc0d. All edits to store.go in $TMPDIR copies only.
+#   T1 TimeoutBeforeLandingIsOneEffect   FAILS on f38dc0d (2 effects)  green under control C-lag
+#   T2 KilledBeforeLandingIsOneEffect    FAILS on f38dc0d (2 effects)  green under control C-lag
+#   T3 HungCallReachesHumanByTheDeadline FAILS on f38dc0d (dispatching) green under control C-hung
+#   T4 OperationsDoNotBlockEachOther     kills M-global-lock (one lock file for every Operation),
+#                                        alone on base C-lag+C-hung
+#   T5 NoSecondSendWhileInFlight         kills M-no-lock (flock skipped) on f38dc0d; on base
+#                                        C-lag+C-hung the lag window is an equivalent guard and T5
+#                                        passes, while T3 and T4 still kill M-no-lock there
+# Controls (not proposals): C-lag treats Absent less than 30s after the attempt began as Unknown;
+# C-hung records Human for a locked Dispatching attempt past UncertainDeadline. With both, all 18
+# package tests pass (rounds 1-3 and store_test.go), so T1-T5 are satisfiable together.
+# OPEN: (1) canon gives no number for visibility_lag_s and does not say whether the Provider
+# (outbox.go Presence doc) or the outbox applies it; T1/T2 read at zero elapsed time, so any positive
+# outbox-side window passes, and round 1 caps it below 70s at a 30s lag. (2) canon gives no number
+# for the deadline (§7 "deadline before proof"); T3 uses the implementation's UncertainDeadline.
+# Observed, not ours: with the lock removed, store_test.go's TestRedispatchBeforeLateReceiptIsRefused
+# hangs until the package timeout rather than failing.
 register: B0-17b
 jobs:
   - id: B1-08
@@ -37,3 +59,5 @@ jobs:
         sha256: 55b7b239cec0793b2a44cb66bea374a98de66f6bbade1dda6b621bd2a804b9d1
       - path: kernel/internal/outbox/outbox_r2_donetest_test.go
         sha256: d3e65a0424acab1036ab671897d059bde56f5fa20761fcea66f759f61bae136c
+      - path: kernel/internal/outbox/outbox_r3_donetest_test.go
+        sha256: 6f956dec5fe6d568f87f851b9a2554b8adb083222b04b4a72707241fdc7b2c18
