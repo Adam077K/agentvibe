@@ -413,6 +413,16 @@ func TestB1_06_PinnedArgv(t *testing.T) {
 		}
 	})
 
+	// Review r3: an inner space inside a rule's parentheses is one tool rule, passed verbatim.
+	t.Run("an inner space inside parentheses is one rule", func(t *testing.T) {
+		s := spec()
+		s.ToolLease = ToolLease{Allowed: []string{"Read", "Bash(git diff:*)"}, Forbidden: []string{"WebFetch"}}
+		allowed, forbidden := tools(t, s)
+		if !slices.Equal(allowed, []string{"Read", "Bash(git diff:*)"}) || !slices.Contains(forbidden, "Agent") {
+			t.Errorf("allowed %q forbidden %q; want [Read Bash(git diff:*)] and Agent forbidden", allowed, forbidden)
+		}
+	})
+
 	t.Run("a spec that cannot fill the pinned line is refused", func(t *testing.T) {
 		const flag = "--dangerously-skip-permissions"
 		cases := map[string]func(*LaunchSpec){
@@ -460,6 +470,14 @@ func TestB1_06_PinnedArgv(t *testing.T) {
 			"\" Agent\" padded": func(s *LaunchSpec) {
 				s.ToolLease = ToolLease{Allowed: []string{"Read", " Agent"}, Forbidden: []string{"WebFetch"}}
 			},
+			// The CLI also splits tool lists on whitespace, so a space outside parentheses is two names.
+			"\"Read Agent\" as one element": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Read Agent"}, Forbidden: []string{"WebFetch"}}
+			},
+			"\"Read\\tAgent\" as one element": func(s *LaunchSpec) {
+				s.ToolLease = ToolLease{Allowed: []string{"Read\tAgent"}, Forbidden: []string{"WebFetch"}}
+			},
+			"a space in a forbidden name": func(s *LaunchSpec) { s.ToolLease.Forbidden = []string{"Web Fetch"} },
 			"a comma in a forbidden name": func(s *LaunchSpec) { s.ToolLease.Forbidden = []string{"WebFetch,Bash"} },
 			"a tool both allowed and forbidden": func(s *LaunchSpec) {
 				s.ToolLease = ToolLease{Allowed: []string{"Read", "Bash"}, Forbidden: []string{"Bash"}}
@@ -604,6 +622,9 @@ func TestB1_06_InitExpectHarnessCheck(t *testing.T) {
 			m["mcp_servers"] = []any{map[string]any{"name": "tracker", "status": "connected"}, map[string]any{"name": "docz", "status": "connected"}}
 		},
 		"an MCP server removed": func(m map[string]any) { m["mcp_servers"] = m["mcp_servers"].([]any)[:1] },
+		"an MCP server's status alone": func(m map[string]any) {
+			m["mcp_servers"] = []any{map[string]any{"name": "tracker", "status": "connected"}, map[string]any{"name": "docs", "status": "failed"}}
+		},
 		"an MCP tool renamed, same count": func(m map[string]any) {
 			ts := slices.Clone(m["tools"].([]any))
 			ts[len(ts)-1] = "mcp__docs__fetch"
@@ -650,6 +671,19 @@ func TestB1_06_InitExpectHarnessCheck(t *testing.T) {
 		tr := mustAbortBeforeToolCall(t, c, base, ii+1, "")
 		mustNotAdjudicateHarness(t, c, tr)
 	})
+	// Review r3: a result that arrives without a preceding init aborts or is unresolved; it is
+	// never adjudicated, whatever it carries.
+	t.Run("never adjudicates: a result with no system/init", func(t *testing.T) {
+		nr := fixture(t, "no-init-result.jsonl")
+		for _, s := range [][]byte{nr, join(lines(nr)[:1])} {
+			w := watch(c, s, expect)
+			for _, exit := range []ExitInfo{{}, {Code: 1}} {
+				if o := c.Classify(w.tr, exit); o.Status == Adjudicate || o.Status == Partial || len(o.Output) != 0 {
+					t.Errorf("no init, %d lines, %+v: Classify = %s(%s) output %s; want aborted or unresolved", len(lines(s)), exit, o.Status, o.Reason, o.Output)
+				}
+			}
+		}
+	})
 	t.Run("aborts: a tool call before system/init", func(t *testing.T) {
 		ls := lines(fixture(t, "no-init.jsonl"))
 		tr := mustAbortBeforeToolCall(t, c, ls, 1, expect)
@@ -678,9 +712,20 @@ func TestB1_06_SubtypeMap(t *testing.T) {
 		return join(replaced(success, last, encode(t, m)))
 	}
 
-	// A rate-limit warning is not a block: the run went on and succeeded.
-	warning := []byte(`{"type":"rate_limit_event","rate_limit_info":{"status":"allowed_warning","resetsAt":1759424400,"rateLimitType":"five_hour"},"session_id":"0192f7a4-6f1e-7c3a-9b1d-3c5e7a9b1d3c","uuid":"rl-w"}`)
-	warned := join(append(append(slices.Clone(success[:last]), warning), success[last]))
+	// A line over 4 MiB: the long-line fixture's >1 MiB tool result, grown in place (claude.go:
+	// "a line may be of any length").
+	ll := lines(fixture(t, "long-line.jsonl"))
+	bi := slices.IndexFunc(ll, func(l []byte) bool { return len(l) > 1<<20 })
+	if bi < 0 {
+		t.Fatal("fixture drift: long-line.jsonl has no line over 1 MiB")
+	}
+	huge := slices.Clone(ll)
+	{
+		m := decode(t, ll[bi])
+		c := m["message"].(map[string]any)["content"].([]any)[0].(map[string]any)
+		c["content"] = strings.Repeat(c["content"].(string), 4)
+		huge[bi] = encode(t, m)
+	}
 
 	cases := []struct {
 		name    string
@@ -705,13 +750,9 @@ func TestB1_06_SubtypeMap(t *testing.T) {
 		{"unknown subtype, exit 0", withResult(func(m map[string]any) { m["subtype"] = "ok" }), ExitInfo{}, Unresolved, ReasonUnparsed, "ok"},
 		{"no result event, exit 0", join(success[:last]), ExitInfo{}, Unresolved, ReasonUnparsed, ""},
 		{"truncated result, exit 0", fixture(t, "truncated.jsonl"), ExitInfo{}, Unresolved, ReasonUnparsed, ""},
-		// ENGINE-SPEC §8.3 "Usage/rate limit, either provider → blocked(capacity)". Wire shape
-		// unmeasured (DR-B1-06-ADAPTER-RULINGS, "Also frozen by r2").
-		{"rate limit rejected", fixture(t, "rate-limit.jsonl"), ExitInfo{Code: 1}, Blocked, ReasonCapacity, "success"},
-		{"rate limit rejected, exit 0", fixture(t, "rate-limit.jsonl"), ExitInfo{}, Blocked, ReasonCapacity, "success"},
-		{"rate-limit warning, then success", warned, ExitInfo{}, Adjudicate, "", "success"},
-		// A stream line over 64 KiB is read, not dropped or fatal (review r2).
-		{"a line over 64 KiB, then success", fixture(t, "long-line.jsonl"), ExitInfo{}, Adjudicate, "", "success"},
+		// A stream line of any length is read, not dropped or fatal (review r2, r3).
+		{"a line over 1 MiB, then success", fixture(t, "long-line.jsonl"), ExitInfo{}, Adjudicate, "", "success"},
+		{"a line over 4 MiB, then success", join(huge), ExitInfo{}, Adjudicate, "", "success"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -759,6 +800,42 @@ func TestB1_06_SubtypeMap(t *testing.T) {
 	})
 }
 
+// ---- Founder ruling E (2026-10-02, DR-B1-06-ADAPTER-RULINGS): the rate-limit wire shape is
+// measured first and frozen later; until then any rate-limit or unrecognised signal never counts
+// as a pass (ENGINE-SPEC §8.3 "Usage/rate limit ... → blocked(capacity)"; Rule 10). The event's
+// own fields, including a status of "allowed", buy nothing. ----
+
+func TestB1_06_UnrecognisedSignalNeverPasses(t *testing.T) {
+	c := NewClaude(claudeDigest)
+	expect := golden(t, c)
+	success := lines(fixture(t, "success.jsonl"))
+	last := len(success) - 1
+	streams := map[string][]byte{
+		"status rejected": fixture(t, "unrecognised-signal-rejected.jsonl"),
+		"status allowed":  fixture(t, "unrecognised-signal-allowed.jsonl"),
+		"an unknown type, no fields": join(append(append(slices.Clone(success[:last]),
+			[]byte(`{"type":"capacity_notice","session_id":"0192f7a4-6f1e-7c3a-9b1d-3c5e7a9b1d3c"}`)), success[last])),
+	}
+	for name, b := range streams {
+		t.Run(name, func(t *testing.T) {
+			w := watch(c, b, expect)
+			if w.err != nil || len(w.reasons) != 0 {
+				t.Fatalf("Watch = %v, aborts %v; the harness matched", w.err, w.reasons)
+			}
+			for _, exit := range []ExitInfo{{}, {Code: 1}} {
+				o := c.Classify(w.tr, exit)
+				if (o.Status != Unresolved && o.Status != Blocked) || len(o.Output) != 0 {
+					t.Errorf("Classify(%+v) = %s(%s) output %s; want unresolved or blocked, never a pass", exit, o.Status, o.Reason, o.Output)
+				}
+			}
+		})
+	}
+	// Paired control: the same run without the signal adjudicates, so the signal is what blocks.
+	if o := c.Classify(watch(c, fixture(t, "success.jsonl"), expect).tr, ExitInfo{}); o.Status != Adjudicate {
+		t.Errorf("control: success.jsonl = %s, want adjudicate", o.Status)
+	}
+}
+
 // ---- Rule 10, B1-06 acceptance "empty result → `unresolved`"; ENGINE-SPEC §8.3 "non-empty
 // schema-valid output → adjudication", "empty output ... → unresolved" ----
 
@@ -801,8 +878,8 @@ func TestB1_06_NothingElseAdjudicates(t *testing.T) {
 	c := NewClaude(claudeDigest)
 	expect := golden(t, c)
 	names, err := filepath.Glob(filepath.Join("testdata", "claude", "*.jsonl"))
-	if err != nil || len(names) != 12 {
-		t.Fatalf("fixtures: %v, %d files; want the 12 registered", err, len(names))
+	if err != nil || len(names) != 14 {
+		t.Fatalf("fixtures: %v, %d files; want the 14 registered", err, len(names))
 	}
 	mayAdjudicate := map[string]bool{"success.jsonl": true, "long-line.jsonl": true}
 	exits := []ExitInfo{{}, {Code: 1}, {Code: -1, Killed: KilledWall}, {Code: -1, Killed: KilledIdle}}

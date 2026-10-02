@@ -39,10 +39,29 @@
 # Caught while proving r2: the base spec forbids Agent and Task, which masked "Agent allowed, not
 # funded" (it was refused as both-allowed-and-forbidden). Those cases now carry their own list.
 #
+# RE-FREEZE r3 2026-10-02: 2026-10-02 re-freeze r3. Opus review of d0f0fc8 FAILED; checks (a) (b)
+# (d) (e) held. Founder rulings, 2026-10-02, recorded in the DR note:
+#   D. launch-pack -> project (project settings only, never user) is RATIFIED.
+#   E. Rate limits: measure first, freeze later. rate-limit.jsonl and the guessed-shape cases
+#      (blocked(capacity) on status rejected; a warning adjudicates) are REMOVED. Frozen instead:
+#      any unrecognised top-level event (anything but system/assistant/user/result), whatever its
+#      status, never adjudicates -> unresolved or blocked. New fixtures
+#      unrecognised-signal-{rejected,allowed}.jsonl, each with an otherwise clean success.
+# Review findings fixed: long-line.jsonl now holds a 1,137,737-byte line, plus an in-test 4 MiB
+# variant; no-init-result.jsonl (a result with no system/init) and a system-only stream never
+# adjudicate; an MCP server's status alone changing aborts; tool names with whitespace outside
+# parentheses ("Read Agent", "Read\tAgent", "Web Fetch") are refused while "Bash(git diff:*)" is
+# one rule. New test TestB1_06_UnrecognisedSignalNeverPasses: 9 tests, 14 fixtures, red 9 of 9.
+# Proof: reference in $TMPDIR passes 9 of 9 (-race -count=3). Mutants: 51 of 52 killed (all of r2
+# plus: unknown events ignored, only status rejected blocks, only the rate_limit_event type blocks,
+# bufio.Scanner at 1 MiB and at 2 MiB, a result before init accepted, MCP servers hashed by name
+# only, any space refused, inner space ignored). Survivor unchanged and equivalent: empty
+# forbidden slot (the slot rule refuses it).
+#
 # OPEN (canon gaps, not decided here):
-# 1. The profile table's row launch-pack -> project was chosen by the test builder; awaits
-#    ratification (DR note, ruling C).
-# 2. The rate-limit wire shape (rate_limit_event status rejected) is unmeasured; re-record it.
+# 1. Exact rate-limit shape: measure on a real run, then re-freeze (ruling E). Until then
+#    blocked(capacity) vs unresolved is not pinned for a rate limit.
+# 2. (resolved by ruling D: the profile row is ratified.)
 # 3. WorkerOutcome is named in canon but never defined; adapter.go defines it.
 # 4. LaunchSpec lacks --agents/--agent/--session-id values; added AgentsPath, Record and SessionID.
 # 5. Status of a harness abort is unspecified: tests require not adjudicate/partial, Reason harness.
@@ -56,7 +75,7 @@ jobs:
   - id: B1-06
     files:
       - path: kernel/internal/adapter/claude_donetest_test.go
-        sha256: 769c2445c0342158515df9ee4c340cab69e1e9a68a0c53a68a353ae792cd0635
+        sha256: 1119f75df884cac68aea26ef772440cd83460d26c7d6144bf13f7bca9791d8c0
       - path: kernel/internal/adapter/testdata/claude/children.jsonl
         sha256: e80c8c7ceb33ebd824760a6e552280ade90c1cb200277196c0f955429426bdc7
       - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl
@@ -70,14 +89,18 @@ jobs:
       - path: kernel/internal/adapter/testdata/claude/error-max-turns.jsonl
         sha256: d3e4ea826683195ebbfc0bb98d89fa79afb30bf2e3c2ae6d51c93a169501c6dc
       - path: kernel/internal/adapter/testdata/claude/long-line.jsonl
-        sha256: 7d7f84e4f1073f40a9c3dd552eed0ff4295eaccfd75831567ce235f438b38dc7
+        sha256: c3b4798a957a060fe8f64a3602e111e9a251a29c7e434dc1f2963918dec70df9
       - path: kernel/internal/adapter/testdata/claude/mcp-tools-changed.jsonl
         sha256: 7ab213f0f144a084e157703dd21402fc28362b59ce78c248ea97440a13492fda
+      - path: kernel/internal/adapter/testdata/claude/no-init-result.jsonl
+        sha256: 0317c0c25095e66d536e3b5da9702014732a3acd7b58e2a7148d90d39616a324
       - path: kernel/internal/adapter/testdata/claude/no-init.jsonl
         sha256: 5702e27958f9dab65449bdacec2d0e54bd2b22f91de349bc93e034d9ab3d3816
-      - path: kernel/internal/adapter/testdata/claude/rate-limit.jsonl
-        sha256: 0309d6270d2de5b431f0df158b18105be9f9e897665b346294e46c8882547422
       - path: kernel/internal/adapter/testdata/claude/success.jsonl
         sha256: c83c4c9824e527c1861ba88a8cf8a5f4dad94cf0bad58ec746feebab79edff60
       - path: kernel/internal/adapter/testdata/claude/truncated.jsonl
         sha256: ddfabfa46ba11e797cc6f1f473b0b40dd013b146cba6ee57794f55f5ce29834b
+      - path: kernel/internal/adapter/testdata/claude/unrecognised-signal-allowed.jsonl
+        sha256: d3dd899d31a7144b21a80a213d6dee0857ef054ab01a9105aaa3b9a06bc146a7
+      - path: kernel/internal/adapter/testdata/claude/unrecognised-signal-rejected.jsonl
+        sha256: 3d289e337a39e7b722b50e4a4869b855c5363808db57b70d2d2b07bb160d3300

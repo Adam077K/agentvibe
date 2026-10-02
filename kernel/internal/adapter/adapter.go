@@ -26,7 +26,8 @@ var ErrNotImplemented = errors.New("adapter: not implemented")
 var (
 	// ErrSpec: the LaunchSpec cannot fill the pinned argv: an empty slot or tool name; a slot
 	// value or tool name that begins with '-' (the launcher's slot rule, so a flag cannot ride
-	// in a slot); a tool name holding a comma or surrounding space; a tool both allowed and
+	// in a slot); a tool name holding a comma, or whitespace outside parentheses (the CLI splits on
+	// both; "Bash(git diff:*)" is one rule, "Read Agent" is two); a tool both allowed and
 	// forbidden; a budget that is not finite and positive; an empty InitExpect; a context
 	// profile not in the pinned table; Agent or Task allowed without FundedTeam; or nothing
 	// left to forbid (DR-B1-06-ADAPTER-RULINGS-2026-10-02, rulings B and C).

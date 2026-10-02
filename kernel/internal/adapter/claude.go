@@ -48,8 +48,10 @@ func (c *Claude) Watch(r io.Reader, initExpect string, abort func(Reason)) (Tran
 }
 
 // Classify applies ENGINE-SPEC §8.3's subtype map to the top-level result event. It never
-// uses the worker's claimed status, and an empty result is never Adjudicate. A rejected rate
-// limit is Blocked(capacity).
+// uses the worker's claimed status, and an empty result is never Adjudicate. A stream holding
+// any top-level event type other than system, assistant, user or result (a rate-limit signal
+// among them, whatever its status) is Unresolved or Blocked, never Adjudicate (founder ruling
+// E: the rate-limit shape is measured first, frozen later).
 func (c *Claude) Classify(t Transcript, exit ExitInfo) WorkerOutcome { return WorkerOutcome{} }
 
 // Children returns every nested agent in t, keyed by parent_tool_use_id.
