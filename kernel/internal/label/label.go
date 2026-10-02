@@ -38,8 +38,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
-	"time"
+	"strconv"
+	"strings"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/wire"
 )
@@ -494,7 +496,7 @@ type Input struct {
 //   - origins that differ where one is public_web or synthetic (no place in decision Q's order);
 //   - retention classes that differ where one is journal_metadata (no place in decision R's order);
 //   - two different holds among obligation, safety and pinned (no duration on the wire);
-//   - a deadline on some inputs and not others, or a deadline that is not RFC 3339 (unordered);
+//   - a deadline on some inputs and not others, or one outside the deadline grammar (parseDeadline);
 //   - founder and portfolio inputs with no venture input (decision T names no owner); this one also
 //     wraps ErrCrossVenture, being data crossing between owners. There is no approved path for a
 //     cross-venture join: the wire form of the founder's approval is OPEN.
@@ -662,12 +664,13 @@ func Join(own Provenance, inputs []Input) (V1, error) {
 	return out, nil
 }
 
-// latestDeadline is the longest retention deadline: the latest RFC 3339 instant when every input
-// carries one, none when no input does. A deadline against an absent one is OPEN, and so is a
-// deadline this reader cannot order.
+// latestDeadline is the longest retention deadline: the latest instant when every input carries
+// one, none when no input does. A deadline against an absent one is OPEN, and so is a deadline
+// outside the one grammar (parseDeadline): this reader cannot order it. Equal instants written
+// differently resolve to the greater string, so the result does not depend on input order.
 func latestDeadline(inputs []Input) (string, error) {
 	var best string
-	var bestT time.Time
+	var bestT deadline
 	n := 0
 	for _, in := range inputs {
 		d := in.Label.Retention.Deadline
@@ -675,11 +678,11 @@ func latestDeadline(inputs []Input) (string, error) {
 			continue
 		}
 		n++
-		t, err := time.Parse(time.RFC3339, d)
-		if err != nil {
-			return "", fmt.Errorf("%w: retention.deadline %q is not RFC 3339 and cannot be ordered", ErrUndecided, d)
+		t, ok := parseDeadline(d)
+		if !ok {
+			return "", fmt.Errorf("%w: retention.deadline %q is outside the deadline grammar and cannot be ordered", ErrUndecided, d)
 		}
-		if best == "" || t.After(bestT) || (t.Equal(bestT) && d > best) {
+		if c := t.cmp(bestT); best == "" || c > 0 || (c == 0 && d > best) {
 			best, bestT = d, t
 		}
 	}
@@ -687,6 +690,94 @@ func latestDeadline(inputs []Input) (string, error) {
 		return "", fmt.Errorf("%w: a retention.deadline on %d of %d inputs; a deadline against an absent one is unordered", ErrUndecided, n, len(inputs))
 	}
 	return best, nil
+}
+
+// THE DEADLINE GRAMMAR (orchestrator ruling 2026-10-02, B1-26 impl review r2), one grammar in both
+// languages: userland/src/label.ts's parseDeadline is this function, step for step, and both run the
+// vectors in testdata/label/r2_deadlines.json. A deadline is RFC 3339's date-time with an uppercase
+// 'T', two-digit fields, an optional '.' fraction of one or more digits, and an uppercase 'Z' or a
+// +hh:mm / -hh:mm offset; the date is a real calendar date, hour < 24, minute and second < 60 (no
+// leap second), offset hour < 24 and offset minute < 60. Anything else (a lowercase 't' or 'z', a
+// space, a comma fraction, a single-digit field, hour 24, offset +24:00, 2026-02-30, a trailing
+// space) is outside it. time.Parse is not used: it accepts some of those.
+var deadlineGrammar = regexp.MustCompile(`^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.([0-9]+))?(?:Z|([+-])([0-9]{2}):([0-9]{2}))$`)
+
+// deadline is an instant: whole seconds since 1970-01-01T00:00:00Z, and the fraction's digits with
+// trailing zeros removed. Two such fractions compare as strings exactly as they compare as numbers.
+type deadline struct {
+	sec  int64
+	frac string
+}
+
+func (a deadline) cmp(b deadline) int {
+	switch {
+	case a.sec < b.sec:
+		return -1
+	case a.sec > b.sec:
+		return 1
+	}
+	return strings.Compare(a.frac, b.frac)
+}
+
+func parseDeadline(s string) (deadline, bool) {
+	m := deadlineGrammar.FindStringSubmatch(s)
+	if m == nil {
+		return deadline{}, false
+	}
+	n := func(i int) int64 {
+		v, _ := strconv.ParseInt(m[i], 10, 64) // the grammar admits only digits here
+		return v
+	}
+	y, mo, d, h, mi, sec := n(1), n(2), n(3), n(4), n(5), n(6)
+	if mo < 1 || mo > 12 || d < 1 || d > daysIn(y, mo) || h > 23 || mi > 59 || sec > 59 {
+		return deadline{}, false
+	}
+	off := int64(0)
+	if m[8] != "" {
+		oh, om := n(9), n(10)
+		if oh > 23 || om > 59 {
+			return deadline{}, false
+		}
+		off = oh*3600 + om*60
+		if m[8] == "-" {
+			off = -off
+		}
+	}
+	return deadline{
+		sec:  daysFromCivil(y, mo, d)*86400 + h*3600 + mi*60 + sec - off,
+		frac: strings.TrimRight(m[7], "0"),
+	}, true
+}
+
+func daysIn(y, m int64) int64 {
+	switch m {
+	case 2:
+		if y%4 == 0 && (y%100 != 0 || y%400 == 0) {
+			return 29
+		}
+		return 28
+	case 4, 6, 9, 11:
+		return 30
+	}
+	return 31
+}
+
+// daysFromCivil is the number of days from 1970-01-01 to y-m-d in the proleptic Gregorian calendar
+// (H. Hinnant's days_from_civil). y is 0..9999, so y-1 can be -1: era is a floor division.
+func daysFromCivil(y, m, d int64) int64 {
+	if m <= 2 {
+		y--
+	}
+	era := y
+	if era < 0 {
+		era -= 399
+	}
+	era /= 400
+	yoe := y - era*400
+	mp := (m + 9) % 12 // March is 0
+	doy := (153*mp+2)/5 + d - 1
+	doe := yoe*365 + yoe/4 - yoe/100 + doy
+	return era*146097 + doe - 719468
 }
 
 // joinConfidence is the lowest rung and the lowest p (decision F), absent when any input has no
