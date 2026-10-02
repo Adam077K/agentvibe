@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"0199a3c1-7e2f-7b40-9c1d-2f6e8a4b5c01"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"{\"verdict\":\"FAIL\",\"summary\":\"first\"}"}}
+{"type":"item.completed","item":{"id":"item_0","type":"reasoning","text":"**Reading the task**"}}
+{"type":"item.completed","item":{"id":"item_3","type":"agent_message","text":"{\"verdict\":\"PASS\",\"summary\":\"second\"}"}}
+{"type":"turn.completed","usage":{"input_tokens":2048,"cached_input_tokens":1024,"output_tokens":64}}
