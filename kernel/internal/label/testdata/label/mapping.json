@@ -123,6 +123,22 @@
     },
     {
       "field": "origin",
+      "value": "participant",
+      "wire": {
+        "origin": "counterparty"
+      },
+      "cite": "09a-ENGINEERING.md:663; DR-LABEL-RECONCILE:127 (decision L, founder 2026-10-02)"
+    },
+    {
+      "field": "origin",
+      "value": "external",
+      "wire": {
+        "origin": "counterparty"
+      },
+      "cite": "09a-ENGINEERING.md:663; DR-LABEL-RECONCILE:127 (decision L, founder 2026-10-02)"
+    },
+    {
+      "field": "origin",
       "value": "collaborator",
       "error": "not_an_origin",
       "cite": "09a-ENGINEERING.md:653 (not an origin: the channel row plus provenance.human_principal)"

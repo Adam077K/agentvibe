@@ -15,7 +15,12 @@
 //   - A closed enum is closed. The names 06 used before 2026-10-01 (origin system/web/worker/
 //     collaborator, data_only, non_exportable, tainted, data_class, authority, a single retention
 //     name, retention_deadline, provenance as a SourceRef array, confidence as a number) are refused.
-//   - An optional field is absent when unset; null is a wrong type for it.
+//   - Keys match exactly: a duplicate key at any depth, or a key that differs from a known one only by
+//     case, is refused (B1-02's rule, 9d519cb). An integer outside ±(2^53-1) is refused.
+//   - An optional field is absent when unset, never null, "" or []; null is refused everywhere.
+//   - ONE READER (DR-LABEL-RECONCILE:61): nouns.Label is this V1 (a type alias), and nouns' Decode and
+//     Encode accept and refuse exactly what this package's do. That re-froze B1-02's fixtures to the
+//     LabelV1 shape on 2026-10-02.
 //   - A label whose schema is not "label/1" is refused wrapping ErrUnknownSchema (§12.0: "readers
 //     refuse unknown versions"). Every other refusal wraps ErrInvalid.
 //   - ConsentScopeRef, VentureId and SubjectId are strings; the canon does not define them further.
@@ -145,8 +150,9 @@ type Input struct {
 }
 
 // Join returns the label of a job's output: the join of every input, data and control (09a §12 Join;
-// 06 §4 L1). Provenance is not joined: the result's provenance is own, and every input's ID is
-// reachable through its derived_from.
+// 06 §4 L1), independent of input order. Provenance is not joined: the result's provenance is own, and
+// every input's ID is reachable through its derived_from. For dclass, retention, exportable and
+// consent_scope the strictest input wins (founder, 2026-10-02).
 func Join(own Provenance, inputs []Input) (V1, error) {
 	return V1{}, ErrNotImplemented
 }

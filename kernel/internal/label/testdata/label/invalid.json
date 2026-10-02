@@ -2346,6 +2346,511 @@
         },
         "revocation_epoch": 0
       }
+    },
+    {
+      "name": "label.null-subjects",
+      "error": "invalid",
+      "why": "subjects null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "subjects": null
+      }
+    },
+    {
+      "name": "label.null-retention-deadline",
+      "error": "invalid",
+      "why": "retention.deadline null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none",
+          "deadline": null
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-provenance-sources",
+      "error": "invalid",
+      "why": "provenance.sources null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": null,
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-exportable",
+      "error": "invalid",
+      "why": "exportable null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": null,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.null-revocation_epoch",
+      "error": "invalid",
+      "why": "revocation_epoch null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": null
+      }
+    },
+    {
+      "name": "label.null-consent_scope",
+      "error": "invalid",
+      "why": "consent_scope null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "consent_scope": null
+      }
+    },
+    {
+      "name": "label.null-confidence-p",
+      "error": "invalid",
+      "why": "confidence.p null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E1",
+          "p": null
+        }
+      }
+    },
+    {
+      "name": "label.null-provenance-derived_from",
+      "error": "invalid",
+      "why": "provenance.derived_from null is refused, required or optional",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1) (field type); nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": null,
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.empty-subjects",
+      "error": "invalid",
+      "why": "an optional list is absent when empty; [] would not round-trip through Go omitempty",
+      "cite": "nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "subjects": []
+      }
+    },
+    {
+      "name": "label.empty-deadline",
+      "error": "invalid",
+      "why": "an optional string is absent when unset, never \"\"",
+      "cite": "nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none",
+          "deadline": ""
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.empty-consent_scope",
+      "error": "invalid",
+      "why": "a ref is a non-empty string",
+      "cite": "nouns.go wire rules (B1-02 frozen contract, the single label reader): an optional field is absent when unset, never null, \"\" or []",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "consent_scope": ""
+      }
+    },
+    {
+      "name": "label.case-variant-beside",
+      "error": "invalid",
+      "why": "a key differing from a known key only by case is refused, not resolved",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record); B1-02 9d519cb (exact-case keys)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "Taint": "untrusted"
+      }
+    },
+    {
+      "name": "label.case-variant-instead",
+      "error": "invalid",
+      "why": "Origin is not origin: encoding/json would match it case-insensitively",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record); B1-02 9d519cb (exact-case keys)",
+      "value": {
+        "schema": "label/1",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "Origin": "internal"
+      }
+    },
+    {
+      "name": "label.case-variant-nested",
+      "error": "invalid",
+      "why": "a case-variant key inside retention is refused",
+      "cite": "09a-ENGINEERING.md:588 (every record carries exactly this record); B1-02 9d519cb",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none",
+          "Hold": "legal"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.unsafe-integer-revocation_epoch",
+      "error": "invalid",
+      "why": "an integer outside +-(2^53-1) is refused: JavaScript would round it",
+      "cite": "B1-02 9d519cb (JS-safe integers, I-JSON RFC 7493 §2.2); 09a-ENGINEERING.md:608",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 9007199254740993
+      }
+    },
+    {
+      "name": "label.negative-revocation_epoch",
+      "error": "invalid",
+      "why": "revocation_epoch is a counter, bumped (a uint64 in the frozen nouns.Label)",
+      "cite": "09a-ENGINEERING.md:608; nouns.go (uint64)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": -1
+      }
+    },
+    {
+      "name": "label.fraction-revocation_epoch",
+      "error": "invalid",
+      "why": "revocation_epoch is an integer counter",
+      "cite": "09a-ENGINEERING.md:608; nouns.go (uint64)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 1.5
+      }
     }
   ]
 }

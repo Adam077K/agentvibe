@@ -10,6 +10,9 @@
 //     LabelV1.encode(value) returns wire JSON. decode(fixture) deep-equals the fixture, and
 //     JSON.stringify(encode(decode(fixture))) is the same JSON. A refusal for an unknown schema version
 //     carries an issue whose path is `schema`.
+//   - ONE READER (DR-LABEL-RECONCILE:61): nouns.Label accepts and refuses exactly what LabelV1 does.
+//     An optional field is absent when unset, never null, "" or []; integers stay within ±(2^53-1).
+//   - LabelV1.encode refuses whatever decode refuses.
 //   - toJSONSchema(LabelV1) is the JSON Schema of the wire form, as plain JSON, such that a validator
 //     built from it (z.fromJSONSchema) accepts every valid fixture and refuses every invalid one.
 //   - mapLegacy(field, value) is 09a §12's mapping for one 06 name: an object of dotted LabelV1 paths to
@@ -17,7 +20,8 @@
 //   - originFor({kind, channel, task?}) returns the wire origin by author (09a §12, "a person's
 //     contribution"); kind and channel take the values kernel/internal/label.Contributor documents.
 //   - join(own, inputs) returns the wire label of a job's output: the join of every input
-//     ({id, label, control?}), with own as its provenance and every input id in derived_from.
+//     ({id, label, control?}), whatever their order, with own as its provenance and every input id in
+//     derived_from; strictest wins for dclass, retention, exportable and consent_scope.
 import type { ZodType } from 'zod';
 
 export class NotImplementedError extends Error {

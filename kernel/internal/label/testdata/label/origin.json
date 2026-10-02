@@ -186,6 +186,26 @@
       "cite": "09a-ENGINEERING.md:634 (participant tasks among them); DR-LABEL-RECONCILE:41 (decision 3)"
     },
     {
+      "name": "customer-own-human-task/human_task",
+      "author": {
+        "kind": "customer",
+        "channel": "human_task",
+        "task": "contribution"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634 (a customer's HumanTask that is not a panel -> customer); DR-LABEL-RECONCILE:124 (decision K, founder 2026-10-02)"
+    },
+    {
+      "name": "customer-signature-task/human_task",
+      "author": {
+        "kind": "customer",
+        "channel": "human_task",
+        "task": "signature"
+      },
+      "origin": "customer",
+      "cite": "09a-ENGINEERING.md:634; DR-LABEL-RECONCILE:124 (decision K)"
+    },
+    {
       "name": "customer/email",
       "author": {
         "kind": "customer",
@@ -247,7 +267,7 @@
         "task": "participant"
       },
       "origin": "counterparty",
-      "cite": "09a-ENGINEERING.md:634 (except a taste-panel transcript: a participant HumanTask stays counterparty); DR-LABEL-RECONCILE:74 (B)"
+      "cite": "09a-ENGINEERING.md:634 (except a taste-panel transcript: a participant HumanTask stays counterparty); DR-LABEL-RECONCILE:74 (B), 124 (K: a participant task is a panel)"
     },
     {
       "name": "customer-taste-panel/human_task",
