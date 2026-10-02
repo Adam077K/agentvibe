@@ -88,7 +88,8 @@ const Provenance = z.strictObject({
 // The safe-integer wire rule as bounds: past ±(2^53-1) every double is an integer.
 const Confidence = z.strictObject({
   rung: z.enum(RUNGS),
-  p: z.number().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER).optional(),
+  // Never -0: JSON.stringify writes it as 0, so it would not round-trip (Go's wire.Number; B1-26 r3).
+  p: z.number().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER).refine((v) => !Object.is(v, -0), 'p is never -0').optional(),
 });
 
 // LabelShape is LabelV1's wire shape; nouns.ts nests it in Event, Job and Effect.

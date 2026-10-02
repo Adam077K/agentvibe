@@ -23,6 +23,7 @@ type PlainResult = { ok: true; value: unknown } | { ok: false; path: PropertyKey
 // of it. Plain means: null, a boolean, a string, a number within the safe-integer rule, a dense
 // Array whose only own keys are its indices and "length", or an object with prototype
 // Object.prototype or null whose own keys are all enumerable data properties holding plain values.
+// A string or key holding a lone surrogate is refused (Go's wire.Compact, B1-26 r3).
 // Refused, without running any of their code: a Proxy (its traps could answer differently on every
 // read), a getter or setter, a sparse array (JSON.stringify writes its holes as null), a symbol key,
 // a non-enumerable key (JSON.stringify skips it), a cycle, and anything else (undefined, bigint,
@@ -31,7 +32,9 @@ type PlainResult = { ok: true; value: unknown } | { ok: false; path: PropertyKey
 // Assignment is how z.json() lost it: assigning "__proto__" sets a prototype, not a key.
 export function plainCopy(v: unknown, at: PropertyKey[] = [], open: Set<object> = new Set()): PlainResult {
   const fail = (message: string): PlainResult => ({ ok: false, path: at, message });
-  if (v === null || typeof v === 'boolean' || typeof v === 'string') return { ok: true, value: v };
+  if (v === null || typeof v === 'boolean') return { ok: true, value: v };
+  // A lone surrogate has no UTF-8 form: Go cannot hold the same string (B1-26 r3).
+  if (typeof v === 'string') return v.isWellFormed() ? { ok: true, value: v } : fail('a string holding a lone surrogate is not wire text');
   if (typeof v === 'number') {
     return isSafeWireNumber(v) ? { ok: true, value: v } : fail('a number outside ±(2^53-1) is refused on the wire');
   }
@@ -40,6 +43,7 @@ export function plainCopy(v: unknown, at: PropertyKey[] = [], open: Set<object> 
   if (open.has(v)) return fail('a cycle has no JSON text');
   const keys = Reflect.ownKeys(v);
   if (keys.some((k) => typeof k === 'symbol')) return fail('a symbol key is not JSON');
+  if (keys.some((k) => !(k as string).isWellFormed())) return fail('a key holding a lone surrogate is not wire text');
   open.add(v);
   try {
     const isArray = Array.isArray(v);

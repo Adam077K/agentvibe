@@ -30,8 +30,8 @@
 //   - Every other integer is a JSON number held to the JavaScript safe range (z.int()). A uint64 in Go
 //     (Event.seq, Label.revocation_epoch) is >= 0 here; nothing else gets a bound nouns.go does not state.
 //     An integer above 2^53-1 is refused here by decision (orchestrator, review round 1); Go aligns.
-//     On the TEXT path (decodeText) an integer field refuses 1.0, 1e0, -0 and 0.0 as Go's
-//     wire.Integer does (B1-26 r2); the object path cannot see the spelling and accepts their values.
+//     On the TEXT path (decodeText) a number field refuses 1.0, 1e0, -0, 0.0 and 0.50 as Go's
+//     wire.Integer and wire.Number do (B1-26 r2, r3); the object path cannot see the spelling.
 //   - A type the canon names but does not define (Actor, Rationale, Target, Budget, TokenSet,
 //     SourceRef, Event.data) is any JSON value, copied key for key (see plainCopy): required where
 //     09a §3 requires it, and otherwise unchecked, as nouns.go says.
@@ -151,8 +151,9 @@ export class WireError extends Error {
 // BEFORE JSON.parse's rounding can hide it, so the refusal names the number as written. It then
 // scans the text once more and refuses a key that appears twice in one object, at any depth and
 // inside raw fields too (Go's wire.ScanWire): JSON.parse keeps the last copy silently, so which copy
-// wins would be a property of the parser, not of the bytes. It throws SyntaxError for text that is
-// not JSON and WireError for an unsafe number or a duplicate key. The value it returns is freshly
+// wins would be a property of the parser, not of the bytes. The same scan refuses a lone surrogate,
+// escaped or raw, in any key or string (Go's wire.Compact; B1-26 r3). It throws SyntaxError for text
+// that is not JSON and WireError for an unsafe number, a duplicate key or a lone surrogate. The value it returns is freshly
 // built by JSON.parse: plain objects and arrays, nobody else's references, and an own "__proto__"
 // key kept as a key.
 export function parseWire(text: string): unknown {
@@ -184,14 +185,14 @@ function readWire(text: string): { value: unknown; spelled: { path: Path; source
   return { value, spelled: scanText(text) };
 }
 
-const CANONICAL_INTEGER = /^-?(?:0|[1-9][0-9]*)$/;
 const NUMBER_AT = /-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/y;
 
 // scanText walks text that JSON.parse has already accepted. It throws WireError on a key that
-// appears twice in one object (keys compared after unescaping, as Go's decoder compares them) and
-// returns every number literal whose value is an integer but whose spelling is not the canonical
-// integer one (a fraction, an exponent, or -0), with its path. Iterative, so nesting depth costs
-// no stack; linear in the text.
+// appears twice in one object (keys compared after unescaping, as Go's decoder compares them) and on
+// a string or key that is not well-formed UTF-16 (a lone surrogate, written raw or as an escape). It
+// returns every number literal whose spelling is not the one JSON.stringify writes for its value
+// (1.0, 0.50, 5e-1, -0), with its path. Iterative, so nesting depth costs no stack; linear in the
+// text.
 function scanText(text: string): { path: Path; source: string }[] {
   const spelled: { path: Path; source: string }[] = [];
   const path: Path = [];
@@ -202,7 +203,11 @@ function scanText(text: string): { path: Path; source: string }[] {
     const start = i++;
     while (text[i] !== '"') i += text[i] === '\\' ? 2 : 1;
     i++;
-    return JSON.parse(text.slice(start, i));
+    const v: string = JSON.parse(text.slice(start, i));
+    if (!v.isWellFormed()) {
+      throw new WireError(`a string holds a lone surrogate${path.length ? ` under ${path.join('.')}` : ''}`);
+    }
+    return v;
   };
   const readKey = (frame: { keys: Set<string> }) => {
     ws();
@@ -244,9 +249,7 @@ function scanText(text: string): { path: Path; source: string }[] {
       NUMBER_AT.lastIndex = i;
       const source = NUMBER_AT.exec(text)![0];
       i += source.length;
-      if ((!CANONICAL_INTEGER.test(source) || source === '-0') && Number.isInteger(Number(source))) {
-        spelled.push({ path: path.slice(), source });
-      }
+      if (JSON.stringify(Number(source)) !== source) spelled.push({ path: path.slice(), source });
     }
     // The value has ended: close every container it ends, then move to the next member.
     for (;;) {
@@ -270,12 +273,13 @@ function scanText(text: string): { path: Path; source: string }[] {
 // integer it can see (the rounded value is itself unsafe), but it trusts its caller to have parsed
 // the right bytes.
 //
-// THE INTEGER-SPELLING RULE (orchestrator ruling 2026-10-02, B1-26 impl review r2), Go's
-// wire.IntegerText: an integer field reads one spelling per value, so 1.0, 3e0, 0.0 and -0 are
-// refused there, while a number field (confidence.p) and a raw field accept any spelling, as Go's
-// wire.Number and wire.AnyJSON do. Userland's schema says which fields are integers, so the rule
-// asks it: each such literal is read again as the non-integer 0.5, and if the schema then refuses
-// the value at exactly that path, the field takes only integers and the literal is refused.
+// THE NUMBER-SPELLING RULE (orchestrator rulings 2026-10-02, B1-26 impl reviews r2 and r3), Go's
+// wire.IntegerText and wire.Number: a typed number field (an integer, or confidence.p) reads only the
+// spelling encode writes back, so 1.0, 3e0, -0, 0.50 and 5e-1 are refused there, and encode(decode(t))
+// is t. A raw field accepts any spelling, as Go's wire.AnyJSON does. Userland's schema says which
+// fields are typed numbers, so the rule asks it: each such literal is read again as a string, and if
+// the schema then refuses the value at exactly that path, the field is a number field and the
+// literal is refused.
 export function decodeText<S extends ZodType>(schema: S, text: string): z.output<S> {
   const { value, spelled } = readWire(text);
   const out = schema.decode(value) as z.output<S>;
@@ -284,14 +288,14 @@ export function decodeText<S extends ZodType>(schema: S, text: string): z.output
   for (const { path } of spelled) {
     let holder = probe;
     for (const k of path.slice(0, -1)) holder = holder[k];
-    Object.defineProperty(holder, path.at(-1)!, { value: 0.5, writable: true, enumerable: true, configurable: true });
+    Object.defineProperty(holder, path.at(-1)!, { value: 'not a number', writable: true, enumerable: true, configurable: true });
   }
   const r = schema.safeDecode(probe);
   if (!r.success) {
     const same = (a: readonly PropertyKey[], b: Path) => a.length === b.length && a.every((k, j) => String(k) === String(b[j]));
     for (const { path, source } of spelled) {
       if (r.error.issues.some((iss) => same(iss.path, path))) {
-        throw new WireError(`${source} at ${path.join('.')} is not an integer as written; an integer field reads only the canonical spelling`);
+        throw new WireError(`${source} at ${path.join('.')} is not written as encode writes it; a number field reads only the canonical spelling`);
       }
     }
   }
