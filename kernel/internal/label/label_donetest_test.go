@@ -94,6 +94,7 @@ type joinCase struct {
 		Subjects                 []string `json:"subjects"`
 		RevocationEpoch          *uint64  `json:"revocation_epoch"`
 		Error                    string   `json:"error"`
+		Venture                  string   `json:"venture"`
 	} `json:"expect"`
 }
 
@@ -517,16 +518,16 @@ func permutations(n int) [][]int {
 	return out
 }
 
-// 09a:665-670 (Join), 06:180 (L1), 06:187 (L8), 09a:602; decisions F, J, M, N, O (DR-LABEL-RECONCILE:99,
-// :121, :136-143). Origin cases marked PROVISIONAL pin the orchestrator's proposed trust order (OPEN, :151). The join is a function of the SET of inputs: every case runs over every order of its inputs,
+// 09a:665-670 (Join), 06:180 (L1), 06:187 (L8), 09a:602; decisions F, J, M-O and Q-T
+// (DR-LABEL-RECONCILE:99, :121, :136-143, :152-158). The join is a function of the SET of inputs: every case runs over every order of its inputs,
 // so "copy the first label" and "copy the last label" both fail.
 func TestB126Join(t *testing.T) {
 	var f struct {
 		Cases []joinCase `json:"cases"`
 	}
 	load(t, "join.json", &f)
-	if len(f.Cases) < 41 {
-		t.Fatalf("join.json holds %d cases; the register froze 41", len(f.Cases))
+	if len(f.Cases) < 48 {
+		t.Fatalf("join.json holds %d cases; the register froze 48", len(f.Cases))
 	}
 	for _, c := range f.Cases {
 		var decoded []label.Input
@@ -555,12 +556,18 @@ func checkJoin(t *testing.T, c joinCase, inputs []label.Input) {
 	t.Helper()
 	out, err := label.Join(c.Own, inputs)
 	if c.Expect.Error != "" {
-		// Decision M (DR-LABEL-RECONCILE:136): inputs from different ventures do not join.
-		if c.Expect.Error != "cross_venture" {
+		// Decision M (DR-LABEL-RECONCILE:136): inputs from different ventures do not join. Decision S
+		// (:156): two different consent refs do not join. Each refusal names exactly one sentinel.
+		want, other := label.ErrCrossVenture, label.ErrConsentConflict
+		switch c.Expect.Error {
+		case "cross_venture":
+		case "consent_conflict":
+			want, other = other, want
+		default:
 			t.Fatalf("fixture names unknown error %q", c.Expect.Error)
 		}
-		if !errors.Is(err, label.ErrCrossVenture) || errors.Is(err, label.ErrInvalid) {
-			t.Fatalf("Join = %+v, %v; want ErrCrossVenture alone (%s)", out, err, c.Cite)
+		if !errors.Is(err, want) || errors.Is(err, other) || errors.Is(err, label.ErrInvalid) {
+			t.Fatalf("Join = %+v, %v; want %v alone (%s)", out, err, want, c.Cite)
 		}
 		return
 	}
@@ -631,6 +638,7 @@ func checkJoin(t *testing.T, c joinCase, inputs []label.Input) {
 	str("retention.deadline", out.Retention.Deadline, e.RetentionDeadline)
 	str("consent_scope", out.ConsentScope, e.ConsentScope)
 	str("origin", out.Origin, e.Origin)
+	str("venture", out.Venture, e.Venture)
 	if e.Subjects != nil {
 		got := slices.Sorted(slices.Values(out.Subjects))
 		want := slices.Sorted(slices.Values(e.Subjects))

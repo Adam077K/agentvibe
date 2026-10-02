@@ -48,6 +48,10 @@ var ErrUnknownName = errors.New("label: no wire name for this 06 name")
 // the founder's approval lets such a join run; the form of that approval is OPEN.
 var ErrCrossVenture = errors.New("label: join across ventures")
 
+// ErrConsentConflict: two of Join's inputs carry different consent refs (founder, 2026-10-02, decision
+// S). Only identical refs join.
+var ErrConsentConflict = errors.New("label: join across different consent scopes")
+
 // V1 is LabelV1, 09a §12.0.
 type V1 struct {
 	Schema          string      `json:"schema"`     // "label/1"
@@ -157,8 +161,9 @@ type Input struct {
 // 06 §4 L1), independent of input order. Provenance is not joined: the result's provenance is own, and
 // every input's ID is reachable through its derived_from. For dclass, retention, exportable and
 // consent_scope the strictest input wins, and otherwise the least trusted value (founder, 2026-10-02;
-// DR-LABEL-RECONCILE decisions J, M, N, O). Inputs from different ventures are refused with
-// ErrCrossVenture.
+// DR-LABEL-RECONCILE decisions J, M-O, Q-T). Inputs from different ventures are refused with
+// ErrCrossVenture; founder and portfolio inputs join a venture's and the result is that venture's.
+// Different consent refs are refused with ErrConsentConflict.
 func Join(own Provenance, inputs []Input) (V1, error) {
 	return V1{}, ErrNotImplemented
 }

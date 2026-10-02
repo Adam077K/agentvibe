@@ -153,7 +153,7 @@ function permutations<T>(xs: T[]): T[][] {
 
 function checkJoin(c: (typeof joins)[number], inputs: { id: string; label: any; control: boolean }[]) {
   if (c.expect.error) {
-    // Decision M (DR-LABEL-RECONCILE:136): inputs from different ventures do not join.
+    // Decision M (DR-LABEL-RECONCILE:136): different ventures do not join; decision S (:156): different consent refs do not.
     assert.throws(() => label.join(clone(c.own), inputs), (e: any) => e instanceof label.LabelJoinError && e.code === c.expect.error, c.cite);
     return;
   }
@@ -187,6 +187,7 @@ function checkJoin(c: (typeof joins)[number], inputs: { id: string; label: any; 
   if (e.retention_deadline) assert.equal(o.retention.deadline, e.retention_deadline, c.cite);
   if (e.consent_scope) assert.equal(o.consent_scope, e.consent_scope, c.cite);
   if (e.origin) assert.equal(o.origin, e.origin, c.cite);
+  if (e.venture) assert.equal(o.venture, e.venture, c.cite);
   if (e.subjects) assert.deepEqual([...(o.subjects ?? [])].sort(), [...e.subjects].sort(), `subjects are the union (${c.cite})`);
   if (e.revocation_epoch !== undefined) assert.equal(o.revocation_epoch, e.revocation_epoch, `the newer epoch (${c.cite})`);
   if (e.permission_at_most) {
@@ -195,8 +196,8 @@ function checkJoin(c: (typeof joins)[number], inputs: { id: string; label: any; 
   }
 }
 
-test('B1-26 Userland: the join, over every order of its inputs (09a:665-670; 06:180 L1, 06:187 L8; 09a:602; decisions F, J, M, N, O; origin order PROVISIONAL, DR-LABEL-RECONCILE:151)', async (t) => {
-  assert.ok(joins.length >= 41, `join.json holds ${joins.length} cases; the register froze 41`);
+test('B1-26 Userland: the join, over every order of its inputs (09a:665-670; 06:180 L1, 06:187 L8; 09a:602; decisions F, J, M-O, Q-T)', async (t) => {
+  assert.ok(joins.length >= 48, `join.json holds ${joins.length} cases; the register froze 48`);
   for (const c of joins) {
     const decoded = c.inputs.map((i) => ({ id: i.id, label: label.LabelV1.decode(clone(i.label)), control: i.control ?? false }));
     for (const order of permutations(decoded)) {

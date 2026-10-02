@@ -68,10 +68,11 @@ export function originFor(c: Contributor): string {
 
 export type JoinInput = { id: string; label: unknown; control?: boolean };
 
-// LabelJoinError: join refused. code 'cross_venture': inputs from different ventures (decision M).
+// LabelJoinError: join refused. code 'cross_venture': inputs from different ventures (decision M);
+// 'consent_conflict': two different consent refs (decision S).
 export class LabelJoinError extends Error {
-  code: 'cross_venture';
-  constructor(code: 'cross_venture', message: string) {
+  code: 'cross_venture' | 'consent_conflict';
+  constructor(code: 'cross_venture' | 'consent_conflict', message: string) {
     super(message);
     this.name = 'LabelJoinError';
     this.code = code;
