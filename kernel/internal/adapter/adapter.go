@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math"
 )
 
 var (
@@ -136,16 +137,35 @@ type ChildJob struct {
 // Transcript is what Watch read. Its fields are the implementation's; the zero Transcript is a
 // run whose harness was never verified, and classifies as unresolved(harness).
 type Transcript struct {
-	events   []event   // every event Watch parsed, in stream order, up to where it stopped
-	init     *initInfo // the verified system/init; nil when none was verified
-	aborted  bool      // Watch refused the harness (and called abort, unless the stream had ended)
-	readErr  bool      // the stream failed before EOF after system/init
-	unparsed int       // lines after system/init that are not a JSON event with a string type
-	unknown  int       // top-level events whose type is not system, assistant, user or result
-	results  int       // top-level result events (more than one is not a typed outcome)
-	trailing int       // events after the first top-level result
-	result   *event    // the first top-level result event
+	events   []event      // every event Watch parsed, in stream order, up to where it stopped
+	init     *initInfo    // the verified system/init; nil when none was verified
+	aborted  bool         // Watch refused the harness (and called abort, unless the stream had ended)
+	readErr  bool         // the stream failed before EOF after system/init
+	unparsed int          // lines after system/init that are not a JSON event with a string type
+	unknown  int          // top-level events whose type is not system, assistant, user or result
+	results  int          // top-level result events (more than one is not a typed outcome)
+	trailing int          // events after the first top-level result
+	result   *event       // the first top-level result event
+	cx       *codexStream // codex only: the pinned run Watch read; nil when never pinned
 }
+
+// stopped is the run-level mapping every family shares, ahead of its own stream rules: an
+// unverified harness or an abort → unresolved(harness); a wall-clock or idle kill →
+// unresolved(timeout); any other kill → unresolved. ok is false when the run was not stopped.
+func stopped(unverified bool, k Kill) (Status, Reason, bool) {
+	switch {
+	case unverified || k == KilledHarness:
+		return Unresolved, ReasonHarness, true
+	case k == KilledWall || k == KilledIdle:
+		return Unresolved, ReasonTimeout, true
+	case k != NotKilled:
+		return Unresolved, "", true
+	}
+	return "", "", false
+}
+
+// budgetOK: a budget is finite and positive.
+func budgetOK(b float64) bool { return !math.IsNaN(b) && !math.IsInf(b, 0) && b > 0 }
 
 // WorkerAdapter is 09a §8.2's contract with launch split into Argv (adapter) + exec (launcher)
 // + Watch (adapter). resume is not here: no resume line is pinned in 09a §8.2 or on the grant.
