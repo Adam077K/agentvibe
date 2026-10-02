@@ -8,7 +8,7 @@
 #
 # Canon: 09a-ENGINEERING.md §12 (LabelV1, Provenance, SourceRef, PrincipalRef, both mapping tables,
 # Join); 06-MEMORY.md §4 (L1, L3, L8); _process/DR-LABEL-RECONCILE-2026-10-01.md (founder decisions
-# 1-8, A-C, E-I, J-L). Every fixture case carries a `cite` naming the canon line it enforces.
+# 1-8, A-C, E-I, J-L, M-P). Every fixture case carries a `cite` naming the canon line it enforces.
 #
 # First frozen 2026-10-02 at 0268a8b (Go 7 tests, Userland 380 subtests). kernel/internal/label/label.go and
 # userland/src/label.ts are NOT registered: they are the interface the job implements (the B1-02
@@ -28,6 +28,15 @@
 # the 3 survivors equivalent (a second redundant check in the reference; their non-redundant forms
 # are among the 26); Userland 13 of 13.
 #
+# Re-frozen 2026-10-02 founder rulings M-P (DR-LABEL-RECONCILE round 6): a join across ventures is
+# refused (ErrCrossVenture / LabelJoinError); least trusted wins (taint quarantined > untrusted > clean,
+# guarded over open, origin, subjects union, newer epoch); journal_metadata and a legal hold are the
+# longest retention; a HumanTask on a customer's behalf is customer. The origin cases pin the
+# orchestrator's PROPOSED order founder > system_of_record > internal > customer > counterparty, which is
+# NOT canon and is OPEN in the DR (:151): re-freeze if the founder orders it differently. Red against
+# stubs: Go 9/9, Userland 408/408. Green against a $TMPDIR reference with B1-02 (919 Userland subtests).
+# Mutants: Go 34 killed of 37 (the same 3 equivalent survivors as before); Userland 19 of 19.
+#
 # Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
 # B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
 # carry the LabelV1 shape that the nouns on main does not read yet.
@@ -39,7 +48,7 @@ jobs:
   - id: B1-26
     files:
       - path: kernel/internal/label/label_donetest_test.go
-        sha256: 4068a355bea3ce34f6b5b03edead9df2b3d7f13095bec6fa06993adab238f317
+        sha256: 684ed2093a9e06bd8bc1c111763348afea3e04eadb86b7d34817f97f40c3944c
       - path: kernel/internal/label/testdata/label/valid.json
         sha256: dccc7ef0dc57b3d43c0187dc1be25aa91f2086901cd15c8e1e1934b5f90ab2c8
       - path: kernel/internal/label/testdata/label/invalid.json
@@ -47,8 +56,8 @@ jobs:
       - path: kernel/internal/label/testdata/label/mapping.json
         sha256: 415d50e2bcb6910cc04e4621fd4319e4d194e5313ffe200199416d03bc46ec0d
       - path: kernel/internal/label/testdata/label/origin.json
-        sha256: 7b35eecafc675ddfc2442520a894c2d50b7ad306ae2afbf038fedd56b739fc3d
+        sha256: d6c278f9e98bb875c827924d509e9ae6a70a2d2c4c977eea29f6ed2e61c23637
       - path: kernel/internal/label/testdata/label/join.json
-        sha256: 0f5b1bcbeb0d214ca3bae9f4b2698853dd97ae8aac87f4e7c00e115834ac4172
+        sha256: 846c68c748512f3f2bab7ecbbe725cadd0bc6bea193910edb0b8d4535ab10a6c
       - path: userland/test/label.donetest.test.ts
-        sha256: cc4054c978be724b12e7ef8ae06b66ce5336268ccba2d0b3cd63a62d77375ffd
+        sha256: 423c92de19aef1551ed803e0e280f44ea2e1d8a7e68550fd2e57b5b565f8d0c0
