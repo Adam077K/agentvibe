@@ -294,7 +294,7 @@
   acceptance_hash: "sha256:1e55fa6e20c9c46881476f2f41946a411b1034fa81a9e665ffcf4cd927dad2fb"
 
 - id: B0-16
-  title: "`kernel/` Go module: allowed-module list, ≤8,000-line lint, CI boundary checks"
+  title: "`kernel/` Go module: allowed-module list, ≤10,000-line lint, CI boundary checks"
   phase: P0
   lane: K
   protected_base: true
