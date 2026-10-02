@@ -18,7 +18,7 @@ The principle is default-deny on what the checker cannot see:
   build tag the sources use.
 - **Tree:** no symlink, cgo, non-Go source (`.c .h .s .m .cc .syso …`), nested `go.mod`, `go.work`
   or `vendor/` anywhere under `kernel/`.
-- **Size:** at most 10,000 lines (`-max-lines`) of `.go` outside `_test.go` files and outside the checker's own two package directories, `internal/boundary` and `cmd/avk-boundary` (matched exactly; their subdirectories, testdata included, still count). That covers every
+- **Size:** at most 11,000 lines (`-max-lines`) of `.go` outside `_test.go` files. That covers every
   directory, including `testdata`, `_` and `.` directories and anything behind a link.
 - **Journal:** no file outside `kernel/` names the Journal (`internal/journal.Path`). The scan
   covers every file whatever its name or encoding: raw bytes, with NULs dropped so UTF-16 reads.
