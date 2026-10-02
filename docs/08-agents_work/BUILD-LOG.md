@@ -329,3 +329,4 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   - B1-12a: review r3 FAILED (ruling B not enforced); r4 tests in progress.
   - secretscan: map-order RNG flake fixed; the founder chose to tighten the scanner, work in progress.
   - Founder rulings this session: B1-06 A–E; outbox lag 2 min per provider; hung call → Human at 15 min; scanner tightened. Label Q–T are recorded in DR files.
+- **B1-26 review FAILED at 4a5094e:** Go and TS disagree on deadlines, epoch encodings and duplicate taint keys. 3 mutants survive. Details in HANDOFF-NEXT.
