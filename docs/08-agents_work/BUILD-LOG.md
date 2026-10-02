@@ -330,3 +330,12 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
   - secretscan: map-order RNG flake fixed; the founder chose to tighten the scanner, work in progress.
   - Founder rulings this session: B1-06 A–E; outbox lag 2 min per provider; hung call → Human at 15 min; scanner tightened. Label Q–T are recorded in DR files.
 - **B1-26 review FAILED at 4a5094e:** Go and TS disagree on deadlines, epoch encodings and duplicate taint keys. 3 mutants survive. Details in HANDOFF-NEXT.
+- **2026-10-02, build-2c.**
+  - **Opened #158** (B1-12a outbox, Opus PASS at fa84f99, rulings A–C) and **#159** (secretscan, Opus PASS at a36f1b9 and 65a09b4; founder chose to tighten the scanner).
+  - **Refusal:** the classifier refused the orchestrator flipping the PRs' session files to `qa_verdict: PASS` (Self-Approval). It was not re-encoded and is left to the founder.
+  - **In flight:**
+    - B1-06: Opus PASS at b3cc99d; r7 tests in progress for the `(*)` bare-tool gap.
+    - B1-26: Opus PASS at 8daed9d; r4 tests in progress for the U+2028 encoding gap.
+  - **Founder rulings:**
+    - B1-06 F: Task is an alias of Agent. When funded, bare Agent or Agent(x) is allowed.
+    - B1-12 C: a dead worker under 15 min whose call is Absent after the lag is retried once.
