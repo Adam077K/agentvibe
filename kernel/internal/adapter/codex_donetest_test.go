@@ -469,6 +469,7 @@ func TestB1_07_ErrorAndRateLimitNeverPass(t *testing.T) {
 		"error item mid-turn":             ins(cxLMsg, errItem),
 		"turn.failed then turn.completed": ins(cxLDone, `{"type":"turn.failed","error":{"message":"x"}}`),
 		"turn.completed then turn.failed": cxJoin(append(slices.Clone(l), `{"type":"turn.failed","error":{"message":"x"}}`)...),
+		"answer, then turn.failed":        cxSuccessWith(t, cxLDone, `{"type":"turn.failed","error":{"message":"x"}}`),
 	} {
 		o := cxRun(stream, ExitInfo{})
 		cxNot(t, name, o)
@@ -515,21 +516,22 @@ func TestB1_07_UnparsedStreams(t *testing.T) {
 		return cxJoin(c...)
 	}
 	for name, stream := range map[string][]byte{
-		"unknown item type":      ins(cxLMsg, `{"type":"item.completed","item":{"id":"item_8","type":"frobnicate"}}`),
-		"item with no type":      ins(cxLMsg, `{"type":"item.completed","item":{"id":"item_8"}}`),
-		"item not an object":     ins(cxLMsg, `{"type":"item.completed","item":"agent_message"}`),
-		"event with no type":     ins(cxLMsg, `{"thread_id":"x"}`),
-		"type not a string":      ins(cxLMsg, `{"type":1}`),
-		"a JSON array line":      ins(cxLMsg, `[]`),
-		"a JSON string line":     ins(cxLMsg, `"turn.completed"`),
-		"turn before thread":     swap(cxLThread, cxLTurn),
-		"answer before turn":     swap(cxLTurn, cxLMsg),
-		"second thread.started":  ins(cxLTurn, l[cxLThread]),
-		"second turn.started":    ins(cxLMsg, l[cxLTurn]),
-		"two turn.completed":     ins(cxLDone, l[cxLDone]),
-		"byte-order mark":        append([]byte("\ufeff"), cxFixture(t, "success.jsonl")...),
-		"blank line mid-stream":  ins(cxLMsg, ""),
-		"two events on one line": cxJoin(append(slices.Clone(l[:cxLDone-1]), l[cxLMsg]+l[cxLDone])...),
+		"unknown item type":            ins(cxLMsg, `{"type":"item.completed","item":{"id":"item_8","type":"frobnicate"}}`),
+		"item with no type":            ins(cxLMsg, `{"type":"item.completed","item":{"id":"item_8"}}`),
+		"item not an object":           ins(cxLMsg, `{"type":"item.completed","item":"agent_message"}`),
+		"event with no type":           ins(cxLMsg, `{"thread_id":"x"}`),
+		"type not a string":            ins(cxLMsg, `{"type":1}`),
+		"a JSON array line":            ins(cxLMsg, `[]`),
+		"a JSON string line":           ins(cxLMsg, `"turn.completed"`),
+		"turn before thread":           swap(cxLThread, cxLTurn),
+		"answer before turn":           swap(cxLTurn, cxLMsg),
+		"second thread.started":        ins(cxLTurn, l[cxLThread]),
+		"second turn.started":          ins(cxLMsg, l[cxLTurn]),
+		"two turn.completed":           ins(cxLDone, l[cxLDone]),
+		"byte-order mark":              append([]byte("\ufeff"), cxFixture(t, "success.jsonl")...),
+		"blank line mid-stream":        ins(cxLMsg, ""),
+		"two events on one line":       cxJoin(append(slices.Clone(l[:cxLDone-1]), l[cxLMsg]+l[cxLDone])...),
+		"trailing data after an event": cxSuccessWith(t, cxLDone, l[cxLDone]+` {"type":"turn.failed"}`),
 	} {
 		cxUnparsed(t, name, cxRun(stream, ExitInfo{}))
 	}

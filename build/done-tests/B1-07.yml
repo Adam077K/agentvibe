@@ -1,0 +1,69 @@
+# Done-test register, B1-07 (docs/vision-v3/14-BUILD-PLAN.md §6 row B1-07, "WorkerAdapter `codex`:
+# `exec`, `--output-schema`, `-o`, `--ephemeral`"; acceptance "Fixtures; empty stdout (known
+# detached-TTY bug) → `unresolved`, never `pass`").
+# Canon: 09a §8.1 (codex-cli 0.154.0 surface), §8.2 (contract, pinned codex line), §8.4 (nested
+# agents), §8.5 (forbidden flags), §8.7 (model_id), §8.8 (UNPARSED); sibling B1-06 and
+# docs/vision-v3/_process/DR-B1-06-ADAPTER-RULINGS-2026-10-02.md (rulings B, C and E kept).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_07 ./internal/adapter/
+# kernel/internal/adapter/codex.go (the stub) and adapter.go (LaunchSpec gains CodexProfile and
+# ResultPath for the -p and -o slots) are NOT registered: they are what the job implements.
+# Evidence, no model turn run: the installed codex-cli 0.154.0 (`codex exec --help`), the serde
+# strings of its native binary (sha256 4f85982624b3898c8991cb80c0981b2aa71070e3537046c9a95950318a95afcc),
+# and the recorded --json runs in docs/03-system-design/final-v2/research/codex-in-the-pane.md
+# and docs/03-system-design/final-v2/review/codex-rehearsal.md. usage-limit.jsonl and
+# unknown-event.jsonl are illustrative (ruling E: unmeasured); only "never adjudicates" is pinned.
+#
+# Round 1, 2026-10-02: 16 tests, 12 fixtures. Red 16 of 16 against the stub. A throwaway
+# reference in $TMPDIR passes the whole package (-race -count=3). Mutants: 44 of 45 killed; one
+# more was a BUILD-FAIL and was discarded. The survivor is equivalent in that reference: "events
+# after the turn ends are not counted as trailing", because the order checks already refuse each one.
+#
+# OPEN (canon or the CLI is silent; the tests refuse with ErrUndecided, or the limit is noted):
+# 1. Tool lease: the codex line has no allow or deny flag. A non-empty lease is ErrUndecided.
+# 2. Funded team and nested agents: no codex flag forbids collab_tool_call. FundedTeam is
+#    ErrUndecided, and a collab_tool_call in the stream never adjudicates.
+# 3. Harness check: the codex stream reports no tools and no model, so init_expect cannot be
+#    checked. A non-empty InitExpect is ErrUndecided, in Argv and in Watch.
+# 4. Approval mode: `codex exec` 0.154.0 has no approval flag. The argv carries none, and -c and
+#    --config are refused. The policy lives in the generated profile, which is layered on the
+#    user's ~/.codex/config.toml (the pinned line has no --ignore-user-config).
+# 5. The -p slot: CodexProfile is a name ($CODEX_HOME/<name>.config.toml), [A-Za-z0-9_-] only.
+#    The B1-08 launcher test fills it with "project".
+# 6. The -o result file: Output comes from the stream's last item.completed agent_message. How
+#    the runner reconciles it with the -o file is not pinned.
+# 7. Rate limits: the shape is unmeasured (ruling E). An `error` event, an `error` item or a
+#    turn.failed never adjudicates. blocked(capacity) vs unresolved is not pinned.
+# 8. Budget: codex has no budget flag. BudgetUSD is validated; the runner enforces it.
+# 9. Pseudo-TTY (09a §8.8): it merges stderr into stdout, and a banner line is UNPARSED. CRLF passes.
+register: B1-07
+jobs:
+  - id: B1-07
+    files:
+      - path: kernel/internal/adapter/codex_donetest_test.go
+        sha256: 55bdfde1f30f6851eeeeb41bfc2d2c85b4f64fe9120e58b4e16ca689a85768b7
+      - path: kernel/internal/adapter/testdata/codex/collab-spawn.jsonl
+        sha256: 3ffd0b33825a5f58b07a180e81c3750bb6003e72225f5c2b37cbd6ebb9519878
+      - path: kernel/internal/adapter/testdata/codex/empty.jsonl
+        sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      - path: kernel/internal/adapter/testdata/codex/malformed.jsonl
+        sha256: 3b266e4be82ecf1fa4ab37b990d301b132938b5b557d70db1a2defb4dc862ce9
+      - path: kernel/internal/adapter/testdata/codex/no-message.jsonl
+        sha256: a6fd22d8202873503fa872a4a954a26cf67b5366e74b4ce237e233bcc00dec49
+      - path: kernel/internal/adapter/testdata/codex/reconnect-then-success.jsonl
+        sha256: 434160fb55eee5223fd0ce3bbfb01dd91fda7baa70a4eda85779d58d9ab846a8
+      - path: kernel/internal/adapter/testdata/codex/success.jsonl
+        sha256: 17d68c11f6528f560a060749fabe8b937c4c56d5a600f0674b3c8a9114273d4a
+      - path: kernel/internal/adapter/testdata/codex/trailing.jsonl
+        sha256: bfccfc3bbb5215a6150abadcb4fd791ef64053a418b3dd52dddfc6b59c29682a
+      - path: kernel/internal/adapter/testdata/codex/truncated.jsonl
+        sha256: 4e77e244ab6aab99d7e3d4588579818521e6dda73a8637be57b4ae201dacde9d
+      - path: kernel/internal/adapter/testdata/codex/turn-failed.jsonl
+        sha256: 808603f639a30977cd40922830d1e8180b07b9dea723f7c5258f8440b2f94752
+      - path: kernel/internal/adapter/testdata/codex/two-messages.jsonl
+        sha256: 1174ecf541b211c8187cc2d811f72579380ae9c3a44ee96f4dfc95d3bbfe6e36
+      - path: kernel/internal/adapter/testdata/codex/unknown-event.jsonl
+        sha256: 46faa02b0ab34136418908ebcc19d5a1394a528cb3cce56abca9c88e71453231
+      - path: kernel/internal/adapter/testdata/codex/usage-limit.jsonl
+        sha256: ed7515cf095b2a4bb36236a20df1d6b899d58caeb02cb95df26d5c55bae6f26a
