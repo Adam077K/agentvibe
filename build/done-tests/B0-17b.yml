@@ -10,6 +10,21 @@
 #   from disk; uncertain never auto-retries, at_most_once never re-sends even on a lookup of Absent.
 # B1-12 out of scope: the two-launcher race of gate G1(b) is the job:// lease (09a §19, two runners
 #   claim one job): B1-05, frozen by B0-17a, not here.
+#
+# RE-FREEZE r2 2026-10-02 (B1-12): 2026-10-02 re-freeze r2 after Opus review (late-receipt double
+# effect, 3 mutants). Added kernel/internal/outbox/outbox_r2_donetest_test.go; the round-1 file is
+# unchanged (hash identical). Base 78d5ac2. Mutants applied to store.go in $TMPDIR copies only; the
+# two round-1 tests stayed green on every one, so each survived before. Killed:
+#   F1  late Receipt refused after an Absent resolve (78d5ac2 itself: legalFrom[Confirmed] lacks
+#       Failed; 2 effects)                               -> LateReceiptAfterAbsentIsOneEffect
+#   M2a Dispatch re-sends a Confirmed Operation          -> ConfirmedIsNeverDispatchedAgain
+#   M2b lookup error resolved to Failed                  -> LookupErrorIsNotProofOfAbsence
+#   M2c keyStream drops Target                           -> TargetIsPartOfTheBusinessKey
+# Positive control: adding Failed to legalFrom[Confirmed] in a copy turns all ten package tests
+# green, so the F1 test is satisfiable. LateReceiptAfterAbsentIsOneEffect FAILS against 78d5ac2,
+# by design. NOT asserted (a design decision, not this brief's): a next Dispatch that runs BEFORE
+# the late Receipt lands still double-sends unless the in-flight attempt is fenced (a lease, or
+# Absent not accepted as proof while an attempt may be in flight).
 register: B0-17b
 jobs:
   - id: B1-08
@@ -20,3 +35,5 @@ jobs:
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go
         sha256: 55b7b239cec0793b2a44cb66bea374a98de66f6bbade1dda6b621bd2a804b9d1
+      - path: kernel/internal/outbox/outbox_r2_donetest_test.go
+        sha256: d3e65a0424acab1036ab671897d059bde56f5fa20761fcea66f759f61bae136c
