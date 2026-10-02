@@ -20,8 +20,8 @@ func jwt(r *rand.Rand) string {
 	return "ey" + "J" + pick(r, b64url, 30) + "." + "ey" + "J" + pick(r, b64url, 80) + "." + pick(r, b64url, 43)
 }
 
-// Item 1 and item 6: named assignment forms, the JWT rule, and a measured miss rate for random
-// values of the lengths real keys use. The measurement is the evidence the rules.go comment cites.
+// Item 1 and item 6: named assignment forms, the JWT rule, the one suppression, and the floor.
+// The miss rate on random values is TestAssignedSecretRandomMissRate.
 func TestAssignedSecretCoverage(t *testing.T) {
 	r := rand.New(rand.NewPCG(7, 7))
 	cases := []struct{ line, want string }{
@@ -41,28 +41,47 @@ func TestAssignedSecretCoverage(t *testing.T) {
 			t.Errorf("reference %q flagged as %v", ref, got)
 		}
 	}
-	// A slice, not a map: all three sets draw from the one seeded r, so the order they draw in
-	// decides which values each set gets. Ranging over a map randomised that order per run, and
-	// two of the six orders hand hex or alnum a 16-character value under its entropy threshold
-	// ("770ffdf4dff07c44" at 2.43 bits, "FpHdHxxdXdKwkH2p" at 3.16), which failed ~1 run in 6.
-	// The sample is now fixed; those values show the rule's miss rate on short values is not zero.
-	sets := []struct{ name, set string }{
-		{"hex", "0123456789abcdef"},
-		{"alnum", alnum},
-		{"base64", alnum + "+/"},
+	// The floor still exists: near-constant placeholders are not reported.
+	for _, ph := range []string{"SERVICE_TOKEN=xxxxxxxxxxxxxxxxxxxx", "SESSION_TOKEN=changeme-changeme-changeme", "API_KEY=0000000000000000"} {
+		if got := matchLine(ph); got != nil {
+			t.Errorf("placeholder %q flagged as %v", ph, got)
+		}
 	}
-	for _, s := range sets {
-		name, set := s.name, s.set
-		misses, n := 0, 3000
-		for i := range n {
-			v := pick(r, set, 16+i%49) // lengths 16..64
-			if matchLine("SERVICE_TOKEN="+v) == nil {
-				misses++
+}
+
+// The miss rate on random values of the lengths real keys use (16-64), for hex, alphanumeric and
+// base64. Every set order under several seeds, each from a fresh generator, so the sample is fixed
+// and no one order or seed is chosen: the flat floors this replaced missed "770ffdf4dff07c44" and
+// "FpHdHxxdXdKwkH2p" under some orders and not others, and a test that ranged over a map of sets
+// failed ~1 run in 6. The measurement is the evidence the rules.go comment cites.
+func TestAssignedSecretRandomMissRate(t *testing.T) {
+	sets := map[string]string{"hex": "0123456789abcdef", "alnum": alnum, "base64": alnum + "+/"}
+	orders := [][]string{
+		{"hex", "alnum", "base64"}, {"hex", "base64", "alnum"},
+		{"alnum", "hex", "base64"}, {"alnum", "base64", "hex"},
+		{"base64", "hex", "alnum"}, {"base64", "alnum", "hex"},
+	}
+	const n = 3000
+	misses, drawn := map[string]int{}, map[string]int{}
+	for _, seed := range [][2]uint64{{7, 7}, {19, 76}, {2026, 1002}} {
+		for _, order := range orders {
+			r := rand.New(rand.NewPCG(seed[0], seed[1]))
+			for _, name := range order {
+				for i := range n {
+					v := pick(r, sets[name], 16+i%49) // lengths 16..64
+					drawn[name]++
+					if matchLine("SERVICE_TOKEN="+v) == nil {
+						misses[name]++
+						t.Errorf("%s: missed %q (len %d, %.3f bits)", name, v, len(v), entropy(v))
+					}
+				}
 			}
 		}
-		t.Logf("%s: %d of %d random values missed", name, misses, n)
-		if misses != 0 {
-			t.Errorf("%s: %d of %d random values missed, want 0", name, misses, n)
+	}
+	for _, name := range []string{"hex", "alnum", "base64"} {
+		t.Logf("%s: %d of %d random values missed", name, misses[name], drawn[name])
+		if drawn[name] != 3*len(orders)*n {
+			t.Errorf("%s: drew %d values, want %d", name, drawn[name], 3*len(orders)*n)
 		}
 	}
 }
