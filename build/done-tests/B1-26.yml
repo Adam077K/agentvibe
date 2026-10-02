@@ -92,6 +92,24 @@
 # 1900-leap, no-400-rule, fraction trim, era floor, month 00, lone surrogates allowed, any p spelling.
 # Run (r3): go -C kernel test -tags donetest -count=1 -run R3 ./internal/label/ && node --test userland/test/label.r3.donetest.test.ts
 #
+# RE-FREEZE 2026-10-02 re-freeze r4 after re-review (Opus PASS at build/b1-26 @ 8daed9d, one MED and
+# surviving mutants). Earlier rounds unchanged (hashes identical). Added:
+#   label_r4_donetest_test.go + label.r4.donetest.test.ts over testdata/label/r4_line_separators.json (7)
+#   and r4_wire_text.json (8).
+#   - MED U+2028/U+2029: written as the raw UTF-8 character in both languages (JSON.stringify's spelling);
+#     a canonical text re-encodes byte for byte through label and nouns, and an escaped one re-encodes raw.
+#   - Mutants: a high surrogate pairs only with DC00-DFFF (wire.go upper bound); Userland's object path
+#     refuses p -0 (label.ts refine) and lone surrogates in strings and keys (wire.ts plainCopy; the key
+#     case through Event.data, the only place an unknown key reaches the check). The abs-bound mutant is
+#     equivalent and skipped (orchestrator).
+# Fails on 8daed9d: Go TestB126R4LineSeparatorsByteIdentical (6 of 7: Go writes \u2028 / \u2029). The
+# rest passes there; its mutants prove it. Proved in $TMPDIR against a reference that writes the raw
+# characters (label, nouns, socket and all Userland done-tests green, 1315 subtests); 5 of 5 mutants
+# killed, each green on rounds 1-r3.
+# FOLLOW-UP, out of scope (orchestrator, r4; no tests): only Go refuses overlong or invalid UTF-8, because
+# Userland has no byte reader; and the raw-field rules predate this branch.
+# Run (r4): go -C kernel test -tags donetest -count=1 -run R4 ./internal/label/ && node --test userland/test/label.r4.donetest.test.ts
+#
 # Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
 # B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
 # carry the LabelV1 shape that the nouns on main does not read yet.
@@ -136,3 +154,11 @@ jobs:
         sha256: 38d662b91aff94c78f222361e470d0eaaeccfa0e5b0af8d99c3eeca941582833
       - path: userland/test/label.r3.donetest.test.ts
         sha256: 74cecd708a98f3e521d715e9fc66fb4fdd38857440d8ac4989305d8b09ba39d9
+      - path: kernel/internal/label/label_r4_donetest_test.go
+        sha256: 9fb2091901d97d9d65b23d95970436ad9bf05f491db719fd8e44a7be5f1ad9a9
+      - path: kernel/internal/label/testdata/label/r4_line_separators.json
+        sha256: 66e813c03287eb43a006ce5f3294f6d76a26feb0112f77c2e131a67ef83c53fb
+      - path: kernel/internal/label/testdata/label/r4_wire_text.json
+        sha256: 3750a662ac191fd772a0ee1c222219eee3707331f3c00e2db98b8e3e1bffa04f
+      - path: userland/test/label.r4.donetest.test.ts
+        sha256: ffb4544df5741509117b8488df5633bca677def0dfb60c47cfe1c04f5e6d572d
