@@ -75,6 +75,26 @@
 # such record can be written; killing it needs a forged journal. With markSent's guard also removed
 # it is killed by NoSendAfterHandedToHuman. Not addressed (not in the brief): review LOW, the lag on
 # the wall clock (store.go:558).
+#
+# RE-FREEZE r5 2026-10-02 (B1-12): 2026-10-02 re-freeze r5 founder ruling dead-worker. Added
+# kernel/internal/outbox/outbox_r5_donetest_test.go; rounds 1-4 unchanged (hashes identical). Base
+# 87059ac (Opus re-review PASS; local ref, GitHub 502). Ruling C recorded in
+# docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md. All store.go edits in $TMPDIR copies.
+# FAILS on 87059ac, by design: DeadWorkerRetriesOnce/second_death_on_the_re-send (3 sends; ruling C
+# allows one retry). Control (not a proposal): count Failed outcomes of sent, unanswered attempts and
+# refuse a second Absent->Failed for them (Human). With it all package tests pass, twice.
+# Mutants on that control, each killed by exactly the named test, all others green:
+#   answered not reset per attempt (store.go:264)  -> AnswerBelongsToItsAttempt
+#   hung gate ignores sent (store.go:572)          -> UnsentAttemptIsNotHung
+#   Dispatch boundary > instead of >= (433)        -> FifteenMinuteBoundary/call_times_out_at_15m0s
+#   Dispatch boundary at 15m-1ns (433)             -> FifteenMinuteBoundary/call_times_out_at_14m59.999999999s
+#   reconcile boundary > instead of >= (572)       -> FifteenMinuteBoundary/dead_worker_reconciled_at_15m0s
+#   reconcile boundary at 15m-1ns (572)            -> FifteenMinuteBoundary/dead_worker_reconciled_at_14m59.999999999s
+# EQUIVALENT, not killed, with reasons:
+#   markSent's `|| s.sent` (store.go:447): only the Dispatch that journaled attempt n calls markSent for
+#     it, under the attempt lock and before any other writer can append sent for n (expect_seq CAS), so
+#     s.sent is never true there. Survived on the control base as predicted.
+#   fold's sent guard (store.go:247): unreachable from the API (round 4); confirmed by the reviewer.
 register: B0-17b
 jobs:
   - id: B1-08
@@ -91,3 +111,5 @@ jobs:
         sha256: 6f956dec5fe6d568f87f851b9a2554b8adb083222b04b4a72707241fdc7b2c18
       - path: kernel/internal/outbox/outbox_r4_donetest_test.go
         sha256: 0a2a6937e73582a09ee40536b51ebc8fc8c0d0a5c486568ecbd38f3ea669eb92
+      - path: kernel/internal/outbox/outbox_r5_donetest_test.go
+        sha256: a48b2f07064d794ac940309f7b3ac12b7db7aab96d7d81ebd231d1a93ff49ab6
